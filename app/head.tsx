@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/next-script-for-ga */
 
 /* eslint-disable @next/next/no-sync-scripts */
 export default function Head() {
@@ -29,7 +30,7 @@ export default function Head() {
       ></script>
 
       {/* Reportana WhatsApp plugin */}
-      {/* <script
+      <script
         dangerouslySetInnerHTML={{
           __html: `
           var a = document.createElement('script');
@@ -38,10 +39,10 @@ export default function Head() {
           document.head.appendChild(a);
         `,
         }}
-      /> */}
+      />
 
       {/* Google Tag Manager */}
-      {/* <script
+      <script
         dangerouslySetInnerHTML={{
           __html: `
             (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -51,10 +52,10 @@ export default function Head() {
             })(window,document,'script','dataLayer','GTM-P8WLDPC5');
           `,
         }}
-      /> */}
+      />
 
       {/* Google Tag (gtag.js) - GA4 */}
-      {/* <script async src="https://www.googletagmanager.com/gtag/js?id=G-WVC65E2PST"></script>
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-WVC65E2PST"></script>
       <script
         dangerouslySetInnerHTML={{
           __html: `
@@ -65,7 +66,7 @@ export default function Head() {
             gtag('config', 'AW-16785148719');
           `,
         }}
-      /> */}
+      />
     </>
   )
 }

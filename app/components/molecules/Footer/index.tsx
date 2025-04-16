@@ -26,7 +26,7 @@ const Footer = () => {
             </Link>
           </div>
           <div className="text-sm flex  flex-col items-center md:flex-row gap-2 text-stone-400  ">
-            <p>&copy; 2024 Inovit Digital Publicidade</p>
+            <p>&copy; 2025 Inovit Digital Publicidade</p>
             <p>CNPJ: 57.554.723/0001-50</p>
           </div>
         </div>

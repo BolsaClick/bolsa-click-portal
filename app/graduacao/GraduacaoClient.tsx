@@ -140,7 +140,8 @@ export default function GraduacaoClient() {
             >
               <div className="relative rounded-2xl overflow-hidden shadow-2xl transform hover:rotate-y-10 transition-transform duration-500">
                 <Image
-                fill 
+                  width={1000}
+                  height={1000}
                   src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80" 
                   alt="Estudantes em sala de aula"
                   className="w-full h-full object-cover"
@@ -148,7 +149,7 @@ export default function GraduacaoClient() {
                 <div className="absolute inset-0 bg-gradient-to-t from-green-900/50 to-transparent" />
                 <div className="absolute bottom-6 left-6 text-white">
                   <Calendar className="w-8 h-8 mb-2" />
-                  <p className="text-2xl font-bold">2024</p>
+                  <p className="text-2xl font-bold">2025</p>
                   <p>Inscrições Abertas</p>
                 </div>
               </div>
@@ -297,8 +298,8 @@ export default function GraduacaoClient() {
                   <div className="relative h-48 overflow-hidden">
                     <div className={`absolute inset-0 bg-gradient-to-b ${area.color} mix-blend-multiply opacity-60`} />
                     <Image 
-                      width="100"
-                      height="100"
+                      width={1000}
+                      height={1000}
                       src={area.image} 
                       alt={area.title}
                       className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"

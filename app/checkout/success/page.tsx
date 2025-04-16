@@ -1,6 +1,7 @@
 // app/graduacao/page.tsx
 import { Metadata } from 'next'
 import SuccessClient from './SuccessClient'
+import { Suspense } from 'react'
 
 
 export const metadata: Metadata = {
@@ -9,5 +10,7 @@ export const metadata: Metadata = {
 }
 
 export default function Page() {
-  return <SuccessClient />
+  return <Suspense fallback={<div className="p-10 text-center text-gray-500">Carregando confirmação...</div>}>
+    <SuccessClient />
+  </Suspense>
 }

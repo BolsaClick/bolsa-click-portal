@@ -1,6 +1,7 @@
 import CoursesClient from './CoursesClient'
 import { Metadata } from 'next'
 import { cookies } from 'next/headers'
+import { Suspense } from 'react'
 
 export async function generateMetadata(): Promise<Metadata> {
   const cookieStore = await cookies()
@@ -38,5 +39,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function CursosPage() {
-  return <CoursesClient />
+  return (
+    <Suspense fallback={<div className="p-4 text-gray-500">Carregando cursos...</div>}>
+      <CoursesClient />
+    </Suspense>
+  )
 }

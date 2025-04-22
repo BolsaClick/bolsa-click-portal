@@ -14,7 +14,7 @@ const HowWork = () => {
   return (
     <Container>
       <section className="w-full mt-28" id="como-funciona-bolsa-de-estudos">
-        <div className="flex-col md:flex-row md:mt-28 items-start flex w-full">
+        <div className="flex-col md:flex-row md:mt-28 items-start flex w-full"  id="o-que-e" aria-labelledby="titulo-oque">
           <h1 className="text-4xl font-bold flex items-center">
             O que é o Bolsa Click
             <span className="relative ml-2 w-32 h-10">
@@ -59,7 +59,8 @@ const HowWork = () => {
         </div>
       </section>
 
-      <section className="w-full mt-28" aria-labelledby="como-funciona">
+      <section className="w-full mt-28"   aria-labelledby="como-funciona"
+  id="como-funciona" >
         <div className="flex flex-col items-center justify-center">
           <h2 id="como-funciona" className="text-3xl font-bold">
             Como conseguir sua bolsa de estudos
@@ -75,7 +76,6 @@ const HowWork = () => {
 
           <ArrowIcon />
 
-          {/* Etapa 2 */}
           <StepCard
             icon={<UserPlus size={40} className="text-bolsa-primary" />}
             title="Faça seu cadastro"

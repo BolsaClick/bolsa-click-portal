@@ -1,11 +1,10 @@
 /* eslint-disable @next/next/next-script-for-ga */
-
 /* eslint-disable @next/next/no-sync-scripts */
+
 export default function Head() {
   return (
-
-
     <>
+      {/* JSON-LD: Organização */}
       <script type="application/ld+json">
         {`
         {
@@ -20,8 +19,43 @@ export default function Head() {
             "https://twitter.com/bolsaclick"
           ]
         }
-`}
+        `}
       </script>
+
+      {/* JSON-LD: Programa Educacional com Bolsa */}
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "EducationalOccupationalProgram",
+          "name": "Bolsas de estudo com até 85% de desconto",
+          "educationalProgramMode": ["online", "presencial"],
+          "occupationalCredentialAwarded": [
+            "Graduação",
+            "Pós-graduação",
+            "Curso técnico",
+            "Educação básica"
+          ],
+          "provider": {
+            "@type": "Organization",
+            "name": "Bolsa Click",
+            "url": "https://www.bolsaclick.com.br"
+          },
+          "programPrerequisites": "Ensino médio completo",
+          "offers": {
+            "@type": "Offer",
+            "url": "https://www.bolsaclick.com.br",
+            "price": "0",
+            "priceCurrency": "BRL",
+            "availability": "https://schema.org/InStock",
+            "eligibleRegion": {
+              "@type": "Country",
+              "name": "Brasil"
+            },
+            "description": "Inscreva-se gratuitamente para obter bolsas de estudo em universidades e escolas parceiras com até 85% de desconto."
+          }
+        })}
+      </script>
+
       {/* Cookie Consent */}
       <script
         id="cookieyes"
@@ -29,7 +63,7 @@ export default function Head() {
         src="https://cdn-cookieyes.com/client_data/2a0be4de7c11618e75d1c64f/script.js"
       ></script>
 
-      {/* Reportana WhatsApp plugin */}
+      {/* WhatsApp Plugin Reportana */}
       <script
         dangerouslySetInnerHTML={{
           __html: `
@@ -54,7 +88,7 @@ export default function Head() {
         }}
       />
 
-      {/* Google Tag (gtag.js) - GA4 */}
+      {/* Google Analytics - GA4 */}
       <script async src="https://www.googletagmanager.com/gtag/js?id=G-WVC65E2PST"></script>
       <script
         dangerouslySetInnerHTML={{

@@ -27,7 +27,7 @@ export const metadata: Metadata = {
       }
     })
   },
-  keywords: ['bolsas de estudo', 'graduação EAD', 'faculdades com desconto', 'educação superior'],
+  keywords: ['bolsas de estudo', 'graduação EAD', 'faculdades com desconto', 'educação superior', 'bolsa para faculdade', 'bolsa para faculdade feminina', 'bolsa para faculdade masculina', 'bolsa click', 'bolsa click faculdade', 'bolsa click graduação', 'bolsa click EAD', 'bolsa click presencial'],
   openGraph: {
     title: 'Bolsa Click - Até 80% de Desconto em Faculdades',
     description: 'Compare bolsas de estudo com até 80% de desconto em faculdades de todo o Brasil.',

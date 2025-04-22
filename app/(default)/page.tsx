@@ -16,6 +16,7 @@ export const metadata: Metadata = {
     'educação superior acessível',
     'ensino superior',
     'faculdades com bolsa',
+    'bolsas de estudo', 'graduação EAD', 'faculdades com desconto', 'educação superior', 'bolsa para faculdade', 'bolsa para faculdade feminina', 'bolsa para faculdade masculina', 'bolsa click', 'bolsa click faculdade', 'bolsa click graduação', 'bolsa click EAD', 'bolsa click presencial'
   ],
   authors: [{ name: 'Bolsa Click', url: 'https://www.bolsaclick.com.br' }],
   creator: 'Bolsa Click',
@@ -58,7 +59,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <>
-      
+
       <HeroSection />
       <Cta />
       <Recommended />

@@ -16,6 +16,7 @@ export const metadata: Metadata = {
     'tecnólogo',
     'áreas do conhecimento',
     'faculdades com desconto',
+    'bolsas de estudo', 'graduação EAD', 'faculdades com desconto', 'educação superior', 'bolsa para faculdade', 'bolsa para faculdade feminina', 'bolsa para faculdade masculina', 'bolsa click', 'bolsa click faculdade', 'bolsa click graduação', 'bolsa click EAD', 'bolsa click presencial'
   ],
   robots: 'index, follow',
   openGraph: {

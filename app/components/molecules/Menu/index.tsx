@@ -4,8 +4,8 @@ import { NavLink } from '../../atoms/NavLink'
 
 const menuItems = [
   { label: 'Graduação', href: '/graduacao' },
-  { label: 'Buscar cursos', href: '/cursos/pesquisar-cursos' },
-  { label: 'Quem somos', href: '#como-funciona' },
+  { label: 'Buscar cursos', href: '/cursos' },
+  { label: 'Quem somos', href: '/quem-somos' },
   { label: 'Contato', href: 'mailto:contato@bolsaclick.com.br' },
 ]
 

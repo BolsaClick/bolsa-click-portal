@@ -4,10 +4,9 @@
 export default function Head() {
   return (
     <>
-      {/* JSON-LD: Organização */}
+      {/* Schema.org: Organização */}
       <script type="application/ld+json">
-        {`
-        {
+        {JSON.stringify({
           "@context": "http://schema.org",
           "@type": "Organization",
           "name": "Bolsa Click",
@@ -18,17 +17,34 @@ export default function Head() {
             "https://www.instagram.com/bolsaclick",
             "https://twitter.com/bolsaclick"
           ]
-        }
-        `}
+        })}
       </script>
 
-      {/* JSON-LD: Programa Educacional com Bolsa */}
+      {/* Schema.org: Campo de busca no Google */}
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "url": "https://www.bolsaclick.com.br/",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://www.bolsaclick.com.br/buscar-cursos?q={search_term_string}",
+            "query-input": {
+              "@type": "PropertyValueSpecification",
+              "valueRequired": true,
+              "valueName": "search_term_string"
+            }
+          }
+        })}
+      </script>
+
+      {/* Schema.org: Programa educacional com bolsa */}
       <script type="application/ld+json">
         {JSON.stringify({
           "@context": "https://schema.org",
           "@type": "EducationalOccupationalProgram",
           "name": "Bolsas de estudo com até 85% de desconto",
-          "educationalProgramMode": ["online", "presencial"],
+          "educationalProgramMode": ["online", "presencial", "semipresencial"],
           "occupationalCredentialAwarded": [
             "Graduação",
             "Pós-graduação",
@@ -51,7 +67,7 @@ export default function Head() {
               "@type": "Country",
               "name": "Brasil"
             },
-            "description": "Inscreva-se gratuitamente para obter bolsas de estudo em universidades e escolas parceiras com até 85% de desconto."
+            "description": "Inscreva-se gratuitamente para obter bolsas de estudo em universidades e escolas com até 85% de desconto."
           }
         })}
       </script>
@@ -88,7 +104,7 @@ export default function Head() {
         }}
       />
 
-      {/* Google Analytics - GA4 */}
+      {/* Google Analytics GA4 */}
       <script async src="https://www.googletagmanager.com/gtag/js?id=G-WVC65E2PST"></script>
       <script
         dangerouslySetInnerHTML={{

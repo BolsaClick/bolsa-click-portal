@@ -4,6 +4,19 @@
 export default function Head() {
   return (
     <>
+      {/* Meta Tags OpenGraph / Twitter */}
+      <meta property="og:type" content="website" />
+      <meta property="og:site_name" content="Bolsa Click" />
+      <meta property="og:title" content="Bolsas de Estudo com até 85% de Desconto - Bolsa Click" />
+      <meta property="og:description" content="Encontre bolsas de estudo para graduação, pós, técnicos e mais. Cadastre-se grátis e estude com até 85% de desconto!" />
+      <meta property="og:url" content="https://www.bolsaclick.com.br" />
+      <meta property="og:image" content="https://www.bolsaclick.com.br/assets/og-banner.png" />
+
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content="Bolsas de Estudo com até 85% de Desconto - Bolsa Click" />
+      <meta name="twitter:description" content="Cadastre-se grátis no Bolsa Click e encontre bolsas de até 85% para cursos presenciais e EAD." />
+      <meta name="twitter:image" content="https://www.bolsaclick.com.br/assets/og-banner.png" />
+
       {/* Schema.org: Organização */}
       <script type="application/ld+json">
         {JSON.stringify({
@@ -38,7 +51,7 @@ export default function Head() {
         })}
       </script>
 
-      {/* Schema.org: Programa educacional com bolsa */}
+      {/* Schema.org: Programa Educacional com Bolsa */}
       <script type="application/ld+json">
         {JSON.stringify({
           "@context": "https://schema.org",
@@ -83,11 +96,11 @@ export default function Head() {
       <script
         dangerouslySetInnerHTML={{
           __html: `
-          var a = document.createElement('script');
-          a.sync = true;
-          a.src = 'https://app.reportana.com/whatsapp-plugin/script.js?shop_id=22250&v=' + Date.now();
-          document.head.appendChild(a);
-        `,
+            var a = document.createElement('script');
+            a.sync = true;
+            a.src = 'https://app.reportana.com/whatsapp-plugin/script.js?shop_id=22250&v=' + Date.now();
+            document.head.appendChild(a);
+          `,
         }}
       />
 

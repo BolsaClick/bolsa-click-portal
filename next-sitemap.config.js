@@ -16,7 +16,7 @@ module.exports = {
   },
 
   additionalPaths: async () => {
-    const res = await fetch('https://www.bolsaclick.com.br/api/core/showCourse')
+    const res = await fetch('https://api.inovit.io/api/core/showCourse')
     const courses = await res.json()
 
     const modalities = ['distancia', 'presencial', 'semipresencial']

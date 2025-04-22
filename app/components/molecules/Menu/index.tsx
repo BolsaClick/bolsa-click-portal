@@ -6,7 +6,7 @@ const menuItems = [
   { label: 'Graduação', href: '/graduacao' },
   { label: 'Buscar cursos', href: '/cursos' },
   { label: 'Quem somos', href: '/quem-somos' },
-  { label: 'Contato', href: 'mailto:contato@bolsaclick.com.br' },
+  { label: 'Contato', href: '/contato' },
 ]
 
 interface MenuProps {

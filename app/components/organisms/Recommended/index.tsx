@@ -7,11 +7,11 @@ import { useEffect, useState } from 'react'
 import { Pagination } from 'swiper/modules'
 import { Swiper, SwiperSlide } from 'swiper/react'
 
-import { useGeoLocation } from '../../../context/GeoLocationContext'
 import Container from '../../atoms/Container'
 import CardRecommended from '../../molecules/CardRecommended'
 import TitleSection from '../../molecules/TitleSection'
 import Image from 'next/image'
+import { useGeoLocation } from '@/app/context/GeoLocationContext'
 const Recommended = () => {
   const { state, town } = useGeoLocation()
 

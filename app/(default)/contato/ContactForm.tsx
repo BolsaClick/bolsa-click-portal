@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import { User, Mail, Phone, MessageSquare, Send } from 'lucide-react';
+import { Send } from 'lucide-react';
 
 export default function ContactForm() {
   const [ref, inView] = useInView({
@@ -92,7 +92,6 @@ export default function ContactForm() {
 
   const inputClasses = "w-full px-4 py-3 bg-white border rounded-md focus:outline-none focus:ring-2 focus:ring-[#00361f]/30 transition-all duration-200";
   const errorClasses = "text-red-500 text-sm mt-1";
-  const iconWrapperClasses = "absolute left-3 top-1/2 -translate-y-1/2 text-[#00361f]/50";
 
   return (
     <motion.div

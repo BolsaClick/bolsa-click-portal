@@ -6,7 +6,6 @@ import { Toaster } from 'sonner'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/utils/react-query'
 import { ClientProviders } from './components/providers/ClientProviders'
-import Head from './head'
 
 
 export const metadata: Metadata = {
@@ -64,7 +63,6 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-br">
-      <script><Head /></script>
       <body className="antialiased">
         <Toaster richColors position="top-right" />
         <Analytics />

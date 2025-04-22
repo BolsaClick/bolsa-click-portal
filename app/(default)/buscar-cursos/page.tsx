@@ -1,51 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { getCoursesByKeyword } from '@/app/lib/api/get-courses-by-keyword'
+import { Suspense } from 'react'
+import BuscarCursos from './BuscarCursosContent'
 
-export default function BuscarCursos() {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const query = searchParams.get('q')
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchAndRedirect = async () => {
-      if (!query) return
-
-      try {
-        const results = await getCoursesByKeyword(query)
-
-        if (results && results.length > 0) {
-          const course = results[0] 
-          const url = `/cursos?modalidade=${course.modality}&course=${course.courseId}&courseName=${encodeURIComponent(course.courseName)}&city=${encodeURIComponent(course.unitCity)}&state=${encodeURIComponent(course.unitState)}`
-          router.replace(url)
-        } else {
-          router.replace(`/cursos?q=${query}`)
-        }
-      } catch (err) {
-        console.error('Erro ao buscar curso:', err)
-        router.replace(`/cursos?q=${query}`)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchAndRedirect()
-  }, [query, router])
-
+export default function BuscarCursosPage() {
   return (
-    <div className="flex justify-center items-center h-screen">
-      {loading ? (
-        <p className="text-gray-600 text-lg">
-          Procurando cursos para <strong>{query}</strong>...
-        </p>
-      ) : (
-        <p className="text-gray-600 text-lg">
-          Redirecionando para cursos correspondentes...
-        </p>
-      )}
-    </div>
+    <Suspense fallback={<div className="h-screen flex items-center justify-center"><p className="text-gray-600">Carregando busca...</p></div>}>
+      <BuscarCursos />
+    </Suspense>
   )
 }

@@ -18,72 +18,81 @@ export default function Head() {
       <meta name="twitter:image" content="https://www.bolsaclick.com.br/assets/og-banner.png" />
 
       {/* Schema.org: Organização */}
-      <script type="application/ld+json">
-        {JSON.stringify({
-          "@context": "http://schema.org",
-          "@type": "Organization",
-          "name": "Bolsa Click",
-          "url": "https://www.bolsaclick.com.br",
-          "logo": "https://www.bolsaclick.com.br/favicon.png",
-          "sameAs": [
-            "https://www.facebook.com/bolsaclick",
-            "https://www.instagram.com/bolsaclick",
-            "https://twitter.com/bolsaclick"
-          ]
-        })}
-      </script>
-
-      {/* Schema.org: Campo de busca no Google */}
-      <script type="application/ld+json">
-        {JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "WebSite",
-          "url": "https://www.bolsaclick.com.br/",
-          "potentialAction": {
-            "@type": "SearchAction",
-            "target": "https://www.bolsaclick.com.br/buscar-cursos?q={search_term_string}",
-            "query-input": {
-              "@type": "PropertyValueSpecification",
-              "valueRequired": true,
-              "valueName": "search_term_string"
-            }
-          }
-        })}
-      </script>
-
-      {/* Schema.org: Programa Educacional com Bolsa */}
-      <script type="application/ld+json">
-        {JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "EducationalOccupationalProgram",
-          "name": "Bolsas de estudo com até 85% de desconto",
-          "educationalProgramMode": ["online", "presencial", "semipresencial"],
-          "occupationalCredentialAwarded": [
-            "Graduação",
-            "Pós-graduação",
-            "Curso técnico",
-            "Educação básica"
-          ],
-          "provider": {
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "http://schema.org",
             "@type": "Organization",
             "name": "Bolsa Click",
-            "url": "https://www.bolsaclick.com.br"
-          },
-          "programPrerequisites": "Ensino médio completo",
-          "offers": {
-            "@type": "Offer",
             "url": "https://www.bolsaclick.com.br",
-            "price": "0",
-            "priceCurrency": "BRL",
-            "availability": "https://schema.org/InStock",
-            "eligibleRegion": {
-              "@type": "Country",
-              "name": "Brasil"
+            "logo": "https://www.bolsaclick.com.br/favicon.png",
+            "sameAs": [
+              "https://www.facebook.com/bolsaclick",
+              "https://www.instagram.com/bolsaclick",
+              "https://twitter.com/bolsaclick"
+            ]
+          }),
+        }}
+      />
+
+      {/* Schema.org: Campo de busca no Google */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "url": "https://www.bolsaclick.com.br/",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://www.bolsaclick.com.br/buscar-cursos?q={search_term_string}",
+              "query-input": {
+                "@type": "PropertyValueSpecification",
+                "valueRequired": true,
+                "valueName": "search_term_string"
+              }
+            }
+          }),
+        }}
+      />
+
+      {/* Schema.org: Programa Educacional com Bolsa */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "EducationalOccupationalProgram",
+            "name": "Bolsas de estudo com até 85% de desconto",
+            "educationalProgramMode": ["online", "presencial", "semipresencial"],
+            "occupationalCredentialAwarded": [
+              "Graduação",
+              "Pós-graduação",
+              "Curso técnico",
+              "Educação básica"
+            ],
+            "provider": {
+              "@type": "Organization",
+              "name": "Bolsa Click",
+              "url": "https://www.bolsaclick.com.br"
             },
-            "description": "Inscreva-se gratuitamente para obter bolsas de estudo em universidades e escolas com até 85% de desconto."
-          }
-        })}
-      </script>
+            "programPrerequisites": "Ensino médio completo",
+            "offers": {
+              "@type": "Offer",
+              "url": "https://www.bolsaclick.com.br",
+              "price": "0",
+              "priceCurrency": "BRL",
+              "availability": "https://schema.org/InStock",
+              "eligibleRegion": {
+                "@type": "Country",
+                "name": "Brasil"
+              },
+              "description": "Inscreva-se gratuitamente para obter bolsas de estudo em universidades e escolas com até 85% de desconto."
+            }
+          }),
+        }}
+      />
 
       {/* Cookie Consent */}
       <script

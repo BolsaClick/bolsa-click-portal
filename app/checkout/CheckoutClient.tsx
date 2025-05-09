@@ -294,6 +294,11 @@ const CheckoutClient = () => {
       phone: data.phone,
       name: data.name,
       firstName: data.name,
+      typeCourse: 'graduacao',
+      paid: 'true',
+      offerId: course.offerId,
+      cep: data.cep,
+      channel: 'Portal Bolsa Click'
     }
     try {
       await postMarketing(payload)

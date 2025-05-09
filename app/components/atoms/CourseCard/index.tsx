@@ -9,8 +9,8 @@ import Image from 'next/image'
 interface CourseCardProps {
   course: Course
   courseName: string
-  setFormData: (name: string, value: any) => void
-  triggerSubmit: () => void
+  setFormData?: (name: string, value: any) => void
+  triggerSubmit?: () => void
 }
 
 const CourseCard: React.FC<CourseCardProps> = ({
@@ -52,10 +52,9 @@ const CourseCard: React.FC<CourseCardProps> = ({
     }
   }
   const handleClick = () => {
-    setFormData('selectedCourse', course)
-    triggerSubmit()
+    localStorage.setItem('selectedCourse', JSON.stringify(course))
+    window.location.href = '/checkout'
   }
-
   const handleAddressClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
     setShowAddress(!showAddress)

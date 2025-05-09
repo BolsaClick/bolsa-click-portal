@@ -9,6 +9,15 @@ export interface CreateMarketing {
   brand: string
   modality: string
   unitId: string
+  cpf: string
+  phone: string
+  name: string
+  firstName: string
+  offerId: string
+  typeCourse: string
+  paid: string
+  cep: string
+  channel: string
 }
 
 export async function postMarketing(studentData: CreateMarketing) {

@@ -16,8 +16,7 @@ interface CourseCardProps {
 const CourseCard: React.FC<CourseCardProps> = ({
   course,
   courseName,
-  setFormData,
-  triggerSubmit,
+
 }) => {
   const [rating, setRating] = useState<number>(0)
   const [showAddress, setShowAddress] = useState(false)

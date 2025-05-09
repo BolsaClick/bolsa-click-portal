@@ -5,7 +5,6 @@ import { CourseJsonLd } from 'next-seo'
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import React from 'react'
 
-// Simula conversão de slug para courseId (ideal usar cache ou api)
 async function getCourseIdBySlug(slug: string): Promise<string> {
   const response = await fetch('https://api.inovit.io/api/core/showCourse', {
     next: { revalidate: 3600 },

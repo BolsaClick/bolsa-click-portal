@@ -3,6 +3,7 @@ import HeroSection from '../components/organisms/HeroSection'
 import Cta from '../components/organisms/Cta'
 import Recommended from '../components/organisms/Recommended'
 import HowWork from '../components/organisms/Recommended/HowWork'
+import Filter from '../components/molecules/Filter'
 
 
 export const metadata: Metadata = {
@@ -59,8 +60,8 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <>
-
       <HeroSection />
+      <Filter />
       <Cta />
       <Recommended />
       <HowWork />

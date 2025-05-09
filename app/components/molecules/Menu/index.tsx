@@ -11,9 +11,10 @@ const menuItems = [
 
 interface MenuProps {
   className?: string
+  isScrolled?: boolean
 }
 
-export const Menu: React.FC<MenuProps> = ({ className = '' }) => {
+export const Menu: React.FC<MenuProps> = ({ isScrolled, className = '' }) => {
   const handleScrollToSection = (href: string) => {
     if (href.startsWith('#')) {
       const element = document.querySelector(href)
@@ -35,6 +36,7 @@ export const Menu: React.FC<MenuProps> = ({ className = '' }) => {
           key={item.label}
           href={item.href}
           className={className}
+          isScrolled={isScrolled}
           onClick={(e) => {
             e.preventDefault()
             handleScrollToSection(item.href)

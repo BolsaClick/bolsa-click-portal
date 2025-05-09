@@ -48,7 +48,7 @@ export const HeaderPages = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-8">
-          <Menu className="text-black font-semibold" />
+          <Menu className="text-black font-semibold" isScrolled />
 
           </div>
 

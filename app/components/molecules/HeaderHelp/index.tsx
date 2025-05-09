@@ -42,7 +42,7 @@ export const HeaderHelp = () => {
 
           {/* Menu Desktop */}
           <div className="hidden lg:flex items-center">
-            <Menu />
+            <Menu isScrolled/>
           </div>
         </div>
       </Container>

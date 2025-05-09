@@ -15,8 +15,8 @@ module.exports = {
         'screen-lg': '1440px',
       },
       colors: {
-        'bolsa-primary': '#003226',
-        'bolsa-secondary': '#B7E680',
+        'bolsa-primary': '#064E3B',
+        'bolsa-secondary': '#059669',
         'bolsa-black': '#151515',
         'bolsa-white': '#FAFAFA',
         'bolsa-gray-dark': '#242424',

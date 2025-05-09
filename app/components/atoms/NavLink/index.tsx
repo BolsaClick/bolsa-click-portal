@@ -4,9 +4,12 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ComponentProps } from 'react'
 
-type NavLinkProps = ComponentProps<typeof Link>
+type NavLinkProps = ComponentProps<typeof Link> & {
+  isScrolled?: boolean
+}
 
-export function NavLink({ href, children, className = '', ...rest }: NavLinkProps) {
+
+export function NavLink({ href, children, isScrolled, className = '', ...rest }: NavLinkProps) {
   const pathname = usePathname()
   const isActive = pathname === href
 
@@ -16,8 +19,8 @@ export function NavLink({ href, children, className = '', ...rest }: NavLinkProp
       className={`
         font-montserrat relative w-full lg:w-auto
         justify-between lg:justify-center flex items-center
-        transition-all duration-300 text-zinc-900 lg:text-zinc-200 px-3 font-medium
-        hover:text-bolsa-secondary
+        transition-all duration-300 text-zinc-900 ${isScrolled ? 'lg:text-zinc-800 hover:text-emerald-500' : 'lg:text-zinc-200 hover:text-bolsa-secondary'}  px-3 font-medium
+        
         ${isActive && 'text-zinc-900'}
         ${className}
       `}

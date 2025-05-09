@@ -4,7 +4,7 @@ import { Text } from '../../atoms/Text'
 const Cta = () => {
   return (
     <Container>
-      <div className="mt-28 w-full justify-between flex-col md:flex-row gap-4 flex items-center ">
+      <div className=" w-full justify-between flex-col md:flex-row gap-4 flex items-center ">
         <div className="rounded-lg p-6 justify-center gap-4 flex-col text-center flex items-center w-full h-52 bg-bolsa-primary bg-cover bg-center">
           <Text size="sm" className="text-bolsa-white">
             Facil de ingressar

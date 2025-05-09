@@ -16,11 +16,17 @@ async function getCourseIdBySlug(slug: string): Promise<string> {
   return found?.courseId || ''
 }
 
-export default async function CursosPage({
-  params,
-}: {
-  params: { slug: string; modalidade: string; cidadeEstado: string }
-}) {
+
+interface CursosPageProps {
+  params: {
+    slug: string
+    modalidade: string
+    cidadeEstado: string
+  }
+}
+
+export default async function CursosPage({ params }: CursosPageProps) {
+
   const [cityRaw, state] = params.cidadeEstado.split('-')
   const city = decodeURIComponent(cityRaw)
   const slug = decodeURIComponent(params.slug)

@@ -13,7 +13,7 @@ export default function CallToAction() {
   });
 
   return (
-    <section className="py-20 bg-[#00361f]">
+    <section className="py-20 bg-emerald-700">
       <div className="container mx-auto px-4">
         <motion.div 
           ref={ref}
@@ -32,7 +32,7 @@ export default function CallToAction() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link 
               href="/cursos" 
-              className="bg-[#8ee48a] hover:bg-[#7ad176] text-[#00361f] font-medium px-6 py-4 rounded-md transition-all duration-300 flex items-center justify-center gap-2"
+              className="bg-emerald-300 hover:bg-emerald-400 text-emerald-700 font-medium px-6 py-4 rounded-md transition-all duration-300 flex items-center justify-center gap-2"
             >
               Buscar Bolsas
               <ArrowRight className="h-5 w-5" />

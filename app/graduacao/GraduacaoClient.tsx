@@ -15,7 +15,7 @@ export default function GraduacaoClient() {
   const [activeTab, setActiveTab] = useState('vantagens')
 
   return (
-   <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+   <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white">
        
         <header className="relative bg-gradient-to-r from-bolsa-secondary to-bolsa-primary text-white py-32 overflow-hidden">
           <motion.div 
@@ -29,7 +29,7 @@ export default function GraduacaoClient() {
               backgroundPosition: 'center'
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-green-900/50 to-bolsa-secondary/50" />
+          <div className="absolute inset-0 bg-gradient-to-b from-emerald-900/50 to-bolsa-secondary/50" />
           <motion.div 
             className="container mx-auto px-4 text-center relative z-10"
             initial={{ opacity: 0, y: 20 }}
@@ -42,17 +42,17 @@ export default function GraduacaoClient() {
             >
               <GraduationCap className="w-24 h-24 mx-auto mb-8" />
             </motion.div>
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white to-green-200">
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white to-emerald-200">
               Cursos de Graduação
             </h1>
-            <p className="text-xl md:text-2xl text-green-100 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl md:text-2xl text-emerald-100 max-w-3xl mx-auto leading-relaxed">
               Descubra o caminho para sua formação superior e transforme seu futuro profissional
             </p>
             <div className="mt-12 flex flex-col sm:flex-row justify-center gap-6">
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="bg-white text-green-700 px-8 py-4 rounded-full font-semibold hover:bg-green-50 transition-colors flex items-center gap-2 justify-center group"
+                className="bg-white text-emerald-700 px-8 py-4 rounded-full font-semibold hover:bg-emerald-50 transition-colors flex items-center gap-2 justify-center group"
               >
                 <Target className="w-5 h-5" />
                 <span>Começar Agora</span>
@@ -75,10 +75,10 @@ export default function GraduacaoClient() {
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {[
-                { icon: Users, title: '+1000', subtitle: 'Alunos Formados', color: 'from-green-500 to-bolsa-primary' },
+                { icon: Users, title: '+1000', subtitle: 'Alunos Formados', color: 'from-emerald-500 to-bolsa-primary' },
                 { icon: BookMarked, title: '+100', subtitle: 'Cursos Disponíveis', color: 'from-purple-500 to-purple-600' },
                 { icon: Award, title: '+50', subtitle: 'Prêmios Recebidos', color: 'from-pink-500 to-pink-600' },
-                { icon: TrendingUp, title: '95%', subtitle: 'Taxa de Empregabilidade', color: 'from-green-500 to-green-600' }
+                { icon: TrendingUp, title: '95%', subtitle: 'Taxa de Empregabilidade', color: 'from-emerald-500 to-emerald-600' }
               ].map((stat, index) => (
                 <motion.div
                   key={index}
@@ -107,7 +107,7 @@ export default function GraduacaoClient() {
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
             >
-              <h2 className="text-4xl font-bold mb-6 bg-gradient-to-r from-green-700 to-green-500 bg-clip-text text-transparent">
+              <h2 className="text-4xl font-bold mb-6 bg-gradient-to-r from-emerald-700 to-emerald-500 bg-clip-text text-transparent">
                 O que é curso de graduação?
               </h2>
               <p className="text-gray-600 text-lg leading-relaxed mb-6">
@@ -117,17 +117,17 @@ export default function GraduacaoClient() {
               <div className="grid grid-cols-2 gap-4 mt-8">
                 <motion.div 
                   whileHover={{ scale: 1.05 }}
-                  className="bg-green-50 rounded-xl p-6 border-2 border-green-100"
+                  className="bg-emerald-50 rounded-xl p-6 border-2 border-emerald-100"
                 >
                   <Star className="w-8 h-8 text-bolsa-primary mb-3" />
-                  <h3 className="font-semibold text-green-700">Diploma Reconhecido</h3>
+                  <h3 className="font-semibold text-emerald-700">Diploma Reconhecido</h3>
                 </motion.div>
                 <motion.div 
                   whileHover={{ scale: 1.05 }}
-                  className="bg-green-50 rounded-xl p-6 border-2 border-green-100"
+                  className="bg-emerald-50 rounded-xl p-6 border-2 border-emerald-100"
                 >
                   <Sparkles className="w-8 h-8 text-bolsa-primary mb-3" />
-                  <h3 className="font-semibold text-green-700">Carreira Profissional</h3>
+                  <h3 className="font-semibold text-emerald-700">Carreira Profissional</h3>
                 </motion.div>
               </div>
             </motion.div>
@@ -146,7 +146,7 @@ export default function GraduacaoClient() {
                   alt="Estudantes em sala de aula"
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-green-900/50 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/50 to-transparent" />
                 <div className="absolute bottom-6 left-6 text-white">
                   <Calendar className="w-8 h-8 mb-2" />
                   <p className="text-2xl font-bold">2025</p>
@@ -159,7 +159,7 @@ export default function GraduacaoClient() {
                   scale: [1, 1.02, 1, 1.02, 1]
                 }}
                 transition={{ duration: 5, repeat: Infinity }}
-                className="absolute -top-6 -right-6 bg-gradient-to-r from-bolsa-primary to-green-400 text-white p-6 rounded-xl shadow-lg"
+                className="absolute -top-6 -right-6 bg-gradient-to-r from-bolsa-primary to-emerald-400 text-white p-6 rounded-xl shadow-lg"
               >
                 <MapPin className="w-8 h-8 mb-2" />
                 <p className="text-2xl font-bold">+50</p>
@@ -170,7 +170,7 @@ export default function GraduacaoClient() {
         </section>
   
         {/* Types of Graduation with Interactive Cards */}
-        <section className="py-20 bg-gradient-to-b from-white to-green-50">
+        <section className="py-20 bg-gradient-to-b from-white to-emerald-50">
           <div className="container mx-auto px-4">
             <motion.h2 
               initial={{ opacity: 0, y: 20 }}
@@ -185,7 +185,7 @@ export default function GraduacaoClient() {
                 {
                   title: 'Bacharelado',
                   icon: BookOpen,
-                  color: 'from-green-500 to-bolsa-primary',
+                  color: 'from-emerald-500 to-bolsa-primary',
                   items: [
                     { icon: Clock, text: 'Duração: 4-5 anos' },
                     { icon: Brain, text: 'Formação ampla e profunda' },
@@ -249,7 +249,7 @@ export default function GraduacaoClient() {
         </section>
   
         {/* Areas of Knowledge with Hover Effects */}
-        <section className="py-20 bg-green-50">
+        <section className="py-20 bg-emerald-50">
           <div className="container mx-auto px-4">
             <motion.h2 
               initial={{ opacity: 0, y: 20 }}
@@ -265,7 +265,7 @@ export default function GraduacaoClient() {
                   title: 'Ciências Exatas',
                   image: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
                   courses: ['Engenharias', 'Matemática', 'Física', 'Computação'],
-                  color: 'from-bolsa-primary to-green-400'
+                  color: 'from-bolsa-primary to-emerald-400'
                 },
                 {
                   title: 'Ciências Humanas',
@@ -277,7 +277,7 @@ export default function GraduacaoClient() {
                   title: 'Ciências Biológicas',
                   image: 'https://images.unsplash.com/photo-1576086213369-97a306d36557?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
                   courses: ['Medicina', 'Enfermagem', 'Nutrição', 'Biologia'],
-                  color: 'from-green-600 to-green-400'
+                  color: 'from-emerald-600 to-emerald-400'
                 },
                 {
                   title: 'Ciências Sociais',
@@ -351,7 +351,7 @@ export default function GraduacaoClient() {
                     className={`px-6 py-3 rounded-xl font-semibold transition-colors ${
                       activeTab === 'vantagens' 
                         ? 'bg-bolsa-primary text-white' 
-                        : 'bg-green-50 text-bolsa-primary hover:bg-green-100'
+                        : 'bg-emerald-50 text-bolsa-primary hover:bg-emerald-100'
                     }`}
                   >
                     Vantagens
@@ -361,7 +361,7 @@ export default function GraduacaoClient() {
                     className={`px-6 py-3 rounded-xl font-semibold transition-colors ${
                       activeTab === 'requisitos' 
                         ? 'bg-bolsa-primary text-white' 
-                        : 'bg-green-50 text-bolsa-primary hover:bg-green-100'
+                        : 'bg-emerald-50 text-bolsa-primary hover:bg-emerald-100'
                     }`}
                   >
                     Requisitos
@@ -371,7 +371,7 @@ export default function GraduacaoClient() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="bg-green-50 rounded-xl p-6"
+                  className="bg-emerald-50 rounded-xl p-6"
                 >
                   {activeTab === 'vantagens' ? (
                     <ul className="space-y-4">
@@ -466,7 +466,7 @@ export default function GraduacaoClient() {
                     alt="Estudante EAD"
                     className="w-full"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-green-900/50 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/50 to-transparent" />
                 </div>
                 <motion.div 
                   className="absolute -bottom-6 -left-6 bg-gradient-to-r from-bolsa-primary to-bolsa-primary text-white p-6 rounded-xl"
@@ -486,7 +486,7 @@ export default function GraduacaoClient() {
         </section>
   
         {/* Newsletter Section with Animation */}
-        <section className="pt-20 bg-gradient-to-r from-green-950 to-bolsa-primary text-white relative overflow-hidden">
+        <section className="pt-20 bg-gradient-to-r from-emerald-950 to-bolsa-primary text-white relative overflow-hidden">
           <motion.div 
             className="absolute inset-0 opacity-10"
             animate={{ 
@@ -504,7 +504,7 @@ export default function GraduacaoClient() {
               viewport={{ once: true }}
             >
               <h2 className="text-4xl font-bold mb-6">Receba alertas sobre vagas!</h2>
-              <p className="text-xl mb-12 text-green-100">Fique por dentro das melhores oportunidades de graduação.</p>
+              <p className="text-xl mb-12 text-emerald-100">Fique por dentro das melhores oportunidades de graduação.</p>
               <div className="max-w-md mx-auto">
                 <div className="flex gap-4 mb-4">
                   <motion.div 
@@ -515,19 +515,19 @@ export default function GraduacaoClient() {
                     <input
                       type="email"
                       placeholder="Seu e-mail"
-                      className="w-full px-12 py-4 rounded-xl text-gray-900 text-lg focus:ring-2 focus:ring-green-500 outline-none"
+                      className="w-full px-12 py-4 rounded-xl text-gray-900 text-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     />
                   </motion.div>
                   <motion.button 
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="bg-white text-green-700 px-8 py-4 rounded-xl font-semibold hover:bg-green-50 transition-colors text-lg flex items-center gap-2"
+                    className="bg-white text-emerald-700 px-8 py-4 rounded-xl font-semibold hover:bg-emerald-50 transition-colors text-lg flex items-center gap-2"
                   >
                     <span>Cadastrar</span>
                     <ArrowRight className="w-5 h-5" />
                   </motion.button>
                 </div>
-                <p className="text-sm text-green-200">
+                <p className="text-sm text-emerald-200">
                   Ao se cadastrar, você concorda em receber nossas comunicações
                 </p>
               </div>

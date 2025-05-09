@@ -4,56 +4,67 @@ import Cta from '../components/organisms/Cta'
 import Recommended from '../components/organisms/Recommended'
 import HowWork from '../components/organisms/Recommended/HowWork'
 import Filter from '../components/molecules/Filter'
+import { getCurrentTheme } from '../lib/themes'
 
+const theme = getCurrentTheme()
 
 export const metadata: Metadata = {
-  title: 'Bolsa Click - Descontos de até 80% em Faculdades',
-  description: 'Economize com bolsas de estudo de até 80% de desconto em faculdades de todo o Brasil. Graduação, EAD e presencial.',
+  title: {
+    default: theme.shortTitle,
+    template: `%s - ${theme.shortTitle}`,
+  },
+  description: theme.description,
   keywords: [
     'bolsas de estudo',
-    'descontos em faculdades',
     'graduação EAD',
-    'bolsas universitárias',
-    'educação superior acessível',
-    'ensino superior',
-    'faculdades com bolsa',
-    'bolsas de estudo', 'graduação EAD', 'faculdades com desconto', 'educação superior', 'bolsa para faculdade', 'bolsa para faculdade feminina', 'bolsa para faculdade masculina', 'bolsa click', 'bolsa click faculdade', 'bolsa click graduação', 'bolsa click EAD', 'bolsa click presencial'
+    'faculdades com desconto',
+    'educação superior',
+    'bolsa para faculdade',
+    'bolsa click',
+    theme.shortTitle.toLowerCase(),
   ],
-  authors: [{ name: 'Bolsa Click', url: 'https://www.bolsaclick.com.br' }],
-  creator: 'Bolsa Click',
-  publisher: 'Bolsa Click',
-  metadataBase: new URL('https://www.bolsaclick.com.br'),
-  alternates: {
-    canonical: 'https://www.bolsaclick.com.br',
-  },
-  robots: 'index, follow',
   openGraph: {
-    title: 'Bolsa Click - Até 80% de Desconto em Faculdades',
-    description: 'Compare bolsas de estudo com até 80% de desconto em faculdades de todo o Brasil.',
-    url: 'https://www.bolsaclick.com.br',
-    siteName: 'Bolsa Click',
-    locale: 'pt_BR',
-    type: 'website',
+    title: theme.title,
+    description: theme.description,
+    url: theme.siteUrl,
+    siteName: theme.name,
     images: [
       {
-        url: 'https://www.bolsaclick.com.br/favicon.png',
+        url: theme.ogImage,
         width: 1200,
         height: 630,
-        alt: 'Bolsa Click',
+        alt: theme.name,
       },
     ],
+    locale: 'pt_BR',
+    type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    site: '@bolsaclick',
-    title: 'Bolsa Click - Até 80% de Desconto em Faculdades',
-    description: 'Encontre bolsas em graduação e pós-graduação com até 80% de desconto.',
-    images: ['https://www.bolsaclick.com.br/favicon.png'],
+    site: theme.twitter,
+    title: theme.title,
+    description: theme.description,
+    images: [theme.ogImage],
   },
   icons: {
-    icon: '/favicon.png',
-    shortcut: '/favicon.png',
-    apple: '/favicon.png',
+    icon: theme.favicon,
+    shortcut: theme.favicon,
+    apple: theme.favicon,
+  },
+  robots: 'index, follow',
+  other: {
+    'application/ld+json': JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: theme.name,
+      url: theme.siteUrl,
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: `${theme.siteUrl}/cursos?courseName={search_term_string}`,
+        'query-input': 'required name=search_term_string',
+      },
+    }),
+
   },
 }
 

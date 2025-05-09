@@ -23,6 +23,11 @@ const Hero = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
+const theme = process.env.NEXT_PUBLIC_THEME
+const sectionBg = theme === 'anhanguera' ? 'bg-[#d63c06]' : 'bg-emerald-700'
+
+
+
   useEffect(() => {
     const interval = setInterval(() => {
       setIsAnimating(true);
@@ -36,7 +41,7 @@ const Hero = () => {
   }, []);
 
   return (
-    <section className="relative bg-emerald-950 text-white pt-20 pb-40 ">
+   <section className={`relative ${sectionBg} text-white pt-20 pb-40`}>
       <div className="container mx-auto px-4 pt-10 text-center">
         <div className="h-[200px] md:h-[240px] flex flex-col pb-32 pt-20  md:pb-20 items-center justify-center">
           <div
@@ -51,7 +56,7 @@ const Hero = () => {
             <p className="text-lg md:text-xl max-w-3xl mx-auto mb-8 text-emerald-100">
               {heroTexts[currentIndex].description}
             </p>
-            <button className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-8 py-3 rounded-lg transition-all transform  shadow-lg">
+            <button className="bg-bolsa-secondary hover:bg-bolsa-secondary/80 text-white duration-300 font-semibold px-8 py-3 rounded-lg transition-all transform  shadow-lg">
               Garanta sua vaga
             </button>
           </div>
@@ -70,7 +75,7 @@ const Hero = () => {
                 }, 500);
               }}
               className={`h-2 rounded-full transition-all duration-300 ${
-                index === currentIndex ? 'w-6 bg-emerald-400' : 'w-2 bg-emerald-700 hover:bg-emerald-600'
+                index === currentIndex ? 'w-6 bg-bolsa-secondary' : 'w-2 bg-bolsa-secondary/50 hover:bg-emerald-300'
               }`}
               aria-label={`Slide ${index + 1}`}
             />

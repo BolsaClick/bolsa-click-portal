@@ -13,7 +13,7 @@ export default function Header() {
 
   return (
     <section className="relative h-[500px] md:h-[600px] overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-[#00361f] to-[#005c2f] z-0">
+      <div className="absolute inset-0 bg-gradient-to-r from-emerald-950 to-emerald-700 z-0">
         <div 
           className="absolute inset-0 bg-[url('https://images.pexels.com/photos/6147369/pexels-photo-6147369.jpeg?auto=compress&cs=tinysrgb&w=1920')] 
           mix-blend-overlay opacity-30 bg-cover bg-center"
@@ -35,7 +35,7 @@ export default function Header() {
           <div className="flex flex-wrap gap-4">
             <Link 
               href="#nossa-historia" 
-              className="bg-[#8ee48a] hover:bg-[#7ad176] text-[#00361f] font-medium px-6 py-3 rounded-md transition-all duration-300"
+              className="bg-emerald-300 hover:bg-emerald-400 text-emerald-700 font-medium px-6 py-3 rounded-md transition-all duration-300"
             >
               Nossa História
             </Link>

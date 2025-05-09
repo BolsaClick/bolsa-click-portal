@@ -87,7 +87,7 @@ const Filter = () => {
         <button
           key={level.levels}
           className={`flex-1 py-4 px-6 text-center font-medium text-nowrap transition-colors ${activeTab === level.levels
-            ? 'text-emerald-700 border-b-2 border-emerald-500'
+            ? 'text-bolsa-secondary/90 border-b-2 border-bolsa-secondary'
             : 'text-gray-600 hover:text-emerald-600'
             }`}
           onClick={() => handleLevelChange(level.levels)}
@@ -138,7 +138,7 @@ const Filter = () => {
       <Button
         type="submit"
         variant='secondary'
-        className='transition-colors shadow-md  bg-emerald-500 hover:bg-emerald-600 text-white font-medium'
+        className='transition-colors shadow-md  bg-bolsa-secondary hover:bg-bolsa-secondary/80 text-white font-medium'
       >
         Buscar Bolsas
       </Button>

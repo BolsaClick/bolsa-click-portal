@@ -38,7 +38,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
   const renderUniversityImage = (universityName: string) => {
     switch (universityName.toLowerCase()) {
       case 'anhanguera':
-        return '/assets/logo-anhanguera.svg'
+        return '/assets/logo-anhanguera-bolsa-click.svg'
       case 'unopar':
         return '/assets/logo-unopar.svg'
       case 'ampli':
@@ -71,7 +71,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
   return (
     <div className="rounded-lg border border-gray-200 bg-white overflow-hidden transition-all duration-200 hover:shadow-md">
       {/* Header */}
-      <div className="p-4 -mt-4">
+      <div className="p-4 mb-4">
         <div className="flex items-center justify-between">
         <Image
             src={universityLogo}

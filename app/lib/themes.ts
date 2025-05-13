@@ -1,6 +1,6 @@
 export const themes = {
   bolsaclick: {
-    name: 'Bolsa Click',
+    name: 'TEste',
     title: 'Bolsa Click - Até 80% de Desconto em Faculdades',
     shortTitle: 'Bolsa Click',
     description: 'Compare bolsas de estudo com até 80% de desconto em faculdades de todo o Brasil.',

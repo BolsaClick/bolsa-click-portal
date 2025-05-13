@@ -63,6 +63,16 @@ module.exports = {
         'bolsa-gray-light': '#F1F1F1',
         emerald: emerald,
       },
+       keyframes: {
+        'slide-pulse': {
+          '0%': { transform: 'translateX(-100%) scale(0.98)', opacity: '0' },
+          '60%': { transform: 'translateX(0) scale(1.02)', opacity: '1' },
+          '100%': { transform: 'translateX(0) scale(1)', opacity: '1' },
+        },
+      },
+      animation: {
+        'slide-pulse': 'slide-pulse 0.4s ease-out',
+      },
     },
   },
   plugins: [],

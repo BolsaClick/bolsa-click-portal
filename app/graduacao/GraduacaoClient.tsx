@@ -17,7 +17,7 @@ export default function GraduacaoClient() {
   return (
    <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white">
        
-        <header className="relative bg-gradient-to-r from-bolsa-secondary to-bolsa-primary text-white py-32 overflow-hidden">
+        <header className="relative bg-gradient-to-r  from-emerald-950 to-emerald-700 text-white py-32 overflow-hidden">
           <motion.div 
             className="absolute inset-0 z-0 opacity-20"
             initial={{ scale: 1.1 }}
@@ -29,7 +29,7 @@ export default function GraduacaoClient() {
               backgroundPosition: 'center'
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-emerald-900/50 to-bolsa-secondary/50" />
+          <div className="absolute inset-0 bg-gradient-to-b  from-emerald-950 to-emerald-700/50" />
           <motion.div 
             className="container mx-auto px-4 text-center relative z-10"
             initial={{ opacity: 0, y: 20 }}

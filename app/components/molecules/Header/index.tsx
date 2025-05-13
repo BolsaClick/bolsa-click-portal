@@ -54,7 +54,7 @@ const logoColor = currentTheme === 'anhanguera'
            <Image
               src={isScrolled ? logoColor : logoWhite}
               alt="Logo"
-              width={130}
+              width={100}
               height={33}
               priority
             />

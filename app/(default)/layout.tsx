@@ -3,6 +3,7 @@ import '../globals.css'
 
 import { Header } from '../components/molecules/Header'
 import Footer from '../components/molecules/Footer'
+import HeaderNew from '../components/molecules/Header/New'
 
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -10,7 +11,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-br">
       <body className="antialiased">
       <div className="flex min-h-screen flex-col">
-              <Header />
+              <HeaderNew />
               <main className="flex flex-1 flex-col">{children}</main>
               <Footer />
             </div>

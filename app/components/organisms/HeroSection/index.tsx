@@ -41,7 +41,7 @@ const sectionBg = theme === 'anhanguera' ? 'bg-[#d63c06]' : 'bg-emerald-700'
   }, []);
 
   return (
-   <section className={`relative ${sectionBg} text-white pt-20 pb-40`}>
+   <section className={`relative ${sectionBg} text-white pt-36 pb-40`}>
       <div className="container mx-auto px-4 pt-10 text-center">
         <div className="h-[200px] md:h-[240px] flex flex-col pb-32 pt-20  md:pb-20 items-center justify-center">
           <div

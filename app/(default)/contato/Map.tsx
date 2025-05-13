@@ -25,13 +25,13 @@ export default function Map() {
     <section className="py-20 bg-[#f5f9f5]">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-[#00361f] mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-emerald-300 mb-4">
             Nossos Escritórios
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
             Estamos presentes em diversas localidades para melhor atender nossos alunos e parceiros.
           </p>
-          <div className="w-24 h-1 bg-[#8ee48a] mx-auto mt-4"></div>
+          <div className="w-24 h-1 bg-bolsa-secondary mx-auto mt-4"></div>
         </div>
 
         <motion.div
@@ -45,24 +45,24 @@ export default function Map() {
             <div 
               key={index}
               className={`bg-white p-6 rounded-xl shadow-md border-2 ${
-                location.active ? 'border-[#8ee48a]' : 'border-transparent'
+                location.active ? 'border-bolsa-secondary' : 'border-transparent'
               }`}
             >
               <div className="flex items-center mb-4">
                 <div className={`w-8 h-8 rounded-full ${
-                  location.active ? 'bg-[#8ee48a]/30' : 'bg-gray-100'
+                  location.active ? 'bg-emerald-200/30' : 'bg-gray-100'
                 } flex items-center justify-center mr-3`}>
                   <MapPin className={`h-4 w-4 ${
-                    location.active ? 'text-[#00361f]' : 'text-gray-400'
+                    location.active ? 'text-emerald-300' : 'text-gray-400'
                   }`} />
                 </div>
                 <h3 className={`text-lg font-bold ${
-                  location.active ? 'text-[#00361f]' : 'text-gray-500'
+                  location.active ? 'text-emerald-300' : 'text-gray-500'
                 }`}>
                   {location.city}
                 </h3>
                 {location.active && (
-                  <span className="ml-auto px-2 py-1 text-xs font-medium bg-[#8ee48a]/20 text-[#00361f] rounded-full">
+                  <span className="ml-auto px-2 py-1 text-xs font-medium bg-emerald-200/20 text-emerald-300 rounded-full">
                     Sede Principal
                   </span>
                 )}

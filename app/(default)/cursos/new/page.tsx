@@ -1,69 +1,71 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 'use client'
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Search, Filter, MapPin, Star, Heart, ArrowUpDown,
-  GraduationCap, Clock, Building2, ArrowLeft, ChevronDown,
+  Search, Filter, MapPin, Star, ArrowUpDown,
+  Building2, ArrowLeft, ChevronDown,
   ListFilter, LayoutGrid, LayoutList, X
 } from 'lucide-react';
-import { Switch, Menu } from '@headlessui/react';
-import Container from '@/app/components/atoms/Container';
+import { Menu } from '@headlessui/react';
 
-interface Scholarship {
-  id: number;
-  name: string;
-  type: string;
-  institution: string;
-  campus: string;
-  rating: number;
-  modality: string;
-  shift: string;
-  originalPrice: number;
-  discountedPrice: number;
-  discountPercentage: number;
-  address: string;
-  isPopular: boolean;
-  isNew: boolean;
-  limitedSpots: number;
-}
+import { useQuery } from '@tanstack/react-query'
+import { useForm } from 'react-hook-form'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
+
+import CourseCardNew from '@/app/components/CourseCardNew';
 
 const SearchResults: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [favorites, setFavorites] = useState<number[]>([]);
+
   const [showFilters, setShowFilters] = useState(true);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [sortBy, setSortBy] = useState('relevance');
 
-  const scholarships: Scholarship[] = [
-    {
-      id: 1,
-      name: 'Engenharia Civil',
-      type: 'Bacharelado',
-      institution: 'Universidade Federal do Brasil',
-      campus: 'Campus Centro',
-      rating: 4.8,
-      modality: 'Presencial',
-      shift: 'Noturno',
-      originalPrice: 1200,
-      discountedPrice: 360,
-      discountPercentage: 70,
-      address: 'Av. Paulista, 1000 - São Paulo',
-      isPopular: true,
-      isNew: false,
-      limitedSpots: 5
-    },
-    // Add more scholarships here
-  ];
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const { handleSubmit, setValue } = useForm()
 
-  const toggleFavorite = (id: number) => {
-    setFavorites(prev =>
-      prev.includes(id)
-        ? prev.filter(fid => fid !== id)
-        : [...prev, id]
-    );
-  };
+  const modalidade = searchParams.get('modalidade') || ''
+  const courseId = searchParams.get('course') || ''
+  const courseName = searchParams.get('courseName') || ''
+  const city = searchParams.get('city') || ''
+  const state = searchParams.get('state') || ''
 
+  const { data: showCourses, isLoading } = useQuery({
+    queryFn: () => getShowFiltersCourses(modalidade, courseId, city, state),
+    queryKey: ['courses', modalidade, courseId, city, state],
+  })
+
+  const coursesHere = showCourses?.courses || []
+
+  const filteredCourses = coursesHere.reduce((acc: any[], course: any) => {
+    const pushUnique = (arr: any[], data: any, modality: string) => {
+      if (!arr.some((item) => item.courseId === course.courseId && item.modality === modality)) {
+        arr.push({ ...data, courseName: course.courseName })
+      }
+    }
+
+    if (!courseName) {
+      if (course.distancia) pushUnique(acc, course.distancia.data[0], 'A distância')
+      if (course.presencial) pushUnique(acc, course.presencial.data[0], 'Presencial')
+      if (course.semipresencial) pushUnique(acc, course.semipresencial.data[0], 'Semipresencial')
+    } else {
+      if (course.distancia) acc.push(...course.distancia.data.map((unit: any) => ({ ...unit, courseName: course.courseName })))
+      if (course.presencial) acc.push(...course.presencial.data.map((unit: any) => ({ ...unit, courseName: course.courseName })))
+      if (course.semipresencial) acc.push(...course.semipresencial.data.map((unit: any) => ({ ...unit, courseName: course.courseName })))
+    }
+
+    return acc
+  }, [])
+
+  const onSubmit = (data: any) => {
+    localStorage.setItem('selectedCourse', JSON.stringify(data))
+    router.push('/checkout/')
+  }
   const sortOptions = [
     { value: 'price_asc', label: 'Menor preço' },
     { value: 'discount_desc', label: 'Maior desconto' },
@@ -316,120 +318,15 @@ const SearchResults: React.FC = () => {
               ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6'
               : 'grid-cols-1 gap-4'
               }`}>
-              {scholarships.map((scholarship) => (
-                <motion.div
-                  key={scholarship.id}
-                  layout
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className={`bg-white rounded-xl shadow-card hover:shadow-hover transition-all duration-300 ${viewMode === 'list' ? 'p-6' : ''
-                    }`}
-                >
-                  <div className="relative p-6">
-                    <div className="flex items-center justify-between w-full mb-2">
-                      {!scholarship.isNew && (
-                        <span className="bg-emerald-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                          Novo
-                        </span>
-                      )}
-
-                      <div className="flex w-full justify-end items-center gap-2">
-                        {/* Últimas vagas */}
-                        {/* {scholarship.limitedSpots && (
-                          <motion.span
-                            animate={{ scale: [1, 1.05, 1] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                            className="bg-error-500 bg-opacity-10 text-error-500 text-xs font-bold px-3 py-1.5 rounded-full border border-error-500"
-                          >
-                            Últimas {scholarship.limitedSpots} vagas
-                          </motion.span>
-                        )} */}
-
-                        {/* Botão de favorito */}
-                        <button
-                          onClick={() => toggleFavorite(scholarship.id)}
-                          className="p-2 rounded-full bg-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300"
-                        >
-                          <Heart
-                            size={20}
-                            className={
-                              favorites.includes(scholarship.id)
-                                ? 'text-red-500 fill-red-500'
-                                : 'text-neutral-400'
-                            }
-                          />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      {/* Dados principais */}
-                      <div>
-                        <h3 className="font-bold text-lg text-neutral-900">{scholarship.name}</h3>
-                        <p className="text-neutral-600 text-sm">{scholarship.type}</p>
-                        <div className="mt-2">
-                          <p className="text-neutral-700 font-medium">{scholarship.institution}</p>
-                          <p className="text-neutral-600 text-sm">{scholarship.campus}</p>
-                        </div>
-                      </div>
-
-                      {/* Detalhes rápidos */}
-                      <div className="flex flex-wrap items-center gap-4">
-                        <div className="flex items-center">
-                          <Star size={18} className="text-yellow-400 mr-1" fill="#FACC15" />
-                          <span className="font-medium">{scholarship.rating}</span>
-                        </div>
-                        <div className="flex items-center text-neutral-600">
-                          <Building2 size={18} className="mr-1" />
-                          {scholarship.modality}
-                        </div>
-                        <div className="flex items-center text-neutral-600">
-                          <Clock size={18} className="mr-1" />
-                          {scholarship.shift}
-                        </div>
-                      </div>
-
-                      {/* Preço */}
-                      <div className="border-t border-neutral-100 pt-4">
-                        <div className="flex justify-between mb-2">
-                          <span className="text-sm text-neutral-600">De:</span>
-                          <span className="text-sm line-through text-neutral-500">
-                            {scholarship.originalPrice.toLocaleString('pt-BR', {
-                              style: 'currency',
-                              currency: 'BRL',
-                            })}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-end">
-                          <div>
-                            <span className="text-sm text-neutral-600">Por:</span>
-                            <div className="text-emerald-500 text-2xl font-bold">
-                              {scholarship.discountedPrice.toLocaleString('pt-BR', {
-                                style: 'currency',
-                                currency: 'BRL',
-                              })}
-                            </div>
-                          </div>
-                          <span className="bg-green-500 text-white text-sm font-bold px-2 py-1 rounded">
-                            {scholarship.discountPercentage}% OFF
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Botão e localização */}
-                      <button className="w-full bg-emerald-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-emerald-600 hover:shadow-lg hover:scale-[1.02] transition-all duration-300">
-                        Quero essa bolsa
-                      </button>
-
-                      <div className="flex items-start text-sm text-neutral-600">
-                        <MapPin size={16} className="mr-2 mt-0.5 flex-shrink-0" />
-                        {scholarship.address}
-                      </div>
-                    </div>
-                  </div>
-
-                </motion.div>
+              {filteredCourses.map((course: any, index: number) => (
+                <CourseCardNew
+                  key={index}
+                  courseName={courseName}
+                  course={course}
+                  setFormData={setValue}
+                  viewMode={viewMode}
+                  triggerSubmit={handleSubmit(onSubmit)}
+                />
               ))}
             </div>
 

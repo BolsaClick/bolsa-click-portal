@@ -51,7 +51,7 @@ const HeaderNew: React.FC = () => {
   return (
     <header className="fixed top-0 left-0 w-full z-[1000] transition-all duration-500">
       <div
-        className={`hidden max-w-6xl md:flex  items-center mx-auto transition-all duration-500 ${
+        className={`hidden max-w-6xl lg:flex  items-center mx-auto transition-all duration-500 ${
           menuOpen
             ? 'bg-white text-emerald-950'
             : scrolled
@@ -74,13 +74,13 @@ const HeaderNew: React.FC = () => {
             />
           </Link>
 
-          <nav className="hidden md:flex gap-10">
+          <nav className="hidden lg:flex gap-10">
             <Menu isScrolled={scrolled} />
           </nav>
         </div>
       </div>
       {/* MOBILE HEADER */}
-      <div className="flex md:hidden items-center justify-between bg-white px-6 py-4 border-b border-gray-200 shadow-sm">
+      <div className="flex lg:hidden items-center justify-between bg-white px-6 py-4 border-b border-gray-200 shadow-sm">
         <Link href="/" className="flex items-center">
           <Image src={logoColor} alt="Logo" width={90} height={33} priority />
         </Link>
@@ -103,7 +103,7 @@ const HeaderNew: React.FC = () => {
       </div>
 
       {/* MENU MOBILE COM TRANSIÇÃO */}
-      <div className={`md:hidden fixed inset-0 z-50 transition-all duration-300 ease-in-out ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`lg:hidden fixed inset-0 z-50 transition-all duration-300 ease-in-out ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         {/* Overlay */}
         {menuOpen && (
           <div

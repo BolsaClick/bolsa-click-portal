@@ -8,10 +8,11 @@
     "start": "next start",
     "lint": "next lint",
     "postbuild": "next-sitemap",
- "bolsaclick": "env-cmd -f .env.bolsaclick next dev",
-  "anhanguera": "env-cmd -f .env.anhanguera next dev"
+    "bolsaclick": "env-cmd -f .env.bolsaclick next dev",
+    "anhanguera": "env-cmd -f .env.anhanguera next dev"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.3",
     "@hookform/resolvers": "^3.9.1",
     "@phosphor-icons/react": "^2.1.7",
     "@prisma/client": "^6.6.0",

@@ -1,16 +1,16 @@
 import type { Metadata } from 'next'
 import HeroSection from '../components/organisms/HeroSection'
 import Cta from '../components/organisms/Cta'
-import Recommended from '../components/organisms/Recommended'
 import HowWork from '../components/organisms/Recommended/HowWork'
 import Filter from '../components/molecules/Filter'
 import { getCurrentTheme } from '../lib/themes'
+import ScholarshipCarousel from '../components/molecules/ScolarShipCarousel'
 
 const theme = getCurrentTheme()
 
 export const metadata: Metadata = {
   title: {
-    default: theme.shortTitle,
+    default: 'Bolsas de Estudo de até 95%',
     template: `%s - ${theme.shortTitle}`,
   },
   description: theme.description,
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
       url: theme.siteUrl,
       potentialAction: {
         '@type': 'SearchAction',
-        target: `${theme.siteUrl}/cursos?courseName={search_term_string}`,
+        target: `${theme.siteUrl}/cursos/result?={search_term_string}`,
         'query-input': 'required name=search_term_string',
       },
     }),
@@ -74,7 +74,7 @@ export default function HomePage() {
       <HeroSection />
       <Filter />
       <Cta />
-      <Recommended />
+      <ScholarshipCarousel />
       <HowWork />
     </>
   )

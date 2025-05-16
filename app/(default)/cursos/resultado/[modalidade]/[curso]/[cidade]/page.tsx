@@ -33,6 +33,17 @@ const capitalizeSlug = (text: string) => {
     title,
     description,
     robots: 'index, follow',
+      keywords: [
+    courseName,
+    modalidade,
+    city,
+    `${courseName} com bolsa`,
+    `faculdade em ${city}`,
+    'Bolsa Click',
+  ],
+  alternates: {
+  canonical: url,
+},
     openGraph: {
       title,
       description,

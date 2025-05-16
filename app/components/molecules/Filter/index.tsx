@@ -66,17 +66,47 @@ const Filter = () => {
       city: city.city,
     })) || []
 
-  const courseOptions =
-    showCourses?.map((course: any) => ({
-      id: course.id,
-      name: course.name,
-    })) || []
+const slugify = (text: string) =>
+  text
+    .toLowerCase()
+    .normalize("NFD") 
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
 
-  const onSubmit = (data: FormValues) => {
-    navigate.push(
-      `/cursos?modalidade=${data.modalidade}&course=${data.course.id}&courseName=${data.course.name}&city=${data.city.city}&state=${data.city.state}`,
-    )
-  }
+const courseOptions =
+  showCourses?.map((course: any) => ({
+    id: course.id,
+    name: course.name,
+    slug: slugify(course.name.replace(/ - (Bacharelado|Tecn[oó]logo)$/, '')),
+  })) || []
+
+
+
+const onSubmit = (data: FormValues) => {
+  const courseSlug = slugify(data.course.name.replace(/ - (Bacharelado|Tecn[oó]logo)$/i, ''))
+  const citySlug = slugify(data.city.city)
+
+  localStorage.setItem('searchParams', JSON.stringify({
+    courseId: data.course.id,
+    courseName: data.course.name,
+    city: data.city.city,
+    state: data.city.state,
+    modalidade: data.modalidade
+  }))
+
+  document.cookie = `courseName=${encodeURIComponent(courseSlug)}; path=/`
+  document.cookie = `modalidade=${encodeURIComponent(data.modalidade)}; path=/`
+  document.cookie = `city=${encodeURIComponent(data.city.city)}; path=/`
+  document.cookie = `state=${encodeURIComponent(data.city.state)}; path=/`
+
+  navigate.push(`/cursos/resultado/${data.modalidade}/${courseSlug}/${citySlug}`);
+
+}
+
+
+
+
   const handleCityChange = debounce((value) => {
     setSearchCity(value)
   }, 300)

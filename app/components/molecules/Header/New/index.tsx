@@ -1,10 +1,10 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Menu } from '../../Menu'
 import Image from 'next/image'
 import Link from 'next/link'
 import { X } from 'lucide-react'
+import { Menu } from '../../Menu'
 
 const HeaderNew: React.FC = () => {
   const [scrolled, setScrolled] = useState(false)

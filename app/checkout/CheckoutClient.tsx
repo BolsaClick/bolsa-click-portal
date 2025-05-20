@@ -386,8 +386,7 @@ const CheckoutClient = () => {
   }, [paymentConfirmedId])
 
   
-  const payToday = 5
-  // const payToday = 19.99 + (renderPageData.montlyFeeTo || 0)
+  const payToday = 19.99 + (renderPageData.montlyFeeTo || 0)
 
   // 🔁 Limpa localStorage ao sair da página
   useEffect(() => {

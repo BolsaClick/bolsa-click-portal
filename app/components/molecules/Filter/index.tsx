@@ -112,28 +112,25 @@ const normalizeCourseName = (name: string) => {
   const citySlug = slugify(data.city.city)
   const courseNameCookie = normalizeCourseName(data.course.name)
 
-  localStorage.setItem('searchParams', JSON.stringify({
-    courseId: data.course.id,
-    courseIdExternal: data.course.courseIds?.[0]
-,    courseName: data.course.name,
-    city: data.city.city,
-    state: data.city.state,
-    modalidade: data.modalidade
-  }))
-
-
-
   document.cookie = `courseName=${encodeURIComponent(courseNameCookie)}; path=/`
   document.cookie = `modalidade=${encodeURIComponent(data.modalidade)}; path=/`
   document.cookie = `city=${encodeURIComponent(data.city.city)}; path=/`
   document.cookie = `state=${encodeURIComponent(data.city.state)}; path=/`
 
+
+ const searchParams = new URLSearchParams({
+    courseId: data.course.id,
+    courseIdExternal: data.course.courseIds?.[0] || '',
+    city: data.city.city,
+    state: data.city.state,
+    courseName: data.course.name 
+  });
+
 if (activeTab === 'pos') {
-  navigate.push(`/cursos/resultado/pos/${courseSlug}/${citySlug}`); 
+  navigate.push(`/cursos/resultado/pos/${courseSlug}/${citySlug}?${searchParams.toString()}`);
 } else {
-  navigate.push(`/cursos/resultado/${data.modalidade}/${courseSlug}/${citySlug}`);
+navigate.push(`/cursos/resultado/${data.modalidade}/${courseSlug}/${citySlug}?${searchParams.toString()}`);
 }
-console.log(data)
 }
 
   const handleCityChange = debounce((value) => {

@@ -34,24 +34,24 @@ const Footer: React.FC = () => {
               <p className="text-neutral-600">
                 O maior marketplace de bolsas de estudo do Brasil. Seu futuro com mais desconto começa aqui.
               </p>
-              <div className="flex justify-start space-x-4">
-                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+              <div className="flex justify-start  space-x-4">
+                <a href="https://facebook.com" className='text-bolsa-secondary hover:text-bolsa-primary transition-all duration-200' target="_blank" rel="noopener noreferrer" aria-label="Facebook">
                   <Facebook size={20} />
                 </a>
-                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                <a href="https://instagram.com/bolsaclick" className='text-bolsa-secondary hover:text-bolsa-primary transition-all duration-200'  target="_blank" rel="noopener noreferrer" aria-label="Instagram">
                   <Instagram size={20} />
                 </a>
-                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                <a href="https://linkedin.com" target="_blank" className='text-bolsa-secondary hover:text-bolsa-primary transition-all duration-200'  rel="noopener noreferrer" aria-label="LinkedIn">
                   <Linkedin size={20} />
                 </a>
-                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
+                <a href="https://twitter.com" target="_blank" className='text-bolsa-secondary hover:text-bolsa-primary transition-all duration-200'  rel="noopener noreferrer" aria-label="Twitter">
                   <Twitter size={20} />
                 </a>
               </div>
             </div>
 
             <div>
-              <h4 className="font-bold text-lg mb-4">Bolsa Click</h4>
+              <h4 className="font-bold text-lg mb-4 text-emerald-600">Bolsa Click</h4>
               <nav aria-label="Links úteis para Bolsa Click">
                 <ul className="space-y-3">
                   <li>
@@ -84,7 +84,7 @@ const Footer: React.FC = () => {
             </div>
 
             <div>
-              <h4 className="font-bold text-lg mb-4">Para Estudantes</h4>
+              <h4 className="font-bold text-lg mb-4  text-emerald-600">Para Estudantes</h4>
               <nav aria-label="Links úteis para estudantes">
                 <ul className="space-y-3">
                   <li>
@@ -117,7 +117,7 @@ const Footer: React.FC = () => {
             </div>
 
             <div>
-              <h4 className="font-bold text-lg mb-4">Contato</h4>
+              <h4 className="font-bold text-lg mb-4  text-emerald-600">Contato</h4>
               <address className="space-y-3">
                 <ul className="space-y-3">
                   <li className="flex items-center justify-center md:justify-start">
@@ -131,7 +131,7 @@ const Footer: React.FC = () => {
                   <li className="flex items-start justify-center md:justify-start">
                     <MapPin size={18} className="text-emerald-500 mr-2 mt-1" />
                     <span className="text-neutral-600">
-                      Av. Paulista, 1000, São Paulo - SP, 01310-100
+                      Av. Paulista, 1106 , São Paulo - SP, 01310-914
                     </span>
                   </li>
                 </ul>

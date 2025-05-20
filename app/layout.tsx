@@ -6,9 +6,9 @@ import { Toaster } from 'sonner'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/utils/react-query'
 import { ClientProviders } from './components/providers/ClientProviders'
-import { themes } from './lib/themes'
+import { getCurrentTheme } from './lib/themes'
 
-const theme = themes.bolsaclick
+const theme = getCurrentTheme()
 
 export const metadata: Metadata = {
   title: {

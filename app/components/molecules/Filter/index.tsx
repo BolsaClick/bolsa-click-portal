@@ -194,7 +194,7 @@ const renderLevelTabs = () => (
             onInputChange={(inputValue) => handleCityChange(inputValue)}
           />
         </div>
-        <div className="w-full ">
+        <div className="w-full">
           {activeTab === 'graduacao' && (
           <ModalitySelect
             value={watch('modalidade')}

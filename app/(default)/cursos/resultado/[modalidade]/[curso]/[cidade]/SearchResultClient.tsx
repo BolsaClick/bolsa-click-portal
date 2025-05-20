@@ -52,8 +52,7 @@ const modalidade = params?.modalidade as string;
     rating: null,
   });
 
-useEffect(() => {
-  if (typeof window !== 'undefined') {
+  useEffect(() => {
     const saved = localStorage.getItem('searchParams');
     if (saved) {
       const parsed = JSON.parse(saved);
@@ -67,11 +66,11 @@ useEffect(() => {
           ? [formatModalidade(parsed.modalidade)]
           : [],
       }));
+
+      // Marca como pronto após carregar tudo
       setIsReady(true);
     }
-  }
-}, []);
-
+  }, []);
 
   function formatModalidade(value: string): string {
     switch (value.toLowerCase()) {

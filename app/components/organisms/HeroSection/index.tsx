@@ -3,9 +3,9 @@ import React, { useState, useEffect } from 'react';
 
 const heroTexts = [
   {
-    title: "Medicina com 50% OFF",
-    subtitle: "na Universidade Central",
-    description: "Realize seu sonho de ser médico com bolsas exclusivas"
+    title: "Administração com 85% OFF",
+    subtitle: "na Faculdade Anhanguera",
+    description: "Realize seu sonho de fazer administração com bolsas exclusivas"
   },
   {
     title: "Engenharia Civil",
@@ -13,8 +13,8 @@ const heroTexts = [
     description: "Vagas limitadas para o próximo semestre"
   },
   {
-    title: "Psicologia EAD",
-    subtitle: "mensalidades a partir de R$299",
+    title: "Psicologia",
+    subtitle: "mensalidades a partir de R$99,00",
     description: "Estude na melhor faculdade de psicologia do Brasil"
   }
 ];
@@ -56,9 +56,7 @@ const sectionBg = theme === 'anhanguera' ? 'bg-[#d63c06]' : 'bg-emerald-700'
             <p className="text-lg md:text-xl max-w-3xl mx-auto mb-8 text-emerald-100">
               {heroTexts[currentIndex].description}
             </p>
-            <button className="bg-bolsa-secondary hover:bg-bolsa-secondary/80 text-white duration-300 font-semibold px-8 py-3 rounded-lg transition-all transform  shadow-lg">
-              Garanta sua vaga
-            </button>
+       
           </div>
         </div>
 

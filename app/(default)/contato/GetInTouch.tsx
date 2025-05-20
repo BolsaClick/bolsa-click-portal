@@ -14,7 +14,7 @@ export default function GetInTouch() {
 
   const supportOptions = [
     {
-      icon: <MessageSquare className="h-12 w-12 text-[#8ee48a] mb-4" />,
+      icon: <MessageSquare className="h-12 w-12 text-bolsa-secondary mb-4" />,
       title: "Chat Online",
       description: "Converse em tempo real com nossa equipe de suporte das 8h às 20h em dias úteis.",
       cta: "Iniciar Chat",
@@ -22,7 +22,7 @@ export default function GetInTouch() {
       delay: 0
     },
     {
-      icon: <Phone className="h-12 w-12 text-[#8ee48a] mb-4" />,
+      icon: <Phone className="h-12 w-12 text-bolsa-secondary mb-4" />,
       title: "Telefone",
       description: "Prefere conversar por telefone? Nossa central está pronta para te atender.",
       cta: "Ligar Agora",
@@ -30,7 +30,7 @@ export default function GetInTouch() {
       delay: 0.2
     },
     {
-      icon: <Headset className="h-12 w-12 text-[#8ee48a] mb-4" />,
+      icon: <Headset className="h-12 w-12 text-bolsa-secondary mb-4" />,
       title: "Agendamento",
       description: "Agende um horário para conversar com um de nossos consultores educacionais.",
       cta: "Agendar Horário",
@@ -40,7 +40,7 @@ export default function GetInTouch() {
   ];
 
   return (
-    <section className="py-20 bg-[#00361f]">
+    <section className="py-20 bg-bolsa-primary">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
@@ -49,7 +49,7 @@ export default function GetInTouch() {
           <p className="text-lg text-white/80 max-w-3xl mx-auto">
             Escolha a melhor forma de contato para suas necessidades e entre em contato conosco.
           </p>
-          <div className="w-24 h-1 bg-[#8ee48a] mx-auto mt-4"></div>
+          <div className="w-24 h-1 bg-bolsa-secondary mx-auto mt-4"></div>
         </div>
 
         <div ref={ref} className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -64,11 +64,11 @@ export default function GetInTouch() {
               <div className="flex justify-center">
                 {option.icon}
               </div>
-              <h3 className="text-xl font-bold text-[#00361f] mb-3">{option.title}</h3>
+              <h3 className="text-xl font-bold text-bolsa-primbg-bolsa-primary mb-3">{option.title}</h3>
               <p className="text-gray-600 mb-6">{option.description}</p>
               <Link
                 href={option.link}
-                className="inline-flex items-center bg-[#f5f9f5] hover:bg-[#e5f5e5] text-[#00361f] font-medium px-5 py-3 rounded-md transition-all duration-300"
+                className="inline-flex items-center bg-emerald-50 hover:bg-emerald-100 text-bolsa-primbg-bolsa-primary font-medium px-5 py-3 rounded-md transition-all duration-300"
               >
                 {option.cta}
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -88,7 +88,7 @@ export default function GetInTouch() {
           </p>
           <Link
             href="/cursos"
-            className="inline-flex items-center bg-[#8ee48a] hover:bg-[#7ad176] text-[#00361f] font-medium px-8 py-4 rounded-md transition-all duration-300 text-lg"
+            className="inline-flex items-center bg-bolsa-secondary hover:bg-bolsa-secondary/75 text-white font-medium px-8 py-4 rounded-md transition-all duration-300 text-lg"
           >
             Explorar Bolsas Disponíveis
             <ArrowRight className="ml-2 h-5 w-5" />

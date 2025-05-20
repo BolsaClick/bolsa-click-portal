@@ -8,6 +8,25 @@ import Image from 'next/image'
 import { useEffect, useState } from 'react'
 
 export const Header = () => {
+  const [currentTheme, setCurrentTheme] = useState('bolsaclick')
+
+useEffect(() => {
+  if (typeof window !== 'undefined') {
+    setCurrentTheme(process.env.NEXT_PUBLIC_THEME || 'bolsaclick')
+  }
+}, [])
+const theme = process.env.NEXT_PUBLIC_THEME
+const sectionBg = theme === 'anhanguera' ? 'bg-[#d63c06]' : 'bg-emerald-700'
+
+
+const logoWhite = currentTheme === 'anhanguera'
+  ? '/assets/logo-anhanguera-bolsa-click-branco.svg'
+  : '/assets/logo-bolsa-click-branco.png'
+
+const logoColor = currentTheme === 'anhanguera'
+  ? '/assets/logo-anhanguera-bolsa-click.svg'
+  : '/assets/logo-bolsa-click-rosa.png'
+
   const [menuOpen, setMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -27,12 +46,18 @@ export const Header = () => {
       ? 'bg-white text-emerald-950'
       : isScrolled
         ? 'bg-white/30 backdrop-blur-lg shadow-lg text-emerald-950'
-        : 'bg-emerald-950'
+        : sectionBg
       }`}>
       <Container>
-        <div className="py-6 flex justify-between items-center">
+        <div className="py-4 flex justify-between items-center">
           <Link href="/">
-            {isScrolled ? <Image src="/assets/logo-bolsa-click-green-dark.svg" alt="Logo" width={130} height={33} /> : <Image src="/assets/logo-bolsa-click-white-green.svg" alt="Logo" width={130} height={30} />}
+           <Image
+              src={isScrolled ? logoColor : logoWhite}
+              alt="Logo"
+              width={100}
+              height={33}
+              priority
+            />
           </Link>
 
           <div className="lg:hidden flex items-center">
@@ -55,7 +80,12 @@ export const Header = () => {
           } z-50 lg:hidden`}
       >
         <div className="flex justify-between items-center p-6 bg-bolsa-primary text-white">
-          <Image src="/assets/logo-bolsa-click-white-green.svg" alt="Logo" width={130} height={30} />
+        <Image
+        src={logoWhite}
+        alt="Logo"
+        width={130}
+        height={30}
+      />
           <button onClick={toggleMenu} className="text-white text-3xl">
             <X size={32} />
           </button>

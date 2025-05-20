@@ -4,6 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { Linkedin, Twitter } from 'lucide-react';
+import Image from 'next/image';
 
 export default function Team() {
   const [ref, inView] = useInView({
@@ -46,7 +47,7 @@ export default function Team() {
     <section className="py-20 bg-white" id="nossa-equipe">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-[#00361f] mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-emerald-700 mb-4">
             Nossa Equipe
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
@@ -65,24 +66,26 @@ export default function Team() {
               transition={{ duration: 0.7, delay: member.delay, ease: "easeOut" }}
             >
               <div className="relative pt-[100%]">
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#00361f]/70">
-                  <img 
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-emerald-700/70">
+                  <Image 
                     src={member.image} 
                     alt={member.name} 
                     className="w-full h-full object-cover"
+                    width={50}
+                    height={50}
                   />
                 </div>
               </div>
               <div className="p-6 flex-grow">
-                <h3 className="text-xl font-bold text-[#00361f] mb-1">{member.name}</h3>
-                <p className="text-[#8ee48a] font-medium mb-4">{member.role}</p>
+                <h3 className="text-xl font-bold text-emerald-700 mb-1">{member.name}</h3>
+                <p className="text-emerald-300 font-medium mb-4">{member.role}</p>
                 <p className="text-gray-600 text-sm">{member.bio}</p>
               </div>
               <div className="flex justify-center gap-4 p-4 border-t border-gray-100">
-                <a href="#" className="text-gray-500 hover:text-[#00361f] transition-colors">
+                <a href="#" className="text-gray-500 hover:text-emerald-700 transition-colors">
                   <Linkedin className="h-5 w-5" />
                 </a>
-                <a href="#" className="text-gray-500 hover:text-[#00361f] transition-colors">
+                <a href="#" className="text-gray-500 hover:text-emerald-700 transition-colors">
                   <Twitter className="h-5 w-5" />
                 </a>
               </div>

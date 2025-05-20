@@ -10,7 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const state = decodeURIComponent(cookieStore.get('state')?.value || '')
 
   const title = courseName
-    ? `Cursos de ${courseName} com até 80% de desconto${city && state ? ` em ${city} - ${state}` : ''}`
+    ? `Cursos de ${courseName} com até 80% de desconto${city && state  ? ` em ${city} - ${state}` : ''}`
     : 'Cursos com até 80% de desconto | Bolsa Click'
 
   const description = courseName

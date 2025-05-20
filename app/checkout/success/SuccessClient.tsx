@@ -75,7 +75,7 @@ export default function SuccessClient() {
     paymentMethod === 'credit_card' ? 'Cartão de Crédito' : 'PIX'
 
   return (
-    <div className="w-full max-w-3xl mx-auto p-4 relative">
+    <div className="w-full mt-[90px] max-w-3xl mx-auto p-4 relative">
       {/* Canvas para o efeito de confete */}
       <canvas
         ref={confettiCanvasRef}

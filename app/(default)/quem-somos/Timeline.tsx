@@ -37,18 +37,18 @@ export default function Timeline() {
     <section className="py-20 bg-white" id="nossa-historia">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-[#00361f] mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-emerald-700 mb-4">
             Nossa História
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
             Conheça os principais marcos da nossa trajetória na transformação do acesso à educação no Brasil.
           </p>
-          <div className="w-24 h-1 bg-[#8ee48a] mx-auto mt-4"></div>
+          <div className="w-24 h-1 bg-emerald-300 mx-auto mt-4"></div>
         </div>
 
         <div ref={ref} className="relative max-w-4xl mx-auto">
           {/* Timeline center line */}
-          <div className="absolute left-0 md:left-1/2 transform md:-translate-x-1/2 h-full w-1 bg-[#00361f]/20 z-0"></div>
+          <div className="absolute left-0 md:left-1/2 transform md:-translate-x-1/2 h-full w-1 bg-emerald-700/20 z-0"></div>
 
           {/* Timeline items */}
           {timelineItems.map((item, index) => (
@@ -65,7 +65,7 @@ export default function Timeline() {
               <div className="flex-none md:w-1/2"></div>
               
               {/* Center circle */}
-              <div className="absolute left-0 md:left-1/2 transform md:-translate-x-1/2 w-10 h-10 rounded-full bg-[#00361f] flex items-center justify-center z-20">
+              <div className="absolute left-0 md:left-1/2 transform md:-translate-x-1/2 w-10 h-10 rounded-full bg-emerald-700 flex items-center justify-center z-20">
                 <Clock className="h-5 w-5 text-white" />
               </div>
               
@@ -73,10 +73,10 @@ export default function Timeline() {
               <div className={`flex-none md:w-1/2 bg-white p-6 rounded-xl shadow-md ${
                 index % 2 === 0 ? 'md:text-right md:pr-12' : 'md:pl-12'
               }`}>
-                <div className="bg-[#00361f] text-white py-1 px-3 rounded-md inline-block mb-2">
+                <div className="bg-emerald-700 text-white py-1 px-3 rounded-md inline-block mb-2">
                   {item.year}
                 </div>
-                <h3 className="text-xl font-bold text-[#00361f] mb-2">{item.title}</h3>
+                <h3 className="text-xl font-bold text-emerald-700 mb-2">{item.title}</h3>
                 <p className="text-gray-600">{item.description}</p>
               </div>
             </motion.div>

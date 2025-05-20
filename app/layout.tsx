@@ -6,41 +6,36 @@ import { Toaster } from 'sonner'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/utils/react-query'
 import { ClientProviders } from './components/providers/ClientProviders'
+import { getCurrentTheme } from './lib/themes'
 
+const theme = getCurrentTheme()
 
 export const metadata: Metadata = {
   title: {
-    default: 'Bolsa Click',
-    template: '%s - Bolsa Click',
+    default: theme.shortTitle,
+    template: `%s - ${theme.shortTitle}`,
   },
-  description: 'Economize com bolsas de estudo com até 80% de desconto em faculdades de todo o Brasil.',
-  other: {
-    'application/ld+json': JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "Bolsa Click",
-      "url": "https://www.bolsaclick.com.br",
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": "https://www.bolsaclick.com.br/cursos?courseName={search_term_string}",
-        "query-input": "required name=search_term_string"
-      }
-    })
-  },
-  keywords: ['bolsas de estudo', 'graduação EAD', 'faculdades com desconto', 'educação superior', 'bolsa para faculdade', 'bolsa para faculdade feminina', 'bolsa para faculdade masculina', 'bolsa click', 'bolsa click faculdade', 'bolsa click graduação', 'bolsa click EAD', 'bolsa click presencial'],
+  description: theme.description,
+  keywords: [
+    'bolsas de estudo',
+    'graduação EAD',
+    'faculdades com desconto',
+    'educação superior',
+    'bolsa para faculdade',
+    'bolsa click',
+    theme.shortTitle.toLowerCase(),
+  ],
   openGraph: {
-    title: 'Bolsa Click - Até 80% de Desconto em Faculdades',
-    description: 'Compare bolsas de estudo com até 80% de desconto em faculdades de todo o Brasil.',
-  
-  
-    url: 'https://www.bolsaclick.com.br',
-    siteName: 'Bolsa Click',
+    title: theme.title,
+    description: theme.description,
+    url: theme.siteUrl,
+    siteName: theme.name,
     images: [
       {
-        url: 'https://www.bolsaclick.com.br/favicon.png',
+        url: theme.ogImage,
         width: 1200,
         height: 630,
-        alt: 'Bolsa Click',
+        alt: theme.name,
       },
     ],
     locale: 'pt_BR',
@@ -48,17 +43,30 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    site: '@bolsaclick',
-    title: 'Bolsa Click - Até 80% de Desconto em Faculdades',
-    description: 'Compare bolsas de estudo com até 80% de desconto em faculdades de todo o Brasil.',
-    images: ['https://www.bolsaclick.com.br/favicon.png'],
+    site: theme.twitter,
+    title: theme.title,
+    description: theme.description,
+    images: [theme.ogImage],
   },
   icons: {
-    icon: '/favicon.png',
-    shortcut: '/favicon.png',
-    apple: '/favicon.png',
+    icon: theme.favicon,
+    shortcut: theme.favicon,
+    apple: theme.favicon,
   },
   robots: 'index, follow',
+  other: {
+    'application/ld+json': JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: theme.name,
+      url: theme.siteUrl,
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: `${theme.siteUrl}/cursos?courseName={search_term_string}`,
+        'query-input': 'required name=search_term_string',
+      },
+    }),
+  },
 }
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

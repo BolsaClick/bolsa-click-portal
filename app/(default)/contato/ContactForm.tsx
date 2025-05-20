@@ -90,7 +90,7 @@ export default function ContactForm() {
     }
   };
 
-  const inputClasses = "w-full px-4 py-3 bg-white border rounded-md focus:outline-none focus:ring-2 focus:ring-[#00361f]/30 transition-all duration-200";
+  const inputClasses = "w-full px-4 py-3 bg-white border rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400/30 transition-all duration-200";
   const errorClasses = "text-red-500 text-sm mt-1";
 
   return (
@@ -101,11 +101,11 @@ export default function ContactForm() {
       animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
       transition={{ duration: 0.7, ease: "easeOut" }}
     >
-      <h2 className="text-2xl md:text-3xl font-bold text-[#00361f] mb-2">Entre em contato</h2>
+      <h2 className="text-2xl md:text-3xl font-bold text-emerald-400 mb-2">Entre em contato</h2>
       <p className="text-gray-600 mb-8">Preencha o formulário abaixo para nos enviar uma mensagem.</p>
       
       {submitted ? (
-        <div className="bg-green-50 border border-green-200 text-green-800 rounded-md p-4 mb-6">
+        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-md p-4 mb-6">
           <p className="font-medium">Mensagem enviada com sucesso!</p>
           <p className="mt-1">Agradecemos seu contato. Retornaremos em breve.</p>
         </div>
@@ -220,7 +220,7 @@ export default function ContactForm() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`w-full bg-[#00361f] hover:bg-[#00482a] text-white font-medium py-3 px-6 rounded-md transition-all duration-300 flex items-center justify-center ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+            className={`w-full bg-emerald-400 hover:bg-emerald-500 text-white font-medium py-3 px-6 rounded-md transition-all duration-300 flex items-center justify-center ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
             {isSubmitting ? (
               <>

@@ -29,7 +29,7 @@ export default function Stats() {
               animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ duration: 0.6, delay: stat.delay, ease: "easeOut" }}
             >
-              <h3 className="text-3xl sm:text-4xl font-bold text-[#00361f] mb-2">
+              <h3 className="text-3xl sm:text-4xl font-bold text-emerald-700 mb-2">
                 {stat.number}
               </h3>
               <p className="text-sm sm:text-base text-gray-600">{stat.label}</p>

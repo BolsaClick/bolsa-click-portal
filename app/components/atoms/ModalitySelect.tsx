@@ -53,7 +53,7 @@ export const ModalitySelect: React.FC<ModalitySelectProps> = ({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg  focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors focus:outline-none focus:ring-2 focus:ring-red/20 focus:border-red appearance-none cursor-pointer"
+        className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg  focus:ring-bolsa-secondary focus:border-bolsa-secondary outline-none transition-colors focus:outline-none focus:ring-2 focus:ring-red/20 focus:border-red appearance-none cursor-pointer"
       >
         {modalities.map((modality) => (
           <option key={modality.value} value={modality.value}>

@@ -44,13 +44,13 @@ export default function Faq() {
     <section className="py-20 bg-white">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-[#00361f] mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-emerald-300 mb-4">
             Perguntas Frequentes
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
             Encontre respostas para as dúvidas mais comuns sobre o BolsaClick e nossos serviços.
           </p>
-          <div className="w-24 h-1 bg-[#8ee48a] mx-auto mt-4"></div>
+          <div className="w-24 h-1 bg-emerald-200 mx-auto mt-4"></div>
         </div>
 
         <motion.div
@@ -68,14 +68,14 @@ export default function Faq() {
                   className="w-full px-6 py-4 flex items-center justify-between text-left focus:outline-none"
                 >
                   <div className="flex items-center">
-                    <HelpCircle className="h-5 w-5 text-[#8ee48a] mr-3 flex-shrink-0" />
-                    <span className="font-medium text-[#00361f]">{item.question}</span>
+                    <HelpCircle className="h-5 w-5 text-emerald-200 mr-3 flex-shrink-0" />
+                    <span className="font-medium text-emerald-300">{item.question}</span>
                   </div>
                   <div className="ml-4 flex-shrink-0">
                     {openItem === index ? (
-                      <ChevronUp className="h-5 w-5 text-[#00361f]" />
+                      <ChevronUp className="h-5 w-5 text-emerald-300" />
                     ) : (
-                      <ChevronDown className="h-5 w-5 text-[#00361f]" />
+                      <ChevronDown className="h-5 w-5 text-emerald-300" />
                     )}
                   </div>
                 </button>
@@ -94,7 +94,7 @@ export default function Faq() {
             <p className="text-gray-600 mb-4">Não encontrou o que procurava?</p>
             <a 
               href="#form-contato" 
-              className="inline-flex items-center bg-[#00361f] hover:bg-[#00482a] text-white font-medium px-6 py-3 rounded-md transition-all duration-300"
+              className="inline-flex items-center bg-emerald-300 hover:bg-emerald-600 text-white font-medium px-6 py-3 rounded-md transition-all duration-300"
             >
               Entre em contato
             </a>

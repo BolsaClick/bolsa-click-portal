@@ -20,10 +20,10 @@ export default function Mission() {
     <section className="py-20 bg-white" id="nossa-missao">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-[#00361f] mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-emerald-600 mb-4">
             Nossa Missão e Visão
           </h2>
-          <div className="w-24 h-1 bg-[#8ee48a] mx-auto"></div>
+          <div className="w-24 h-1 bg-emerald-300 mx-auto"></div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-10">
@@ -35,11 +35,11 @@ export default function Mission() {
             transition={{ duration: 0.7, ease: "easeOut" }}
           >
             <div className="mb-6 flex justify-center">
-              <div className="w-16 h-16 rounded-full bg-[#00361f]/10 flex items-center justify-center">
-                <GraduationCap className="h-8 w-8 text-[#00361f]" />
+              <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                <GraduationCap className="h-8 w-8 text-emerald-500" />
               </div>
             </div>
-            <h3 className="text-2xl font-bold text-[#00361f] mb-4 text-center">Nossa Missão</h3>
+            <h3 className="text-2xl font-bold text-emerald-500 mb-4 text-center">Nossa Missão</h3>
             <p className="text-gray-700 mb-4 text-center">
               Democratizar o acesso à educação superior no Brasil, conectando 
               estudantes com instituições de ensino de qualidade através de bolsas 
@@ -60,11 +60,11 @@ export default function Mission() {
             transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
           >
             <div className="mb-6 flex justify-center">
-              <div className="w-16 h-16 rounded-full bg-[#00361f]/10 flex items-center justify-center">
-                <Target className="h-8 w-8 text-[#00361f]" />
+              <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                <Target className="h-8 w-8 text-emerald-500" />
               </div>
             </div>
-            <h3 className="text-2xl font-bold text-[#00361f] mb-4 text-center">Nossa Visão</h3>
+            <h3 className="text-2xl font-bold text-emerald-500 mb-4 text-center">Nossa Visão</h3>
             <p className="text-gray-700 mb-4 text-center">
               Ser a principal plataforma de acesso à educação superior no Brasil, 
               reconhecida pela excelência em conectar estudantes com oportunidades 

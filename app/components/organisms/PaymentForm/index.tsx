@@ -83,7 +83,6 @@ export default function PaymentForm({
     return options
   }
   const handleFormSubmit = async (formData: FormSchema) => {
-    console.log('Dados do pagamento:', formData)
     const paymentData = {
       ...formData,
       paymentMethod: activeTab,

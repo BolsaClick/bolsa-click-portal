@@ -6,15 +6,15 @@ import { useForm } from 'react-hook-form'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import Container from '@/app/components/atoms/Container'
-import Skeleton from '@/app/components/atoms/Skeleton'
-import CourseCard from '@/app/components/atoms/CourseCard'
-import { CourseJsonLd } from 'next-seo'
-import React from 'react'
+import React, { useState } from 'react'
+import CourseCardNew from '@/app/components/CourseCardNew'
+import { ArrowLeft,  LayoutGrid, LayoutList } from 'lucide-react'
 
 export default function CoursesClient() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { handleSubmit, setValue } = useForm()
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const modalidade = searchParams.get('modalidade') || ''
   const courseId = searchParams.get('course') || ''
@@ -55,85 +55,91 @@ export default function CoursesClient() {
   }
 
   return (
+    <div className='pb-6'>
+       <header className="w-full bg-bolsa-primary shadow-sm z-50">
+        <div className='pt-24 pb-6'>
+          <div className="p-4 mx-auto max-w-7xl">
+            <div className="flex flex-col md:flex-row items-center justify-between mb-4">
+              <button onClick={router.back} className="hidden sm:inline-flex items-center justify-center rounded-md py-2.5 px-4 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 bg-bolsa-secondary text-neutral-50 hover:bg-slate-600 focus:ring-bolsa-secondary/20">
+                <ArrowLeft size={20} className="mr-2" />
+                <span className="hidden sm:inline">Voltar para Busca</span>
+              </button>
+              <div className="flex items-center space-x-2 flex-shrink-0">
+                <div className="hidden sm:flex items-center space-x-2 bg-white rounded-lg border border-neutral-200 p-1">
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2 rounded ${viewMode === 'grid' ? 'bg-emerald-50 text-bolsa-secondary' : 'text-neutral-500 hover:bg-neutral-50'}`}
+                  >
+                    <LayoutGrid size={20} />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`p-2 rounded ${viewMode === 'list' ? 'bg-emerald-50 text-bolsa-secondary' : 'text-neutral-500 hover:bg-neutral-50'}`}
+                  >
+                    <LayoutList size={20} />
+                  </button>
+                </div>
+
+              </div>
+            </div>
+
+           
+          </div>
+        </div>
+      </header>
     <Container>
       
       {filteredCourses.length > 0 && (
-        <section aria-label="Cursos com bolsa">
+        <section aria-label="Cursos com bolsa Bolsa Click" className='pb-6'>
           <h1 className="text-2xl md:text-3xl font-bold text-bolsa-primary text-center mt-10">
-            {courseName
-              ? `Cursos de ${courseName} com até 80% de desconto${city && state ? ` em ${city} - ${state}` : ''}`
-              : 'Todos os cursos com bolsa de estudo disponíveis'}
+            Todos os cursos com bolsa de estudo disponíveis
           </h1>
         </section>
       )}
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        {filteredCourses.length === 0 && !isLoading && (
-          <div className="text-center w-full flex justify-center items-center flex-col h-screen text-gray-700">
-            <p className="text-lg font-semibold mb-4">
-              Infelizmente, não encontramos cursos disponíveis para a modalidade &quot;{modalidade}&quot;.
-            </p>
-            <p className="text-sm text-gray-600 mb-4">
-              Mas não se preocupe, você pode explorar outras modalidades:
-            </p>
-            <ul className="space-y-2">
-              {['distancia', 'presencial', 'semipresencial'].map((tipo) => {
-                const url = `/cursos?modalidade=${tipo}&course=${courseId}&courseName=${encodeURIComponent(courseName)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`
-                return (
-                  <li key={tipo}>
-                    <a href={url} className="text-blue-500 hover:underline capitalize">
-                      {tipo === 'distancia' ? 'A distância' : tipo === 'presencial' ? 'Presencial' : 'Semipresencial'}
-                    </a>
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
-        )}
-        <div className="mt-10 w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isLoading
-            ? Array.from({ length: 12 }).map((_, index) => (
-              <div key={`skeleton-${index}`} className="bg-white shadow-lg rounded-lg overflow-hidden w-full p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <Skeleton width="48px" height="48px" round />
-                  <Skeleton width="64px" />
-                </div>
-                <Skeleton width="75%" />
-                <div className="flex mt-2 justify-between items-center mb-4 text-sm text-gray-500">
-                  <div className="flex flex-col w-3/4">
-                    <Skeleton height="16px" className="mb-2" />
-                    <Skeleton height="16px" width="75%" className="mb-2" />
+
+              {isLoading ? (
+              <div
+                className={`grid ${viewMode === 'grid'
+                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6'
+                  : 'grid-cols-1 gap-4'
+                  }`}
+              >
+                {Array.from({ length: 6 }).map((_, i) => (
+
+
+                  <div key={i} className="bg-white rounded-xl shadow-card p-6 animate-pulse space-y-4">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2 mt-4"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2 mt-4"></div>
+                    <div className="h-8 bg-gray-200 rounded w-full mt-6"></div>
                   </div>
-                  <Skeleton height="16px" width="96px" />
-                </div>
-                <div className="flex justify-start gap-2 items-center mb-4">
-                  <Skeleton height="24px" width="96px" />
-                </div>
-                <div className="flex justify-center mt-4">
-                  <Skeleton height="40px" width="160px" />
-                </div>
+
+                ))}
               </div>
-            ))
-            : filteredCourses.map((course: any, index: number) => (
-              <React.Fragment key={`fragment-${course.id || index}`}>
-              <CourseCard
-                course={course}
-                courseName={courseName || course.courseName}
-                setFormData={setValue}
-                triggerSubmit={handleSubmit(onSubmit)}
-              />
-              <CourseJsonLd
-                courseName={course.courseName}
-                description={`Bolsa de estudo para o curso de ${course.courseName} em ${course.unitCity} - ${course.unitState}`}
-                provider={{
-                  name: 'Bolsa Click',
-                  url: 'https://www.bolsaclick.com.br',
-                }}
-              />
-            </React.Fragment>
-            ))}
-        </div>
+            ) : (
+              <div className={`grid ${viewMode === 'grid'
+                ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6'
+                : 'grid-cols-1 gap-4'
+                }`}>
+                {filteredCourses.map((course: any, index: number) => (
+                  <CourseCardNew
+                    key={index}
+                    courseName={course.courseName}
+                    course={course}
+                    setFormData={setValue}
+                    viewMode={viewMode}
+                    triggerSubmit={handleSubmit(onSubmit)}
+                  />
+                ))}
+              </div>
+            )}
+
       </form>
     </Container>
+    </div>
   )
 }

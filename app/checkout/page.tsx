@@ -3,7 +3,7 @@ import { Metadata } from 'next'
 import CheckoutClient from './CheckoutClient'
 
 export const metadata: Metadata = {
-  title: 'Matrícula | Bolsa Click',
+  title: 'Matrícula',
   description: 'Realize sua matrícula com segurança e aproveite seu desconto.',
 }
 

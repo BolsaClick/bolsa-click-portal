@@ -1,26 +1,37 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react'
-import { Controller } from 'react-hook-form'
+import { Control, Controller } from 'react-hook-form'
 import { ReactNode } from 'react'
 
-type ComboBoxProps = {
-  control: any
+type CourseOption = {
+  id: string
   name: string
-  options: { id: string; name: string }[] | { state: string; city: string }[]
-  placeholder?: string
-  onInputChange?: (value: string) => void
-  value?: any
-  icon?: ReactNode // <- novo
+  courseIds?: string[]
 }
 
-export const ComboBox: React.FC<ComboBoxProps> = ({
+type CityOption = {
+  city: string
+  state: string
+}
+
+type ComboBoxProps<T> = {
+  control: Control<any>
+  name: string
+  options: T[]
+  placeholder?: string
+  onInputChange?: (value: string) => void
+  value?: T
+  icon?: ReactNode
+}
+
+export const ComboBox = <T extends CourseOption | CityOption>({
   control,
   name,
   options,
   placeholder = 'Selecione uma opção',
   onInputChange,
   icon,
-}) => {
+}: ComboBoxProps<T>) => {
   const [inputValue, setInputValue] = useState('')
   const [isOpen, setIsOpen] = useState(false)
 
@@ -74,7 +85,7 @@ export const ComboBox: React.FC<ComboBoxProps> = ({
                 }}
                 onFocus={() => setIsOpen(true)}
                 onBlur={() => setTimeout(() => setIsOpen(false), 200)}
-               className={`w-full ${icon ? 'pl-10' : 'pl-4'}  pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors`}
+               className={`w-full ${icon ? 'pl-10' : 'pl-4'}  pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bolsa-secondary focus:border-bolsa-secondary outline-none transition-colors`}
                 placeholder={placeholder}
               />
               {isOpen && filteredOptions.length > 0 && (
@@ -99,6 +110,7 @@ export const ComboBox: React.FC<ComboBoxProps> = ({
                           selectedValue = {
                             id: option.id,
                             name: option.name,
+                            courseIds: (option as CourseOption).courseIds ?? [],
                           }
                         }
 

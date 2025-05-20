@@ -12,19 +12,27 @@ import {
 
 import { useQuery } from '@tanstack/react-query'
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { getShowFiltersCoursesPos } from '@/app/lib/api/get-courses-filter-pos';
 
 export default function SearchResultPos() {
+
+
+
+const searchParams = useSearchParams();
+const courseName = searchParams.get('courseName') ?? '';
+const courseId = searchParams.get('courseId') ?? '';
+const city = searchParams.get('city') ?? '';
+const state = searchParams.get('state') ?? '';
+const courseIdExternal = searchParams.get('courseIdExternal') ?? '';
+
+
   const router = useRouter()
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9;
   const [isReady, setIsReady] = useState(false);
-  const [courseExternalId, setCourseExternalId] = useState<string>('');
   const [durationFilter, setDurationFilter] = useState<string | null>(null)
-  const [courseName, setCourseName] = useState<string>('');
-  const [state, setState] = useState<string>('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
@@ -34,24 +42,18 @@ export default function SearchResultPos() {
     rating: null,
   });
 
-  useEffect(() => {
-    const saved = localStorage.getItem('searchParams');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setCourseExternalId(parsed.courseIdExternal || '');
-      setCourseName(parsed.courseName || '');
-      setState(parsed.state || '');
-      setFilters((prev) => ({
-        ...prev,
-        city: parsed.city || '',
-      }));
-      setIsReady(true);
-    }
-  }, []);
-
+useEffect(() => {
+  if (courseId && city && state) {
+    setFilters((prev) => ({
+      ...prev,
+      city,
+    }));
+    setIsReady(true);
+  }
+}, [ courseId, city, state]);
   const { data: showCourses, isLoading } = useQuery({
-    queryFn: () => getShowFiltersCoursesPos(courseExternalId),
-    queryKey: ['courses', courseExternalId],
+    queryFn: () => getShowFiltersCoursesPos(courseIdExternal),
+    queryKey: ['courses', courseIdExternal],
     enabled: isReady
   });
 
@@ -75,7 +77,7 @@ export default function SearchResultPos() {
     const offerWithCourseName = {
       ...offer,
       courseName,
-      courseExternalId,
+      courseIdExternal,
     }
     localStorage.removeItem('selectedPosOffer')
     localStorage.setItem(

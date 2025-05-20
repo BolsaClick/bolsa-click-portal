@@ -65,7 +65,7 @@ module.exports = {
   },
   additionalPaths: async () => {
     const paths = coursePages.map(({ slug, city, state, courseId, modalidade }) => ({
-      loc: `/cursos/resultado/${modalidade}/${slug}/${city}?city=${city}&&state=${state}courseId=${courseId}&courseName=${encodeURIComponent(name)}`,
+      loc: `/cursos/resultado/${modalidade}/${slug}/${city}?city=${city}&&state=${state}courseId=${courseId}&courseName=${encodeURIComponent(slug)}`,
       changefreq: 'weekly',
       priority: 0.8,
     }))

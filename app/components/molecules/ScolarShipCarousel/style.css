@@ -33,7 +33,7 @@
 }
 
 .carousel-item {
-  @apply px-4;
+  @apply px-4 pb-6;
 }
 
 .carousel-dots {
@@ -53,7 +53,6 @@
 }
 
 .scholarship-card:hover {
-  @apply shadow-xl;
   transform: translateY(-5px);
 }
 

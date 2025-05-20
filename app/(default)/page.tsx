@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import HeroSection from '../components/organisms/HeroSection'
 import Cta from '../components/organisms/Cta'
-import HowWork from '../components/organisms/Recommended/HowWork'
 import Filter from '../components/molecules/Filter'
 import { getCurrentTheme } from '../lib/themes'
 import ScholarshipCarousel from '../components/molecules/ScolarShipCarousel'
+import AboutSection from '../components/molecules/AboutSection'
+import HowWork from '../components/organisms/Recommended/HowWork'
 
 const theme = getCurrentTheme()
 
@@ -75,6 +76,7 @@ export default function HomePage() {
       <Filter />
       <Cta />
       <ScholarshipCarousel />
+      <AboutSection />
       <HowWork />
     </>
   )

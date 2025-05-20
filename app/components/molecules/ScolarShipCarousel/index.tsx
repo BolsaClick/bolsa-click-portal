@@ -188,7 +188,6 @@ const ScholarshipCarousel: React.FC = () => {
       location: `${city} - ${stateFinal}`
     };
   });
-
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 640) setItemsToShow(1);

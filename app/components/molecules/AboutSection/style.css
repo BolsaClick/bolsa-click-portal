@@ -1,0 +1,80 @@
+.about-section {
+  position: relative;
+}
+
+.about-image img {
+  transition: transform 0.5s ease;
+}
+
+.about-image:hover img {
+  transform: scale(1.03);
+}
+
+.about-button {
+  @apply bg-blue-950 hover:bg-blue-900 text-white font-bold py-3 px-8 rounded-lg transition-colors duration-300 shadow-md;
+}
+
+.stats-grid {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-4 mb-12 mt-8;
+}
+
+.stat-item {
+  @apply text-center p-4;
+}
+
+.stat-number {
+  @apply text-3xl font-bold text-red-500 mb-2;
+}
+
+.stat-label {
+  @apply text-gray-600 text-sm;
+}
+
+.testimonials-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12;
+}
+
+.testimonial-card {
+  @apply bg-white rounded-lg shadow-md p-6 relative;
+  transition: transform 0.3s ease;
+}
+
+.testimonial-card:hover {
+  transform: translateY(-5px);
+}
+
+.testimonial-quote {
+  @apply text-gray-600 italic mb-4;
+}
+
+.testimonial-author {
+  @apply flex items-center;
+}
+
+.author-image {
+  @apply w-12 h-12 rounded-full mr-4;
+}
+
+.author-info h4 {
+  @apply font-semibold text-blue-950;
+}
+
+.author-info p {
+  @apply text-sm text-gray-500;
+}
+
+.quick-stats {
+  @apply flex flex-wrap justify-center gap-8 mb-12 text-center;
+}
+
+.quick-stat {
+  @apply flex flex-col items-center;
+}
+
+.quick-stat-number {
+  @apply text-4xl font-bold text-red-500 mb-2;
+}
+
+.quick-stat-label {
+  @apply text-gray-700;
+}

@@ -1,26 +1,37 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react'
-import { Controller } from 'react-hook-form'
+import { Control, Controller } from 'react-hook-form'
 import { ReactNode } from 'react'
 
-type ComboBoxProps = {
-  control: any
+type CourseOption = {
+  id: string
   name: string
-  options: { id: string; name: string }[] | { state: string; city: string }[]
-  placeholder?: string
-  onInputChange?: (value: string) => void
-  value?: any
-  icon?: ReactNode // <- novo
+  courseIds?: string[]
 }
 
-export const ComboBox: React.FC<ComboBoxProps> = ({
+type CityOption = {
+  city: string
+  state: string
+}
+
+type ComboBoxProps<T> = {
+  control: Control<any>
+  name: string
+  options: T[]
+  placeholder?: string
+  onInputChange?: (value: string) => void
+  value?: T
+  icon?: ReactNode
+}
+
+export const ComboBox = <T extends CourseOption | CityOption>({
   control,
   name,
   options,
   placeholder = 'Selecione uma opção',
   onInputChange,
   icon,
-}) => {
+}: ComboBoxProps<T>) => {
   const [inputValue, setInputValue] = useState('')
   const [isOpen, setIsOpen] = useState(false)
 
@@ -99,6 +110,7 @@ export const ComboBox: React.FC<ComboBoxProps> = ({
                           selectedValue = {
                             id: option.id,
                             name: option.name,
+                            courseIds: (option as CourseOption).courseIds ?? [],
                           }
                         }
 

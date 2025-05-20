@@ -28,11 +28,10 @@ import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import FormCheckout from '../components/organisms/FormCheckout'
+import { createStudentCogna } from '../lib/api/post-student-cogna'
 
 
 
-// import { createStudent } from '../../../api/post-student'
-// import { createStudentCogna } from '../../../api/post-student-cogna'
 
 
 const formSchema = z.object({
@@ -136,8 +135,8 @@ const CheckoutClient = () => {
       const delay = (ms: number) =>
         new Promise((resolve) => setTimeout(resolve, ms))
       await delay(2000)
-      // const studentPayload = studentData(data, offerData)
-      // await createStudentCogna(studentPayload)
+      const studentPayload = studentData(data, offerData)
+      await createStudentCogna(studentPayload)
     } catch (error) {
       console.error('Erro ao criar aluno:', error)
       toast.error(
@@ -323,16 +322,6 @@ const CheckoutClient = () => {
 
   const economy = montlyFeeFrom * 48
 
-  const montlyFee = () => {
-    if (
-      Array.isArray(renderPageData?.lateEnrollment?.installments) &&
-      renderPageData.lateEnrollment.installments.length > 0
-    ) {
-      return renderPageData.lateEnrollment.installments[0].netValue
-    }
-
-    return renderPageData.montlyFeeTo
-  }
   const fetchUpdates = async () => {
     if (!paymentConfirmedId) {
       return false
@@ -396,7 +385,27 @@ const CheckoutClient = () => {
     }
   }, [paymentConfirmedId])
 
-  const payToday = 19.99 + (montlyFee() || 0)
+  
+  const payToday = 5
+  // const payToday = 19.99 + (renderPageData.montlyFeeTo || 0)
+
+  // 🔁 Limpa localStorage ao sair da página
+  useEffect(() => {
+    const clearStorage = () => {
+      localStorage.removeItem('selectedCourse')
+      localStorage.removeItem('selectedPosOffer')
+    }
+
+    window.addEventListener('pagehide', clearStorage)
+    window.addEventListener('beforeunload', clearStorage)
+
+    return () => {
+      window.removeEventListener('pagehide', clearStorage)
+      window.removeEventListener('beforeunload', clearStorage)
+    }
+  }, [])
+
+
 
   return (
     <>
@@ -433,7 +442,7 @@ const CheckoutClient = () => {
                     </span>
                     por{' '}
                     <span className="font-bold">
-                      {formatCurrency(Number(montlyFee()))}
+                      {formatCurrency(renderPageData.montlyFeeTo)}
                     </span>
                   </p>
                 </div>
@@ -445,7 +454,7 @@ const CheckoutClient = () => {
                   </h2>
                   <p className="text-sm font-bold text-gray-500 flex justify-between mt-3">
                     Pagar a 1ª mensalidade{' '}
-                    <span>{formatCurrency(Number(montlyFee()))}</span>
+                    <span>{formatCurrency(renderPageData.montlyFeeTo)}</span>
                   </p>
                   <p className="text-sm text-gray-500 flex justify-between mt-3">
                     Taxa de serviço Bolsa Click
@@ -526,7 +535,7 @@ const CheckoutClient = () => {
                   </span>
                 </div>
                 <span className="font-bold text-xl">
-                  {formatCurrency(Number(montlyFee()))}
+                  {formatCurrency(renderPageData.montlyFeeTo)}
                 </span>
               </div>
             </div>

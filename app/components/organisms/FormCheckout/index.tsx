@@ -6,8 +6,8 @@ import { validarCPF } from '@/utils/cpf-validate'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ChevronRight } from 'lucide-react'
 import { useEffect } from 'react'
-import {  useForm } from 'react-hook-form'
-import { useHookFormMask   } from 'use-mask-input'
+import { useForm } from 'react-hook-form'
+import { useHookFormMask } from 'use-mask-input'
 
 import { z } from 'zod'
 
@@ -31,10 +31,12 @@ const formSchema = z.object({
   gender: z.enum(['masculino', 'feminino'], {
     errorMap: () => ({ message: 'Gênero é obrigatório' }),
   }),
+  plan: z.string().optional(),
 })
 
 type FormSchema = z.infer<typeof formSchema>
-const FormCheckout = ({ onSubmit, disabled, setEmail }: any) => {
+const FormCheckout = ({ onSubmit, disabled, setEmail, isPostGraduation,
+  plans, }: any) => {
   const {
     register,
     handleSubmit,
@@ -201,7 +203,31 @@ const FormCheckout = ({ onSubmit, disabled, setEmail }: any) => {
             />
           </div>
         </div>
-
+        {isPostGraduation && (
+          <div className="w-full mb-4">
+            <label>Plano de Pagamento</label>
+            {plans && plans.length > 0 ? (
+              <select
+                {...register('plan')}
+                className="w-full px-4 py-2 border rounded-md focus:outline-none"
+              >
+                <option value="">Selecione um plano</option>
+                {plans.map((plan: any) => (
+                  <option key={plan.id} value={plan.id}>
+                    {`${plan.numberOfInstallments}x de R$ ${Number(plan.installmentValue).toFixed(2).replace('.', ',')}`}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="text-sm text-gray-500 italic">
+                Carregando planos...
+              </p>
+            )}
+            {errors.plan && (
+              <p className="text-red-500 text-sm">{errors.plan.message}</p>
+            )}
+          </div>
+        )}
         <label className="flex items-center w-full text-sm md:flex-row mt-2 font-medium text-gray-700">
           <input type="checkbox" {...register('whatsapp')} className="mr-2" />
           Quero receber mensagens pelo WhatsApp

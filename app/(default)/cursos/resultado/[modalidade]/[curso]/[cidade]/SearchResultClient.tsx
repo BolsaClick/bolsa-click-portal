@@ -13,7 +13,7 @@ import {
 
 import { useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 
 import CourseCardNew from '@/app/components/CourseCardNew';
@@ -26,6 +26,13 @@ export default function SearchResultClient() {
 const params = useParams();
 
 const modalidade = params?.modalidade as string;
+const searchParams = useSearchParams();
+const courseName = searchParams.get('courseName') ?? '';
+const courseId = searchParams.get('courseId') ?? '';
+const city = searchParams.get('city') ?? '';
+const state = searchParams.get('state') ?? '';
+
+
 
   const router = useRouter()
   const { handleSubmit, setValue } = useForm()
@@ -34,9 +41,6 @@ const modalidade = params?.modalidade as string;
   const [isReady, setIsReady] = useState(false);
   
 
-  const [courseIdState, setCourseIdState] = useState<string>('');
-  const [courseName, setCourseName] = useState<string>('');
-  const [state, setState] = useState<string>('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
@@ -52,25 +56,16 @@ const modalidade = params?.modalidade as string;
     rating: null,
   });
 
-  useEffect(() => {
-    const saved = localStorage.getItem('searchParams');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setCourseIdState(parsed.courseId || '');
-      setCourseName(parsed.courseName || '');
-      setState(parsed.state || '');
-      setFilters((prev) => ({
-        ...prev,
-        city: parsed.city || '',
-        modalidades: parsed.modalidade
-          ? [formatModalidade(parsed.modalidade)]
-          : [],
-      }));
-
-      // Marca como pronto após carregar tudo
-      setIsReady(true);
-    }
-  }, []);
+useEffect(() => {
+  if (modalidade && courseId && city && state) {
+    setFilters((prev) => ({
+      ...prev,
+      city,
+      modalidades: [formatModalidade(modalidade)],
+    }));
+    setIsReady(true);
+  }
+}, [modalidade, courseId, city, state]);
 
   function formatModalidade(value: string): string {
     switch (value.toLowerCase()) {
@@ -87,8 +82,8 @@ const modalidade = params?.modalidade as string;
 
 
   const { data: showCourses, isLoading } = useQuery({
-    queryFn: () => getShowFiltersCourses(modalidade, courseIdState, filters.city, state),
-    queryKey: ['courses', modalidade, courseIdState, filters.city, state],
+    queryFn: () => getShowFiltersCourses(modalidade, courseId, city, state),
+    queryKey: ['courses', modalidade, courseId, city, state],
     enabled: isReady
   });
 

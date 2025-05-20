@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
-<url><loc>https://www.bolsaclick.com.br/ajuda/termos-de-uso</loc><lastmod>2025-05-20T03:02:19.079Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-<url><loc>https://www.bolsaclick.com.br</loc><lastmod>2025-05-20T03:02:19.080Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-<url><loc>https://www.bolsaclick.com.br/ajuda/politica-de-cookies</loc><lastmod>2025-05-20T03:02:19.080Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-<url><loc>https://www.bolsaclick.com.br/ajuda/politica-de-privacidade</loc><lastmod>2025-05-20T03:02:19.080Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-<url><loc>https://www.bolsaclick.com.br/graduacao</loc><lastmod>2025-05-20T03:02:19.080Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-<url><loc>https://www.bolsaclick.com.br/contato</loc><lastmod>2025-05-20T03:02:19.080Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-<url><loc>https://www.bolsaclick.com.br/checkout/pos</loc><lastmod>2025-05-20T03:02:19.080Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-<url><loc>https://www.bolsaclick.com.br/quem-somos</loc><lastmod>2025-05-20T03:02:19.080Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.bolsaclick.com.br/ajuda/politica-de-cookies</loc><lastmod>2025-05-20T03:50:53.748Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.bolsaclick.com.br/quem-somos</loc><lastmod>2025-05-20T03:50:53.749Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.bolsaclick.com.br/ajuda/politica-de-privacidade</loc><lastmod>2025-05-20T03:50:53.749Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.bolsaclick.com.br/ajuda/termos-de-uso</loc><lastmod>2025-05-20T03:50:53.749Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.bolsaclick.com.br/contato</loc><lastmod>2025-05-20T03:50:53.749Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.bolsaclick.com.br</loc><lastmod>2025-05-20T03:50:53.749Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.bolsaclick.com.br/checkout/pos</loc><lastmod>2025-05-20T03:50:53.749Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.bolsaclick.com.br/graduacao</loc><lastmod>2025-05-20T03:50:53.749Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.bolsaclick.com.br/cursos/direito?city=São Paulo&amp;state=SP&amp;courseId=01d29fc8-6e92-4a6e-8edc-848dab59da24</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>https://www.bolsaclick.com.br/cursos/psicologia?city=campinas&amp;state=sp&amp;courseId=05ea2de4-cf8c-4b2d-a3eb-9ab3bb8b94cf</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>https://www.bolsaclick.com.br/cursos/administracao?city=ribeiraopreto&amp;state=sp&amp;courseId=aaa8f97d-40dc-40c6-b772-2c3068288534</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>https://www.bolsaclick.com.br/cursos/enfermagem?city=rio-de-janeiro&amp;state=rj&amp;courseId=9fd0c921-93b8-400c-82c6-f1a0166402d7</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>https://www.bolsaclick.com.br/cursos/educacao-fisica?city=curitiba&amp;state=pr&amp;courseId=364d1436-ad27-4035-9ba7-dcb503797ed6</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>https://www.bolsaclick.com.br/cursos/farmacia?city=belo-horizonte&amp;state=mg&amp;courseId=d4f0d30d-75a3-4964-b5dc-028ae835460c</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
 </urlset>

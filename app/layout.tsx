@@ -38,7 +38,7 @@ export const metadata: Metadata = {
         alt: theme.name,
       },
     ],
-    locale: 'pt_BR',
+    locale: 'pt_br',
     type: 'website',
   },
   twitter: {
@@ -54,7 +54,13 @@ export const metadata: Metadata = {
     apple: theme.favicon,
   },
   robots: 'index, follow',
+      alternates: {
+      canonical: theme.siteUrl,
+    },
   other: {
+    'copyright': 'Bolsa Click',
+    'abstract': 'Bolsas de Estudo de até 95% para Faculdades e Escolas | Bolsa Click',
+
     'application/ld+json': JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'WebSite',

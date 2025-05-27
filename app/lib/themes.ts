@@ -4,7 +4,7 @@ export const themes = {
     title: 'Bolsa Click - Até 80% de Desconto em Faculdades',
     shortTitle: 'Bolsa Click',
     description: 'O Bolsa Click tem Bolsas de Estudo de até 85% em mais de 30.000 Escolas e Faculdades em todo Brasil. Graduação e pós, educação básica, técnicos, idiomas',
-    favicon: '/favicon.png',
+    favicon: '/favicon.ico',
     ogImage: 'https://www.bolsaclick.com.br/assets/og-image-bolsaclick.png',
     siteUrl: 'https://www.bolsaclick.com.br',
     twitter: '@bolsaclick',

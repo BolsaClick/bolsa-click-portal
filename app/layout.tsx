@@ -60,7 +60,6 @@ export const metadata: Metadata = {
   other: {
     'copyright': 'Bolsa Click',
     'abstract': 'Bolsas de Estudo de até 95% para Faculdades e Escolas | Bolsa Click',
-
     'application/ld+json': JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'WebSite',
@@ -77,6 +76,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-br">
+          <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#ffffff" />
+        <meta name="apple-mobile-web-app-title" content="Bolsa Click" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+      </head>
       <body className="antialiased">
         <Toaster richColors position="top-right" />
         <Analytics />

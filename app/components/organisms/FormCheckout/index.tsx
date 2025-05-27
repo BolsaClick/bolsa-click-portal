@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
+import MetaFacebook from '@/app/context/FacebookPixel'
 import { getCep } from '@/app/lib/api/get-cep'
 import { validarCPF } from '@/utils/cpf-validate'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -73,6 +74,7 @@ const FormCheckout = ({ onSubmit, disabled, setEmail, isPostGraduation,
 
   return (
     <>
+      <MetaFacebook />
       <form onSubmit={handleSubmit(onSubmit)} className="flex gap-4 flex-col ">
         <div className="flex flex-col w-full ">
           <label className="block text-sm font-medium text-gray-700">E-mail</label>

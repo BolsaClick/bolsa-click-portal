@@ -54,13 +54,14 @@ export const metadata: Metadata = {
     apple: theme.favicon,
   },
   robots: 'index, follow',
-      alternates: {
-      canonical: theme.siteUrl,
-    },
-  other: {
-    'copyright': 'Bolsa Click',
-    'abstract': 'Bolsas de Estudo de até 95% para Faculdades e Escolas | Bolsa Click',
-    'application/ld+json': JSON.stringify({
+  alternates: {
+    canonical: theme.siteUrl,
+  },
+other: {
+  'copyright': 'Bolsa Click',
+  'abstract': 'Bolsas de Estudo de até 95% para Faculdades e Escolas | Bolsa Click',
+  'application/ld+json': JSON.stringify([
+    {
       '@context': 'https://schema.org',
       '@type': 'WebSite',
       name: theme.name,
@@ -69,19 +70,42 @@ export const metadata: Metadata = {
         '@type': 'SearchAction',
         target: `${theme.siteUrl}/cursos?courseName={search_term_string}`,
         'query-input': 'required name=search_term_string',
-      },
-    }),
-  },
+      }
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: 'Bolsa Click',
+      url: theme.siteUrl,
+      logo: `${theme.siteUrl}/logo-bolsa-click-rosa.png`, 
+      sameAs: [
+        'https://www.instagram.com/bolsaclick',
+        'https://www.facebook.com/bolsaclickbrasil',
+        'https://www.linkedin.com/company/bolsaclick'
+      ],
+      contactPoint: {
+        '@type': 'ContactPoint',
+        telephone: '+55-11-99999-9999',
+        contactType: 'customer service',
+        areaServed: 'BR',
+        availableLanguage: ['Portuguese']
+      }
+    }
+  ])
+},
+
 }
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-br">
-          <head>
+      <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#ffffff" />
         <meta name="apple-mobile-web-app-title" content="Bolsa Click" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="author" content="Bolsa Click" />
+        <meta name="publisher" content="Bolsa Click" />
       </head>
       <body className="antialiased">
         <Toaster richColors position="top-right" />

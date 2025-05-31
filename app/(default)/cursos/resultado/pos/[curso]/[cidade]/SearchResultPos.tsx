@@ -20,12 +20,12 @@ export default function SearchResultPos() {
 
 
 
-const searchParams = useSearchParams();
-const courseName = searchParams.get('courseName') ?? '';
-const courseId = searchParams.get('courseId') ?? '';
-const city = searchParams.get('city') ?? '';
-const state = searchParams.get('state') ?? '';
-const courseIdExternal = searchParams.get('courseIdExternal') ?? '';
+  const searchParams = useSearchParams();
+  const courseName = searchParams.get('courseName') ?? '';
+  const courseId = searchParams.get('courseId') ?? '';
+  const city = searchParams.get('city') ?? '';
+  const state = searchParams.get('state') ?? '';
+  const courseIdExternal = searchParams.get('courseIdExternal') ?? '';
 
 
   const router = useRouter()
@@ -42,15 +42,15 @@ const courseIdExternal = searchParams.get('courseIdExternal') ?? '';
     rating: null,
   });
 
-useEffect(() => {
-  if (courseId && city && state) {
-    setFilters((prev) => ({
-      ...prev,
-      city,
-    }));
-    setIsReady(true);
-  }
-}, [ courseId, city, state]);
+  useEffect(() => {
+    if (courseId && city && state) {
+      setFilters((prev) => ({
+        ...prev,
+        city,
+      }));
+      setIsReady(true);
+    }
+  }, [courseId, city, state]);
   const { data: showCourses, isLoading } = useQuery({
     queryFn: () => getShowFiltersCoursesPos(courseIdExternal),
     queryKey: ['courses', courseIdExternal],
@@ -84,7 +84,7 @@ useEffect(() => {
       'selectedPosOffer',
       JSON.stringify(offerWithCourseName),
     )
-        router.push('/checkout/pos')
+    router.push('/checkout/pos')
 
   }
 
@@ -141,8 +141,8 @@ useEffect(() => {
               )
             }
             className={`px-4 py-2 rounded-md text-sm font-semibold border ${durationFilter === duration
-                ? 'bg-bolsa-secondary text-white'
-                : 'bg-white text-bolsa-secondary border-bolsa-secondary'
+              ? 'bg-bolsa-secondary text-white'
+              : 'bg-white text-bolsa-secondary border-bolsa-secondary'
               } transition-all duration-200`}
           >
             {duration}
@@ -227,7 +227,7 @@ useEffect(() => {
             </div>
 
             {isLoading ? (
-              <div className={`grid ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6' : 'grid-cols-1 gap-4'}`}>
+              <div className={` grid ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6' : 'grid-cols-1 gap-4'}`}>
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div key={i} className="bg-white rounded-xl shadow-card p-6 animate-pulse space-y-4">
                     <div className="h-4 bg-gray-200 rounded w-3/4"></div>
@@ -240,68 +240,123 @@ useEffect(() => {
                 ))}
               </div>
             ) : (
-              <div className={`grid ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6' : 'grid-cols-1 gap-4'}`}>
-                {paginatedCourses.map((offer: any) => (
-                  <div
-                    key={offer.id}
-                    className="bg-white shadow-md rounded-lg p-6 flex flex-col justify-between"
-                  >
-                    <div className="mb-4">
-                      <h2 className="text-xl font-bold text-gray-800 mb-1">
-                        {courseName}
-                      </h2>
-                      <p className="text-sm text-gray-600 font-semibold mb-1">
-                        {offer.unitName}
-                      </p>
-                      <p className="text-sm text-gray-500 mb-1">
-                        Modalidade: <strong>{offer.modality}</strong>
-                      </p>
-                      <p className="text-sm text-gray-500 mb-1">
-                        Duração: <strong>{offer.courseDuration}</strong>
-                      </p>
-                      <p className="text-sm text-gray-500 mb-2">
-                        Parcela mínima:{' '}
-                        <strong>
-                          {offer.minimumInstallmentValue.toLocaleString(
-                            'pt-BR',
-                            {
-                              style: 'currency',
-                              currency: 'BRL',
-                            },
-                          )}
-                        </strong>
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleSelect(offer)}
-                      className="bg-bolsa-secondary text-white py-2 px-4 rounded-md text-sm hover:bg-bolsa-secondary/80 transition-all duration-200"
+              <div className="w-full overflow-x-hidden px-4 sm:px-0">
+                <div className={`grid gap-4 sm:gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}>
+                  {paginatedCourses.map((offer: any) => (
+                    <div
+                      key={offer.id}
+                      className="bg-white shadow-md rounded-lg p-6 flex flex-col justify-between"
                     >
-                      Quero essa bolsa!
-                    </button>
-                  </div>
-                ))}
+                      <div className="mb-4">
+                        <h2 className="text-xl font-bold text-gray-800 mb-1">
+                          {courseName}
+                        </h2>
+                        <p className="text-sm text-gray-600 font-semibold mb-1">
+                          {offer.unitName}
+                        </p>
+                        <p className="text-sm text-gray-500 mb-1">
+                          Modalidade: <strong>{offer.modality}</strong>
+                        </p>
+                        <p className="text-sm text-gray-500 mb-1">
+                          Duração: <strong>{offer.courseDuration}</strong>
+                        </p>
+                        <p className="text-sm text-gray-500 mb-2">
+                          Parcela mínima:{' '}
+                          <strong>
+                            {offer.minimumInstallmentValue.toLocaleString(
+                              'pt-BR',
+                              {
+                                style: 'currency',
+                                currency: 'BRL',
+                              },
+                            )}
+                          </strong>
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleSelect(offer)}
+                        className="w-full bg-bolsa-secondary text-white py-2 px-4 rounded-md text-sm text-center whitespace-normal break-words hover:bg-bolsa-secondary/80 transition-all duration-200"
+
+
+                      >
+                        Quero essa bolsa!
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {!isLoading && totalPages > 1 && (
+              <div className="mt-8 flex flex-wrap justify-center items-center gap-2 px-4 sm:px-0">
+                {/* Prev */}
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-2 bg-neutral-200 text-neutral-800 rounded disabled:opacity-50"
+                >
+                  <ArrowLeft size={16} />
+                </button>
+
+                {/* Dynamic Pages */}
+                {Array.from({ length: totalPages }).map((_, i) => {
+                  const page = i + 1;
+
+                  const isFirst = page === 1;
+                  const isLast = page === totalPages;
+                  const isNearCurrent =
+                    Math.abs(currentPage - page) <= 1 ||
+                    page === currentPage ||
+                    (currentPage <= 4 && page <= 5) ||
+                    (currentPage >= totalPages - 3 && page >= totalPages - 4);
+
+                  if (
+                    isFirst ||
+                    isLast ||
+                    isNearCurrent
+                  ) {
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-3 py-2 text-sm rounded ${currentPage === page
+                            ? 'bg-bolsa-secondary text-white'
+                            : 'bg-white border text-neutral-800'
+                          }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  }
+
+                  // Render ellipsis
+                  const showBeforeEllipsis = page === 2 && currentPage > 4;
+                  const showAfterEllipsis = page === totalPages - 1 && currentPage < totalPages - 3;
+
+                  if (showBeforeEllipsis || showAfterEllipsis) {
+                    return (
+                      <span key={page} className="px-2 text-gray-500">
+                        ...
+                      </span>
+                    );
+                  }
+
+                  return null;
+                })}
+
+                {/* Next */}
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-2 bg-neutral-200 text-neutral-800 rounded disabled:opacity-50"
+                >
+                  <ArrowRight size={16} />
+                </button>
               </div>
             )}
 
-            {!isLoading && (
-              <div className="mt-8 flex justify-center items-center space-x-2">
-                <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="px-4 py-2 bg-neutral-200 text-neutral-800 rounded disabled:opacity-50">
-                  <ArrowLeft size={20} />
-                </button>
 
-                {Array.from({ length: totalPages }).map((_, i) => (
-                  <button key={i} onClick={() => setCurrentPage(i + 1)} className={`px-4 py-2 rounded ${currentPage === i + 1 ? 'bg-bolsa-secondary text-white' : 'bg-white border text-neutral-800'}`}>
-                    {i + 1}
-                  </button>
-                ))}
-
-                <button onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="px-4 py-2 bg-neutral-200 text-neutral-800 rounded disabled:opacity-50">
-                  <ArrowRight size={20} />
-                </button>
-              </div>
-            )}
           </div>
         </div>
       </div>

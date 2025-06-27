@@ -1,21 +1,32 @@
 import CoursesClient from './CoursesClient'
 import { Metadata } from 'next'
-import { cookies } from 'next/headers'
 import { Suspense } from 'react'
 
-export async function generateMetadata(): Promise<Metadata> {
-  const cookieStore = await cookies()
-  const courseName = decodeURIComponent(cookieStore.get('courseName')?.value || '')
-  const city = decodeURIComponent(cookieStore.get('city')?.value || '')
-  const state = decodeURIComponent(cookieStore.get('state')?.value || '')
+type Params = {
+  modalidade: string
+  curso: string
+  cidade: string
+}
+export async function generateMetadata({ params, searchParams }: {
+  params: Params,
+  searchParams?: { courseName?: string, city?: string, state?: string }
+}): Promise<Metadata> {
+  const modalidade = decodeURIComponent(params.modalidade)
+  const curso = decodeURIComponent(params.curso)
+  const cidade = decodeURIComponent(params.cidade)
 
-  const title = courseName
-    ? `Cursos de ${courseName} com até 80% de desconto${city && state  ? ` em ${city} - ${state}` : ''}`
-    : 'Cursos com até 80% de desconto | Bolsa Click'
+  const courseName = searchParams?.courseName
+    ? decodeURIComponent(searchParams.courseName)
+    : curso.replaceAll('-', ' ')
 
-  const description = courseName
-    ? `Encontre bolsas de até 80% para o curso de ${courseName}${city && state ? ` em ${city} - ${state}` : ''}.`
-    : 'Compare bolsas de estudo com até 80% de desconto em faculdades de todo o Brasil.'
+  const city = searchParams?.city
+    ? decodeURIComponent(searchParams.city)
+    : cidade.replaceAll('-', ' ')
+
+  const state = searchParams?.state ? ` - ${decodeURIComponent(searchParams.state)}` : ''
+
+  const title = `Curso de ${courseName} (${modalidade}) com até 80% de desconto em ${city}${state}`
+  const description = `Encontre bolsas de estudo para o curso de ${courseName} na modalidade ${modalidade}, com até 80% de desconto em ${city}${state}.`
 
   return {
     title,
@@ -24,7 +35,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title,
       description,
-      url: 'https://www.bolsaclick.com.br/cursos',
+      url: `https://www.bolsaclick.com.br/cursos/resultado/${modalidade}/${curso}/${cidade}`,
       siteName: 'Bolsa Click',
       locale: 'pt_BR',
       type: 'website',

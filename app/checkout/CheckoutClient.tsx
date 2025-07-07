@@ -6,7 +6,6 @@ import PaymentForm from '@/app/components/organisms/PaymentForm'
 import { OfferData } from '@/app/interface/interfaces'
 import { getPaymentStatus } from '@/app/lib/api/get-payment-paid'
 import { UpdateTransaction, updateTransactionStatus } from '@/app/lib/api/patch-payment'
-import { postMarketing } from '@/app/lib/api/post-marketing'
 import { createPayment } from '@/app/lib/api/post-payment'
 import { createStudent } from '@/app/lib/api/post-student'
 import { getCourseOffer } from '@/app/lib/api/show-offers'
@@ -145,15 +144,15 @@ const CheckoutClient = () => {
     }
   }
   const handleRegisterStudentApi = async (data: any) => {
-    const payload: any = {
+    const offerData = modalityFunction()
+
+ const payload = {
       name: data.name,
       email: data.email,
       cpf: data.cpf,
       phone: data.phone,
       birthday: data.birthDate,
       rg: data.rg,
-      courseId: data.courseId,
-      whatsapp_optin: true,
       password: data.password,
       address: data.address,
       address_number: data.addressNumber,
@@ -161,8 +160,18 @@ const CheckoutClient = () => {
       city: data.city,
       state: data.state,
       postal_code: data.cep,
-      amount: payToday,
-      universitySlugs: [course.brand.toLowerCase()],
+      whatsapp_optin: data.whatsapp,
+      high_school_completion_year: data.schoolYear,
+      courseId: offerData.courseId,
+      courseName: offerData.course,
+      amount: offerData.subscriptionValue || 99,
+      brand: offerData.brand,
+      modality: offerData.modality,
+      unitId: offerData.unitId,
+      offerId: offerData.offerId,
+      typeCourse: 'graduacao',
+      channel: 'anhanguera',
+      universitySlugs: [offerData.brand?.toLowerCase()],
     }
 
     try {
@@ -279,37 +288,10 @@ const CheckoutClient = () => {
 
   const renderPageData = modalityFunction()
 
-  const handleMarketing = async (data: any) => {
-    const payload = {
-      email: data.email,
-      cpf: data.cpf,
-      city: course.unitCity,
-      state: course.unitState,
-      courseId: course.courseId,
-      courseName: course.courseName,
-      brand: course.brand,
-      modality: course.modality,
-      unitId: course.unitId,
-      phone: data.phone,
-      name: data.name,
-      firstName: data.name,
-      typeCourse: 'graduacao',
-      paid: 'true',
-      offerId: course.offerId,
-      cep: data.cep,
-      channel: 'Portal Bolsa Click'
-    }
-    try {
-      await postMarketing(payload)
-    } catch (error) {
-      console.error('Erro ao enviar payload:', error)
-    }
-  }
 
   const handleNextStep = async (data: any) => {
     setCurrentStep(2)
     setDataRegister((prev: any) => ({ ...prev, ...data }))
-    handleMarketing(data)
     setHandleData(data)
     await handleRegisterStudentApi(data)
   }

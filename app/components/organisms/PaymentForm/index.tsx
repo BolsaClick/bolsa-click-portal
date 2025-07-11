@@ -35,7 +35,7 @@ interface PaymentGatewayProps {
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
-  expDate: z.string().length(7, 'Data de expiração inválida'),
+  expDate: z.string().length(5, 'Data de expiração inválida'),
   cvv: z.string().length(3, 'CVV deve ter 3 dígitos'),
   cardNumber: z.string().length(19, 'Número do cartão inválido'),
 })

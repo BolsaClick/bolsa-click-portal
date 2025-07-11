@@ -1,41 +1,52 @@
+'use client'
+
 import Container from '../../atoms/Container'
 import { Text } from '../../atoms/Text'
 
+const cards = [
+  {
+    title: 'Fácil de ingressar',
+    description: 'Presencial ou online, tenha a liberdade de escolher dia e hora da sua prova.'
+  },
+  {
+    title: 'Melhores ofertas',
+    description: (
+      <>
+        Aqui você encontra as melhores ofertas para{' '}
+        <span className="text-bolsa-secondary font-semibold">Início Imediato</span>.
+      </>
+    )
+  },
+  {
+    title: 'Bolsas de até 80%',
+    description: 'Investir no seu futuro pode ser mais leve.'
+  }
+]
+
 const Cta = () => {
   return (
-    <Container>
-      <div className=" w-full pb-12 justify-between flex-col md:flex-row gap-4 flex items-center ">
-        <div className="rounded-lg p-6 justify-center gap-4 flex-col text-center flex items-center w-full h-52 bg-bolsa-primary bg-cover bg-center">
-          <Text size="sm" className="text-bolsa-white">
-            Facil de ingressar
-          </Text>
-          <Text size="xs" className="text-bolsa-gray-light">
-            Presencial ou online tenha a liberdade de escolhar dia e hora da sua
-            prova
-          </Text>
+    <section aria-labelledby="cta-title" className="py-12 bg-[#f8f8f8]">
+      <Container>
+        <h2 id="cta-title" className="sr-only">Vantagens do Bolsa Click</h2>
+
+        <div className="w-full flex flex-col md:flex-row justify-between gap-4">
+          {cards.map((card, index) => (
+            <div
+              key={index}
+              className="rounded-lg p-6 text-center flex flex-col justify-center items-center w-full h-52 bg-bolsa-primary bg-cover bg-center"
+              aria-label={`Vantagem ${index + 1}: ${typeof card.title === 'string' ? card.title : ''}`}
+            >
+              <Text size="sm" className="text-bolsa-white">
+                {card.title}
+              </Text>
+              <Text size="xs" className="text-bolsa-gray-light">
+                {card.description}
+              </Text>
+            </div>
+          ))}
         </div>
-        <div className="rounded-lg p-6 justify-center gap-4 flex-col flex text-center items-center w-full h-52 bg-bolsa-primary bg-cover bg-center">
-          <Text size="sm" className="text-bolsa-white">
-            Melhores ofertas
-          </Text>
-          <Text size="xs" className="text-bolsa-gray-light">
-            Aqui você encontra as melhores ofertas para{' '}
-            <span className="text-bolsa-secondary font-semibold">
-              Inicio Imediato
-            </span>
-            .
-          </Text>
-        </div>
-        <div className="rounded-lg p-6 justify-center gap-4 flex-col flex text-center items-center w-full h-52 bg-bolsa-primary bg-cover bg-center">
-          <Text size="sm" className="text-bolsa-white">
-            Bolsas de até 80%
-          </Text>
-          <Text size="xs" className="text-bolsa-gray-light">
-            Investir no seu futuro pode ser mais leve.
-          </Text>
-        </div>
-      </div>
-    </Container>
+      </Container>
+    </section>
   )
 }
 

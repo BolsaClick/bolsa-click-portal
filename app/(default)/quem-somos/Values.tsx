@@ -15,25 +15,25 @@ export default function Values() {
     {
       icon: <GraduationCap className="h-8 w-8 text-emerald-700" />,
       title: 'Acesso à Educação',
-      description: 'Acreditamos que a educação de qualidade deve ser acessível a todos, independentemente de sua condição financeira.',
+      description: 'Defendemos que toda pessoa, independentemente da renda, deve ter acesso a uma formação superior de qualidade.',
       delay: 0
     },
     {
       icon: <Award className="h-8 w-8 text-emerald-700" />,
       title: 'Excelência',
-      description: 'Buscamos continuamente aprimorar nossa plataforma e parcerias para oferecer as melhores oportunidades educacionais.',
+      description: 'Nos empenhamos para oferecer a melhor experiência ao aluno, por meio de tecnologia, atendimento e parceiros confiáveis.',
       delay: 0.2
     },
     {
       icon: <Users className="h-8 w-8 text-emerald-700" />,
       title: 'Comunidade',
-      description: 'Valorizamos a construção de uma comunidade forte de estudantes, instituições e educadores comprometidos com a transformação social.',
+      description: 'Criamos pontes entre estudantes, instituições e educadores, formando uma rede que transforma vidas por meio da educação.',
       delay: 0.4
     },
     {
       icon: <Heart className="h-8 w-8 text-emerald-700" />,
       title: 'Impacto Social',
-      description: 'Nossa missão vai além dos negócios - trabalhamos para gerar impacto positivo na sociedade através da educação.',
+      description: 'Trabalhamos com propósito: gerar oportunidades reais, reduzir desigualdades e construir um Brasil mais justo.',
       delay: 0.6
     }
   ];
@@ -46,9 +46,9 @@ export default function Values() {
             Nossos Valores
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Os princípios que orientam nossa missão de democratizar o acesso à educação superior.
+            Os pilares que nos guiam todos os dias na missão de democratizar o ensino superior no Brasil.
           </p>
-          <div className="w-24 h-1 bg-emerald-300 mx-auto mt-4"></div>
+          <div className="w-24 h-1 bg-emerald-300 mx-auto mt-4" />
         </div>
 
         <div ref={ref} className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">

@@ -8,11 +8,11 @@ import Link from 'next/link';
 const AboutSection: React.FC = () => {
   const [currentTheme, setCurrentTheme] = useState('bolsaclick')
 
-useEffect(() => {
-  if (typeof window !== 'undefined') {
-    setCurrentTheme(process.env.NEXT_PUBLIC_THEME || 'bolsaclick')
-  }
-}, [])
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCurrentTheme(process.env.NEXT_PUBLIC_THEME || 'bolsaclick')
+    }
+  }, [])
 
   const benefits = [
     "Descontos de até 95% durante todo o curso",
@@ -49,8 +49,41 @@ useEffect(() => {
     }
   ];
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    "name": "Bolsa Click",
+    "url": "https://www.bolsaclick.com.br",
+    "description": "O BolsaClick é a maior plataforma de bolsas de estudo do Brasil, com descontos de até 95% para ensino superior. Encontre bolsas em mais de 25 instituições com facilidade e suporte.",
+    "sameAs": [
+      "https://www.instagram.com/bolsaclick",
+      "https://www.facebook.com/bolsaclick"
+    ],
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "5",
+      "reviewCount": "3"
+    },
+    "review": testimonials.map((t) => ({
+      "@type": "Review",
+      "author": { "@type": "Person", "name": t.author },
+      "reviewBody": t.quote,
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": "5",
+        "bestRating": "5"
+      }
+    }))
+  };
+
   return (
-    <section id="about" className="about-section py-16 bg-white">
+    <section id="about" className="about-section py-16 bg-white relative">
+      {/* JSON-LD SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-2xl md:text-3xl font-bold mb-6 text-emerald-600">
@@ -77,16 +110,16 @@ useEffect(() => {
               src="https://images.pexels.com/photos/5212345/pexels-photo-5212345.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
               alt="Estudante sorridente"
               className="rounded-lg shadow-xl"
-                 width={1260}
-                    height={750}
+              width={1260}
+              height={750}
             />
           </div>
-          
+
           <div className="about-content">
             <h3 className="text-xl font-bold mb-6 text-emerald-600">
               Por que escolher o BolsaClick?
             </h3>
-            
+
             <ul className="benefits-list mb-8">
               {benefits.map((benefit, index) => (
                 <li key={index} className="flex items-start mb-3">
@@ -95,8 +128,8 @@ useEffect(() => {
                 </li>
               ))}
             </ul>
-            
-            <Link href='/quem-somos' className="about-button">
+
+            <Link href="/quem-somos" className="about-button">
               Saiba mais sobre nós
             </Link>
           </div>
@@ -107,32 +140,29 @@ useEffect(() => {
             O que dizem nossos alunos
           </h3>
           {currentTheme === 'bolsaclick' && (
-            <>
             <div className="testimonials-grid">
-            {testimonials.map((testimonial, index) => (
-              <div key={index} className="testimonial-card">
-                <div className="testimonial-quote">
-                  &quot;{testimonial.quote}&quot;
-                </div>
-                <div className="testimonial-author">
-                  <Image 
-                    src={testimonial.image} 
-                    alt={testimonial.author} 
-                    className="author-image"
-                    width={70}
-                    height={40}
-                  />
-                  <div className="author-info">
-                    <h4>{testimonial.author}</h4>
-                    <p>{testimonial.course}</p>
+              {testimonials.map((testimonial, index) => (
+                <div key={index} className="testimonial-card">
+                  <div className="testimonial-quote">
+                    &quot;{testimonial.quote}&quot;
+                  </div>
+                  <div className="testimonial-author">
+                    <Image
+                      src={testimonial.image}
+                      alt={testimonial.author}
+                      className="author-image"
+                      width={70}
+                      height={40}
+                    />
+                    <div className="author-info">
+                      <h4>{testimonial.author}</h4>
+                      <p>{testimonial.course}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-            </>
+              ))}
+            </div>
           )}
-          
         </div>
       </div>
     </section>

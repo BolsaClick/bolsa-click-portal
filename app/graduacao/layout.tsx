@@ -1,14 +1,15 @@
 // app/graduacao/layout.tsx
 
 import Footer from "../components/molecules/Footer";
-import { HeaderPages } from "../components/molecules/HeaderPages";
+import HeaderNew from "../components/molecules/Header/New";
 
 export default function GraduacaoLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <HeaderPages />
+      <HeaderNew />
+
       {children}
-      <Footer/>
+      <Footer />
     </>
   )
 }

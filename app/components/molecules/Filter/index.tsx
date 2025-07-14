@@ -41,29 +41,29 @@ const Filter = () => {
     localStorage.setItem('selectedLevel', level)
     setValue('levels', level)
 
-     setValue('course', { id: '', name: '', courseIds: [] })
+    setValue('course', { id: '', name: '', courseIds: [] })
   }
   const { control, handleSubmit, watch, setValue } = useForm<FormValues>({
     defaultValues: {
       modalidade: 'distancia',
       levels: activeTab,
-         course: { name: '', id: '', courseIds: [] },
+      course: { name: '', id: '', courseIds: [] },
       city: { state: '', city: '' },
     },
   })
 
 
-const { data: graduationCourses } = useQuery({
-  queryFn: getShowCourses,
-  queryKey: ['courses', 'graduacao'],
-  enabled: activeTab === 'graduacao',
-})
+  const { data: graduationCourses } = useQuery({
+    queryFn: getShowCourses,
+    queryKey: ['courses', 'graduacao'],
+    enabled: activeTab === 'graduacao',
+  })
 
-const { data: postCourses } = useQuery({
-  queryFn: getShowPos,
-  queryKey: ['courses', 'pos'],
-  enabled: activeTab === 'pos',
-})
+  const { data: postCourses } = useQuery({
+    queryFn: getShowPos,
+    queryKey: ['courses', 'pos'],
+    enabled: activeTab === 'pos',
+  })
 
   const { data: responseCity } = useQuery({
     queryKey: ['cities', searchCity],
@@ -76,94 +76,100 @@ const { data: postCourses } = useQuery({
       city: city.city,
     })) || []
 
-const slugify = (text: string) =>
-  text
-    .toLowerCase()
-    .normalize("NFD") 
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)+/g, "");
+  const slugify = (text: string) =>
+    text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "");
 
 
-    const rawCourses = activeTab === 'graduacao'
-  ? graduationCourses
-  : activeTab === 'pos'
-  ? postCourses
-  : []
+  const rawCourses = activeTab === 'graduacao'
+    ? graduationCourses
+    : activeTab === 'pos'
+      ? postCourses
+      : []
 
-const courseOptions =
-  rawCourses?.map((course: any) => ({
-    id: course.id,
-    name: course.name,
-    courseIds: course.courseIds,
-    slug: slugify(course.name.replace(/ - (Bacharelado|Tecn[oó]logo)$/, '')),
-  })) || []
+  const courseOptions =
+    rawCourses?.map((course: any) => ({
+      id: course.id,
+      name: course.name,
+      courseIds: course.courseIds,
+      slug: slugify(course.name.replace(/ - (Bacharelado|Tecn[oó]logo)$/, '')),
+    })) || []
 
-const onSubmit = (data: FormValues) => {
-  const courseSlug = slugify(data.course.name.replace(/ - (Bacharelado|Tecn[oó]logo)$/i, ''))
-const normalizeCourseName = (name: string) => {
-  return name
-    .replace(/ - (Bacharelado|Tecn[oó]logo)$/i, '') 
-    .replace(/\s+/g, ' ') 
-    .trim()
-    .toLowerCase()
-    .replace(/(^\w{1})|(\s+\w{1})/g, (l) => l.toUpperCase()) 
-}
-  const citySlug = slugify(data.city.city)
-  const courseNameCookie = normalizeCourseName(data.course.name)
+  const onSubmit = (data: FormValues) => {
 
-  document.cookie = `courseName=${encodeURIComponent(courseNameCookie)}; path=/`
-  document.cookie = `modalidade=${encodeURIComponent(data.modalidade)}; path=/`
-  document.cookie = `city=${encodeURIComponent(data.city.city)}; path=/`
-  document.cookie = `state=${encodeURIComponent(data.city.state)}; path=/`
+    const city = data.city.city || 'São Paulo'
+    const state = data.city.state || 'SP'
+
+    const courseSlug = slugify(data.course.name.replace(/ - (Bacharelado|Tecn[oó]logo)$/i, ''))
+    const normalizeCourseName = (name: string) => {
+      return name
+        .replace(/ - (Bacharelado|Tecn[oó]logo)$/i, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase()
+        .replace(/(^\w{1})|(\s+\w{1})/g, (l) => l.toUpperCase())
+    }
+
+    const citySlug = slugify(city)
+
+    const courseNameCookie = normalizeCourseName(data.course.name)
+
+    document.cookie = `courseName=${encodeURIComponent(courseNameCookie)}; path=/`
+    document.cookie = `modalidade=${encodeURIComponent(data.modalidade)}; path=/`
+    document.cookie = `city=${encodeURIComponent(city)}; path=/`
+    document.cookie = `state=${encodeURIComponent(state)}; path=/`
 
 
- const searchParams = new URLSearchParams({
-    courseId: data.course.id,
-    courseIdExternal: data.course.courseIds?.[0] || '',
-    city: data.city.city,
-    state: data.city.state,
-    courseName: data.course.name 
-  });
+    const searchParams = new URLSearchParams({
+      courseId: data.course.id,
+      courseIdExternal: data.course.courseIds?.[0] || '',
+      city: city,
+      state: state,
+      courseName: data.course.name
+    });
 
-if (activeTab === 'pos') {
-  navigate.push(`/cursos/resultado/pos/${courseSlug}/${citySlug}?${searchParams.toString()}`);
-} else {
-navigate.push(`/cursos/resultado/${data.modalidade}/${courseSlug}/${citySlug}?${searchParams.toString()}`);
-}
-}
+    if (activeTab === 'pos') {
+      navigate.push(`/cursos/resultado/pos/${courseSlug}/${citySlug}?${searchParams.toString()}`);
+    } else {
+      navigate.push(`/cursos/resultado/${data.modalidade}/${courseSlug}/${citySlug}?${searchParams.toString()}`);
+    }
+  }
 
   const handleCityChange = debounce((value) => {
     setSearchCity(value)
   }, 300)
 
-const renderLevelTabs = () => (
-  <div className="grid grid-cols-3 border-b border-gray-300">
-    {educationLevels.map((level) => {
-      const isDisabled = level.levels === 'tecnico'
+  const renderLevelTabs = () => (
+    <div className="grid grid-cols-3 border-b border-gray-300">
+      {educationLevels.map((level) => {
+        const isDisabled = level.levels === 'tecnico'
 
-      return (
-        <button
-          key={level.levels}
-          className={`flex-1 py-4 px-6 text-center font-medium text-nowrap transition-colors
+        return (
+          <button
+            key={level.levels}
+            className={`flex-1 py-4 px-6 text-center font-medium text-nowrap transition-colors
             ${activeTab === level.levels
-              ? 'text-bolsa-secondary/90 border-b-2 border-bolsa-secondary'
-              : isDisabled
-              ? 'text-gray-400 cursor-not-allowed'
-              : 'text-gray-600 hover:text-emerald-600'
-            }`}
-          onClick={() => {
-            if (!isDisabled) handleLevelChange(level.levels)
-          }}
-          type="button"
-          disabled={isDisabled}
-        >
-          {level.label}
-        </button>
-      )
-    })}
-  </div>
-)
+                ? 'text-bolsa-secondary/90 border-b-2 border-bolsa-secondary'
+                : isDisabled
+                  ? 'text-gray-400 cursor-not-allowed'
+                  : 'text-gray-600 hover:text-emerald-600'
+              }`}
+            onClick={() => {
+              if (!isDisabled) handleLevelChange(level.levels)
+            }}
+            type="button"
+            disabled={isDisabled}
+          >
+            {level.label}
+          </button>
+        )
+      })}
+    </div>
+  )
 
 
 
@@ -193,13 +199,13 @@ const renderLevelTabs = () => (
         </div>
         <div className="w-full">
           {activeTab === 'graduacao' && (
-          <ModalitySelect
-            value={watch('modalidade')}
-            onChange={(value) => setValue('modalidade', value as FormValues['modalidade'])}
-            variant="default"
-          />
+            <ModalitySelect
+              value={watch('modalidade')}
+              onChange={(value) => setValue('modalidade', value as FormValues['modalidade'])}
+              variant="default"
+            />
           )}
-       
+
         </div>
 
 

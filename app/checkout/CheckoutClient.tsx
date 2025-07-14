@@ -28,6 +28,7 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 import FormCheckout from '../components/organisms/FormCheckout'
 import { createStudentCogna } from '../lib/api/post-student-cogna'
+import Skeleton from '../components/atoms/Skeleton'
 
 
 
@@ -79,6 +80,8 @@ const CheckoutClient = () => {
       setCourse(selected)
     }
   }, [])
+
+
 
   const { data: response } = useQuery({
     queryKey: ['offers', course?.courseId],
@@ -146,7 +149,7 @@ const CheckoutClient = () => {
   const handleRegisterStudentApi = async (data: any) => {
     const offerData = modalityFunction()
 
- const payload = {
+    const payload = {
       name: data.name,
       email: data.email,
       cpf: data.cpf,
@@ -339,7 +342,7 @@ const CheckoutClient = () => {
         }
 
 
-        return true 
+        return true
       }
     } catch (error) {
       console.error('Erro ao buscar status do pagamento:', error)
@@ -366,7 +369,7 @@ const CheckoutClient = () => {
     }
   }, [paymentConfirmedId])
 
-  
+
   const payToday = 19.99 + (renderPageData.montlyFeeTo || 0)
 
   // 🔁 Limpa localStorage ao sair da página
@@ -456,6 +459,8 @@ const CheckoutClient = () => {
                 <h2 className="text-xl font-semibold text-gray-900">
                   Dados do Aluno
                 </h2>
+
+
                 <p className="text-sm text-gray-500 mt-1">
                   Coloque os dados do aluno para realizar a matrícula
                 </p>
@@ -500,79 +505,95 @@ const CheckoutClient = () => {
             <h3 className="text-xl pt-2 font-semibold mb-4 text-gray-900">
               Detalhes do Curso
             </h3>
-            <p className="text-gray-700 mb-2">
-              Curso: <strong>{renderPageData.course}</strong>
-            </p>
 
-            <div className="w-full md:flex-row gap-2 flex-col flex justify-between md:items-center">
-              <div className="md:w-1/2">
-                <span>Valor da mensalidade:</span>
-              </div>
-              <div className="flex flex-col md:items-end justify-end md:text-end ">
-                <div className="bg-green-100 text-green-700 px-2 items-start text-sm w-full rounded-md border-1 border-green-500 md:text-end whitespace-nowrap">
-                  <span className="font-bold">
-                    {discountPercentage.toFixed(1)}% de desconto
-                  </span>
+            {!renderPageData.course ? (
+              <>
+                <Skeleton className="h-4 w-1/2 mb-3" />
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-full mb-2" />
+              </>
+            ) : (
+              <>
+
+                <p className="text-gray-700 mb-2">
+                  Curso: <strong>{renderPageData.course}</strong>
+                </p>
+                <div className="w-full md:flex-row gap-2 flex-col flex justify-between md:items-center">
+                  <div className="md:w-1/2">
+                    <span>Valor da mensalidade:</span>
+                  </div>
+                  <div className="flex flex-col md:items-end justify-end md:text-end ">
+                    <div className="bg-green-100 text-green-700 px-2 items-start text-sm w-full rounded-md border-1 border-green-500 md:text-end whitespace-nowrap">
+                      <span className="font-bold">
+                        {discountPercentage.toFixed(1)}% de desconto
+                      </span>
+                    </div>
+                    <span className="font-bold text-xl">
+                      {formatCurrency(renderPageData.montlyFeeTo)}
+                    </span>
+                  </div>
                 </div>
-                <span className="font-bold text-xl">
-                  {formatCurrency(renderPageData.montlyFeeTo)}
-                </span>
-              </div>
-            </div>
-            <div className="flex mt-10  text-zinc-500 w-full flex-col">
-              <div className="w-full flex-row flex items-center gap-2">
-                <GraduationCap size={24} />
-                <span className="capitalize">
-                  {renderPageData?.brand?.toLocaleLowerCase()}
-                </span>
-              </div>
-              <div className="w-full flex-row flex items-center gap-2">
-                <ChalkboardTeacher size={24} />
-                <span>
-                  {renderPageData.modality === 'Presencial'
-                    ? 'Presencial'
-                    : renderPageData.modality === 'Semipresencial'
-                      ? 'Semipresencial'
-                      : 'EAD/Online'}
-                </span>
-              </div>
-              {/* // colocar o turno aqui com (em breve)
+                <div className="flex mt-10  text-zinc-500 w-full flex-col">
+                  <div className="w-full flex-row flex items-center gap-2">
+                    <GraduationCap size={24} />
+                    <span className="capitalize">
+                      {renderPageData?.brand?.toLocaleLowerCase()}
+                    </span>
+                  </div>
+                  <div className="w-full flex-row flex items-center gap-2">
+                    <ChalkboardTeacher size={24} />
+                    <span>
+                      {renderPageData.modality === 'Presencial'
+                        ? 'Presencial'
+                        : renderPageData.modality === 'Semipresencial'
+                          ? 'Semipresencial'
+                          : 'EAD/Online'}
+                    </span>
+                  </div>
+                  {/* // colocar o turno aqui com (em breve)
                     {renderPageData.shift} -{' '} */}
 
-              <div className="w-full flex-row flex items-center gap-2">
-                <Notebook size={24} />
-                <span>
-                  {renderPageData.weekday === 'Seg à Sex}'
-                    ? 'Segunda-Feira à Sexta-Feira'
-                    : renderPageData.weekday === 'Sex'
-                      ? 'Sexta-Feira'
-                      : renderPageData.weekday === 'Sáb'
-                        ? 'Sábado'
-                        : renderPageData.weekday === 'Seg'
-                          ? 'Segunda-Feira'
-                          : renderPageData.weekday === 'Ter'
-                            ? 'Terça-Feira'
-                            : renderPageData.weekday === 'Qua'
-                              ? 'Quarta-Feira'
-                              : renderPageData.weekday === 'Qui'
-                                ? 'Quinta-Feira'
-                                : 'Faça o seu horário de estudo'}
-                </span>
-              </div>
-              <div className="w-full flex-row flex items-center gap-2">
-                <Bank size={24} />
-                <span className="capitalize">
-                  {renderPageData.unit
-                    ?.replace('/', ', ')
-                    ?.toLowerCase()
-                    ?.replace(/^./, (match) => match.toUpperCase())
-                    ?.replace(
-                      /,\s*(\w{2})/,
-                      (p1) => `, ${p1.toUpperCase()}`,
-                    )}{' '}
-                </span>
-              </div>
-            </div>
+                  <div className="w-full flex-row flex items-center gap-2">
+                    <Notebook size={24} />
+                    <span>
+                      {renderPageData.weekday === 'Seg à Sex}'
+                        ? 'Segunda-Feira à Sexta-Feira'
+                        : renderPageData.weekday === 'Sex'
+                          ? 'Sexta-Feira'
+                          : renderPageData.weekday === 'Sáb'
+                            ? 'Sábado'
+                            : renderPageData.weekday === 'Seg'
+                              ? 'Segunda-Feira'
+                              : renderPageData.weekday === 'Ter'
+                                ? 'Terça-Feira'
+                                : renderPageData.weekday === 'Qua'
+                                  ? 'Quarta-Feira'
+                                  : renderPageData.weekday === 'Qui'
+                                    ? 'Quinta-Feira'
+                                    : 'Faça o seu horário de estudo'}
+                    </span>
+                  </div>
+                  <div className="w-full flex-row flex items-center gap-2">
+                    <Bank size={24} />
+                    <span className="capitalize">
+                      {renderPageData.unit
+                        ?.replace('/', ', ')
+                        ?.toLowerCase()
+                        ?.replace(/^./, (match) => match.toUpperCase())
+                        ?.replace(
+                          /,\s*(\w{2})/,
+                          (p1) => `, ${p1.toUpperCase()}`,
+                        )}{' '}
+                    </span>
+                  </div>
+                </div>
+              </>
+
+            )}
+
+
             <p className="text-gray-600 text-sm mt-4">
               * Este desconto é válido para todas as mensalidades, exceto
               rematrículas e dependências.

@@ -49,8 +49,7 @@ export default function CoursesClient() {
     return acc
   }, [])
 
-  const onSubmit = (data: any) => {
-    localStorage.setItem('selectedCourse', JSON.stringify(data))
+  const onSubmit = () => {
     router.push('/checkout/')
   }
 

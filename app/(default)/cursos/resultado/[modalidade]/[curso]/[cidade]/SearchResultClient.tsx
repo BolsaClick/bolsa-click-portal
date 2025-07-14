@@ -23,14 +23,14 @@ import PriceRangeSlider from '@/app/components/atoms/PriceRange';
 
 export default function SearchResultClient() {
 
-const params = useParams();
+  const params = useParams();
 
-const modalidade = params?.modalidade as string;
-const searchParams = useSearchParams();
-const courseName = searchParams.get('courseName') ?? '';
-const courseId = searchParams.get('courseId') ?? '';
-const city = searchParams.get('city') ?? '';
-const state = searchParams.get('state') ?? '';
+  const modalidade = params?.modalidade as string;
+  const searchParams = useSearchParams();
+  const courseName = searchParams.get('courseName') ?? '';
+  const courseId = searchParams.get('courseId') ?? '';
+  const city = searchParams.get('city') ?? '';
+  const state = searchParams.get('state') ?? '';
 
 
 
@@ -39,7 +39,7 @@ const state = searchParams.get('state') ?? '';
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
   const [isReady, setIsReady] = useState(false);
-  
+
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -56,16 +56,16 @@ const state = searchParams.get('state') ?? '';
     rating: null,
   });
 
-useEffect(() => {
-  if (modalidade && courseId && city && state) {
-    setFilters((prev) => ({
-      ...prev,
-      city,
-      modalidades: [formatModalidade(modalidade)],
-    }));
-    setIsReady(true);
-  }
-}, [modalidade, courseId, city, state]);
+  useEffect(() => {
+    if (modalidade && courseId && city && state) {
+      setFilters((prev) => ({
+        ...prev,
+        city,
+        modalidades: [formatModalidade(modalidade)],
+      }));
+      setIsReady(true);
+    }
+  }, [modalidade, courseId, city, state]);
 
   function formatModalidade(value: string): string {
     switch (value.toLowerCase()) {
@@ -368,16 +368,41 @@ useEffect(() => {
                 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6'
                 : 'grid-cols-1 gap-4'
                 }`}>
-                {paginatedCourses.map((course: any, index: number) => (
-                  <CourseCardNew
-                    key={index}
-                    courseName={courseName}
-                    course={course}
-                    setFormData={setValue}
-                    viewMode={viewMode}
-                    triggerSubmit={handleSubmit(onSubmit)}
-                  />
-                ))}
+                {filteredCourses.length === 0 ? (
+                  <div className="col-span-full text-center py-12">
+                    <p className="text-lg text-neutral-600 mb-6">
+                      Nenhuma oferta encontrada para essa modalidade nessa cidade. 😢
+                    </p>
+                    <button
+                      onClick={() => {
+                        const other = modalidade === 'presencial'
+                          ? 'semipresencial'
+                          : modalidade === 'semipresencial'
+                            ? 'distancia'
+                            : 'presencial';
+
+                        const url = `/cursos/resultado/${other}/${params.curso}/${params.cidade}?courseId=${courseId}&courseName=${courseName}&city=${city}&state=${state}`;
+                        router.push(url);
+                      }}
+                      className="inline-flex items-center px-6 py-3 bg-bolsa-secondary text-white font-semibold rounded hover:bg-emerald-700 transition"
+                    >
+                      Buscar em outra modalidade
+                      <ArrowRight className="ml-2" size={18} />
+                    </button>
+                  </div>
+                ) : (
+                  paginatedCourses.map((course: any, index: number) => (
+                    <CourseCardNew
+                      key={index}
+                      courseName={courseName}
+                      course={course}
+                      setFormData={setValue}
+                      viewMode={viewMode}
+                      triggerSubmit={handleSubmit(onSubmit)}
+                    />
+                  ))
+                )}
+
               </div>
             )}
 

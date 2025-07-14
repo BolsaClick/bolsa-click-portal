@@ -18,8 +18,8 @@ const idsByTheme = {
     aw: 'AW-16785148719',
   },
   anhanguera: {
-    ga4: 'G-DDF5CSE3KY',
-    gtm: 'GTM-WPGG76D6',
+ga4: 'G-DDF5CSE3KY',
+    gtm: 'GTM-PPD7PKN5', 
     aw: undefined,
   },
 } as const

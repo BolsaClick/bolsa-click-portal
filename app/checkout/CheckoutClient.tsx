@@ -338,9 +338,8 @@ const CheckoutClient = () => {
           }
         }
 
-        // Após as tentativas de cadastro, navega para a página de sucesso
 
-        return true // Retorna verdadeiro se o pagamento foi confirmado e o cadastro foi realizado
+        return true 
       }
     } catch (error) {
       console.error('Erro ao buscar status do pagamento:', error)

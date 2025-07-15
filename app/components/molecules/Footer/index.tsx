@@ -35,7 +35,7 @@ const Footer: React.FC = () => {
                 O maior marketplace de bolsas de estudo do Brasil. Seu futuro com mais desconto começa aqui.
               </p>
               <div className="flex justify-start  space-x-4">
-                <a href="https://facebook.com" className='text-bolsa-secondary hover:text-bolsa-primary transition-all duration-200' target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                <a href="https://facebook.com/bolsaclick" className='text-bolsa-secondary hover:text-bolsa-primary transition-all duration-200' target="_blank" rel="noopener noreferrer" aria-label="Facebook">
                   <Facebook size={20} />
                 </a>
                 <a href="https://instagram.com/bolsaclick" className='text-bolsa-secondary hover:text-bolsa-primary transition-all duration-200'  target="_blank" rel="noopener noreferrer" aria-label="Instagram">
@@ -55,30 +55,30 @@ const Footer: React.FC = () => {
               <nav aria-label="Links úteis para Bolsa Click">
                 <ul className="space-y-3">
                   <li>
-                    <a href="#" className="text-neutral-600 hover:text-emerald-500 transition-colors">
+                    <a href="/quem-somos" className="text-neutral-600 hover:text-emerald-500 transition-colors">
                       Quem Somos
                     </a>
                   </li>
-                  <li>
+                  {/* <li>
                     <a href="#" className="text-neutral-600 hover:text-emerald-500 transition-colors">
                       Como Funciona
                     </a>
-                  </li>
-                  <li>
+                  </li> */}
+                  {/* <li>
                     <a href="#" className="text-neutral-600 hover:text-emerald-500 transition-colors">
                       Imprensa
                     </a>
-                  </li>
-                  <li>
+                  </li> */}
+                  {/* <li>
                     <a href="#" className="text-neutral-600 hover:text-emerald-500 transition-colors">
                       Trabalhe Conosco
                     </a>
-                  </li>
-                  <li>
+                  </li> */}
+                  {/* <li>
                     <a href="#" className="text-neutral-600 hover:text-emerald-500 transition-colors">
                       Seja uma Instituição Parceira
                     </a>
-                  </li>
+                  </li> */}
                 </ul>
               </nav>
             </div>

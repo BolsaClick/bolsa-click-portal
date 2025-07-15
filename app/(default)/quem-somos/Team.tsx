@@ -3,7 +3,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import { Linkedin, Twitter } from 'lucide-react';
 import Image from 'next/image';
 
 export default function Team() {
@@ -81,14 +80,7 @@ export default function Team() {
                 <p className="text-emerald-300 font-medium mb-4">{member.role}</p>
                 <p className="text-gray-600 text-sm">{member.bio}</p>
               </div>
-              <div className="flex justify-center gap-4 p-4 border-t border-gray-100">
-                <a href="#" className="text-gray-500 hover:text-emerald-700 transition-colors">
-                  <Linkedin className="h-5 w-5" />
-                </a>
-                <a href="#" className="text-gray-500 hover:text-emerald-700 transition-colors">
-                  <Twitter className="h-5 w-5" />
-                </a>
-              </div>
+
             </motion.div>
           ))}
         </div>

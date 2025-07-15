@@ -51,8 +51,8 @@ export const SecureFooter: React.FC = () => {
           <a href="/ajuda/termos-de-uso" className="hover:text-gray-900">Termos e Condições</a>
           <a href="/ajuda/politica-de-privacidade" className="hover:text-gray-900">Política de privacidade</a>
           <a href="/ajuda/politica-de-cookies" className="hover:text-gray-900">Política de cookies</a>
-          <a href="#" className="hover:text-gray-900">Imprensa</a>
-          <a href="#" className="hover:text-gray-900">Torne-se um parceiro</a>
+          {/* <a href="#" className="hover:text-gray-900">Imprensa</a>
+          <a href="#" className="hover:text-gray-900">Torne-se um parceiro</a> */}
         </div>
       </div>
     </footer>

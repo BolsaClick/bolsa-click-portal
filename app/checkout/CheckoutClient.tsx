@@ -218,7 +218,7 @@ const CheckoutClient = () => {
         await updateTransactionStatus(transactionData)
 
         navigate.push(
-          `/checkout/success?course=${course}&paymentMethod=${paymentMethod}&price=${payToday}&dataRegister${dataRegister}`
+          `/checkout/success?course=${course.courseName}&paymentMethod=${paymentMethod}&price=${payToday}`
         )
         toast.success('Matricula realizado com sucesso!')
       }

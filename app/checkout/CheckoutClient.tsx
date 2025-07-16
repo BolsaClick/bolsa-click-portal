@@ -71,6 +71,8 @@ const CheckoutClient = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [course, setCourse] = useState<any>(null)
+  const [courseTo, setCourseTo] = useState<any>(null)
+
 
   useEffect(() => {
     const storedCourse = localStorage.getItem('selectedCourse')
@@ -78,6 +80,7 @@ const CheckoutClient = () => {
       const parsed = JSON.parse(storedCourse)
       const selected = parsed?.selectedCourse || parsed
       setCourse(selected)
+      setCourseTo(selected.courseName)
     }
   }, [])
 
@@ -218,7 +221,7 @@ const CheckoutClient = () => {
         await updateTransactionStatus(transactionData)
 
         navigate.push(
-          `/checkout/success?course=${course.courseName}&paymentMethod=${paymentMethod}&price=${payToday}`
+          `/checkout/success?course=${courseTo}&paymentMethod=${paymentMethod}&price=${payToday}`
         )
         toast.success('Matricula realizado com sucesso!')
       }

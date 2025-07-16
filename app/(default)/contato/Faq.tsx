@@ -93,7 +93,6 @@ export default function Faq() {
           <div className="text-center mt-10">
             <p className="text-gray-600 mb-4">Não encontrou o que procurava?</p>
             <a 
-              href="#form-contato" 
               className="inline-flex items-center bg-emerald-300 hover:bg-emerald-600 text-white font-medium px-6 py-3 rounded-md transition-all duration-300"
             >
               Entre em contato

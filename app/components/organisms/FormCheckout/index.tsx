@@ -160,7 +160,7 @@ const FormCheckout = ({ onSubmit, disabled, setEmail, isPostGraduation,
             <label className="block text-sm font-medium text-gray-700">Telefone</label>
             <input
               {...register('phone')}
-              {...registerWithMask("phone", ['99 9999-9999', '99999-9999'], {
+              {...registerWithMask("phone", ['99 99999-9999', '99999-9999'], {
                 required: true
               })}
               placeholder="(00) 00000-0000"

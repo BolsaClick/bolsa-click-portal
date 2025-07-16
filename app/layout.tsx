@@ -20,7 +20,7 @@ const idsByTheme = {
   anhanguera: {
 ga4: 'G-DDF5CSE3KY',
     gtm: 'GTM-PPD7PKN5', 
-    aw: undefined,
+    aw: 'AW-17355201661',
   },
 } as const
 

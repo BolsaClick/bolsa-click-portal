@@ -22,6 +22,14 @@ export default function SuccessClient() {
   const confettiCanvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
+    console.log('SuccessPage mounted')
+    if (typeof window !== 'undefined') {
+      ;(window as any).dataLayer = (window as any).dataLayer || []
+      ;(window as any).dataLayer.push({ event: 'formbcsuccess' })
+    }
+  }, [])
+
+  useEffect(() => {
     if (status === 'waiting') {
       const timer = setTimeout(() => {
         setStatus('processing')

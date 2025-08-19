@@ -21,13 +21,14 @@ export default function SuccessClient() {
   const [progress, setProgress] = useState(0)
   const confettiCanvasRef = useRef<HTMLCanvasElement>(null)
 
-  useEffect(() => {
-    console.log('SuccessPage mounted')
-    if (typeof window !== 'undefined') {
-      ;(window as any).dataLayer = (window as any).dataLayer || []
-      ;(window as any).dataLayer.push({ event: 'formbcsuccess' })
-    }
-  }, [])
+useEffect(() => {
+  if (typeof window !== 'undefined') {
+    type DataLayerEvent = Record<string, unknown>;
+    const w = window as Window & { dataLayer?: DataLayerEvent[] };
+    w.dataLayer = w.dataLayer ?? [];
+    w.dataLayer.push({ event: 'formbcsuccess' });
+  }
+}, [])
 
   useEffect(() => {
     if (status === 'waiting') {

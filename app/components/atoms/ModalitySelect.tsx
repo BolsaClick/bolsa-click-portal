@@ -15,8 +15,8 @@ interface ModalitySelectProps {
 
 const modalities: ModalityOption[] = [
   { value: 'presencial', label: 'Presencial', icon: <Building2 size={16} /> },
-  { value: 'distancia', label: 'A distancia', icon: <Monitor size={16} /> },
-  { value: 'semipresencial', label: 'Semipresencial', icon: <GraduationCap size={16} /> }
+  { value: 'distancia', label: 'Ead', icon: <Monitor size={16} /> },
+  { value: 'semipresencial', label: 'Semi', icon: <GraduationCap size={16} /> }
 ];
 
 export const ModalitySelect: React.FC<ModalitySelectProps> = ({

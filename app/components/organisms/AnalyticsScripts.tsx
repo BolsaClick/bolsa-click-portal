@@ -3,7 +3,7 @@
 import Script from 'next/script'
 
 type Props = {
-  ga4: string
+  ga4?: string
   gtm: string
   aw?: string
 }

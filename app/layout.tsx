@@ -13,14 +13,10 @@ const theme = getCurrentTheme()
 
 const idsByTheme = {
   bolsaclick: {
-    ga4: 'G-WVC65E2PST',
-    gtm: 'GTM-P8WLDPC5',
-    aw: 'AW-16785148719',
+    gtm: 'GTM-K4KZBRF3',
   },
   anhanguera: {
-ga4: 'G-DDF5CSE3KY',
     gtm: 'GTM-PPD7PKN5', 
-    aw: 'AW-17355201661',
   },
 } as const
 
@@ -136,7 +132,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </noscript>
 
 
-        <AnalyticsScripts ga4={ids.ga4} gtm={ids.gtm} aw={ids.aw} />
+        <AnalyticsScripts  gtm={ids.gtm}  />
 
         <Script
           src="https://cdn-cookieyes.com/client_data/2a0be4de7c11618e75d1c64f/script.js"

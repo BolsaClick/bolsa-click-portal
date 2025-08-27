@@ -491,17 +491,21 @@ const CheckoutClient = () => {
 
             {currentStep === 2 && (
               <PaymentForm
-                amount={payToday}
-                onSubmit={onSubmit}
-                transactionDenied={transactionDenied}
-                transactionError={transactionError}
-                paymentMethod={paymentMethod}
-                generatePix={generatPix}
-                codePix={getQrCode}
-                imagePix={getQrCodeImage}
-                isSubmitting={isSubmitting}
-                transactionDeniedByIssuer={transactionDeniedByIssuer}
-              />
+            amount={payToday}
+            onSubmit={onSubmit}
+            transactionDenied={transactionDenied}
+            transactionError={transactionError}
+            paymentMethod={paymentMethod}
+            generatePix={generatPix}
+            codePix={getQrCode}
+            imagePix={getQrCodeImage}
+            isSubmitting={isSubmitting}
+            transactionDeniedByIssuer={transactionDeniedByIssuer}
+            // 👇 novos props
+            customerEmail={dataRegister?.email}
+            customerPhone={dataRegister?.phone}
+            customerName={dataRegister?.name}
+          />
             )}
           </div>
           <div className="flex  flex-col md:w-1/2 h-1/2 bg-white  p-6 rounded-lg shadow-md">

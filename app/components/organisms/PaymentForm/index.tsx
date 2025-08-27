@@ -31,6 +31,9 @@ interface PaymentGatewayProps {
   imagePix: string
   codePix: string
   isSubmitting: boolean
+    customerEmail?: string
+  customerPhone?: string
+  customerName?: string
 }
 
 const formSchema = z.object({
@@ -38,6 +41,7 @@ const formSchema = z.object({
   expDate: z.string().length(5, 'Data de expiração inválida'),
   cvv: z.string().length(3, 'CVV deve ter 3 dígitos'),
   cardNumber: z.string().length(19, 'Número do cartão inválido'),
+  
 })
 
 type FormSchema = z.infer<typeof formSchema>
@@ -52,6 +56,9 @@ export default function PaymentForm({
   codePix,
   isSubmitting,
   transactionDeniedByIssuer,
+  customerEmail,
+  customerName,
+  customerPhone
 }: PaymentGatewayProps) {
   const [installments, setInstallments] = useState('1')
   const [activeTab, setActiveTab] = useState<'credit_card' | 'pix'>(
@@ -87,6 +94,11 @@ export default function PaymentForm({
       ...formData,
       paymentMethod: activeTab,
       installments,
+       customer: {
+      email: customerEmail,
+      phone: customerPhone,
+      name: customerName,
+    },
     }
 
     onSubmit(paymentData)

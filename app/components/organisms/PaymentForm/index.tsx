@@ -54,7 +54,6 @@ export default function PaymentForm({
   onSubmit,
   transactionDenied,
   transactionError,
-  paymentMethod,
   generatePix,
   imagePix,
   codePix,

@@ -170,7 +170,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   ctaText: "Precisa de ajuda? 💙",
                   borderRadius: "25",
                   autoShow: false,
-                  phoneNumber: "5511988919770"
+                  phoneNumber: "5511936200198"
                 }
               };
 

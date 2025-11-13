@@ -38,13 +38,13 @@ const AboutSection: React.FC = () => {
     {
       quote: "O processo foi super simples e rápido. Em menos de uma semana já estava matriculado com 60% de desconto!",
       author: "João Santos",
-      course: "Engenharia Civil - Anhembi",
+      course: "Engenharia Civil - Anhanguera",
       image: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
     },
     {
       quote: "Excelente plataforma! Encontrei várias opções de bolsas e o suporte me ajudou a escolher a melhor para mim.",
       author: "Ana Oliveira",
-      course: "Psicologia - Estácio",
+      course: "Psicologia - Anhanguera",
       image: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
     }
   ];

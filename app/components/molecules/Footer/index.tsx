@@ -88,9 +88,9 @@ const Footer: React.FC = () => {
               <nav aria-label="Links úteis para estudantes">
                 <ul className="space-y-3">
                   <li>
-                    <a href="#" className="text-neutral-600 hover:text-emerald-500 transition-colors">
+                    <span className="text-neutral-400 line-through cursor-not-allowed">
                       Cadastre-se
-                    </a>
+                    </span>
                   </li>
                   <li>
                     <a href="#" className="text-neutral-600 hover:text-emerald-500 transition-colors">
@@ -98,19 +98,19 @@ const Footer: React.FC = () => {
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="text-neutral-600 hover:text-emerald-500 transition-colors">
+                    <span className="text-neutral-400 line-through cursor-not-allowed">
                       Buscar Pós-graduação
-                    </a>
+                    </span>
                   </li>
                   <li>
-                    <a href="#" className="text-neutral-600 hover:text-emerald-500 transition-colors">
+                    <span className="text-neutral-400 line-through cursor-not-allowed">
                       Buscar Cursos Técnicos
-                    </a>
+                    </span>
                   </li>
                   <li>
-                    <a href="#" className="text-neutral-600 hover:text-emerald-500 transition-colors">
+                    <span className="text-neutral-400 line-through cursor-not-allowed">
                       Dúvidas Frequentes
-                    </a>
+                    </span>
                   </li>
                 </ul>
               </nav>
@@ -122,7 +122,7 @@ const Footer: React.FC = () => {
                 <ul className="space-y-3">
                   <li className="flex items-center justify-center md:justify-start">
                     <Phone size={18} className="text-emerald-500 mr-2" />
-                    <span className="text-neutral-600">0800 123 4567</span>
+                    <span className="text-neutral-600">(11) 03620-0198</span>
                   </li>
                   <li className="flex items-center justify-center md:justify-start">
                     <Mail size={18} className="text-emerald-500 mr-2" />

@@ -1251,9 +1251,29 @@ function MatriculaContent() {
                 <p className="font-medium text-sm text-gray-900">{offerDetails.course}</p>
               </div>
 
+              {/* Mensalidade - sempre exibida como informação */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <p className="text-xs text-gray-500 mb-1">Valor da mensalidade</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {offerDetails?.montlyFeeFrom && offerDetails.montlyFeeFrom > monthlyFee && (
+                    <>
+                      <p className="text-sm text-gray-400 line-through">De {formatCurrency(offerDetails.montlyFeeFrom)} por</p>
+                      <p className="text-xl font-bold text-green-600 ">{formatCurrency(monthlyFee)}</p>
+                      <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded">
+                        {Math.round(((offerDetails.montlyFeeFrom - monthlyFee) / offerDetails.montlyFeeFrom) * 100)}% de desconto
+                      </span>
+                    </>
+                  )}
+                  {(!offerDetails?.montlyFeeFrom || offerDetails.montlyFeeFrom <= monthlyFee) && (
+                    <p className="text-xl font-bold text-green-600">{formatCurrency(monthlyFee)}</p>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-1 italic">Paga diretamente à instituição</p>
+              </div>
+
               {isMarketplace ? (
                 <>
-                  {/* Marketplace ativo: mostrar apenas matrícula */}
+                  {/* Marketplace ativo: mostrar matrícula */}
                   <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-3">
                     <div className="flex items-start gap-2 mb-2">
                       <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -1289,7 +1309,7 @@ function MatriculaContent() {
                 </>
               ) : (
                 <>
-                  {/* Marketplace desabilitado: mostrar apenas taxa de serviço */}
+                  {/* Marketplace desabilitado: mostrar taxa de serviço */}
                   <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-3">
                     <div className="flex items-start gap-2 mb-2">
                       <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -1387,9 +1407,15 @@ function MatriculaContent() {
               </div>
 
               <div className="pt-3 border-t border-gray-200 space-y-2">
+                {/* Mensalidade - exibida como informação (não somada) */}
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-600">Mensalidade</span>
+                  <span className="text-gray-500 italic">{formatCurrency(monthlyFee)}</span>
+                </div>
+                
                 {isMarketplace ? (
                   <>
-                    {/* Marketplace ativo: mostrar apenas matrícula */}
+                    {/* Marketplace ativo: mostrar matrícula */}
                     <div className="flex justify-between text-xs">
                       <span className="text-gray-600">Valor da matrícula</span>
                       <span className="text-gray-900">
@@ -1401,7 +1427,7 @@ function MatriculaContent() {
                   </>
                 ) : (
                   <>
-                    {/* Marketplace desabilitado: mostrar apenas taxa de serviço */}
+                    {/* Marketplace desabilitado: mostrar taxa de serviço */}
                     <div className="flex justify-between text-xs">
                       <span className="text-gray-600">Taxa de serviço Bolsa Click</span>
                       <span className="text-gray-900">

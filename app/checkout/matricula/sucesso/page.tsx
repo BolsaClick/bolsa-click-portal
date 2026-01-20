@@ -3,7 +3,7 @@ import { Suspense } from 'react'
 import MatriculaSuccessClient from './MatriculaSuccessClient'
 
 export const metadata: Metadata = {
-  title: 'Matrícula Realizada com Sucesso',
+  title: 'Inscrição Realizada com Sucesso',
 }
 
 export default function MatriculaSuccessPage() {

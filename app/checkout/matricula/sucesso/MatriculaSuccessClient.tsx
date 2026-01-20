@@ -91,10 +91,10 @@ export default function MatriculaSuccessClient() {
             </div>
           </div>
           <h2 className="text-2xl font-bold text-gray-800 animate-fade-in">
-            Matrícula Realizada com Sucesso!
+            Inscrição Realizada com Sucesso!
           </h2>
           <p className="text-gray-600 mt-2 animate-fade-in animation-delay-100">
-            Parabéns! Sua matrícula foi efetivada com sucesso.
+            Parabéns! Sua inscrição foi realizada com sucesso e você garantiu seu desconto.
           </p>
         </div>
 
@@ -102,7 +102,7 @@ export default function MatriculaSuccessClient() {
         <div className="p-6 space-y-6">
           {course && (
             <div className="border border-gray-200 rounded-lg p-4 space-y-3 animate-fade-in animation-delay-200 hover:shadow-md transition-shadow duration-300">
-              <h3 className="font-medium">Detalhes da Matrícula</h3>
+              <h3 className="font-medium">Detalhes da Inscrição</h3>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <span className="text-gray-500">Curso:</span>
                 <span className="font-medium">{course}</span>
@@ -122,10 +122,10 @@ export default function MatriculaSuccessClient() {
               </div>
               <div>
                 <h4 className="font-medium text-green-800">
-                  Matrícula confirmada!
+                  Inscrição realizada e garantida com desconto!
                 </h4>
                 <p className="text-sm text-green-700 mt-1">
-                  Sua matrícula foi efetivada com sucesso. Você receberá um e-mail com os próximos passos e informações importantes sobre seu curso.
+                  Sua inscrição foi realizada com sucesso e você garantiu seu desconto. Para confirmar sua matrícula, você precisará realizar o pagamento dentro da universidade. Você receberá um e-mail com os próximos passos e informações importantes.
                 </p>
               </div>
             </div>
@@ -136,7 +136,8 @@ export default function MatriculaSuccessClient() {
               Próximos Passos
             </h4>
             <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
-              <li>Acesse o portal do aluno para acompanhar sua matrícula</li>
+              <li>Acesse o portal do candidato para acompanhar sua inscrição</li>
+              <li>Realize o pagamento dentro da universidade para confirmar sua matrícula</li>
               <li>Verifique seu e-mail para mais informações</li>
               <li>Entre em contato com a instituição se tiver dúvidas</li>
             </ul>

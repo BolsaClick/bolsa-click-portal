@@ -653,7 +653,7 @@ function MatriculaContent() {
       
       // Verificar se a resposta indica sucesso (201 Created)
       if (response.success || response.id) {
-        toast.success('Matrícula realizada com sucesso!')
+        toast.success('Inscrição realizada com sucesso!')
         
         trackEvent('enrollment_completed', {
           course_id: offerDetails.courseId,

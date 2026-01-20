@@ -730,6 +730,8 @@ function MatriculaContent() {
       const amountInCents = matriculaAfterCoupon
 
       // Criar checkout na API Elysium primeiro
+      // O cupom é aplicado apenas no cálculo do valor total (matriculaAfterCoupon)
+      // e não é enviado no checkout
       const checkoutData = {
         name: data.name,
         cpf: data.cpf.replace(/\D/g, ''),
@@ -737,7 +739,6 @@ function MatriculaContent() {
         phone: data.phone.replace(/\D/g, ''),
         amountInCents,
         description: `Matrícula - ${offerDetails.course}`,
-        couponCode: coupon?.code || undefined,
         brand: offerDetails.brand?.toLowerCase() || 'anhanguera',
         metadata: {
           courseId: offerDetails.courseId,

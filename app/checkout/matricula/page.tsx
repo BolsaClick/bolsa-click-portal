@@ -551,40 +551,48 @@ function MatriculaContent() {
       const promoterId = process.env.NEXT_PUBLIC_PROMOTER_ID || '6716698cb4d33b0008a18001'
       
       console.log('📝 Criando inscrição no Tartarus...', inscriptionPayload)
-      await createInscription(inscriptionPayload, promoterId, 'DC')
-      console.log('✅ Inscrição criada com sucesso')
+      const response = await createInscription(inscriptionPayload, promoterId, 'DC')
+      console.log('✅ Inscrição criada com sucesso', response)
       
-      toast.success('Matrícula realizada com sucesso!')
-      
-      trackEvent('enrollment_completed', {
-        course_id: offerDetails.courseId,
-        course_name: offerDetails.course,
-        brand: offerDetails.brand,
-        modality: offerDetails.modality,
-        shift: offerDetails.shift,
-        student_email: data.email,
-        student_cpf: data.cpf.replace(/\D/g, ''),
-        amount_paid: matriculaAfterCoupon / 100,
-        has_coupon: !!coupon,
-        coupon_code: coupon?.code,
-        promoter_id: promoterId,
-      })
-      
-      // Identificar usuário no PostHog
-      identifyUser(data.cpf.replace(/\D/g, ''), {
-        email: data.email,
-        name: data.name,
-        phone: data.phone.replace(/\D/g, ''),
-      })
-      
-      // Redirecionar para página de sucesso ou fechar modal
-      setTimeout(() => {
-        setShowModal(false)
-        // router.push('/checkout/matricula/sucesso')
-      }, 2000)
+      // Verificar se a resposta indica sucesso (201 Created)
+      if (response.success || response.id) {
+        toast.success('Matrícula realizada com sucesso!')
+        
+        trackEvent('enrollment_completed', {
+          course_id: offerDetails.courseId,
+          course_name: offerDetails.course,
+          brand: offerDetails.brand,
+          modality: offerDetails.modality,
+          shift: offerDetails.shift,
+          student_email: data.email,
+          student_cpf: data.cpf.replace(/\D/g, ''),
+          amount_paid: matriculaAfterCoupon / 100,
+          has_coupon: !!coupon,
+          coupon_code: coupon?.code,
+          promoter_id: promoterId,
+        })
+        
+        // Identificar usuário no PostHog
+        identifyUser(data.cpf.replace(/\D/g, ''), {
+          email: data.email,
+          name: data.name,
+          phone: data.phone.replace(/\D/g, ''),
+        })
+        
+        // Redirecionar para página de sucesso com informações do curso
+        const params = new URLSearchParams()
+        if (offerDetails.course) {
+          params.set('course', offerDetails.course)
+        }
+        
+        router.push(`/checkout/matricula/sucesso?${params.toString()}`)
+      } else {
+        throw new Error('Resposta da API não indica sucesso')
+      }
     } catch (error: unknown) {
       console.error('Erro ao criar matrícula:', error)
       toast.error('Erro ao finalizar matrícula. Entre em contato com o suporte.')
+      setPixLoading(false)
     }
   }
 

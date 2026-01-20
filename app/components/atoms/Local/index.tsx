@@ -2,13 +2,17 @@
 import { useGeoLocation } from '../../../context/GeoLocationContext'
 
 const GeoLocation = () => {
-  const { state, town, error } = useGeoLocation()
+  const { city, region, state, town, error } = useGeoLocation()
+
+  // Usar city/region (novo) ou town/state (compatibilidade)
+  const displayCity = city || town
+  const displayState = region || state
 
   return (
     <div>
-      {state && town ? (
+      {displayCity && displayState ? (
         <span>
-          {town} - {state}
+          {displayCity} - {displayState}
         </span>
       ) : error ? (
         <p>{error}</p>

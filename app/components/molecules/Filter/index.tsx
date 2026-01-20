@@ -12,11 +12,10 @@ import { getShowCourses } from '@/app/lib/api/get-courses'
 import { getLocalities } from '@/app/lib/api/get-localites'
 import { ModalitySelect } from '../../atoms/ModalitySelect'
 import { GraduationCap, MapPin } from 'lucide-react'
-import { getShowPos } from '@/app/lib/api/get-pos'
 
 type FormValues = {
-  modalidade: 'distancia' | 'presencial' | 'semipresencial'
-  course: { name: string; id: string, courseIds: string[] }
+  modalidade: 'EAD' | 'PRESENCIAL' | 'SEMIPRESENCIAL'
+  course: { name: string; id: string; slug: string }
   city: { state: string; city: string }
   levels: 'graduacao' | 'pos' | 'tecnico'
 }
@@ -36,33 +35,46 @@ const Filter = () => {
     return 'graduacao'
   })
 
+  const academicLevelMap: Record<FormValues['levels'], string> = {
+    graduacao: 'GRADUACAO',
+    pos: 'POS_GRADUACAO',
+    tecnico: 'TECNICO',
+  }
+
+
   const handleLevelChange = (level: FormValues['levels']) => {
     setActiveTab(level)
     localStorage.setItem('selectedLevel', level)
     setValue('levels', level)
 
-    setValue('course', { id: '', name: '', courseIds: [] })
+    setValue('course', { id: '', name: '', slug: '' })
   }
   const { control, handleSubmit, watch, setValue } = useForm<FormValues>({
     defaultValues: {
-      modalidade: 'distancia',
+      modalidade: 'EAD',
       levels: activeTab,
-      course: { name: '', id: '', courseIds: [] },
+      course: { name: '', id: '', slug: '' },
       city: { state: '', city: '' },
     },
   })
 
 
   const { data: graduationCourses } = useQuery({
-    queryFn: getShowCourses,
+    queryFn: () => getShowCourses(academicLevelMap.graduacao),
     queryKey: ['courses', 'graduacao'],
     enabled: activeTab === 'graduacao',
   })
 
   const { data: postCourses } = useQuery({
-    queryFn: getShowPos,
+    queryFn: () => getShowCourses(academicLevelMap.pos),
     queryKey: ['courses', 'pos'],
     enabled: activeTab === 'pos',
+  })
+
+  const { data: tecnicoCourses } = useQuery({
+    queryFn: () => getShowCourses(academicLevelMap.tecnico),
+    queryKey: ['courses', 'tecnico'],
+    enabled: activeTab === 'tecnico',
   })
 
   const { data: responseCity } = useQuery({
@@ -89,54 +101,94 @@ const Filter = () => {
     ? graduationCourses
     : activeTab === 'pos'
       ? postCourses
-      : []
+      : activeTab === 'tecnico'
+        ? tecnicoCourses
+        : []
 
   const courseOptions =
     rawCourses?.map((course: any) => ({
       id: course.id,
       name: course.name,
-      courseIds: course.courseIds,
-      slug: slugify(course.name.replace(/ - (Bacharelado|Tecn[oó]logo)$/, '')),
+      slug: course.slug || slugify(course.name.replace(/ - (Bacharelado|Tecn[oó]logo)$/, '')),
     })) || []
+
+  const removeCourseSuffix = (name: string) => {
+    return name
+      .replace(/ - (Bacharelado|Licenciatura|Tecn[oó]logo)$/i, '')
+      .trim()
+  }
+
+  // Verificar se o curso tem sufixo (Bacharelado, Licenciatura, Tecnólogo)
+  const hasCourseSuffix = (name: string): boolean => {
+    return / - (Bacharelado|Licenciatura|Tecn[oó]logo)$/i.test(name)
+  }
+
+  // Extrair apenas o sufixo do curso (Bacharelado, Licenciatura, Tecnólogo)
+  const extractCourseSuffix = (name: string): string => {
+    const match = name.match(/ - (Bacharelado|Licenciatura|Tecn[oó]logo)$/i)
+    return match ? match[1] : ''
+  }
+
+  // Converter valores do ModalitySelect para o formato esperado
+  const convertModalityToAPI = (value: string): FormValues['modalidade'] => {
+    const lower = value.toLowerCase()
+    if (lower === 'distancia') return 'EAD'
+    if (lower === 'presencial') return 'PRESENCIAL'
+    if (lower === 'semipresencial') return 'SEMIPRESENCIAL'
+    return value.toUpperCase() as FormValues['modalidade']
+  }
+
+  // Converter valores da API para o formato do ModalitySelect
+  const convertModalityFromAPI = (value: string): string => {
+    const upper = value.toUpperCase()
+    if (upper === 'EAD') return 'distancia'
+    if (upper === 'PRESENCIAL') return 'presencial'
+    if (upper === 'SEMIPRESENCIAL') return 'semipresencial'
+    return value.toLowerCase()
+  }
 
   const onSubmit = (data: FormValues) => {
 
     const city = data.city.city || 'São Paulo'
     const state = data.city.state || 'SP'
 
-    const courseSlug = slugify(data.course.name.replace(/ - (Bacharelado|Tecn[oó]logo)$/i, ''))
-    const normalizeCourseName = (name: string) => {
-      return name
-        .replace(/ - (Bacharelado|Tecn[oó]logo)$/i, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .toLowerCase()
-        .replace(/(^\w{1})|(\s+\w{1})/g, (l) => l.toUpperCase())
+    const courseNameClean = data.course.name ? removeCourseSuffix(data.course.name) : ''
+
+    // Construir URL com parâmetros - 'c' sempre primeiro se existir
+    const params: string[] = [];
+    
+    // Só adiciona o parâmetro 'c' se o curso estiver preenchido (sem sufixos para SEO)
+    if (courseNameClean && courseNameClean.trim()) {
+      params.push(`c=${encodeURIComponent(courseNameClean)}`);
     }
-
-    const citySlug = slugify(city)
-
-    const courseNameCookie = normalizeCourseName(data.course.name)
-
-    document.cookie = `courseName=${encodeURIComponent(courseNameCookie)}; path=/`
-    document.cookie = `modalidade=${encodeURIComponent(data.modalidade)}; path=/`
-    document.cookie = `city=${encodeURIComponent(city)}; path=/`
-    document.cookie = `state=${encodeURIComponent(state)}; path=/`
-
-
-    const searchParams = new URLSearchParams({
-      courseId: data.course.id,
-      courseIdExternal: data.course.courseIds?.[0] || '',
-      city: city,
-      state: state,
-      courseName: data.course.name
-    });
-
+    
+    // Adicionar apenas o sufixo do curso (Bacharelado, Licenciatura, Tecnólogo) no cn
+    // Só adiciona cn se o curso tiver sufixo
+    if (data.course.name && data.course.name.trim() && hasCourseSuffix(data.course.name)) {
+      const suffix = extractCourseSuffix(data.course.name)
+      if (suffix) {
+        params.push(`cn=${encodeURIComponent(suffix)}`);
+      }
+    }
+    
+    // Adicionar os outros parâmetros
+    params.push(`cidade=${encodeURIComponent(city)}`);
+    params.push(`estado=${encodeURIComponent(state)}`);
+    
+    // Garantir que a modalidade está no formato correto (EAD, PRESENCIAL, SEMIPRESENCIAL)
+    const modalidadeFormatada = convertModalityToAPI(data.modalidade)
+    params.push(`modalidade=${encodeURIComponent(modalidadeFormatada)}`);
+    
+    // Adicionar nível acadêmico para diferenciar graduação, pós e técnico
     if (activeTab === 'pos') {
-      navigate.push(`/cursos/resultado/pos/${courseSlug}/${citySlug}?${searchParams.toString()}`);
+      params.push(`nivel=POS_GRADUACAO`);
+    } else if (activeTab === 'tecnico') {
+      params.push(`nivel=TECNICO`);
     } else {
-      navigate.push(`/cursos/resultado/${data.modalidade}/${courseSlug}/${citySlug}?${searchParams.toString()}`);
+      params.push(`nivel=GRADUACAO`);
     }
+    
+    navigate.push(`/curso/resultado?${params.join('&')}`);
   }
 
   const handleCityChange = debounce((value) => {
@@ -178,6 +230,7 @@ const Filter = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="w-full ">
           <ComboBox
+            key={`course-${activeTab}`}
             control={control}
             name="course"
             options={courseOptions}
@@ -200,8 +253,8 @@ const Filter = () => {
         <div className="w-full">
           {activeTab === 'graduacao' && (
             <ModalitySelect
-              value={watch('modalidade')}
-              onChange={(value) => setValue('modalidade', value as FormValues['modalidade'])}
+              value={convertModalityFromAPI(watch('modalidade'))}
+              onChange={(value) => setValue('modalidade', convertModalityToAPI(value))}
               variant="default"
             />
           )}

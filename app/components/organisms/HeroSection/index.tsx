@@ -54,12 +54,15 @@ const Hero = () => {
             }`}
           >
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+              Bolsas de Estudo de até 95% de Desconto
+            </h1>
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold mb-4 leading-tight">
               {heroTexts[currentIndex].title}
               <br className="hidden md:block" />
               <span className="text-emerald-400 block text-xl" aria-hidden="true">
                 {heroTexts[currentIndex].subtitle}
               </span>
-            </h1>
+            </h2>
             <p className="text-lg md:text-xl max-w-3xl mx-auto mb-8 text-emerald-100">
               {heroTexts[currentIndex].description}
             </p>

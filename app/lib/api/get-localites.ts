@@ -1,4 +1,4 @@
-import { api } from "./axios"
+import { tartarus } from "./axios"
 
 
 interface City {
@@ -11,8 +11,8 @@ interface GetCitiesResponse {
 }
 
 export async function getLocalities(city: string) {
-  const response = await api.get<GetCitiesResponse>(
-    `core/getLocalities?q=${city}`,
+  const response = await tartarus.get<GetCitiesResponse>(
+    `cogna/courses/locations?search=${city}`,
   )
   return response.data
 }

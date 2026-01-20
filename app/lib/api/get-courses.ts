@@ -1,11 +1,21 @@
-import { api } from "./axios"
+import { tartarus } from "./axios"
 
 interface CourseResponse {
   id: string
   name: string
-  courseIds: string[]
+  slug: string
+  academicLevel: string
+  createdAt: string
+  updatedAt: string
 }
-export async function getShowCourses() {
-  const response = await api.get<CourseResponse[]>('/core/showCourse')
-  return response.data
+
+export async function getShowCourses(academicLevel?: string) {
+  const params = academicLevel ? { academicLevel } : {}
+  const response = await tartarus.get<CourseResponse[]>('/courses', { params })
+  
+  const sortedData = response.data.sort((a, b) => 
+    a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' })
+  )
+  
+  return sortedData
 }

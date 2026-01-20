@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Course } from "@/app/interface/course"
+import { Course, Schedule } from "@/app/interface/course"
 import { motion } from "framer-motion"
 import { Building2, Clock, Heart, MapPin, Star } from "lucide-react"
 import Image from "next/image"
-import { useState } from "react"
+import { useFavorites } from "@/app/lib/hooks/useFavorites"
 
 interface CourseCardProps {
   course: Course
@@ -26,7 +26,7 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
   courseName,
   isPos
 }) => {
-  const [favorites, setFavorites] = useState<number[]>([]);
+  const { isFavorite, toggleFavorite } = useFavorites()
 
 
 
@@ -78,17 +78,59 @@ const handleClick = () => {
     };
   };
 
-  const toggleFavorite = (id: number) => {
-    setFavorites(prev =>
-      prev.includes(id)
-        ? prev.filter(fid => fid !== id)
-        : [...prev, id]
-    );
-  };
 
   const courseParsed = parseCourseName(courseName || course.name);
 
+  // Função para converter dias da semana de inglês para português
+  const translateDay = (day: string): string => {
+    const daysMap: Record<string, string> = {
+      'MONDAY': 'Segunda',
+      'TUESDAY': 'Terça',
+      'WEDNESDAY': 'Quarta',
+      'THURSDAY': 'Quinta',
+      'FRIDAY': 'Sexta',
+      'SATURDAY': 'Sábado',
+      'SUNDAY': 'Domingo',
+    };
+    return daysMap[day.toUpperCase()] || day;
+  };
 
+  // Função para determinar o turno baseado em shiftOptions
+  const getShiftLabel = (shiftOptions?: string[]): string => {
+    if (!shiftOptions || shiftOptions.length === 0) return '';
+    
+    const shifts = shiftOptions.map(s => s.toUpperCase());
+    
+    if (shifts.includes('INTEGRAL')) return 'Integral';
+    if (shifts.includes('MATUTINO') && shifts.includes('NOTURNO')) return 'Manhã e Noite';
+    if (shifts.includes('MATUTINO')) return 'Manhã';
+    if (shifts.includes('VESPERTINO')) return 'Tarde';
+    if (shifts.includes('NOTURNO')) return 'Noite';
+    if (shifts.includes('VIRTUAL')) return 'Virtual';
+    
+    return shiftOptions.join(', ');
+  };
+
+  // Função para formatar os horários dos dias
+  const formatSchedules = (schedules?: Schedule[]): string => {
+    if (!schedules || schedules.length === 0) return '';
+    
+    const groupedByTime = schedules.reduce((acc: Record<string, string[]>, schedule) => {
+      const timeKey = `${schedule.startHour}-${schedule.endHour}`;
+      if (!acc[timeKey]) {
+        acc[timeKey] = [];
+      }
+      acc[timeKey].push(translateDay(schedule.day));
+      return acc;
+    }, {});
+
+    return Object.entries(groupedByTime)
+      .map(([time, days]) => {
+        const [start, end] = time.split('-');
+        return `${days.join(', ')}: ${start} às ${end}`;
+      })
+      .join(' | ');
+  };
 
   const renderUniversityImage = (universityName: string) => {
     switch (universityName.toLowerCase()) {
@@ -107,28 +149,64 @@ const handleClick = () => {
     }
   }
 
+  // Schema.org JSON-LD para SEO
+  const courseSchema = {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    "name": courseParsed.name || course.name,
+    "description": `${courseParsed.name || course.name} - ${course.commercialModality || course.modality} em ${course.city || ''}${course.uf ? `, ${course.uf}` : ''}. ${course.academicDegree ? `${course.academicDegree}` : courseParsed.type}`,
+    "provider": {
+      "@type": "CollegeOrUniversity",
+      "name": course.brand || "Faculdade"
+    },
+    "educationalCredentialAwarded": course.academicDegree || courseParsed.type,
+    "courseMode": course.commercialModality || course.modality,
+    "offers": {
+      "@type": "Offer",
+      "price": course.minPrice || 0,
+      "priceCurrency": "BRL",
+      "availability": "https://schema.org/InStock",
+      "url": typeof window !== 'undefined' ? window.location.href : ""
+    },
+    ...(course.city && {
+      "location": {
+        "@type": "Place",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": course.city,
+          "addressRegion": course.uf || course.unitState || "",
+          ...(course.unitAddress && { "streetAddress": course.unitAddress }),
+          ...(course.unitPostalCode && { "postalCode": course.unitPostalCode })
+        }
+      }
+    })
+  }
+
   return (
     <>
-
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(courseSchema) }}
+      />
       <motion.article
         key={course.id}
         layout
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className={`bg-white rounded-xl shadow-card hover:shadow-hover transition-all duration-300 ${viewMode === "list" ? "p-6" : ""
+        className={`bg-white rounded-xl shadow-card hover:shadow-hover transition-all duration-300 flex flex-col h-full ${viewMode === "list" ? "p-6" : ""
           }`}
         itemScope
         itemType="https://schema.org/Course"
       >
-        <div className="relative p-6">
-          <div className="space-y-4">
+        <div className="relative p-6 flex flex-col flex-1">
+          <div className="space-y-4 flex flex-col flex-1">
             {/* Dados principais */}
             <header>
               <div className="w-full flex justify-between items-center">
                 <div className="w-full justify-start flex">
                   <Image
-                    src={renderUniversityImage(course.brand)}
+                    src={renderUniversityImage(course.brand || '')}
                     alt={`Logo da faculdade ${course.brand}`}
                     width={70}
                     height={30}
@@ -140,13 +218,15 @@ const handleClick = () => {
                   <button
                     title="Favoritar curso"
                     aria-label="Favoritar curso"
-                    onClick={() => toggleFavorite(course.id)}
+                    onClick={() => {
+                      toggleFavorite(course);
+                    }}
                     className="p-2 rounded-full bg-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300"
                   >
                     <Heart
                       size={20}
                       className={
-                        favorites.includes(course.id)
+                        isFavorite(course)
                           ? "text-red-500 fill-red-500"
                           : "text-neutral-400"
                       }
@@ -158,13 +238,42 @@ const handleClick = () => {
               <h3 className="font-bold text-lg text-neutral-900" itemProp="name">
                 {courseParsed.name || course.name}
               </h3>
-              <p className="text-neutral-600 text-sm" itemProp="educationalCredentialAwarded">
-                {courseParsed.type}
-              </p>
+              <div className="flex flex-wrap gap-2 items-center">
+                {course.academicDegree && (
+                  <p className="text-neutral-600 text-sm" itemProp="educationalCredentialAwarded">
+                    {course.academicDegree === 'BACHARELADO' ? 'Bacharelado' :
+                     course.academicDegree === 'LICENCIATURA' ? 'Licenciatura' :
+                     course.academicDegree === 'TECNOLOGO' ? 'Tecnólogo' :
+                     course.academicDegree === 'ESPECIALISTA' ? 'Especialista' :
+                     course.academicDegree}
+                  </p>
+                )}
+                {course.academicLevel && (
+                  <>
+                    {course.academicDegree && <span className="text-neutral-400">•</span>}
+                    <p className="text-neutral-600 text-sm">
+                      {course.academicLevel === 'GRADUACAO' ? 'Graduação' :
+                       course.academicLevel === 'POS_GRADUACAO' ? 'Pós-graduação' :
+                       course.academicLevel === 'TECNICO' ? 'Técnico' :
+                       course.academicLevel}
+                    </p>
+                  </>
+                )}
+                {!course.academicDegree && (
+                  <p className="text-neutral-600 text-sm" itemProp="educationalCredentialAwarded">
+                    {courseParsed.type}
+                  </p>
+                )}
+              </div>
               <p className="text-neutral-600 text-sm" itemScope itemProp="provider" itemType="https://schema.org/CollegeOrUniversity">
-                <span itemProp="name">{capitalizeFirstLetter(course.brand)}</span>
+                <span itemProp="name">{capitalizeFirstLetter(course.brand || '')}</span>
               </p>
-              {course.unitDistrict && (
+              {course.unitName && (
+                <p className="text-neutral-600 text-sm">
+                  Campus: {capitalizeFirstLetter(course.unitName)}
+                </p>
+              )}
+              {!course.unitName && course.unitDistrict && (
                 <p className="text-neutral-600 text-sm">
                   Campus: {capitalizeFirstLetter(course.unitDistrict)}
                 </p>
@@ -179,49 +288,103 @@ const handleClick = () => {
               </div>
               <div className="flex items-center text-neutral-600">
                 <Building2 size={18} className="mr-1" />
-                <span itemProp="courseMode">{course.modality}</span>
+                <span itemProp="courseMode">
+                  {course.commercialModality || course.modality}
+                  {course.submodality === 'HIBRIDO_FLEX' && !course.commercialModality && (
+                    <span className="ml-1 text-xs text-emerald-600 font-medium">
+                      (com aulas práticas)
+                    </span>
+                  )}
+                </span>
               </div>
-              <div className="flex items-center text-neutral-600">
-                <Clock size={18} className="mr-1" />
-                {course.classShift}
-              </div>
+              {(course.shiftOptions && course.shiftOptions.length > 0) && (
+                <div className="flex items-center text-neutral-600">
+                  <Clock size={18} className="mr-1" />
+                  <span>{getShiftLabel(course.shiftOptions)}</span>
+                </div>
+              )}
+              {course.classShift && !course.shiftOptions && (
+                <div className="flex items-center text-neutral-600">
+                  <Clock size={18} className="mr-1" />
+                  {course.classShift}
+                </div>
+              )}
+              {course.city && (
+                <div className="flex items-center text-neutral-600">
+                  <MapPin size={18} className="mr-1" />
+                  <span>{capitalizeFirstLetter(course.city)}</span>
+                </div>
+              )}
             </div>
 
-            {/* Preço */}
-            <div className="border-t border-neutral-100 pt-4" itemProp="hasCourseInstance" itemScope itemType="https://schema.org/CourseInstance">
-              <div className="flex justify-between items-end">
+            {/* Horários dos dias da semana (quando disponível) */}
+            {course.schedules && course.schedules.length > 0 && (
+              <div className="text-sm text-neutral-600 bg-neutral-50 p-3 rounded-lg">
+                <div className="font-medium mb-1">Horários:</div>
+                <div>{formatSchedules(course.schedules)}</div>
+              </div>
+            )}
+
+            {/* Preço e Botão */}
+            <div className="border-t border-neutral-100 pt-4 mt-auto" itemProp="hasCourseInstance" itemScope itemType="https://schema.org/CourseInstance">
+              <div className="flex justify-between items-end mb-4">
                 <div>
                   <span className="text-sm text-neutral-600">Por:</span>
                   <div className="text-emerald-500 text-2xl font-bold" itemProp="offers" itemScope itemType="https://schema.org/Offer">
-                    <span itemProp="price">   {(course.montlyFeeToMin / 1).toLocaleString('pt-BR', {
+                    <span itemProp="price">   {(course.minPrice / 1).toLocaleString('pt-BR', {
                       style: 'currency',
                       currency: 'BRL',
                     })}</span>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Botão */}
-            <button
-              onClick={handleClick}
-              title="Avançar para matrícula"
-              aria-label="Avançar para matrícula"
-              className="w-full bg-emerald-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-emerald-600 hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
-            >
-              Quero essa bolsa
-            </button>
+              {/* Botão */}
+              <button
+                onClick={handleClick}
+                title="Avançar para matrícula"
+                aria-label="Avançar para matrícula"
+                className="w-full bg-emerald-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-emerald-600 hover:shadow-lg hover:scale-[1.02] transition-all duration-300 mb-4"
+              >
+                Quero essa bolsa
+              </button>
 
-            {/* Localização */}
-            <div className="flex items-start text-sm text-neutral-600">
-              <MapPin size={16} className="mr-2 mt-0.5 flex-shrink-0" />
-              <p>
-                {capitalizeFirstLetter(course.unitAddress)}, {course.unitNumber} -{" "}
-                {course.unitCity} - {course.unitState}
-                {course.unitDistrict && `, ${capitalizeFirstLetter(course.unitDistrict)}`}
-                {" - CEP: "}
-                {course.unitPostalCode}
-              </p>
+              {/* Localização */}
+              <div className="flex items-start text-sm text-neutral-600">
+                <MapPin size={16} className="mr-2 mt-0.5 flex-shrink-0" />
+                <p 
+                  className="truncate overflow-hidden text-ellipsis whitespace-nowrap" 
+                  title={
+                    course.unitAddress 
+                      ? `${capitalizeFirstLetter(course.unitAddress)}${course.unitNumber ? `, ${course.unitNumber}` : ''}${course.unitCity || course.city ? ` - ${course.unitCity || course.city}` : ''}${course.unitState || course.uf ? ` - ${course.unitState || course.uf}` : ''}${course.unitPostalCode ? ` - CEP: ${course.unitPostalCode}` : ''}`
+                      : course.unit
+                        ? `${course.unit}${course.unitPostalCode ? ` - CEP: ${course.unitPostalCode}` : ''}`
+                        : `${course.unitCity || course.city || ''}${course.unitCity || course.city ? ' - ' : ''}${course.unitState || course.uf || ''}${course.unitPostalCode ? ` - CEP: ${course.unitPostalCode}` : ''}`
+                  }
+                >
+                  {course.unitAddress ? (
+                    <>
+                      {capitalizeFirstLetter(course.unitAddress)}
+                      {course.unitNumber && `, ${course.unitNumber}`}
+                      {course.unitCity || course.city ? ` - ${course.unitCity || course.city}` : ''}
+                      {course.unitState || course.uf ? ` - ${course.unitState || course.uf}` : ''}
+                      {course.unitPostalCode && ` - CEP: ${course.unitPostalCode}`}
+                    </>
+                  ) : course.unit ? (
+                    <>
+                      {course.unit}
+                      {course.unitPostalCode && ` - CEP: ${course.unitPostalCode}`}
+                    </>
+                  ) : (
+                    <>
+                      {course.unitCity || course.city || ''}
+                      {course.unitCity || course.city ? ' - ' : ''}
+                      {course.unitState || course.uf || ''}
+                      {course.unitPostalCode && ` - CEP: ${course.unitPostalCode}`}
+                    </>
+                  )}
+                </p>
+              </div>
             </div>
           </div>
         </div>

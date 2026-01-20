@@ -150,7 +150,7 @@ const ScholarshipCarousel: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsToShow, setItemsToShow] = useState(3);
   const carouselRef = useRef<HTMLDivElement>(null);
-  const { state, town } = useGeoLocation();
+  const { city, region, state, town } = useGeoLocation();
   const router = useRouter();
 
   const slugify = (text: string) =>
@@ -158,34 +158,36 @@ const ScholarshipCarousel: React.FC = () => {
 
   const handleNavigate = (scholarship: ScholarshipProps) => {
     const courseSlug = slugify(scholarship.course.replace(/ - (Bacharelado|Tecn[oó]logo)$/i, ''));
-    const city = scholarship.city || town || 'São Paulo';
-    const stateFinal = scholarship.state || state || 'SP';
-    const citySlug = slugify(city);
+    // Usar city/region (novo) ou town/state (compatibilidade)
+    const cityFinal = scholarship.city || city || town || 'São Paulo';
+    const stateFinal = scholarship.state || region || state || 'SP';
 
     localStorage.setItem('searchParams', JSON.stringify({
       courseId: scholarship.courseId,
       courseName: scholarship.course,
-      city,
+      city: cityFinal,
       state: stateFinal,
       modalidade: scholarship.modality
     }));
 
     document.cookie = `courseName=${encodeURIComponent(courseSlug)}; path=/`;
     document.cookie = `modalidade=${encodeURIComponent(scholarship.modality)}; path=/`;
-    document.cookie = `city=${encodeURIComponent(city)}; path=/`;
+    document.cookie = `city=${encodeURIComponent(cityFinal)}; path=/`;
     document.cookie = `state=${encodeURIComponent(stateFinal)}; path=/`;
 
+    const citySlug = slugify(cityFinal);
     router.push(`/cursos/resultado/${scholarship.modality}/${courseSlug}/${citySlug}`);
   };
 
   const overrideLocationScholarships = scholarships.map((s) => {
-    const city = s.city || town || 'São Paulo';
-    const stateFinal = s.state || state || 'SP';
+    // Usar city/region (novo) ou town/state (compatibilidade)
+    const cityFinal = s.city || city || town || 'São Paulo';
+    const stateFinal = s.state || region || state || 'SP';
     return {
       ...s,
-      city,
+      city: cityFinal,
       state: stateFinal,
-      location: `${city} - ${stateFinal}`
+      location: `${cityFinal} - ${stateFinal}`
     };
   });
   useEffect(() => {

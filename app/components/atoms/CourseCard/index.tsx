@@ -59,7 +59,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
     setShowAddress(!showAddress)
   }
 
-  const capitalizeFirstLetter = (text: string) => {
+  const capitalizeFirstLetter = (text: string | undefined) => {
     if (!text) return ''
     return text
       .split(' ') // Divide a string em palavras
@@ -152,7 +152,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
       <div className="border-t border-gray-200 px-4 py-3">
         <div className="mb-2 flex items-baseline gap-1">
           <span className="text-lg font-bold">
-            {(course.montlyFeeToMin / 1).toLocaleString('pt-BR', {
+            {(course.minPrice / 1).toLocaleString('pt-BR', {
               style: 'currency',
               currency: 'BRL',
             })}

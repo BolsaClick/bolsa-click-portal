@@ -71,7 +71,7 @@ const HowWork: React.FC = () => {
         </div>
         
         <div className="flex justify-center mt-12">
-          <Link href="/cursos" className="cta-button-large">
+          <Link href="/curso" className="cta-button-large">
             Encontre sua bolsa agora
           </Link>
         </div>

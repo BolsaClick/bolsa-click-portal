@@ -87,7 +87,7 @@ export default function GetInTouch() {
             Seu sucesso acadêmico é nossa prioridade. Estamos aqui para ajudar você a encontrar as melhores oportunidades educacionais!
           </p>
           <Link
-            href="/cursos"
+            href="/curso"
             className="inline-flex items-center bg-bolsa-secondary hover:bg-bolsa-secondary/75 text-white font-medium px-8 py-4 rounded-md transition-all duration-300 text-lg"
           >
             Explorar Bolsas Disponíveis

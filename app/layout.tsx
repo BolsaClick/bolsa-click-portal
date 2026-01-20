@@ -81,7 +81,7 @@ export const metadata: Metadata = {
         url: theme.siteUrl,
         potentialAction: {
           '@type': 'SearchAction',
-          target: `${theme.siteUrl}/cursos?courseName={search_term_string}`,
+          target: `${theme.siteUrl}/curso/resultado?q={search_term_string}`,
           'query-input': 'required name=search_term_string',
         },
       },

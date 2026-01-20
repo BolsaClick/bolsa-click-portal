@@ -87,7 +87,7 @@ export default function Custom404() {
               <Home className="w-5 h-5" />
               <span>Voltar para a página inicial</span>
             </button>
-            <button onClick={() => router.push('cursos')} className="border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center space-x-2">
+            <button onClick={() => router.push('curso')} className="border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center space-x-2">
               <Search className="w-5 h-5" />
               <span>Buscar um curso</span>
             </button>

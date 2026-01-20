@@ -13,7 +13,7 @@ import TitleSection from '../../molecules/TitleSection'
 import Image from 'next/image'
 import { useGeoLocation } from '@/app/context/GeoLocationContext'
 const Recommended = () => {
-  const { state, town } = useGeoLocation()
+  const { city, region, state, town } = useGeoLocation()
 
   const [userLocation, setUserLocation] = useState<{
     state: string
@@ -21,10 +21,14 @@ const Recommended = () => {
   } | null>(null)
 
   useEffect(() => {
-    if (state && town) {
-      setUserLocation({ state, town })
+    // Usar city/region (novo) ou state/town (compatibilidade)
+    const locationCity = city || town
+    const locationState = region || state
+    
+    if (locationCity && locationState) {
+      setUserLocation({ state: locationState, town: locationCity })
     }
-  }, [state, town])
+  }, [city, region, state, town])
   const bolsas = [
     {
       id: 1,

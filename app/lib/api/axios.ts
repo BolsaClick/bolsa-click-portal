@@ -31,6 +31,18 @@ export const api = axios.create({
   },
 
 })
+export const tartarus = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_TARTARUS_API,
+  proxy: {
+    host: parsedFixieUrl.hostname,
+    port: Number(parsedFixieUrl.port), 
+    auth: {
+      username: parsedFixieUrl.username,
+      password: parsedFixieUrl.password,
+    },
+  },
+
+})
 
 export const opencage = axios.create({
   baseURL: process.env.OPENCAGE_URL,

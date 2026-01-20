@@ -1,9 +1,13 @@
-import axios from 'axios'
+'use client'
+
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import { getLocationByIP } from '@/app/lib/api/get-location-by-ip'
 
 type LocationData = {
   state: string | null
   town: string | null
+  city: string | null
+  region: string | null
   error: string | null
 }
 
@@ -12,51 +16,39 @@ const GeoLocationContext = createContext<LocationData | null>(null)
 export const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
   const [state, setState] = useState<string | null>(null)
   const [town, setTown] = useState<string | null>(null)
+  const [city, setCity] = useState<string | null>(null)
+  const [region, setRegion] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!navigator.geolocation) {
-      setError('Geolocalização não é suportada neste navegador.')
-      return
-    }
-  
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords
-  
-        try {
-          const response = await axios.get(
-            'https://nominatim.openstreetmap.org/reverse',
-            {
-              params: {
-                format: 'json',
-                lat: latitude,
-                lon: longitude,
-              },
-            }
-          )
-  
-          const address = response.data.address || {}
-  
-          setState(address.state ?? null)
-          setTown(address.town ?? address.city ?? null) // tenta city como fallback
-        } catch (err) {
-          console.error('Erro ao buscar endereço da API:', err)
+    const detectLocation = async () => {
+      try {
+        const location = await getLocationByIP()
+        
+        if (location) {
+          setCity(location.city)
+          setRegion(location.region)
+          setState(location.region)
+          setTown(location.city)
+        } else {
           setError('Não foi possível obter a localização.')
         }
-      },
-      (geoError) => {
-        console.error(
-          'Erro de geolocalização:',
-          geoError?.message || geoError || 'Erro desconhecido'
-        )
-        setError('Permissão negada ou erro ao acessar a localização.')
+      } catch (err) {
+        console.error('Erro ao detectar localização por IP:', err)
+        setError('Não foi possível obter a localização.')
+        // Valores padrão em caso de erro
+        setCity('São Paulo')
+        setRegion('SP')
+        setState('SP')
+        setTown('São Paulo')
       }
-    )
+    }
+
+    detectLocation()
   }, [])
 
   return (
-    <GeoLocationContext.Provider value={{ state, town, error }}>
+    <GeoLocationContext.Provider value={{ state, town, city, region, error }}>
       {children}
     </GeoLocationContext.Provider>
   )
@@ -66,7 +58,7 @@ export const useGeoLocation = () => {
   const context = useContext(GeoLocationContext)
   if (!context) {
     throw new Error(
-      'useGeoLocation deve ser usado dentro de GeoLocationProvider',
+      'useGeoLocation deve ser usado dentro de GlobalProvider',
     )
   }
   return context

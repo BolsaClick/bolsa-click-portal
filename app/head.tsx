@@ -46,7 +46,7 @@ export default function Head() {
             "url": "https://www.bolsaclick.com.br/",
             "potentialAction": {
               "@type": "SearchAction",
-              "target": "https://www.bolsaclick.com.br/buscar-cursos?q={search_term_string}",
+              "target": "https://www.bolsaclick.com.br/curso/result?q={search_term_string}",
               "query-input": {
                 "@type": "PropertyValueSpecification",
                 "valueRequired": true,

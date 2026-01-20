@@ -239,6 +239,65 @@ function MatriculaContent() {
     }
   }, [offerDetails, shift, modality])
 
+  // Verificar se há uma transação pendente quando a página carrega
+  useEffect(() => {
+    if (typeof window !== 'undefined' && offerDetails) {
+      const pendingTransactionId = localStorage.getItem('pendingTransactionId')
+      const pendingFormData = localStorage.getItem('pendingFormData')
+      
+      if (pendingTransactionId && pendingFormData) {
+        try {
+          const formData = JSON.parse(pendingFormData) as FormSchema
+          
+          // Verificar o status imediatamente
+          const checkPendingPayment = async () => {
+            try {
+              const statusResponse = await getCheckoutStatus(pendingTransactionId)
+              console.log('📊 Verificando transação pendente:', statusResponse)
+              
+              if (statusResponse.status === 'paid') {
+                // Pagamento já foi confirmado, criar matrícula
+                console.log('✅ Pagamento já confirmado! Criando matrícula...')
+                // Usar a função que será definida abaixo
+                // eslint-disable-next-line react-hooks/exhaustive-deps
+                createInscriptionAfterPayment(formData).catch(console.error)
+                
+                // Limpar dados pendentes
+                localStorage.removeItem('pendingTransactionId')
+                localStorage.removeItem('pendingFormData')
+              } else if (statusResponse.status === 'pending') {
+                // Ainda pendente, reiniciar verificação
+                console.log('🔄 Reiniciando verificação de pagamento pendente...')
+                setTransactionId(pendingTransactionId)
+                setPixQrCode({
+                  brCode: '',
+                  brCodeBase64: null,
+                })
+                setShowModal(true)
+                // Usar a função que será definida abaixo
+                // eslint-disable-next-line react-hooks/exhaustive-deps
+                startPaymentStatusCheck(pendingTransactionId, formData)
+              } else {
+                // Falhou ou cancelado, limpar
+                localStorage.removeItem('pendingTransactionId')
+                localStorage.removeItem('pendingFormData')
+              }
+            } catch (error) {
+              console.error('Erro ao verificar transação pendente:', error)
+            }
+          }
+          
+          checkPendingPayment()
+        } catch (error) {
+          console.error('Erro ao processar dados pendentes:', error)
+          localStorage.removeItem('pendingTransactionId')
+          localStorage.removeItem('pendingFormData')
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [offerDetails])
+
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }))
   }
@@ -457,6 +516,7 @@ function MatriculaContent() {
   const startPaymentStatusCheck = async (transactionIdValue: string, formData: FormSchema) => {
     const maxAttempts = 60 // 5 minutos (60 * 5 segundos)
     let attempts = 0
+    let intervalId: NodeJS.Timeout | null = null
 
     const checkStatus = async () => {
       try {
@@ -468,6 +528,13 @@ function MatriculaContent() {
 
         if (statusResponse.status === 'paid') {
           console.log('✅ Pagamento confirmado! Criando matrícula...')
+          
+          // Limpar intervalo se estiver rodando
+          if (intervalId) {
+            clearInterval(intervalId)
+            intervalId = null
+          }
+          
           toast.success('Pagamento confirmado! Finalizando matrícula...')
           
           trackEvent('payment_confirmed', {
@@ -488,29 +555,51 @@ function MatriculaContent() {
           return
         } else if (statusResponse.status === 'failed' || statusResponse.status === 'cancelled') {
           console.error('❌ Pagamento falhou ou foi cancelado')
+          
+          // Limpar intervalo se estiver rodando
+          if (intervalId) {
+            clearInterval(intervalId)
+            intervalId = null
+          }
+          
           toast.error('Pagamento não foi confirmado. Tente novamente.')
           setPixError('Pagamento não foi confirmado')
+          setPixLoading(false)
           return
         }
 
         // Se ainda está pendente e não excedeu o limite, continuar verificando
-        if (attempts < maxAttempts && statusResponse.status === 'pending') {
-          setTimeout(checkStatus, 5000) // Verificar a cada 5 segundos
-        } else if (attempts >= maxAttempts) {
+        if (attempts >= maxAttempts) {
           console.warn('⏱️ Timeout na verificação do pagamento')
+          
+          // Limpar intervalo se estiver rodando
+          if (intervalId) {
+            clearInterval(intervalId)
+            intervalId = null
+          }
+          
           toast.warning('Tempo limite excedido. Verifique o status do pagamento manualmente.')
+          setPixLoading(false)
         }
       } catch (error: unknown) {
         console.error('Erro ao verificar status do pagamento:', error)
-        // Continuar tentando mesmo em caso de erro
-        if (attempts < maxAttempts) {
-          setTimeout(checkStatus, 5000)
+        
+        // Se excedeu o limite de tentativas, parar
+        if (attempts >= maxAttempts) {
+          if (intervalId) {
+            clearInterval(intervalId)
+            intervalId = null
+          }
+          setPixLoading(false)
         }
       }
     }
 
-    // Iniciar verificação após 5 segundos
-    setTimeout(checkStatus, 5000)
+    // Verificar imediatamente na primeira vez
+    checkStatus()
+    
+    // Depois verificar a cada 3 segundos (mais frequente)
+    intervalId = setInterval(checkStatus, 3000)
   }
 
   // Função para criar a matrícula após o pagamento ser confirmado
@@ -578,6 +667,12 @@ function MatriculaContent() {
           name: data.name,
           phone: data.phone.replace(/\D/g, ''),
         })
+        
+        // Limpar dados pendentes do localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('pendingTransactionId')
+          localStorage.removeItem('pendingFormData')
+        }
         
         // Redirecionar para página de sucesso com informações do curso
         const params = new URLSearchParams()
@@ -676,6 +771,12 @@ function MatriculaContent() {
       }
 
       setTransactionId(transactionIdValue)
+      
+      // Salvar transactionId e dados do formulário no localStorage para verificação posterior
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('pendingTransactionId', transactionIdValue)
+        localStorage.setItem('pendingFormData', JSON.stringify(data))
+      }
 
       // Verificar se tem QR Code na resposta
       if (checkoutResponse.pixQrCode?.brCode && checkoutResponse.pixQrCode?.brCodeBase64) {
@@ -697,7 +798,7 @@ function MatriculaContent() {
           coupon_code: coupon?.code,
         })
         
-        // Iniciar verificação do status do pagamento
+        // Iniciar verificação do status do pagamento imediatamente
         startPaymentStatusCheck(transactionIdValue, data)
       } else {
         throw new Error('QR Code Pix não encontrado na resposta do checkout')

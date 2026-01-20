@@ -93,7 +93,7 @@ const Footer: React.FC = () => {
                     </span>
                   </li>
                   <li>
-                    <a href="#" className="text-neutral-600 hover:text-emerald-500 transition-colors">
+                    <a href="curso/resultado" className="text-neutral-600 hover:text-emerald-500 transition-colors">
                       Buscar Graduação
                     </a>
                   </li>

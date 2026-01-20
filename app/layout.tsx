@@ -136,6 +136,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Facebook Pixel (noscript) */}
         {ids.facebookPixel && (
           <noscript>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               height="1"
               width="1"

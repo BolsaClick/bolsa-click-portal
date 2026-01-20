@@ -33,12 +33,13 @@ import { formatCurrency } from '@/utils/fomartCurrency'
 import { toast } from 'sonner'
 import { validateCoupon } from '@/app/lib/api/get-coupon'
 import { FaPix } from 'react-icons/fa6'
-import { isMarketplaceEnabled } from '@/utils/feature-flags'
 import { validateCpf } from '@/app/lib/api/validate-cpf'
 import { createStudent } from '@/app/lib/api/create-student'
 import { createInscription, buildInscriptionPayload } from '@/app/lib/api/create-inscription'
 import { createCheckout } from '@/app/lib/api/create-checkout'
 import { getCheckoutStatus } from '@/app/lib/api/checkout-status'
+import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
+import { useMarketplaceFeatureFlag, usePixBeforeEnrollmentFeatureFlag } from '@/app/lib/hooks/usePostHogFeatureFlags'
 
 
 // Validação melhorada seguindo o exemplo
@@ -116,6 +117,11 @@ interface CouponData {
 function MatriculaContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const { trackEvent, identifyUser } = usePostHogTracking()
+  
+  // Feature flags do PostHog
+  const isMarketplace = useMarketplaceFeatureFlag()
+  const requirePixBeforeEnrollment = usePixBeforeEnrollmentFeatureFlag()
   
   const groupId = searchParams.get('groupId') || searchParams.get('id')
   const unitId = searchParams.get('unitId')
@@ -202,6 +208,24 @@ function MatriculaContent() {
     retry: 2,
   })
 
+  // Track checkout page loaded when offerDetails is available
+  useEffect(() => {
+    if (offerDetails) {
+      trackEvent('checkout_page_loaded', {
+        course_id: offerDetails.courseId,
+        course_name: offerDetails.course,
+        brand: offerDetails.brand,
+        modality: offerDetails.modality,
+        shift: offerDetails.shift,
+        monthly_fee: offerDetails.montlyFeeTo,
+        enrollment_fee: offerDetails.subscriptionValue || 0,
+        unit_id: offerDetails.unitId,
+        city: offerDetails.unitCity,
+        state: offerDetails.unitState,
+      })
+    }
+  }, [offerDetails, trackEvent])
+
   useEffect(() => {
     if (offerDetails) {
       const courseToSave = {
@@ -273,8 +297,8 @@ function MatriculaContent() {
     }
   }
 
-  // Feature flag: marketplace
-  const isMarketplace = isMarketplaceEnabled()
+  // Feature flag: marketplace (agora vem do PostHog)
+  // const isMarketplace já está definido acima via useMarketplaceFeatureFlag()
   
   const monthlyFee = offerDetails?.montlyFeeTo || 0
   
@@ -356,6 +380,12 @@ function MatriculaContent() {
       
       if (!couponCode || !couponCode.trim()) {
         setCouponError('Digite um código de cupom')
+        trackEvent('coupon_apply_attempted', {
+          coupon_code: couponCode.trim().toUpperCase(),
+          error: 'empty_code',
+          course_id: offerDetails?.courseId,
+          course_name: offerDetails?.course,
+        })
         return
       }
 
@@ -365,6 +395,12 @@ function MatriculaContent() {
       if (!result.valid || !result.coupon) {
         setCouponError(result.error || 'Cupom inválido')
         toast.error(result.error || 'Cupom inválido')
+        trackEvent('coupon_apply_failed', {
+          coupon_code: couponCode.trim().toUpperCase(),
+          error: result.error || 'invalid_coupon',
+          course_id: offerDetails?.courseId,
+          course_name: offerDetails?.course,
+        })
         return
       }
 
@@ -388,11 +424,28 @@ function MatriculaContent() {
         : `${result.coupon.discount}%`
       
       toast.success(`Cupom aplicado com sucesso! Você economizou ${discountValue}`)
+      
+      trackEvent('coupon_applied', {
+        coupon_code: couponCode.trim().toUpperCase(),
+        coupon_type: result.coupon.type,
+        discount_value: result.coupon.type === 'PERCENT' ? result.coupon.discount : (result.discountAmount || 0) / 100,
+        discount_amount: result.discountAmount || 0,
+        original_amount: baseMatricula,
+        final_amount: result.finalAmount || baseMatricula,
+        course_id: offerDetails?.courseId,
+        course_name: offerDetails?.course,
+      })
     } catch (err: unknown) {
       const axiosError = err as { response?: { data?: { error?: string } }; message?: string }
       const message = axiosError.response?.data?.error || axiosError.message || 'Erro ao aplicar cupom'
       setCouponError(message)
       toast.error(message)
+      trackEvent('coupon_apply_error', {
+        coupon_code: couponCode.trim().toUpperCase(),
+        error: message,
+        course_id: offerDetails?.courseId,
+        course_name: offerDetails?.course,
+      })
     }
   }
 
@@ -412,6 +465,17 @@ function MatriculaContent() {
         if (statusResponse.status === 'paid') {
           console.log('✅ Pagamento confirmado! Criando matrícula...')
           toast.success('Pagamento confirmado! Finalizando matrícula...')
+          
+          trackEvent('payment_confirmed', {
+            transaction_id: transactionIdValue,
+            course_id: offerDetails?.courseId,
+            course_name: offerDetails?.course,
+            amount_in_cents: matriculaAfterCoupon,
+            amount_in_reais: matriculaAfterCoupon / 100,
+            payment_method: 'pix',
+            has_coupon: !!coupon,
+            coupon_code: coupon?.code,
+          })
           
           // Pagamento confirmado, criar matrícula
           await createInscriptionAfterPayment(formData)
@@ -488,6 +552,27 @@ function MatriculaContent() {
       
       toast.success('Matrícula realizada com sucesso!')
       
+      trackEvent('enrollment_completed', {
+        course_id: offerDetails.courseId,
+        course_name: offerDetails.course,
+        brand: offerDetails.brand,
+        modality: offerDetails.modality,
+        shift: offerDetails.shift,
+        student_email: data.email,
+        student_cpf: data.cpf.replace(/\D/g, ''),
+        amount_paid: matriculaAfterCoupon / 100,
+        has_coupon: !!coupon,
+        coupon_code: coupon?.code,
+        promoter_id: promoterId,
+      })
+      
+      // Identificar usuário no PostHog
+      identifyUser(data.cpf.replace(/\D/g, ''), {
+        email: data.email,
+        name: data.name,
+        phone: data.phone.replace(/\D/g, ''),
+      })
+      
       // Redirecionar para página de sucesso ou fechar modal
       setTimeout(() => {
         setShowModal(false)
@@ -505,6 +590,19 @@ function MatriculaContent() {
       if (cpfValidationError) {
         toast.error('Por favor, corrija o CPF antes de continuar.')
         return
+      }
+
+      // Se a flag requirePixBeforeEnrollment estiver ativa, 
+      // criar matrícula primeiro e depois cobrar
+      if (requirePixBeforeEnrollment) {
+        console.log('📝 Modo: PIX antes da matrícula está ativo')
+        trackEvent('pix_before_enrollment_mode_activated', {
+          course_id: offerDetails?.courseId,
+          course_name: offerDetails?.course,
+        })
+        
+        // TODO: Implementar lógica alternativa se necessário
+        // Por enquanto, continua com o fluxo normal
       }
 
       setPixError(null)
@@ -535,6 +633,20 @@ function MatriculaContent() {
       }
 
       console.log('💳 Criando checkout na API Elysium...', checkoutData)
+      
+      trackEvent('checkout_initiated', {
+        course_id: offerDetails.courseId,
+        course_name: offerDetails.course,
+        brand: offerDetails.brand,
+        amount_in_cents: amountInCents,
+        amount_in_reais: amountInCents / 100,
+        has_coupon: !!coupon,
+        coupon_code: coupon?.code,
+        payment_method: paymentMethod,
+        student_email: data.email,
+        student_cpf: data.cpf.replace(/\D/g, ''),
+      })
+      
       const checkoutResponse = await createCheckout(checkoutData)
       console.log('✅ Checkout criado:', checkoutResponse)
 
@@ -556,6 +668,16 @@ function MatriculaContent() {
         setShowModal(true)
         toast.success('QR Code Pix gerado com sucesso!')
         
+        trackEvent('pix_qr_code_generated', {
+          transaction_id: transactionIdValue,
+          course_id: offerDetails.courseId,
+          course_name: offerDetails.course,
+          amount_in_cents: amountInCents,
+          amount_in_reais: amountInCents / 100,
+          has_coupon: !!coupon,
+          coupon_code: coupon?.code,
+        })
+        
         // Iniciar verificação do status do pagamento
         startPaymentStatusCheck(transactionIdValue, data)
       } else {
@@ -568,6 +690,16 @@ function MatriculaContent() {
       setPixError(errorMessage)
       setPixLoading(false)
       toast.error(errorMessage)
+      
+      trackEvent('checkout_error', {
+        error: errorMessage,
+        course_id: offerDetails?.courseId,
+        course_name: offerDetails?.course,
+        amount_in_cents: matriculaAfterCoupon,
+        payment_method: paymentMethod,
+        has_coupon: !!coupon,
+        coupon_code: coupon?.code,
+      })
     }
   }
 
@@ -743,14 +875,36 @@ function MatriculaContent() {
                                         // Pode cadastrar
                                         setCpfValidationError(null)
                                         toast.success('CPF validado com sucesso!')
+                                        trackEvent('cpf_validated', {
+                                          cpf_valid: true,
+                                          inscription_allowed: true,
+                                          course_id: offerDetails?.courseId,
+                                          course_name: offerDetails?.course,
+                                        })
                                       } else if (result.haveAnotherInscriptionInCycle) {
                                         // Tem outra inscrição no ciclo e não está permitido cadastrar
                                         setCpfValidationError(result.message || 'Este CPF possui outra inscrição no ciclo e não pode ser cadastrado.')
                                         toast.error(result.message || 'Este CPF possui outra inscrição no ciclo.')
+                                        trackEvent('cpf_validation_failed', {
+                                          cpf_valid: true,
+                                          inscription_allowed: false,
+                                          reason: 'another_inscription_in_cycle',
+                                          message: result.message,
+                                          course_id: offerDetails?.courseId,
+                                          course_name: offerDetails?.course,
+                                        })
                                       } else {
                                         // Não está permitido cadastrar por outro motivo
                                         setCpfValidationError(result.message || 'Este CPF não pode ser cadastrado para este curso.')
                                         toast.error(result.message || 'Este CPF não pode ser cadastrado.')
+                                        trackEvent('cpf_validation_failed', {
+                                          cpf_valid: true,
+                                          inscription_allowed: false,
+                                          reason: 'other',
+                                          message: result.message,
+                                          course_id: offerDetails?.courseId,
+                                          course_name: offerDetails?.course,
+                                        })
                                       }
                                     } catch (error: unknown) {
                                       console.error('Erro ao validar CPF:', error)

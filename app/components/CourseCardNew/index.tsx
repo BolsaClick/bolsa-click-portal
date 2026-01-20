@@ -6,6 +6,7 @@ import Image from "next/image"
 import { useFavorites } from "@/app/lib/hooks/useFavorites"
 import { useState } from "react"
 import { toast } from "sonner"
+import { usePostHogTracking } from "@/app/lib/hooks/usePostHogTracking"
 
 interface CourseCardProps {
   course: Course
@@ -29,6 +30,7 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
   isPos
 }) => {
   const { isFavorite, toggleFavorite } = useFavorites()
+  const { trackEvent } = usePostHogTracking()
   
   // Estado para seleção de turno
   const [selectedShift, setSelectedShift] = useState<string>('')
@@ -64,6 +66,14 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
     // Se precisa selecionar turno mas ainda não selecionou
     if (needsShiftSelection() && !selectedShift) {
       toast.error('Por favor, selecione o turno')
+      trackEvent('course_card_click_blocked', {
+        reason: 'shift_not_selected',
+        course_id: course.id,
+        course_name: course.name,
+        course_brand: course.brand,
+        modality: courseModality,
+        view_mode: viewMode,
+      })
       return
     }
 
@@ -79,6 +89,23 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
     
     const finalShift = selectedShift || course.classShift || ''
     if (finalShift) params.set('shift', finalShift)
+
+    // Track course selection
+    trackEvent('course_selected', {
+      course_id: course.id,
+      course_name: course.name,
+      course_brand: course.brand,
+      academic_level: course.academicLevel,
+      modality: finalModality,
+      shift: finalShift,
+      price: course.minPrice,
+      city: course.city,
+      state: course.uf || course.unitState,
+      unit_id: course.unitId,
+      is_pos: isPos,
+      view_mode: viewMode,
+      is_favorite: isFavorite(course),
+    })
 
     // Redirecionar para checkout com params na URL
     if (isPos) {
@@ -267,7 +294,18 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
                     title="Favoritar curso"
                     aria-label="Favoritar curso"
                     onClick={() => {
-                      toggleFavorite(course);
+                      const wasFavorite = isFavorite(course)
+                      toggleFavorite(course)
+                      trackEvent(wasFavorite ? 'course_unfavorited' : 'course_favorited', {
+                        course_id: course.id,
+                        course_name: course.name,
+                        course_brand: course.brand,
+                        academic_level: course.academicLevel,
+                        modality: courseModality,
+                        price: course.minPrice,
+                        city: course.city,
+                        view_mode: viewMode,
+                      })
                     }}
                     className="p-2 rounded-full bg-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300"
                   >
@@ -351,7 +389,16 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
                   <Clock size={18} className="mr-1 flex-shrink-0" />
                   <select
                     value={selectedShift}
-                    onChange={(e) => setSelectedShift(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedShift(e.target.value)
+                      trackEvent('course_shift_selected', {
+                        course_id: course.id,
+                        course_name: course.name,
+                        selected_shift: e.target.value,
+                        available_shifts: course.shiftOptions?.join(', ') || '',
+                        modality: courseModality,
+                      })
+                    }}
                     className="bg-transparent border-b border-dashed border-neutral-400 hover:border-emerald-500 focus:border-emerald-500 outline-none text-neutral-600 cursor-pointer px-1 py-0 min-w-[120px] text-sm transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >

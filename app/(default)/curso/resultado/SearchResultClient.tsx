@@ -15,6 +15,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
+import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 
 import CourseCardNew from '@/app/components/CourseCardNew';
 import FiltersPanel from './FiltersPanel';
@@ -24,7 +25,7 @@ import { Course } from '@/app/interface/course';
 
 
 export default function SearchResultClient() {
-
+  const { trackEvent } = usePostHogTracking()
   const searchParams = useSearchParams();
   
   // Ler parâmetros da nova estrutura de URL
@@ -244,6 +245,22 @@ export default function SearchResultClient() {
     refetchOnReconnect: false, // Não refetch quando reconecta
   });
 
+  // Track search completion
+  useEffect(() => {
+    if (showCourses && !isLoading) {
+      const coursesCount = Array.isArray(showCourses) ? showCourses.length : (showCourses?.data?.length || 0)
+      trackEvent('course_search_completed', {
+        course_name: courseNameForAPI,
+        city: cidade,
+        state: estado,
+        modality: modalidade,
+        academic_level: nivel,
+        results_count: coursesCount,
+        has_results: coursesCount > 0,
+      })
+    }
+  }, [showCourses, isLoading, courseNameForAPI, cidade, estado, modalidade, nivel, trackEvent])
+
 
   // Filtrar por modalidade apenas se houver modalidade na URL
   const filteredByModality = useMemo(() => {
@@ -316,12 +333,25 @@ const onSubmit = (data: any) => {
   // Handler para mudança de preço
   const handlePriceChange = useCallback((val: [number, number]) => {
     setFilters((prev) => ({ ...prev, montlyFeeToMin: val }))
-  }, [])
+    trackEvent('course_filter_price_changed', {
+      price_min: val[0],
+      price_max: val[1],
+      course_name: courseNameForAPI,
+      city: cidade,
+      state: estado,
+    })
+  }, [trackEvent, courseNameForAPI, cidade, estado])
 
   // Handler para mudança de modalidade
   const handleModalityChange = useCallback((mode: string) => {
     updateURL({ modalidade: mode })
-  }, [updateURL])
+    trackEvent('course_filter_modality_changed', {
+      modality: mode,
+      course_name: courseNameForAPI,
+      city: cidade,
+      state: estado,
+    })
+  }, [updateURL, trackEvent, courseNameForAPI, cidade, estado])
 
   // Handler para seleção de curso
   const handleCourseSelect = useCallback((courseNameClean: string, courseNameFull: string) => {
@@ -331,7 +361,14 @@ const onSubmit = (data: any) => {
       c: courseNameClean,
       cn: courseNameFull,
     })
-  }, [updateURL])
+    trackEvent('course_search_initiated', {
+      course_name: courseNameClean,
+      course_name_full: courseNameFull,
+      city: cidade,
+      state: estado,
+      academic_level: nivel,
+    })
+  }, [updateURL, trackEvent, cidade, estado, nivel])
 
   // Handler para seleção de cidade
   const handleCitySelect = useCallback((newCity: string, newState: string) => {
@@ -339,7 +376,13 @@ const onSubmit = (data: any) => {
       cidade: newCity,
       estado: newState,
     })
-  }, [updateURL])
+    trackEvent('course_search_location_changed', {
+      city: newCity,
+      state: newState,
+      course_name: courseNameForAPI,
+      academic_level: nivel,
+    })
+  }, [updateURL, trackEvent, courseNameForAPI, nivel])
 
   return (
     <div className="w-full  bg-neutral-50">
@@ -355,13 +398,29 @@ const onSubmit = (data: any) => {
               <div className="flex items-center space-x-2 flex-shrink-0">
                 <div className="hidden sm:flex items-center space-x-2 bg-white rounded-lg border border-neutral-200 p-1">
                   <button
-                    onClick={() => setViewMode('grid')}
+                    onClick={() => {
+                      setViewMode('grid')
+                      trackEvent('course_search_view_changed', {
+                        view_mode: 'grid',
+                        course_name: courseNameForAPI,
+                        city: cidade,
+                        state: estado,
+                      })
+                    }}
                     className={`p-2 rounded ${viewMode === 'grid' ? 'bg-emerald-50 text-bolsa-secondary' : 'text-neutral-500 hover:bg-neutral-50'}`}
                   >
                     <LayoutGrid size={20} />
                   </button>
                   <button
-                    onClick={() => setViewMode('list')}
+                    onClick={() => {
+                      setViewMode('list')
+                      trackEvent('course_search_view_changed', {
+                        view_mode: 'list',
+                        course_name: courseNameForAPI,
+                        city: cidade,
+                        state: estado,
+                      })
+                    }}
                     className={`p-2 rounded ${viewMode === 'list' ? 'bg-emerald-50 text-bolsa-secondary' : 'text-neutral-500 hover:bg-neutral-50'}`}
                   >
                     <LayoutList size={20} />
@@ -585,7 +644,19 @@ const onSubmit = (data: any) => {
             {!isLoading && (
               <div className="mt-8 flex justify-center items-center space-x-2">
                 <button
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  onClick={() => {
+                    setCurrentPage((prev) => {
+                      const newPage = Math.max(prev - 1, 1)
+                      trackEvent('course_search_page_changed', {
+                        page: newPage,
+                        direction: 'previous',
+                        course_name: courseNameForAPI,
+                        city: cidade,
+                        state: estado,
+                      })
+                      return newPage
+                    })
+                  }}
                   disabled={currentPage === 1}
                   className="px-4 py-2 bg-neutral-200 text-neutral-800 rounded transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:text-bolsa-secondary disabled:hover:text-neutral-800"
                 >
@@ -595,7 +666,16 @@ const onSubmit = (data: any) => {
                 {Array.from({ length: totalPages }).map((_, i) => (
                   <button
                     key={i}
-                    onClick={() => setCurrentPage(i + 1)}
+                    onClick={() => {
+                      setCurrentPage(i + 1)
+                      trackEvent('course_search_page_changed', {
+                        page: i + 1,
+                        direction: 'direct',
+                        course_name: courseNameForAPI,
+                        city: cidade,
+                        state: estado,
+                      })
+                    }}
                     className={`px-4 py-2 rounded ${currentPage === i + 1 ? 'bg-bolsa-secondary text-white' : 'bg-white border text-neutral-800'}`}
                   >
                     {i + 1}
@@ -603,7 +683,19 @@ const onSubmit = (data: any) => {
                 ))}
 
                 <button
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  onClick={() => {
+                    setCurrentPage((prev) => {
+                      const newPage = Math.min(prev + 1, totalPages)
+                      trackEvent('course_search_page_changed', {
+                        page: newPage,
+                        direction: 'next',
+                        course_name: courseNameForAPI,
+                        city: cidade,
+                        state: estado,
+                      })
+                      return newPage
+                    })
+                  }}
                   disabled={currentPage === totalPages}
                   className="px-4 py-2 bg-neutral-200 text-neutral-800 rounded transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:text-bolsa-secondary disabled:hover:text-neutral-800"
                 >

@@ -1,23 +1,39 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Heart, LayoutGrid, LayoutList, ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useFavorites } from '@/app/lib/hooks/useFavorites'
 import CourseCardNew from '@/app/components/CourseCardNew'
 import { useForm } from 'react-hook-form'
+import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 
 export default function FavoritesClient() {
   const router = useRouter()
   const { favorites, clearFavorites } = useFavorites()
   const { handleSubmit, setValue } = useForm()
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const { trackEvent } = usePostHogTracking()
 
   const onSubmit = (data: Record<string, unknown>) => {
     localStorage.setItem('selectedCourse', JSON.stringify(data))
+    const courseData = data as { id?: string | number; name?: string; brand?: string }
+    trackEvent('favorite_course_selected', {
+      course_id: courseData.id,
+      course_name: courseData.name,
+      brand: courseData.brand,
+      from_favorites: true,
+    })
     router.push('/checkout/')
   }
+  
+  // Track when favorites page is loaded
+  useEffect(() => {
+    trackEvent('favorites_page_viewed', {
+      favorites_count: favorites.length,
+    })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="w-full bg-neutral-50 min-h-screen">
@@ -67,7 +83,13 @@ export default function FavoritesClient() {
               
               {favorites.length > 0 && (
                 <button
-                  onClick={clearFavorites}
+                  onClick={() => {
+                    trackEvent('favorites_cleared', {
+                      favorites_count: favorites.length,
+                      courses_count: favorites.length,
+                    })
+                    clearFavorites()
+                  }}
                   className="mt-4 sm:mt-0 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
                 >
                   Limpar todos os favoritos

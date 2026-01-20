@@ -255,7 +255,11 @@ function MatriculaContent() {
               const statusResponse = await getCheckoutStatus(pendingTransactionId)
               console.log('📊 Verificando transação pendente:', statusResponse)
               
-              if (statusResponse.status === 'paid') {
+              // Normalizar status para lowercase e verificar também o campo paid
+              const normalizedStatus = statusResponse.status?.toLowerCase()
+              const isPaid = normalizedStatus === 'paid' || (statusResponse as { paid?: boolean }).paid === true
+              
+              if (isPaid) {
                 // Pagamento já foi confirmado, criar matrícula
                 console.log('✅ Pagamento já confirmado! Criando matrícula...')
                 // Usar a função que será definida abaixo
@@ -265,7 +269,7 @@ function MatriculaContent() {
                 // Limpar dados pendentes
                 localStorage.removeItem('pendingTransactionId')
                 localStorage.removeItem('pendingFormData')
-              } else if (statusResponse.status === 'pending') {
+              } else if (statusResponse.status?.toLowerCase() === 'pending') {
                 // Ainda pendente, reiniciar verificação
                 console.log('🔄 Reiniciando verificação de pagamento pendente...')
                 setTransactionId(pendingTransactionId)
@@ -526,7 +530,11 @@ function MatriculaContent() {
         const statusResponse = await getCheckoutStatus(transactionIdValue)
         console.log('📊 Status do pagamento:', statusResponse)
 
-        if (statusResponse.status === 'paid') {
+        // Normalizar status para lowercase e verificar também o campo paid
+        const normalizedStatus = statusResponse.status?.toLowerCase()
+        const isPaid = normalizedStatus === 'paid' || (statusResponse as { paid?: boolean }).paid === true
+
+        if (isPaid) {
           console.log('✅ Pagamento confirmado! Criando matrícula...')
           
           // Limpar intervalo se estiver rodando
@@ -553,7 +561,7 @@ function MatriculaContent() {
           
           // Parar a verificação
           return
-        } else if (statusResponse.status === 'failed' || statusResponse.status === 'cancelled') {
+        } else if (normalizedStatus === 'failed' || normalizedStatus === 'cancelled') {
           console.error('❌ Pagamento falhou ou foi cancelado')
           
           // Limpar intervalo se estiver rodando

@@ -1,11 +1,13 @@
 import { elysium } from './axios'
 
 export interface CheckoutStatusResponse {
-  id: string
+  id?: string
   transactionId: string
-  status: 'pending' | 'paid' | 'failed' | 'cancelled'
-  amountInCents: number
+  status: 'pending' | 'paid' | 'failed' | 'cancelled' | 'PENDING' | 'PAID' | 'FAILED' | 'CANCELLED'
+  amountInCents?: number
+  amount?: number
   paidAt?: string
+  paid?: boolean
   [key: string]: unknown
 }
 

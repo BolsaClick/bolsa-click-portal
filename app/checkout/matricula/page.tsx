@@ -305,25 +305,26 @@ function MatriculaContent() {
   // Taxa administrativa fixa do Bolsa Click
   const administrativeFee = 49.99
   
-  // Se marketplace estiver ativo, usar valor da API, senão usar R$ 49,99 fixo
-  // Quando marketplace = true: usar subscriptionValue (valor da matrícula da API) + taxa administrativa
-  // Quando marketplace = false: usar apenas taxa administrativa (R$ 49,99)
+  // Lógica de cobrança:
+  // Marketplace ATIVO: cobrar apenas a MATRÍCULA (subscriptionValue da API)
+  // Marketplace DESABILITADO: cobrar apenas a TAXA DE SERVIÇO (R$ 49,99)
+  // Mensalidade sempre é cobrada pela faculdade (não aparece no checkout)
   let enrollmentFee: number
   if (isMarketplace) {
-    // Marketplace ativo: usar valor da API para matrícula
+    // Marketplace ativo: cobrar apenas a matrícula
     // Prioridade: subscriptionValue > montlyFeeTo (como fallback)
     enrollmentFee = offerDetails?.subscriptionValue !== undefined && offerDetails?.subscriptionValue !== null
       ? offerDetails.subscriptionValue
       : (offerDetails?.montlyFeeTo || 0)
   } else {
-    // Marketplace inativo: usar apenas taxa administrativa
+    // Marketplace desabilitado: cobrar apenas taxa de serviço
     enrollmentFee = administrativeFee
   }
   
   const baseMatricula = Math.round(enrollmentFee * 100) // em centavos
   
   // Texto do label baseado na feature flag
-  const enrollmentLabel = isMarketplace ? 'matrícula' : 'taxa administrativa'
+  const enrollmentLabel = isMarketplace ? 'matrícula' : 'taxa de serviço'
 
   // Debug: verificar valores
   useEffect(() => {
@@ -357,17 +358,20 @@ function MatriculaContent() {
   const matriculaAfterCoupon = applyCouponToMatricula()
   
   // Calcular subtotal e total baseado na feature flag
+  // Marketplace ATIVO: total = apenas matrícula
+  // Marketplace DESABILITADO: total = apenas taxa de serviço
+  // Mensalidade não entra no cálculo (é cobrada pela faculdade)
   let subtotal: number
   let total: number
   
   if (isMarketplace) {
-    // Marketplace ativo: mensalidade + taxa administrativa + matrícula
+    // Marketplace ativo: apenas matrícula
     const matriculaValue = coupon ? (coupon.originalAmount / 100) : enrollmentFee
-    subtotal = monthlyFee + administrativeFee + matriculaValue
+    subtotal = matriculaValue
     // Total com cupom aplicado (se houver)
-    total = monthlyFee + administrativeFee + (matriculaAfterCoupon / 100)
+    total = matriculaAfterCoupon / 100
   } else {
-    // Marketplace inativo: apenas taxa administrativa
+    // Marketplace desabilitado: apenas taxa de serviço
     const adminValue = coupon ? (coupon.originalAmount / 100) : enrollmentFee
     subtotal = adminValue
     // Total com cupom aplicado (se houver)
@@ -592,25 +596,32 @@ function MatriculaContent() {
         return
       }
 
-      // Se a flag requirePixBeforeEnrollment estiver ativa, 
-      // criar matrícula primeiro e depois cobrar
-      if (requirePixBeforeEnrollment) {
-        console.log('📝 Modo: PIX antes da matrícula está ativo')
-        trackEvent('pix_before_enrollment_mode_activated', {
-          course_id: offerDetails?.courseId,
-          course_name: offerDetails?.course,
-        })
-        
-        // TODO: Implementar lógica alternativa se necessário
-        // Por enquanto, continua com o fluxo normal
-      }
-
-      setPixError(null)
-      setPixLoading(true)
-
       if (!offerDetails) {
         throw new Error('Detalhes da oferta não encontrados')
       }
+
+      // Se a flag requirePixBeforeEnrollment estiver ativa, 
+      // criar matrícula diretamente sem checkout
+      if (requirePixBeforeEnrollment) {
+        console.log('📝 Modo: PIX antes da matrícula está ativo - Criando matrícula diretamente')
+        
+        setPixLoading(true)
+        
+        trackEvent('pix_before_enrollment_mode_activated', {
+          course_id: offerDetails.courseId,
+          course_name: offerDetails.course,
+        })
+        
+        // Criar matrícula diretamente sem checkout
+        await createInscriptionAfterPayment(data)
+        
+        setPixLoading(false)
+        return
+      }
+
+      // Fluxo normal: criar checkout primeiro
+      setPixError(null)
+      setPixLoading(true)
 
       // Valor a pagar em centavos (com desconto do cupom se houver)
       const amountInCents = matriculaAfterCoupon
@@ -699,6 +710,7 @@ function MatriculaContent() {
         payment_method: paymentMethod,
         has_coupon: !!coupon,
         coupon_code: coupon?.code,
+        pix_before_enrollment: requirePixBeforeEnrollment,
       })
     }
   }
@@ -1241,14 +1253,19 @@ function MatriculaContent() {
 
               {isMarketplace ? (
                 <>
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <p className="text-xs text-gray-500 mb-1">Valor da mensalidade</p>
-                    <p className="text-xl font-bold text-green-600">{formatCurrency(monthlyFee)}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Taxa administrativa Bolsa Click</p>
-                    <p className="text-base font-semibold text-gray-900">{formatCurrency(administrativeFee)}</p>
+                  {/* Marketplace ativo: mostrar apenas matrícula */}
+                  <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-3">
+                    <div className="flex items-start gap-2 mb-2">
+                      <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-white text-xs font-bold">!</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold text-blue-900 mb-1">Você paga apenas a matrícula</p>
+                        <p className="text-xs text-blue-700">
+                          A mensalidade será paga diretamente à instituição.
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   <div>
@@ -1272,25 +1289,7 @@ function MatriculaContent() {
                 </>
               ) : (
                 <>
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <p className="text-xs text-gray-500 mb-1">Valor da mensalidade</p>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {offerDetails?.montlyFeeFrom && offerDetails.montlyFeeFrom > monthlyFee && (
-                        <>
-                          <p className="text-sm text-gray-400 line-through">De {formatCurrency(offerDetails.montlyFeeFrom)} por</p>
-                          <p className="text-xl font-bold text-green-600 ">{formatCurrency(monthlyFee)}</p>
-                          <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded">
-                            {Math.round(((offerDetails.montlyFeeFrom - monthlyFee) / offerDetails.montlyFeeFrom) * 100)}% de desconto
-                          </span>
-                        </>
-                      )}
-                      {(!offerDetails?.montlyFeeFrom || offerDetails.montlyFeeFrom <= monthlyFee) && (
-                        <p className="text-xl font-bold text-green-600">{formatCurrency(monthlyFee)}</p>
-                      )}
-                    </div>
-                   
-                  </div>
-
+                  {/* Marketplace desabilitado: mostrar apenas taxa de serviço */}
                   <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-3">
                     <div className="flex items-start gap-2 mb-2">
                       <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -1390,14 +1389,7 @@ function MatriculaContent() {
               <div className="pt-3 border-t border-gray-200 space-y-2">
                 {isMarketplace ? (
                   <>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-gray-600">Pagar a mensalidade</span>
-                      <span className="text-gray-900">{formatCurrency(monthlyFee)}</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-gray-600">Taxa de serviço Bolsa Click</span>
-                      <span className="text-gray-900">{formatCurrency(administrativeFee)}</span>
-                    </div>
+                    {/* Marketplace ativo: mostrar apenas matrícula */}
                     <div className="flex justify-between text-xs">
                       <span className="text-gray-600">Valor da matrícula</span>
                       <span className="text-gray-900">
@@ -1408,14 +1400,17 @@ function MatriculaContent() {
                     </div>
                   </>
                 ) : (
-                  <div className="flex justify-between text-xs">
-                    <span className="text-gray-600">Taxa de serviço Bolsa Click</span>
-                    <span className="text-gray-900">
-                      {coupon 
-                        ? formatCurrency((coupon.originalAmount / 100))
-                        : formatCurrency(administrativeFee)}
-                    </span>
-                  </div>
+                  <>
+                    {/* Marketplace desabilitado: mostrar apenas taxa de serviço */}
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">Taxa de serviço Bolsa Click</span>
+                      <span className="text-gray-900">
+                        {coupon 
+                          ? formatCurrency((coupon.originalAmount / 100))
+                          : formatCurrency(administrativeFee)}
+                      </span>
+                    </div>
+                  </>
                 )}
                 {coupon && (
                   <div className="flex justify-between text-xs">

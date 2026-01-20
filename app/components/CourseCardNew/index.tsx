@@ -4,6 +4,8 @@ import { motion } from "framer-motion"
 import { Building2, Clock, Heart, MapPin, Star } from "lucide-react"
 import Image from "next/image"
 import { useFavorites } from "@/app/lib/hooks/useFavorites"
+import { useState } from "react"
+import { toast } from "sonner"
 
 interface CourseCardProps {
   course: Course
@@ -27,18 +29,64 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
   isPos
 }) => {
   const { isFavorite, toggleFavorite } = useFavorites()
+  
+  // Estado para seleção de turno
+  const [selectedShift, setSelectedShift] = useState<string>('')
 
+  // Obter modalidade do curso (não precisa selecionar)
+  const courseModality = course.modality?.toUpperCase() || course.commercialModality?.toUpperCase() || ''
 
+  // Verificar se precisa mostrar seletor de turno (não virtual e tem opções)
+  const needsShiftSelection = () => {
+    // Só mostrar se tiver businessKey e unitId
+    if (!course.businessKey || !course.unitId) {
+      return false
+    }
 
-const handleClick = () => {
-  localStorage.setItem('selectedCourse', JSON.stringify(course))
+    // Não mostrar se for virtual
+    const isVirtual = course.shiftOptions?.some(s => s.toUpperCase() === 'VIRTUAL') || 
+                      course.classShift?.toUpperCase() === 'VIRTUAL'
+    if (isVirtual) {
+      return false
+    }
 
-  if (isPos) {
-    window.location.href = '/pos/checkout'
-  } else {
-    window.location.href = '/checkout'
+    // Mostrar se tiver múltiplos turnos disponíveis
+    const hasMultipleShifts = course.shiftOptions && course.shiftOptions.length > 1
+    
+    // Ou se for presencial/semipresencial e tiver turnos
+    const isPresential = courseModality === 'PRESENCIAL' || courseModality === 'SEMIPRESENCIAL'
+    const hasShifts = course.shiftOptions && course.shiftOptions.length > 0
+    
+    return (hasMultipleShifts || (isPresential && hasShifts))
   }
-}
+
+  const handleClick = async () => {
+    // Se precisa selecionar turno mas ainda não selecionou
+    if (needsShiftSelection() && !selectedShift) {
+      toast.error('Por favor, selecione o turno')
+      return
+    }
+
+    // Construir URL com parâmetros essenciais para compartilhamento
+    const params = new URLSearchParams()
+    
+    // Parâmetros obrigatórios: groupId (course.id), unitId, modality, shift
+    if (course.id) params.set('groupId', String(course.id))
+    if (course.unitId) params.set('unitId', course.unitId)
+    
+    const finalModality = courseModality || course.modality || course.commercialModality || ''
+    if (finalModality) params.set('modality', finalModality)
+    
+    const finalShift = selectedShift || course.classShift || ''
+    if (finalShift) params.set('shift', finalShift)
+
+    // Redirecionar para checkout com params na URL
+    if (isPos) {
+      window.location.href = `/pos/checkout?${params.toString()}`
+    } else {
+      window.location.href = `/checkout/matricula?${params.toString()}`
+    }
+  }
 
   const capitalizeFirstLetter = (text: string) => {
     if (!text) return ''
@@ -297,17 +345,43 @@ const handleClick = () => {
                   )}
                 </span>
               </div>
-              {(course.shiftOptions && course.shiftOptions.length > 0) && (
+              {/* Seletor de turno inline (se necessário) ou exibição estática */}
+              {needsShiftSelection() && course.shiftOptions && course.shiftOptions.length > 0 ? (
                 <div className="flex items-center text-neutral-600">
-                  <Clock size={18} className="mr-1" />
-                  <span>{getShiftLabel(course.shiftOptions)}</span>
+                  <Clock size={18} className="mr-1 flex-shrink-0" />
+                  <select
+                    value={selectedShift}
+                    onChange={(e) => setSelectedShift(e.target.value)}
+                    className="bg-transparent border-b border-dashed border-neutral-400 hover:border-emerald-500 focus:border-emerald-500 outline-none text-neutral-600 cursor-pointer px-1 py-0 min-w-[120px] text-sm transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="" disabled>Selecione</option>
+                    {course.shiftOptions.map((shift) => (
+                      <option key={shift} value={shift}>
+                        {shift === 'MATUTINO' ? 'Manhã' :
+                         shift === 'VESPERTINO' ? 'Tarde' :
+                         shift === 'NOTURNO' ? 'Noite' :
+                         shift === 'INTEGRAL' ? 'Integral' :
+                         shift}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              )}
-              {course.classShift && !course.shiftOptions && (
-                <div className="flex items-center text-neutral-600">
-                  <Clock size={18} className="mr-1" />
-                  {course.classShift}
-                </div>
+              ) : (
+                <>
+                  {(course.shiftOptions && course.shiftOptions.length > 0) && (
+                    <div className="flex items-center text-neutral-600">
+                      <Clock size={18} className="mr-1" />
+                      <span>{getShiftLabel(course.shiftOptions)}</span>
+                    </div>
+                  )}
+                  {course.classShift && !course.shiftOptions && (
+                    <div className="flex items-center text-neutral-600">
+                      <Clock size={18} className="mr-1" />
+                      {course.classShift}
+                    </div>
+                  )}
+                </>
               )}
               {course.city && (
                 <div className="flex items-center text-neutral-600">
@@ -331,22 +405,38 @@ const handleClick = () => {
                 <div>
                   <span className="text-sm text-neutral-600">Por:</span>
                   <div className="text-emerald-500 text-2xl font-bold" itemProp="offers" itemScope itemType="https://schema.org/Offer">
-                    <span itemProp="price">   {(course.minPrice / 1).toLocaleString('pt-BR', {
-                      style: 'currency',
-                      currency: 'BRL',
-                    })}</span>
+                    <span itemProp="price">
+                      {(course.minPrice / 1).toLocaleString('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      })}
+                    </span>
                   </div>
                 </div>
               </div>
 
+
               {/* Botão */}
               <button
                 onClick={handleClick}
-                title="Avançar para matrícula"
+                disabled={needsShiftSelection() && !selectedShift}
+                title={
+                  needsShiftSelection() && !selectedShift
+                    ? "Selecione o turno" 
+                    : "Avançar para matrícula"
+                }
                 aria-label="Avançar para matrícula"
-                className="w-full bg-emerald-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-emerald-600 hover:shadow-lg hover:scale-[1.02] transition-all duration-300 mb-4"
+                className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-300 mb-4 ${
+                  needsShiftSelection() && !selectedShift
+                    ? 'bg-gray-400 text-white cursor-not-allowed'
+                    : 'bg-emerald-500 text-white hover:bg-emerald-600 hover:shadow-lg hover:scale-[1.02]'
+                }`}
               >
-                Quero essa bolsa
+                {needsShiftSelection() && !selectedShift ? (
+                  'Selecione o turno'
+                ) : (
+                  'Quero essa bolsa'
+                )}
               </button>
 
               {/* Localização */}

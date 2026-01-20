@@ -30,7 +30,7 @@ export default function Header() {
             Estamos aqui para ajudar
           </h1>
           <p className="text-xl text-white/90 mb-8">
-            Entre em contato conosco para saber mais sobre o BolsaClick, tirar dúvidas sobre bolsas de estudo ou receber suporte personalizado.
+            Entre em contato conosco para saber mais sobre o Bolsa Click, tirar dúvidas sobre bolsas de estudo ou receber suporte personalizado.
           </p>
           <div className="flex flex-wrap gap-6 mt-8">
             <div className="flex items-center text-white">

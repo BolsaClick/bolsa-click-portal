@@ -80,44 +80,61 @@ export default function SearchResultClient() {
     cidade?: string
     estado?: string
     modalidade?: string
+    nivel?: string
   }) => {
     const params = new URLSearchParams()
     
-    if (newParams.c !== undefined) {
-      if (newParams.c) params.set('c', newParams.c)
-    } else if (curso) {
-      params.set('c', curso)
-    }
+    // Determinar o valor final de cada parâmetro
+    const finalC = newParams.c !== undefined 
+      ? (newParams.c && newParams.c.trim() ? newParams.c.trim() : '') 
+      : (curso || '')
     
-    if (newParams.cn !== undefined) {
-      // Só adicionar cn se tiver valor (não string vazia)
-      if (newParams.cn && newParams.cn.trim()) {
-        params.set('cn', newParams.cn.trim())
+    const finalCn = newParams.cn !== undefined
+      ? (newParams.cn && newParams.cn.trim() ? newParams.cn.trim() : '')
+      : (cursoNomeCompleto || '')
+    
+    const finalCidade = newParams.cidade !== undefined
+      ? (newParams.cidade && newParams.cidade.trim() ? newParams.cidade.trim() : '')
+      : (cidade || '')
+    
+    const finalEstado = newParams.estado !== undefined
+      ? (newParams.estado && newParams.estado.trim() ? newParams.estado.trim() : '')
+      : (estado || '')
+    
+    const finalModalidade = newParams.modalidade !== undefined
+      ? (newParams.modalidade && newParams.modalidade.trim() ? newParams.modalidade.trim() : '')
+      : (modalidade || '')
+    
+    const finalNivel = newParams.nivel !== undefined
+      ? newParams.nivel
+      : (nivel || 'GRADUACAO')
+    
+    // Adicionar apenas parâmetros com valor
+    if (finalC) {
+      params.set('c', finalC)
+      // Só adicionar cn se tiver valor e se c também tiver
+      if (finalCn) {
+        params.set('cn', finalCn)
       }
-    } else if (cursoNomeCompleto && cursoNomeCompleto.trim()) {
-      params.set('cn', cursoNomeCompleto)
     }
     
-    if (newParams.cidade !== undefined) {
-      params.set('cidade', newParams.cidade)
-    } else if (cidade) {
-      params.set('cidade', cidade)
+    if (finalCidade) {
+      params.set('cidade', finalCidade)
     }
     
-    if (newParams.estado !== undefined) {
-      params.set('estado', newParams.estado)
-    } else if (estado) {
-      params.set('estado', estado)
+    if (finalEstado) {
+      params.set('estado', finalEstado)
     }
     
-    if (newParams.modalidade !== undefined) {
-      params.set('modalidade', newParams.modalidade)
-    } else if (modalidade) {
-      params.set('modalidade', modalidade)
+    if (finalModalidade) {
+      params.set('modalidade', finalModalidade)
     }
+    
+    // Sempre adicionar o nível acadêmico
+    params.set('nivel', finalNivel)
     
     router.push(`/curso/resultado?${params.toString()}`)
-  }, [curso, cursoNomeCompleto, cidade, estado, modalidade, router])
+  }, [curso, cursoNomeCompleto, cidade, estado, modalidade, nivel, router])
 
   // Montar nome do curso para exibição: curso limpo + sufixo do cn (se houver)
   const courseDisplayName = useMemo(() => {
@@ -221,9 +238,9 @@ export default function SearchResultClient() {
     ),
     queryKey: ['courses', 'filter', courseNameForAPI, cidade, estado, modalidade, nivel],
     enabled: isReady && !!cidade && !!estado,
-    staleTime: Infinity, // Os dados nunca ficam "stale", não refetch automático
+    staleTime: 0, // Permitir refetch quando os parâmetros mudarem
     refetchOnWindowFocus: false, // Não refetch quando a janela ganha foco
-    refetchOnMount: false, // Não refetch quando o componente monta novamente
+    refetchOnMount: true, // Refetch quando o componente monta novamente (quando URL muda)
     refetchOnReconnect: false, // Não refetch quando reconecta
   });
 
@@ -265,11 +282,36 @@ export default function SearchResultClient() {
 
 
 
-  const onSubmit = (data: any) => {
-    localStorage.setItem('selectedCourse', JSON.stringify(data))
-    router.push('/checkout/')
-  }
+// app/(default)/curso/resultado/SearchResultClient.tsx
 
+const onSubmit = (data: any) => {
+  // Construir URL com parâmetros essenciais
+  const params = new URLSearchParams()
+  
+  // Parâmetros obrigatórios para buscar detalhes
+  if (data.businessKey) params.set('groupId', data.businessKey)
+  if (data.unitId) params.set('unitId', data.unitId)
+  
+  // Modalidade e turno
+  const finalModality = data.modality || data.commercialModality || ''
+  if (finalModality) params.set('modality', finalModality)
+  
+  const finalShift = data.classShift || data.shift || ''
+  if (finalShift) params.set('shift', finalShift)
+  
+  // Parâmetros opcionais para exibição
+  if (data.id) params.set('courseId', String(data.id))
+  if (data.name) params.set('courseName', encodeURIComponent(data.name))
+  if (data.unitCity) params.set('city', data.unitCity)
+  if (data.unitState) params.set('state', data.unitState)
+  if (data.brand) params.set('brand', data.brand)
+  
+  // Salvar no localStorage também (compatibilidade)
+  localStorage.setItem('selectedCourse', JSON.stringify(data))
+  
+  // Redirecionar para matrícula com params na URL
+  router.push(`/checkout/matricula?${params.toString()}`)
+}
 
   // Handler para mudança de preço
   const handlePriceChange = useCallback((val: [number, number]) => {
@@ -283,6 +325,8 @@ export default function SearchResultClient() {
 
   // Handler para seleção de curso
   const handleCourseSelect = useCallback((courseNameClean: string, courseNameFull: string) => {
+    // Resetar página para 1 quando mudar o curso
+    setCurrentPage(1)
     updateURL({
       c: courseNameClean,
       cn: courseNameFull,

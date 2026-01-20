@@ -19,12 +19,12 @@ export default function Faq() {
 
   const faqItems = [
     {
-      question: "Como funcionam as bolsas de estudo do BolsaClick?",
-      answer: "As bolsas de estudo do BolsaClick funcionam como descontos nas mensalidades de cursos em instituições parceiras. Após se cadastrar em nossa plataforma, você pode buscar bolsas disponíveis conforme seus interesses, verificar o percentual de desconto oferecido e as condições para obtenção. Ao selecionar uma bolsa, você recebe orientações para efetuar sua matrícula diretamente na instituição de ensino escolhida."
+      question: "Como funcionam as bolsas de estudo do Bolsa Click?",
+      answer: "As bolsas de estudo do Bolsa Click funcionam como descontos nas mensalidades de cursos em instituições parceiras. Após se cadastrar em nossa plataforma, você pode buscar bolsas disponíveis conforme seus interesses, verificar o percentual de desconto oferecido e as condições para obtenção. Ao selecionar uma bolsa, você recebe orientações para efetuar sua matrícula diretamente na instituição de ensino escolhida."
     },
     {
-      question: "Preciso pagar algo para utilizar o BolsaClick?",
-      answer: "Não, o BolsaClick é totalmente gratuito para os estudantes. Não cobramos nenhuma taxa para você se cadastrar, buscar ou solicitar bolsas de estudo. Nossa remuneração vem das parcerias com as instituições de ensino."
+      question: "Preciso pagar algo para utilizar o Bolsa Click?",
+      answer: "Não, o Bolsa Click é totalmente gratuito para os estudantes. Não cobramos nenhuma taxa para você se cadastrar, buscar ou solicitar bolsas de estudo. Nossa remuneração vem das parcerias com as instituições de ensino."
     },
     {
       question: "As bolsas são válidas para qualquer curso?",
@@ -32,7 +32,7 @@ export default function Faq() {
     },
     {
       question: "Como faço para garantir minha bolsa de estudos?",
-      answer: "Para garantir sua bolsa, você precisa atender aos requisitos específicos da instituição e do programa escolhido. Após selecionar a bolsa na plataforma BolsaClick, você receberá um comprovante de pré-matrícula que deverá ser apresentado à instituição de ensino dentro do prazo estabelecido. A confirmação final da bolsa ocorre após a análise da documentação e aprovação pela instituição."
+      answer: "Para garantir sua bolsa, você precisa atender aos requisitos específicos da instituição e do programa escolhido. Após selecionar a bolsa na plataforma Bolsa Click, você receberá um comprovante de pré-matrícula que deverá ser apresentado à instituição de ensino dentro do prazo estabelecido. A confirmação final da bolsa ocorre após a análise da documentação e aprovação pela instituição."
     },
     {
       question: "Perco minha bolsa se reprovar em alguma disciplina?",
@@ -48,7 +48,7 @@ export default function Faq() {
             Perguntas Frequentes
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Encontre respostas para as dúvidas mais comuns sobre o BolsaClick e nossos serviços.
+            Encontre respostas para as dúvidas mais comuns sobre o Bolsa Click e nossos serviços.
           </p>
           <div className="w-24 h-1 bg-emerald-200 mx-auto mt-4"></div>
         </div>

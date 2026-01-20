@@ -26,7 +26,7 @@ export default function CallToAction() {
             Faça parte dessa transformação
           </h2>
           <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
-            Milhares de estudantes já encontraram seu caminho para o ensino superior com o BolsaClick. 
+            Milhares de estudantes já encontraram seu caminho para o ensino superior com o Bolsa Click. 
             Você pode ser o próximo a transformar seu futuro.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

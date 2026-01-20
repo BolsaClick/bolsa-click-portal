@@ -90,7 +90,7 @@ const AboutSection: React.FC = () => {
             O que é o Bolsa<span className="text-red-500">Click</span>?
           </h2>
           <p className="text-gray-600 max-w-3xl mx-auto">
-            O BolsaClick é a maior plataforma de bolsas de estudo do Brasil, conectando estudantes a oportunidades de educação superior com descontos exclusivos. Nossa missão é democratizar o acesso à educação de qualidade, tornando o ensino superior acessível para todos.
+            O Bolsa Click é a maior plataforma de bolsas de estudo do Brasil, conectando estudantes a oportunidades de educação superior com descontos exclusivos. Nossa missão é democratizar o acesso à educação de qualidade, tornando o ensino superior acessível para todos.
           </p>
         </div>
 
@@ -117,7 +117,7 @@ const AboutSection: React.FC = () => {
 
           <div className="about-content">
             <h3 className="text-xl font-bold mb-6 text-emerald-600">
-              Por que escolher o BolsaClick?
+              Por que escolher o Bolsa Click?
             </h3>
 
             <ul className="benefits-list mb-8">

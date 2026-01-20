@@ -16,7 +16,7 @@ export default function Team() {
       name: 'Ana Silva',
       role: 'CEO & Fundadora',
       image: 'https://images.pexels.com/photos/5393594/pexels-photo-5393594.jpeg?auto=compress&cs=tinysrgb&w=400',
-      bio: 'Especialista em educação com mais de 15 anos de experiência, Ana fundou o BolsaClick com a missão de democratizar o acesso ao ensino superior.',
+      bio: 'Especialista em educação com mais de 15 anos de experiência, Ana fundou o Bolsa Click com a missão de democratizar o acesso ao ensino superior.',
       delay: 0
     },
     {
@@ -30,7 +30,7 @@ export default function Team() {
       name: 'Mariana Costa',
       role: 'Diretora de Parcerias',
       image: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=400',
-      bio: 'Responsável pelo relacionamento com instituições de ensino, Mariana já estabeleceu mais de 5.000 parcerias estratégicas para o BolsaClick.',
+      bio: 'Responsável pelo relacionamento com instituições de ensino, Mariana já estabeleceu mais de 5.000 parcerias estratégicas para o Bolsa Click.',
       delay: 0.4
     },
     {

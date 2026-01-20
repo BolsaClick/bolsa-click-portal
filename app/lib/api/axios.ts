@@ -33,13 +33,8 @@ export const api = axios.create({
 })
 export const tartarus = axios.create({
   baseURL: process.env.NEXT_PUBLIC_TARTARUS_API,
-  proxy: {
-    host: parsedFixieUrl.hostname,
-    port: Number(parsedFixieUrl.port), 
-    auth: {
-      username: parsedFixieUrl.username,
-      password: parsedFixieUrl.password,
-    },
+  headers: {
+    'Content-Type': 'application/json',
   },
 
 })
@@ -52,6 +47,13 @@ export const cogna = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_COGNA_URL,
   headers: {
     Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_TOKEN}`,
+    'Content-Type': 'application/json',
+  },
+})
+
+export const elysium = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_ELYSIUM_API,
+  headers: {
     'Content-Type': 'application/json',
   },
 })

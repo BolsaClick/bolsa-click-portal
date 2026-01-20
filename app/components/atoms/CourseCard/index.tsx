@@ -51,8 +51,29 @@ const CourseCard: React.FC<CourseCardProps> = ({
     }
   }
   const handleClick = () => {
-    localStorage.setItem('selectedCourse', JSON.stringify(course))
-    window.location.href = '/checkout'
+    // Construir URL com parâmetros essenciais para compartilhamento
+    const params = new URLSearchParams()
+    
+    // Se tiver os dados necessários, usar params
+    if (course.businessKey && course.unitId) {
+      params.set('groupId', course.businessKey)
+      params.set('unitId', course.unitId)
+      if (course.modality) params.set('modality', course.modality)
+      if (course.classShift) params.set('shift', course.classShift)
+      if (course.id) params.set('courseId', String(course.id))
+      if (courseName || course.name) {
+        params.set('courseName', encodeURIComponent(courseName || course.name))
+      }
+      if (course.unitCity) params.set('city', course.unitCity)
+      if (course.unitState) params.set('state', course.unitState)
+      if (course.brand) params.set('brand', course.brand)
+      
+      window.location.href = `/checkout?${params.toString()}`
+    } else {
+      // Fallback para localStorage se não tiver dados completos
+      localStorage.setItem('selectedCourse', JSON.stringify(course))
+      window.location.href = '/checkout'
+    }
   }
   const handleAddressClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()

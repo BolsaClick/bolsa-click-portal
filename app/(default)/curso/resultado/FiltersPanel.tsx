@@ -40,6 +40,7 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
   const [isCourseDropdownOpen, setIsCourseDropdownOpen] = useState(false)
   const courseInputRef = useRef<HTMLInputElement>(null)
   const courseInitializedRef = useRef(false)
+  const isUserTypingRef = useRef(false)
   
   const [searchCity, setSearchCity] = useState('')
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false)
@@ -59,20 +60,29 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
 
   // Inicializar e atualizar com o curso atual (juntar c + cn)
   useEffect(() => {
+    // Não atualizar se o usuário estiver digitando
+    if (isUserTypingRef.current) {
+      return
+    }
+    
+    // Calcular o valor esperado da URL
+    let expectedValue = ''
     if (courseName) {
-      let newCourseValue = courseName
-      // Se tiver sufixo (cn), juntar com o nome do curso
+      expectedValue = courseName
       if (courseSuffix && courseSuffix.trim()) {
-        newCourseValue = `${courseName} - ${courseSuffix}`
+        expectedValue = `${courseName} - ${courseSuffix}`
       }
-      
-      if (searchCourse !== newCourseValue) {
-        setSearchCourse(newCourseValue)
+    }
+    
+    // Só atualizar se o valor atual for diferente do esperado
+    // E se o input não estiver sendo editado ativamente
+    if (searchCourse !== expectedValue) {
+      // Se o valor esperado mudou (props mudaram), atualizar
+      // Mas não se o usuário acabou de limpar o campo
+      if (expectedValue || !searchCourse) {
+        setSearchCourse(expectedValue)
         courseInitializedRef.current = true
       }
-    } else if (!courseName && searchCourse) {
-      // Se não tiver curso na URL mas tiver no input, limpar
-      setSearchCourse('')
     }
   }, [courseName, courseSuffix, searchCourse])
   
@@ -157,12 +167,17 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
   // Handler para mudança no input de curso
   const handleCourseInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
+    isUserTypingRef.current = true
     setSearchCourse(value)
     if (value.length >= 3) {
       setIsCourseDropdownOpen(true)
     } else {
       setIsCourseDropdownOpen(false)
     }
+    // Resetar a flag após um pequeno delay para permitir que o useEffect funcione novamente
+    setTimeout(() => {
+      isUserTypingRef.current = false
+    }, 100)
   }, [])
 
   // Handler para mudança no input de cidade
@@ -180,6 +195,7 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
   const handleCourseSelect = useCallback((option: { id: string; name: string; slug: string }) => {
     const courseNameClean = removeCourseSuffix(option.name)
     const courseSuffix = extractCourseSuffix(option.name) // Extrair apenas o sufixo
+    isUserTypingRef.current = false // Resetar flag ao selecionar
     setSearchCourse(option.name)
     setIsCourseDropdownOpen(false)
     // Passar apenas o sufixo como courseNameFull (será usado como cn na URL)
@@ -274,10 +290,24 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
                   setIsCourseDropdownOpen(true)
                 }
               }}
-              className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bolsa-secondary focus:border-bolsa-secondary outline-none transition-colors"
+              className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bolsa-secondary focus:border-bolsa-secondary outline-none transition-colors"
               placeholder="Digite o curso (mín. 3 letras)"
               autoComplete="off"
             />
+            {searchCourse && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchCourse('')
+                  setIsCourseDropdownOpen(false)
+                  onCourseSelect('', '')
+                }}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Limpar curso"
+              >
+                <X size={18} />
+              </button>
+            )}
             {isCourseDropdownOpen && courseOptions.length > 0 && searchCourse.length >= 3 && (
               <ul className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-[300px] overflow-auto">
                 {courseOptions.map((option) => (

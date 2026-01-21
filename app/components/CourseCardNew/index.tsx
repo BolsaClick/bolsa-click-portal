@@ -87,8 +87,7 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
     const finalModality = courseModality || course.modality || course.commercialModality || ''
     if (finalModality) params.set('modality', finalModality)
     
-    // Usar turno selecionado, ou classShift, ou o único turno disponível
-    const finalShift = selectedShift || course.classShift || (course.shiftOptions && course.shiftOptions.length === 1 ? course.shiftOptions[0] : '')
+    const finalShift = selectedShift || course.classShift || ''
     if (finalShift) params.set('shift', finalShift)
 
     // Track course selection
@@ -182,12 +181,7 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
     if (shifts.includes('MATUTINO')) return 'Manhã';
     if (shifts.includes('VESPERTINO')) return 'Tarde';
     if (shifts.includes('NOTURNO')) return 'Noite';
-    // Ao invés de retornar 'Virtual', retornar o valor real do shift
-    if (shifts.includes('VIRTUAL')) {
-      // Retornar o primeiro shift que for VIRTUAL ou o valor original
-      const virtualShift = shiftOptions.find(s => s.toUpperCase() === 'VIRTUAL');
-      return virtualShift || shiftOptions[0];
-    }
+    if (shifts.includes('VIRTUAL')) return 'Virtual';
     
     return shiftOptions.join(', ');
   };
@@ -422,21 +416,17 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
                 </div>
               ) : (
                 <>
-                  {/* Priorizar classShift quando disponível (valor real do shift) */}
-                  {course.classShift ? (
+                  {(course.shiftOptions && course.shiftOptions.length > 0) && (
                     <div className="flex items-center text-neutral-600">
                       <Clock size={18} className="mr-1" />
-                      <span>{course.classShift}</span>
+                      <span>{getShiftLabel(course.shiftOptions)}</span>
                     </div>
-                  ) : (
-                    <>
-                      {(course.shiftOptions && course.shiftOptions.length > 0) && (
-                        <div className="flex items-center text-neutral-600">
-                          <Clock size={18} className="mr-1" />
-                          <span>{getShiftLabel(course.shiftOptions)}</span>
-                        </div>
-                      )}
-                    </>
+                  )}
+                  {course.classShift && !course.shiftOptions && (
+                    <div className="flex items-center text-neutral-600">
+                      <Clock size={18} className="mr-1" />
+                      {course.classShift}
+                    </div>
                   )}
                 </>
               )}

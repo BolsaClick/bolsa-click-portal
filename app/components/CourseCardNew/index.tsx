@@ -38,7 +38,7 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
   // Obter modalidade do curso (não precisa selecionar)
   const courseModality = course.modality?.toUpperCase() || course.commercialModality?.toUpperCase() || ''
 
-  // Verificar se precisa mostrar seletor de turno (não virtual e tem múltiplas opções)
+  // Verificar se precisa mostrar seletor de turno (não virtual e tem opções)
   const needsShiftSelection = () => {
     // Só mostrar se tiver businessKey e unitId
     if (!course.businessKey || !course.unitId) {
@@ -52,22 +52,14 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
       return false
     }
 
-    // Só mostrar seletor se tiver MÚLTIPLOS turnos (mais de 1)
-    // Se tiver apenas 1 turno, não mostrar seletor, mas usar automaticamente
+    // Mostrar se tiver múltiplos turnos disponíveis
     const hasMultipleShifts = course.shiftOptions && course.shiftOptions.length > 1
     
-    return hasMultipleShifts
-  }
-
-  // Obter o turno único disponível (quando não precisa selecionar)
-  const getSingleShift = () => {
-    if (course.shiftOptions && course.shiftOptions.length === 1) {
-      return course.shiftOptions[0]
-    }
-    if (course.classShift) {
-      return course.classShift
-    }
-    return null
+    // Ou se for presencial/semipresencial e tiver turnos
+    const isPresential = courseModality === 'PRESENCIAL' || courseModality === 'SEMIPRESENCIAL'
+    const hasShifts = course.shiftOptions && course.shiftOptions.length > 0
+    
+    return (hasMultipleShifts || (isPresential && hasShifts))
   }
 
   const handleClick = async () => {
@@ -95,8 +87,8 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
     const finalModality = courseModality || course.modality || course.commercialModality || ''
     if (finalModality) params.set('modality', finalModality)
     
-    // Usar turno selecionado, ou turno único disponível, ou classShift
-    const finalShift = selectedShift || getSingleShift() || course.classShift || ''
+    // Usar turno selecionado, ou classShift, ou o único turno disponível
+    const finalShift = selectedShift || course.classShift || (course.shiftOptions && course.shiftOptions.length === 1 ? course.shiftOptions[0] : '')
     if (finalShift) params.set('shift', finalShift)
 
     // Track course selection
@@ -190,7 +182,12 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
     if (shifts.includes('MATUTINO')) return 'Manhã';
     if (shifts.includes('VESPERTINO')) return 'Tarde';
     if (shifts.includes('NOTURNO')) return 'Noite';
-    if (shifts.includes('VIRTUAL')) return 'Virtual';
+    // Ao invés de retornar 'Virtual', retornar o valor real do shift
+    if (shifts.includes('VIRTUAL')) {
+      // Retornar o primeiro shift que for VIRTUAL ou o valor original
+      const virtualShift = shiftOptions.find(s => s.toUpperCase() === 'VIRTUAL');
+      return virtualShift || shiftOptions[0];
+    }
     
     return shiftOptions.join(', ');
   };
@@ -393,7 +390,7 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
                 </span>
               </div>
               {/* Seletor de turno inline (se necessário) ou exibição estática */}
-              {needsShiftSelection() && course.shiftOptions && course.shiftOptions.length > 1 ? (
+              {needsShiftSelection() && course.shiftOptions && course.shiftOptions.length > 0 ? (
                 <div className="flex items-center text-neutral-600">
                   <Clock size={18} className="mr-1 flex-shrink-0" />
                   <select
@@ -425,18 +422,21 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
                 </div>
               ) : (
                 <>
-                  {/* Mostrar turno quando houver apenas 1 opção ou quando for virtual */}
-                  {(course.shiftOptions && course.shiftOptions.length > 0) && (
+                  {/* Priorizar classShift quando disponível (valor real do shift) */}
+                  {course.classShift ? (
                     <div className="flex items-center text-neutral-600">
                       <Clock size={18} className="mr-1" />
-                      <span>{getShiftLabel(course.shiftOptions)}</span>
+                      <span>{course.classShift}</span>
                     </div>
-                  )}
-                  {course.classShift && !course.shiftOptions && (
-                    <div className="flex items-center text-neutral-600">
-                      <Clock size={18} className="mr-1" />
-                      {course.classShift}
-                    </div>
+                  ) : (
+                    <>
+                      {(course.shiftOptions && course.shiftOptions.length > 0) && (
+                        <div className="flex items-center text-neutral-600">
+                          <Clock size={18} className="mr-1" />
+                          <span>{getShiftLabel(course.shiftOptions)}</span>
+                        </div>
+                      )}
+                    </>
                   )}
                 </>
               )}

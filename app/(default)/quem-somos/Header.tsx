@@ -30,7 +30,7 @@ export default function Header() {
             Transformando o acesso à educação superior no Brasil
           </h1>
           <p className="text-xl text-white/90 mb-8">
-            Conheça a história, missão e os valores que impulsionam o BolsaClick a democratizar o acesso à educação de qualidade para todos.
+            Conheça a história, missão e os valores que impulsionam o Bolsa Click a democratizar o acesso à educação de qualidade para todos.
           </p>
           <div className="flex flex-wrap gap-4">
             <Link 

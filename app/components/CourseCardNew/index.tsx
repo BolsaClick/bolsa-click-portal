@@ -38,7 +38,7 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
   // Obter modalidade do curso (não precisa selecionar)
   const courseModality = course.modality?.toUpperCase() || course.commercialModality?.toUpperCase() || ''
 
-  // Verificar se precisa mostrar seletor de turno (não virtual e tem opções)
+  // Verificar se precisa mostrar seletor de turno (não virtual e tem múltiplas opções)
   const needsShiftSelection = () => {
     // Só mostrar se tiver businessKey e unitId
     if (!course.businessKey || !course.unitId) {
@@ -52,14 +52,11 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
       return false
     }
 
-    // Mostrar se tiver múltiplos turnos disponíveis
+    // Só mostrar seletor se tiver MÚLTIPLOS turnos (mais de 1)
+    // Se tiver apenas 1 turno, não mostrar seletor, usar automaticamente
     const hasMultipleShifts = course.shiftOptions && course.shiftOptions.length > 1
     
-    // Ou se for presencial/semipresencial e tiver turnos
-    const isPresential = courseModality === 'PRESENCIAL' || courseModality === 'SEMIPRESENCIAL'
-    const hasShifts = course.shiftOptions && course.shiftOptions.length > 0
-    
-    return (hasMultipleShifts || (isPresential && hasShifts))
+    return hasMultipleShifts
   }
 
   const handleClick = async () => {
@@ -87,7 +84,9 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
     const finalModality = courseModality || course.modality || course.commercialModality || ''
     if (finalModality) params.set('modality', finalModality)
     
-    const finalShift = selectedShift || course.classShift || ''
+    // Usar turno selecionado, ou classShift, ou o único turno disponível (quando há apenas 1 opção)
+    const singleShift = course.shiftOptions && course.shiftOptions.length === 1 ? course.shiftOptions[0] : null
+    const finalShift = selectedShift || course.classShift || singleShift || ''
     if (finalShift) params.set('shift', finalShift)
 
     // Track course selection

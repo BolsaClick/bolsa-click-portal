@@ -40,6 +40,7 @@ import { createCheckout } from '@/app/lib/api/create-checkout'
 import { getCheckoutStatus } from '@/app/lib/api/checkout-status'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { useMarketplaceFeatureFlag, usePixBeforeEnrollmentFeatureFlag } from '@/app/lib/hooks/usePostHogFeatureFlags'
+import { formatPhone } from '@/utils/formatters'
 
 
 // Validação melhorada seguindo o exemplo
@@ -1171,13 +1172,7 @@ function MatriculaContent() {
                           render={({ field }) => (
                             <input
                               value={field.value}
-                              onChange={(e) => {
-                                const masked = e.target.value
-                                  .replace(/\D/g, '')
-                                  .replace(/^(\d{2})(\d)/, '($1)$2')
-                                  .replace(/(\d)(\d{4})$/, '$1-$2')
-                                field.onChange(masked)
-                              }}
+                              onChange={(e) => field.onChange(formatPhone(e.target.value))}
                               onFocus={() => {
                                 // Tentar cadastrar quando o usuário focar no campo
                                 tryCreateStudent()

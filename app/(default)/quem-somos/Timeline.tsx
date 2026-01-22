@@ -15,7 +15,7 @@ export default function Timeline() {
     {
       year: 2024,
       title: 'O início da jornada',
-      description: 'Fundação do BolsaClick com a missão de democratizar o acesso à educação superior no Brasil.',
+      description: 'Fundação do Bolsa Click com a missão de democratizar o acesso à educação superior no Brasil.',
       delay: 0
     },
 

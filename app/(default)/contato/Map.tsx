@@ -88,7 +88,7 @@ export default function Map() {
             allowFullScreen 
             loading="lazy" 
             referrerPolicy="no-referrer-when-downgrade"
-            title="Mapa do escritório BolsaClick"
+            title="Mapa do escritório Bolsa Click"
           ></iframe>
         </motion.div>
       </div>

@@ -54,7 +54,7 @@ const AboutSection: React.FC = () => {
     "@type": "EducationalOrganization",
     "name": "Bolsa Click",
     "url": "https://www.bolsaclick.com.br",
-    "description": "O BolsaClick é a maior plataforma de bolsas de estudo do Brasil, com descontos de até 95% para ensino superior. Encontre bolsas em mais de 25 instituições com facilidade e suporte.",
+    "description": "O Bolsa Click é a maior plataforma de bolsas de estudo do Brasil, com descontos de até 95% para ensino superior. Encontre bolsas em mais de 25 instituições com facilidade e suporte.",
     "sameAs": [
       "https://www.instagram.com/bolsaclick",
       "https://www.facebook.com/bolsaclick"

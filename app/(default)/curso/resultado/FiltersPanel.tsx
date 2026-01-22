@@ -46,9 +46,15 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false)
   const cityInputRef = useRef<HTMLInputElement>(null)
   const cityInitializedRef = useRef(false)
+  const isUserTypingCityRef = useRef(false)
 
   // Inicializar e atualizar com a cidade atual
   useEffect(() => {
+    // Não atualizar se o usuário estiver digitando
+    if (isUserTypingCityRef.current) {
+      return
+    }
+    
     if (city && state) {
       const newCityValue = `${city} - ${state}`
       if (searchCity !== newCityValue) {
@@ -183,12 +189,17 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
   // Handler para mudança no input de cidade
   const handleCityInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
+    isUserTypingCityRef.current = true
     setSearchCity(value)
     if (value.length >= 3) {
       setIsCityDropdownOpen(true)
     } else {
       setIsCityDropdownOpen(false)
     }
+    // Resetar a flag após um pequeno delay para permitir que o useEffect funcione novamente
+    setTimeout(() => {
+      isUserTypingCityRef.current = false
+    }, 100)
   }, [])
 
   // Handler para seleção de curso
@@ -211,6 +222,7 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
 
   // Handler para seleção de cidade
   const handleCitySelect = useCallback((option: { city: string; state: string }) => {
+    isUserTypingCityRef.current = false // Resetar flag ao selecionar
     setSearchCity(`${option.city} - ${option.state}`)
     setIsCityDropdownOpen(false)
     onCitySelect(option.city, option.state)
@@ -357,10 +369,24 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
                   setIsCityDropdownOpen(true)
                 }
               }}
-              className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bolsa-secondary focus:border-bolsa-secondary outline-none transition-colors"
+              className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bolsa-secondary focus:border-bolsa-secondary outline-none transition-colors"
               placeholder="Digite a cidade (mín. 3 letras)"
               autoComplete="off"
             />
+            {searchCity && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchCity('')
+                  setIsCityDropdownOpen(false)
+                  onCitySelect('', '')
+                }}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Limpar cidade"
+              >
+                <X size={18} />
+              </button>
+            )}
             {isCityDropdownOpen && cityOptions.length > 0 && searchCity.length >= 3 && (
               <ul className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-[300px] overflow-auto">
                 {cityOptions.map((option, index) => (

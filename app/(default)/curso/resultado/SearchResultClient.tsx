@@ -281,7 +281,26 @@ export default function SearchResultClient() {
     })
   }, [showCourses, modalidade])
 
-  const filteredByPrice = filteredByModality.filter((course: { minPrice?: number; montlyFeeToMin?: number; monthlyFee?: number; price?: number }) => {
+  // Deduplicar por ID quando não houver filtro de cidade
+  const deduplicatedCourses = useMemo(() => {
+    // Se houver cidade na URL, não deduplicar (mostrar todas as unidades)
+    if (cidade && cidade.trim()) {
+      return filteredByModality
+    }
+    
+    // Se não houver cidade, deduplicar por ID (mostrar apenas uma vez cada curso)
+    const seenIds = new Set<string>()
+    return filteredByModality.filter((course: { id?: string }) => {
+      if (!course.id) return true // Se não tiver ID, manter (não deveria acontecer)
+      if (seenIds.has(course.id)) {
+        return false // Já vimos este ID, remover
+      }
+      seenIds.add(course.id) // Primeira vez vendo este ID, manter
+      return true
+    })
+  }, [filteredByModality, cidade])
+
+  const filteredByPrice = deduplicatedCourses.filter((course: { minPrice?: number; montlyFeeToMin?: number; monthlyFee?: number; price?: number }) => {
     // Filtrar por preço se o campo existir
     const price = course.minPrice || course.montlyFeeToMin || course.monthlyFee || course.price || 0;
     return price >= filters.montlyFeeToMin[0] &&

@@ -28,7 +28,7 @@
     "next": "15.3.6",
     "next-seo": "^6.6.0",
     "next-sitemap": "^4.2.3",
-    "posthog-js": "^1.249.0",
+    "posthog-js": "^1.334.0",
     "posthog-node": "^4.17.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

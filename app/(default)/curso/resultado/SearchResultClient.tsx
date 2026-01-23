@@ -274,10 +274,14 @@ export default function SearchResultClient() {
     }
     
     // Se houver modalidade, filtrar por ela
+    // Verificar tanto modality quanto commercialModality
     const modalidadeUpper = modalidade.toUpperCase()
     return coursesHere.filter((course: { modality?: string; commercialModality?: string }) => {
-      const courseModality = (course.modality || course.commercialModality || '').toUpperCase()
-      return courseModality === modalidadeUpper
+      const courseModality = (course.modality || '').toUpperCase()
+      const courseCommercialModality = (course.commercialModality || '').toUpperCase()
+      
+      // Retornar true se qualquer um dos campos corresponder à modalidade buscada
+      return courseModality === modalidadeUpper || courseCommercialModality === modalidadeUpper
     })
   }, [showCourses, modalidade])
 
@@ -300,12 +304,14 @@ export default function SearchResultClient() {
     })
   }, [filteredByModality, cidade])
 
-  const filteredByPrice = deduplicatedCourses.filter((course: { minPrice?: number; montlyFeeToMin?: number; monthlyFee?: number; price?: number }) => {
-    // Filtrar por preço se o campo existir
-    const price = course.minPrice || course.montlyFeeToMin || course.monthlyFee || course.price || 0;
-    return price >= filters.montlyFeeToMin[0] &&
-      price <= filters.montlyFeeToMin[1];
-  });
+  const filteredByPrice = useMemo(() => {
+    return deduplicatedCourses.filter((course: { minPrice?: number; montlyFeeToMin?: number; monthlyFee?: number; price?: number }) => {
+      // Filtrar por preço se o campo existir
+      const price = course.minPrice || course.montlyFeeToMin || course.monthlyFee || course.price || 0;
+      return price >= filters.montlyFeeToMin[0] &&
+        price <= filters.montlyFeeToMin[1];
+    });
+  }, [deduplicatedCourses, filters.montlyFeeToMin]);
 
   const paginatedCourses = filteredByPrice.slice(
     (currentPage - 1) * itemsPerPage,

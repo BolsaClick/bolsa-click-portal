@@ -264,7 +264,6 @@ function MatriculaContent() {
                 // Pagamento já foi confirmado, criar matrícula
                 console.log('✅ Pagamento já confirmado! Criando matrícula...')
                 // Usar a função que será definida abaixo
-                // eslint-disable-next-line react-hooks/exhaustive-deps
                 createInscriptionAfterPayment(formData).catch(console.error)
                 
                 // Limpar dados pendentes
@@ -280,7 +279,6 @@ function MatriculaContent() {
                 })
                 setShowModal(true)
                 // Usar a função que será definida abaixo
-                // eslint-disable-next-line react-hooks/exhaustive-deps
                 startPaymentStatusCheck(pendingTransactionId, formData)
               } else {
                 // Falhou ou cancelado, limpar

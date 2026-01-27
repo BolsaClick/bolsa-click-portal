@@ -28,7 +28,7 @@ const ids = idsByTheme[themeName as keyof typeof idsByTheme]
 export const metadata: Metadata = {
   title: {
     default: theme.shortTitle,
-    template: `%s - ${theme.shortTitle}`,
+    template: `%s | ${theme.shortTitle}`,
   },
   description: theme.description,
   keywords: [

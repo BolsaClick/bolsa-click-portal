@@ -35,7 +35,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const nivel = typeof params.nivel === 'string' ? params.nivel : 'GRADUACAO'
 
   // Normalizar parâmetros: se 'c' contém sufixo mas 'cn' não existe, extrair o sufixo
-  let courseNameClean = curso ? removeCourseSuffix(curso) : ''
+  const courseNameClean = curso ? removeCourseSuffix(curso) : ''
   let finalCn = cursoNomeCompleto || ''
   
   // Se o curso tem sufixo no parâmetro 'c' mas não temos 'cn', extrair o sufixo
@@ -55,17 +55,19 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
                      nivel === 'TECNICO' ? 'Técnico' : 
                      'Graduação'
 
-  const title = courseName
-    ? `${courseType} em ${courseName} - ${modalidadeFormatted}${locationText} com até 80% de desconto | Bolsa Click`
-    : cidade && estado
-      ? `Cursos de ${courseType} ${modalidadeFormatted}${locationText} com até 80% de desconto | Bolsa Click`
-      : `Cursos de ${courseType} ${modalidadeFormatted} com até 80% de desconto | Bolsa Click`
+  // Verificar se há curso selecionado (cidade/estado sozinhos não contam como filtro para o título)
+  // Quando não há curso, sempre mostrar "Buscar cursos" mesmo que tenha cidade/estado (geolocalização automática)
+  const hasCourseSelected = courseName && courseName.trim().length > 0
+  
+  // Se não houver curso selecionado, usar título genérico "Buscar cursos"
+  // Nota: O layout principal adiciona " - Bolsa Click" automaticamente via template
+  const title = hasCourseSelected
+    ? `${courseType} em ${courseName} - ${modalidadeFormatted}${locationText} com até 80% de desconto`
+    : 'Buscar cursos'
 
-  const description = courseName
+  const description = hasCourseSelected
     ? `Compare bolsas para ${courseType.toLowerCase()} em ${courseName} (${modalidadeFormatted})${locationText}. Encontre as melhores ofertas com até 80% de desconto nas principais faculdades do Brasil. Cadastre-se grátis e economize!`
-    : cidade && estado
-      ? `Encontre bolsas de estudo de ${courseType.toLowerCase()} ${modalidadeFormatted}${locationText} com até 80% de desconto. Compare preços, modalidades e condições de pagamento nas melhores faculdades. Cadastre-se grátis!`
-      : `Encontre bolsas de estudo de ${courseType.toLowerCase()} ${modalidadeFormatted} com até 80% de desconto nas melhores faculdades do Brasil. Compare preços e economize na sua mensalidade. Cadastre-se grátis!`
+    : 'Busque e compare bolsas de estudo para graduação, pós-graduação e cursos técnicos. Encontre as melhores ofertas com até 80% de desconto nas principais faculdades do Brasil. Cadastre-se grátis!'
 
   // Construir URL canônica auto-referencial e normalizada
   // Normalização: sempre usar 'c' limpo e 'cn' separado (se aplicável)

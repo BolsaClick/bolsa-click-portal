@@ -7,6 +7,7 @@ import { useFavorites } from "@/app/lib/hooks/useFavorites"
 import { useState } from "react"
 import { toast } from "sonner"
 import { usePostHogTracking } from "@/app/lib/hooks/usePostHogTracking"
+import { postSearch } from "@/app/lib/api/post-search"
 
 interface CourseCardProps {
   course: Course
@@ -72,6 +73,22 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
         view_mode: viewMode,
       })
       return
+    }
+
+    // Enviar dados para o endpoint de search antes de redirecionar
+    if (course.id && course.unitId) {
+      try {
+        await postSearch(
+          String(course.id),
+          course.unitId,
+          course
+        )
+        // Não mostrar toast de sucesso para não atrapalhar o fluxo
+        // O erro já é logado internamente na função postSearch
+      } catch (error) {
+        // Erro já foi tratado dentro de postSearch, apenas continuar o fluxo
+        console.error('Erro ao enviar dados para search:', error)
+      }
     }
 
     // Construir URL com parâmetros essenciais para compartilhamento

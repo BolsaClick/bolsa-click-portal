@@ -112,7 +112,6 @@ export const ComboBox = <T extends CourseOption | CityOption>({
                 autoComplete="off"
                 value={inputValue}
                 onChange={(e) => {
-                  const value = e.target.value
                   handleInputChange(e)
                   // Não atualizar o field enquanto está digitando, só o inputValue
                   // Manter o dropdown aberto quando há opções disponíveis

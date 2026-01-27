@@ -10,6 +10,16 @@ interface Course {
   [key: string]: unknown
 }
 
+interface CourseWithPrices {
+  minPrice?: number
+  maxPrice?: number
+  prices?: {
+    withDiscount?: number
+    withoutDiscount?: number
+  }
+  [key: string]: unknown
+}
+
 export async function getShowFiltersCourses(
   courseName?: string,
   city?: string,
@@ -138,7 +148,7 @@ export async function getShowFiltersCourses(
   // Mapear os dados para garantir que minPrice e maxPrice estejam presentes
   // A API pode retornar os preços em diferentes formatos (prices.withDiscount, prices.withoutDiscount, etc)
   if (response.data && response.data.data && Array.isArray(response.data.data)) {
-    const mappedData = response.data.data.map((course: any) => {
+    const mappedData = response.data.data.map((course: CourseWithPrices) => {
       // Se já tiver minPrice e maxPrice, manter como está
       if (course.minPrice !== undefined && course.maxPrice !== undefined) {
         return course

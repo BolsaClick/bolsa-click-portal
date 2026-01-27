@@ -19,6 +19,9 @@ export const metadata: Metadata = {
     'bolsas de estudo', 'graduação EAD', 'faculdades com desconto', 'educação superior', 'bolsa para faculdade', 'bolsa para faculdade feminina', 'bolsa para faculdade masculina', 'bolsa click', 'bolsa click faculdade', 'bolsa click graduação', 'bolsa click EAD', 'bolsa click presencial'
   ],
   robots: 'index, follow',
+  alternates: {
+    canonical: 'https://www.bolsaclick.com.br/graduacao',
+  },
   openGraph: {
     title: 'Cursos de Graduação com até 80% de Desconto',
     description: 'Escolha entre bacharelado, licenciatura ou tecnólogo e estude com bolsa de até 80% em diversas áreas.',
@@ -41,6 +44,40 @@ export const metadata: Metadata = {
     title: 'Cursos de Graduação com até 80% de Desconto',
     description: 'Graduação com bolsa de estudo? Encontre a sua na Bolsa Click com descontos imperdíveis.',
     images: ['https://www.bolsaclick.com.br/favicon.png'],
+  },
+  other: {
+    'application/ld+json': JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Course',
+      name: 'Cursos de Graduação',
+      description: 'Descubra cursos de graduação presenciais, EAD e semipresenciais com bolsas de estudo de até 80% em diversas áreas do conhecimento.',
+      provider: {
+        '@type': 'Organization',
+        name: 'Bolsa Click',
+        url: 'https://www.bolsaclick.com.br',
+        logo: 'https://www.bolsaclick.com.br/assets/logo-bolsa-click-rosa.png',
+      },
+      educationalLevel: 'Graduação',
+      courseMode: ['Presencial', 'EAD', 'Semipresencial'],
+      url: 'https://www.bolsaclick.com.br/graduacao',
+      breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: 'Home',
+            item: 'https://www.bolsaclick.com.br',
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: 'Graduação',
+            item: 'https://www.bolsaclick.com.br/graduacao',
+          },
+        ],
+      },
+    }),
   },
 };
 

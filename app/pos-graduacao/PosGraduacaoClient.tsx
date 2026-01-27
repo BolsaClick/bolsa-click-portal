@@ -1,4 +1,4 @@
-// app/graduacao/App.tsx
+// app/pos-graduacao/PosGraduacaoClient.tsx
 'use client'
 
 import { useState, useRef } from 'react'
@@ -12,13 +12,13 @@ import {
 } from 'lucide-react'
 import Image from 'next/image'
 
-export default function GraduacaoClient() {
+export default function PosGraduacaoClient() {
   const [activeTab, setActiveTab] = useState('vantagens')
   const router = useRouter()
   const infoSectionRef = useRef<HTMLElement>(null)
 
   const handleComecarAgora = () => {
-    router.push('/curso?nivel=GRADUACAO')
+    router.push('/curso/resultado?nivel=POS_GRADUACAO')
   }
 
   const handleSaibaMais = () => {
@@ -54,10 +54,10 @@ export default function GraduacaoClient() {
               <GraduationCap className="w-24 h-24 mx-auto mb-8" />
             </motion.div>
             <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white to-emerald-200">
-              Cursos de Graduação
+              Cursos de Pós-graduação
             </h1>
             <p className="text-xl md:text-2xl text-emerald-100 max-w-3xl mx-auto leading-relaxed">
-              Descubra o caminho para sua formação superior e transforme seu futuro profissional
+              Especialize-se e alcance novos patamares na sua carreira profissional
             </p>
             <div className="mt-12 flex flex-col sm:flex-row justify-center gap-6">
               <motion.button 
@@ -88,10 +88,10 @@ export default function GraduacaoClient() {
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {[
-                { icon: Users, title: '+1000', subtitle: 'Alunos Formados', color: 'from-emerald-500 to-bolsa-primary' },
-                { icon: BookMarked, title: '+100', subtitle: 'Cursos Disponíveis', color: 'from-purple-500 to-purple-600' },
-                { icon: Award, title: '+50', subtitle: 'Prêmios Recebidos', color: 'from-pink-500 to-pink-600' },
-                { icon: TrendingUp, title: '95%', subtitle: 'Taxa de Empregabilidade', color: 'from-emerald-500 to-emerald-600' }
+                { icon: Users, title: '+500', subtitle: 'Especialistas Formados', color: 'from-emerald-500 to-bolsa-primary' },
+                { icon: BookMarked, title: '+200', subtitle: 'Cursos Disponíveis', color: 'from-purple-500 to-purple-600' },
+                { icon: Award, title: '+80%', subtitle: 'Desconto em Bolsas', color: 'from-pink-500 to-pink-600' },
+                { icon: TrendingUp, title: '98%', subtitle: 'Satisfação dos Alunos', color: 'from-emerald-500 to-emerald-600' }
               ].map((stat, index) => (
                 <motion.div
                   key={index}
@@ -111,7 +111,7 @@ export default function GraduacaoClient() {
           </div>
         </section>
   
-        {/* What is Graduation Section with 3D Card Effect */}
+        {/* What is Post-Graduation Section with 3D Card Effect */}
         <section ref={infoSectionRef} className="py-20 container mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -121,11 +121,11 @@ export default function GraduacaoClient() {
               transition={{ duration: 0.8 }}
             >
               <h2 className="text-4xl font-bold mb-6 bg-gradient-to-r from-emerald-700 to-emerald-500 bg-clip-text text-transparent">
-                O que é curso de graduação?
+                O que é pós-graduação?
               </h2>
               <p className="text-gray-600 text-lg leading-relaxed mb-6">
-                A graduação é o primeiro nível da formação superior no Brasil. São cursos que oferecem diploma de bacharel, licenciatura ou 
-                tecnólogo, permitindo que o profissional atue de forma legal no mercado de trabalho.
+                A pós-graduação é uma formação especializada que permite aprofundar conhecimentos em uma área específica após a graduação. 
+                Inclui especializações, MBAs, mestrados e doutorados, oferecendo oportunidades de crescimento profissional e acadêmico.
               </p>
               <div className="grid grid-cols-2 gap-4 mt-8">
                 <motion.div 
@@ -133,14 +133,14 @@ export default function GraduacaoClient() {
                   className="bg-emerald-50 rounded-xl p-6 border-2 border-emerald-100"
                 >
                   <Star className="w-8 h-8 text-bolsa-primary mb-3" />
-                  <h3 className="font-semibold text-emerald-700">Diploma Reconhecido</h3>
+                  <h3 className="font-semibold text-emerald-700">Especialização Profissional</h3>
                 </motion.div>
                 <motion.div 
                   whileHover={{ scale: 1.05 }}
                   className="bg-emerald-50 rounded-xl p-6 border-2 border-emerald-100"
                 >
                   <Sparkles className="w-8 h-8 text-bolsa-primary mb-3" />
-                  <h3 className="font-semibold text-emerald-700">Carreira Profissional</h3>
+                  <h3 className="font-semibold text-emerald-700">Diferencial no Mercado</h3>
                 </motion.div>
               </div>
             </motion.div>
@@ -156,7 +156,7 @@ export default function GraduacaoClient() {
                   width={1000}
                   height={1000}
                   src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80" 
-                  alt="Estudantes em sala de aula"
+                  alt="Profissionais em pós-graduação"
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/50 to-transparent" />
@@ -182,7 +182,7 @@ export default function GraduacaoClient() {
           </div>
         </section>
   
-        {/* Types of Graduation with Interactive Cards */}
+        {/* Types of Post-Graduation with Interactive Cards */}
         <section className="py-20 bg-gradient-to-b from-white to-emerald-50">
           <div className="container mx-auto px-4">
             <motion.h2 
@@ -191,38 +191,38 @@ export default function GraduacaoClient() {
               viewport={{ once: true }}
               className="text-4xl font-bold text-center mb-16"
             >
-              Tipos de Graduação
+              Tipos de Pós-graduação
             </motion.h2>
             <div className="grid md:grid-cols-3 gap-8">
               {[
                 {
-                  title: 'Bacharelado',
+                  title: 'Especialização',
                   icon: BookOpen,
                   color: 'from-emerald-500 to-bolsa-primary',
                   items: [
-                    { icon: Clock, text: 'Duração: 4-5 anos' },
-                    { icon: Brain, text: 'Formação ampla e profunda' },
-                    { icon: FileSpreadsheet, text: 'Foco em pesquisa' }
+                    { icon: Clock, text: 'Duração: 1-2 anos' },
+                    { icon: Brain, text: 'Aprofundamento em área específica' },
+                    { icon: FileSpreadsheet, text: 'Foco prático e profissional' }
                   ]
                 },
                 {
-                  title: 'Licenciatura',
+                  title: 'MBA',
                   icon: Building2,
                   color: 'from-purple-500 to-purple-600',
                   items: [
-                    { icon: Clock, text: 'Duração: 4 anos' },
-                    { icon: Users, text: 'Foco em ensino' },
-                    { icon: BookMarked, text: 'Prática pedagógica' }
+                    { icon: Clock, text: 'Duração: 1-2 anos' },
+                    { icon: Users, text: 'Foco em gestão e negócios' },
+                    { icon: BookMarked, text: 'Networking e cases reais' }
                   ]
                 },
                 {
-                  title: 'Tecnólogo',
+                  title: 'Mestrado',
                   icon: Laptop,
                   color: 'from-pink-500 to-pink-600',
                   items: [
-                    { icon: Clock, text: 'Duração: 2-3 anos' },
-                    { icon: Target, text: 'Formação específica' },
-                    { icon: TrendingUp, text: 'Foco prático' }
+                    { icon: Clock, text: 'Duração: 2 anos' },
+                    { icon: Target, text: 'Formação acadêmica avançada' },
+                    { icon: TrendingUp, text: 'Pesquisa e produção científica' }
                   ]
                 }
               ].map((type, index) => (
@@ -270,32 +270,32 @@ export default function GraduacaoClient() {
               viewport={{ once: true }}
               className="text-4xl font-bold text-center mb-16"
             >
-              Áreas de Conhecimento
+              Áreas de Especialização
             </motion.h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
                 {
-                  title: 'Ciências Exatas',
-                  image: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-                  courses: ['Engenharias', 'Matemática', 'Física', 'Computação'],
+                  title: 'Gestão e Negócios',
+                  image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+                  courses: ['MBA em Gestão', 'Administração', 'Marketing', 'Finanças'],
                   color: 'from-bolsa-primary to-emerald-400'
                 },
                 {
-                  title: 'Ciências Humanas',
-                  image: 'https://images.unsplash.com/photo-1513128034602-7814ccaddd4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-                  courses: ['Direito', 'Psicologia', 'Pedagogia', 'História'],
-                  color: 'from-purple-600 to-purple-400'
-                },
-                {
-                  title: 'Ciências Biológicas',
+                  title: 'Saúde e Bem-estar',
                   image: 'https://images.unsplash.com/photo-1576086213369-97a306d36557?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-                  courses: ['Medicina', 'Enfermagem', 'Nutrição', 'Biologia'],
+                  courses: ['Enfermagem', 'Nutrição', 'Psicologia', 'Fisioterapia'],
                   color: 'from-emerald-600 to-emerald-400'
                 },
                 {
-                  title: 'Ciências Sociais',
-                  image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-                  courses: ['Administração', 'Economia', 'Contabilidade', 'Marketing'],
+                  title: 'Tecnologia e Inovação',
+                  image: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+                  courses: ['TI e Sistemas', 'Data Science', 'Segurança', 'Desenvolvimento'],
+                  color: 'from-purple-600 to-purple-400'
+                },
+                {
+                  title: 'Educação e Pedagogia',
+                  image: 'https://images.unsplash.com/photo-1513128034602-7814ccaddd4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+                  courses: ['Pedagogia', 'Gestão Escolar', 'Educação Inclusiva', 'Metodologias'],
                   color: 'from-pink-600 to-pink-400'
                 }
               ].map((area, index) => (
@@ -353,10 +353,10 @@ export default function GraduacaoClient() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
               >
-                <h2 className="text-4xl font-bold mb-6">Graduação à Distância (EAD)</h2>
+                <h2 className="text-4xl font-bold mb-6">Pós-graduação à Distância (EAD)</h2>
                 <p className="text-gray-600 text-lg mb-8">
-                  A graduação EAD é uma modalidade que permite estudar de forma flexível, com aulas online e 
-                  algumas atividades presenciais.
+                  A pós-graduação EAD oferece flexibilidade total para profissionais que buscam especialização sem 
+                  comprometer a rotina de trabalho.
                 </p>
                 <div className="flex gap-4 mb-6">
                   <button
@@ -394,7 +394,7 @@ export default function GraduacaoClient() {
                         className="flex items-center gap-3 text-gray-600"
                       >
                         <Clock className="w-5 h-5 text-bolsa-primary" />
-                        <span>Flexibilidade de horários</span>
+                        <span>Estude no seu ritmo e horário</span>
                       </motion.li>
                       <motion.li 
                         initial={{ opacity: 0, x: -20 }}
@@ -403,7 +403,7 @@ export default function GraduacaoClient() {
                         className="flex items-center gap-3 text-gray-600"
                       >
                         <TrendingUp className="w-5 h-5 text-bolsa-primary" />
-                        <span>Menor custo</span>
+                        <span>Investimento mais acessível</span>
                       </motion.li>
                       <motion.li 
                         initial={{ opacity: 0, x: -20 }}
@@ -412,7 +412,7 @@ export default function GraduacaoClient() {
                         className="flex items-center gap-3 text-gray-600"
                       >
                         <Target className="w-5 h-5 text-bolsa-primary" />
-                        <span>Estudo no seu ritmo</span>
+                        <span>Conteúdo atualizado e relevante</span>
                       </motion.li>
                       <motion.li 
                         initial={{ opacity: 0, x: -20 }}
@@ -421,7 +421,7 @@ export default function GraduacaoClient() {
                         className="flex items-center gap-3 text-gray-600"
                       >
                         <Award className="w-5 h-5 text-bolsa-primary" />
-                        <span>Mesmo valor do diploma</span>
+                        <span>Certificado reconhecido pelo MEC</span>
                       </motion.li>
                     </ul>
                   ) : (
@@ -432,7 +432,7 @@ export default function GraduacaoClient() {
                         className="flex items-center gap-3 text-gray-600"
                       >
                         <Brain className="w-5 h-5 text-bolsa-primary" />
-                        <span>Autodisciplina</span>
+                        <span>Diploma de graduação</span>
                       </motion.li>
                       <motion.li 
                         initial={{ opacity: 0, x: -20 }}
@@ -441,7 +441,7 @@ export default function GraduacaoClient() {
                         className="flex items-center gap-3 text-gray-600"
                       >
                         <Laptop className="w-5 h-5 text-bolsa-primary" />
-                        <span>Computador com internet</span>
+                        <span>Acesso à internet estável</span>
                       </motion.li>
                       <motion.li 
                         initial={{ opacity: 0, x: -20 }}
@@ -450,7 +450,7 @@ export default function GraduacaoClient() {
                         className="flex items-center gap-3 text-gray-600"
                       >
                         <Calendar className="w-5 h-5 text-bolsa-primary" />
-                        <span>Organização do tempo</span>
+                        <span>Dedicação e comprometimento</span>
                       </motion.li>
                       <motion.li 
                         initial={{ opacity: 0, x: -20 }}
@@ -459,7 +459,7 @@ export default function GraduacaoClient() {
                         className="flex items-center gap-3 text-gray-600"
                       >
                         <CheckCircle className="w-5 h-5 text-bolsa-primary" />
-                        <span>Comprometimento</span>
+                        <span>Experiência profissional (recomendado)</span>
                       </motion.li>
                     </ul>
                   )}
@@ -473,10 +473,10 @@ export default function GraduacaoClient() {
               >
                 <div className="rounded-2xl overflow-hidden shadow-2xl transform hover:scale-105 transition-transform duration-500">
                   <Image 
-                  width={100}
-                  height={100}
+                    width={100}
+                    height={100}
                     src="https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80"
-                    alt="Estudante EAD"
+                    alt="Profissional em pós-graduação EAD"
                     className="w-full"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/50 to-transparent" />
@@ -517,7 +517,7 @@ export default function GraduacaoClient() {
               viewport={{ once: true }}
             >
               <h2 className="text-4xl font-bold mb-6">Receba alertas sobre vagas!</h2>
-              <p className="text-xl mb-12 text-emerald-100">Fique por dentro das melhores oportunidades de graduação.</p>
+              <p className="text-xl mb-12 text-emerald-100">Fique por dentro das melhores oportunidades de pós-graduação.</p>
               <div className="max-w-md mx-auto">
                 <div className="flex gap-4 mb-4">
                   <motion.div 

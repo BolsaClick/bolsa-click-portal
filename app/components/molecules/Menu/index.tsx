@@ -4,8 +4,9 @@ import { NavLink } from '../../atoms/NavLink'
 
 const menuItems = [
   { label: 'Graduação', href: '/graduacao' },
+  { label: 'Pós-graduação', href: '/pos-graduacao' },
   { label: 'Buscar cursos', href: '/curso/resultado' },
-  { label: 'Meus favoritos', href: '/favoritos' },
+  // { label: 'Meus favoritos', href: '/favoritos' },
   { label: 'Quem somos', href: '/quem-somos' },
   { label: 'Contato', href: '/contato' },
 ]

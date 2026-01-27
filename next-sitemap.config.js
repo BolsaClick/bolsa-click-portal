@@ -80,6 +80,21 @@ module.exports = {
   additionalPaths: async () => {
     const paths = []
     
+    // Adicionar páginas principais com alta prioridade
+    paths.push({
+      loc: '/graduacao',
+      changefreq: 'weekly',
+      priority: 0.9,
+      lastmod: new Date().toISOString(),
+    })
+    
+    paths.push({
+      loc: '/pos-graduacao',
+      changefreq: 'weekly',
+      priority: 0.9,
+      lastmod: new Date().toISOString(),
+    })
+    
     // Gerar URLs para combinações de cursos populares + cidades principais + modalidades
     // Prioridade alta (0.9): cursos mais buscados nas principais cidades
     const topCourses = popularCourses.slice(0, 6) // Top 6 cursos

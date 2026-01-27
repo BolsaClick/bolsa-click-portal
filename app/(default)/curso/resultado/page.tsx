@@ -16,6 +16,11 @@ function removeCourseSuffix(name: string) {
     .trim()
 }
 
+function extractCourseSuffix(name: string): string | null {
+  const match = name.match(/ - (Bacharelado|Licenciatura|Tecn[oó]logo)$/i)
+  return match ? match[1] : null
+}
+
 type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
@@ -23,12 +28,24 @@ type Props = {
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const params = await searchParams
   const curso = typeof params.c === 'string' ? params.c : ''
+  const cursoNomeCompleto = typeof params.cn === 'string' ? params.cn : ''
   const cidade = typeof params.cidade === 'string' ? params.cidade : ''
   const estado = typeof params.estado === 'string' ? params.estado : ''
   const modalidade = typeof params.modalidade === 'string' ? params.modalidade : 'EAD'
   const nivel = typeof params.nivel === 'string' ? params.nivel : 'GRADUACAO'
 
-  const courseNameClean = curso ? removeCourseSuffix(curso) : ''
+  // Normalizar parâmetros: se 'c' contém sufixo mas 'cn' não existe, extrair o sufixo
+  let courseNameClean = curso ? removeCourseSuffix(curso) : ''
+  let finalCn = cursoNomeCompleto || ''
+  
+  // Se o curso tem sufixo no parâmetro 'c' mas não temos 'cn', extrair o sufixo
+  if (curso && !finalCn && nivel === 'GRADUACAO') {
+    const suffix = extractCourseSuffix(curso)
+    if (suffix) {
+      finalCn = suffix
+    }
+  }
+
   const courseName = courseNameClean ? capitalizeText(courseNameClean) : ''
   const modalidadeFormatted = capitalizeText(modalidade === 'EAD' ? 'A Distância' : modalidade)
   const locationText = cidade && estado ? ` em ${cidade} - ${estado}` : ''
@@ -50,13 +67,34 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
       ? `Encontre bolsas de estudo de ${courseType.toLowerCase()} ${modalidadeFormatted}${locationText} com até 80% de desconto. Compare preços, modalidades e condições de pagamento nas melhores faculdades. Cadastre-se grátis!`
       : `Encontre bolsas de estudo de ${courseType.toLowerCase()} ${modalidadeFormatted} com até 80% de desconto nas melhores faculdades do Brasil. Compare preços e economize na sua mensalidade. Cadastre-se grátis!`
 
+  // Construir URL canônica auto-referencial e normalizada
+  // Normalização: sempre usar 'c' limpo e 'cn' separado (se aplicável)
+  // Isso garante consistência e evita duplicação de conteúdo
   const canonicalParams = new URLSearchParams()
-  if (courseNameClean) canonicalParams.set('c', courseNameClean)
-  if (cidade) canonicalParams.set('cidade', cidade)
-  if (estado) canonicalParams.set('estado', estado)
+  
+  // Ordem alfabética para consistência: c, cn, cidade, estado, modalidade, nivel
+  if (courseNameClean && courseNameClean.trim()) {
+    canonicalParams.set('c', courseNameClean.trim())
+  }
+  
+  // Incluir 'cn' apenas se existir e for graduação (pós-graduação não usa sufixo)
+  if (finalCn && finalCn.trim() && nivel === 'GRADUACAO') {
+    canonicalParams.set('cn', finalCn.trim())
+  }
+  
+  if (cidade && cidade.trim()) {
+    canonicalParams.set('cidade', cidade.trim())
+  }
+  if (estado && estado.trim()) {
+    canonicalParams.set('estado', estado.trim())
+  }
+  
+  // Sempre incluir modalidade e nivel (valores padrão se não especificados)
   canonicalParams.set('modalidade', modalidade)
   canonicalParams.set('nivel', nivel)
   
+  // URL canônica auto-referencial: sempre aponta para a própria página com www
+  // Normalizada para evitar múltiplas URLs apontando para o mesmo conteúdo
   const canonicalUrl = `https://www.bolsaclick.com.br/curso/resultado?${canonicalParams.toString()}`
 
   const keywords = [

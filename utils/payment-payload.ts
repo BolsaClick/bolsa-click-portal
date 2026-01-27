@@ -6,7 +6,7 @@ export const generatePayload = (
   payToday: number,
   paymentType: 'credit_card' | 'pix',
 ) => {
-  const [month, year] = data?.expDate ? data.expDate.split('/') : ['01', '2025']
+  const [month, year] = data?.expDate ? data.expDate.split('/') : ['01', '2026']
   const expMonth = parseInt(month, 10)
   const expYear = parseInt(year, 10)
 

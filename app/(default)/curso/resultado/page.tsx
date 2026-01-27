@@ -60,14 +60,14 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const hasCourseSelected = courseName && courseName.trim().length > 0
   
   // Se não houver curso selecionado, usar título genérico "Buscar cursos"
-  // Nota: O layout principal adiciona " - Bolsa Click" automaticamente via template
+  // Nota: O layout principal adiciona " | Bolsa Click" automaticamente via template
   const title = hasCourseSelected
-    ? `${courseType} em ${courseName} - ${modalidadeFormatted}${locationText} com até 80% de desconto`
-    : 'Buscar cursos'
+    ? `Bolsa de Estudo em ${courseName} - Faculdades ${modalidadeFormatted}${locationText} com até 80% de Desconto`
+    : 'Bolsa de Estudo em Faculdades | Buscar Cursos'
 
   const description = hasCourseSelected
-    ? `Compare bolsas para ${courseType.toLowerCase()} em ${courseName} (${modalidadeFormatted})${locationText}. Encontre as melhores ofertas com até 80% de desconto nas principais faculdades do Brasil. Cadastre-se grátis e economize!`
-    : 'Busque e compare bolsas de estudo para graduação, pós-graduação e cursos técnicos. Encontre as melhores ofertas com até 80% de desconto nas principais faculdades do Brasil. Cadastre-se grátis!'
+    ? `Encontre bolsa de estudo em ${courseName} (${modalidadeFormatted})${locationText}. Desconto em faculdade de até 80% nas principais instituições do Brasil. Compare preços e garanta sua bolsa. Cadastre-se grátis!`
+    : 'Busque e compare bolsas de estudo em faculdades de todo Brasil. Desconto em faculdade de até 80% para graduação, pós-graduação e cursos técnicos. Mais de 30.000 faculdades parceiras. Cadastre-se grátis!'
 
   // Construir URL canônica auto-referencial e normalizada
   // Normalização: sempre usar 'c' limpo e 'cn' separado (se aplicável)
@@ -100,12 +100,28 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const canonicalUrl = `https://www.bolsaclick.com.br/curso/resultado?${canonicalParams.toString()}`
 
   const keywords = [
-    courseName && `${courseName} com bolsa`,
     courseName && `bolsa de estudo ${courseName}`,
-    modalidadeFormatted && `graduação ${modalidadeFormatted.toLowerCase()}`,
+    courseName && `bolsa de estudos ${courseName}`,
+    courseName && `desconto em faculdade ${courseName}`,
+    courseName && `bolsa faculdade ${courseName}`,
+    courseName && `${courseName} com bolsa`,
+    `bolsa de estudo ${courseType.toLowerCase()}`,
+    `bolsa de estudos ${courseType.toLowerCase()}`,
+    `desconto em faculdade ${courseType.toLowerCase()}`,
+    cidade && `bolsa de estudo ${cidade}`,
+    cidade && `desconto em faculdade ${cidade}`,
     cidade && `faculdade em ${cidade}`,
+    estado && `bolsa de estudo ${estado}`,
     estado && `cursos em ${estado}`,
+    modalidadeFormatted && `${courseType.toLowerCase()} ${modalidadeFormatted.toLowerCase()}`,
+    'bolsa de estudo',
+    'bolsa de estudos',
     'bolsas de estudo',
+    'desconto em faculdade',
+    'desconto faculdade',
+    'bolsa faculdade',
+    'faculdade com bolsa',
+    'faculdades com desconto',
     'educação superior',
     'Bolsa Click',
   ].filter(Boolean) as string[]

@@ -3,10 +3,20 @@ import { Metadata } from 'next'
 import PosGraduacaoClient from './PosGraduacaoClient';
 
 export const metadata: Metadata = {
-  title: 'Cursos de Pós-graduação com até 80% de Desconto',
-  description: 'Descubra cursos de pós-graduação presenciais, EAD e semipresenciais com bolsas de estudo de até 80% em diversas áreas do conhecimento.',
+  title: 'Bolsa de Estudo em Faculdades - Pós-graduação com até 80% de Desconto',
+  description: 'Encontre bolsa de estudo em faculdades para pós-graduação com até 80% de desconto. Desconto em faculdade para especialização, MBA e mestrado. Mais de 30.000 faculdades parceiras. Cadastre-se grátis!',
   keywords: [
-    'pós-graduação',
+    'bolsa de estudo pós-graduação',
+    'bolsa de estudos pós-graduação',
+    'desconto em faculdade pós-graduação',
+    'bolsa faculdade pós-graduação',
+    'faculdade com bolsa pós-graduação',
+    'bolsa de estudo especialização',
+    'bolsa de estudo mba',
+    'bolsa de estudo mestrado',
+    'pós-graduação com bolsa',
+    'pós-graduação com desconto',
+    'faculdade pós-graduação',
     'especialização',
     'mba',
     'cursos de pós',
@@ -15,17 +25,21 @@ export const metadata: Metadata = {
     'especialização profissional',
     'mestrado',
     'doutorado',
-    'áreas do conhecimento',
     'faculdades com desconto',
-    'bolsas de estudo', 'pós-graduação EAD', 'faculdades com desconto', 'educação superior', 'bolsa para pós-graduação', 'bolsa click', 'bolsa click faculdade', 'bolsa click pós-graduação', 'bolsa click EAD', 'bolsa click presencial'
+    'bolsas de estudo',
+    'bolsa para pós-graduação',
+    'educação superior',
+    'bolsa click',
+    'bolsa click faculdade',
+    'bolsa click pós-graduação',
   ],
   robots: 'index, follow',
   alternates: {
     canonical: 'https://www.bolsaclick.com.br/pos-graduacao',
   },
   openGraph: {
-    title: 'Cursos de Pós-graduação com até 80% de Desconto',
-    description: 'Escolha entre especialização, MBA ou mestrado e estude com bolsa de até 80% em diversas áreas.',
+    title: 'Bolsa de Estudo em Faculdades - Pós-graduação com até 80% de Desconto',
+    description: 'Encontre bolsa de estudo em faculdades para pós-graduação. Desconto em faculdade de até 80% para especialização, MBA e mestrado. Cadastre-se grátis!',
     url: 'https://www.bolsaclick.com.br/pos-graduacao',
     siteName: 'Bolsa Click',
     locale: 'pt_BR',
@@ -42,8 +56,8 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     site: '@bolsaclick',
-    title: 'Cursos de Pós-graduação com até 80% de Desconto',
-    description: 'Pós-graduação com bolsa de estudo? Encontre a sua na Bolsa Click com descontos imperdíveis.',
+    title: 'Bolsa de Estudo em Faculdades - Pós-graduação com até 80% de Desconto',
+    description: 'Pós-graduação com bolsa de estudo? Encontre a sua na Bolsa Click. Desconto em faculdade de até 80%. Cadastre-se grátis!',
     images: ['https://www.bolsaclick.com.br/favicon.png'],
   },
   other: {

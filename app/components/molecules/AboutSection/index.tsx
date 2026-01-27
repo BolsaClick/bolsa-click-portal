@@ -16,16 +16,16 @@ const AboutSection: React.FC = () => {
 
   const benefits = [
     "Descontos de até 95% durante todo o curso",
-    "Mais de 25 instituições parceiras",
+    "Mais de 30.000 faculdades parceiras",
     "Processo de matrícula simplificado",
     "Suporte personalizado durante todo o processo"
   ];
 
   const quickStats = [
-    { number: "10k+", label: "Alunos matriculados", icon: <Users size={24} /> },
-    { number: "25+", label: "Instituições parceiras", icon: <School size={24} /> },
-    { number: "97%", label: "Desconto máximo", icon: <Award size={24} /> },
-    { number: "100%", label: "Satisfação dos alunos", icon: <TrendingUp size={24} /> }
+    { number: "30.000+", label: "Faculdades parceiras", icon: <School size={24} /> },
+    { number: "100.000+", label: "Cursos disponíveis", icon: <Users size={24} /> },
+    { number: "95%", label: "Desconto máximo", icon: <Award size={24} /> },
+    { number: "98%", label: "Alunos recomendam", icon: <TrendingUp size={24} /> }
   ];
 
   const testimonials = [
@@ -54,7 +54,7 @@ const AboutSection: React.FC = () => {
     "@type": "EducationalOrganization",
     "name": "Bolsa Click",
     "url": "https://www.bolsaclick.com.br",
-    "description": "O Bolsa Click é a maior plataforma de bolsas de estudo do Brasil, com descontos de até 95% para ensino superior. Encontre bolsas em mais de 25 instituições com facilidade e suporte.",
+    "description": "O Bolsa Click é a maior plataforma de bolsas de estudo do Brasil, com descontos de até 95% para ensino superior. Encontre bolsas em mais de 30.000 faculdades parceiras com facilidade e suporte.",
     "sameAs": [
       "https://www.instagram.com/bolsaclick",
       "https://www.facebook.com/bolsaclick"
@@ -90,7 +90,7 @@ const AboutSection: React.FC = () => {
             O que é o Bolsa<span className="text-red-500">Click</span>?
           </h2>
           <p className="text-gray-600 max-w-3xl mx-auto">
-            O Bolsa Click é a maior plataforma de bolsas de estudo do Brasil, conectando estudantes a oportunidades de educação superior com descontos exclusivos. Nossa missão é democratizar o acesso à educação de qualidade, tornando o ensino superior acessível para todos.
+            O Bolsa Click é a maior plataforma de bolsa de estudo em faculdades do Brasil. Encontre desconto em faculdade de até 95% para graduação, pós-graduação e cursos técnicos. Mais de 30.000 faculdades parceiras com bolsas de estudos exclusivas. Nossa missão é democratizar o acesso à educação de qualidade, tornando o ensino superior acessível para todos.
           </p>
         </div>
 

@@ -16,6 +16,7 @@ interface FiltersPanelProps {
   courseSuffix?: string  
   onModalityChange: (modality: string) => void
   onCitySelect: (city: string, state: string) => void
+  onAcademicLevelChange?: (level: string) => void
   priceRange: [number, number]
   onPriceChange: (range: [number, number]) => void
   onCourseSelect: (courseNameClean: string, courseNameFull: string) => void
@@ -31,6 +32,7 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
   courseSuffix,
   onModalityChange,
   onCitySelect,
+  onAcademicLevelChange,
   priceRange,
   onPriceChange,
   onCourseSelect,
@@ -121,13 +123,27 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
   }, [])
 
   // Filtrar cursos baseado no input (sem acentos)
+  // Se não houver texto digitado, mostrar todos os cursos
+  // Se houver texto, filtrar pelos cursos que contêm o texto
   const courseOptions = useMemo(() => {
-    if (!coursesForFilter || !searchCourse || searchCourse.length < 3) return []
+    if (!coursesForFilter) return []
     
+    // Se não houver texto digitado ou tiver menos de 3 caracteres, mostrar todos os cursos
+    if (!searchCourse || searchCourse.length < 3) {
+      return coursesForFilter
+        .slice(0, 50) // Limitar a 50 cursos para performance
+        .map((course: { id: string; name: string; slug?: string }) => ({
+          id: course.id,
+          name: course.name,
+          slug: course.slug || '',
+        }))
+    }
+    
+    // Se houver texto, filtrar
     const searchNormalized = removeAcentos(searchCourse)
     return coursesForFilter
       .filter((course: { id: string; name: string; slug?: string }) => removeAcentos(course.name).includes(searchNormalized))
-      .slice(0, 10)
+      .slice(0, 50) // Limitar a 50 cursos para performance
       .map((course: { id: string; name: string; slug?: string }) => ({
         id: course.id,
         name: course.name,
@@ -175,7 +191,8 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
     const value = e.target.value
     isUserTypingRef.current = true
     setSearchCourse(value)
-    if (value.length >= 3) {
+    // Manter o dropdown aberto quando há cursos disponíveis
+    if (coursesForFilter && coursesForFilter.length > 0) {
       setIsCourseDropdownOpen(true)
     } else {
       setIsCourseDropdownOpen(false)
@@ -184,7 +201,7 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
     setTimeout(() => {
       isUserTypingRef.current = false
     }, 100)
-  }, [])
+  }, [coursesForFilter])
 
   // Handler para mudança no input de cidade
   const handleCityInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -298,7 +315,8 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
               value={searchCourse}
               onChange={handleCourseInputChange}
               onFocus={() => {
-                if (searchCourse.length >= 3) {
+                // Abrir o dropdown quando focado, mostrando todos os cursos disponíveis
+                if (courseOptions.length > 0) {
                   setIsCourseDropdownOpen(true)
                 }
               }}
@@ -320,7 +338,7 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
                 <X size={18} />
               </button>
             )}
-            {isCourseDropdownOpen && courseOptions.length > 0 && searchCourse.length >= 3 && (
+            {isCourseDropdownOpen && courseOptions.length > 0 && (
               <ul className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-[300px] overflow-auto">
                 {courseOptions.map((option) => (
                   <li
@@ -339,7 +357,7 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
                 ))}
               </ul>
             )}
-            {isCourseDropdownOpen && courseOptions.length === 0 && searchCourse.length >= 3 && (
+            {isCourseDropdownOpen && courseOptions.length === 0 && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
                 <div className="px-5 py-3 text-gray-500">
                   Nenhum curso encontrado
@@ -443,6 +461,35 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
             })}
           </div>
         </div>
+
+        {/* Academic Level Filter */}
+        {onAcademicLevelChange && (
+          <div className="space-y-3">
+            <h3 className="font-medium flex items-center">
+              <GraduationCap size={16} className="text-primary-500 mr-2" />
+              Nível Acadêmico
+            </h3>
+            <div className="space-y-2">
+              {['GRADUACAO', 'POS_GRADUACAO'].map((level) => {
+                const label = level === 'GRADUACAO' ? 'Graduação' : 'Pós-graduação'
+                const isChecked = academicLevel === level
+                
+                return (
+                  <label key={level} className="flex items-center">
+                    <input
+                      type="radio"
+                      name="academicLevel"
+                      checked={isChecked}
+                      onChange={() => onAcademicLevelChange(level)}
+                      className="w-4 h-4 text-primary-500 border-neutral-300 rounded focus:ring-primary-500"
+                    />
+                    <span className="ml-2 text-neutral-700">{label}</span>
+                  </label>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Price Range Filter */}
         <div className="space-y-3">

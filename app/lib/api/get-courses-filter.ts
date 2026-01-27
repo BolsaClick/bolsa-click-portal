@@ -27,58 +27,58 @@ export async function getShowFiltersCourses(
       try {
         const mostSearched = await getMostSearchedCourses(city)
         
-        // Filtrar por modalidade se fornecida
-        let filteredData = mostSearched.data
-        if (modality && modality.trim()) {
-          const modalityUpper = modality.toUpperCase()
-          filteredData = filteredData.filter((course: Course) => {
-            const courseModality = (course.modality || course.commercialModality || '').toUpperCase()
-            return courseModality === modalityUpper
-          })
-        }
-        
-        // Filtrar por estado se fornecido
-        if (state && state.trim()) {
-          filteredData = filteredData.filter((course: Course) => {
-            return (course.uf || course.unitState || '').toUpperCase() === state.toUpperCase()
-          })
-        }
-        
-        // Filtrar por academicLevel se fornecido
-        if (academicLevel) {
-          filteredData = filteredData.filter((course: Course) => {
-            return (course.academicLevel || '').toUpperCase() === academicLevel.toUpperCase()
-          })
-        }
-        
-        // Aplicar paginação
-        const startIndex = (page - 1) * size
-        const endIndex = startIndex + size
-        const paginatedData = filteredData.slice(startIndex, endIndex)
-        
-        return {
-          totalItems: filteredData.length,
-          totalPages: Math.ceil(filteredData.length / size),
-          data: paginatedData
+        // Se o most-searched vier vazio, fazer fallback para a API de busca normal
+        if (!mostSearched.data || mostSearched.data.length === 0 || mostSearched.totalItems === 0) {
+          // Continuar para a busca normal abaixo
+        } else {
+          // Filtrar por modalidade se fornecida
+          let filteredData = mostSearched.data
+          if (modality && modality.trim()) {
+            const modalityUpper = modality.toUpperCase()
+            filteredData = filteredData.filter((course: Course) => {
+              const courseModality = (course.modality || course.commercialModality || '').toUpperCase()
+              return courseModality === modalityUpper
+            })
+          }
+          
+          // Filtrar por estado se fornecido
+          if (state && state.trim()) {
+            filteredData = filteredData.filter((course: Course) => {
+              return (course.uf || course.unitState || '').toUpperCase() === state.toUpperCase()
+            })
+          }
+          
+          // Filtrar por academicLevel se fornecido
+          if (academicLevel) {
+            filteredData = filteredData.filter((course: Course) => {
+              return (course.academicLevel || '').toUpperCase() === academicLevel.toUpperCase()
+            })
+          }
+          
+          // Se não houver resultados após filtrar, fazer fallback para a API de busca normal
+          if (filteredData.length === 0) {
+            // Continuar para a busca normal abaixo
+          } else {
+            // Aplicar paginação
+            const startIndex = (page - 1) * size
+            const endIndex = startIndex + size
+            const paginatedData = filteredData.slice(startIndex, endIndex)
+            
+            return {
+              totalItems: filteredData.length,
+              totalPages: Math.ceil(filteredData.length / size),
+              data: paginatedData
+            }
+          }
         }
       } catch (error) {
         console.error('Erro ao buscar cursos mais buscados:', error)
-        // Se der erro, retornar array vazio em vez de fazer fallback
-        // para evitar mostrar resultados indesejados
-        return {
-          totalItems: 0,
-          totalPages: 0,
-          data: []
-        }
-      }
-    } else {
-      // Se não houver cidade, retornar vazio
-      return {
-        totalItems: 0,
-        totalPages: 0,
-        data: []
+        // Se der erro, fazer fallback para a API de busca normal
+        // Continuar para a busca normal abaixo
       }
     }
+    // Se não houver cidade ou não houver resultados no most-searched, fazer fallback para a API de busca normal
+    // Continuar para a busca normal abaixo
   }
 
   // Busca normal (comportamento atual quando há courseName ou erro na most-searched)
@@ -134,5 +134,38 @@ export async function getShowFiltersCourses(
     params,
     paramsSerializer
   })
+  
+  // Mapear os dados para garantir que minPrice e maxPrice estejam presentes
+  // A API pode retornar os preços em diferentes formatos (prices.withDiscount, prices.withoutDiscount, etc)
+  if (response.data && response.data.data && Array.isArray(response.data.data)) {
+    const mappedData = response.data.data.map((course: any) => {
+      // Se já tiver minPrice e maxPrice, manter como está
+      if (course.minPrice !== undefined && course.maxPrice !== undefined) {
+        return course
+      }
+      
+      // Tentar extrair de prices.withDiscount e prices.withoutDiscount
+      if (course.prices) {
+        return {
+          ...course,
+          minPrice: course.prices.withDiscount ?? course.minPrice ?? 0,
+          maxPrice: course.prices.withoutDiscount ?? course.maxPrice ?? 0,
+        }
+      }
+      
+      // Se não tiver prices, manter os valores existentes ou usar 0
+      return {
+        ...course,
+        minPrice: course.minPrice ?? 0,
+        maxPrice: course.maxPrice ?? 0,
+      }
+    })
+    
+    return {
+      ...response.data,
+      data: mappedData
+    }
+  }
+  
   return response.data
 }

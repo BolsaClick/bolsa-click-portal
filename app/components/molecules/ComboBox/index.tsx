@@ -115,16 +115,16 @@ export const ComboBox = <T extends CourseOption | CityOption>({
                   const value = e.target.value
                   handleInputChange(e)
                   // Não atualizar o field enquanto está digitando, só o inputValue
-                  // Só abrir o dropdown se tiver pelo menos 3 caracteres
-                  if (value.length >= 3) {
+                  // Manter o dropdown aberto quando há opções disponíveis
+                  if (options.length > 0) {
                     setIsOpen(true)
                   } else {
                     setIsOpen(false)
                   }
                 }}
                 onFocus={() => {
-                  // Só abrir se tiver pelo menos 3 caracteres
-                  if (inputValue.length >= 3) {
+                  // Abrir o dropdown quando focado, mostrando todos os cursos disponíveis
+                  if (options.length > 0) {
                     setIsOpen(true)
                   }
                   isSelectingRef.current = false

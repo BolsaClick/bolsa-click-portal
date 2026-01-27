@@ -409,6 +409,20 @@ const onSubmit = (data: any) => {
     })
   }, [updateURL, trackEvent, courseNameForAPI, nivel])
 
+  // Handler para mudança de nível acadêmico
+  const handleAcademicLevelChange = useCallback((newLevel: string) => {
+    // Resetar página para 1 quando mudar o nível
+    setCurrentPage(1)
+    updateURL({ nivel: newLevel })
+    trackEvent('course_filter_academic_level_changed', {
+      academic_level: newLevel,
+      course_name: courseNameForAPI,
+      city: cidade,
+      state: estado,
+      modality: modalidade,
+    })
+  }, [updateURL, trackEvent, courseNameForAPI, cidade, estado, modalidade])
+
   return (
     <div className="w-full  bg-neutral-50">
       {/* Enhanced Header */}
@@ -537,6 +551,7 @@ const onSubmit = (data: any) => {
                 courseSuffix={cursoNomeCompleto}
                 onModalityChange={handleModalityChange}
                 onCitySelect={handleCitySelect}
+                onAcademicLevelChange={handleAcademicLevelChange}
                 priceRange={filters.montlyFeeToMin}
                 onPriceChange={handlePriceChange}
                 onCourseSelect={handleCourseSelect}
@@ -571,6 +586,7 @@ const onSubmit = (data: any) => {
                 courseSuffix={cursoNomeCompleto}
                 onModalityChange={handleModalityChange}
                 onCitySelect={handleCitySelect}
+                onAcademicLevelChange={handleAcademicLevelChange}
                 priceRange={filters.montlyFeeToMin}
                 onPriceChange={handlePriceChange}
                 onCourseSelect={handleCourseSelect}

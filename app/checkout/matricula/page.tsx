@@ -38,6 +38,7 @@ import { createStudent } from '@/app/lib/api/create-student'
 import { createInscription, buildInscriptionPayload } from '@/app/lib/api/create-inscription'
 import { createCheckout } from '@/app/lib/api/create-checkout'
 import { getCheckoutStatus } from '@/app/lib/api/checkout-status'
+import type { PosPaymentMethod, PosInstallment } from '@/app/lib/api/get-offer-details'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { useMarketplaceFeatureFlag, usePixBeforeEnrollmentFeatureFlag } from '@/app/lib/hooks/usePostHogFeatureFlags'
 import { formatPhone } from '@/utils/formatters'
@@ -148,6 +149,10 @@ function MatriculaContent() {
   const [isValidatingCpf, setIsValidatingCpf] = useState(false)
   const [studentCreated, setStudentCreated] = useState(false)
   const [isCreatingStudent, setIsCreatingStudent] = useState(false)
+  // Pós-graduação: método de pagamento, parcela e dia de vencimento
+  const [posPaymentMethodType, setPosPaymentMethodType] = useState<string>('')
+  const [posInstallmentId, setPosInstallmentId] = useState<string>('')
+  const [posDueDay, setPosDueDay] = useState<string>('')
 
   const {
     register,
@@ -616,6 +621,18 @@ function MatriculaContent() {
         throw new Error('Detalhes da oferta não encontrados')
       }
 
+      let paymentMethod: { id: string; dueDay: string } | undefined
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('pendingPosPaymentMethod')
+        if (stored) {
+          try {
+            paymentMethod = JSON.parse(stored) as { id: string; dueDay: string }
+          } catch {
+            // ignore
+          }
+        }
+      }
+
       const inscriptionPayload = buildInscriptionPayload(
         {
           name: data.name,
@@ -638,9 +655,11 @@ function MatriculaContent() {
           businessKey: offerDetails.businessKey,
           dmhSource: offerDetails.dmhSource,
           academicLevel: offerDetails.academicLevel,
+          ingressType: offerDetails.ingressType,
           schedules: offerDetails.schedules,
           shift: offerDetails.shift,
-        }
+        },
+        paymentMethod
       )
 
       // PromoterId - pode vir de variável de ambiente ou ser fixo
@@ -679,6 +698,7 @@ function MatriculaContent() {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('pendingTransactionId')
           localStorage.removeItem('pendingFormData')
+          localStorage.removeItem('pendingPosPaymentMethod')
         }
         
         // Redirecionar para página de sucesso com informações do curso
@@ -708,6 +728,35 @@ function MatriculaContent() {
 
       if (!offerDetails) {
         throw new Error('Detalhes da oferta não encontrados')
+      }
+
+      // Pós-graduação: validar parcelas e dia, depois seguir o mesmo fluxo de checkout (gerar PIX da taxa)
+      const isPos = offerDetails.academicLevel === 'POS_GRADUACAO' && (offerDetails.paymentMethods?.length ?? 0) > 0
+      if (isPos) {
+        if (!posInstallmentId || !posDueDay) {
+          toast.error('Selecione a quantidade de parcelas e o dia de vencimento.')
+          return
+        }
+        let selectedInstallment: PosInstallment | null = null
+        for (const pm of (offerDetails.paymentMethods ?? []) as PosPaymentMethod[]) {
+          const found = pm.installments.find((i) => i.id === posInstallmentId)
+          if (found) {
+            selectedInstallment = found
+            break
+          }
+        }
+        if (!selectedInstallment) {
+          toast.error('Plano de pagamento inválido.')
+          return
+        }
+        // Salva método de pagamento escolhido para enviar na inscrição após o PIX ser pago
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(
+            'pendingPosPaymentMethod',
+            JSON.stringify({ id: posInstallmentId, dueDay: String(posDueDay) })
+          )
+        }
+        // Segue para o fluxo normal de checkout (createCheckout) abaixo
       }
 
       // Se a flag requirePixBeforeEnrollment estiver ativa, 
@@ -751,6 +800,9 @@ function MatriculaContent() {
           courseId: offerDetails.courseId,
           courseName: offerDetails.course,
           unitId: offerDetails.unitId,
+          ...(isPos && posInstallmentId && posDueDay
+            ? { posInstallmentId, posDueDay }
+            : {}),
         },
       }
 
@@ -1308,42 +1360,133 @@ function MatriculaContent() {
                 </button>
                 {expandedSections.pagamento && (
                   <div className="px-4 pb-4 space-y-3">
-                    <div
-                      onClick={() => setPaymentMethod('pix')}
-                      className={`p-3 border-2 rounded-lg cursor-pointer transition-all hover:border-green-300 ${
-                        paymentMethod === 'pix'
-                          ? 'border-green-500 bg-green-50'
-                          : 'border-gray-200'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-5 h-5 rounded flex items-center justify-center">
-                              <FaPix className="w-6 h-6 text-green-600" />
-                          </div>
-                          <div>
-                            <span className="font-medium text-sm text-gray-900">Pix</span>
-                            <p className="text-xs text-gray-500">O pagamento será aprovado em instantes.</p>
+                    {offerDetails.academicLevel === 'POS_GRADUACAO' && (offerDetails.paymentMethods?.length ?? 0) > 0 ? (
+                      <>
+                        <label className="block text-xs font-medium text-gray-700">Método de pagamento</label>
+                        <div className="flex flex-wrap gap-2">
+                          {(offerDetails.paymentMethods as PosPaymentMethod[]).map((pm) => {
+                            const label =
+                              pm.type === 'CREDITO'
+                                ? 'Crédito'
+                                : pm.type === 'BOLETO'
+                                  ? 'Boleto'
+                                  : pm.type === 'PIX'
+                                    ? 'PIX'
+                                    : pm.type === 'CREDITO_RECORRENCIA'
+                                      ? 'Cartão Recorrente'
+                                      : pm.type
+                            return (
+                              <button
+                                key={pm.type}
+                                type="button"
+                                onClick={() => {
+                                  setPosPaymentMethodType(pm.type)
+                                  setPosInstallmentId('')
+                                }}
+                                className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all ${
+                                  posPaymentMethodType === pm.type
+                                    ? 'border-green-500 bg-green-50 text-green-800'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                }`}
+                              >
+                                {label}
+                              </button>
+                            )
+                          })}
+                        </div>
+                        {posPaymentMethodType && (
+                          <>
+                            <label className="block text-xs font-medium text-gray-700 mt-3">Quantidade de parcelas</label>
+                            <div className="space-y-2">
+                              {(
+                                (offerDetails.paymentMethods as PosPaymentMethod[]).find((pm) => pm.type === posPaymentMethodType)
+                                  ?.installments ?? []
+                              ).map((inst: PosInstallment) => (
+                                <div
+                                  key={inst.id}
+                                  onClick={() => setPosInstallmentId(inst.id)}
+                                  className={`p-3 border-2 rounded-lg cursor-pointer transition-all flex justify-between items-center ${
+                                    posInstallmentId === inst.id ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'
+                                  }`}
+                                >
+                                  <span className="font-medium text-sm">
+                                    {inst.number}x de {formatCurrency(inst.installmentValue)}
+                                  </span>
+                                  <span className="text-xs text-gray-500">Total: {formatCurrency(inst.totalValue)}</span>
+                                  {posInstallmentId === inst.id && <Check size={18} className="text-green-600" />}
+                                </div>
+                              ))}
+                            </div>
+                            <label className="block text-xs font-medium text-gray-700 mt-3">Dia de vencimento</label>
+                            <select
+                              value={posDueDay}
+                              onChange={(e) => setPosDueDay(e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary"
+                            >
+                              <option value="">Selecione o dia</option>
+                              {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
+                                <option key={d} value={d}>
+                                  Dia {d}
+                                </option>
+                              ))}
+                            </select>
+                          </>
+                        )}
+                        <button
+                          type="submit"
+                          disabled={isSubmitting || pixLoading || !posInstallmentId || !posDueDay}
+                          className="w-full mt-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-lg font-semibold text-base hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isSubmitting || pixLoading ? (
+                            <div className="flex items-center justify-center space-x-2">
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              <span>Processando...</span>
+                            </div>
+                          ) : (
+                            'Finalizar Matrícula'
+                          )}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <div
+                          onClick={() => setPaymentMethod('pix')}
+                          className={`p-3 border-2 rounded-lg cursor-pointer transition-all hover:border-green-300 ${
+                            paymentMethod === 'pix'
+                              ? 'border-green-500 bg-green-50'
+                              : 'border-gray-200'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-5 h-5 rounded flex items-center justify-center">
+                                <FaPix className="w-6 h-6 text-green-600" />
+                              </div>
+                              <div>
+                                <span className="font-medium text-sm text-gray-900">Pix</span>
+                                <p className="text-xs text-gray-500">O pagamento será aprovado em instantes.</p>
+                              </div>
+                            </div>
+                            {paymentMethod === 'pix' && <Check size={18} className="text-green-600" />}
                           </div>
                         </div>
-                        {paymentMethod === 'pix' && <Check size={18} className="text-green-600" />}
-                      </div>
-                    </div>
-                    <button
-                      type="submit"
-                      disabled={isSubmitting || pixLoading}
-                      className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-lg font-semibold text-base hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isSubmitting || pixLoading ? (
-                        <div className="flex items-center justify-center space-x-2">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          <span>Processando...</span>
-                        </div>
-                      ) : (
-                        'Finalizar Matrícula'
-                      )}
-                    </button>
-                    <p className="text-center text-xs text-gray-500">Escolha o método de pagamento *</p>
+                        <button
+                          type="submit"
+                          disabled={isSubmitting || pixLoading}
+                          className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-lg font-semibold text-base hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isSubmitting || pixLoading ? (
+                            <div className="flex items-center justify-center space-x-2">
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              <span>Processando...</span>
+                            </div>
+                          ) : (
+                            'Finalizar Matrícula'
+                          )}
+                        </button>
+                        <p className="text-center text-xs text-gray-500">Escolha o método de pagamento *</p>
+                      </>
+                    )}
                   </div>
                 )}
               </div>

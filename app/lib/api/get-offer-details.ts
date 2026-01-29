@@ -1,7 +1,22 @@
 import { tartarus } from "./axios"
 
+/** Parcela de um método de pagamento (POS) */
+export interface PosInstallment {
+  id: string
+  number: number
+  totalValue: number
+  installmentValue: number
+  discountPercentage: number
+}
+
+/** Método de pagamento com parcelas (POS) */
+export interface PosPaymentMethod {
+  type: string
+  installments: PosInstallment[]
+}
+
 // Interface baseada na resposta da API
-interface OfferDetailsResponse {
+export interface OfferDetailsResponse {
   id: string
   name: string
   academicLevel: string
@@ -37,7 +52,7 @@ interface OfferDetailsResponse {
       enrollmentPrice: number
       discountPercentage: number
       installments: Array<unknown>
-      paymentMethods: Array<unknown>
+      paymentMethods: PosPaymentMethod[]
     }
     easyPay: unknown | null
   }
@@ -52,6 +67,8 @@ interface OfferDetailsResponse {
   businessKey: string
   idDmhElastic: string | null
   dmhSource: unknown | null
+  /** Tipos de ingresso (ex.: ["ISENTO_VESTIBULAR"] para pós). Se a API enviar mais de um, virão aqui. */
+  ingressType?: string[]
 }
 
 // Interface de retorno mapeada para uso nos componentes
@@ -98,6 +115,10 @@ export interface OfferDetails {
       ponctualityDiscountNetValue: number
     }>
   }
+  /** Pós-graduação: métodos de pagamento e parcelas */
+  paymentMethods?: PosPaymentMethod[]
+  /** Tipos de ingresso (ex.: ["ISENTO_VESTIBULAR"] para pós). Se mais de um, enviar todos na inscrição. */
+  ingressType?: string[]
 }
 
 // Mapear resposta da API para o formato esperado (usando dados direto da API)
@@ -152,6 +173,8 @@ function mapOfferDetailsResponse(
       businessKey: (response.dmhSource as { businessKey?: string })?.businessKey,
       source: (response.dmhSource as { source?: string })?.source,
     } : undefined,
+    paymentMethods: response.basePricing?.default?.paymentMethods ?? [],
+    ingressType: response.ingressType,
   }
 }
 
@@ -185,4 +208,26 @@ export async function getOfferDetails(
 
   // Mapear a resposta para o formato esperado
   return mapOfferDetailsResponse(response.data, shift, modality)
+}
+
+/**
+ * Busca detalhes completos da oferta (incluindo basePricing.paymentMethods).
+ * Usado no checkout POS para exibir parcelas e métodos de pagamento.
+ */
+export async function getPosOfferDetailsRaw(
+  groupId: string,
+  shift: string,
+  modality: string,
+  unitId: string
+): Promise<OfferDetailsResponse> {
+  const params: Record<string, string> = {
+    groupId,
+    shift,
+    modality,
+    unitId,
+  }
+  const response = await tartarus.get<OfferDetailsResponse>('cogna/courses/details', {
+    params,
+  })
+  return response.data
 }

@@ -17,6 +17,8 @@ export interface CreateInscriptionRequest {
       }
     }
     offerSource: string
+    /** Pós-graduação: id da parcela escolhida e dia de vencimento */
+    paymentMethod?: { id: string; dueDay: string }
   }
   personalData: {
     name: string
@@ -106,13 +108,16 @@ export function buildInscriptionPayload(
       source?: string
     }
     academicLevel?: string
+    /** Tipos de ingresso (ex.: ["ISENTO_VESTIBULAR"] para pós; ["VESTIBULAR"] para graduação). Se mais de um, enviar todos. */
+    ingressType?: string[]
     schedules?: Array<{
       day: string
       startHour: string
       endHour: string
     }>
     shift?: string
-  }
+  },
+  paymentMethod?: { id: string; dueDay: string }
 ): CreateInscriptionRequest {
   // Limpar formatação
   const cleanCpf = formData.cpf.replace(/\D/g, '')
@@ -156,10 +161,17 @@ export function buildInscriptionPayload(
           businessKey: offerDetails.dmhSource?.businessKey || offerDetails.businessKey || offerDetails.dmhId || '',
           selectedDay,
           academicLevel: offerDetails.academicLevel || 'GRADUACAO',
-          ingressType: ['VESTIBULAR'],
+          // Pós: ISENTO_VESTIBULAR (ou os que vierem em offerDetails.ingressType). Graduação: VESTIBULAR. Se tiver mais de um, enviar todos.
+          ingressType:
+            offerDetails.ingressType && offerDetails.ingressType.length > 0
+              ? offerDetails.ingressType
+              : offerDetails.academicLevel === 'POS_GRADUACAO'
+                ? ['ISENTO_VESTIBULAR']
+                : ['VESTIBULAR'],
         },
       },
       offerSource: offerDetails.dmhSource?.source || 'ATHENAS',
+      ...(paymentMethod && { paymentMethod }),
     },
     personalData: {
       name: formData.name,

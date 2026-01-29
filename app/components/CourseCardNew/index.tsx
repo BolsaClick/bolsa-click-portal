@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Course, Schedule } from "@/app/interface/course"
+import { Course } from "@/app/interface/course"
 import { motion } from "framer-motion"
 import { Building2, Clock, Heart, MapPin, Star } from "lucide-react"
 import Image from "next/image"
@@ -123,12 +123,8 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
       is_favorite: isFavorite(course),
     })
 
-    // Redirecionar para checkout com params na URL
-    if (isPos) {
-      window.location.href = `/pos/checkout?${params.toString()}`
-    } else {
-      window.location.href = `/checkout/matricula?${params.toString()}`
-    }
+    // Redirecionar para checkout (pós e graduação usam a mesma página de matrícula)
+    window.location.href = `/checkout/matricula?${params.toString()}`
   }
 
   const capitalizeFirstLetter = (text: string) => {
@@ -172,20 +168,6 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
 
   const courseParsed = parseCourseName(courseName || course.name);
 
-  // Função para converter dias da semana de inglês para português
-  const translateDay = (day: string): string => {
-    const daysMap: Record<string, string> = {
-      'MONDAY': 'Segunda',
-      'TUESDAY': 'Terça',
-      'WEDNESDAY': 'Quarta',
-      'THURSDAY': 'Quinta',
-      'FRIDAY': 'Sexta',
-      'SATURDAY': 'Sábado',
-      'SUNDAY': 'Domingo',
-    };
-    return daysMap[day.toUpperCase()] || day;
-  };
-
   // Função para determinar o turno baseado em shiftOptions
   const getShiftLabel = (shiftOptions?: string[]): string => {
     if (!shiftOptions || shiftOptions.length === 0) return '';
@@ -200,27 +182,6 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
     if (shifts.includes('VIRTUAL')) return 'Virtual';
     
     return shiftOptions.join(', ');
-  };
-
-  // Função para formatar os horários dos dias
-  const formatSchedules = (schedules?: Schedule[]): string => {
-    if (!schedules || schedules.length === 0) return '';
-    
-    const groupedByTime = schedules.reduce((acc: Record<string, string[]>, schedule) => {
-      const timeKey = `${schedule.startHour}-${schedule.endHour}`;
-      if (!acc[timeKey]) {
-        acc[timeKey] = [];
-      }
-      acc[timeKey].push(translateDay(schedule.day));
-      return acc;
-    }, {});
-
-    return Object.entries(groupedByTime)
-      .map(([time, days]) => {
-        const [start, end] = time.split('-');
-        return `${days.join(', ')}: ${start} às ${end}`;
-      })
-      .join(' | ');
   };
 
   const renderUniversityImage = (universityName: string) => {
@@ -454,11 +415,11 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
               )}
             </div>
 
-            {/* Horários dos dias da semana (quando disponível) */}
-            {course.schedules && course.schedules.length > 0 && (
+            {/* Período (duração em meses) */}
+            {(typeof course.durationInMonths === 'number' && course.durationInMonths > 0) && (
               <div className="text-sm text-neutral-600 bg-neutral-50 p-3 rounded-lg">
-                <div className="font-medium mb-1">Horários:</div>
-                <div>{formatSchedules(course.schedules)}</div>
+                <div className="font-medium mb-1">Período:</div>
+                <div>{course.durationInMonths} {course.durationInMonths === 1 ? 'mês' : 'meses'}</div>
               </div>
             )}
 
@@ -466,14 +427,32 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
             <div className="border-t border-neutral-100 pt-4 mt-auto" itemProp="hasCourseInstance" itemScope itemType="https://schema.org/CourseInstance">
               <div className="flex justify-between items-end mb-4">
                 <div>
-                  <span className="text-sm text-neutral-600">Por:</span>
+                  <span className="text-sm text-neutral-600">
+                    {course.academicLevel === 'POS_GRADUACAO' &&
+                    typeof course.totalInstallment === 'number' &&
+                    typeof course.minInstallmentValue === 'number'
+                      ? 'Até:'
+                      : 'Por:'}
+                  </span>
                   <div className="text-emerald-500 text-2xl font-bold" itemProp="offers" itemScope itemType="https://schema.org/Offer">
-                    <span itemProp="price">
-                      {(course.minPrice / 1).toLocaleString('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL',
-                      })}
-                    </span>
+                    {course.academicLevel === 'POS_GRADUACAO' &&
+                    typeof course.totalInstallment === 'number' &&
+                    typeof course.minInstallmentValue === 'number' ? (
+                      <span itemProp="price">
+                        {course.totalInstallment}x de{' '}
+                        {course.minInstallmentValue.toLocaleString('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                        })}
+                      </span>
+                    ) : (
+                      <span itemProp="price">
+                        {(course.minPrice / 1).toLocaleString('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                        })}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

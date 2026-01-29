@@ -30,9 +30,11 @@ export async function getShowFiltersCourses(
   size: number = 10
 ) {
   // Se NÃO houver courseName (undefined, null, string vazia ou só espaços), usar a API de cursos mais buscados
+  // Exceto para pós-graduação: o endpoint /offers/most-searched pode não retornar POS; usar sempre cogna/courses/search
   const hasCourseName = courseName && courseName.trim() && courseName.trim().length > 0
-  
-  if (!hasCourseName) {
+  const isPosGraduation = academicLevel.toUpperCase() === 'POS_GRADUACAO'
+
+  if (!hasCourseName && !isPosGraduation) {
     if (city && city.trim()) {
       try {
         const mostSearched = await getMostSearchedCourses(city)

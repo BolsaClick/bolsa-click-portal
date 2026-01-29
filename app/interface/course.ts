@@ -27,10 +27,15 @@ export interface Course {
   academicLevel?: string
   academicDegree?: string
   duration?: number
+  durationInMonths?: number
   unitId?: string
   unitName?: string
   unit?: string
   businessKey?: string
-  commercialModality?: string
+  commercialModality?: string | null
   submodality?: string | null
+  /** Pós-graduação: número de parcelas */
+  totalInstallment?: number
+  /** Pós-graduação: valor da parcela mínima */
+  minInstallmentValue?: number
 }

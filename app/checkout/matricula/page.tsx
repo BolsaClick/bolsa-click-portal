@@ -149,10 +149,9 @@ function MatriculaContent() {
   const [isValidatingCpf, setIsValidatingCpf] = useState(false)
   const [studentCreated, setStudentCreated] = useState(false)
   const [isCreatingStudent, setIsCreatingStudent] = useState(false)
-  // Pós-graduação: método de pagamento, parcela e dia de vencimento
+  // Pós-graduação: método de pagamento e parcela (dia de vencimento fixo 10)
   const [posPaymentMethodType, setPosPaymentMethodType] = useState<string>('')
   const [posInstallmentId, setPosInstallmentId] = useState<string>('')
-  const [posDueDay, setPosDueDay] = useState<string>('')
 
   const {
     register,
@@ -730,11 +729,12 @@ function MatriculaContent() {
         throw new Error('Detalhes da oferta não encontrados')
       }
 
-      // Pós-graduação: validar parcelas e dia, depois seguir o mesmo fluxo de checkout (gerar PIX da taxa)
+      // Pós-graduação: validar parcelas (dia de vencimento é fixo 10)
       const isPos = offerDetails.academicLevel === 'POS_GRADUACAO' && (offerDetails.paymentMethods?.length ?? 0) > 0
+      const POS_DUE_DAY = '10'
       if (isPos) {
-        if (!posInstallmentId || !posDueDay) {
-          toast.error('Selecione a quantidade de parcelas e o dia de vencimento.')
+        if (!posInstallmentId) {
+          toast.error('Selecione a quantidade de parcelas.')
           return
         }
         let selectedInstallment: PosInstallment | null = null
@@ -749,11 +749,11 @@ function MatriculaContent() {
           toast.error('Plano de pagamento inválido.')
           return
         }
-        // Salva método de pagamento escolhido para enviar na inscrição após o PIX ser pago
+        // Salva método de pagamento escolhido para enviar na inscrição após o PIX ser pago (dia fixo 10)
         if (typeof window !== 'undefined') {
           localStorage.setItem(
             'pendingPosPaymentMethod',
-            JSON.stringify({ id: posInstallmentId, dueDay: String(posDueDay) })
+            JSON.stringify({ id: posInstallmentId, dueDay: POS_DUE_DAY })
           )
         }
         // Segue para o fluxo normal de checkout (createCheckout) abaixo
@@ -800,8 +800,8 @@ function MatriculaContent() {
           courseId: offerDetails.courseId,
           courseName: offerDetails.course,
           unitId: offerDetails.unitId,
-          ...(isPos && posInstallmentId && posDueDay
-            ? { posInstallmentId, posDueDay }
+          ...(isPos && posInstallmentId
+            ? { posInstallmentId, posDueDay: '10' }
             : {}),
         },
       }
@@ -1417,24 +1417,14 @@ function MatriculaContent() {
                                 </div>
                               ))}
                             </div>
-                            <label className="block text-xs font-medium text-gray-700 mt-3">Dia de vencimento</label>
-                            <select
-                              value={posDueDay}
-                              onChange={(e) => setPosDueDay(e.target.value)}
-                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary"
-                            >
-                              <option value="">Selecione o dia</option>
-                              {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
-                                <option key={d} value={d}>
-                                  Dia {d}
-                                </option>
-                              ))}
-                            </select>
+                            <p className="text-xs text-gray-600 mt-3">
+                              Vencimento: dia <strong>10</strong> de cada mês (fixo para pós-graduação).
+                            </p>
                           </>
                         )}
                         <button
                           type="submit"
-                          disabled={isSubmitting || pixLoading || !posInstallmentId || !posDueDay}
+                          disabled={isSubmitting || pixLoading || !posInstallmentId}
                           className="w-full mt-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-lg font-semibold text-base hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {isSubmitting || pixLoading ? (

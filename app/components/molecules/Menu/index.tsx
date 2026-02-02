@@ -3,6 +3,7 @@ import React from 'react'
 import { NavLink } from '../../atoms/NavLink'
 
 const menuItems = [
+  { label: 'Cursos', href: '/cursos' },
   { label: 'Graduação', href: '/graduacao' },
   { label: 'Pós-graduação', href: '/pos-graduacao' },
   { label: 'Buscar cursos', href: '/curso/resultado' },
@@ -32,7 +33,7 @@ export const Menu: React.FC<MenuProps> = ({ isScrolled, className = '' }) => {
   }
 
   return (
-    <nav className={`flex lg:flex-row flex-col gap-6 `}>
+    <nav className={`flex lg:flex-row flex-col gap-6`}>
       {menuItems.map((item) => (
         <NavLink
           key={item.label}

@@ -147,7 +147,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ],
     averageSalary: 'R$ 3.500 a R$ 10.000',
     marketDemand: 'ALTA',
-    image: '/assets/images/enfermagem.jpg',
+    image: '/assets/images/enfermagem.jpeg',
     keywords: [
       'enfermagem',
       'curso de enfermagem',
@@ -239,7 +239,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ],
     averageSalary: 'R$ 3.000 a R$ 9.000',
     marketDemand: 'ALTA',
-    image: '/assets/images/educacao-fisica.jpg',
+    image: '/assets/images/educacao-fisica.jpeg',
     keywords: [
       'educação física',
       'curso de educação física',
@@ -378,7 +378,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ],
     averageSalary: 'R$ 3.500 a R$ 10.000',
     marketDemand: 'ALTA',
-    image: '/assets/images/gestao-de-recursos-humanos.jpg',
+    image: '/assets/images/gestao-de-recursos-humanos.webp',
     keywords: [
       'gestão de recursos humanos',
       'curso de rh',
@@ -424,7 +424,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ],
     averageSalary: 'R$ 3.500 a R$ 12.000',
     marketDemand: 'ALTA',
-    image: '/assets/images/marketing.jpg',
+    image: '/assets/images/marketing.webp',
     keywords: [
       'marketing',
       'curso de marketing',
@@ -746,7 +746,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ],
     averageSalary: 'R$ 3.500 a R$ 10.000',
     marketDemand: 'ALTA',
-    image: '/assets/images/biomedicina.jpg',
+    image: '/assets/images/Biomedicina.jpeg',
     keywords: [
       'biomedicina',
       'curso de biomedicina',
@@ -838,7 +838,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ],
     averageSalary: 'R$ 4.000 a R$ 12.000',
     marketDemand: 'ALTA',
-    image: '/assets/images/gestao-comercial.jpg',
+    image: '/assets/images/gestao-comercial.jpeg',
     keywords: [
       'gestão comercial',
       'curso de gestão comercial',
@@ -884,7 +884,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ],
     averageSalary: 'R$ 3.500 a R$ 10.000',
     marketDemand: 'ALTA',
-    image: '/assets/images/farmacia.jpg',
+    image: '/assets/images/farmacia.jpeg',
     keywords: [
       'farmácia',
       'curso de farmácia',
@@ -930,7 +930,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ],
     averageSalary: 'R$ 8.000 a R$ 30.000+',
     marketDemand: 'ALTA',
-    image: '/assets/images/medicina.jpg',
+    image: '/assets/images/medicina.webp',
     keywords: [
       'medicina',
       'curso de medicina',

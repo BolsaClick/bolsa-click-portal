@@ -699,19 +699,50 @@ function MatriculaContent() {
           phone: data.phone.replace(/\D/g, ''),
         })
         
+        // Montar params para a página de sucesso antes de limpar o localStorage
+        const params = new URLSearchParams()
+        if (offerDetails.course) {
+          params.set('course', offerDetails.course)
+        }
+        const level = offerDetails.academicLevel
+        if (level === 'GRADUACAO' || !level) {
+          // Graduação: enviar valor da mensalidade (ex: 108)
+          params.set('monthlyFee', String(monthlyFee))
+        } else if (level === 'POS_GRADUACAO' && offerDetails.paymentMethods?.length) {
+          // Pós: enviar opção escolhida (ex: Boleto em 18x de R$ 129)
+          const methods = offerDetails.paymentMethods as PosPaymentMethod[]
+          let paymentLabel = ''
+          let installmentDescription = ''
+          if (paymentMethod) {
+            for (const pm of methods) {
+              const inst = pm.installments.find((i) => i.id === paymentMethod.id)
+              if (inst) {
+                paymentLabel = pm.type === 'CREDITO' ? 'Crédito' : pm.type === 'BOLETO' ? 'Boleto' : pm.type === 'PIX' ? 'PIX' : pm.type === 'CREDITO_RECORRENCIA' ? 'Cartão Recorrente' : pm.type
+                installmentDescription = `${inst.number}x de ${formatCurrency(inst.installmentValue)}`
+                break
+              }
+            }
+          }
+          // Fluxo PIX: não tem pendingPosPaymentMethod; usar primeira parcela PIX
+          if (!paymentLabel && methods.length) {
+            const pixMethod = methods.find((pm) => pm.type === 'PIX')
+            const firstInst = pixMethod?.installments?.[0]
+            if (firstInst) {
+              paymentLabel = 'PIX'
+              installmentDescription = `${firstInst.number}x de ${formatCurrency(firstInst.installmentValue)}`
+            }
+          }
+          if (paymentLabel) params.set('paymentMethod', paymentLabel)
+          if (installmentDescription) params.set('installmentDescription', installmentDescription)
+        }
+
         // Limpar dados pendentes do localStorage
         if (typeof window !== 'undefined') {
           localStorage.removeItem('pendingTransactionId')
           localStorage.removeItem('pendingFormData')
           localStorage.removeItem('pendingPosPaymentMethod')
         }
-        
-        // Redirecionar para página de sucesso com informações do curso
-        const params = new URLSearchParams()
-        if (offerDetails.course) {
-          params.set('course', offerDetails.course)
-        }
-        
+
         router.push(`/checkout/matricula/sucesso?${params.toString()}`)
       } else {
         throw new Error('Resposta da API não indica sucesso')

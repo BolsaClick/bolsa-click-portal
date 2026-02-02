@@ -4,11 +4,19 @@ import confetti from 'canvas-confetti'
 import { useEffect, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { CheckCircle2, ExternalLink } from 'lucide-react'
+import { formatCurrency } from '@/utils/fomartCurrency'
 
 export default function MatriculaSuccessClient() {
   const searchParams = useSearchParams()
   const course = searchParams.get('course')
+  const monthlyFeeParam = searchParams.get('monthlyFee')
+  const paymentMethod = searchParams.get('paymentMethod')
+  const installmentDescription = searchParams.get('installmentDescription')
   const confettiCanvasRef = useRef<HTMLCanvasElement>(null)
+
+  const monthlyFee = monthlyFeeParam ? Number(monthlyFeeParam) : null
+  const isGraduacao = monthlyFee != null && !Number.isNaN(monthlyFee)
+  const isPos = Boolean(paymentMethod && installmentDescription)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -100,17 +108,39 @@ export default function MatriculaSuccessClient() {
 
         {/* Content */}
         <div className="p-6 space-y-6">
-          {course && (
+          {(course || isGraduacao || isPos) && (
             <div className="border border-gray-200 rounded-lg p-4 space-y-3 animate-fade-in animation-delay-200 hover:shadow-md transition-shadow duration-300">
               <h3 className="font-medium">Detalhes da Inscrição</h3>
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <span className="text-gray-500">Curso:</span>
-                <span className="font-medium">{course}</span>
+                {course && (
+                  <>
+                    <span className="text-gray-500">Curso:</span>
+                    <span className="font-medium">{course}</span>
+                  </>
+                )}
 
                 <span className="text-gray-500">Data:</span>
                 <span className="font-medium">
                   {new Date().toLocaleDateString('pt-BR')}
                 </span>
+
+                {isGraduacao && (
+                  <>
+                    <span className="text-gray-500">Mensalidade:</span>
+                    <span className="font-medium text-green-700">
+                      {formatCurrency(monthlyFee ?? 0)}
+                    </span>
+                  </>
+                )}
+
+                {isPos && (
+                  <>
+                    <span className="text-gray-500">Pagamento:</span>
+                    <span className="font-medium text-green-700">
+                      {paymentMethod} em {installmentDescription}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           )}

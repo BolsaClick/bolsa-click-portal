@@ -72,12 +72,12 @@ export function usePixBeforeEnrollmentFeatureFlag() {
 }
 
 /**
- * Hook específico para feature flag pix_enabled.
- * Quando enabled: checkout atual (taxa, endpoint de checkout, PIX).
- * Quando disabled: checkout sem taxa, sem endpoint de checkout, apenas create-inscription.
+ * Hook específico para feature flag pix_enabled (PostHog).
+ * Padrão (false): sem pagamento, sem endpoint de checkout, sem taxas/valores — só create-inscription.
+ * Quando enabled no PostHog: checkout com endpoint, taxas/valores e PIX.
  */
 export function usePixEnabledFeatureFlag() {
-  const { flagValue } = usePostHogFeatureFlag('pix_enabled', true)
+  const { flagValue } = usePostHogFeatureFlag('pix_enabled', false)
   return flagValue as boolean
 }
 

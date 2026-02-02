@@ -124,6 +124,8 @@ function MatriculaContent() {
   // Feature flags do PostHog
   const isMarketplace = useMarketplaceFeatureFlag()
   const requirePixBeforeEnrollment = usePixBeforeEnrollmentFeatureFlag()
+  // Por padrão: sem pagamento e sem endpoint de checkout (só create-inscription).
+  // Endpoint de checkout e taxas/valores só aparecem se pix_enabled estiver enabled no PostHog.
   const pixEnabled = usePixEnabledFeatureFlag()
   
   const groupId = searchParams.get('groupId') || searchParams.get('id')
@@ -393,16 +395,6 @@ function MatriculaContent() {
   
   const baseMatricula = Math.round(enrollmentFee * 100) // em centavos
 
-  // Valor da matrícula para exibição: quando pix_enabled desligado, mostramos o mesmo valor (não cobramos no checkout, mas exibimos)
-  const enrollmentFeeForDisplay =
-    !pixEnabled
-      ? isMarketplace
-        ? (offerDetails?.subscriptionValue !== undefined && offerDetails?.subscriptionValue !== null
-            ? offerDetails.subscriptionValue
-            : (offerDetails?.montlyFeeTo || 0))
-        : administrativeFee
-      : enrollmentFee
-  
   // Texto do label baseado na feature flag
   const enrollmentLabel = isMarketplace ? 'matrícula' : 'taxa de serviço'
 
@@ -743,8 +735,35 @@ function MatriculaContent() {
         throw new Error('Detalhes da oferta não encontrados')
       }
 
-      // pix_enabled DESABILITADO: não chama checkout, apenas create-inscription (sem taxa)
+      // pix_enabled DESABILITADO: não chama checkout nem taxas; apenas create-inscription
+      // Graduação: vai direto para create-inscription
+      // Pós: exige seleção de parcelas (enviamos para create-inscription), depois create-inscription
       if (!pixEnabled) {
+        const isPosNoCheckout = offerDetails.academicLevel === 'POS_GRADUACAO' && (offerDetails.paymentMethods?.length ?? 0) > 0
+        if (isPosNoCheckout) {
+          if (!posInstallmentId) {
+            toast.error('Selecione a quantidade de parcelas.')
+            return
+          }
+          let selectedInstallment: PosInstallment | null = null
+          for (const pm of (offerDetails.paymentMethods ?? []) as PosPaymentMethod[]) {
+            const found = pm.installments.find((i) => i.id === posInstallmentId)
+            if (found) {
+              selectedInstallment = found
+              break
+            }
+          }
+          if (!selectedInstallment) {
+            toast.error('Plano de pagamento inválido.')
+            return
+          }
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(
+              'pendingPosPaymentMethod',
+              JSON.stringify({ id: posInstallmentId, dueDay: '10' })
+            )
+          }
+        }
         setPixLoading(true)
         trackEvent('checkout_pix_disabled_inscription_only', {
           course_id: offerDetails.courseId,
@@ -755,34 +774,20 @@ function MatriculaContent() {
         return
       }
 
-      // Pós-graduação: validar parcelas (dia de vencimento é fixo 10)
+      // Pós-graduação com PIX: usar primeira parcela do método PIX para a inscrição (fluxo único PIX para graduação e pós)
       const isPos = offerDetails.academicLevel === 'POS_GRADUACAO' && (offerDetails.paymentMethods?.length ?? 0) > 0
       const POS_DUE_DAY = '10'
-      if (isPos) {
-        if (!posInstallmentId) {
-          toast.error('Selecione a quantidade de parcelas.')
-          return
-        }
-        let selectedInstallment: PosInstallment | null = null
-        for (const pm of (offerDetails.paymentMethods ?? []) as PosPaymentMethod[]) {
-          const found = pm.installments.find((i) => i.id === posInstallmentId)
-          if (found) {
-            selectedInstallment = found
-            break
-          }
-        }
-        if (!selectedInstallment) {
-          toast.error('Plano de pagamento inválido.')
-          return
-        }
-        // Salva método de pagamento escolhido para enviar na inscrição após o PIX ser pago (dia fixo 10)
-        if (typeof window !== 'undefined') {
+      let posInstallmentIdForCheckout: string | undefined
+      if (isPos && typeof window !== 'undefined') {
+        const pixMethod = (offerDetails.paymentMethods as PosPaymentMethod[]).find((pm) => pm.type === 'PIX')
+        const firstInstallment = pixMethod?.installments?.[0]
+        if (firstInstallment) {
+          posInstallmentIdForCheckout = firstInstallment.id
           localStorage.setItem(
             'pendingPosPaymentMethod',
-            JSON.stringify({ id: posInstallmentId, dueDay: POS_DUE_DAY })
+            JSON.stringify({ id: firstInstallment.id, dueDay: POS_DUE_DAY })
           )
         }
-        // Segue para o fluxo normal de checkout (createCheckout) abaixo
       }
 
       // Se a flag requirePixBeforeEnrollment estiver ativa, 
@@ -826,8 +831,8 @@ function MatriculaContent() {
           courseId: offerDetails.courseId,
           courseName: offerDetails.course,
           unitId: offerDetails.unitId,
-          ...(isPos && posInstallmentId
-            ? { posInstallmentId, posDueDay: '10' }
+          ...(isPos && posInstallmentIdForCheckout
+            ? { posInstallmentId: posInstallmentIdForCheckout, posDueDay: '10' }
             : {}),
         },
       }
@@ -1393,104 +1398,100 @@ function MatriculaContent() {
                 {expandedSections.pagamento && (
                   <div className="px-4 pb-4 space-y-3">
                     {!pixEnabled ? (
-                      <>
-                        <p className="text-sm text-gray-600">
-                          O valor da matrícula e das mensalidades será pago diretamente à instituição de ensino. Clique em Finalizar Matrícula para concluir.
-                        </p>
-                        <button
-                          type="submit"
-                          disabled={isSubmitting || pixLoading}
-                          className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-lg font-semibold text-base hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isSubmitting || pixLoading ? (
-                            <div className="flex items-center justify-center space-x-2">
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                              <span>Processando...</span>
-                            </div>
-                          ) : (
-                            'Finalizar Matrícula'
-                          )}
-                        </button>
-                      </>
-                    ) : offerDetails.academicLevel === 'POS_GRADUACAO' && (offerDetails.paymentMethods?.length ?? 0) > 0 ? (
-                      <>
-                        <label className="block text-xs font-medium text-gray-700">Método de pagamento</label>
-                        <div className="flex flex-wrap gap-2">
-                          {(offerDetails.paymentMethods as PosPaymentMethod[]).map((pm) => {
-                            const label =
-                              pm.type === 'CREDITO'
-                                ? 'Crédito'
-                                : pm.type === 'BOLETO'
-                                  ? 'Boleto'
-                                  : pm.type === 'PIX'
-                                    ? 'PIX'
-                                    : pm.type === 'CREDITO_RECORRENCIA'
-                                      ? 'Cartão Recorrente'
-                                      : pm.type
-                            return (
-                              <button
-                                key={pm.type}
-                                type="button"
-                                onClick={() => {
-                                  setPosPaymentMethodType(pm.type)
-                                  setPosInstallmentId('')
-                                }}
-                                className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all ${
-                                  posPaymentMethodType === pm.type
-                                    ? 'border-green-500 bg-green-50 text-green-800'
-                                    : 'border-gray-200 hover:border-gray-300'
-                                }`}
-                              >
-                                {label}
-                              </button>
-                            )
-                          })}
-                        </div>
-                        {posPaymentMethodType && (
-                          <>
-                            <label className="block text-xs font-medium text-gray-700 mt-3">Quantidade de parcelas</label>
-                            <div className="space-y-2">
-                              {(
-                                (offerDetails.paymentMethods as PosPaymentMethod[]).find((pm) => pm.type === posPaymentMethodType)
-                                  ?.installments ?? []
-                              ).map((inst: PosInstallment) => (
-                                <div
-                                  key={inst.id}
-                                  onClick={() => setPosInstallmentId(inst.id)}
-                                  className={`p-3 border-2 rounded-lg cursor-pointer transition-all flex justify-between items-center ${
-                                    posInstallmentId === inst.id ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'
+                      // Sem checkout: pós mostra parcelas (para create-inscription); graduação só botão
+                      offerDetails.academicLevel === 'POS_GRADUACAO' && (offerDetails.paymentMethods?.length ?? 0) > 0 ? (
+                        <>
+                          <label className="block text-xs font-medium text-gray-700">Método de pagamento</label>
+                          <div className="flex flex-wrap gap-2">
+                            {(offerDetails.paymentMethods as PosPaymentMethod[]).map((pm) => {
+                              const label =
+                                pm.type === 'CREDITO' ? 'Crédito' : pm.type === 'BOLETO' ? 'Boleto' : pm.type === 'PIX' ? 'PIX' : pm.type === 'CREDITO_RECORRENCIA' ? 'Cartão Recorrente' : pm.type
+                              return (
+                                <button
+                                  key={pm.type}
+                                  type="button"
+                                  onClick={() => {
+                                    setPosPaymentMethodType(pm.type)
+                                    setPosInstallmentId('')
+                                  }}
+                                  className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all ${
+                                    posPaymentMethodType === pm.type ? 'border-green-500 bg-green-50 text-green-800' : 'border-gray-200 hover:border-gray-300'
                                   }`}
                                 >
-                                  <span className="font-medium text-sm">
-                                    {inst.number}x de {formatCurrency(inst.installmentValue)}
-                                  </span>
-                                  <span className="text-xs text-gray-500">Total: {formatCurrency(inst.totalValue)}</span>
-                                  {posInstallmentId === inst.id && <Check size={18} className="text-green-600" />}
-                                </div>
-                              ))}
-                            </div>
-                            <p className="text-xs text-gray-600 mt-3">
-                              Vencimento: dia <strong>10</strong> de cada mês (fixo para pós-graduação).
-                            </p>
-                          </>
-                        )}
-                        <button
-                          type="submit"
-                          disabled={isSubmitting || pixLoading || !posInstallmentId}
-                          className="w-full mt-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-lg font-semibold text-base hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isSubmitting || pixLoading ? (
-                            <div className="flex items-center justify-center space-x-2">
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                              <span>Processando...</span>
-                            </div>
-                          ) : (
-                            'Finalizar Matrícula'
+                                  {label}
+                                </button>
+                              )
+                            })}
+                          </div>
+                          {posPaymentMethodType && (
+                            <>
+                              <label className="block text-xs font-medium text-gray-700 mt-3">Quantidade de parcelas</label>
+                              <div className="space-y-2">
+                                {(
+                                  (offerDetails.paymentMethods as PosPaymentMethod[]).find((pm) => pm.type === posPaymentMethodType)?.installments ?? []
+                                ).map((inst: PosInstallment) => (
+                                  <div
+                                    key={inst.id}
+                                    onClick={() => setPosInstallmentId(inst.id)}
+                                    className={`p-3 border-2 rounded-lg cursor-pointer transition-all flex justify-between items-center ${
+                                      posInstallmentId === inst.id ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'
+                                    }`}
+                                  >
+                                    <span className="font-medium text-sm">
+                                      {inst.number}x de {formatCurrency(inst.installmentValue)}
+                                    </span>
+                                    <span className="text-xs text-gray-500">Total: {formatCurrency(inst.totalValue)}</span>
+                                    {posInstallmentId === inst.id && <Check size={18} className="text-green-600" />}
+                                  </div>
+                                ))}
+                              </div>
+                              <p className="text-xs text-gray-600 mt-3">
+                                Vencimento: dia <strong>10</strong> de cada mês (fixo para pós-graduação).
+                              </p>
+                            </>
                           )}
-                        </button>
-                      </>
+                          <p className="text-sm text-gray-600 mt-3">
+                            O valor da matrícula e das mensalidades será pago diretamente à instituição de ensino.
+                          </p>
+                          <button
+                            type="submit"
+                            disabled={isSubmitting || pixLoading || !posInstallmentId}
+                            className="w-full mt-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-lg font-semibold text-base hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isSubmitting || pixLoading ? (
+                              <div className="flex items-center justify-center space-x-2">
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                <span>Processando...</span>
+                              </div>
+                            ) : (
+                              'Finalizar Matrícula'
+                            )}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-sm text-gray-600">
+                            O valor da matrícula e das mensalidades será pago diretamente à instituição de ensino. Clique em Finalizar Matrícula para concluir.
+                          </p>
+                          <button
+                            type="submit"
+                            disabled={isSubmitting || pixLoading}
+                            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-lg font-semibold text-base hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isSubmitting || pixLoading ? (
+                              <div className="flex items-center justify-center space-x-2">
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                <span>Processando...</span>
+                              </div>
+                            ) : (
+                              'Finalizar Matrícula'
+                            )}
+                          </button>
+                        </>
+                      )
                     ) : (
                       <>
+                        {/* PIX para graduação e pós-graduação quando pix_enabled ativo */}
                         <div
                           onClick={() => setPaymentMethod('pix')}
                           className={`p-3 border-2 rounded-lg cursor-pointer transition-all hover:border-green-300 ${
@@ -1569,6 +1570,7 @@ function MatriculaContent() {
 
               {!pixEnabled ? (
                 <>
+                  {/* Sem checkout: não exibir valores de taxas/matrícula — só aviso de pagamento à instituição */}
                   <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-3">
                     <div className="flex items-start gap-2 mb-2">
                       <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -1577,15 +1579,10 @@ function MatriculaContent() {
                       <div className="flex-1">
                         <p className="text-xs font-semibold text-blue-900 mb-1">Matrícula e mensalidade na instituição</p>
                         <p className="text-xs text-blue-700">
-                          O valor da matrícula e das mensalidades será pago diretamente à instituição de ensino.
+                          O valor da matrícula e das mensalidades será pago diretamente à instituição de ensino. Nenhuma taxa é cobrada neste checkout.
                         </p>
                       </div>
                     </div>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Valor da matrícula</p>
-                    <p className="text-base font-semibold text-gray-900">{formatCurrency(enrollmentFeeForDisplay)}</p>
-                    <p className="text-xs text-gray-500 mt-1 italic">Pago diretamente à instituição</p>
                   </div>
                 </>
               ) : isMarketplace ? (
@@ -1726,16 +1723,17 @@ function MatriculaContent() {
               )}
 
               <div className="pt-3 border-t border-gray-200 space-y-2">
-                {/* Mensalidade - exibida como informação (não somada) */}
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-600">Mensalidade</span>
-                  <span className="text-gray-500 italic">{formatCurrency(monthlyFee)}</span>
-                </div>
+                {/* Mensalidade - exibida como informação (não somada); quando !pixEnabled não exibir taxas/total */}
+                {pixEnabled && (
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-600">Mensalidade</span>
+                    <span className="text-gray-500 italic">{formatCurrency(monthlyFee)}</span>
+                  </div>
+                )}
                 
                 {!pixEnabled ? (
-                  <div className="flex justify-between text-xs">
-                    <span className="text-gray-600">Valor da matrícula</span>
-                    <span className="text-gray-900">{formatCurrency(enrollmentFeeForDisplay)}</span>
+                  <div className="text-xs text-gray-600 italic">
+                    Matrícula e mensalidades: pago diretamente à instituição. Nenhuma taxa neste checkout.
                   </div>
                 ) : isMarketplace ? (
                   <>
@@ -1772,20 +1770,19 @@ function MatriculaContent() {
                     </span>
                   </div>
                 )}
-                <div className="flex justify-between text-base font-semibold pt-2 border-t border-gray-200">
-                  <span className="text-gray-900">Total</span>
-                  <div className="flex flex-col items-end gap-0.5">
-                    {pixEnabled && coupon && (
-                      <span className="text-xs text-gray-400 line-through">
-                        {formatCurrency(subtotal)}
-                      </span>
-                    )}
-                    <span className="text-green-600">{formatCurrency(pixEnabled ? total : enrollmentFeeForDisplay)}</span>
-                    {!pixEnabled && (
-                      <span className="text-xs text-gray-500 italic">Pago diretamente à instituição</span>
-                    )}
+                {pixEnabled && (
+                  <div className="flex justify-between text-base font-semibold pt-2 border-t border-gray-200">
+                    <span className="text-gray-900">Total</span>
+                    <div className="flex flex-col items-end gap-0.5">
+                      {coupon && (
+                        <span className="text-xs text-gray-400 line-through">
+                          {formatCurrency(subtotal)}
+                        </span>
+                      )}
+                      <span className="text-green-600">{formatCurrency(total)}</span>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
 

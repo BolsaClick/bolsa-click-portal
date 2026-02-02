@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { getLocationByIP } from '@/app/lib/api/get-location-by-ip'
+import { getCityFromOurAPIByIP } from '@/app/lib/api/get-city-from-api-by-ip'
 
 type LocationData = {
   state: string | null
@@ -23,12 +23,12 @@ export const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const detectLocation = async () => {
       try {
-        const location = await getLocationByIP()
+        const location = await getCityFromOurAPIByIP()
         
         if (location) {
           setCity(location.city)
-          setRegion(location.region)
-          setState(location.region)
+          setRegion(location.state)
+          setState(location.state)
           setTown(location.city)
         } else {
           setError('Não foi possível obter a localização.')
@@ -36,7 +36,6 @@ export const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
       } catch (err) {
         console.error('Erro ao detectar localização por IP:', err)
         setError('Não foi possível obter a localização.')
-        // Valores padrão em caso de erro
         setCity('São Paulo')
         setRegion('SP')
         setState('SP')

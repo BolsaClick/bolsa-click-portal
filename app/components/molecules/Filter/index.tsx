@@ -2,7 +2,7 @@
 'use client'
 import { useQuery } from '@tanstack/react-query'
 import debounce from 'lodash.debounce'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 
 import { Button } from '../../atoms/Button'
@@ -12,6 +12,7 @@ import { getShowCourses } from '@/app/lib/api/get-courses'
 import { getLocalities } from '@/app/lib/api/get-localites'
 import { ModalitySelect } from '../../atoms/ModalitySelect'
 import { GraduationCap, MapPin } from 'lucide-react'
+import { useGeoLocation } from '@/app/context/GeoLocationContext'
 
 type FormValues = {
   modalidade: 'EAD' | 'PRESENCIAL' | 'SEMIPRESENCIAL'
@@ -27,6 +28,7 @@ const educationLevels: { levels: FormValues['levels']; label: string }[] = [
 ]
 const Filter = () => {
   const navigate = useRouter()
+  const { city: geoCity, state: geoState } = useGeoLocation()
   const [searchCity, setSearchCity] = useState('')
   const [activeTab, setActiveTab] = useState<FormValues['levels']>(() => {
     if (typeof window !== 'undefined') {
@@ -58,6 +60,12 @@ const Filter = () => {
     },
   })
 
+  // Preencher cidade/estado padrão com a localização da API de cidades (por IP), igual ao filtro da home
+  useEffect(() => {
+    if (geoCity && geoState) {
+      setValue('city', { city: geoCity, state: geoState })
+    }
+  }, [geoCity, geoState, setValue])
 
   const { data: graduationCourses } = useQuery({
     queryFn: () => getShowCourses(academicLevelMap.graduacao),

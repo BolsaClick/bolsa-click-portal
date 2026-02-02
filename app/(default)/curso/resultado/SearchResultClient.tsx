@@ -42,7 +42,6 @@ export default function SearchResultClient() {
   const { handleSubmit, setValue } = useForm()
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
-  const [isReady, setIsReady] = useState(false);
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -153,69 +152,69 @@ export default function SearchResultClient() {
 
   const [locationDetected, setLocationDetected] = useState(false)
 
-  // Detectar localização por IP se não houver cidade na URL
+  // Detectar localização por IP se não houver cidade na URL.
+  // Com pequeno delay ao vir da home: evita rodar com searchParams ainda vazios (client nav)
+  // e sobrescrever a URL perdendo curso/cidade/estado.
   useEffect(() => {
-    const detectLocation = async () => {
-      // Se já tiver cidade e estado na URL, usar eles
       if (cidade && estado) {
         setFilters((prev) => ({
           ...prev,
           city: cidade,
           modalidades: modalidade && modalidade.trim() ? [formatModalidade(modalidade)] : [],
         }));
-        setIsReady(true);
         return;
       }
 
-      // Se já detectou localização, não detectar novamente
-      if (locationDetected) {
-        return;
-      }
+    if (locationDetected) return;
 
-      // Se não tiver cidade, detectar por IP
-      try {
-        const { getLocationByIP } = await import('@/app/lib/api/get-location-by-ip')
-        const location = await getLocationByIP()
-        
-        if (location) {
-          setLocationDetected(true)
-          
-          // Atualizar URL com a cidade detectada
-          const params = new URLSearchParams()
-          if (curso) params.set('c', curso)
-          if (cursoNomeCompleto) params.set('cn', cursoNomeCompleto)
-          params.set('cidade', location.city)
-          params.set('estado', location.region)
-          // Só adicionar modalidade se tiver valor
-          if (modalidade && modalidade.trim()) {
-            params.set('modalidade', modalidade)
-          }
-          params.set('nivel', nivel)
-          
-          // Atualizar URL sem recarregar a página
-          router.replace(`/curso/resultado?${params.toString()}`, { scroll: false })
+    const timeoutId = setTimeout(async () => {
+      if (locationDetected) return;
+      // Revalidar URL atual (pode ter atualizado após navegação da home)
+      if (typeof window !== 'undefined') {
+        const current = new URLSearchParams(window.location.search)
+        const currentCidade = current.get('cidade') ?? ''
+        const currentEstado = current.get('estado') ?? ''
+        if (currentCidade.trim() && currentEstado.trim()) {
+          setFilters((prev) => ({
+            ...prev,
+            city: currentCidade,
+            modalidades: (current.get('modalidade') ?? '').trim() ? [formatModalidade(current.get('modalidade')!)] : [],
+          }));
+          return;
         }
+      }
+
+      try {
+        const { getCityFromOurAPIByIP } = await import('@/app/lib/api/get-city-from-api-by-ip')
+        const location = await getCityFromOurAPIByIP()
+        if (!location) return
+
+        setLocationDetected(true)
+
+        const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
+        params.set('cidade', location.city)
+        params.set('estado', location.state)
+        if (!params.has('c') && curso) params.set('c', curso)
+        if (!params.has('cn') && cursoNomeCompleto) params.set('cn', cursoNomeCompleto)
+        if (!params.has('nivel')) params.set('nivel', nivel)
+        if (!params.has('modalidade') && modalidade?.trim()) params.set('modalidade', modalidade)
+
+        router.replace(`/curso/resultado?${params.toString()}`, { scroll: false })
       } catch (error) {
         console.error('Erro ao detectar localização:', error)
         setLocationDetected(true)
-        
-        // Em caso de erro, usar valores padrão
-        const params = new URLSearchParams()
-        if (curso) params.set('c', curso)
-        if (cursoNomeCompleto) params.set('cn', cursoNomeCompleto)
+        const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
         params.set('cidade', 'São Paulo')
         params.set('estado', 'SP')
-        // Só adicionar modalidade se tiver valor
-        if (modalidade && modalidade.trim()) {
-          params.set('modalidade', modalidade)
-        }
-        params.set('nivel', nivel)
-        
+        if (!params.has('c') && curso) params.set('c', curso)
+        if (!params.has('cn') && cursoNomeCompleto) params.set('cn', cursoNomeCompleto)
+        if (!params.has('nivel')) params.set('nivel', nivel)
+        if (!params.has('modalidade') && modalidade?.trim()) params.set('modalidade', modalidade)
         router.replace(`/curso/resultado?${params.toString()}`, { scroll: false })
       }
-    };
+    }, 350)
 
-    detectLocation();
+    return () => clearTimeout(timeoutId)
   }, [cidade, estado, modalidade, nivel, curso, cursoNomeCompleto, router, locationDetected]);
 
 
@@ -226,6 +225,10 @@ export default function SearchResultClient() {
     }
     return cursoNomeCompleto || curso || undefined
   }, [curso, cursoNomeCompleto])
+
+  // Habilitar busca assim que tiver cidade e estado (da URL ou após detecção por IP).
+  // Assim, ao vir da home com filtros na URL, a API é chamada logo no primeiro render.
+  const canSearch = !!cidade?.trim() && !!estado?.trim();
 
   const { data: showCourses, isLoading } = useQuery({
     queryFn: () => getShowFiltersCourses(
@@ -238,7 +241,7 @@ export default function SearchResultClient() {
       20 // size (20 itens por página)
     ),
     queryKey: ['courses', 'filter', courseNameForAPI, cidade, estado, modalidade, nivel],
-    enabled: isReady && !!cidade && !!estado,
+    enabled: canSearch,
     staleTime: 0, // Permitir refetch quando os parâmetros mudarem
     refetchOnWindowFocus: false, // Não refetch quando a janela ganha foco
     refetchOnMount: true, // Refetch quando o componente monta novamente (quando URL muda)

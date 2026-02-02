@@ -3,6 +3,8 @@ export interface LocationByIP {
   region: string
   country: string
   countryCode: string
+  latitude?: number
+  longitude?: number
 }
 
 // Mapeamento de estados brasileiros para siglas UF
@@ -79,15 +81,17 @@ export async function getLocationByIP(): Promise<LocationByIP | null> {
         const data = await response.json()
         
         // Verificar se temos cidade e estado válidos
-        // ipapi.co pode retornar region_code (sigla) ou region (nome completo)
+        // ipapi.co pode retornar region_code (sigla) ou region (nome completo); latitude/longitude opcionais
         if (data.city && (data.region || data.region_code)) {
           const stateUF = data.region_code || convertStateToUF(data.region || 'SP')
-          
+          const lat = typeof data.latitude === 'number' ? data.latitude : (data.latitude != null ? Number(data.latitude) : undefined)
+          const lng = typeof data.longitude === 'number' ? data.longitude : (data.longitude != null ? Number(data.longitude) : undefined)
           return {
             city: data.city,
             region: stateUF,
             country: data.country_name || 'Brasil',
             countryCode: data.country_code || 'BR',
+            ...(lat != null && !Number.isNaN(lat) && lng != null && !Number.isNaN(lng) && { latitude: lat, longitude: lng }),
           }
         }
       }
@@ -108,14 +112,16 @@ export async function getLocationByIP(): Promise<LocationByIP | null> {
         const data = await response.json()
         
         if (data.status === 'success' && data.city && (data.regionName || data.region)) {
-          // ip-api.com retorna region como código (ex: "SP") ou regionName como nome completo
+          // ip-api.com retorna region como código (ex: "SP") ou regionName como nome completo; lat/lon opcionais
           const stateUF = data.region || convertStateToUF(data.regionName || 'SP')
-          
+          const lat = typeof data.lat === 'number' ? data.lat : (data.lat != null ? Number(data.lat) : undefined)
+          const lng = typeof data.lon === 'number' ? data.lon : (data.lon != null ? Number(data.lon) : undefined)
           return {
             city: data.city,
             region: stateUF,
             country: data.country || 'Brasil',
             countryCode: data.countryCode || 'BR',
+            ...(lat != null && !Number.isNaN(lat) && lng != null && !Number.isNaN(lng) && { latitude: lat, longitude: lng }),
           }
         }
       }

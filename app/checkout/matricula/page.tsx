@@ -40,7 +40,7 @@ import { createCheckout } from '@/app/lib/api/create-checkout'
 import { getCheckoutStatus } from '@/app/lib/api/checkout-status'
 import type { PosPaymentMethod, PosInstallment } from '@/app/lib/api/get-offer-details'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
-import { useMarketplaceFeatureFlag, usePixBeforeEnrollmentFeatureFlag } from '@/app/lib/hooks/usePostHogFeatureFlags'
+import { useMarketplaceFeatureFlag, usePixBeforeEnrollmentFeatureFlag, usePixEnabledFeatureFlag } from '@/app/lib/hooks/usePostHogFeatureFlags'
 import { formatPhone } from '@/utils/formatters'
 
 
@@ -124,6 +124,7 @@ function MatriculaContent() {
   // Feature flags do PostHog
   const isMarketplace = useMarketplaceFeatureFlag()
   const requirePixBeforeEnrollment = usePixBeforeEnrollmentFeatureFlag()
+  const pixEnabled = usePixEnabledFeatureFlag()
   
   const groupId = searchParams.get('groupId') || searchParams.get('id')
   const unitId = searchParams.get('unitId')
@@ -372,11 +373,14 @@ function MatriculaContent() {
   const administrativeFee = 49.99
   
   // Lógica de cobrança:
-  // Marketplace ATIVO: cobrar apenas a MATRÍCULA (subscriptionValue da API)
-  // Marketplace DESABILITADO: cobrar apenas a TAXA DE SERVIÇO (R$ 49,99)
+  // pix_enabled DESABILITADO: sem taxa, sem checkout (apenas create-inscription)
+  // pix_enabled ATIVO + Marketplace ATIVO: cobrar apenas a MATRÍCULA (subscriptionValue da API)
+  // pix_enabled ATIVO + Marketplace DESABILITADO: cobrar apenas a TAXA DE SERVIÇO (R$ 49,99)
   // Mensalidade sempre é cobrada pela faculdade (não aparece no checkout)
   let enrollmentFee: number
-  if (isMarketplace) {
+  if (!pixEnabled) {
+    enrollmentFee = 0
+  } else if (isMarketplace) {
     // Marketplace ativo: cobrar apenas a matrícula
     // Prioridade: subscriptionValue > montlyFeeTo (como fallback)
     enrollmentFee = offerDetails?.subscriptionValue !== undefined && offerDetails?.subscriptionValue !== null
@@ -388,6 +392,16 @@ function MatriculaContent() {
   }
   
   const baseMatricula = Math.round(enrollmentFee * 100) // em centavos
+
+  // Valor da matrícula para exibição: quando pix_enabled desligado, mostramos o mesmo valor (não cobramos no checkout, mas exibimos)
+  const enrollmentFeeForDisplay =
+    !pixEnabled
+      ? isMarketplace
+        ? (offerDetails?.subscriptionValue !== undefined && offerDetails?.subscriptionValue !== null
+            ? offerDetails.subscriptionValue
+            : (offerDetails?.montlyFeeTo || 0))
+        : administrativeFee
+      : enrollmentFee
   
   // Texto do label baseado na feature flag
   const enrollmentLabel = isMarketplace ? 'matrícula' : 'taxa de serviço'
@@ -407,7 +421,7 @@ function MatriculaContent() {
         calculatedEnrollmentFee: enrollmentFee,
       })
     }
-  }, [offerDetails, isMarketplace, enrollmentFee, baseMatricula, administrativeFee, monthlyFee])
+  }, [offerDetails, isMarketplace, pixEnabled, enrollmentFee, baseMatricula, administrativeFee, monthlyFee])
 
   const applyCouponToMatricula = () => {
     if (!coupon) return baseMatricula
@@ -729,6 +743,18 @@ function MatriculaContent() {
         throw new Error('Detalhes da oferta não encontrados')
       }
 
+      // pix_enabled DESABILITADO: não chama checkout, apenas create-inscription (sem taxa)
+      if (!pixEnabled) {
+        setPixLoading(true)
+        trackEvent('checkout_pix_disabled_inscription_only', {
+          course_id: offerDetails.courseId,
+          course_name: offerDetails.course,
+        })
+        await createInscriptionAfterPayment(data)
+        setPixLoading(false)
+        return
+      }
+
       // Pós-graduação: validar parcelas (dia de vencimento é fixo 10)
       const isPos = offerDetails.academicLevel === 'POS_GRADUACAO' && (offerDetails.paymentMethods?.length ?? 0) > 0
       const POS_DUE_DAY = '10'
@@ -960,7 +986,11 @@ function MatriculaContent() {
         {/* Header */}
         <div className="pt-10 mb-6 md:mb-8">
           <h1 className="text-xl md:text-2xl font-bold text-gray-900">Checkout {offerDetails.brand}</h1>
-          <p className="text-gray-600 mt-1 text-sm">Complete seus dados para finalizar a {enrollmentLabel}</p>
+          <p className="text-gray-600 mt-1 text-sm">
+            {pixEnabled
+              ? `Complete seus dados para finalizar a ${enrollmentLabel}`
+              : 'Complete seus dados para finalizar a matrícula. O valor da matrícula e das mensalidades será pago diretamente à instituição.'}
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
@@ -1338,7 +1368,7 @@ function MatriculaContent() {
                 )}
               </div>
 
-              {/* Forma de Pagamento - Seção Expansível */}
+              {/* Forma de Pagamento - Seção Expansível (oculta opções quando pix_enabled = false) */}
               <div>
                 <button
                   type="button"
@@ -1349,7 +1379,9 @@ function MatriculaContent() {
                     <CreditCard size={18} className="text-orange-600" />
                     <div>
                       <h2 className="text-base font-semibold text-gray-900">Forma de Pagamento</h2>
-                      <p className="text-xs text-gray-500">Selecione a melhor forma de pagar</p>
+                      <p className="text-xs text-gray-500">
+                        {pixEnabled ? 'Selecione a melhor forma de pagar' : 'Valor da matrícula pago diretamente à instituição'}
+                      </p>
                     </div>
                   </div>
                   {expandedSections.pagamento ? (
@@ -1360,7 +1392,27 @@ function MatriculaContent() {
                 </button>
                 {expandedSections.pagamento && (
                   <div className="px-4 pb-4 space-y-3">
-                    {offerDetails.academicLevel === 'POS_GRADUACAO' && (offerDetails.paymentMethods?.length ?? 0) > 0 ? (
+                    {!pixEnabled ? (
+                      <>
+                        <p className="text-sm text-gray-600">
+                          O valor da matrícula e das mensalidades será pago diretamente à instituição de ensino. Clique em Finalizar Matrícula para concluir.
+                        </p>
+                        <button
+                          type="submit"
+                          disabled={isSubmitting || pixLoading}
+                          className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-lg font-semibold text-base hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isSubmitting || pixLoading ? (
+                            <div className="flex items-center justify-center space-x-2">
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              <span>Processando...</span>
+                            </div>
+                          ) : (
+                            'Finalizar Matrícula'
+                          )}
+                        </button>
+                      </>
+                    ) : offerDetails.academicLevel === 'POS_GRADUACAO' && (offerDetails.paymentMethods?.length ?? 0) > 0 ? (
                       <>
                         <label className="block text-xs font-medium text-gray-700">Método de pagamento</label>
                         <div className="flex flex-wrap gap-2">
@@ -1515,7 +1567,28 @@ function MatriculaContent() {
                 <p className="text-xs text-gray-500 mt-1 italic">Paga diretamente à instituição</p>
               </div>
 
-              {isMarketplace ? (
+              {!pixEnabled ? (
+                <>
+                  <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-3">
+                    <div className="flex items-start gap-2 mb-2">
+                      <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-white text-xs font-bold">!</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold text-blue-900 mb-1">Matrícula e mensalidade na instituição</p>
+                        <p className="text-xs text-blue-700">
+                          O valor da matrícula e das mensalidades será pago diretamente à instituição de ensino.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Valor da matrícula</p>
+                    <p className="text-base font-semibold text-gray-900">{formatCurrency(enrollmentFeeForDisplay)}</p>
+                    <p className="text-xs text-gray-500 mt-1 italic">Pago diretamente à instituição</p>
+                  </div>
+                </>
+              ) : isMarketplace ? (
                 <>
                   {/* Marketplace ativo: mostrar matrícula */}
                   <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-3">
@@ -1614,41 +1687,43 @@ function MatriculaContent() {
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-gray-200">
-                <label className="block text-xs font-medium text-gray-700 mb-2">Digite seu cupom</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
-                    placeholder="Código do cupom"
-                    disabled={!!coupon}
-                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-                  />
-                  {coupon ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCoupon(null)
-                        setCouponCode('')
-                        toast.info('Cupom removido')
-                      }}
-                      className="p-2 bg-red-100 text-red-600 rounded-md hover:bg-red-200"
-                    >
-                      <X size={16} />
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleApplyCoupon}
-                      className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                      Aplicar
-                    </button>
-                  )}
+              {pixEnabled && (
+                <div className="pt-3 border-t border-gray-200">
+                  <label className="block text-xs font-medium text-gray-700 mb-2">Digite seu cupom</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      placeholder="Código do cupom"
+                      disabled={!!coupon}
+                      className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                    />
+                    {coupon ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCoupon(null)
+                          setCouponCode('')
+                          toast.info('Cupom removido')
+                        }}
+                        className="p-2 bg-red-100 text-red-600 rounded-md hover:bg-red-200"
+                      >
+                        <X size={16} />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleApplyCoupon}
+                        className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                      >
+                        Aplicar
+                      </button>
+                    )}
+                  </div>
+                  {couponError && <p className="text-xs text-red-600 mt-1">{couponError}</p>}
                 </div>
-                {couponError && <p className="text-xs text-red-600 mt-1">{couponError}</p>}
-              </div>
+              )}
 
               <div className="pt-3 border-t border-gray-200 space-y-2">
                 {/* Mensalidade - exibida como informação (não somada) */}
@@ -1657,7 +1732,12 @@ function MatriculaContent() {
                   <span className="text-gray-500 italic">{formatCurrency(monthlyFee)}</span>
                 </div>
                 
-                {isMarketplace ? (
+                {!pixEnabled ? (
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-600">Valor da matrícula</span>
+                    <span className="text-gray-900">{formatCurrency(enrollmentFeeForDisplay)}</span>
+                  </div>
+                ) : isMarketplace ? (
                   <>
                     {/* Marketplace ativo: mostrar matrícula */}
                     <div className="flex justify-between text-xs">
@@ -1682,7 +1762,7 @@ function MatriculaContent() {
                     </div>
                   </>
                 )}
-                {coupon && (
+                {pixEnabled && coupon && (
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-600">Cupom</span>
                     <span className="text-green-600 font-medium">
@@ -1694,13 +1774,16 @@ function MatriculaContent() {
                 )}
                 <div className="flex justify-between text-base font-semibold pt-2 border-t border-gray-200">
                   <span className="text-gray-900">Total</span>
-                  <div className="flex items-center gap-2">
-                    {coupon && (
+                  <div className="flex flex-col items-end gap-0.5">
+                    {pixEnabled && coupon && (
                       <span className="text-xs text-gray-400 line-through">
                         {formatCurrency(subtotal)}
                       </span>
                     )}
-                    <span className="text-green-600">{formatCurrency(total)}</span>
+                    <span className="text-green-600">{formatCurrency(pixEnabled ? total : enrollmentFeeForDisplay)}</span>
+                    {!pixEnabled && (
+                      <span className="text-xs text-gray-500 italic">Pago diretamente à instituição</span>
+                    )}
                   </div>
                 </div>
               </div>

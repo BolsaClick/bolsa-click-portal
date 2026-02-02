@@ -8,7 +8,7 @@ import {
   GraduationCap, BookOpen, Clock, Award, Building2,
   FileSpreadsheet, Globe, Users, Brain, Target, Laptop,
   CheckCircle, TrendingUp, Calendar, BookMarked,
-  ArrowRight, Mail, Star, Sparkles, MapPin
+  ArrowRight, Mail, Star, Sparkles, MapPin, ChevronDown
 } from 'lucide-react'
 import Image from 'next/image'
 
@@ -497,7 +497,213 @@ export default function PosGraduacaoClient() {
             </div>
           </div>
         </section>
-  
+
+        {/* Seção: Por que fazer uma Pós-Graduação? */}
+        <section className="py-20 container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <motion.h2
+              className="text-4xl md:text-5xl font-bold text-center mb-12 text-emerald-900"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              Por que fazer uma Pós-Graduação?
+            </motion.h2>
+
+            <div className="prose prose-lg max-w-none text-gray-700 space-y-6">
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+              >
+                A pós-graduação é essencial para quem busca se destacar no mercado de trabalho e
+                alcançar posições de liderança. Com uma especialização, MBA ou mestrado, você
+                aprofunda seus conhecimentos em áreas específicas, aumenta sua competitividade
+                profissional e pode conquistar salários até 120% maiores.
+              </motion.p>
+
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+              >
+                Profissionais com pós-graduação têm maior reconhecimento no mercado, acesso a cargos
+                de gestão e consultoria, além de desenvolverem uma rede de contatos valiosa (networking)
+                com outros especialistas da área. É o diferencial que pode alavancar sua carreira.
+              </motion.p>
+
+              <motion.h3
+                className="text-2xl font-bold text-emerald-800 mt-8 mb-4"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+              >
+                Tipos de Pós-Graduação Disponíveis
+              </motion.h3>
+
+              <ul className="space-y-3">
+                <motion.li
+                  className="flex items-start"
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <CheckCircle className="w-6 h-6 text-emerald-600 mr-3 mt-1 flex-shrink-0" />
+                  <div>
+                    <strong>Especialização (Lato Sensu):</strong> Aprofundamento em área específica
+                    do conhecimento. Duração de 12 a 24 meses. Ideal para aplicação prática.
+                  </div>
+                </motion.li>
+                <motion.li
+                  className="flex items-start"
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <CheckCircle className="w-6 h-6 text-emerald-600 mr-3 mt-1 flex-shrink-0" />
+                  <div>
+                    <strong>MBA (Master in Business Administration):</strong> Focado em gestão e
+                    administração de negócios. Voltado para líderes e executivos.
+                  </div>
+                </motion.li>
+                <motion.li
+                  className="flex items-start"
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <CheckCircle className="w-6 h-6 text-emerald-600 mr-3 mt-1 flex-shrink-0" />
+                  <div>
+                    <strong>Mestrado (Stricto Sensu):</strong> Formação acadêmica avançada com foco
+                    em pesquisa. Duração de 2 a 3 anos. Requisito para carreira docente.
+                  </div>
+                </motion.li>
+              </ul>
+
+              <motion.h3
+                className="text-2xl font-bold text-emerald-800 mt-8 mb-4"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.6 }}
+              >
+                Modalidades de Ensino
+              </motion.h3>
+
+              <div className="grid md:grid-cols-3 gap-6 mt-6">
+                <motion.div
+                  className="bg-emerald-50 p-6 rounded-xl"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.7 }}
+                >
+                  <h4 className="font-bold text-lg text-emerald-900 mb-3">EAD (Ensino a Distância)</h4>
+                  <p className="text-sm text-gray-600">
+                    Flexibilidade total para conciliar estudos com trabalho. Conteúdo de qualidade
+                    com tutoria especializada e aulas gravadas.
+                  </p>
+                </motion.div>
+                <motion.div
+                  className="bg-emerald-50 p-6 rounded-xl"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.8 }}
+                >
+                  <h4 className="font-bold text-lg text-emerald-900 mb-3">Presencial</h4>
+                  <p className="text-sm text-gray-600">
+                    Networking presencial com professores doutores e colegas da área. Discussões
+                    aprofundadas e troca de experiências.
+                  </p>
+                </motion.div>
+                <motion.div
+                  className="bg-emerald-50 p-6 rounded-xl"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.9 }}
+                >
+                  <h4 className="font-bold text-lg text-emerald-900 mb-3">Semipresencial</h4>
+                  <p className="text-sm text-gray-600">
+                    Equilibra flexibilidade do EAD com encontros presenciais estratégicos para
+                    workshops, estudos de caso e networking.
+                  </p>
+                </motion.div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Seção de FAQ */}
+        <section className="py-20 bg-gradient-to-b from-white to-emerald-50">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <motion.h2
+              className="text-4xl md:text-5xl font-bold text-center mb-12 text-emerald-900"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              Perguntas Frequentes sobre Pós-Graduação
+            </motion.h2>
+
+            <div className="space-y-4">
+              {[
+                {
+                  question: "Qual a diferença entre Especialização e MBA?",
+                  answer: "A Especialização é focada em aprofundamento técnico em uma área específica, enquanto o MBA é voltado para gestão e liderança empresarial, focado em formar executivos e gestores."
+                },
+                {
+                  question: "Preciso ter graduação para fazer pós-graduação?",
+                  answer: "Sim! A pós-graduação (lato sensu ou stricto sensu) exige diploma de graduação reconhecido pelo MEC como pré-requisito para ingresso."
+                },
+                {
+                  question: "Quanto tempo dura uma pós-graduação?",
+                  answer: "Especializações e MBAs geralmente duram de 12 a 24 meses. Mestrados levam de 2 a 3 anos, e Doutorados de 3 a 5 anos."
+                },
+                {
+                  question: "Pós-graduação EAD tem o mesmo valor no mercado?",
+                  answer: "Sim! Cursos de pós-graduação EAD reconhecidos pelo MEC têm a mesma validade que os presenciais. O diploma não faz distinção entre modalidades."
+                },
+                {
+                  question: "Como funciona a bolsa de estudos para pós-graduação?",
+                  answer: "No Bolsa Click você encontra descontos de até 80% em pós-graduações. Basta escolher o curso, comparar preços e se cadastrar gratuitamente para garantir sua bolsa."
+                },
+                {
+                  question: "Posso fazer pós-graduação em área diferente da minha graduação?",
+                  answer: "Sim! Muitas especializações e MBAs aceitam profissionais de diferentes áreas. Alguns cursos podem solicitar conhecimentos prévios ou cursos complementares."
+                }
+              ].map((faq, index) => (
+                <motion.div
+                  key={index}
+                  className="bg-white rounded-xl shadow-md overflow-hidden"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <details className="group">
+                    <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
+                      <h3 className="text-lg font-semibold text-emerald-900 pr-4">
+                        {faq.question}
+                      </h3>
+                      <ChevronDown className="w-6 h-6 text-emerald-600 transition-transform group-open:rotate-180" />
+                    </summary>
+                    <div className="px-6 pb-6 text-gray-600">
+                      <p>{faq.answer}</p>
+                    </div>
+                  </details>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Newsletter Section with Animation */}
         <section className="pt-20 bg-gradient-to-r from-emerald-950 to-bolsa-primary text-white relative overflow-hidden">
           <motion.div 

@@ -72,20 +72,7 @@ export const metadata: Metadata = {
     apple: theme.favicon,
   },
   robots: 'index, follow',
-  other: {
-    'application/ld+json': JSON.stringify({
-      '@context': 'https://schema.org',
-      '@type': 'WebSite',
-      name: theme.name,
-      url: theme.siteUrl,
-      potentialAction: {
-        '@type': 'SearchAction',
-        target: `${theme.siteUrl}/curso/result?={search_term_string}`,
-        'query-input': 'required name=search_term_string',
-      },
-    }),
-
-  },
+  // Schema.org removido: já definido em layout.tsx para evitar duplicação
 }
 
 export default function HomePage() {

@@ -8,7 +8,7 @@ import {
   GraduationCap, BookOpen, Clock, Award, Building2,
   FileSpreadsheet, Globe, Users, Brain, Target, Laptop,
   CheckCircle, TrendingUp, Calendar, BookMarked,
-  ArrowRight, Mail, Star, Sparkles, MapPin
+  ArrowRight, Mail, Star, Sparkles, MapPin, ChevronDown
 } from 'lucide-react'
 import Image from 'next/image'
 
@@ -497,7 +497,214 @@ export default function GraduacaoClient() {
             </div>
           </div>
         </section>
-  
+
+        {/* Seção: Por que fazer uma Graduação? */}
+        <section className="py-20 container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <motion.h2
+              className="text-4xl md:text-5xl font-bold text-center mb-12 text-emerald-900"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              Por que fazer uma Graduação?
+            </motion.h2>
+
+            <div className="prose prose-lg max-w-none text-gray-700 space-y-6">
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+              >
+                A graduação é o primeiro passo para construir uma carreira profissional sólida e
+                alcançar seus objetivos profissionais. Com um diploma de ensino superior, você
+                aumenta significativamente suas chances de conquistar melhores oportunidades no
+                mercado de trabalho e salários mais competitivos.
+              </motion.p>
+
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+              >
+                No Brasil, profissionais com graduação ganham, em média, 2,5 vezes mais do que
+                aqueles que têm apenas o ensino médio. Além disso, a taxa de empregabilidade é
+                consideravelmente maior entre os graduados, garantindo maior estabilidade financeira
+                e crescimento na carreira.
+              </motion.p>
+
+              <motion.h3
+                className="text-2xl font-bold text-emerald-800 mt-8 mb-4"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+              >
+                Tipos de Graduação Disponíveis
+              </motion.h3>
+
+              <ul className="space-y-3">
+                <motion.li
+                  className="flex items-start"
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <CheckCircle className="w-6 h-6 text-emerald-600 mr-3 mt-1 flex-shrink-0" />
+                  <div>
+                    <strong>Bacharelado:</strong> Formação generalista que prepara para diversas
+                    áreas de atuação profissional. Duração média de 4 anos.
+                  </div>
+                </motion.li>
+                <motion.li
+                  className="flex items-start"
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <CheckCircle className="w-6 h-6 text-emerald-600 mr-3 mt-1 flex-shrink-0" />
+                  <div>
+                    <strong>Licenciatura:</strong> Voltada para quem deseja ser professor.
+                    Permite atuar na educação básica e ensino médio.
+                  </div>
+                </motion.li>
+                <motion.li
+                  className="flex items-start"
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <CheckCircle className="w-6 h-6 text-emerald-600 mr-3 mt-1 flex-shrink-0" />
+                  <div>
+                    <strong>Tecnólogo:</strong> Curso de curta duração (2 a 3 anos) focado em
+                    competências específicas para o mercado de trabalho.
+                  </div>
+                </motion.li>
+              </ul>
+
+              <motion.h3
+                className="text-2xl font-bold text-emerald-800 mt-8 mb-4"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.6 }}
+              >
+                Modalidades de Ensino
+              </motion.h3>
+
+              <div className="grid md:grid-cols-3 gap-6 mt-6">
+                <motion.div
+                  className="bg-emerald-50 p-6 rounded-xl"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.7 }}
+                >
+                  <h4 className="font-bold text-lg text-emerald-900 mb-3">EAD (Ensino a Distância)</h4>
+                  <p className="text-sm text-gray-600">
+                    Estude no seu ritmo, de qualquer lugar. Ideal para quem precisa de flexibilidade
+                    de horários e economia com deslocamento.
+                  </p>
+                </motion.div>
+                <motion.div
+                  className="bg-emerald-50 p-6 rounded-xl"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.8 }}
+                >
+                  <h4 className="font-bold text-lg text-emerald-900 mb-3">Presencial</h4>
+                  <p className="text-sm text-gray-600">
+                    Interação direta com professores e colegas. Acesso a laboratórios e infraestrutura
+                    completa da instituição.
+                  </p>
+                </motion.div>
+                <motion.div
+                  className="bg-emerald-50 p-6 rounded-xl"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.9 }}
+                >
+                  <h4 className="font-bold text-lg text-emerald-900 mb-3">Semipresencial</h4>
+                  <p className="text-sm text-gray-600">
+                    Combina o melhor dos dois mundos: flexibilidade do EAD com encontros presenciais
+                    para práticas e networking.
+                  </p>
+                </motion.div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Seção de FAQ */}
+        <section className="py-20 bg-gradient-to-b from-white to-emerald-50">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <motion.h2
+              className="text-4xl md:text-5xl font-bold text-center mb-12 text-emerald-900"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              Perguntas Frequentes sobre Graduação
+            </motion.h2>
+
+            <div className="space-y-4">
+              {[
+                {
+                  question: "Quanto tempo dura uma graduação?",
+                  answer: "A duração varia conforme o tipo: Bacharelados e Licenciaturas geralmente levam de 4 a 5 anos, enquanto cursos Tecnólogos têm duração de 2 a 3 anos."
+                },
+                {
+                  question: "Qual a diferença entre Bacharelado e Licenciatura?",
+                  answer: "O Bacharelado forma profissionais para atuar em diferentes áreas do mercado, enquanto a Licenciatura prepara professores para lecionar na educação básica e ensino médio."
+                },
+                {
+                  question: "Posso fazer graduação EAD e ter o mesmo diploma?",
+                  answer: "Sim! O diploma de cursos EAD reconhecidos pelo MEC tem a mesma validade que os presenciais, sem distinção na certificação."
+                },
+                {
+                  question: "Como funciona a bolsa de estudos no Bolsa Click?",
+                  answer: "É simples: você busca o curso desejado, compara preços e descontos de até 80%, escolhe a melhor opção e garante sua bolsa. O cadastro é totalmente gratuito."
+                },
+                {
+                  question: "Preciso fazer ENEM para conseguir bolsa?",
+                  answer: "Não! No Bolsa Click você encontra bolsas de estudo sem precisar da nota do ENEM. Basta se cadastrar gratuitamente e escolher o curso."
+                },
+                {
+                  question: "Posso transferir minha faculdade e manter a bolsa?",
+                  answer: "Isso depende das políticas de cada instituição. Recomendamos consultar diretamente a faculdade sobre as possibilidades de transferência mantendo o desconto."
+                }
+              ].map((faq, index) => (
+                <motion.div
+                  key={index}
+                  className="bg-white rounded-xl shadow-md overflow-hidden"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <details className="group">
+                    <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
+                      <h3 className="text-lg font-semibold text-emerald-900 pr-4">
+                        {faq.question}
+                      </h3>
+                      <ChevronDown className="w-6 h-6 text-emerald-600 transition-transform group-open:rotate-180" />
+                    </summary>
+                    <div className="px-6 pb-6 text-gray-600">
+                      <p>{faq.answer}</p>
+                    </div>
+                  </details>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Newsletter Section with Animation */}
         <section className="pt-20 bg-gradient-to-r from-emerald-950 to-bolsa-primary text-white relative overflow-hidden">
           <motion.div 

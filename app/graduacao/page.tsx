@@ -46,10 +46,10 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: 'https://www.bolsaclick.com.br/favicon.png',
+        url: 'https://www.bolsaclick.com.br/assets/og-image-bolsaclick.png',
         width: 1200,
         height: 630,
-        alt: 'Bolsa Click',
+        alt: 'Bolsas de Estudo para Graduação - Bolsa Click',
       },
     ],
   },
@@ -65,15 +65,34 @@ export const metadata: Metadata = {
       '@context': 'https://schema.org',
       '@type': 'Course',
       name: 'Cursos de Graduação',
-      description: 'Descubra cursos de graduação presenciais, EAD e semipresenciais com bolsas de estudo de até 80% em diversas áreas do conhecimento.',
+      description: 'Descubra cursos de graduação presenciais, EAD e semipresenciais com bolsas de estudo de até 80% em diversas áreas do conhecimento. Bacharelado, Licenciatura e Tecnólogo.',
       provider: {
         '@type': 'Organization',
         name: 'Bolsa Click',
         url: 'https://www.bolsaclick.com.br',
         logo: 'https://www.bolsaclick.com.br/assets/logo-bolsa-click-rosa.png',
+        sameAs: [
+          'https://www.instagram.com/bolsaclick',
+          'https://www.facebook.com/bolsaclickbrasil',
+          'https://www.linkedin.com/company/bolsaclick',
+        ],
       },
       educationalLevel: 'Graduação',
       courseMode: ['Presencial', 'EAD', 'Semipresencial'],
+      timeToComplete: 'P4Y',
+      occupationalCategory: 'Ensino Superior',
+      audience: {
+        '@type': 'EducationalAudience',
+        educationalRole: 'student',
+      },
+      offers: {
+        '@type': 'AggregateOffer',
+        priceCurrency: 'BRL',
+        lowPrice: '0',
+        highPrice: '0',
+        offerCount: '100000',
+        availability: 'https://schema.org/InStock',
+      },
       url: 'https://www.bolsaclick.com.br/graduacao',
       breadcrumb: {
         '@type': 'BreadcrumbList',

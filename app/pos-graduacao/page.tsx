@@ -46,10 +46,10 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: 'https://www.bolsaclick.com.br/favicon.png',
+        url: 'https://www.bolsaclick.com.br/assets/og-image-bolsaclick.png',
         width: 1200,
         height: 630,
-        alt: 'Bolsa Click',
+        alt: 'Bolsas de Estudo para Pós-Graduação - Bolsa Click',
       },
     ],
   },
@@ -58,22 +58,41 @@ export const metadata: Metadata = {
     site: '@bolsaclick',
     title: 'Bolsa de Estudo em Faculdades - Pós-graduação com até 80% de Desconto',
     description: 'Pós-graduação com bolsa de estudo? Encontre a sua na Bolsa Click. Desconto em faculdade de até 80%. Cadastre-se grátis!',
-    images: ['https://www.bolsaclick.com.br/favicon.png'],
+    images: ['https://www.bolsaclick.com.br/assets/og-image-bolsaclick.png'],
   },
   other: {
     'application/ld+json': JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'Course',
       name: 'Cursos de Pós-graduação',
-      description: 'Descubra cursos de pós-graduação presenciais, EAD e semipresenciais com bolsas de estudo de até 80% em diversas áreas do conhecimento.',
+      description: 'Descubra cursos de pós-graduação presenciais, EAD e semipresenciais com bolsas de estudo de até 80% em diversas áreas do conhecimento. Especialização, MBA e Mestrado.',
       provider: {
         '@type': 'Organization',
         name: 'Bolsa Click',
         url: 'https://www.bolsaclick.com.br',
         logo: 'https://www.bolsaclick.com.br/assets/logo-bolsa-click-rosa.png',
+        sameAs: [
+          'https://www.instagram.com/bolsaclick',
+          'https://www.facebook.com/bolsaclickbrasil',
+          'https://www.linkedin.com/company/bolsaclick',
+        ],
       },
       educationalLevel: 'Pós-graduação',
       courseMode: ['Presencial', 'EAD', 'Semipresencial'],
+      timeToComplete: 'P18M',
+      occupationalCategory: 'Ensino Superior',
+      audience: {
+        '@type': 'EducationalAudience',
+        educationalRole: 'student',
+      },
+      offers: {
+        '@type': 'AggregateOffer',
+        priceCurrency: 'BRL',
+        lowPrice: '0',
+        highPrice: '0',
+        offerCount: '50000',
+        availability: 'https://schema.org/InStock',
+      },
       url: 'https://www.bolsaclick.com.br/pos-graduacao',
       breadcrumb: {
         '@type': 'BreadcrumbList',

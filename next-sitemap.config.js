@@ -68,7 +68,13 @@ module.exports = {
   sitemapSize: 5000,
   changefreq: 'weekly',
   priority: 0.7,
-  exclude: ['/admin', '/login', '/checkout', '/checkout/success', '/checkout/pos'],
+  exclude: [
+    '/admin',
+    '/login',
+    '/checkout/*',    // Wildcard para todas páginas de checkout
+    '/favoritos',     // Página privada
+    '/curso',         // Redirect page (não indexar)
+  ],
   robotsTxtOptions: {
     policies: [
       {
@@ -79,19 +85,27 @@ module.exports = {
   },
   additionalPaths: async () => {
     const paths = []
-    
-    // Adicionar páginas principais com alta prioridade
+
+    // Home com prioridade máxima
     paths.push({
-      loc: '/graduacao',
-      changefreq: 'weekly',
-      priority: 0.9,
+      loc: '/',
+      changefreq: 'daily',
+      priority: 1.0,
       lastmod: new Date().toISOString(),
     })
-    
+
+    // Páginas principais com prioridade muito alta
+    paths.push({
+      loc: '/graduacao',
+      changefreq: 'daily',  // Mudou de weekly para daily
+      priority: 0.95,       // Aumentou de 0.9 para 0.95
+      lastmod: new Date().toISOString(),
+    })
+
     paths.push({
       loc: '/pos-graduacao',
-      changefreq: 'weekly',
-      priority: 0.9,
+      changefreq: 'daily',  // Mudou de weekly para daily
+      priority: 0.95,       // Aumentou de 0.9 para 0.95
       lastmod: new Date().toISOString(),
     })
     

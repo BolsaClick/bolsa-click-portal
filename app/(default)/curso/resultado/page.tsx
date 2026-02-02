@@ -126,6 +126,32 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     'Bolsa Click',
   ].filter(Boolean) as string[]
 
+  // Construir BreadcrumbList schema
+  const breadcrumbItems = [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Home',
+      item: 'https://www.bolsaclick.com.br',
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: courseType, // Graduação, Pós-graduação, etc
+      item: `https://www.bolsaclick.com.br/${nivel === 'GRADUACAO' ? 'graduacao' : nivel === 'POS_GRADUACAO' ? 'pos-graduacao' : 'cursos'}`,
+    },
+  ]
+
+  // Adicionar curso como terceiro item se selecionado
+  if (hasCourseSelected) {
+    breadcrumbItems.push({
+      '@type': 'ListItem',
+      position: 3,
+      name: courseName,
+      item: canonicalUrl,
+    })
+  }
+
   return {
     title,
     description,
@@ -147,6 +173,13 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
       site: '@bolsaclick',
       title,
       description,
+    },
+    other: {
+      'application/ld+json': JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: breadcrumbItems,
+      }),
     },
   }
 }

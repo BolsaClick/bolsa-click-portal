@@ -36,26 +36,7 @@ export default function Head() {
         }}
       />
 
-      {/* Schema.org: Campo de busca no Google */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "WebSite",
-            "url": "https://www.bolsaclick.com.br/",
-            "potentialAction": {
-              "@type": "SearchAction",
-              "target": "https://www.bolsaclick.com.br/curso/result?q={search_term_string}",
-              "query-input": {
-                "@type": "PropertyValueSpecification",
-                "valueRequired": true,
-                "valueName": "search_term_string"
-              }
-            }
-          }),
-        }}
-      />
+      {/* Schema.org removido: já definido em layout.tsx para evitar duplicação */}
 
       {/* Schema.org: Programa Educacional com Bolsa */}
       <script

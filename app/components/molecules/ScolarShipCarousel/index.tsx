@@ -1,146 +1,86 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, MapPin, Book, Monitor } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { ChevronLeft, ChevronRight, Book, Monitor, Clock, TrendingUp } from 'lucide-react';
 import './style.css';
 import Image from 'next/image';
-import { useGeoLocation } from '@/app/context/GeoLocationContext';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { TOP_CURSOS, CursoMetadata } from '@/app/cursos/_data/cursos';
 
-interface ScholarshipProps {
-  id: number;
-  courseId: string;
-  course: string;
-  college: string;
-  modality: string;
-  location?: string;
-  city?: string;
-  state?: string;
-  originalPrice: number;
-  discountPrice: number;
-  discount: number;
-  image: string;
+interface ScholarshipCardProps {
+  curso: CursoMetadata;
 }
 
-const scholarships: ScholarshipProps[] = [
-  {
-    id: 1,
-    courseId: '05ea2de4-cf8c-4b2d-a3eb-9ab3bb8b94cf',
-    course: "Psicologia - Bacharelado",
-    college: "Anhanguera",
-    modality: "presencial",
-    city: "",
-    state: "",
-    location: "",
-    originalPrice: 1200,
-    discountPrice: 599,
-    discount: 50,
-    image: "https://images.pexels.com/photos/3938022/pexels-photo-3938022.jpeg"
-  },
-  {
-    id: 2,
-    courseId: '01d29fc8-6e92-4a6e-8edc-848dab59da24',
-    course: "Direito - Bacharelado",
-    college: "Unopar",
-    modality: "presencial",
-    city: "",
-    state: "",
-    location: "",
-    originalPrice: 900,
-    discountPrice: 400,
-    discount: 55,
-    image: "https://images.pexels.com/photos/5668859/pexels-photo-5668859.jpeg"
-  },
-    {
-    id: 3,
-    courseId: '99150620-8fd6-4ba7-8c3e-bf24ac3a7cd6',
-    course: "Análise e Desenvolvimento de Sistemas - Tecnólogo",
-    college: "Anhanguera",
-    modality: "distancia",
-    city: "",
-    state: "",
-    location: "",
-    originalPrice: 900,
-    discountPrice: 400,
-    discount: 23,
-    image: "https://images.pexels.com/photos/270557/pexels-photo-270557.jpeg"
-  },
-    {
-    id: 4,
-    courseId: 'a7405dcb-f22b-4e3f-a1e2-3492d3ba77fa',
-    course: "Cibersegurança - Tecnólogo",
-    college: "Unopar",
-    modality: "presencial",
-    city: "",
-    state: "",
-    location: "",
-    originalPrice: 900,
-    discountPrice: 400,
-    discount: 90,
-    image: "https://images.pexels.com/photos/1181354/pexels-photo-1181354.jpeg"
-  },
-    {
-    id: 5,
-    courseId: 'fe868eb2-6050-45df-b0c6-6565155f690f',
-    course: "Odontologia - Bacharelado",
-    college: "Unopar",
-    modality: "presencial",
-    city: "",
-    state: "",
-    location: "",
-    originalPrice: 900,
-    discountPrice: 400,
-    discount: 86,
-    image: "https://images.pexels.com/photos/3845653/pexels-photo-3845653.jpeg"
-  },
-      {
-    id: 6,
-    courseId: 'aaa8f97d-40dc-40c6-b772-2c3068288534',
-    course: "Administração - Bacharelado",
-    college: "Unopar",
-    modality: "presencial",
-    city: "",
-    state: "",
-    location: "",
-    originalPrice: 900,
-    discountPrice: 400,
-    discount: 44,
-    image: "https://images.pexels.com/photos/3760072/pexels-photo-3760072.jpeg"
-  },
-];
-
-const ScholarshipCard: React.FC<{ scholarship: ScholarshipProps; onClick: () => void }> = ({ scholarship, onClick }) => {
-  const formatCurrency = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-  const capitalizeSlug = (text: string) => {
-    return text
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[̀-ͯ]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)+/g, '')
-      .replace(/(^\w|\b\w)/g, (match) => match.toUpperCase());
+const ScholarshipCard: React.FC<ScholarshipCardProps> = ({ curso }) => {
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'BACHARELADO': return 'Bacharelado';
+      case 'LICENCIATURA': return 'Licenciatura';
+      case 'TECNOLOGO': return 'Tecnólogo';
+      default: return type;
+    }
   };
+
+  const getMarketDemandConfig = (demand: string) => {
+    switch (demand) {
+      case 'ALTA': return { label: 'Alta demanda', color: 'bg-emerald-500' };
+      case 'MEDIA': return { label: 'Média demanda', color: 'bg-amber-500' };
+      case 'BAIXA': return { label: 'Baixa demanda', color: 'bg-gray-500' };
+      default: return { label: demand, color: 'bg-gray-500' };
+    }
+  };
+
+  const demandConfig = getMarketDemandConfig(curso.marketDemand);
 
   return (
     <div className="scholarship-card">
       <div className="scholarship-image">
-        <Image src={scholarship.image} alt={scholarship.course} width={100} height={100} />
-        <div className="discount-badge">-{scholarship.discount}%</div>
+        <Image
+          src={curso.image}
+          alt={curso.name}
+          width={400}
+          height={250}
+          style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+        />
+        <div className="discount-badge">
+          <TrendingUp size={12} className="inline mr-1" />
+          {demandConfig.label}
+        </div>
       </div>
       <div className="scholarship-content">
-        <h3 className="text-xl font-bold mb-2 text-blue-950">{scholarship.course}</h3>
-        <p className="text-gray-700 mb-2">{scholarship.college}</p>
-        <div className="flex flex-wrap gap-2 mb-3">
-          <span className="badge"><Monitor size={14} className="mr-1" />{capitalizeSlug(scholarship.modality)}</span>
-          <span className="badge"><MapPin size={14} className="mr-1" />{scholarship.location}</span>
-          <span className="badge"><Book size={14} className="mr-1" />{scholarship.course}</span>
+        <h3 className="text-lg font-bold mb-2 text-blue-950">{curso.fullName}</h3>
+        <p className="text-gray-500 text-sm mb-4 line-clamp-2">{curso.description}</p>
+
+        <div className="flex flex-wrap gap-2 mb-4">
+          <span className="badge">
+            <Monitor size={12} className="mr-1" />
+            {getTypeLabel(curso.type)}
+          </span>
+          <span className="badge">
+            <Clock size={12} className="mr-1" />
+            {curso.duration}
+          </span>
+          <span className="badge">
+            <Book size={12} className="mr-1" />
+            Graduação
+          </span>
         </div>
+
         <div className="price-container">
-          <div className="original-price">De: <span className="line-through">{formatCurrency(scholarship.originalPrice)}</span></div>
-          <div className="discount-price">Por: <span className="font-bold text-red-500">{formatCurrency(scholarship.discountPrice)}</span></div>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs text-gray-400 uppercase tracking-wide">Salário médio</div>
+              <div className="font-bold text-bolsa-primary text-lg">{curso.averageSalary}</div>
+            </div>
+          </div>
         </div>
-        <button onClick={onClick} className="scholarship-button">Ver detalhes</button>
+
+        <Link
+          href={`/cursos/${curso.slug}`}
+          className="scholarship-button block text-center"
+        >
+          Ver bolsas disponíveis
+        </Link>
       </div>
     </div>
   );
@@ -149,47 +89,34 @@ const ScholarshipCard: React.FC<{ scholarship: ScholarshipProps; onClick: () => 
 const ScholarshipCarousel: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsToShow, setItemsToShow] = useState(3);
+  const [isPaused, setIsPaused] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
-  const { city, region, state, town } = useGeoLocation();
-  const router = useRouter();
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const slugify = (text: string) =>
-    text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+  // Pegar os primeiros 10 cursos do TOP_CURSOS
+  const cursosDestaque = TOP_CURSOS.slice(0, 10);
 
-  const handleNavigate = (scholarship: ScholarshipProps) => {
-    const courseSlug = slugify(scholarship.course.replace(/ - (Bacharelado|Tecn[oó]logo)$/i, ''));
-    // Usar city/region (novo) ou town/state (compatibilidade)
-    const cityFinal = scholarship.city || city || town || 'São Paulo';
-    const stateFinal = scholarship.state || region || state || 'SP';
+  const totalSlides = cursosDestaque.length;
+  const maxIndex = Math.max(0, totalSlides - itemsToShow);
 
-    localStorage.setItem('searchParams', JSON.stringify({
-      courseId: scholarship.courseId,
-      courseName: scholarship.course,
-      city: cityFinal,
-      state: stateFinal,
-      modalidade: scholarship.modality
-    }));
+  // Auto-play
+  const startAutoPlay = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      if (!isPaused) {
+        setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
+      }
+    }, 5000);
+  }, [isPaused, maxIndex]);
 
-    document.cookie = `courseName=${encodeURIComponent(courseSlug)}; path=/`;
-    document.cookie = `modalidade=${encodeURIComponent(scholarship.modality)}; path=/`;
-    document.cookie = `city=${encodeURIComponent(cityFinal)}; path=/`;
-    document.cookie = `state=${encodeURIComponent(stateFinal)}; path=/`;
-
-    const citySlug = slugify(cityFinal);
-    router.push(`/cursos/resultado/${scholarship.modality}/${courseSlug}/${citySlug}`);
-  };
-
-  const overrideLocationScholarships = scholarships.map((s) => {
-    // Usar city/region (novo) ou town/state (compatibilidade)
-    const cityFinal = s.city || city || town || 'São Paulo';
-    const stateFinal = s.state || region || state || 'SP';
-    return {
-      ...s,
-      city: cityFinal,
-      state: stateFinal,
-      location: `${cityFinal} - ${stateFinal}`
+  useEffect(() => {
+    startAutoPlay();
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  });
+  }, [startAutoPlay]);
+
+  // Handle resize
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 640) setItemsToShow(1);
@@ -201,18 +128,49 @@ const ScholarshipCarousel: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const totalSlides = overrideLocationScholarships.length;
-  const maxIndex = Math.max(0, totalSlides - itemsToShow);
+  const goToPrev = () => {
+    setCurrentIndex((prev) => Math.max(0, prev - 1));
+    startAutoPlay();
+  };
+
+  const goToNext = () => {
+    setCurrentIndex((prev) => Math.min(maxIndex, prev + 1));
+    startAutoPlay();
+  };
+
+  const goToSlide = (index: number) => {
+    setCurrentIndex(index);
+    startAutoPlay();
+  };
 
   return (
-    <section className="scholarships-section py-16">
+    <section
+      className="scholarships-section py-16"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
       <div className="container mx-auto px-4">
-        <h2 className="text-2xl md:text-3xl font-bold text-center mb-12 text-blue-950">
-          Bolsas em Destaque
-        </h2>
+        {/* Header */}
+        <div className="text-center mb-12">
+          <span className="inline-block px-4 py-1.5 bg-blue-50 text-bolsa-primary text-sm font-semibold rounded-full mb-4">
+            TOP 10 CURSOS
+          </span>
+          <h2 className="text-3xl md:text-4xl font-bold text-blue-950 mb-4">
+            Cursos em Destaque
+          </h2>
+          <p className="text-gray-500 max-w-xl mx-auto">
+            Encontre bolsas de estudo com até <span className="text-bolsa-primary font-semibold">80% de desconto</span> para os cursos mais procurados do Brasil
+          </p>
+        </div>
 
+        {/* Carousel */}
         <div className="carousel-container">
-          <button className="carousel-control prev" onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))} disabled={currentIndex === 0}>
+          <button
+            className="carousel-control prev"
+            onClick={goToPrev}
+            disabled={currentIndex === 0}
+            aria-label="Anterior"
+          >
             <ChevronLeft size={24} />
           </button>
 
@@ -225,30 +183,47 @@ const ScholarshipCarousel: React.FC = () => {
                 gridTemplateColumns: `repeat(${totalSlides}, ${100 / itemsToShow}%)`
               }}
             >
-              {overrideLocationScholarships.map((scholarship) => (
-                <div key={scholarship.id} className="carousel-item">
-                  <ScholarshipCard scholarship={scholarship} onClick={() => handleNavigate(scholarship)} />
+              {cursosDestaque.map((curso) => (
+                <div key={curso.slug} className="carousel-item">
+                  <ScholarshipCard curso={curso} />
                 </div>
               ))}
             </div>
           </div>
 
-          <button className="carousel-control next" onClick={() => setCurrentIndex(Math.min(maxIndex, currentIndex + 1))} disabled={currentIndex >= maxIndex}>
+          <button
+            className="carousel-control next"
+            onClick={goToNext}
+            disabled={currentIndex >= maxIndex}
+            aria-label="Próximo"
+          >
             <ChevronRight size={24} />
           </button>
         </div>
 
+        {/* Dots Navigation */}
         <div className="flex justify-center mt-8">
           <div className="carousel-dots">
             {Array.from({ length: maxIndex + 1 }).map((_, index) => (
               <button
                 key={index}
                 className={`carousel-dot ${index === currentIndex ? 'active' : ''}`}
-                onClick={() => setCurrentIndex(index)}
-                aria-label={`Go to slide ${index + 1}`}
+                onClick={() => goToSlide(index)}
+                aria-label={`Ir para slide ${index + 1}`}
               />
             ))}
           </div>
+        </div>
+
+        {/* CTA */}
+        <div className="text-center mt-10">
+          <Link
+            href="/cursos"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-white border-2 border-blue-950 text-blue-950 font-semibold rounded-xl hover:bg-blue-950 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md"
+          >
+            Ver todos os cursos
+            <ChevronRight size={20} />
+          </Link>
         </div>
       </div>
     </section>

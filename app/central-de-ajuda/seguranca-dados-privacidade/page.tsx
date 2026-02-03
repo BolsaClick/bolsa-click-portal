@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { HelpArticleCard } from '@/app/components/help/HelpArticleCard'
-import Link from 'next/link'
+import { HelpCategoryHero } from '@/app/components/help/HelpCategoryHero'
+import { Shield } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Segurança, Dados e Privacidade | Central de Ajuda Bolsa Click',
@@ -41,30 +42,22 @@ const articles = [
 
 export default function SegurancaDadosPrivacidadePage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-screen-lg px-4 py-12">
-        <nav className="mb-6 flex items-center gap-2 text-sm text-gray-600">
-          <Link href="/central-de-ajuda" className="hover:text-[var(--bolsa-primary)]">
-            Central de Ajuda
-          </Link>
-          <span>/</span>
-          <span className="text-[var(--bolsa-black)]">Segurança, Dados e Privacidade</span>
-        </nav>
+    <>
+      <HelpCategoryHero
+        title="Segurança, Dados e Privacidade"
+        description="Sua privacidade é nossa prioridade. Entenda como protegemos seus dados, nossa conformidade com a LGPD e como exercer seus direitos."
+        icon={<Shield size={28} />}
+      />
 
-        <h1 className="mb-4 text-4xl font-bold text-[var(--bolsa-black)]">
-          Segurança, Dados e Privacidade
-        </h1>
-        <p className="mb-12 text-lg text-gray-600">
-          Sua privacidade é nossa prioridade. Entenda como protegemos seus dados, nossa
-          conformidade com a LGPD e como exercer seus direitos.
-        </p>
-
-        <div className="grid gap-6 md:grid-cols-2">
-          {articles.map((article, index) => (
-            <HelpArticleCard key={index} {...article} />
-          ))}
+      <div className="min-h-screen bg-gray-50">
+        <div className="mx-auto max-w-5xl px-4 py-12">
+          <div className="grid gap-5 md:grid-cols-2">
+            {articles.map((article, index) => (
+              <HelpArticleCard key={index} {...article} />
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { HelpArticleCard } from '@/app/components/help/HelpArticleCard'
-import Link from 'next/link'
+import { HelpCategoryHero } from '@/app/components/help/HelpCategoryHero'
+import { Headphones } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Atendimento e Suporte | Central de Ajuda Bolsa Click',
@@ -47,30 +48,22 @@ const articles = [
 
 export default function AtendimentoSuportePage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-5xl px-4 py-12">
-        <nav className="mb-6 flex items-center gap-2 pt-12 text-sm text-gray-600">
-          <Link href="/central-de-ajuda" className="hover:text-bolsa-primary">
-            Central de Ajuda
-          </Link>
-          <span>/</span>
-          <span className="text-bolsa-black">Atendimento e Suporte</span>
-        </nav>
+    <>
+      <HelpCategoryHero
+        title="Atendimento e Suporte"
+        description="Estamos aqui para ajudar! Conheça todos os nossos canais de atendimento, horários e como resolver as dúvidas mais comuns rapidamente."
+        icon={<Headphones size={28} />}
+      />
 
-        <h1 className="mb-4 text-4xl font-bold text-bolsa-black">
-          Atendimento e Suporte
-        </h1>
-        <p className="mb-12 text-lg text-gray-600">
-          Estamos aqui para ajudar! Conheça todos os nossos canais de atendimento, horários e como
-          resolver as dúvidas mais comuns rapidamente.
-        </p>
-
-        <div className="grid gap-6 md:grid-cols-2">
-          {articles.map((article, index) => (
-            <HelpArticleCard key={index} {...article} />
-          ))}
+      <div className="min-h-screen bg-gray-50">
+        <div className="mx-auto max-w-5xl px-4 py-12">
+          <div className="grid gap-5 md:grid-cols-2">
+            {articles.map((article, index) => (
+              <HelpArticleCard key={index} {...article} />
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

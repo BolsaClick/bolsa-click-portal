@@ -88,7 +88,7 @@ export default function FaculdadesPage() {
             href="https://emec.mec.gov.br"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[var(--bolsa-primary)] hover:underline"
+            className="text-bolsa-primary hover:underline"
           >
             emec.mec.gov.br
           </a>

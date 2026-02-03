@@ -1,4 +1,5 @@
 import { ReactNode } from 'react'
+import { Zap } from 'lucide-react'
 
 interface QuickAnswerProps {
   children: ReactNode
@@ -6,24 +7,16 @@ interface QuickAnswerProps {
 
 export function QuickAnswer({ children }: QuickAnswerProps) {
   return (
-    <div className="mb-8 rounded-xl border-l-4 border-[var(--bolsa-secondary)] bg-emerald-50 p-6">
-      <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold text-[var(--bolsa-primary)]">
-        <svg
-          className="h-5 w-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M13 10V3L4 14h7v7l9-11h-7z"
-          />
-        </svg>
+    <div className="mb-8 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 p-6">
+      <h2 className="mb-3 flex items-center gap-2 text-base font-semibold text-emerald-700">
+        <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
+          <Zap size={16} className="text-white" />
+        </div>
         Resumo Rápido
       </h2>
-      <div className="prose prose-sm max-w-none text-gray-700">{children}</div>
+      <div className="prose prose-sm max-w-none text-gray-600 leading-relaxed">
+        {children}
+      </div>
     </div>
   )
 }

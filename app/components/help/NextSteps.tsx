@@ -12,7 +12,7 @@ interface NextStepsProps {
 
 export function NextSteps({ steps }: NextStepsProps) {
   return (
-    <div className="mb-8 rounded-xl bg-gradient-to-br from-[var(--bolsa-primary)] to-blue-900 p-6 text-white">
+    <div className="mb-8 rounded-xl bg-gradient-to-br from-bolsa-primary to-blue-900 p-6 text-white">
       <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
         <svg
           className="h-5 w-5"

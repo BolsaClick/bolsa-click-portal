@@ -74,6 +74,8 @@ module.exports = {
     '/checkout/*',    // Wildcard para todas páginas de checkout
     '/favoritos',     // Página privada
     '/curso',         // Redirect page (não indexar)
+    '/ajuda',         // Páginas antigas (movidas para central-de-ajuda)
+    '/ajuda/*',       // Todas subpáginas de ajuda antigas
   ],
   robotsTxtOptions: {
     policies: [

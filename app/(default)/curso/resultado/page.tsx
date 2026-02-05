@@ -4,6 +4,12 @@ import SearchResultClient from './SearchResultClient'
 
 export const dynamic = 'force-dynamic'
 
+// Estados brasileiros válidos
+const ESTADOS_BRASIL = new Set([
+  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG',
+  'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+])
+
 function capitalizeText(text: string) {
   return text
     .toLowerCase()
@@ -58,6 +64,15 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   // Verificar se há curso selecionado (cidade/estado sozinhos não contam como filtro para o título)
   // Quando não há curso, sempre mostrar "Buscar cursos" mesmo que tenha cidade/estado (geolocalização automática)
   const hasCourseSelected = courseName && courseName.trim().length > 0
+
+  // Verificar se é um estado brasileiro válido (se estado foi informado)
+  // URLs com estados inválidos (como CA, TX, NY) não devem ser indexadas
+  const isValidBrazilianState = !estado || ESTADOS_BRASIL.has(estado.toUpperCase())
+
+  // Determinar se a página deve ser indexada:
+  // - Deve ter um curso selecionado (páginas genéricas não são indexadas)
+  // - Se tiver estado, deve ser brasileiro
+  const shouldIndex = hasCourseSelected && isValidBrazilianState
   
   // Se não houver curso selecionado, usar título genérico "Buscar cursos"
   // Nota: O layout principal adiciona " | Bolsa Click" automaticamente via template
@@ -155,7 +170,8 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   return {
     title,
     description,
-    robots: 'index, follow',
+    // Só indexar páginas com curso selecionado e estado brasileiro válido
+    robots: shouldIndex ? 'index, follow' : 'noindex, nofollow',
     keywords,
     alternates: {
       canonical: canonicalUrl,

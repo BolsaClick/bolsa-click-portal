@@ -208,13 +208,13 @@ const Footer: React.FC = () => {
               © {new Date().getFullYear()} Bolsa Click. Todos os direitos reservados.
             </p>
             <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-              <Link href="/ajuda/termos-de-uso" className="text-neutral-500 text-sm hover:text-bolsa-primary transition-colors">
+              <Link href="/central-de-ajuda/seguranca-dados-privacidade/termos-de-uso" className="text-neutral-500 text-sm hover:text-bolsa-primary transition-colors">
                 Termos de Uso
               </Link>
-              <Link href="/ajuda/politica-de-privacidade" className="text-neutral-500 text-sm hover:text-bolsa-primary transition-colors">
+              <Link href="/central-de-ajuda/seguranca-dados-privacidade/politica-de-privacidade" className="text-neutral-500 text-sm hover:text-bolsa-primary transition-colors">
                 Privacidade
               </Link>
-              <Link href="/ajuda/politica-de-cookies" className="text-neutral-500 text-sm hover:text-bolsa-primary transition-colors">
+              <Link href="/central-de-ajuda/seguranca-dados-privacidade/politica-de-cookies" className="text-neutral-500 text-sm hover:text-bolsa-primary transition-colors">
                 Cookies
               </Link>
               <Link href="/central-de-ajuda/seguranca-dados-privacidade/lgpd" className="text-neutral-500 text-sm hover:text-bolsa-primary transition-colors">

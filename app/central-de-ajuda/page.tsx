@@ -77,7 +77,7 @@ const categories = [
     title: 'Segurança, Dados e Privacidade',
     description: 'Como protegemos suas informações e nossa política de privacidade',
     href: '/central-de-ajuda/seguranca-dados-privacidade',
-    articleCount: 4,
+    articleCount: 7,
   },
 ]
 

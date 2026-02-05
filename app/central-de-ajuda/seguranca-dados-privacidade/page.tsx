@@ -15,6 +15,30 @@ export const metadata: Metadata = {
 
 const articles = [
   {
+    title: 'Política de Privacidade',
+    description:
+      'Entenda como coletamos, utilizamos, armazenamos e protegemos seus dados pessoais.',
+    href: '/central-de-ajuda/seguranca-dados-privacidade/politica-de-privacidade',
+  },
+  {
+    title: 'Termos de Uso',
+    description:
+      'Confira os termos e condições para utilização da plataforma Bolsa Click.',
+    href: '/central-de-ajuda/seguranca-dados-privacidade/termos-de-uso',
+  },
+  {
+    title: 'Política de Cookies',
+    description:
+      'Saiba como utilizamos cookies e tecnologias semelhantes em nosso site.',
+    href: '/central-de-ajuda/seguranca-dados-privacidade/politica-de-cookies',
+  },
+  {
+    title: 'LGPD e transparência',
+    description:
+      'Seus direitos sob a LGPD e nosso compromisso com a transparência total.',
+    href: '/central-de-ajuda/seguranca-dados-privacidade/lgpd',
+  },
+  {
     title: 'Como o Bolsa Click protege meus dados?',
     description:
       'Conheça as tecnologias e práticas de segurança que usamos para proteger suas informações.',
@@ -25,12 +49,6 @@ const articles = [
     description:
       'Entenda como e por que utilizamos seus dados e com quem compartilhamos.',
     href: '/central-de-ajuda/seguranca-dados-privacidade/uso-informacoes',
-  },
-  {
-    title: 'LGPD e transparência',
-    description:
-      'Seus direitos sob a LGPD e nosso compromisso com a transparência total.',
-    href: '/central-de-ajuda/seguranca-dados-privacidade/lgpd',
   },
   {
     title: 'Comunicação oficial do Bolsa Click',

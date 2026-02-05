@@ -1,13 +1,13 @@
-import './globals.css'
-import { Metadata } from 'next'
-import { Analytics } from '@vercel/analytics/react'
-import { Toaster } from 'sonner'
-import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/utils/react-query'
-import { ClientProviders } from './components/providers/ClientProviders'
-import { getCurrentTheme } from './lib/themes'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { Analytics } from '@vercel/analytics/react'
+import { Metadata } from 'next'
 import Script from 'next/script'
+import { Toaster } from 'sonner'
 import { AnalyticsScripts } from './components/organisms/AnalyticsScripts'
+import { ClientProviders } from './components/providers/ClientProviders'
+import './globals.css'
+import { getCurrentTheme } from './lib/themes'
 
 const theme = getCurrentTheme()
 
@@ -134,7 +134,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#ffffff" />
         <meta name="apple-mobile-web-app-title" content="Bolsa Click" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="author" content="Bolsa Click" />
         <meta name="publisher" content="Bolsa Click" />

@@ -1,7 +1,10 @@
 import { Metadata } from 'next'
 import { HelpCategory } from '@/app/components/help/HelpCategory'
 import { ContactCTA } from '@/app/components/help/ContactCTA'
-import { Info, BookOpen, Percent, CreditCard, GraduationCap, Headphones, Shield } from 'lucide-react'
+import { getHelpCategories } from './_lib/data'
+import { renderIcon } from './_lib/icons'
+
+export const revalidate = 3600 // Revalidar a cada 1 hora
 
 export const metadata: Metadata = {
   title: 'Central de Ajuda | Bolsa Click - Tire suas dúvidas sobre bolsas de estudo',
@@ -29,59 +32,9 @@ export const metadata: Metadata = {
   },
 }
 
-const categories = [
-  {
-    icon: <Info size={24} />,
-    title: 'Sobre o Bolsa Click',
-    description: 'Entenda como funciona nossa plataforma e como conseguimos os melhores descontos',
-    href: '/central-de-ajuda/sobre-o-bolsa-click',
-    articleCount: 5,
-  },
-  {
-    icon: <BookOpen size={24} />,
-    title: 'Primeiros Passos',
-    description: 'Aprenda a criar sua conta, buscar e garantir a bolsa ideal para você',
-    href: '/central-de-ajuda/primeiros-passos',
-    articleCount: 5,
-  },
-  {
-    icon: <Percent size={24} />,
-    title: 'Bolsas, Descontos e Regras',
-    description: 'Saiba tudo sobre validade, requisitos e como seu desconto é aplicado',
-    href: '/central-de-ajuda/bolsas-descontos-regras',
-    articleCount: 5,
-  },
-  {
-    icon: <CreditCard size={24} />,
-    title: 'Pagamento, Taxas e Reembolso',
-    description: 'Entenda custos, formas de pagamento e políticas de cancelamento',
-    href: '/central-de-ajuda/pagamento-taxas-reembolso',
-    articleCount: 5,
-  },
-  {
-    icon: <GraduationCap size={24} />,
-    title: 'Matrícula e Faculdade',
-    description: 'Processo de matrícula, documentos necessários e início das aulas',
-    href: '/central-de-ajuda/matricula-faculdade',
-    articleCount: 5,
-  },
-  {
-    icon: <Headphones size={24} />,
-    title: 'Atendimento e Suporte',
-    description: 'Canais de contato, horários e como acompanhar sua solicitação',
-    href: '/central-de-ajuda/atendimento-suporte',
-    articleCount: 5,
-  },
-  {
-    icon: <Shield size={24} />,
-    title: 'Segurança, Dados e Privacidade',
-    description: 'Como protegemos suas informações e nossa política de privacidade',
-    href: '/central-de-ajuda/seguranca-dados-privacidade',
-    articleCount: 7,
-  },
-]
+export default async function CentralDeAjudaPage() {
+  const categories = await getHelpCategories()
 
-export default function CentralDeAjudaPage() {
   return (
     <>
       {/* Hero Section */}
@@ -110,8 +63,15 @@ export default function CentralDeAjudaPage() {
         {/* Categories Grid */}
         <div className="mx-auto max-w-5xl px-4 py-12">
           <div className="grid gap-5 sm:grid-cols-2">
-            {categories.map((category, index) => (
-              <HelpCategory key={index} {...category} />
+            {categories.map((category) => (
+              <HelpCategory
+                key={category.id}
+                icon={renderIcon(category.icon)}
+                title={category.title}
+                description={category.description}
+                href={`/central-de-ajuda/${category.slug}`}
+                articleCount={category.articleCount}
+              />
             ))}
           </div>
 

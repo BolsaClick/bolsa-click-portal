@@ -1,13 +1,16 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, PutObjectCommand, PutObjectAclCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
 
-// Configuração do Tigris (S3-compatible) - Aceita TIGRIS_ ou AWS_ prefix
-const ENDPOINT_URL = process.env.TIGRIS_ENDPOINT_URL || process.env.AWS_ENDPOINT_URL || 'https://t3.storageapi.dev'
-const ACCESS_KEY = process.env.TIGRIS_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID || ''
-const SECRET_KEY = process.env.TIGRIS_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY || ''
-const BUCKET_NAME = process.env.TIGRIS_BUCKET_NAME || process.env.AWS_S3_BUCKET_NAME || ''
+// Configuração do Tigris (S3-compatible) - Bucket Público
+const ENDPOINT_URL = process.env.TIGRIS_ENDPOINT_URL || 'https://t3.storage.dev'
+const ACCESS_KEY = process.env.TIGRIS_ACCESS_KEY_ID || ''
+const SECRET_KEY = process.env.TIGRIS_SECRET_ACCESS_KEY || ''
+const BUCKET_NAME = process.env.TIGRIS_BUCKET_NAME || 'bolsa-click'
+
+// URL pública segue o formato: https://<bucket>.fly.storage.tigris.dev/<path>
+const PUBLIC_URL_BASE = `https://${BUCKET_NAME}.fly.storage.tigris.dev`
 
 const s3Client = new S3Client({
-  region: process.env.AWS_DEFAULT_REGION || 'auto',
+  region: 'auto',
   endpoint: ENDPOINT_URL,
   credentials: {
     accessKeyId: ACCESS_KEY,
@@ -43,18 +46,28 @@ export async function uploadFile(
     buffer = fileData
   }
 
-  const command = new PutObjectCommand({
+  // Upload do arquivo
+  const putCommand = new PutObjectCommand({
     Bucket: BUCKET_NAME,
     Key: path,
     Body: buffer,
     ContentType: contentType,
   })
 
-  await s3Client.send(command)
+  await s3Client.send(putCommand)
+
+  // Define o ACL como público
+  const aclCommand = new PutObjectAclCommand({
+    Bucket: BUCKET_NAME,
+    Key: path,
+    ACL: 'public-read',
+  })
+
+  await s3Client.send(aclCommand)
 
   // Retorna a URL pública do arquivo
-  // Tigris usa o formato: https://t3.storageapi.dev/BUCKET_NAME/path
-  const publicUrl = `${ENDPOINT_URL}/${BUCKET_NAME}/${path}`
+  // Tigris público usa: https://<bucket>.fly.storage.tigris.dev/<path>
+  const publicUrl = `${PUBLIC_URL_BASE}/${path}`
   return publicUrl
 }
 
@@ -92,9 +105,19 @@ export function generateFilePath(folder: string, originalName: string): string {
 export function getPathFromURL(url: string): string | null {
   try {
     const urlObj = new URL(url)
-    // Remove a barra inicial
+    // URL pública: https://bucket.fly.storage.tigris.dev/path
+    // Remove a barra inicial do pathname
     return urlObj.pathname.slice(1)
   } catch {
     return null
   }
+}
+
+/**
+ * Gera a URL pública a partir do path
+ * @param path Caminho do arquivo
+ * @returns URL pública
+ */
+export function getPublicURL(path: string): string {
+  return `${PUBLIC_URL_BASE}/${path}`
 }

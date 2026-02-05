@@ -11,7 +11,16 @@ import Container from '../../atoms/Container'
 import CardRecommended from '../../molecules/CardRecommended'
 import TitleSection from '../../molecules/TitleSection'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useGeoLocation } from '@/app/context/GeoLocationContext'
+
+interface FeaturedCourse {
+  id: string
+  slug: string
+  name: string
+  imageUrl: string
+}
+
 const Recommended = () => {
   const { city, region, state, town } = useGeoLocation()
 
@@ -20,15 +29,30 @@ const Recommended = () => {
     town: string
   } | null>(null)
 
+  const [featuredCourses, setFeaturedCourses] = useState<FeaturedCourse[]>([])
+
   useEffect(() => {
     // Usar city/region (novo) ou state/town (compatibilidade)
     const locationCity = city || town
     const locationState = region || state
-    
+
     if (locationCity && locationState) {
       setUserLocation({ state: locationState, town: locationCity })
     }
   }, [city, region, state, town])
+
+  useEffect(() => {
+    // Buscar cursos em destaque da API
+    fetch('/api/cursos?limit=4')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.courses) {
+          setFeaturedCourses(data.courses)
+        }
+      })
+      .catch(console.error)
+  }, [])
+
   const bolsas = [
     {
       id: 1,
@@ -92,32 +116,6 @@ const Recommended = () => {
     },
   ]
 
-  const cursos = [
-    {
-      id: 1,
-      logo: '/assets/images/analise-e-desenvolvimento-de-sistemas.jpeg',
-      curso: 'Análise e Desenvolvimento de Sistemas',
-      bolsa: 'R$ 34,63',
-    },
-    {
-      id: 2,
-      logo: '/assets/images/psicologia.webp',
-      curso: 'Psicologia',
-      bolsa: 'R$ 34,63',
-    },
-    {
-      id: 3,
-      logo: '/assets/images/direito.webp',
-      curso: 'Direito',
-      bolsa: 'R$ 34,63',
-    },
-    {
-      id: 4,
-      logo: '/assets/images/adm.jpg',
-      curso: 'Administração',
-      bolsa: 'R$ 34,63',
-    },
-  ]
   return (
     <Container>
       <div className="mt-28 w-full">
@@ -184,15 +182,16 @@ const Recommended = () => {
       </div>
 
       <div className="flex justify-start md:justify-between overflow-x-auto items-center gap-4 px-4 py-4">
-        {cursos.map((curso) => (
-          <div
+        {featuredCourses.map((curso) => (
+          <Link
+            href={`/cursos/${curso.slug}`}
             key={curso.id}
-            className="mt-10 max-w-xs flex-shrink-0 w-full h-96 bg-white shadow-lg rounded-lg overflow-hidden"
+            className="mt-10 max-w-xs flex-shrink-0 w-full h-96 bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow"
           >
-          <div className="relative w-full h-36">
+            <div className="relative w-full h-36">
               <Image
-                src={curso.logo}
-                alt={`${curso.curso} com até 80% de desconto | Bolsa Click`}
+                src={curso.imageUrl}
+                alt={`${curso.name} com até 80% de desconto | Bolsa Click`}
                 fill
                 className="object-cover rounded-t-lg md:grayscale hover:grayscale-0 transition-all duration-300 hover:opacity-80 hover:scale-125"
               />
@@ -200,17 +199,17 @@ const Recommended = () => {
 
             <div className="p-4 h-36">
               <h2 className="text-xl font-semibold text-center">
-                {curso.curso}
+                {curso.name}
               </h2>
             </div>
 
             <div className="flex flex-col justify-end space-y-2 p-4">
               <p className="text-center">A partir de:</p>
               <span className="text-bolsa-primary text-xl font-semibold text-center">
-                {curso.bolsa}/mês
+                R$ 34,63/mês
               </span>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </Container>

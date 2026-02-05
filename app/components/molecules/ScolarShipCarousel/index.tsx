@@ -5,10 +5,22 @@ import { ChevronLeft, ChevronRight, Book, Monitor, Clock, TrendingUp } from 'luc
 import './style.css';
 import Image from 'next/image';
 import Link from 'next/link';
-import { TOP_CURSOS, CursoMetadata } from '@/app/cursos/_data/cursos';
+
+interface CursoData {
+  id: string;
+  slug: string;
+  name: string;
+  fullName: string;
+  type: string;
+  description: string;
+  duration: string;
+  averageSalary: string;
+  marketDemand: string;
+  imageUrl: string;
+}
 
 interface ScholarshipCardProps {
-  curso: CursoMetadata;
+  curso: CursoData;
 }
 
 const ScholarshipCard: React.FC<ScholarshipCardProps> = ({ curso }) => {
@@ -36,7 +48,7 @@ const ScholarshipCard: React.FC<ScholarshipCardProps> = ({ curso }) => {
     <div className="scholarship-card">
       <div className="scholarship-image">
         <Image
-          src={curso.image}
+          src={curso.imageUrl}
           alt={curso.name}
           width={400}
           height={250}
@@ -90,11 +102,21 @@ const ScholarshipCarousel: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsToShow, setItemsToShow] = useState(3);
   const [isPaused, setIsPaused] = useState(false);
+  const [cursosDestaque, setCursosDestaque] = useState<CursoData[]>([]);
   const carouselRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Pegar os primeiros 10 cursos do TOP_CURSOS
-  const cursosDestaque = TOP_CURSOS.slice(0, 10);
+  // Buscar cursos da API
+  useEffect(() => {
+    fetch('/api/cursos?limit=10')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.courses) {
+          setCursosDestaque(data.courses);
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   const totalSlides = cursosDestaque.length;
   const maxIndex = Math.max(0, totalSlides - itemsToShow);

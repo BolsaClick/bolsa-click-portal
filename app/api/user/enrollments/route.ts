@@ -83,9 +83,6 @@ export async function POST(request: NextRequest) {
       discount,
       externalId,
       paymentId,
-      unitId,
-      unitCity,
-      unitState,
     } = body
 
     if (!courseId || !courseName || !institutionName) {

@@ -17,17 +17,23 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/app/contexts/AuthContext'
 
-interface EnrollmentStats {
-  total: number
-  inProgress: number
-  enrolled: number
+interface Stats {
+  enrollments: {
+    total: number
+    inProgress: number
+    enrolled: number
+  }
+  favorites: number
 }
 
 export default function MinhaContaPage() {
   const router = useRouter()
   const { user, firebaseUser, loading, logout } = useAuth()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
-  const [stats, setStats] = useState<EnrollmentStats>({ total: 0, inProgress: 0, enrolled: 0 })
+  const [stats, setStats] = useState<Stats>({
+    enrollments: { total: 0, inProgress: 0, enrolled: 0 },
+    favorites: 0,
+  })
   const [loadingStats, setLoadingStats] = useState(true)
 
   useEffect(() => {
@@ -45,21 +51,38 @@ export default function MinhaContaPage() {
 
       try {
         const idToken = await firebaseUser.getIdToken()
-        const response = await fetch('/api/user/enrollments', {
-          headers: {
-            Authorization: `Bearer ${idToken}`,
-          },
-        })
 
-        if (response.ok) {
-          const data = await response.json()
-          const enrollments = data.enrollments || []
-          setStats({
+        // Fetch enrollments and favorites in parallel
+        const [enrollmentsRes, favoritesRes] = await Promise.all([
+          fetch('/api/user/enrollments', {
+            headers: { Authorization: `Bearer ${idToken}` },
+          }),
+          fetch('/api/user/favorites', {
+            headers: { Authorization: `Bearer ${idToken}` },
+          }),
+        ])
+
+        let enrollmentsData = { enrollments: [] }
+        let favoritesData = { favorites: [] }
+
+        if (enrollmentsRes.ok) {
+          enrollmentsData = await enrollmentsRes.json()
+        }
+        if (favoritesRes.ok) {
+          favoritesData = await favoritesRes.json()
+        }
+
+        const enrollments = enrollmentsData.enrollments || []
+        const favorites = favoritesData.favorites || []
+
+        setStats({
+          enrollments: {
             total: enrollments.length,
             inProgress: enrollments.filter((e: { status: string }) => e.status === 'IN_PROGRESS').length,
             enrolled: enrollments.filter((e: { status: string }) => e.status === 'ENROLLED').length,
-          })
-        }
+          },
+          favorites: favorites.length,
+        })
       } catch (error) {
         console.error('Error fetching stats:', error)
       } finally {
@@ -164,7 +187,11 @@ export default function MinhaContaPage() {
                 <Heart className="w-5 h-5 text-pink-500" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">0</p>
+                {loadingStats ? (
+                  <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                ) : (
+                  <p className="text-2xl font-bold text-gray-900">{stats.favorites}</p>
+                )}
                 <p className="text-sm text-gray-500">Favoritos</p>
               </div>
             </div>
@@ -178,7 +205,7 @@ export default function MinhaContaPage() {
                 {loadingStats ? (
                   <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
                 ) : (
-                  <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.enrollments.total}</p>
                 )}
                 <p className="text-sm text-gray-500">Matrículas</p>
               </div>
@@ -193,7 +220,7 @@ export default function MinhaContaPage() {
                 {loadingStats ? (
                   <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
                 ) : (
-                  <p className="text-2xl font-bold text-gray-900">{stats.inProgress}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.enrollments.inProgress}</p>
                 )}
                 <p className="text-sm text-gray-500">Em andamento</p>
               </div>

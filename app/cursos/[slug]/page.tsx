@@ -1,8 +1,9 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { prisma } from '@/app/lib/prisma'
 import CursoPageClient from './CursoPageClient'
-import { getCursoMetadataBySlug, getAllCursoSlugs } from '../_data/cursos'
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
+import { FeaturedCourseData } from '../_data/types'
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -11,9 +12,39 @@ type Props = {
 // ISR: Revalidar a cada 1 hora (3600 segundos)
 export const revalidate = 3600
 
+// Helper para buscar curso do banco de dados
+async function getCourseBySlug(slug: string): Promise<FeaturedCourseData | null> {
+  try {
+    const course = await prisma.featuredCourse.findUnique({
+      where: {
+        slug,
+        isActive: true,
+      },
+    })
+    return course as FeaturedCourseData | null
+  } catch (error) {
+    console.error('Erro ao buscar curso do banco de dados:', error)
+    return null
+  }
+}
+
+// Helper para buscar todos os slugs para SSG
+async function getAllCourseSlugs(): Promise<string[]> {
+  try {
+    const courses = await prisma.featuredCourse.findMany({
+      where: { isActive: true },
+      select: { slug: true },
+    })
+    return courses.map(c => c.slug)
+  } catch (error) {
+    console.error('Erro ao buscar slugs do banco de dados:', error)
+    return []
+  }
+}
+
 // Gerar static params para SSG
 export async function generateStaticParams() {
-  const slugs = getAllCursoSlugs()
+  const slugs = await getAllCourseSlugs()
   return slugs.map((slug) => ({
     slug: slug,
   }))
@@ -22,7 +53,7 @@ export async function generateStaticParams() {
 // Gerar metadata dinâmica (SEO)
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const curso = getCursoMetadataBySlug(slug)
+  const curso = await getCourseBySlug(slug)
 
   if (!curso) {
     return {
@@ -32,6 +63,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = `${curso.fullName} - Bolsa de Estudo com até 80% de Desconto`
   const description = `${curso.description} Encontre bolsas de estudo para ${curso.name} com até 80% de desconto em mais de 30.000 faculdades. Compare preços e garanta sua vaga. Inscrição grátis!`
+
+  // Construir URL da imagem
+  const imageUrl = curso.imageUrl.startsWith('http')
+    ? curso.imageUrl
+    : `https://www.bolsaclick.com.br${curso.imageUrl}`
 
   return {
     title,
@@ -58,7 +94,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: 'website',
       images: [
         {
-          url: `https://www.bolsaclick.com.br${curso.image}`,
+          url: imageUrl,
           width: 1200,
           height: 630,
           alt: `${curso.name} - Bolsa Click`,
@@ -70,7 +106,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       site: '@bolsaclick',
       title,
       description,
-      images: [`https://www.bolsaclick.com.br${curso.image}`],
+      images: [imageUrl],
     },
     other: {
       'application/ld+json': JSON.stringify([
@@ -96,7 +132,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           timeToComplete: curso.duration,
           occupationalCategory: curso.areas[0],
           url: `https://www.bolsaclick.com.br/cursos/${slug}`,
-          image: `https://www.bolsaclick.com.br${curso.image}`,
+          image: imageUrl,
           offers: {
             '@type': 'AggregateOffer',
             priceCurrency: 'BRL',
@@ -138,7 +174,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 // Server Component: busca dados da API e renderiza
 export default async function CursoPage({ params }: Props) {
   const { slug } = await params
-  const cursoMetadata = getCursoMetadataBySlug(slug)
+  const cursoMetadata = await getCourseBySlug(slug)
 
   if (!cursoMetadata) {
     notFound()

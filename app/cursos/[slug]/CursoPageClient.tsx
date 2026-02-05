@@ -16,11 +16,11 @@ import {
   MapPin,
   School,
 } from 'lucide-react'
-import { CursoMetadata } from '../_data/cursos'
+import { FeaturedCourseData } from '../_data/types'
 import { Course } from '@/app/interface/course'
 
 interface CursoPageClientProps {
-  cursoMetadata: CursoMetadata
+  cursoMetadata: FeaturedCourseData
   courseOffers: Course[]
 }
 
@@ -294,8 +294,8 @@ export default function CursoPageClient({
               viewport={{ once: true }}
             >
               <Image
-                src={cursoMetadata.image}
-                alt={`Estudantes de ${cursoMetadata.name}`}
+                src={cursoMetadata.imageUrl}
+                alt={cursoMetadata.imageAlt || `Estudantes de ${cursoMetadata.name}`}
                 fill
                 className="object-cover"
               />

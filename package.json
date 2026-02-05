@@ -12,6 +12,8 @@
     "anhanguera": "env-cmd -f .env.anhanguera next dev"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.983.0",
+    "@aws-sdk/lib-storage": "^3.983.0",
     "@headlessui/react": "^2.2.3",
     "@hookform/resolvers": "^3.9.1",
     "@phosphor-icons/react": "^2.1.7",

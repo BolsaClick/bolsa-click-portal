@@ -5,14 +5,18 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Search, GraduationCap, TrendingUp, Award } from 'lucide-react'
-import { TOP_CURSOS } from './_data/cursos'
+import { FeaturedCourseListItem } from './_data/types'
 
-export default function CursosPageClient() {
+interface CursosPageClientProps {
+  courses: FeaturedCourseListItem[]
+}
+
+export default function CursosPageClient({ courses }: CursosPageClientProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedType, setSelectedType] = useState<string>('TODOS')
 
   // Filtrar cursos
-  const filteredCursos = TOP_CURSOS.filter((curso) => {
+  const filteredCursos = courses.filter((curso) => {
     const matchesSearch = curso.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          curso.fullName.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesType = selectedType === 'TODOS' || curso.type === selectedType
@@ -20,10 +24,10 @@ export default function CursosPageClient() {
   })
 
   const courseTypes = [
-    { id: 'TODOS', label: 'Todos os Cursos', count: TOP_CURSOS.length },
-    { id: 'BACHARELADO', label: 'Bacharelado', count: TOP_CURSOS.filter(c => c.type === 'BACHARELADO').length },
-    { id: 'LICENCIATURA', label: 'Licenciatura', count: TOP_CURSOS.filter(c => c.type === 'LICENCIATURA').length },
-    { id: 'TECNOLOGO', label: 'Tecnólogo', count: TOP_CURSOS.filter(c => c.type === 'TECNOLOGO').length },
+    { id: 'TODOS', label: 'Todos os Cursos', count: courses.length },
+    { id: 'BACHARELADO', label: 'Bacharelado', count: courses.filter(c => c.type === 'BACHARELADO').length },
+    { id: 'LICENCIATURA', label: 'Licenciatura', count: courses.filter(c => c.type === 'LICENCIATURA').length },
+    { id: 'TECNOLOGO', label: 'Tecnólogo', count: courses.filter(c => c.type === 'TECNOLOGO').length },
   ]
 
   return (
@@ -61,7 +65,7 @@ export default function CursosPageClient() {
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6">
-                <p className="text-3xl font-bold text-white mb-2">20+</p>
+                <p className="text-3xl font-bold text-white mb-2">{courses.length}+</p>
                 <p className="text-sm text-emerald-100">Cursos em Destaque</p>
               </div>
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6">
@@ -142,7 +146,7 @@ export default function CursosPageClient() {
                   <div className="relative h-48 bg-gradient-to-br from-emerald-500 to-emerald-700 overflow-hidden">
                     <div className="absolute inset-0">
                       <Image
-                        src={curso.image}
+                        src={curso.imageUrl}
                         alt={`Curso de ${curso.name}`}
                         fill
                         className="object-cover group-hover:scale-110 transition-transform duration-300"

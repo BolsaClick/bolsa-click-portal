@@ -50,6 +50,7 @@ model User {
   favorites     Favorite[]
   enrollments   Enrollment[]
   searchHistory SearchHistory[]
+  adminProfile  AdminUser?
 
   @@index([email])
   @@index([firebaseUid])
@@ -183,6 +184,158 @@ enum LeadStatus {
   INTERESTED    // Interessado
   CONVERTED     // Convertido (fez matrícula)
   LOST          // Perdido
+}
+
+// ==========================================
+// MODELOS DE ADMINISTRAÇÃO
+// ==========================================
+
+model AdminUser {
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  role        AdminRole @default(EDITOR)
+  permissions String[]  // Permissões: help_center, courses, users, dashboard, admin_management
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdBy   String?   // ID do admin que criou
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+enum AdminRole {
+  SUPER_ADMIN   // Acesso total
+  ADMIN         // Todas funcionalidades exceto gerenciar admins
+  EDITOR        // Apenas gerenciamento de conteúdo
+}
+
+// ==========================================
+// CENTRAL DE AJUDA (CMS)
+// ==========================================
+
+model HelpCategory {
+  id          String        @id @default(uuid())
+  slug        String        @unique
+  title       String
+  description String
+  icon        String        // Nome do ícone Lucide: "Info", "BookOpen", etc.
+  order       Int           @default(0)
+  isActive    Boolean       @default(true)
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  articles    HelpArticle[]
+
+  @@index([slug])
+  @@index([isActive])
+}
+
+model HelpArticle {
+  id              String       @id @default(uuid())
+  categoryId      String
+  slug            String
+  title           String
+  description     String       // Descrição curta para cards
+  content         String       @db.Text  // Conteúdo completo (HTML ou Markdown)
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  keywords        String[]
+
+  order           Int          @default(0)
+  isActive        Boolean      @default(true)
+  publishedAt     DateTime?
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  createdBy       String?      // Admin que criou
+  updatedBy       String?      // Último admin que atualizou
+
+  category        HelpCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, slug])
+  @@index([categoryId])
+  @@index([isActive])
+}
+
+// ==========================================
+// CURSOS EM DESTAQUE
+// ==========================================
+
+model FeaturedCourse {
+  id              String       @id @default(uuid())
+  slug            String       @unique
+  apiCourseName   String       // Nome usado na API
+  name            String       // Nome de exibição
+  fullName        String       // Nome completo com tipo
+  type            CourseType
+  nivel           CourseLevel
+
+  description     String
+  longDescription String       @db.Text
+  duration        String
+
+  areas           String[]     // Áreas de atuação
+  skills          String[]     // Habilidades desenvolvidas
+  careerPaths     String[]     // Carreiras possíveis
+
+  averageSalary   String
+  marketDemand    MarketDemand
+
+  imageUrl        String       // URL da imagem no Firebase Storage
+  imageAlt        String?
+
+  keywords        String[]     // Palavras-chave para SEO
+
+  order           Int          @default(0)
+  isActive        Boolean      @default(true)
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([slug])
+  @@index([isActive])
+  @@index([order])
+}
+
+enum CourseType {
+  BACHARELADO
+  LICENCIATURA
+  TECNOLOGO
+}
+
+enum CourseLevel {
+  GRADUACAO
+  POS_GRADUACAO
+}
+
+enum MarketDemand {
+  ALTA
+  MEDIA
+  BAIXA
+}
+
+// ==========================================
+// LOG DE ATIVIDADES (AUDITORIA)
+// ==========================================
+
+model ActivityLog {
+  id          String   @id @default(uuid())
+  adminUserId String
+  action      String   // CREATE, UPDATE, DELETE
+  entity      String   // HelpCategory, HelpArticle, FeaturedCourse
+  entityId    String
+  details     Json?    // Campos alterados
+
+  createdAt   DateTime @default(now())
+
+  @@index([adminUserId])
+  @@index([entity])
+  @@index([createdAt])
 }
 
 // ==========================================

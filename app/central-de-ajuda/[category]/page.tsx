@@ -12,8 +12,13 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const slugs = await getAllCategorySlugs()
-  return slugs.map((category) => ({ category }))
+  try {
+    const slugs = await getAllCategorySlugs()
+    return slugs.map((category) => ({ category }))
+  } catch {
+    // Tabela ainda não existe - retorna vazio para build dinâmico
+    return []
+  }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

@@ -34,28 +34,33 @@ export interface HelpArticleData {
  * Busca todas as categorias ativas da Central de Ajuda
  */
 export const getHelpCategories = cache(async (): Promise<HelpCategoryData[]> => {
-  const categories = await prisma.helpCategory.findMany({
-    where: { isActive: true },
-    orderBy: { order: 'asc' },
-    include: {
-      _count: {
-        select: {
-          articles: {
-            where: { isActive: true }
+  try {
+    const categories = await prisma.helpCategory.findMany({
+      where: { isActive: true },
+      orderBy: { order: 'asc' },
+      include: {
+        _count: {
+          select: {
+            articles: {
+              where: { isActive: true }
+            }
           }
         }
       }
-    }
-  })
+    })
 
-  return categories.map(cat => ({
-    id: cat.id,
-    slug: cat.slug,
-    title: cat.title,
-    description: cat.description,
-    icon: cat.icon,
-    articleCount: cat._count.articles,
-  }))
+    return categories.map(cat => ({
+      id: cat.id,
+      slug: cat.slug,
+      title: cat.title,
+      description: cat.description,
+      icon: cat.icon,
+      articleCount: cat._count.articles,
+    }))
+  } catch {
+    // Tabela ainda não existe
+    return []
+  }
 })
 
 /**

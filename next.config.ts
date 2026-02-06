@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   images: {
-    domains: ['images.unsplash.com', 'api.pagar.me', 'pagar.me', 'images.pexels.com', 't3.storageapi.dev'],
+    domains: ['images.unsplash.com', 'api.pagar.me', 'pagar.me', 'images.pexels.com', 't3.storageapi.dev', 'bolsa-click.fly.storage.tigris.dev'],
   },
   async rewrites() {
     return [

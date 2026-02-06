@@ -38,9 +38,10 @@ import { createLead } from '@/app/lib/api/create-lead'
 import { createInscription, buildInscriptionPayload } from '@/app/lib/api/create-inscription'
 import { createCheckout } from '@/app/lib/api/create-checkout'
 import { getCheckoutStatus } from '@/app/lib/api/checkout-status'
+import { createMarketplaceInscription } from '@/app/lib/api/create-inscription-marketplace'
 import type { PosPaymentMethod, PosInstallment } from '@/app/lib/api/get-offer-details'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
-import { useMarketplaceFeatureFlag, usePixBeforeEnrollmentFeatureFlag, usePixEnabledFeatureFlag } from '@/app/lib/hooks/usePostHogFeatureFlags'
+import { usePixBeforeEnrollmentFeatureFlag, usePixEnabledFeatureFlag } from '@/app/lib/hooks/usePostHogFeatureFlags'
 import { formatPhone } from '@/utils/formatters'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { Loader2 } from 'lucide-react'
@@ -125,10 +126,9 @@ function MatriculaContent() {
   const { user, firebaseUser, loading: authLoading, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth()
 
   // Feature flags do PostHog
-  const isMarketplace = useMarketplaceFeatureFlag()
   const requirePixBeforeEnrollment = usePixBeforeEnrollmentFeatureFlag()
-  // Por padrão: sem pagamento e sem endpoint de checkout (só create-inscription).
-  // Endpoint de checkout e taxas/valores só aparecem se pix_enabled estiver enabled no PostHog.
+  // Por padrão (true): checkout habilitado com cobrança de matrícula via PIX.
+  // Quando disabled no PostHog: sem pagamento, sem endpoint de checkout — só create-inscription.
   const pixEnabled = usePixEnabledFeatureFlag()
 
   const groupId = searchParams.get('groupId') || searchParams.get('id')
@@ -160,6 +160,7 @@ function MatriculaContent() {
   const [pixLoading, setPixLoading] = useState(false)
   const [pixError, setPixError] = useState<string | null>(null)
   const [transactionId, setTransactionId] = useState<string | null>(null)
+  const [, setLocalTransactionId] = useState<string | null>(null)
   const [cpfValidationError, setCpfValidationError] = useState<string | null>(null)
   const [isValidatingCpf, setIsValidatingCpf] = useState(false)
   const [cpfExistsInDb, setCpfExistsInDb] = useState<boolean | null>(null)
@@ -429,9 +430,26 @@ function MatriculaContent() {
               if (isPaid) {
                 // Pagamento já foi confirmado, criar matrícula
                 console.log('✅ Pagamento já confirmado! Criando matrícula...')
+
+                // Atualizar transação local para PAID
+                const pendingLocalTxId = localStorage.getItem('pendingLocalTransactionId')
+                if (pendingLocalTxId) {
+                  try {
+                    await fetch(`/api/transactions/${pendingLocalTxId}`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ status: 'PAID' }),
+                    })
+                    console.log('✅ Transação local atualizada para PAID')
+                    localStorage.removeItem('pendingLocalTransactionId')
+                  } catch (localTxErr) {
+                    console.error('⚠️ Erro ao atualizar transação local:', localTxErr)
+                  }
+                }
+
                 // Usar a função que será definida abaixo
                 createInscriptionAfterPayment(formData).catch(console.error)
-                
+
                 // Limpar dados pendentes
                 localStorage.removeItem('pendingTransactionId')
                 localStorage.removeItem('pendingFormData')
@@ -450,17 +468,19 @@ function MatriculaContent() {
                 // Falhou ou cancelado, limpar
                 localStorage.removeItem('pendingTransactionId')
                 localStorage.removeItem('pendingFormData')
+                localStorage.removeItem('pendingLocalTransactionId')
               }
             } catch (error) {
               console.error('Erro ao verificar transação pendente:', error)
             }
           }
-          
+
           checkPendingPayment()
         } catch (error) {
           console.error('Erro ao processar dados pendentes:', error)
           localStorage.removeItem('pendingTransactionId')
           localStorage.removeItem('pendingFormData')
+          localStorage.removeItem('pendingLocalTransactionId')
         }
       }
     }
@@ -478,18 +498,18 @@ function MatriculaContent() {
     }
 
     const formValues = getValues()
-    
-    // Verificar se os dados necessários estão preenchidos
-    if (formValues.name && formValues.cpf && formValues.email && formValues.phone) {
+
+    // Verificar se os dados necessários estão preenchidos (phone é opcional)
+    if (formValues.name && formValues.cpf && formValues.email) {
       handleCreateStudent()
     }
   }
 
   const handleCreateStudent = async () => {
-    // Verificar se os dados necessários estão preenchidos
+    // Verificar se os dados necessários estão preenchidos (phone é opcional)
     const formValues = getValues()
-    
-    if (!formValues.name || !formValues.cpf || !formValues.email || !formValues.phone) {
+
+    if (!formValues.name || !formValues.cpf || !formValues.email) {
       // Dados não estão completos, não fazer nada
       return
     }
@@ -503,25 +523,55 @@ function MatriculaContent() {
 
     try {
       const cleanCpf = formValues.cpf.replace(/\D/g, '')
-      const cleanPhone = formValues.phone.replace(/\D/g, '')
+      const cleanPhone = formValues.phone ? formValues.phone.replace(/\D/g, '') : ''
 
-      const leadData = {
+      const studentData: Record<string, unknown> = {
         name: formValues.name,
         cpf: cleanCpf,
         email: formValues.email,
-        phone: cleanPhone,
         courseNames: [offerDetails?.course || ''],
         courseId: offerDetails?.courseId,
         courseName: offerDetails?.course,
         institutionName: offerDetails?.brand,
         modalidade: offerDetails?.modality,
       }
+      // Só inclui phone se existir
+      if (cleanPhone) {
+        studentData.phone = cleanPhone
+      }
 
-      await createLead(leadData)
+      // Cadastrar no /api/students (salva local + envia para Elysium)
+      const studentResponse = await fetch('/api/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(studentData),
+      })
+
+      if (studentResponse.ok) {
+        const data = await studentResponse.json()
+        console.log('✅ Estudante cadastrado com sucesso:', data)
+        if (data.elysiumId) {
+          console.log('✅ Cadastrado também no Elysium:', data.elysiumId)
+        }
+      }
+
+      // Também cadastrar como lead (mantém compatibilidade)
+      await createLead({
+        name: formValues.name,
+        cpf: cleanCpf,
+        email: formValues.email,
+        phone: cleanPhone || '',
+        courseNames: [offerDetails?.course || ''],
+        courseId: offerDetails?.courseId,
+        courseName: offerDetails?.course,
+        institutionName: offerDetails?.brand,
+        modalidade: offerDetails?.modality,
+      })
+
       setStudentCreated(true)
       console.log('✅ Lead cadastrado com sucesso')
     } catch (error: unknown) {
-      console.error('Erro ao cadastrar lead:', error)
+      console.error('Erro ao cadastrar estudante:', error)
       // Não mostrar erro para o usuário, apenas logar
       // O cadastro pode falhar silenciosamente
     } finally {
@@ -529,57 +579,62 @@ function MatriculaContent() {
     }
   }
 
-  // Feature flag: marketplace (agora vem do PostHog)
-  // const isMarketplace já está definido acima via useMarketplaceFeatureFlag()
-  
   const monthlyFee = offerDetails?.montlyFeeTo || 0
-  
-  // Taxa administrativa fixa do Bolsa Click
-  const administrativeFee = 49.99
-  
+
+  // Verificar se a oferta é do source ATHENAS (único que cobra matrícula)
+  const offerSource = offerDetails?.dmhSource?.source
+  const isAthenasSource = offerSource === 'ATHENAS'
+
+  // Valor padrão da matrícula: R$ 449,00
+  const defaultEnrollmentFee = 449
+
   // Lógica de cobrança:
-  // pix_enabled DESABILITADO: sem taxa, sem checkout (apenas create-inscription)
-  // pix_enabled ATIVO + Marketplace ATIVO: cobrar apenas a MATRÍCULA (subscriptionValue da API)
-  // pix_enabled ATIVO + Marketplace DESABILITADO: cobrar apenas a TAXA DE SERVIÇO (R$ 49,99)
+  // Só cobra matrícula quando: pix_enabled ATIVO + source === 'ATHENAS'
+  // Caso contrário: sem taxa, sem checkout (apenas create-inscription)
   // Mensalidade sempre é cobrada pela faculdade (não aparece no checkout)
   let enrollmentFee: number
-  if (!pixEnabled) {
+  if (!pixEnabled || !isAthenasSource) {
     enrollmentFee = 0
-  } else if (isMarketplace) {
-    // Marketplace ativo: cobrar apenas a matrícula
-    // Prioridade: subscriptionValue > montlyFeeTo (como fallback)
-    enrollmentFee = offerDetails?.subscriptionValue !== undefined && offerDetails?.subscriptionValue !== null
-      ? offerDetails.subscriptionValue
-      : (offerDetails?.montlyFeeTo || 0)
   } else {
-    // Marketplace desabilitado: cobrar apenas taxa de serviço
-    enrollmentFee = administrativeFee
+    // Prioridade: subscriptionValue da API > valor padrão (R$ 449,00)
+    enrollmentFee = offerDetails?.subscriptionValue !== undefined && offerDetails?.subscriptionValue !== null && offerDetails.subscriptionValue > 0
+      ? offerDetails.subscriptionValue
+      : defaultEnrollmentFee
   }
-  
+
+  // Checkout habilitado apenas para ofertas ATHENAS com pix_enabled
+  const checkoutEnabled = pixEnabled && isAthenasSource
+
   const baseMatricula = Math.round(enrollmentFee * 100) // em centavos
 
-  // Texto do label baseado na feature flag
-  const enrollmentLabel = isMarketplace ? 'matrícula' : 'taxa de serviço'
+  // Texto do label: sempre "matrícula"
+  const enrollmentLabel = 'matrícula'
 
   // Debug: verificar valores
   useEffect(() => {
     if (offerDetails) {
-      console.log('🔍 Debug Feature Flag:', {
-        isMarketplace,
-        envValue: process.env.NEXT_PUBLIC_FEATURE_MARKETPLACE,
+      console.log('🔍 Debug Checkout:', {
+        pixEnabled,
+        offerSource,
+        isAthenasSource,
+        checkoutEnabled,
         subscriptionValue: offerDetails?.subscriptionValue,
-        montlyFeeTo: offerDetails?.montlyFeeTo,
+        defaultEnrollmentFee,
         enrollmentFee,
-        administrativeFee,
         monthlyFee,
         baseMatricula,
-        calculatedEnrollmentFee: enrollmentFee,
       })
     }
-  }, [offerDetails, isMarketplace, pixEnabled, enrollmentFee, baseMatricula, administrativeFee, monthlyFee])
+  }, [offerDetails, pixEnabled, offerSource, isAthenasSource, checkoutEnabled, enrollmentFee, baseMatricula, monthlyFee])
 
   const applyCouponToMatricula = () => {
     if (!coupon) return baseMatricula
+    // Usar o finalAmount pré-calculado pela API para garantir consistência
+    // entre o valor exibido na UI e o valor enviado para pagamento
+    if (coupon.finalAmount !== undefined && coupon.finalAmount > 0) {
+      return coupon.finalAmount
+    }
+    // Fallback: recalcular localmente se não tiver finalAmount
     if (coupon.type === 'amount') {
       return Math.max(0, baseMatricula - coupon.value)
     }
@@ -591,27 +646,11 @@ function MatriculaContent() {
   }
 
   const matriculaAfterCoupon = applyCouponToMatricula()
-  
-  // Calcular subtotal e total baseado na feature flag
-  // Marketplace ATIVO: total = apenas matrícula
-  // Marketplace DESABILITADO: total = apenas taxa de serviço
-  // Mensalidade não entra no cálculo (é cobrada pela faculdade)
-  let subtotal: number
-  let total: number
-  
-  if (isMarketplace) {
-    // Marketplace ativo: apenas matrícula
-    const matriculaValue = coupon ? (coupon.originalAmount / 100) : enrollmentFee
-    subtotal = matriculaValue
-    // Total com cupom aplicado (se houver)
-    total = matriculaAfterCoupon / 100
-  } else {
-    // Marketplace desabilitado: apenas taxa de serviço
-    const adminValue = coupon ? (coupon.originalAmount / 100) : enrollmentFee
-    subtotal = adminValue
-    // Total com cupom aplicado (se houver)
-    total = matriculaAfterCoupon / 100
-  }
+
+  // Calcular subtotal e total
+  // Cobrança apenas da matrícula (mensalidade é cobrada pela faculdade)
+  const subtotal = coupon ? (coupon.originalAmount / 100) : enrollmentFee
+  const total = matriculaAfterCoupon / 100
 
   const handleApplyCoupon = async () => {
     try {
@@ -727,7 +766,76 @@ function MatriculaContent() {
             has_coupon: !!coupon,
             coupon_code: coupon?.code,
           })
-          
+
+          // 4. Atualizar transação local para PAID
+          const storedLocalTransactionId = typeof window !== 'undefined'
+            ? localStorage.getItem('pendingLocalTransactionId')
+            : null
+
+          if (storedLocalTransactionId) {
+            try {
+              const updatePaidResponse = await fetch(`/api/transactions/${storedLocalTransactionId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'PAID' }),
+              })
+              if (updatePaidResponse.ok) {
+                console.log('✅ Transação local atualizada para PAID')
+                // Limpar localStorage após atualizar
+                localStorage.removeItem('pendingLocalTransactionId')
+              }
+            } catch (updatePaidError) {
+              console.error('⚠️ Erro ao atualizar transação local para PAID:', updatePaidError)
+            }
+          }
+
+          // 5. Para ofertas ATHENAS, criar inscrição no marketplace
+          if (isAthenasSource && offerDetails?.idDmhElastic) {
+            console.log('📝 Criando inscrição no marketplace ATHENAS...')
+            try {
+              const marketplaceResult = await createMarketplaceInscription(
+                {
+                  name: formData.name,
+                  cpf: formData.cpf,
+                  email: formData.email,
+                  phone: formData.phone,
+                  rg: formData.rg,
+                  birthDate: formData.birthDate,
+                  gender: formData.gender || 'masculino',
+                  cep: formData.cep,
+                  address: formData.address,
+                  addressNumber: formData.addressNumber,
+                  neighborhood: formData.neighborhood || '',
+                  city: formData.city || '',
+                  state: formData.state || '',
+                  ingressType: selectedIngressType,
+                  schoolYear: formData.schoolYear || String(new Date().getFullYear()),
+                  acceptTerms: true,
+                  acceptEmail: true,
+                  acceptSms: true,
+                  acceptWhatsapp: true,
+                },
+                offerDetails
+              )
+
+              if (marketplaceResult.success) {
+                console.log('✅ Inscrição no marketplace ATHENAS criada com sucesso')
+                trackEvent('marketplace_inscription_created', {
+                  transaction_id: transactionIdValue,
+                  course_id: offerDetails.courseId,
+                  course_name: offerDetails.course,
+                  idDmhElastic: offerDetails.idDmhElastic,
+                })
+              } else {
+                console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceResult.error)
+                // Não bloquear o fluxo - a inscrição principal ainda será criada
+              }
+            } catch (marketplaceError) {
+              console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceError)
+              // Não bloquear o fluxo
+            }
+          }
+
           // Pagamento confirmado, criar matrícula
           await createInscriptionAfterPayment(formData)
           
@@ -735,13 +843,33 @@ function MatriculaContent() {
           return
         } else if (normalizedStatus === 'failed' || normalizedStatus === 'cancelled') {
           console.error('❌ Pagamento falhou ou foi cancelado')
-          
+
           // Limpar intervalo se estiver rodando
           if (intervalId) {
             clearInterval(intervalId)
             intervalId = null
           }
-          
+
+          // Atualizar transação local para FAILED ou CANCELLED
+          const storedLocalTxId = typeof window !== 'undefined'
+            ? localStorage.getItem('pendingLocalTransactionId')
+            : null
+
+          if (storedLocalTxId) {
+            try {
+              const failedStatus = normalizedStatus === 'cancelled' ? 'CANCELLED' : 'FAILED'
+              await fetch(`/api/transactions/${storedLocalTxId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: failedStatus }),
+              })
+              console.log(`✅ Transação local atualizada para ${failedStatus}`)
+              localStorage.removeItem('pendingLocalTransactionId')
+            } catch (failedTxError) {
+              console.error('⚠️ Erro ao atualizar transação local:', failedTxError)
+            }
+          }
+
           toast.error('Pagamento não foi confirmado. Tente novamente.')
           setPixError('Pagamento não foi confirmado')
           setPixLoading(false)
@@ -751,13 +879,32 @@ function MatriculaContent() {
         // Se ainda está pendente e não excedeu o limite, continuar verificando
         if (attempts >= maxAttempts) {
           console.warn('⏱️ Timeout na verificação do pagamento')
-          
+
           // Limpar intervalo se estiver rodando
           if (intervalId) {
             clearInterval(intervalId)
             intervalId = null
           }
-          
+
+          // Atualizar transação local para EXPIRED
+          const storedExpiredTxId = typeof window !== 'undefined'
+            ? localStorage.getItem('pendingLocalTransactionId')
+            : null
+
+          if (storedExpiredTxId) {
+            try {
+              await fetch(`/api/transactions/${storedExpiredTxId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'EXPIRED' }),
+              })
+              console.log('✅ Transação local atualizada para EXPIRED')
+              localStorage.removeItem('pendingLocalTransactionId')
+            } catch (expiredTxError) {
+              console.error('⚠️ Erro ao atualizar transação local:', expiredTxError)
+            }
+          }
+
           toast.warning('Tempo limite excedido. Verifique o status do pagamento manualmente.')
           setPixLoading(false)
         }
@@ -995,10 +1142,10 @@ function MatriculaContent() {
         throw new Error('Detalhes da oferta não encontrados')
       }
 
-      // pix_enabled DESABILITADO: não chama checkout nem taxas; apenas create-inscription
+      // Checkout DESABILITADO (source !== ATHENAS ou pix_enabled false): não chama checkout; apenas create-inscription
       // Graduação: vai direto para create-inscription
       // Pós: exige seleção de parcelas (enviamos para create-inscription), depois create-inscription
-      if (!pixEnabled) {
+      if (!checkoutEnabled) {
         const isPosNoCheckout = offerDetails.academicLevel === 'POS_GRADUACAO' && (offerDetails.paymentMethods?.length ?? 0) > 0
         if (isPosNoCheckout) {
           if (!posInstallmentId) {
@@ -1076,7 +1223,45 @@ function MatriculaContent() {
       // Valor a pagar em centavos (com desconto do cupom se houver)
       const amountInCents = matriculaAfterCoupon
 
-      // Criar checkout na API Elysium primeiro
+      // 1. Criar transação local no nosso banco de dados
+      console.log('📝 Criando transação local...')
+      let createdLocalTransactionId: string | null = null
+      try {
+        const localTransactionResponse = await fetch('/api/transactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: data.name,
+            cpf: data.cpf.replace(/\D/g, ''),
+            email: data.email,
+            phone: data.phone.replace(/\D/g, ''),
+            amountInCents,
+            courseId: offerDetails.courseId,
+            courseName: offerDetails.course,
+            institutionName: offerDetails.brand,
+            metadata: {
+              unitId: offerDetails.unitId,
+              modality: offerDetails.modality,
+              shift: offerDetails.shift,
+              ...(coupon ? { couponCode: coupon.code, couponDiscount: coupon.discountApplied } : {}),
+            },
+          }),
+        })
+
+        if (localTransactionResponse.ok) {
+          const localTransactionData = await localTransactionResponse.json()
+          createdLocalTransactionId = localTransactionData.transaction?.id
+          setLocalTransactionId(createdLocalTransactionId)
+          console.log('✅ Transação local criada:', createdLocalTransactionId)
+        } else {
+          console.error('⚠️ Erro ao criar transação local, continuando sem ela')
+        }
+      } catch (localTxError) {
+        console.error('⚠️ Erro ao criar transação local:', localTxError)
+        // Não bloquear o fluxo se falhar
+      }
+
+      // 2. Criar checkout na API Elysium
       // O cupom é aplicado apenas no cálculo do valor total (matriculaAfterCoupon)
       // e não é enviado no checkout
       const checkoutData = {
@@ -1091,6 +1276,7 @@ function MatriculaContent() {
           courseId: offerDetails.courseId,
           courseName: offerDetails.course,
           unitId: offerDetails.unitId,
+          localTransactionId: createdLocalTransactionId, // Incluir ID da transação local
           ...(isPos && posInstallmentIdForCheckout
             ? { posInstallmentId: posInstallmentIdForCheckout, posDueDay: '10' }
             : {}),
@@ -1122,11 +1308,35 @@ function MatriculaContent() {
       }
 
       setTransactionId(transactionIdValue)
-      
+
+      // 3. Atualizar transação local com o ID externo do Elysium e QR Code PIX
+      if (createdLocalTransactionId) {
+        try {
+          const updateLocalTxResponse = await fetch(`/api/transactions/${createdLocalTransactionId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              externalTransactionId: transactionIdValue,
+              status: 'PROCESSING',
+              pixBrCode: checkoutResponse.pixQrCode?.brCode,
+              pixQrCodeBase64: checkoutResponse.pixQrCode?.brCodeBase64,
+            }),
+          })
+          if (updateLocalTxResponse.ok) {
+            console.log('✅ Transação local atualizada com ID externo:', transactionIdValue)
+          }
+        } catch (updateTxError) {
+          console.error('⚠️ Erro ao atualizar transação local:', updateTxError)
+        }
+      }
+
       // Salvar transactionId e dados do formulário no localStorage para verificação posterior
       if (typeof window !== 'undefined') {
         localStorage.setItem('pendingTransactionId', transactionIdValue)
         localStorage.setItem('pendingFormData', JSON.stringify(data))
+        if (createdLocalTransactionId) {
+          localStorage.setItem('pendingLocalTransactionId', createdLocalTransactionId)
+        }
       }
 
       // Verificar se tem QR Code na resposta
@@ -1252,7 +1462,7 @@ function MatriculaContent() {
         <div className="pt-10 mb-6 md:mb-8">
           <h1 className="text-xl md:text-2xl font-bold text-gray-900">Checkout {offerDetails.brand}</h1>
           <p className="text-gray-600 mt-1 text-sm">
-            {pixEnabled
+            {checkoutEnabled
               ? `Complete seus dados para finalizar a ${enrollmentLabel}`
               : 'Complete seus dados para finalizar a matrícula. O valor da matrícula e das mensalidades será pago diretamente à instituição.'}
           </p>
@@ -1827,7 +2037,7 @@ function MatriculaContent() {
                     <div>
                       <h2 className="text-base font-semibold text-gray-900">Forma de Pagamento</h2>
                       <p className="text-xs text-gray-500">
-                        {pixEnabled ? 'Selecione a melhor forma de pagar' : 'Valor da matrícula pago diretamente à instituição'}
+                        {checkoutEnabled ? 'Selecione a melhor forma de pagar' : 'Valor da matrícula pago diretamente à instituição'}
                       </p>
                     </div>
                   </div>
@@ -1839,7 +2049,7 @@ function MatriculaContent() {
                 </button>
                 {expandedSections.pagamento && (
                   <div className="px-4 pb-4 space-y-3">
-                    {!pixEnabled ? (
+                    {!checkoutEnabled ? (
                       // Sem checkout: pós mostra parcelas (para create-inscription); graduação só botão
                       offerDetails.academicLevel === 'POS_GRADUACAO' && (offerDetails.paymentMethods?.length ?? 0) > 0 ? (
                         <>
@@ -2010,7 +2220,7 @@ function MatriculaContent() {
                 <p className="text-xs text-gray-500 mt-1 italic">Paga diretamente à instituição</p>
               </div>
 
-              {!pixEnabled ? (
+              {!checkoutEnabled ? (
                 <>
                   {/* Sem checkout: não exibir valores de taxas/matrícula — só aviso de pagamento à instituição */}
                   <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-3">
@@ -2027,9 +2237,9 @@ function MatriculaContent() {
                     </div>
                   </div>
                 </>
-              ) : isMarketplace ? (
+              ) : (
                 <>
-                  {/* Marketplace ativo: mostrar matrícula */}
+                  {/* Checkout habilitado: mostrar matrícula */}
                   <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-3">
                     <div className="flex items-start gap-2 mb-2">
                       <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -2050,44 +2260,8 @@ function MatriculaContent() {
                       <p className="text-base font-semibold text-gray-900">{formatCurrency(matriculaAfterCoupon / 100)}</p>
                       {coupon && (
                         <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
-                          {coupon.type === 'percent' 
-                            ? `-${coupon.value}%` 
-                            : `-${formatCurrency(coupon.value)}`}
-                        </span>
-                      )}
-                    </div>
-                    {coupon && (
-                      <p className="text-xs text-gray-400 line-through mt-1">
-                        {formatCurrency(enrollmentFee)}
-                      </p>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* Marketplace desabilitado: mostrar taxa de serviço */}
-                  <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-3">
-                    <div className="flex items-start gap-2 mb-2">
-                      <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-white text-xs font-bold">!</span>
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-xs font-semibold text-blue-900 mb-1">Você só paga a taxa de serviço</p>
-                        <p className="text-xs text-blue-700">
-                          A mensalidade será paga diretamente à instituição.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Taxa de serviço Bolsa Click</p>
-                    <div className="flex items-center gap-2">
-                      <p className="text-base font-semibold text-gray-900">{formatCurrency(matriculaAfterCoupon / 100)}</p>
-                      {coupon && (
-                        <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
-                          {coupon.type === 'percent' 
-                            ? `-${coupon.value}%` 
+                          {coupon.type === 'percent'
+                            ? `-${coupon.value}%`
                             : `-${formatCurrency(coupon.value)}`}
                         </span>
                       )}
@@ -2126,7 +2300,7 @@ function MatriculaContent() {
                 </p>
               </div>
 
-              {pixEnabled && (
+              {checkoutEnabled && (
                 <div className="pt-3 border-t border-gray-200">
                   <label className="block text-xs font-medium text-gray-700 mb-2">Digite seu cupom</label>
                   <div className="flex gap-2">
@@ -2165,54 +2339,42 @@ function MatriculaContent() {
               )}
 
               <div className="pt-3 border-t border-gray-200 space-y-2">
-                {/* Mensalidade - exibida como informação (não somada); quando !pixEnabled não exibir taxas/total */}
-                {pixEnabled && (
+                {/* Mensalidade - exibida como informação (não somada); quando !checkoutEnabled não exibir taxas/total */}
+                {checkoutEnabled && (
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-600">Mensalidade</span>
                     <span className="text-gray-500 italic">{formatCurrency(monthlyFee)}</span>
                   </div>
                 )}
                 
-                {!pixEnabled ? (
+                {!checkoutEnabled ? (
                   <div className="text-xs text-gray-600 italic">
                     Matrícula e mensalidades: pago diretamente à instituição. Nenhuma taxa neste checkout.
                   </div>
-                ) : isMarketplace ? (
+                ) : (
                   <>
-                    {/* Marketplace ativo: mostrar matrícula */}
+                    {/* Checkout habilitado: mostrar matrícula */}
                     <div className="flex justify-between text-xs">
                       <span className="text-gray-600">Valor da matrícula</span>
                       <span className="text-gray-900">
-                        {coupon 
+                        {coupon
                           ? formatCurrency((coupon.originalAmount / 100))
                           : formatCurrency(enrollmentFee)}
                       </span>
                     </div>
                   </>
-                ) : (
-                  <>
-                    {/* Marketplace desabilitado: mostrar taxa de serviço */}
-                    <div className="flex justify-between text-xs">
-                      <span className="text-gray-600">Taxa de serviço Bolsa Click</span>
-                      <span className="text-gray-900">
-                        {coupon 
-                          ? formatCurrency((coupon.originalAmount / 100))
-                          : formatCurrency(administrativeFee)}
-                      </span>
-                    </div>
-                  </>
                 )}
-                {pixEnabled && coupon && (
+                {checkoutEnabled && coupon && (
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-600">Cupom</span>
                     <span className="text-green-600 font-medium">
-                      {coupon.type === 'percent' 
-                        ? `-${coupon.value}%` 
+                      {coupon.type === 'percent'
+                        ? `-${coupon.value}%`
                         : `-${formatCurrency(coupon.value)}`}
                     </span>
                   </div>
                 )}
-                {pixEnabled && (
+                {checkoutEnabled && (
                   <div className="flex justify-between text-base font-semibold pt-2 border-t border-gray-200">
                     <span className="text-gray-900">Total</span>
                     <div className="flex flex-col items-end gap-0.5">

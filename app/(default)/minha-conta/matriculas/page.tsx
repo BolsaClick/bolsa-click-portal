@@ -15,6 +15,8 @@ import {
   Loader2,
   AlertCircle,
   ExternalLink,
+  Receipt,
+  CreditCard,
 } from 'lucide-react'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { formatCurrency } from '@/utils/fomartCurrency'
@@ -30,16 +32,35 @@ interface Enrollment {
   finalPrice: number | null
   discount: number | null
   status: 'PENDING' | 'IN_PROGRESS' | 'ENROLLED' | 'CANCELLED' | 'COMPLETED'
-  paymentStatus: 'PENDING' | 'PROCESSING' | 'PAID' | 'FAILED' | 'REFUNDED' | 'CANCELLED'
+  paymentStatus: string
   enrollmentDate: string | null
   startDate: string | null
   externalId: string | null
   createdAt: string
+  isTransaction?: boolean
+  transactionId?: string
 }
 
-const statusConfig = {
+interface Transaction {
+  id: string
+  name: string
+  cpf: string
+  email: string
+  phone: string
+  courseId: string | null
+  courseName: string | null
+  institutionName: string | null
+  amountInCents: number
+  externalTransactionId: string | null
+  status: string
+  paymentMethod: string
+  paidAt: string | null
+  createdAt: string
+}
+
+const statusConfig: Record<string, { label: string; color: string; icon: typeof Clock }> = {
   PENDING: {
-    label: 'Pendente',
+    label: 'Aguardando Pagamento',
     color: 'bg-yellow-100 text-yellow-800',
     icon: Clock,
   },
@@ -49,7 +70,7 @@ const statusConfig = {
     icon: Loader2,
   },
   ENROLLED: {
-    label: 'Matriculado',
+    label: 'Matrícula Confirmada',
     color: 'bg-green-100 text-green-800',
     icon: CheckCircle2,
   },
@@ -65,19 +86,21 @@ const statusConfig = {
   },
 }
 
-const paymentStatusConfig = {
-  PENDING: { label: 'Aguardando', color: 'text-yellow-600' },
+const paymentStatusConfig: Record<string, { label: string; color: string }> = {
+  PENDING: { label: 'Aguardando Pagamento', color: 'text-yellow-600' },
   PROCESSING: { label: 'Processando', color: 'text-blue-600' },
   PAID: { label: 'Pago', color: 'text-green-600' },
   FAILED: { label: 'Falhou', color: 'text-red-600' },
   REFUNDED: { label: 'Reembolsado', color: 'text-gray-600' },
   CANCELLED: { label: 'Cancelado', color: 'text-red-600' },
+  EXPIRED: { label: 'Expirado', color: 'text-gray-500' },
 }
 
 export default function MatriculasPage() {
   const router = useRouter()
   const { user, firebaseUser, loading: authLoading } = useAuth()
   const [enrollments, setEnrollments] = useState<Enrollment[]>([])
+  const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -105,6 +128,7 @@ export default function MatriculasPage() {
 
         const data = await response.json()
         setEnrollments(data.enrollments || [])
+        setTransactions(data.transactions || [])
       } catch (err) {
         console.error('Error fetching enrollments:', err)
         setError('Não foi possível carregar suas matrículas')
@@ -190,9 +214,22 @@ export default function MatriculasPage() {
         {enrollments.length > 0 && (
           <div className="space-y-4">
             {enrollments.map((enrollment) => {
-              const status = statusConfig[enrollment.status]
+              // Verificar se existe uma transação PAID com o mesmo externalId
+              const matchingPaidTransaction = enrollment.externalId
+                ? transactions.find(
+                    (tx) =>
+                      tx.externalTransactionId === enrollment.externalId &&
+                      tx.status === 'PAID'
+                  )
+                : null
+
+              // Se houver transação PAID correspondente, sobrescrever o status
+              const effectiveStatus = matchingPaidTransaction ? 'ENROLLED' : enrollment.status
+              const effectivePaymentStatus = matchingPaidTransaction ? 'PAID' : enrollment.paymentStatus
+
+              const status = statusConfig[effectiveStatus] || statusConfig.PENDING
               const StatusIcon = status.icon
-              const paymentStatus = paymentStatusConfig[enrollment.paymentStatus]
+              const paymentStatus = paymentStatusConfig[effectivePaymentStatus] || { label: effectivePaymentStatus, color: 'text-gray-600' }
 
               return (
                 <div
@@ -270,6 +307,80 @@ export default function MatriculasPage() {
                 </div>
               )
             })}
+          </div>
+        )}
+
+        {/* Transactions Section */}
+        {transactions.length > 0 && (
+          <div className="mt-8">
+            <div className="flex items-center gap-2 mb-4">
+              <Receipt className="w-5 h-5 text-gray-600" />
+              <h2 className="text-xl font-semibold text-gray-900">Transações</h2>
+            </div>
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="divide-y divide-gray-100">
+                {transactions.map((transaction) => {
+                  const isPaid = transaction.status === 'PAID'
+                  const isPending = transaction.status === 'PENDING' || transaction.status === 'PROCESSING'
+                  const isFailed = transaction.status === 'FAILED' || transaction.status === 'CANCELLED' || transaction.status === 'EXPIRED'
+
+                  return (
+                    <div key={transaction.id} className="p-4 md:p-5">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        {/* Transaction Info */}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <CreditCard className="w-4 h-4 text-gray-400" />
+                            <span className="text-sm text-gray-500 uppercase">
+                              {transaction.paymentMethod === 'pix' ? 'PIX' : transaction.paymentMethod}
+                            </span>
+                            {transaction.externalTransactionId && (
+                              <span className="text-xs text-gray-400">
+                                #{transaction.externalTransactionId.slice(-8)}
+                              </span>
+                            )}
+                          </div>
+                          <p className="font-medium text-gray-900">
+                            {transaction.courseName || 'Matrícula'}
+                          </p>
+                          {transaction.institutionName && (
+                            <p className="text-sm text-gray-500">{transaction.institutionName}</p>
+                          )}
+                          <p className="text-xs text-gray-400 mt-1">
+                            {formatDate(transaction.createdAt)}
+                          </p>
+                        </div>
+
+                        {/* Amount and Status */}
+                        <div className="flex items-center gap-4 md:text-right">
+                          <div>
+                            <p className="text-lg font-bold text-gray-900">
+                              {formatCurrency(transaction.amountInCents / 100)}
+                            </p>
+                          </div>
+                          <div
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              isPaid
+                                ? 'bg-green-100 text-green-700'
+                                : isPending
+                                ? 'bg-yellow-100 text-yellow-700'
+                                : isFailed
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-gray-100 text-gray-700'
+                            }`}
+                          >
+                            {isPaid && 'Pago'}
+                            {isPending && 'Pendente'}
+                            {isFailed && 'Cancelado'}
+                            {!isPaid && !isPending && !isFailed && transaction.status}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
           </div>
         )}
 

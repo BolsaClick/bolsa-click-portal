@@ -16,6 +16,7 @@ import {
   LogOut,
   Menu,
   X,
+  Ticket,
 } from 'lucide-react'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { AdminProvider, useAdmin } from '@/app/contexts/AdminAuthContext'
@@ -68,6 +69,12 @@ const navigation = [
     href: '/admin/configuracoes',
     icon: Settings,
     permission: 'admin_management',
+  },
+  {
+    name: 'Cupons',
+    href: '/admin/cupons',
+    icon: Ticket,
+    permission: 'dashboard',
   },
 ]
 

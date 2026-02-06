@@ -23,7 +23,7 @@ async function verifyToken(request: NextRequest) {
   }
 }
 
-// GET - Listar inscrições do usuário
+// GET - Listar inscrições e transações do usuário
 export async function GET(request: NextRequest) {
   try {
     const decodedToken = await verifyToken(request)
@@ -50,7 +50,65 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ enrollments: user.enrollments })
+    // Buscar transações pelo CPF ou email do usuário
+    const transactions = await prisma.transaction.findMany({
+      where: {
+        OR: [
+          ...(user.cpf ? [{ cpf: user.cpf }] : []),
+          { email: user.email },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    })
+
+    // Encontrar transações que não têm enrollment correspondente
+    // (para mostrar pagamentos pendentes/confirmados sem matrícula)
+    const transactionsWithoutEnrollment = transactions.filter(tx => {
+      if (!tx.courseId) return true // Mostrar todas transações sem curso
+      return !user.enrollments.some(e => e.courseId === tx.courseId)
+    })
+
+    // Converter transações para formato de enrollment virtual
+    const virtualEnrollments = transactionsWithoutEnrollment.map(tx => ({
+      id: `tx-${tx.id}`,
+      courseId: tx.courseId || '',
+      courseName: tx.courseName || 'Matrícula',
+      institutionName: tx.institutionName || 'Instituição',
+      modalidade: 'EAD',
+      turno: null,
+      originalPrice: tx.amountInCents / 100,
+      finalPrice: tx.amountInCents / 100,
+      discount: null,
+      status: tx.status === 'PAID' ? 'ENROLLED' : (tx.status === 'PENDING' || tx.status === 'PROCESSING' ? 'PENDING' : 'CANCELLED'),
+      paymentStatus: tx.status,
+      enrollmentDate: tx.paidAt ? tx.paidAt.toISOString() : null,
+      startDate: null,
+      externalId: tx.externalTransactionId,
+      paymentId: tx.id,
+      createdAt: tx.createdAt.toISOString(),
+      updatedAt: tx.updatedAt.toISOString(),
+      isTransaction: true,
+      transactionId: tx.id,
+    }))
+
+    // Combinar matrículas reais com virtuais (de transações)
+    const allEnrollments = [
+      ...user.enrollments.map(e => ({
+        ...e,
+        enrollmentDate: e.enrollmentDate?.toISOString() || null,
+        startDate: e.startDate?.toISOString() || null,
+        createdAt: e.createdAt.toISOString(),
+        updatedAt: e.updatedAt.toISOString(),
+        isTransaction: false,
+      })),
+      ...virtualEnrollments,
+    ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+
+    return NextResponse.json({
+      enrollments: allEnrollments,
+      transactions,
+    })
   } catch (error) {
     console.error('Error fetching enrollments:', error)
     return NextResponse.json(

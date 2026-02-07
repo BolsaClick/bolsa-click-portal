@@ -2139,6 +2139,7 @@ const isFormValidForPayment =
                     <ChevronDown size={18} className="text-gray-400" />
                   )}
                 </button>
+                
                 {expandedSections.pagamento && (
                   <div className="px-4 pb-4 space-y-3">
                     {!checkoutEnabled ? (

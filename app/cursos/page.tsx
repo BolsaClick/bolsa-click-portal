@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { prisma } from '@/app/lib/prisma'
 import CursosPageClient from './CursosPageClient'
 
 export const metadata: Metadata = {
@@ -83,6 +84,38 @@ export const metadata: Metadata = {
   },
 }
 
-export default function CursosPage() {
-  return <CursosPageClient />
+// ISR: Revalidar a cada 1 hora
+export const revalidate = 3600
+
+async function getCourses() {
+  try {
+    const courses = await prisma.featuredCourse.findMany({
+      where: { isActive: true },
+      orderBy: { order: 'asc' },
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        fullName: true,
+        type: true,
+        nivel: true,
+        description: true,
+        duration: true,
+        averageSalary: true,
+        marketDemand: true,
+        imageUrl: true,
+        areas: true,
+      },
+    })
+    return courses
+  } catch (error) {
+    console.error('Erro ao buscar cursos do banco de dados:', error)
+    return []
+  }
+}
+
+export default async function CursosPage() {
+  const courses = await getCourses()
+
+  return <CursosPageClient courses={courses} />
 }

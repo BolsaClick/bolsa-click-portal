@@ -3,8 +3,8 @@
 import { ChevronDown, ChevronUp, MapPin, Star } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 
-import { Course } from '../../../interface/course'
 import Image from 'next/image'
+import { Course } from '../../../interface/course'
 
 interface CourseCardProps {
   course: Course
@@ -53,7 +53,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
   const handleClick = () => {
     // Construir URL com parâmetros essenciais para compartilhamento
     const params = new URLSearchParams()
-    
+
     // Se tiver os dados necessários, usar params
     if (course.businessKey && course.unitId) {
       params.set('groupId', course.businessKey)
@@ -67,7 +67,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
       if (course.unitCity) params.set('city', course.unitCity)
       if (course.unitState) params.set('state', course.unitState)
       if (course.brand) params.set('brand', course.brand)
-      
+
       window.location.href = `/checkout?${params.toString()}`
     } else {
       // Fallback para localStorage se não tiver dados completos
@@ -94,10 +94,10 @@ const CourseCard: React.FC<CourseCardProps> = ({
       {/* Header */}
       <div className="p-4 mb-4">
         <div className="flex items-center justify-between">
-        <Image
+          <Image
             src={universityLogo}
             alt="Logo Anhanguera"
-            width={96} 
+            width={96}
             height={96}
             className="object-contain"
           />
@@ -146,11 +146,11 @@ const CourseCard: React.FC<CourseCardProps> = ({
             <div className="mt-2 rounded-md bg-gray-100 p-3 text-sm">
               {(course.modality === 'Presencial' ||
                 course.modality === 'Semipresencial') && (
-                <p>
-                  {capitalizeFirstLetter(course.unitAddress)} - CEP:{' '}
-                  {course.unitPostalCode}
-                </p>
-              )}
+                  <p>
+                    {capitalizeFirstLetter(course.unitAddress)} - CEP:{' '}
+                    {course.unitPostalCode}
+                  </p>
+                )}
 
               {course.modality === 'A distância' && (
                 <>
@@ -184,7 +184,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
           onClick={handleClick}
           className="w-full rounded-md bg-bolsa-secondary px-4 py-2 text-white font-medium hover:bg-bolsa-primary transition-colors"
         >
-          Quero essa bolsa!
+          Inscreva-se!
         </button>
       </div>
     </div>

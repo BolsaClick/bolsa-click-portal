@@ -7,6 +7,437 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// ==========================================
+// MODELOS DE AUTENTICAÇÃO E USUÁRIO
+// ==========================================
+
+model User {
+  id            String    @id @default(uuid())
+  firebaseUid   String    @unique // UID do Firebase Auth
+  email         String    @unique
+  name          String?
+  phone         String?
+  cpf           String?   @unique
+  avatar        String?   // URL da foto de perfil
+
+  // Endereço
+  cep           String?
+  street        String?
+  number        String?
+  complement    String?
+  neighborhood  String?
+  city          String?
+  state         String?
+
+  // Dados acadêmicos
+  educationLevel String?  // ENSINO_MEDIO, GRADUACAO, POS_GRADUACAO
+  currentSchool  String?
+
+  // Status
+  emailVerified Boolean   @default(false)
+  isActive      Boolean   @default(true)
+
+  // Preferências
+  receiveEmails Boolean   @default(true)
+  receiveSms    Boolean   @default(true)
+  receiveWhatsapp Boolean @default(true)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+
+  // Relacionamentos
+  favorites     Favorite[]
+  enrollments   Enrollment[]
+  searchHistory SearchHistory[]
+  adminProfile  AdminUser?
+
+  @@index([email])
+  @@index([firebaseUid])
+  @@index([cpf])
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String
+  courseId  String   // ID do curso na API externa
+  courseName String
+  courseSlug String
+  institutionName String?
+  modalidade String?
+  price     Float?
+  discount  Float?
+
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([userId])
+}
+
+model Enrollment {
+  id              String   @id @default(uuid())
+  userId          String
+
+  // Dados do curso
+  courseId        String
+  courseName      String
+  institutionName String
+  modalidade      String
+  turno           String?
+
+  // Valores
+  originalPrice   Float?
+  finalPrice      Float?
+  discount        Float?
+
+  // Status
+  status          EnrollmentStatus @default(PENDING)
+  paymentStatus   PaymentStatus    @default(PENDING)
+
+  // Datas
+  enrollmentDate  DateTime?
+  startDate       DateTime?
+
+  // Referências externas
+  externalId      String?  // ID no sistema externo
+  paymentId       String?  // ID do pagamento
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+
+model SearchHistory {
+  id          String   @id @default(uuid())
+  userId      String
+
+  query       String?
+  course      String?
+  city        String?
+  state       String?
+  modalidade  String?
+  nivel       String?
+
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+enum EnrollmentStatus {
+  PENDING         // Aguardando matrícula
+  IN_PROGRESS     // Matrícula em andamento
+  ENROLLED        // Matriculado
+  CANCELLED       // Cancelado
+  COMPLETED       // Concluído
+}
+
+enum PaymentStatus {
+  PENDING         // Aguardando pagamento
+  PROCESSING      // Processando
+  PAID            // Pago
+  FAILED          // Falhou
+  REFUNDED        // Reembolsado
+  CANCELLED       // Cancelado
+}
+
+// ==========================================
+// MODELO DE LEADS (CAPTURA DE INTERESSADOS)
+// ==========================================
+
+model Lead {
+  id          String   @id @default(uuid())
+  name        String
+  cpf         String
+  email       String
+  phone       String
+  courseNames String[] // Cursos de interesse
+
+  // Dados do curso (se disponível)
+  courseId    String?
+  courseName  String?
+  institutionName String?
+  modalidade  String?
+
+  // Status do lead
+  status      LeadStatus @default(NEW)
+  convertedAt DateTime?  // Data de conversão (quando virou enrollment)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([cpf])
+  @@index([email])
+  @@index([status])
+}
+
+enum LeadStatus {
+  NEW           // Novo lead
+  CONTACTED     // Contactado
+  INTERESTED    // Interessado
+  CONVERTED     // Convertido (fez matrícula)
+  LOST          // Perdido
+}
+
+// ==========================================
+// TRANSAÇÕES DE PAGAMENTO
+// ==========================================
+
+model Transaction {
+  id                String            @id @default(uuid())
+
+  // Dados do pagador
+  name              String
+  cpf               String
+  email             String
+  phone             String
+
+  // Referência ao Lead (se existir)
+  leadId            String?
+
+  // Dados do curso
+  courseId          String?
+  courseName        String?
+  institutionName   String?
+
+  // Valores
+  amountInCents     Int               // Valor em centavos
+
+  // IDs externos
+  externalTransactionId String?       @unique // ID da transação no Elysium/gateway
+  elysiumStudentId  String?           // ID do estudante no Elysium
+
+  // PIX
+  pixBrCode         String?           @db.Text
+  pixQrCodeBase64   String?           @db.Text
+
+  // Status
+  status            TransactionStatus @default(PENDING)
+  paymentMethod     String            @default("pix")
+
+  // Metadados
+  metadata          Json?
+
+  // Datas
+  paidAt            DateTime?
+  failedAt          DateTime?
+  cancelledAt       DateTime?
+
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([cpf])
+  @@index([email])
+  @@index([status])
+  @@index([externalTransactionId])
+}
+
+enum TransactionStatus {
+  PENDING           // Aguardando pagamento
+  PROCESSING        // Processando
+  PAID              // Pago
+  FAILED            // Falhou
+  CANCELLED         // Cancelado
+  EXPIRED           // Expirado
+  REFUNDED          // Reembolsado
+}
+
+// ==========================================
+// CUPONS DE DESCONTO
+// ==========================================
+
+model Coupon {
+  id              String       @id @default(uuid())
+  code            String       @unique  // Código do cupom (ex: SUMMER2024)
+  description     String?               // Descrição do cupom
+  discount        Float                 // Valor do desconto
+  type            CouponType            // PERCENT ou FIXED
+  maxUses         Int?                  // Máximo de usos (null = ilimitado)
+  usedCount       Int          @default(0)  // Quantas vezes foi usado
+  validFrom       DateTime     @default(now())  // Data de início da validade
+  validUntil      DateTime?             // Data de expiração (null = sem expiração)
+  isActive        Boolean      @default(true)
+
+  // ID do cupom no Elysium (se sincronizado)
+  elysiumCouponId String?      @unique
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  createdBy       String?               // Admin que criou
+
+  @@index([code])
+  @@index([isActive])
+  @@index([validUntil])
+}
+
+enum CouponType {
+  PERCENT   // Desconto em porcentagem
+  FIXED     // Desconto em valor fixo (centavos)
+}
+
+// ==========================================
+// MODELOS DE ADMINISTRAÇÃO
+// ==========================================
+
+model AdminUser {
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  role        AdminRole @default(EDITOR)
+  permissions String[]  // Permissões: help_center, courses, users, dashboard, admin_management
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdBy   String?   // ID do admin que criou
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+enum AdminRole {
+  SUPER_ADMIN   // Acesso total
+  ADMIN         // Todas funcionalidades exceto gerenciar admins
+  EDITOR        // Apenas gerenciamento de conteúdo
+}
+
+// ==========================================
+// CENTRAL DE AJUDA (CMS)
+// ==========================================
+
+model HelpCategory {
+  id          String        @id @default(uuid())
+  slug        String        @unique
+  title       String
+  description String
+  icon        String        // Nome do ícone Lucide: "Info", "BookOpen", etc.
+  order       Int           @default(0)
+  isActive    Boolean       @default(true)
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  articles    HelpArticle[]
+
+  @@index([slug])
+  @@index([isActive])
+}
+
+model HelpArticle {
+  id              String       @id @default(uuid())
+  categoryId      String
+  slug            String
+  title           String
+  description     String       // Descrição curta para cards
+  content         String       @db.Text  // Conteúdo completo (HTML ou Markdown)
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  keywords        String[]
+
+  order           Int          @default(0)
+  isActive        Boolean      @default(true)
+  publishedAt     DateTime?
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  createdBy       String?      // Admin que criou
+  updatedBy       String?      // Último admin que atualizou
+
+  category        HelpCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, slug])
+  @@index([categoryId])
+  @@index([isActive])
+}
+
+// ==========================================
+// CURSOS EM DESTAQUE
+// ==========================================
+
+model FeaturedCourse {
+  id              String       @id @default(uuid())
+  slug            String       @unique
+  apiCourseName   String       // Nome usado na API
+  name            String       // Nome de exibição
+  fullName        String       // Nome completo com tipo
+  type            CourseType
+  nivel           CourseLevel
+
+  description     String
+  longDescription String       @db.Text
+  duration        String
+
+  areas           String[]     // Áreas de atuação
+  skills          String[]     // Habilidades desenvolvidas
+  careerPaths     String[]     // Carreiras possíveis
+
+  averageSalary   String
+  marketDemand    MarketDemand
+
+  imageUrl        String       // URL da imagem no Firebase Storage
+  imageAlt        String?
+
+  keywords        String[]     // Palavras-chave para SEO
+
+  order           Int          @default(0)
+  isActive        Boolean      @default(true)
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([slug])
+  @@index([isActive])
+  @@index([order])
+}
+
+enum CourseType {
+  BACHARELADO
+  LICENCIATURA
+  TECNOLOGO
+}
+
+enum CourseLevel {
+  GRADUACAO
+  POS_GRADUACAO
+}
+
+enum MarketDemand {
+  ALTA
+  MEDIA
+  BAIXA
+}
+
+// ==========================================
+// LOG DE ATIVIDADES (AUDITORIA)
+// ==========================================
+
+model ActivityLog {
+  id          String   @id @default(uuid())
+  adminUserId String
+  action      String   // CREATE, UPDATE, DELETE
+  entity      String   // HelpCategory, HelpArticle, FeaturedCourse
+  entityId    String
+  details     Json?    // Campos alterados
+
+  createdAt   DateTime @default(now())
+
+  @@index([adminUserId])
+  @@index([entity])
+  @@index([createdAt])
+}
+
+// ==========================================
+// MODELOS EXISTENTES (CURSOS)
+// ==========================================
+
 model Curso {
   id         String @id @default(uuid())
   nome       String

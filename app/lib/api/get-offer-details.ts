@@ -119,6 +119,8 @@ export interface OfferDetails {
   paymentMethods?: PosPaymentMethod[]
   /** Tipos de ingresso (ex.: ["ISENTO_VESTIBULAR"] para pós). Se mais de um, enviar todos na inscrição. */
   ingressType?: string[]
+  /** ID DMH Elastic para criar inscrição no marketplace ATHENAS */
+  idDmhElastic?: string
 }
 
 // Mapear resposta da API para o formato esperado (usando dados direto da API)
@@ -175,6 +177,7 @@ function mapOfferDetailsResponse(
     } : undefined,
     paymentMethods: response.basePricing?.default?.paymentMethods ?? [],
     ingressType: response.ingressType,
+    idDmhElastic: response.idDmhElastic || undefined,
   }
 }
 

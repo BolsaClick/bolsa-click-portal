@@ -181,6 +181,7 @@ function MatriculaContent() {
     setValue,
     control,
     getValues,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
@@ -201,6 +202,20 @@ function MatriculaContent() {
       state: '',
     },
   })
+
+  const watchedValues = watch()
+
+const isFormValidForPayment =
+  !!watchedValues.email &&
+  !!watchedValues.name &&
+  !!watchedValues.cpf &&
+  !!watchedValues.birthDate &&
+  !!watchedValues.phone &&
+  !!watchedValues.cep &&
+  !!watchedValues.address &&
+  !!watchedValues.addressNumber &&
+  !cpfValidationError &&
+  Object.keys(errors).length === 0
 
 
   // Pré-preencher formulário quando usuário estiver logado
@@ -2204,7 +2219,8 @@ function MatriculaContent() {
                           </p>
                           <button
                             type="submit"
-                            disabled={isSubmitting || pixLoading}
+                            disabled={isSubmitting || pixLoading || !isFormValidForPayment}
+
                             className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-lg font-semibold text-base hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {isSubmitting || pixLoading ? (
@@ -2279,7 +2295,8 @@ function MatriculaContent() {
                                 email: getValues('email') || '',
                                 phone: getValues('phone') || '',
                               }}
-                              amountInCents={Math.round(applyCouponToMatricula() * 100)}
+                              amountInCents={Math.round(applyCouponToMatricula())}
+
                               description={`Matrícula - ${offerDetails.course}`}
                               brand={offerDetails.brand?.toLowerCase() || 'anhanguera'}
                               metadata={{

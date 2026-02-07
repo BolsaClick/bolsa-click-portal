@@ -7,6 +7,8 @@ export interface CreateCheckoutRequest {
   phone: string
   amountInCents: number
   description: string
+  /** Método de pagamento no Elysium: 'pix' ou 'card' (Stripe) */
+  paymentMethod?: 'pix' | 'card'
   couponCode?: string
   brand?: string
   metadata?: Record<string, unknown>
@@ -15,7 +17,8 @@ export interface CreateCheckoutRequest {
 export interface CreateCheckoutResponse {
   success: boolean
   transactionId: string
-  pixQrCode: {
+  /** Presente quando paymentMethod === 'pix' */
+  pixQrCode?: {
     id: string
     amount: number
     status: string
@@ -27,9 +30,12 @@ export interface CreateCheckoutResponse {
     updatedAt: string
     expiresAt: string
   }
+  /** Presente quando paymentMethod === 'card' (Stripe) */
+  clientSecret?: string
+  paymentIntentId?: string
   amount: number
-  originalAmount: number
-  discountApplied: number
+  originalAmount?: number
+  discountApplied?: number
 }
 
 /**

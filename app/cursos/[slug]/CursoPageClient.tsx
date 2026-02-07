@@ -1,23 +1,23 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { Course } from '@/app/interface/course'
 import { motion } from 'framer-motion'
-import Image from 'next/image'
-import { useRouter } from 'next/navigation'
 import {
   Award,
-  TrendingUp,
+  Briefcase,
+  CheckCircle,
   Clock,
   DollarSign,
-  CheckCircle,
-  Briefcase,
-  Star,
   GraduationCap,
   MapPin,
   School,
+  Star,
+  TrendingUp,
 } from 'lucide-react'
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import { useRef, useState } from 'react'
 import { FeaturedCourseData } from '../_data/types'
-import { Course } from '@/app/interface/course'
 
 interface CursoPageClientProps {
   cursoMetadata: FeaturedCourseData
@@ -102,7 +102,7 @@ export default function CursoPageClient({
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                {courseOffers.length > 0 ? 'Ver Ofertas Disponíveis' : 'Quero essa bolsa!'}
+                {courseOffers.length > 0 ? 'Ver Ofertas Disponíveis' : 'Inscreva-se!'}
               </motion.button>
 
               <motion.button
@@ -189,11 +189,10 @@ export default function CursoPageClient({
                 <button
                   key={modality}
                   onClick={() => setSelectedModality(modality)}
-                  className={`px-6 py-2 rounded-full font-semibold transition-all ${
-                    selectedModality === modality
+                  className={`px-6 py-2 rounded-full font-semibold transition-all ${selectedModality === modality
                       ? 'bg-emerald-600 text-white shadow-lg'
                       : 'bg-white text-emerald-600 hover:bg-emerald-50'
-                  }`}
+                    }`}
                 >
                   {modality === 'TODAS' ? 'Todas' : modality.charAt(0) + modality.slice(1).toLowerCase()}
                 </button>
@@ -313,11 +312,10 @@ export default function CursoPageClient({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all ${
-                    activeTab === tab.id
+                  className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all ${activeTab === tab.id
                       ? 'bg-emerald-600 text-white shadow-lg'
                       : 'bg-white text-emerald-600 hover:bg-emerald-50'
-                  }`}
+                    }`}
                 >
                   <tab.icon className="w-5 h-5" />
                   {tab.label}

@@ -45,6 +45,7 @@ import { usePixBeforeEnrollmentFeatureFlag, usePixEnabledFeatureFlag } from '@/a
 import { formatPhone } from '@/utils/formatters'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { Loader2 } from 'lucide-react'
+import { StripeCheckout } from '@/app/components/stripe'
 
 
 // Validação melhorada seguindo o exemplo
@@ -1271,6 +1272,7 @@ function MatriculaContent() {
         phone: data.phone.replace(/\D/g, ''),
         amountInCents,
         description: `Matrícula - ${offerDetails.course}`,
+        paymentMethod: 'pix' as const,
         brand: offerDetails.brand?.toLowerCase() || 'anhanguera',
         metadata: {
           courseId: offerDetails.courseId,
@@ -1382,6 +1384,81 @@ function MatriculaContent() {
         coupon_code: coupon?.code,
         pix_before_enrollment: requirePixBeforeEnrollment,
       })
+    }
+  }
+
+  /** Chamado quando o pagamento com cartão (Stripe) é confirmado: cria matrícula e redireciona para sucesso */
+  const handleStripeSuccess = async (paymentIntentId: string, transactionIdElysium: string) => {
+    if (!offerDetails) return
+    setTransactionId(transactionIdElysium)
+    setPixLoading(true)
+    try {
+      trackEvent('payment_confirmed', {
+        transaction_id: transactionIdElysium,
+        course_id: offerDetails.courseId,
+        course_name: offerDetails.course,
+        amount_in_cents: Math.round(applyCouponToMatricula()),
+        amount_in_reais: applyCouponToMatricula() / 100,
+        payment_method: 'card',
+        has_coupon: !!coupon,
+        coupon_code: coupon?.code,
+      })
+
+      // Pós-graduação: persistir método de pagamento selecionado para createInscriptionAfterPayment
+      if (offerDetails.academicLevel === 'POS_GRADUACAO' && posInstallmentId && posPaymentMethodType) {
+        const methods = (offerDetails.paymentMethods ?? []) as PosPaymentMethod[]
+        const method = methods.find((pm) => pm.type === posPaymentMethodType)
+        const inst = method?.installments?.find((i) => i.id === posInstallmentId)
+        if (inst && typeof window !== 'undefined') {
+          localStorage.setItem('pendingPosPaymentMethod', JSON.stringify({ id: inst.id, dueDay: '10' }))
+        }
+      }
+
+      // Inscrição marketplace ATHENAS (se aplicável)
+      if (isAthenasSource && offerDetails.idDmhElastic) {
+        const formData = getValues()
+        try {
+          const marketplaceResult = await createMarketplaceInscription(
+            {
+              name: formData.name,
+              cpf: formData.cpf,
+              email: formData.email,
+              phone: formData.phone,
+              rg: formData.rg,
+              birthDate: formData.birthDate,
+              gender: formData.gender || 'masculino',
+              cep: formData.cep,
+              address: formData.address,
+              addressNumber: formData.addressNumber,
+              neighborhood: formData.neighborhood || '',
+              city: formData.city || '',
+              state: formData.state || '',
+              ingressType: selectedIngressType,
+              schoolYear: formData.schoolYear || String(new Date().getFullYear()),
+              acceptTerms: true,
+              acceptEmail: true,
+              acceptSms: true,
+              acceptWhatsapp: true,
+            },
+            offerDetails
+          )
+          if (marketplaceResult.success) {
+            trackEvent('marketplace_inscription_created', {
+              transaction_id: transactionIdElysium,
+              course_id: offerDetails.courseId,
+              course_name: offerDetails.course,
+              idDmhElastic: offerDetails.idDmhElastic,
+            })
+          }
+        } catch (marketplaceError) {
+          console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceError)
+        }
+      }
+
+      const formData = getValues() as FormSchema
+      await createInscriptionAfterPayment(formData)
+    } finally {
+      setPixLoading(false)
     }
   }
 
@@ -2143,42 +2220,101 @@ function MatriculaContent() {
                       )
                     ) : (
                       <>
-                        {/* PIX para graduação e pós-graduação quando pix_enabled ativo */}
-                        <div
-                          onClick={() => setPaymentMethod('pix')}
-                          className={`p-3 border-2 rounded-lg cursor-pointer transition-all hover:border-green-300 ${
-                            paymentMethod === 'pix'
-                              ? 'border-green-500 bg-green-50'
-                              : 'border-gray-200'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <div className="w-5 h-5 rounded flex items-center justify-center">
-                                <FaPix className="w-6 h-6 text-green-600" />
+                        {/* Opções de pagamento */}
+                        <div className="space-y-2">
+                          {/* PIX */}
+                          <div
+                            onClick={() => setPaymentMethod('pix')}
+                            className={`p-3 border-2 rounded-lg cursor-pointer transition-all hover:border-green-300 ${
+                              paymentMethod === 'pix'
+                                ? 'border-green-500 bg-green-50'
+                                : 'border-gray-200'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-2">
+                                <div className="w-5 h-5 rounded flex items-center justify-center">
+                                  <FaPix className="w-6 h-6 text-green-600" />
+                                </div>
+                                <div>
+                                  <span className="font-medium text-sm text-gray-900">Pix</span>
+                                  <p className="text-xs text-gray-500">O pagamento será aprovado em instantes.</p>
+                                </div>
                               </div>
-                              <div>
-                                <span className="font-medium text-sm text-gray-900">Pix</span>
-                                <p className="text-xs text-gray-500">O pagamento será aprovado em instantes.</p>
-                              </div>
+                              {paymentMethod === 'pix' && <Check size={18} className="text-green-600" />}
                             </div>
-                            {paymentMethod === 'pix' && <Check size={18} className="text-green-600" />}
+                          </div>
+
+                          {/* Cartão de Crédito */}
+                          <div
+                            onClick={() => setPaymentMethod('credit_card')}
+                            className={`p-3 border-2 rounded-lg cursor-pointer transition-all hover:border-blue-300 ${
+                              paymentMethod === 'credit_card'
+                                ? 'border-blue-500 bg-blue-50'
+                                : 'border-gray-200'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-2">
+                                <div className="w-5 h-5 rounded flex items-center justify-center">
+                                  <CreditCard className="w-5 h-5 text-blue-600" />
+                                </div>
+                                <div>
+                                  <span className="font-medium text-sm text-gray-900">Cartão de Crédito</span>
+                                  <p className="text-xs text-gray-500">Pagamento seguro.</p>
+                                </div>
+                              </div>
+                              {paymentMethod === 'credit_card' && <Check size={18} className="text-blue-600" />}
+                            </div>
                           </div>
                         </div>
-                        <button
-                          type="submit"
-                          disabled={isSubmitting || pixLoading}
-                          className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-lg font-semibold text-base hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isSubmitting || pixLoading ? (
-                            <div className="flex items-center justify-center space-x-2">
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                              <span>Processando...</span>
-                            </div>
-                          ) : (
-                            'Finalizar Matrícula'
-                          )}
-                        </button>
+
+                        {/* Formulário de cartão (Stripe) */}
+                        {paymentMethod === 'credit_card' && (
+                          <div className="mt-4">
+                            <StripeCheckout
+                              customerData={{
+                                name: getValues('name') || '',
+                                cpf: getValues('cpf') || '',
+                                email: getValues('email') || '',
+                                phone: getValues('phone') || '',
+                              }}
+                              amountInCents={Math.round(applyCouponToMatricula() * 100)}
+                              description={`Matrícula - ${offerDetails.course}`}
+                              brand={offerDetails.brand?.toLowerCase() || 'anhanguera'}
+                              metadata={{
+                                courseId: offerDetails.courseId,
+                                courseName: offerDetails.course,
+                                unitId: offerDetails.unitId,
+                                institutionName: offerDetails.brand,
+                              }}
+                              returnUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/checkout/matricula/sucesso`}
+                              onSuccess={handleStripeSuccess}
+                              onError={(msg) => {
+                                toast.error(msg)
+                                setPixError(msg)
+                              }}
+                            />
+                          </div>
+                        )}
+
+                        {/* Botão para PIX */}
+                        {paymentMethod === 'pix' && (
+                          <button
+                            type="submit"
+                            disabled={isSubmitting || pixLoading}
+                            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-lg font-semibold text-base hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isSubmitting || pixLoading ? (
+                              <div className="flex items-center justify-center space-x-2">
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                <span>Processando...</span>
+                              </div>
+                            ) : (
+                              'Finalizar Matrícula'
+                            )}
+                          </button>
+                        )}
                         <p className="text-center text-xs text-gray-500">Escolha o método de pagamento *</p>
                       </>
                     )}

@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Course } from "@/app/interface/course"
+import { postSearch } from "@/app/lib/api/post-search"
+import { useFavorites } from "@/app/lib/hooks/useFavorites"
+import { usePostHogTracking } from "@/app/lib/hooks/usePostHogTracking"
 import { motion } from "framer-motion"
 import { Building2, Clock, Heart, MapPin, Star } from "lucide-react"
 import Image from "next/image"
-import { useFavorites } from "@/app/lib/hooks/useFavorites"
 import { useState } from "react"
 import { toast } from "sonner"
-import { usePostHogTracking } from "@/app/lib/hooks/usePostHogTracking"
-import { postSearch } from "@/app/lib/api/post-search"
 
 interface CourseCardProps {
   course: Course
@@ -32,7 +32,7 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
 }) => {
   const { isFavorite, toggleFavorite } = useFavorites()
   const { trackEvent } = usePostHogTracking()
-  
+
   // Estado para seleção de turno
   const [selectedShift, setSelectedShift] = useState<string>('')
 
@@ -47,8 +47,8 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
     }
 
     // Não mostrar se for virtual
-    const isVirtual = course.shiftOptions?.some(s => s.toUpperCase() === 'VIRTUAL') || 
-                      course.classShift?.toUpperCase() === 'VIRTUAL'
+    const isVirtual = course.shiftOptions?.some(s => s.toUpperCase() === 'VIRTUAL') ||
+      course.classShift?.toUpperCase() === 'VIRTUAL'
     if (isVirtual) {
       return false
     }
@@ -56,7 +56,7 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
     // Só mostrar seletor se tiver MÚLTIPLOS turnos (mais de 1)
     // Se tiver apenas 1 turno, não mostrar seletor, usar automaticamente
     const hasMultipleShifts = course.shiftOptions && course.shiftOptions.length > 1
-    
+
     return hasMultipleShifts
   }
 
@@ -93,14 +93,14 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
 
     // Construir URL com parâmetros essenciais para compartilhamento
     const params = new URLSearchParams()
-    
+
     // Parâmetros obrigatórios: groupId (course.id), unitId, modality, shift
     if (course.id) params.set('groupId', String(course.id))
     if (course.unitId) params.set('unitId', course.unitId)
-    
+
     const finalModality = courseModality || course.modality || course.commercialModality || ''
     if (finalModality) params.set('modality', finalModality)
-    
+
     // Usar turno selecionado, ou classShift, ou o único turno disponível (quando há apenas 1 opção)
     const singleShift = course.shiftOptions && course.shiftOptions.length === 1 ? course.shiftOptions[0] : null
     const finalShift = selectedShift || course.classShift || singleShift || ''
@@ -171,16 +171,16 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
   // Função para determinar o turno baseado em shiftOptions
   const getShiftLabel = (shiftOptions?: string[]): string => {
     if (!shiftOptions || shiftOptions.length === 0) return '';
-    
+
     const shifts = shiftOptions.map(s => s.toUpperCase());
-    
+
     if (shifts.includes('INTEGRAL')) return 'Integral';
     if (shifts.includes('MATUTINO') && shifts.includes('NOTURNO')) return 'Manhã e Noite';
     if (shifts.includes('MATUTINO')) return 'Manhã';
     if (shifts.includes('VESPERTINO')) return 'Tarde';
     if (shifts.includes('NOTURNO')) return 'Noite';
     if (shifts.includes('VIRTUAL')) return 'Virtual';
-    
+
     return shiftOptions.join(', ');
   };
 
@@ -305,10 +305,10 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
                 {course.academicDegree && (
                   <p className="text-neutral-600 text-sm" itemProp="educationalCredentialAwarded">
                     {course.academicDegree === 'BACHARELADO' ? 'Bacharelado' :
-                     course.academicDegree === 'LICENCIATURA' ? 'Licenciatura' :
-                     course.academicDegree === 'TECNOLOGO' ? 'Tecnólogo' :
-                     course.academicDegree === 'ESPECIALISTA' ? 'Especialista' :
-                     course.academicDegree}
+                      course.academicDegree === 'LICENCIATURA' ? 'Licenciatura' :
+                        course.academicDegree === 'TECNOLOGO' ? 'Tecnólogo' :
+                          course.academicDegree === 'ESPECIALISTA' ? 'Especialista' :
+                            course.academicDegree}
                   </p>
                 )}
                 {course.academicLevel && (
@@ -316,9 +316,9 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
                     {course.academicDegree && <span className="text-neutral-400">•</span>}
                     <p className="text-neutral-600 text-sm">
                       {course.academicLevel === 'GRADUACAO' ? 'Graduação' :
-                       course.academicLevel === 'POS_GRADUACAO' ? 'Pós-graduação' :
-                       course.academicLevel === 'TECNICO' ? 'Técnico' :
-                       course.academicLevel}
+                        course.academicLevel === 'POS_GRADUACAO' ? 'Pós-graduação' :
+                          course.academicLevel === 'TECNICO' ? 'Técnico' :
+                            course.academicLevel}
                     </p>
                   </>
                 )}
@@ -383,10 +383,10 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
                     {course.shiftOptions.map((shift) => (
                       <option key={shift} value={shift}>
                         {shift === 'MATUTINO' ? 'Manhã' :
-                         shift === 'VESPERTINO' ? 'Tarde' :
-                         shift === 'NOTURNO' ? 'Noite' :
-                         shift === 'INTEGRAL' ? 'Integral' :
-                         shift}
+                          shift === 'VESPERTINO' ? 'Tarde' :
+                            shift === 'NOTURNO' ? 'Noite' :
+                              shift === 'INTEGRAL' ? 'Integral' :
+                                shift}
                       </option>
                     ))}
                   </select>
@@ -429,15 +429,15 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
                 <div>
                   <span className="text-sm text-neutral-600">
                     {course.academicLevel === 'POS_GRADUACAO' &&
-                    typeof course.totalInstallment === 'number' &&
-                    typeof course.minInstallmentValue === 'number'
+                      typeof course.totalInstallment === 'number' &&
+                      typeof course.minInstallmentValue === 'number'
                       ? 'Até:'
                       : 'Por:'}
                   </span>
                   <div className="text-emerald-500 text-2xl font-bold" itemProp="offers" itemScope itemType="https://schema.org/Offer">
                     {course.academicLevel === 'POS_GRADUACAO' &&
-                    typeof course.totalInstallment === 'number' &&
-                    typeof course.minInstallmentValue === 'number' ? (
+                      typeof course.totalInstallment === 'number' &&
+                      typeof course.minInstallmentValue === 'number' ? (
                       <span itemProp="price">
                         {course.totalInstallment}x de{' '}
                         {course.minInstallmentValue.toLocaleString('pt-BR', {
@@ -464,30 +464,29 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
                 disabled={needsShiftSelection() && !selectedShift}
                 title={
                   needsShiftSelection() && !selectedShift
-                    ? "Selecione o turno" 
+                    ? "Selecione o turno"
                     : "Avançar para matrícula"
                 }
                 aria-label="Avançar para matrícula"
-                className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-300 mb-4 ${
-                  needsShiftSelection() && !selectedShift
+                className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-300 mb-4 ${needsShiftSelection() && !selectedShift
                     ? 'bg-gray-400 text-white cursor-not-allowed'
                     : 'bg-emerald-500 text-white hover:bg-emerald-600 hover:shadow-lg hover:scale-[1.02]'
-                }`}
+                  }`}
               >
                 {needsShiftSelection() && !selectedShift ? (
                   'Selecione o turno'
                 ) : (
-                  'Quero essa bolsa'
+                  'Inscreva-se'
                 )}
               </button>
 
               {/* Localização */}
               <div className="flex items-start text-sm text-neutral-600">
                 <MapPin size={16} className="mr-2 mt-0.5 flex-shrink-0" />
-                <p 
-                  className="truncate overflow-hidden text-ellipsis whitespace-nowrap" 
+                <p
+                  className="truncate overflow-hidden text-ellipsis whitespace-nowrap"
                   title={
-                    course.unitAddress 
+                    course.unitAddress
                       ? `${capitalizeFirstLetter(course.unitAddress)}${course.unitNumber ? `, ${course.unitNumber}` : ''}${course.unitCity || course.city ? ` - ${course.unitCity || course.city}` : ''}${course.unitState || course.uf ? ` - ${course.unitState || course.uf}` : ''}${course.unitPostalCode ? ` - CEP: ${course.unitPostalCode}` : ''}`
                       : course.unit
                         ? `${course.unit}${course.unitPostalCode ? ` - CEP: ${course.unitPostalCode}` : ''}`

@@ -50,6 +50,42 @@ export async function generateStaticParams() {
   }))
 }
 
+// Helper para buscar preços das ofertas para SEO
+async function getCoursePriceRange(apiCourseName: string, nivel: string) {
+  try {
+    const apiResponse = await getShowFiltersCourses(
+      apiCourseName,
+      undefined,
+      undefined,
+      undefined,
+      nivel,
+      1,
+      20
+    )
+    const offers = apiResponse?.data || []
+    if (offers.length === 0) return { lowPrice: 0, highPrice: 0, offerCount: 0 }
+
+    const prices = offers
+      .map((o: { minPrice?: number; prices?: { withDiscount?: number; withoutDiscount?: number } }) =>
+        o.minPrice || o.prices?.withDiscount || 0
+      )
+      .filter((p: number) => p > 0)
+    const maxPrices = offers
+      .map((o: { maxPrice?: number; prices?: { withoutDiscount?: number } }) =>
+        o.maxPrice || o.prices?.withoutDiscount || 0
+      )
+      .filter((p: number) => p > 0)
+
+    return {
+      lowPrice: prices.length > 0 ? Math.min(...prices) : 0,
+      highPrice: maxPrices.length > 0 ? Math.max(...maxPrices) : 0,
+      offerCount: offers.length,
+    }
+  } catch {
+    return { lowPrice: 0, highPrice: 0, offerCount: 0 }
+  }
+}
+
 // Gerar metadata dinâmica (SEO)
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
@@ -61,13 +97,150 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
   }
 
-  const title = `${curso.fullName} - Bolsa de Estudo com até 80% de Desconto`
-  const description = `${curso.description} Encontre bolsas de estudo para ${curso.name} com até 80% de desconto em mais de 30.000 faculdades. Compare preços e garanta sua vaga. Inscrição grátis!`
+  // Buscar preços reais das ofertas para schema
+  const { lowPrice, highPrice, offerCount } = await getCoursePriceRange(curso.apiCourseName, curso.nivel)
+
+  const priceText = lowPrice > 0 ? ` a partir de R$ ${lowPrice.toFixed(0)}/mês` : ''
+  const title = `${curso.name} com Bolsa de até 80% - Duração, Salários e Faculdades`
+  const description = `Bolsas de estudo para ${curso.fullName}${priceText}. Até 80% de desconto em mais de 30.000 faculdades. ${curso.duration} de duração. Salário médio: ${curso.averageSalary}. Inscrição grátis!`
 
   // Construir URL da imagem
   const imageUrl = curso.imageUrl.startsWith('http')
     ? curso.imageUrl
     : `https://www.bolsaclick.com.br${curso.imageUrl}`
+
+  // FAQPage schema dinâmico baseado no curso
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: `O que é o curso de ${curso.name}?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: curso.longDescription,
+        },
+      },
+      {
+        '@type': 'Question',
+        name: `Quanto tempo dura o curso de ${curso.name}?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: `O curso de ${curso.fullName} tem duração de ${curso.duration}. Está disponível nas modalidades presencial, semipresencial e EAD (ensino a distância).`,
+        },
+      },
+      {
+        '@type': 'Question',
+        name: `Quanto custa o curso de ${curso.name} com bolsa?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: lowPrice > 0
+            ? `Com bolsa de estudo pelo Bolsa Click, o curso de ${curso.name} pode ser encontrado a partir de R$ ${lowPrice.toFixed(2)} por mês, com descontos de até 80%. Os valores variam conforme a faculdade, modalidade e localização.`
+            : `O Bolsa Click oferece bolsas de até 80% de desconto para o curso de ${curso.name}. Os valores variam conforme a faculdade, modalidade e localização. Cadastre-se grátis para ver as ofertas disponíveis.`,
+        },
+      },
+      {
+        '@type': 'Question',
+        name: `Qual o salário médio de quem faz ${curso.name}?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: `O salário médio para profissionais formados em ${curso.name} é de ${curso.averageSalary}. O valor pode variar conforme a experiência, região e área de atuação.`,
+        },
+      },
+      {
+        '@type': 'Question',
+        name: `Quais as áreas de atuação de ${curso.name}?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: `O profissional formado em ${curso.name} pode atuar nas seguintes áreas: ${curso.areas.join(', ')}. A demanda do mercado para esta área é ${curso.marketDemand === 'ALTA' ? 'alta' : curso.marketDemand === 'MEDIA' ? 'média' : 'em crescimento'}.`,
+        },
+      },
+    ],
+  }
+
+  // Product schema para exibir preço nos resultados do Google
+  const productSchema = lowPrice > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: `Bolsa de Estudo - ${curso.fullName}`,
+    description: `Bolsa de estudo para ${curso.fullName} com até 80% de desconto. ${curso.duration} de duração.`,
+    image: imageUrl,
+    brand: {
+      '@type': 'Brand',
+      name: 'Bolsa Click',
+    },
+    offers: {
+      '@type': 'AggregateOffer',
+      priceCurrency: 'BRL',
+      lowPrice: lowPrice.toFixed(2),
+      highPrice: highPrice.toFixed(2),
+      offerCount: String(offerCount),
+      availability: 'https://schema.org/InStock',
+      url: `https://www.bolsaclick.com.br/cursos/${slug}`,
+    },
+  } : null
+
+  const schemas = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Course',
+      name: curso.fullName,
+      description: curso.longDescription,
+      provider: {
+        '@type': 'Organization',
+        name: 'Bolsa Click',
+        url: 'https://www.bolsaclick.com.br',
+        logo: 'https://www.bolsaclick.com.br/assets/logo-bolsa-click-rosa.png',
+        sameAs: [
+          'https://www.instagram.com/bolsaclick',
+          'https://www.facebook.com/bolsaclickbrasil',
+          'https://www.linkedin.com/company/bolsaclick',
+        ],
+      },
+      educationalLevel: curso.nivel === 'GRADUACAO' ? 'Graduação' : 'Pós-graduação',
+      educationalCredentialAwarded: curso.type,
+      courseMode: ['Presencial', 'EAD', 'Semipresencial'],
+      timeToComplete: curso.duration,
+      occupationalCategory: curso.areas[0],
+      url: `https://www.bolsaclick.com.br/cursos/${slug}`,
+      image: imageUrl,
+      offers: {
+        '@type': 'AggregateOffer',
+        priceCurrency: 'BRL',
+        lowPrice: lowPrice > 0 ? lowPrice.toFixed(2) : '0',
+        highPrice: highPrice > 0 ? highPrice.toFixed(2) : '0',
+        offerCount: String(offerCount || 1000),
+        availability: 'https://schema.org/InStock',
+      },
+    },
+    faqSchema,
+    ...(productSchema ? [productSchema] : []),
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Home',
+          item: 'https://www.bolsaclick.com.br',
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: curso.nivel === 'GRADUACAO' ? 'Graduação' : 'Pós-graduação',
+          item: `https://www.bolsaclick.com.br/${curso.nivel === 'GRADUACAO' ? 'graduacao' : 'pos-graduacao'}`,
+        },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          name: curso.name,
+          item: `https://www.bolsaclick.com.br/cursos/${slug}`,
+        },
+      ],
+    },
+  ]
 
   return {
     title,
@@ -79,6 +252,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       `faculdade de ${curso.name}`,
       `${curso.name} ead`,
       `${curso.name} presencial`,
+      `quanto custa ${curso.name}`,
+      `salário ${curso.name}`,
       'bolsa click',
     ],
     robots: 'index, follow',
@@ -109,64 +284,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: [imageUrl],
     },
     other: {
-      'application/ld+json': JSON.stringify([
-        {
-          '@context': 'https://schema.org',
-          '@type': 'Course',
-          name: curso.fullName,
-          description: curso.longDescription,
-          provider: {
-            '@type': 'Organization',
-            name: 'Bolsa Click',
-            url: 'https://www.bolsaclick.com.br',
-            logo: 'https://www.bolsaclick.com.br/assets/logo-bolsa-click-rosa.png',
-            sameAs: [
-              'https://www.instagram.com/bolsaclick',
-              'https://www.facebook.com/bolsaclickbrasil',
-              'https://www.linkedin.com/company/bolsaclick',
-            ],
-          },
-          educationalLevel: curso.nivel === 'GRADUACAO' ? 'Graduação' : 'Pós-graduação',
-          educationalCredentialAwarded: curso.type,
-          courseMode: ['Presencial', 'EAD', 'Semipresencial'],
-          timeToComplete: curso.duration,
-          occupationalCategory: curso.areas[0],
-          url: `https://www.bolsaclick.com.br/cursos/${slug}`,
-          image: imageUrl,
-          offers: {
-            '@type': 'AggregateOffer',
-            priceCurrency: 'BRL',
-            lowPrice: '0',
-            highPrice: '0',
-            offerCount: '1000',
-            availability: 'https://schema.org/InStock',
-          },
-        },
-        {
-          '@context': 'https://schema.org',
-          '@type': 'BreadcrumbList',
-          itemListElement: [
-            {
-              '@type': 'ListItem',
-              position: 1,
-              name: 'Home',
-              item: 'https://www.bolsaclick.com.br',
-            },
-            {
-              '@type': 'ListItem',
-              position: 2,
-              name: curso.nivel === 'GRADUACAO' ? 'Graduação' : 'Pós-graduação',
-              item: `https://www.bolsaclick.com.br/${curso.nivel === 'GRADUACAO' ? 'graduacao' : 'pos-graduacao'}`,
-            },
-            {
-              '@type': 'ListItem',
-              position: 3,
-              name: curso.name,
-              item: `https://www.bolsaclick.com.br/cursos/${slug}`,
-            },
-          ],
-        },
-      ]),
+      'application/ld+json': JSON.stringify(schemas),
     },
   }
 }

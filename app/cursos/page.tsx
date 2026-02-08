@@ -3,8 +3,8 @@ import { prisma } from '@/app/lib/prisma'
 import CursosPageClient from './CursosPageClient'
 
 export const metadata: Metadata = {
-  title: 'Cursos com Bolsa de Estudo | Bolsa Click',
-  description: 'Descubra os cursos mais procurados com bolsas de estudo de até 80% de desconto. Graduação, Tecnólogo e Licenciatura nas melhores faculdades do Brasil.',
+  title: 'Cursos com Bolsa de até 80% - Graduação, Licenciatura e Tecnólogo',
+  description: 'Compare bolsas de estudo com até 80% de desconto nos cursos mais procurados. Graduação, Licenciatura e Tecnólogo em mais de 30.000 faculdades. Veja salários, duração e inscreva-se grátis!',
   keywords: [
     'cursos com bolsa',
     'cursos graduação',

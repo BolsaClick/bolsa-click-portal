@@ -124,6 +124,35 @@ export const metadata: Metadata = {
           availableLanguage: ['Portuguese'],
         },
       },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'EducationalOccupationalProgram',
+        name: 'Bolsas de estudo com até 95% de desconto',
+        educationalProgramMode: ['online', 'presencial', 'semipresencial'],
+        occupationalCredentialAwarded: [
+          'Graduação',
+          'Pós-graduação',
+          'Curso técnico',
+        ],
+        provider: {
+          '@type': 'Organization',
+          name: 'Bolsa Click',
+          url: theme.siteUrl,
+        },
+        programPrerequisites: 'Ensino médio completo',
+        offers: {
+          '@type': 'Offer',
+          url: theme.siteUrl,
+          price: '0',
+          priceCurrency: 'BRL',
+          availability: 'https://schema.org/InStock',
+          eligibleRegion: {
+            '@type': 'Country',
+            name: 'Brasil',
+          },
+          description: 'Inscreva-se gratuitamente para obter bolsas de estudo em universidades e escolas com até 95% de desconto.',
+        },
+      },
     ]),
   },
 }

@@ -171,7 +171,7 @@ const HeaderNew: React.FC = () => {
             {/* Inscreva-se Button - only when not logged in */}
             {!user && (
               <Link
-                href="/curso/resultado"
+                href="/cursos"
 
                 className={`px-6 py-2 rounded-full font-semibold transition-colors ${scrolled
                   ? 'bg-bolsa-primary text-white hover:bg-bolsa-primary/90'
@@ -209,7 +209,7 @@ const HeaderNew: React.FC = () => {
         </div>
         {!user && (
           <Link
-            href="/curso/resultado"
+            href="/cursos"
             className="px-4 py-2 mr-2 bg-bolsa-primary text-white rounded-full font-semibold text-sm whitespace-nowrap hover:bg-bolsa-primary/90 transition-colors"
           >
             Inscreva-se

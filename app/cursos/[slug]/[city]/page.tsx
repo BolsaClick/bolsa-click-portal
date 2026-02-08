@@ -303,10 +303,11 @@ export default async function CursoCidadePage({ params }: Props) {
     notFound()
   }
 
-  // Buscar ofertas filtradas pela cidade
+  // Buscar ofertas: primeiro com filtro de cidade, se vazio busca sem cidade
   let courseOffers = []
   try {
-    const apiResponse = await getShowFiltersCourses(
+    // Tentar com filtro de cidade
+    const cityResponse = await getShowFiltersCourses(
       cursoMetadata.apiCourseName,
       cityData.name,
       cityData.state,
@@ -315,9 +316,38 @@ export default async function CursoCidadePage({ params }: Props) {
       1,
       20
     )
-    courseOffers = apiResponse?.data || []
+    courseOffers = cityResponse?.data || []
+
+    // Se não encontrou na cidade, buscar sem filtro de cidade (ofertas gerais do curso)
+    if (courseOffers.length === 0) {
+      const generalResponse = await getShowFiltersCourses(
+        cursoMetadata.apiCourseName,
+        undefined,
+        undefined,
+        undefined,
+        cursoMetadata.nivel,
+        1,
+        20
+      )
+      courseOffers = generalResponse?.data || []
+    }
   } catch (error) {
     console.error(`Erro ao buscar ofertas para ${cursoMetadata.name} em ${cityData.name}:`, error)
+    // Fallback: buscar sem cidade
+    try {
+      const fallbackResponse = await getShowFiltersCourses(
+        cursoMetadata.apiCourseName,
+        undefined,
+        undefined,
+        undefined,
+        cursoMetadata.nivel,
+        1,
+        20
+      )
+      courseOffers = fallbackResponse?.data || []
+    } catch {
+      // Se tudo falhar, page renderiza sem ofertas
+    }
   }
 
   // Outras cidades para internal linking (exclui a cidade atual)

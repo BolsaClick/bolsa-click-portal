@@ -6,6 +6,7 @@ import Script from 'next/script'
 import { Toaster } from 'sonner'
 import { AnalyticsScripts } from './components/organisms/AnalyticsScripts'
 import { ClientProviders } from './components/providers/ClientProviders'
+import { WatiWhatsappWidget } from './components/WatiWhatsappWidget'
 import './globals.css'
 import { getCurrentTheme } from './lib/themes'
 
@@ -171,50 +172,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           strategy="afterInteractive"
         />
 
-        <Script id="wati-whatsapp" strategy="afterInteractive">
-          {`
-            (function() {
-              var url = 'https://wati-integration-prod-service.clare.ai/v2/watiWidget.js?85782';
-              var s = document.createElement('script');
-              s.type = 'text/javascript';
-              s.async = true;
-              s.src = url;
-
-              var options = {
-                enabled: true,
-                chatButtonSetting: {
-                  backgroundColor: "#023e73",
-                  ctaText: "Precisa de ajuda? 💙",
-                  borderRadius: "25",
-                  marginLeft: "0",
-                  marginRight: "20",
-                  marginBottom: "20",
-                  ctaIconWATI: false,
-                  position: "right"
-                },
-                brandSetting: {
-                  brandName: "Bolsa Click",
-                  brandSubTitle: "undefined",
-                  brandImg: "https://blog.bolsaclick.com.br/wp-content/uploads/2025/05/whatsappimage.png",
-                  welcomeText: "Seja bem-vindo! Como posso ajudar?",
-                  messageText: "Olá! 👋 Tudo certo? Estava dando uma olhada nessa página do Bolsa Click: {{page_link}} e surgiu uma dúvida. Você pode me ajudar? 💙",
-                  backgroundColor: "#023e73",
-                  ctaText: "Precisa de ajuda? 💙",
-                  borderRadius: "25",
-                  autoShow: false,
-                  phoneNumber: "5511936200198"
-                }
-              };
-
-              s.onload = function () {
-                CreateWhatsappChatWidget(options);
-              };
-
-              var x = document.getElementsByTagName('script')[0];
-              x.parentNode.insertBefore(s, x);
-            })();
-          `}
-        </Script>
+        <WatiWhatsappWidget />
 
         <Toaster richColors position="top-right" />
         <Analytics />

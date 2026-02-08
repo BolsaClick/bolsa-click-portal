@@ -82,17 +82,7 @@ export default function Head() {
         src="https://cdn-cookieyes.com/client_data/2a0be4de7c11618e75d1c64f/script.js"
       ></script>
 
-      {/* WhatsApp Plugin Reportana */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
-            var a = document.createElement('script');
-            a.sync = true;
-            a.src = 'https://app.reportana.com/whatsapp-plugin/script.js?shop_id=22250&v=' + Date.now();
-            document.head.appendChild(a);
-          `,
-        }}
-      />
+
 
       {/* Google Tag Manager */}
       <script

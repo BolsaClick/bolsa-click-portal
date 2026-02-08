@@ -6,6 +6,8 @@ import { motion } from 'framer-motion'
 import {
   Briefcase,
   CheckCircle,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   DollarSign,
   GraduationCap,
@@ -17,7 +19,7 @@ import {
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { FeaturedCourseData } from '../../_data/types'
 
 interface CursoCidadeClientProps {
@@ -42,6 +44,16 @@ export default function CursoCidadeClient({
   const router = useRouter()
   const offersRef = useRef<HTMLElement>(null)
   const infoSectionRef = useRef<HTMLElement>(null)
+  const carouselRef = useRef<HTMLDivElement>(null)
+
+  const scrollCarousel = useCallback((direction: 'left' | 'right') => {
+    if (!carouselRef.current) return
+    const scrollAmount = 340
+    carouselRef.current.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    })
+  }, [])
 
   const filteredOffers = selectedModality === 'TODAS'
     ? courseOffers
@@ -207,66 +219,92 @@ export default function CursoCidadeClient({
               ))}
             </div>
 
-            {/* Lista de Ofertas */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-              {filteredOffers.map((offer, index) => (
-                <motion.div
-                  key={`${offer.id}-${index}`}
-                  className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.05 }}
-                  whileHover={{ y: -5 }}
-                >
-                  <div className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <School className="w-8 h-8 text-emerald-600" />
-                      <h3 className="font-bold text-lg text-gray-900 line-clamp-2">
-                        {offer.brand || 'Faculdade Parceira'}
-                      </h3>
-                    </div>
+            {/* Carousel de Ofertas */}
+            <div className="relative max-w-7xl mx-auto">
+              {/* Botões de navegação */}
+              {filteredOffers.length > 3 && (
+                <>
+                  <button
+                    onClick={() => scrollCarousel('left')}
+                    className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-3 hover:bg-emerald-50 transition-colors hidden md:flex items-center justify-center"
+                    aria-label="Anterior"
+                  >
+                    <ChevronLeft className="w-6 h-6 text-emerald-700" />
+                  </button>
+                  <button
+                    onClick={() => scrollCarousel('right')}
+                    className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-3 hover:bg-emerald-50 transition-colors hidden md:flex items-center justify-center"
+                    aria-label="Próximo"
+                  >
+                    <ChevronRight className="w-6 h-6 text-emerald-700" />
+                  </button>
+                </>
+              )}
 
-                    <div className="flex items-center gap-2 text-gray-600 mb-3">
-                      <MapPin className="w-4 h-4" />
-                      <span className="text-sm">
-                        {offer.unitCity && offer.unitState
-                          ? `${offer.unitCity} - ${offer.unitState}`
-                          : `${cityName} - ${cityState}`}
-                      </span>
-                    </div>
+              <div
+                ref={carouselRef}
+                className="flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4 -mx-4 px-4 scrollbar-hide"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {filteredOffers.map((offer, index) => (
+                  <motion.div
+                    key={`${offer.id}-${index}`}
+                    className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all flex-shrink-0 w-[300px] md:w-[320px] snap-start"
+                    initial={{ opacity: 0, x: 20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.05 }}
+                    whileHover={{ y: -5 }}
+                  >
+                    <div className="p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <School className="w-8 h-8 text-emerald-600 flex-shrink-0" />
+                        <h3 className="font-bold text-lg text-gray-900 line-clamp-2">
+                          {offer.brand || 'Faculdade Parceira'}
+                        </h3>
+                      </div>
 
-                    <div className="inline-block px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-semibold mb-4">
-                      {offer.modality}
-                    </div>
+                      <div className="flex items-center gap-2 text-gray-600 mb-3">
+                        <MapPin className="w-4 h-4 flex-shrink-0" />
+                        <span className="text-sm">
+                          {offer.unitCity && offer.unitState
+                            ? `${offer.unitCity} - ${offer.unitState}`
+                            : `${cityName} - ${cityState}`}
+                        </span>
+                      </div>
 
-                    <div className="mb-4">
-                      {offer.minPrice && offer.minPrice > 0 ? (
-                        <div>
-                          <p className="text-sm text-gray-500 mb-1">A partir de:</p>
-                          <p className="text-3xl font-bold text-emerald-600">
-                            R$ {offer.minPrice.toFixed(2)}
-                          </p>
-                          {offer.maxPrice && offer.maxPrice !== offer.minPrice && (
-                            <p className="text-sm text-gray-500">
-                              até R$ {offer.maxPrice.toFixed(2)}
+                      <div className="inline-block px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-semibold mb-4">
+                        {offer.modality}
+                      </div>
+
+                      <div className="mb-4">
+                        {offer.minPrice && offer.minPrice > 0 ? (
+                          <div>
+                            <p className="text-sm text-gray-500 mb-1">A partir de:</p>
+                            <p className="text-3xl font-bold text-emerald-600">
+                              R$ {offer.minPrice.toFixed(2)}
                             </p>
-                          )}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-gray-500">Consulte valores</p>
-                      )}
-                    </div>
+                            {offer.maxPrice && offer.maxPrice !== offer.minPrice && (
+                              <p className="text-sm text-gray-500">
+                                até R$ {offer.maxPrice.toFixed(2)}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500">Consulte valores</p>
+                        )}
+                      </div>
 
-                    <button
-                      onClick={() => handleVerOferta(offer)}
-                      className="w-full bg-emerald-600 text-white py-3 rounded-full font-semibold hover:bg-emerald-700 transition-all"
-                    >
-                      Ver Detalhes
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
+                      <button
+                        onClick={() => handleVerOferta(offer)}
+                        className="w-full bg-emerald-600 text-white py-3 rounded-full font-semibold hover:bg-emerald-700 transition-all"
+                      >
+                        Ver Detalhes
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
             </div>
 
             {/* CTA para buscar mais */}

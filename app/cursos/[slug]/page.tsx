@@ -311,7 +311,7 @@ export default async function CursoPage({ params }: Props) {
       20                            // quantidade de ofertas
     )
 
-    courseOffers = apiResponse || []
+    courseOffers = apiResponse?.data || []
   } catch (error) {
     console.error(`Erro ao buscar ofertas para ${cursoMetadata.name}:`, error)
     // Se API falhar, componente ainda renderiza com dados estáticos

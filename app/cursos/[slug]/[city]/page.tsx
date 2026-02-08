@@ -29,33 +29,11 @@ async function getCourseBySlug(slug: string): Promise<FeaturedCourseData | null>
   }
 }
 
-// Top 12 cidades para gerar no build (as demais são geradas on-demand via ISR)
-const TOP_CITIES_FOR_BUILD = BRAZILIAN_CITIES.slice(0, 12)
-
-// Gerar static params: cursos ativos × top 12 cidades
-// As demais combinações são geradas on-demand quando acessadas (ISR)
+// Não gerar páginas no build para evitar sobrecarregar o banco/API
+// Todas as city pages são geradas on-demand na primeira visita e cacheadas via ISR (1h)
 export async function generateStaticParams() {
-  try {
-    const courses = await prisma.featuredCourse.findMany({
-      where: { isActive: true },
-      select: { slug: true },
-    })
-
-    const params: { slug: string; city: string }[] = []
-    for (const course of courses) {
-      for (const city of TOP_CITIES_FOR_BUILD) {
-        params.push({ slug: course.slug, city: city.slug })
-      }
-    }
-    return params
-  } catch (error) {
-    console.error('Erro ao gerar static params:', error)
-    return []
-  }
+  return []
 }
-
-// Permitir geração de páginas não listadas no generateStaticParams (on-demand ISR)
-export const dynamicParams = true
 
 // Helper para buscar preços das ofertas filtradas por cidade
 async function getCityPriceRange(apiCourseName: string, cityName: string, stateUF: string, nivel: string) {
@@ -337,7 +315,7 @@ export default async function CursoCidadePage({ params }: Props) {
       1,
       20
     )
-    courseOffers = apiResponse || []
+    courseOffers = apiResponse?.data || []
   } catch (error) {
     console.error(`Erro ao buscar ofertas para ${cursoMetadata.name} em ${cityData.name}:`, error)
   }

@@ -435,6 +435,32 @@ model ActivityLog {
 }
 
 // ==========================================
+// CONFIGURAÇÕES GERAIS DO SITE
+// ==========================================
+
+model SiteSettings {
+  id                String   @id @default("default")
+
+  // Contato
+  whatsappNumber    String   @default("5511936200198")
+  contactEmail      String   @default("contato@bolsaclick.com.br")
+  contactPhone      String   @default("(11) 93620-0198")
+
+  // Redes Sociais
+  facebookUrl       String   @default("https://facebook.com/bolsaclickbrasil")
+  instagramUrl      String   @default("https://instagram.com/bolsaclick")
+  linkedinUrl       String   @default("https://linkedin.com/company/bolsaclick")
+
+  // SEO
+  siteName          String   @default("Bolsa Click")
+  siteDescription   String   @default("O maior marketplace de bolsas de estudo do Brasil")
+  logoUrl           String   @default("/assets/logo-bolsa-click-rosa.png")
+
+  updatedAt         DateTime @updatedAt
+  updatedBy         String?
+}
+
+// ==========================================
 // MODELOS EXISTENTES (CURSOS)
 // ==========================================
 

@@ -1130,30 +1130,6 @@ const isFormValidForPayment =
         return
       }
 
-      // Exigir login/cadastro se usuário não estiver logado
-      if (!user) {
-        // Salvar CPF para pre-preencher no cadastro
-        const cleanCpf = data.cpf.replace(/\D/g, '')
-        setPendingCpfForRegistration(cleanCpf)
-
-        // Se CPF já existe no banco, pedir login
-        if (cpfExistsInDb) {
-          toast.error('Este CPF já possui uma conta. Faça login para continuar.')
-          setAuthMode('login')
-          setShowAuthModal(true)
-          return
-        }
-
-        // Se CPF não existe, pedir para criar conta
-        toast.info('Crie uma conta para finalizar sua matrícula.')
-        setAuthMode('register')
-        // Pre-preencher email no modal
-        setAuthEmail(data.email)
-        setAuthName(data.name)
-        setShowAuthModal(true)
-        return
-      }
-
       if (!offerDetails) {
         throw new Error('Detalhes da oferta não encontrados')
       }
@@ -1817,9 +1793,9 @@ const isFormValidForPayment =
                         {cpfValidationError && <p className="text-red-500 text-xs mt-1">{cpfValidationError}</p>}
                         {/* Mensagem quando CPF já existe no nosso banco */}
                         {cpfExistsInDb && !user && (
-                          <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md">
-                            <p className="text-xs text-amber-800">
-                              <strong>Este CPF já possui uma conta.</strong>
+                          <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                            <p className="text-xs text-blue-800">
+                              Este CPF já possui uma conta.
                               {cpfEmailHint && <span> Email: {cpfEmailHint}</span>}
                             </p>
                             <button
@@ -1830,15 +1806,9 @@ const isFormValidForPayment =
                               }}
                               className="mt-1 text-xs text-bolsa-primary font-medium hover:underline"
                             >
-                              Clique aqui para fazer login
+                              Fazer login (opcional)
                             </button>
                           </div>
-                        )}
-                        {/* Mensagem quando CPF não existe - pode criar conta */}
-                        {cpfExistsInDb === false && !user && (
-                          <p className="text-green-600 text-xs mt-1">
-                            CPF disponível. Você precisará criar uma conta para finalizar.
-                          </p>
                         )}
                       </div>
                       <div>

@@ -31,7 +31,7 @@
     "framer-motion": "^12.7.3",
     "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.483.0",
-    "next": "15.3.6",
+    "next": "15.3.8",
     "next-seo": "^6.6.0",
     "next-sitemap": "^4.2.3",
     "posthog-js": "^1.334.0",

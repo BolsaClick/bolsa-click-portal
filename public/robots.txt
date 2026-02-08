@@ -1,6 +1,14 @@
 # *
 User-agent: *
 Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /checkout/
+Disallow: /login
+Disallow: /favoritos
+Disallow: /minha-conta/
+Disallow: /cadastro
+Disallow: /recuperar-senha
 
 # Host
 Host: https://www.bolsaclick.com.br

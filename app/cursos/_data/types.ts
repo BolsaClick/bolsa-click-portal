@@ -30,6 +30,7 @@ export interface FeaturedCourseListItem {
   slug: string
   name: string
   fullName: string
+  apiCourseName: string
   type: 'BACHARELADO' | 'LICENCIATURA' | 'TECNOLOGO'
   nivel: 'GRADUACAO' | 'POS_GRADUACAO'
   description: string

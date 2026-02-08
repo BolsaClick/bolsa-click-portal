@@ -97,6 +97,7 @@ async function getCourses() {
         slug: true,
         name: true,
         fullName: true,
+        apiCourseName: true,
         type: true,
         nivel: true,
         description: true,

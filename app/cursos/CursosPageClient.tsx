@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Search, GraduationCap, TrendingUp, Award } from 'lucide-react'
+import { Search, GraduationCap, TrendingUp, Award, BookOpen } from 'lucide-react'
 import { FeaturedCourseListItem } from './_data/types'
 
 interface CursosPageClientProps {
@@ -138,46 +138,47 @@ export default function CursosPageClient({ courses }: CursosPageClientProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
-                <Link
-                  href={`/cursos/${curso.slug}`}
-                  className="group block bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 h-full"
-                >
+                <div className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 h-full flex flex-col">
                   {/* Imagem */}
-                  <div className="relative h-48 bg-gradient-to-br from-emerald-500 to-emerald-700 overflow-hidden">
-                    <div className="absolute inset-0">
-                      <Image
-                        src={curso.imageUrl}
-                        alt={`Curso de ${curso.name}`}
-                        fill
-                        className="object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    </div>
+                  <Link href={`/cursos/${curso.slug}`} className="block">
+                    <div className="relative h-48 bg-gradient-to-br from-emerald-500 to-emerald-700 overflow-hidden">
+                      <div className="absolute inset-0">
+                        <Image
+                          src={curso.imageUrl}
+                          alt={`Curso de ${curso.name}`}
+                          fill
+                          className="object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      </div>
 
-                    {/* Badge de tipo */}
-                    <div className="absolute top-3 right-3">
-                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-semibold text-emerald-700">
-                        <Award className="w-3 h-3" />
-                        {curso.type}
-                      </span>
-                    </div>
-
-                    {/* Badge de demanda */}
-                    {curso.marketDemand === 'ALTA' && (
-                      <div className="absolute top-3 left-3">
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-500 text-white rounded-full text-xs font-semibold">
-                          <TrendingUp className="w-3 h-3" />
-                          Alta Demanda
+                      {/* Badge de tipo */}
+                      <div className="absolute top-3 right-3">
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-semibold text-emerald-700">
+                          <Award className="w-3 h-3" />
+                          {curso.type}
                         </span>
                       </div>
-                    )}
-                  </div>
+
+                      {/* Badge de demanda */}
+                      {curso.marketDemand === 'ALTA' && (
+                        <div className="absolute top-3 left-3">
+                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-500 text-white rounded-full text-xs font-semibold">
+                            <TrendingUp className="w-3 h-3" />
+                            Alta Demanda
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </Link>
 
                   {/* Conteúdo */}
-                  <div className="p-5">
-                    <h3 className="font-bold text-lg text-gray-900 mb-2 group-hover:text-emerald-700 transition-colors line-clamp-2">
-                      {curso.name}
-                    </h3>
+                  <div className="p-5 flex flex-col flex-1">
+                    <Link href={`/cursos/${curso.slug}`}>
+                      <h3 className="font-bold text-lg text-gray-900 mb-2 group-hover:text-emerald-700 transition-colors line-clamp-2">
+                        {curso.name}
+                      </h3>
+                    </Link>
 
                     <p className="text-sm text-gray-600 mb-4 line-clamp-2">
                       {curso.description}
@@ -197,17 +198,27 @@ export default function CursosPageClient({ courses }: CursosPageClientProps) {
                       </div>
                     </div>
 
-                    {/* CTA */}
-                    <div className="mt-4">
-                      <span className="text-sm font-semibold text-emerald-600 group-hover:text-emerald-700 flex items-center gap-2">
+                    {/* CTAs */}
+                    <div className="mt-4 flex items-center justify-between gap-3 pt-3">
+                      <Link
+                        href={`/cursos/${curso.slug}`}
+                        className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                      >
                         Ver detalhes
-                        <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
-                      </span>
+                      </Link>
+                      <Link
+                        href={`/curso/resultado?c=${encodeURIComponent(curso.apiCourseName)}&nivel=${curso.nivel}`}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-bolsa-primary text-white text-sm font-semibold rounded-full hover:bg-bolsa-primary/90 transition-colors"
+                      >
+                        <BookOpen className="w-3.5 h-3.5" />
+                        Ver Bolsas
+                      </Link>
                     </div>
                   </div>
-                </Link>
+                </div>
               </motion.div>
             ))}
           </div>

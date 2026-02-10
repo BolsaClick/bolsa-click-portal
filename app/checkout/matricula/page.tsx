@@ -132,10 +132,14 @@ function MatriculaContent() {
   // Quando disabled no PostHog: sem pagamento, sem endpoint de checkout — só create-inscription.
   const pixEnabled = usePixEnabledFeatureFlag()
 
-  const groupId = searchParams.get('groupId') || searchParams.get('id')
-  const unitId = searchParams.get('unitId')
-  const modality = searchParams.get('modality')
-  const shift = searchParams.get('shift') || 'VIRTUAL'
+  const storedCheckoutParams = typeof window !== 'undefined'
+    ? (() => { try { return JSON.parse(localStorage.getItem('pendingCheckoutParams') || '') } catch { return null } })()
+    : null
+
+  const groupId = searchParams.get('groupId') || searchParams.get('id') || storedCheckoutParams?.groupId
+  const unitId = searchParams.get('unitId') || storedCheckoutParams?.unitId
+  const modality = searchParams.get('modality') || storedCheckoutParams?.modality
+  const shift = searchParams.get('shift') || storedCheckoutParams?.shift || 'VIRTUAL'
 
   // Estados para login/registro no checkout
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -174,6 +178,12 @@ function MatriculaContent() {
   const [posInstallmentId, setPosInstallmentId] = useState<string>('')
   // Graduação: tipo de ingresso (ENEM ou VESTIBULAR)
   const [selectedIngressType, setSelectedIngressType] = useState<'ENEM' | 'VESTIBULAR'>('VESTIBULAR')
+  // Recovery: dados para efeito 2 (depende de offerDetails)
+  const [pendingRecoveryData, setPendingRecoveryData] = useState<{
+    status: string
+    formData: FormSchema
+    transactionId: string
+  } | null>(null)
 
   const {
     register,
@@ -423,85 +433,107 @@ const isFormValidForPayment =
     }
   }, [offerDetails, shift, modality])
 
-  // Verificar se há uma transação pendente quando a página carrega
+  // Efeito 1: Recuperar transação pendente no mount (sem depender de offerDetails)
   useEffect(() => {
-    if (typeof window !== 'undefined' && offerDetails) {
-      const pendingTransactionId = localStorage.getItem('pendingTransactionId')
-      const pendingFormData = localStorage.getItem('pendingFormData')
-      
-      if (pendingTransactionId && pendingFormData) {
-        try {
-          const formData = JSON.parse(pendingFormData) as FormSchema
-          
-          // Verificar o status imediatamente
-          const checkPendingPayment = async () => {
-            try {
-              const statusResponse = await getCheckoutStatus(pendingTransactionId)
-              console.log('📊 Verificando transação pendente:', statusResponse)
-              
-              // Normalizar status para lowercase e verificar também o campo paid
-              const normalizedStatus = statusResponse.status?.toLowerCase()
-              const isPaid = normalizedStatus === 'paid' || (statusResponse as { paid?: boolean }).paid === true
-              
-              if (isPaid) {
-                // Pagamento já foi confirmado, criar matrícula
-                console.log('✅ Pagamento já confirmado! Criando matrícula...')
+    if (typeof window === 'undefined') return
 
-                // Atualizar transação local para PAID
-                const pendingLocalTxId = localStorage.getItem('pendingLocalTransactionId')
-                if (pendingLocalTxId) {
-                  try {
-                    await fetch(`/api/transactions/${pendingLocalTxId}`, {
-                      method: 'PATCH',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ status: 'PAID' }),
-                    })
-                    console.log('✅ Transação local atualizada para PAID')
-                    localStorage.removeItem('pendingLocalTransactionId')
-                  } catch (localTxErr) {
-                    console.error('⚠️ Erro ao atualizar transação local:', localTxErr)
-                  }
-                }
+    const pendingTxId = localStorage.getItem('pendingTransactionId')
+    const pendingFormDataStr = localStorage.getItem('pendingFormData')
+    if (!pendingTxId || !pendingFormDataStr) return
 
-                // Usar a função que será definida abaixo
-                createInscriptionAfterPayment(formData).catch(console.error)
+    let formData: FormSchema
+    try {
+      formData = JSON.parse(pendingFormDataStr) as FormSchema
+    } catch {
+      localStorage.removeItem('pendingTransactionId')
+      localStorage.removeItem('pendingFormData')
+      localStorage.removeItem('pendingLocalTransactionId')
+      localStorage.removeItem('pendingCheckoutParams')
+      return
+    }
 
-                // Limpar dados pendentes
-                localStorage.removeItem('pendingTransactionId')
-                localStorage.removeItem('pendingFormData')
-              } else if (statusResponse.status?.toLowerCase() === 'pending') {
-                // Ainda pendente, reiniciar verificação
-                console.log('🔄 Reiniciando verificação de pagamento pendente...')
-                setTransactionId(pendingTransactionId)
-                setPixQrCode({
-                  brCode: '',
-                  brCodeBase64: null,
-                })
-                setShowModal(true)
-                // Usar a função que será definida abaixo
-                startPaymentStatusCheck(pendingTransactionId, formData)
-              } else {
-                // Falhou ou cancelado, limpar
-                localStorage.removeItem('pendingTransactionId')
-                localStorage.removeItem('pendingFormData')
-                localStorage.removeItem('pendingLocalTransactionId')
-              }
-            } catch (error) {
-              console.error('Erro ao verificar transação pendente:', error)
-            }
-          }
-
-          checkPendingPayment()
-        } catch (error) {
-          console.error('Erro ao processar dados pendentes:', error)
+    const recoverPendingTransaction = async () => {
+      try {
+        const res = await fetch(`/api/checkout/status/${pendingTxId}`)
+        if (!res.ok) {
+          // Transação não encontrada, limpar
           localStorage.removeItem('pendingTransactionId')
           localStorage.removeItem('pendingFormData')
           localStorage.removeItem('pendingLocalTransactionId')
+          localStorage.removeItem('pendingCheckoutParams')
+          return
         }
+
+        const data = await res.json()
+        console.log('📊 Recuperando transação pendente:', data)
+
+        if (data.status === 'PAID') {
+          // Pagamento confirmado, delegar ao Efeito 2 (precisa de offerDetails)
+          setPendingRecoveryData({ status: 'PAID', formData, transactionId: pendingTxId })
+        } else if (data.status === 'PENDING') {
+          setTransactionId(pendingTxId)
+          // Restaurar QR Code real da API (não vazio!)
+          if (data.paymentMethod === 'pix' && data.pixBrCode && data.pixQrCodeBase64) {
+            setPixQrCode({
+              brCode: data.pixBrCode,
+              brCodeBase64: data.pixQrCodeBase64,
+            })
+            setShowModal(true)
+            console.log('🔄 QR Code PIX recuperado com sucesso')
+          }
+          // Delegar início do polling ao Efeito 2 (precisa de offerDetails para createInscriptionAfterPayment)
+          setPendingRecoveryData({ status: 'PENDING', formData, transactionId: pendingTxId })
+        } else {
+          // FAILED, CANCELLED, EXPIRED - limpar
+          localStorage.removeItem('pendingTransactionId')
+          localStorage.removeItem('pendingFormData')
+          localStorage.removeItem('pendingLocalTransactionId')
+          localStorage.removeItem('pendingCheckoutParams')
+        }
+      } catch (error) {
+        console.error('Erro ao recuperar transação pendente:', error)
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [offerDetails])
+
+    recoverPendingTransaction()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Efeito 2: Ações que dependem de offerDetails (polling, criar matrícula)
+  useEffect(() => {
+    if (!pendingRecoveryData || !offerDetails) return
+
+    const { status, formData, transactionId: pendingTxId } = pendingRecoveryData
+    setPendingRecoveryData(null) // Executar apenas uma vez
+
+    if (status === 'PAID') {
+      console.log('✅ Pagamento já confirmado! Criando matrícula...')
+
+      const pendingLocalTxId = localStorage.getItem('pendingLocalTransactionId')
+      if (pendingLocalTxId) {
+        fetch(`/api/transactions/${pendingLocalTxId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'PAID' }),
+        })
+          .then(() => {
+            console.log('✅ Transação local atualizada para PAID')
+            localStorage.removeItem('pendingLocalTransactionId')
+          })
+          .catch((err) => console.error('⚠️ Erro ao atualizar transação local:', err))
+      }
+
+      createInscriptionAfterPayment(formData).catch(console.error)
+
+      localStorage.removeItem('pendingTransactionId')
+      localStorage.removeItem('pendingFormData')
+      localStorage.removeItem('pendingCheckoutParams')
+    } else if (status === 'PENDING') {
+      console.log('🔄 Reiniciando verificação de pagamento pendente...')
+      startPaymentStatusCheck(pendingTxId, formData)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [offerDetails, pendingRecoveryData])
 
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }))
@@ -1109,6 +1141,7 @@ const isFormValidForPayment =
           localStorage.removeItem('pendingTransactionId')
           localStorage.removeItem('pendingFormData')
           localStorage.removeItem('pendingPosPaymentMethod')
+          localStorage.removeItem('pendingCheckoutParams')
         }
 
         router.push(`/checkout/matricula/sucesso?${params.toString()}`)
@@ -1330,6 +1363,9 @@ const isFormValidForPayment =
         if (createdLocalTransactionId) {
           localStorage.setItem('pendingLocalTransactionId', createdLocalTransactionId)
         }
+        localStorage.setItem('pendingCheckoutParams', JSON.stringify({
+          groupId, unitId, modality, shift,
+        }))
       }
 
       // Verificar se tem QR Code na resposta

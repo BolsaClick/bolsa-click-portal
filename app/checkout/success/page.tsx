@@ -5,8 +5,8 @@ import { Suspense } from 'react'
 
 
 export const metadata: Metadata = {
-  title: '🎉 Parabéns | Bolsa Click',
-  description: 'Sua matricula foi realizada com sucesso, fique atento ao seu e-mail para mais informações.',
+  title: 'Parabéns | Bolsa Click',
+  description: 'Sua matrícula foi realizada com sucesso, fique atento ao seu e-mail para mais informações.',
 }
 
 export default function Page() {

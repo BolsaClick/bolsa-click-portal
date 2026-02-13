@@ -6,6 +6,7 @@ import { getCurrentTheme } from '../lib/themes'
 import ScholarshipCarousel from '../components/molecules/ScolarShipCarousel'
 import AboutSection from '../components/molecules/AboutSection'
 import HowWork from '../components/organisms/Recommended/HowWork'
+import PopularCoursesSection from '../components/organisms/PopularCoursesSection'
 
 const theme = getCurrentTheme()
 
@@ -141,6 +142,7 @@ export default function HomePage() {
       <Filter />
       <Cta />
       <ScholarshipCarousel />
+      <PopularCoursesSection />
       <AboutSection />
       <HowWork />
     </>

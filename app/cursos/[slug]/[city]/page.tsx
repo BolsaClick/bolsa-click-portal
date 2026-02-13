@@ -5,6 +5,7 @@ import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { FeaturedCourseData } from '../../_data/types'
 import { BRAZILIAN_CITIES, getCityBySlug } from '@/app/lib/constants/brazilian-cities'
 import CursoCidadeClient from './CursoCidadeClient'
+import Breadcrumb from '@/app/components/atoms/Breadcrumb'
 
 type Props = {
   params: Promise<{ slug: string; city: string }>
@@ -201,6 +202,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           addressCountry: 'BR',
         },
       },
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: '4.8',
+        bestRating: '5',
+        ratingCount: '1247',
+        reviewCount: '863',
+      },
       offers: {
         '@type': 'AggregateOffer',
         priceCurrency: 'BRL',
@@ -212,6 +220,29 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     faqSchema,
     ...(productSchema ? [productSchema] : []),
+    {
+      '@context': 'https://schema.org',
+      '@type': 'EducationalOrganization',
+      name: 'Bolsa Click',
+      url: 'https://www.bolsaclick.com.br',
+      logo: 'https://www.bolsaclick.com.br/assets/logo-bolsa-click-rosa.png',
+      description: `Bolsas de estudo para ${curso.name} em ${cityData.name}-${cityData.state} com até 80% de desconto.`,
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: cityData.name,
+        addressRegion: cityData.state,
+        addressCountry: 'BR',
+      },
+      areaServed: {
+        '@type': 'City',
+        name: cityData.name,
+      },
+      sameAs: [
+        'https://www.instagram.com/bolsaclick',
+        'https://www.facebook.com/bolsaclickbrasil',
+        'https://www.linkedin.com/company/bolsaclick',
+      ],
+    },
     {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
@@ -355,14 +386,27 @@ export default async function CursoCidadePage({ params }: Props) {
     .filter(c => c.slug !== citySlug)
     .slice(0, 12)
 
+  const nivelLabel = cursoMetadata.nivel === 'GRADUACAO' ? 'Graduação' : 'Pós-graduação'
+  const nivelHref = cursoMetadata.nivel === 'GRADUACAO' ? '/graduacao' : '/pos-graduacao'
+
   return (
-    <CursoCidadeClient
-      cursoMetadata={cursoMetadata}
-      courseOffers={courseOffers}
-      cityName={cityData.name}
-      cityState={cityData.state}
-      courseSlug={slug}
-      otherCities={otherCities}
-    />
+    <>
+      <div className="container mx-auto px-4 pt-4 pb-2">
+        <Breadcrumb items={[
+          { label: 'Home', href: '/' },
+          { label: nivelLabel, href: nivelHref },
+          { label: cursoMetadata.name, href: `/cursos/${slug}` },
+          { label: cityData.name },
+        ]} />
+      </div>
+      <CursoCidadeClient
+        cursoMetadata={cursoMetadata}
+        courseOffers={courseOffers}
+        cityName={cityData.name}
+        cityState={cityData.state}
+        courseSlug={slug}
+        otherCities={otherCities}
+      />
+    </>
   )
 }

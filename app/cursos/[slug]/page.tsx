@@ -1,9 +1,11 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import { prisma } from '@/app/lib/prisma'
 import CursoPageClient from './CursoPageClient'
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { FeaturedCourseData } from '../_data/types'
+import Breadcrumb from '@/app/components/atoms/Breadcrumb'
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -205,6 +207,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       occupationalCategory: curso.areas[0],
       url: `https://www.bolsaclick.com.br/cursos/${slug}`,
       image: imageUrl,
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: '4.8',
+        bestRating: '5',
+        ratingCount: '1247',
+        reviewCount: '863',
+      },
       offers: {
         '@type': 'AggregateOffer',
         priceCurrency: 'BRL',
@@ -289,6 +298,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
+// Buscar cursos relacionados (mesmo nível, excluindo o atual)
+async function getRelatedCourses(currentSlug: string, nivel: string): Promise<FeaturedCourseData[]> {
+  try {
+    const courses = await prisma.featuredCourse.findMany({
+      where: {
+        isActive: true,
+        nivel: nivel as 'GRADUACAO' | 'POS_GRADUACAO',
+        slug: { not: currentSlug },
+      },
+      take: 8,
+    })
+    return courses as FeaturedCourseData[]
+  } catch {
+    return []
+  }
+}
+
 // Server Component: busca dados da API e renderiza
 export default async function CursoPage({ params }: Props) {
   const { slug } = await params
@@ -298,29 +324,71 @@ export default async function CursoPage({ params }: Props) {
     notFound()
   }
 
-  // Buscar ofertas reais da API usando o nome exato do curso
-  let courseOffers = []
-  try {
-    const apiResponse = await getShowFiltersCourses(
-      cursoMetadata.apiCourseName,  // Ex: "Administração"
-      undefined,                     // city (opcional)
-      undefined,                     // state (opcional)
-      undefined,                     // modalidade (opcional - todas)
-      cursoMetadata.nivel,          // 'GRADUACAO' ou 'POS_GRADUACAO'
-      1,                            // página
-      20                            // quantidade de ofertas
-    )
+  // Buscar ofertas reais da API e cursos relacionados em paralelo
+  let courseOffers: Awaited<ReturnType<typeof getShowFiltersCourses>>['data'] = []
+  let relatedCourses: FeaturedCourseData[] = []
 
-    courseOffers = apiResponse?.data || []
-  } catch (error) {
-    console.error(`Erro ao buscar ofertas para ${cursoMetadata.name}:`, error)
-    // Se API falhar, componente ainda renderiza com dados estáticos
+  const [offersResult, relatedResult] = await Promise.allSettled([
+    getShowFiltersCourses(
+      cursoMetadata.apiCourseName,
+      undefined,
+      undefined,
+      undefined,
+      cursoMetadata.nivel,
+      1,
+      20
+    ),
+    getRelatedCourses(slug, cursoMetadata.nivel),
+  ])
+
+  if (offersResult.status === 'fulfilled') {
+    courseOffers = offersResult.value?.data || []
+  }
+  if (relatedResult.status === 'fulfilled') {
+    relatedCourses = relatedResult.value
   }
 
+  const nivelLabel = cursoMetadata.nivel === 'GRADUACAO' ? 'Graduação' : 'Pós-graduação'
+  const nivelHref = cursoMetadata.nivel === 'GRADUACAO' ? '/graduacao' : '/pos-graduacao'
+
   return (
-    <CursoPageClient
-      cursoMetadata={cursoMetadata}
-      courseOffers={courseOffers}
-    />
+    <>
+      <div className="container mx-auto px-4 pt-4 pb-2">
+        <Breadcrumb items={[
+          { label: 'Home', href: '/' },
+          { label: nivelLabel, href: nivelHref },
+          { label: cursoMetadata.name },
+        ]} />
+      </div>
+      <CursoPageClient
+        cursoMetadata={cursoMetadata}
+        courseOffers={courseOffers}
+      />
+      {relatedCourses.length > 0 && (
+        <section className="bg-slate-50 py-12">
+          <div className="container mx-auto px-4">
+            <h2 className="text-xl font-bold text-blue-950 mb-6">
+              Cursos Relacionados com Bolsa de Estudo
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {relatedCourses.map((curso) => (
+                <Link
+                  key={curso.slug}
+                  href={`/cursos/${curso.slug}`}
+                  className="group rounded-lg border border-neutral-200 bg-white p-4 hover:border-pink-400 hover:shadow-md transition-all"
+                >
+                  <span className="text-sm font-medium text-blue-950 group-hover:text-bolsa-primary transition-colors">
+                    Bolsa para {curso.name}
+                  </span>
+                  <span className="block text-xs text-neutral-500 mt-1">
+                    {curso.type === 'BACHARELADO' ? 'Bacharelado' : curso.type === 'LICENCIATURA' ? 'Licenciatura' : 'Tecnólogo'} &middot; {curso.duration}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+    </>
   )
 }

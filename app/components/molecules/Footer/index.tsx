@@ -6,6 +6,60 @@ import Link from 'next/link';
 import Container from '../../atoms/Container';
 import { useWhatsappFeatureFlag } from '@/app/lib/hooks/usePostHogFeatureFlags';
 
+const linkClass = 'text-neutral-600 text-sm hover:text-bolsa-primary transition-colors'
+
+const cursosGraduacao = [
+  { nome: 'Administração', slug: 'administracao' },
+  { nome: 'Direito', slug: 'direito' },
+  { nome: 'Enfermagem', slug: 'enfermagem' },
+  { nome: 'Psicologia', slug: 'psicologia' },
+  { nome: 'Pedagogia', slug: 'pedagogia' },
+  { nome: 'Educação Física', slug: 'educacao-fisica' },
+  { nome: 'Ciências Contábeis', slug: 'ciencias-contabeis' },
+  { nome: 'Arquitetura e Urbanismo', slug: 'arquitetura-e-urbanismo' },
+  { nome: 'Nutrição', slug: 'nutricao' },
+  { nome: 'Fisioterapia', slug: 'fisioterapia' },
+  { nome: 'Engenharia Civil', slug: 'engenharia-civil' },
+  { nome: 'Biomedicina', slug: 'biomedicina' },
+  { nome: 'Odontologia', slug: 'odontologia' },
+  { nome: 'Farmácia', slug: 'farmacia' },
+]
+
+const cursosTecnologos = [
+  { nome: 'Análise e Desenv. de Sistemas', slug: 'analise-e-desenvolvimento-de-sistemas' },
+  { nome: 'Gestão de Recursos Humanos', slug: 'gestao-de-recursos-humanos' },
+  { nome: 'Marketing', slug: 'marketing' },
+  { nome: 'Gestão Comercial', slug: 'gestao-comercial' },
+]
+
+const cidadesPopulares = [
+  { nome: 'São Paulo', slug: 'sao-paulo' },
+  { nome: 'Rio de Janeiro', slug: 'rio-de-janeiro' },
+  { nome: 'Belo Horizonte', slug: 'belo-horizonte' },
+  { nome: 'Curitiba', slug: 'curitiba' },
+  { nome: 'Porto Alegre', slug: 'porto-alegre' },
+  { nome: 'Brasília', slug: 'brasilia' },
+  { nome: 'Salvador', slug: 'salvador' },
+  { nome: 'Recife', slug: 'recife' },
+  { nome: 'Fortaleza', slug: 'fortaleza' },
+  { nome: 'Goiânia', slug: 'goiania' },
+  { nome: 'Campinas', slug: 'campinas' },
+  { nome: 'Manaus', slug: 'manaus' },
+]
+
+const bolsasPorCidade = [
+  { nome: 'Administração em São Paulo', curso: 'administracao', cidade: 'sao-paulo' },
+  { nome: 'Direito em São Paulo', curso: 'direito', cidade: 'sao-paulo' },
+  { nome: 'Enfermagem em Rio de Janeiro', curso: 'enfermagem', cidade: 'rio-de-janeiro' },
+  { nome: 'Psicologia em Belo Horizonte', curso: 'psicologia', cidade: 'belo-horizonte' },
+  { nome: 'Pedagogia em Curitiba', curso: 'pedagogia', cidade: 'curitiba' },
+  { nome: 'Direito em Brasília', curso: 'direito', cidade: 'brasilia' },
+  { nome: 'Enfermagem em Salvador', curso: 'enfermagem', cidade: 'salvador' },
+  { nome: 'Administração em Recife', curso: 'administracao', cidade: 'recife' },
+  { nome: 'ADS em Fortaleza', curso: 'analise-e-desenvolvimento-de-sistemas', cidade: 'fortaleza' },
+  { nome: 'Pedagogia em Goiânia', curso: 'pedagogia', cidade: 'goiania' },
+]
+
 const Footer: React.FC = () => {
   const showWhatsapp = useWhatsappFeatureFlag()
   const [currentTheme, setCurrentTheme] = useState('bolsaclick')
@@ -21,20 +75,97 @@ const Footer: React.FC = () => {
       ? '/assets/logo-anhanguera-bolsa-click.svg'
       : '/assets/logo-bolsa-click-rosa.png'
 
-  // Cursos populares para o footer
-  const cursosPopulares = [
-    { nome: 'Administração', slug: 'administracao' },
-    { nome: 'Direito', slug: 'direito' },
-    { nome: 'Enfermagem', slug: 'enfermagem' },
-    { nome: 'Psicologia', slug: 'psicologia' },
-    { nome: 'Pedagogia', slug: 'pedagogia' },
-    { nome: 'Análise e Desenvolvimento de Sistemas', slug: 'analise-e-desenvolvimento-de-sistemas' },
-  ];
-
   return (
     <footer className="bg-gradient-to-b from-slate-50 to-slate-100 border-t border-neutral-200 w-full">
+      {/* Seção de links internos para SEO */}
       <Container>
-        <div className="py-12 md:py-16">
+        <div className="py-10 border-b border-neutral-200">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {/* Cursos de Graduação */}
+            <div>
+              <h4 className="font-bold text-sm uppercase tracking-wider text-blue-950 mb-4">Cursos de Graduação</h4>
+              <nav aria-label="Cursos de graduação">
+                <ul className="space-y-2">
+                  {cursosGraduacao.map((curso) => (
+                    <li key={curso.slug}>
+                      <Link href={`/cursos/${curso.slug}`} className={linkClass}>
+                        Bolsa para {curso.nome}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </div>
+
+            {/* Cursos Tecnólogos + Modalidades */}
+            <div>
+              <h4 className="font-bold text-sm uppercase tracking-wider text-blue-950 mb-4">Cursos Tecnólogos</h4>
+              <nav aria-label="Cursos tecnólogos">
+                <ul className="space-y-2">
+                  {cursosTecnologos.map((curso) => (
+                    <li key={curso.slug}>
+                      <Link href={`/cursos/${curso.slug}`} className={linkClass}>
+                        Bolsa para {curso.nome}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+
+              <h4 className="font-bold text-sm uppercase tracking-wider text-blue-950 mb-4 mt-8">Por Nível</h4>
+              <nav aria-label="Níveis de ensino">
+                <ul className="space-y-2">
+                  <li><Link href="/graduacao" className={linkClass}>Graduação com Bolsa</Link></li>
+                  <li><Link href="/pos-graduacao" className={linkClass}>Pós-Graduação com Bolsa</Link></li>
+                  <li><Link href="/cursos" className={linkClass}>Todos os Cursos</Link></li>
+                </ul>
+              </nav>
+            </div>
+
+            {/* Bolsas por Cidade */}
+            <div>
+              <h4 className="font-bold text-sm uppercase tracking-wider text-blue-950 mb-4">Bolsas por Cidade</h4>
+              <nav aria-label="Bolsas por cidade">
+                <ul className="space-y-2">
+                  {cidadesPopulares.map((cidade) => (
+                    <li key={cidade.slug}>
+                      <Link
+                        href={`/curso/resultado?cidade=${encodeURIComponent(cidade.nome)}&estado=${cidade.slug === 'brasilia' ? 'DF' : cidade.slug === 'sao-paulo' || cidade.slug === 'campinas' ? 'SP' : cidade.slug === 'rio-de-janeiro' ? 'RJ' : cidade.slug === 'belo-horizonte' ? 'MG' : cidade.slug === 'curitiba' ? 'PR' : cidade.slug === 'porto-alegre' ? 'RS' : cidade.slug === 'salvador' ? 'BA' : cidade.slug === 'recife' ? 'PE' : cidade.slug === 'fortaleza' ? 'CE' : cidade.slug === 'goiania' ? 'GO' : cidade.slug === 'manaus' ? 'AM' : ''}&nivel=GRADUACAO`}
+                        className={linkClass}
+                      >
+                        Bolsas em {cidade.nome}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </div>
+
+            {/* Bolsas Curso + Cidade */}
+            <div>
+              <h4 className="font-bold text-sm uppercase tracking-wider text-blue-950 mb-4">Cursos em Destaque</h4>
+              <nav aria-label="Cursos em destaque por cidade">
+                <ul className="space-y-2">
+                  {bolsasPorCidade.map((item) => (
+                    <li key={`${item.curso}-${item.cidade}`}>
+                      <Link
+                        href={`/cursos/${item.curso}/${item.cidade}`}
+                        className={linkClass}
+                      >
+                        {item.nome}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </Container>
+
+      {/* Seção principal do footer */}
+      <Container>
+        <div className="py-10">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-8 lg:gap-12">
             {/* Logo e Descrição */}
             <div className="col-span-2 md:col-span-1 space-y-4">
@@ -46,7 +177,7 @@ const Footer: React.FC = () => {
                 priority
               />
               <p className="text-neutral-600 text-sm leading-relaxed">
-                O maior marketplace de bolsas de estudo do Brasil. Seu futuro com mais desconto começa aqui.
+                O maior marketplace de bolsas de estudo do Brasil. Encontre bolsas de até 95% de desconto em mais de 30.000 faculdades.
               </p>
               <div className="flex space-x-3 pt-2">
                 <a
@@ -96,22 +227,22 @@ const Footer: React.FC = () => {
               <nav aria-label="Links institucionais">
                 <ul className="space-y-2.5">
                   <li>
-                    <Link href="/quem-somos" className="text-neutral-600 text-sm hover:text-bolsa-primary transition-colors">
+                    <Link href="/quem-somos" className={linkClass}>
                       Quem Somos
                     </Link>
                   </li>
                   <li>
-                    <Link href="/central-de-ajuda/sobre-o-bolsa-click/como-funciona" className="text-neutral-600 text-sm hover:text-bolsa-primary transition-colors">
+                    <Link href="/central-de-ajuda/sobre-o-bolsa-click/como-funciona" className={linkClass}>
                       Como Funciona
                     </Link>
                   </li>
                   <li>
-                    <Link href="/central-de-ajuda" className="text-neutral-600 text-sm hover:text-bolsa-primary transition-colors">
+                    <Link href="/central-de-ajuda" className={linkClass}>
                       Central de Ajuda
                     </Link>
                   </li>
                   <li>
-                    <Link href="/contato" className="text-neutral-600 text-sm hover:text-bolsa-primary transition-colors">
+                    <Link href="/contato" className={linkClass}>
                       Fale Conosco
                     </Link>
                   </li>
@@ -125,27 +256,32 @@ const Footer: React.FC = () => {
               <nav aria-label="Links para estudantes">
                 <ul className="space-y-2.5">
                   <li>
-                    <Link href="/cursos" className="text-neutral-600 text-sm hover:text-bolsa-primary transition-colors">
-                      Buscar Cursos
+                    <Link href="/cursos" className={linkClass}>
+                      Buscar Bolsas de Estudo
                     </Link>
                   </li>
                   <li>
-                    <Link href="/pos-graduacao" className="text-neutral-600 text-sm hover:text-bolsa-primary transition-colors">
-                      Pós-Graduação
+                    <Link href="/graduacao" className={linkClass}>
+                      Bolsa para Graduação
                     </Link>
                   </li>
                   <li>
-                    <Link href="/central-de-ajuda/primeiros-passos" className="text-neutral-600 text-sm hover:text-bolsa-primary transition-colors">
+                    <Link href="/pos-graduacao" className={linkClass}>
+                      Bolsa para Pós-Graduação
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/central-de-ajuda/primeiros-passos" className={linkClass}>
                       Primeiros Passos
                     </Link>
                   </li>
                   <li>
-                    <Link href="/central-de-ajuda/bolsas-descontos-regras" className="text-neutral-600 text-sm hover:text-bolsa-primary transition-colors">
+                    <Link href="/central-de-ajuda/bolsas-descontos-regras" className={linkClass}>
                       Regras das Bolsas
                     </Link>
                   </li>
                   <li>
-                    <Link href="/central-de-ajuda/pagamento-taxas-reembolso" className="text-neutral-600 text-sm hover:text-bolsa-primary transition-colors">
+                    <Link href="/central-de-ajuda/pagamento-taxas-reembolso" className={linkClass}>
                       Pagamento e Reembolso
                     </Link>
                   </li>
@@ -153,21 +289,17 @@ const Footer: React.FC = () => {
               </nav>
             </div>
 
-            {/* Cursos Populares */}
+            {/* Cursos Mais Buscados */}
             <div>
-              <h4 className="font-bold text-sm uppercase tracking-wider text-blue-950 mb-4">Cursos Populares</h4>
-              <nav aria-label="Cursos populares">
+              <h4 className="font-bold text-sm uppercase tracking-wider text-blue-950 mb-4">Mais Buscados</h4>
+              <nav aria-label="Cursos mais buscados">
                 <ul className="space-y-2.5">
-                  {cursosPopulares.map((curso) => (
-                    <li key={curso.slug}>
-                      <Link
-                        href={`/cursos/${curso.slug}`}
-                        className="text-neutral-600 text-sm hover:text-bolsa-primary transition-colors"
-                      >
-                        {curso.nome}
-                      </Link>
-                    </li>
-                  ))}
+                  <li><Link href="/cursos/administracao" className={linkClass}>Administração</Link></li>
+                  <li><Link href="/cursos/direito" className={linkClass}>Direito</Link></li>
+                  <li><Link href="/cursos/enfermagem" className={linkClass}>Enfermagem</Link></li>
+                  <li><Link href="/cursos/psicologia" className={linkClass}>Psicologia</Link></li>
+                  <li><Link href="/cursos/pedagogia" className={linkClass}>Pedagogia</Link></li>
+                  <li><Link href="/cursos/analise-e-desenvolvimento-de-sistemas" className={linkClass}>ADS</Link></li>
                 </ul>
               </nav>
             </div>

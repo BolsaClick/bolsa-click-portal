@@ -105,7 +105,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
   // Se estiver na página de login, renderizar apenas o children
   if (isLoginPage) {
-    return <>{children}</>
+    return <><meta name="robots" content="noindex, nofollow" />{children}</>
   }
 
   if (loading) {
@@ -130,7 +130,9 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <>
+      <meta name="robots" content="noindex, nofollow" />
+      <div className="min-h-screen bg-gray-100">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
@@ -239,6 +241,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
         <main className="p-6">{children}</main>
       </div>
     </div>
+    </>
   )
 }
 

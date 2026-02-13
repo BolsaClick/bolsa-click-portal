@@ -71,8 +71,10 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
   // Determinar se a página deve ser indexada:
   // - Deve ter um curso selecionado (páginas genéricas não são indexadas)
+  // - Deve ter cidade E estado (sem eles, a página redireciona via geolocalização)
   // - Se tiver estado, deve ser brasileiro
-  const shouldIndex = hasCourseSelected && isValidBrazilianState
+  const hasLocation = !!(cidade && cidade.trim() && estado && estado.trim())
+  const shouldIndex = hasCourseSelected && hasLocation && isValidBrazilianState
   
   // Se não houver curso selecionado, usar título genérico "Buscar cursos"
   // Nota: O layout principal adiciona " | Bolsa Click" automaticamente via template

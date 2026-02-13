@@ -461,6 +461,51 @@ model SiteSettings {
 }
 
 // ==========================================
+// INSTITUIÇÕES (FACULDADES PARCEIRAS)
+// ==========================================
+
+model Institution {
+  id                String            @id @default(uuid())
+  slug              String            @unique
+  name              String            // "Anhanguera"
+  shortName         String            // "ANHANGUERA"
+  fullName          String            // "Universidade Anhanguera"
+  description       String
+  longDescription   String            @db.Text
+  founded           Int?
+  type              InstitutionType
+  campusCount       Int?
+  studentCount      String?           // "500.000+"
+  coursesOffered    Int?
+  headquartersCity  String?
+  headquartersState String?
+  mecRating         Int?              // 1-5
+  emecLink          String?
+  modalities        String[]          // ["EAD", "PRESENCIAL", "SEMIPRESENCIAL"]
+  academicLevels    String[]          // ["GRADUACAO", "POS_GRADUACAO"]
+  highlights        String[]          // Diferenciais
+  logoUrl           String
+  imageUrl          String
+  imageAlt          String?
+  keywords          String[]
+  metaTitle         String?
+  metaDescription   String?
+  isActive          Boolean           @default(true)
+  order             Int               @default(0)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([slug])
+  @@index([isActive])
+}
+
+enum InstitutionType {
+  PRIVADA
+  PUBLICA_FEDERAL
+  PUBLICA_ESTADUAL
+}
+
+// ==========================================
 // MODELOS EXISTENTES (CURSOS)
 // ==========================================
 

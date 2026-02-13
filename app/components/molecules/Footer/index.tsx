@@ -141,9 +141,19 @@ const Footer: React.FC = () => {
               </nav>
             </div>
 
-            {/* Bolsas Curso + Cidade */}
+            {/* Bolsas Curso + Cidade + Faculdades */}
             <div>
-              <h4 className="font-bold text-sm uppercase tracking-wider text-blue-950 mb-4">Cursos em Destaque</h4>
+              <h4 className="font-bold text-sm uppercase tracking-wider text-blue-950 mb-4">Faculdades Parceiras</h4>
+              <nav aria-label="Faculdades parceiras">
+                <ul className="space-y-2">
+                  <li><Link href="/faculdades/anhanguera" className={linkClass}>Anhanguera</Link></li>
+                  <li><Link href="/faculdades/unopar" className={linkClass}>Unopar</Link></li>
+                  <li><Link href="/faculdades/unime" className={linkClass}>Unime</Link></li>
+                  <li><Link href="/faculdades" className={linkClass}>Ver todas as faculdades</Link></li>
+                </ul>
+              </nav>
+
+              <h4 className="font-bold text-sm uppercase tracking-wider text-blue-950 mb-4 mt-8">Cursos em Destaque</h4>
               <nav aria-label="Cursos em destaque por cidade">
                 <ul className="space-y-2">
                   {bolsasPorCidade.map((item) => (

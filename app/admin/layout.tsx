@@ -17,6 +17,7 @@ import {
   Menu,
   X,
   Ticket,
+  Building2,
 } from 'lucide-react'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { AdminProvider, useAdmin } from '@/app/contexts/AdminAuthContext'
@@ -38,6 +39,12 @@ const navigation = [
     name: 'Cursos em Destaque',
     href: '/admin/cursos',
     icon: GraduationCap,
+    permission: 'courses',
+  },
+  {
+    name: 'Faculdades',
+    href: '/admin/faculdades',
+    icon: Building2,
     permission: 'courses',
   },
   {

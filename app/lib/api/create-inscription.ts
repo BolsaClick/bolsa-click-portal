@@ -18,7 +18,7 @@ export interface CreateInscriptionRequest {
     }
     offerSource: string
     /** Pós-graduação: id da parcela escolhida e dia de vencimento */
-    paymentMethod?: { id: string; dueDay: string }
+    paymentMethod?: { id: string; dueDay: string; voucher?: string; voucherId?: number }
   }
   personalData: {
     name: string
@@ -117,7 +117,7 @@ export function buildInscriptionPayload(
     }>
     shift?: string
   },
-  paymentMethod?: { id: string; dueDay: string }
+  paymentMethod?: { id: string; dueDay: string; voucher?: string; voucherId?: number }
 ): CreateInscriptionRequest {
   // Limpar formatação
   const cleanCpf = formData.cpf.replace(/\D/g, '')

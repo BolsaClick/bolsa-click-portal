@@ -36,6 +36,7 @@ import { FaPix } from 'react-icons/fa6'
 import { validateCpf } from '@/app/lib/api/validate-cpf'
 import { createLead } from '@/app/lib/api/create-lead'
 import { createInscription, buildInscriptionPayload } from '@/app/lib/api/create-inscription'
+import { validateVoucher, type ValidateVoucherResponse, type VoucherInstallment } from '@/app/lib/api/validate-voucher'
 import { createCheckout } from '@/app/lib/api/create-checkout'
 import { getCheckoutStatus } from '@/app/lib/api/checkout-status'
 import { createMarketplaceInscription } from '@/app/lib/api/create-inscription-marketplace'
@@ -176,6 +177,12 @@ function MatriculaContent() {
   // Pós-graduação: método de pagamento e parcela (dia de vencimento fixo 10)
   const [posPaymentMethodType, setPosPaymentMethodType] = useState<string>('')
   const [posInstallmentId, setPosInstallmentId] = useState<string>('')
+  const [voucherCode, setVoucherCode] = useState<string>('')
+  const [voucherValidating, setVoucherValidating] = useState(false)
+  const [voucherValid, setVoucherValid] = useState<boolean | null>(null)
+  const [voucherMessage, setVoucherMessage] = useState<string>('')
+  const [voucherData, setVoucherData] = useState<ValidateVoucherResponse | null>(null)
+  const [voucherInstallments, setVoucherInstallments] = useState<VoucherInstallment[]>([])
   // Graduação: tipo de ingresso (ENEM ou VESTIBULAR)
   const [selectedIngressType, setSelectedIngressType] = useState<'ENEM' | 'VESTIBULAR'>('VESTIBULAR')
   // Recovery: dados para efeito 2 (depende de offerDetails)
@@ -977,6 +984,51 @@ const isFormValidForPayment =
     intervalId = setInterval(checkStatus, 3000)
   }
 
+  // Função para validar voucher
+  const handleValidateVoucher = async () => {
+    if (!voucherCode.trim()) return
+    const cpf = (getValues('cpf') || '').replace(/\D/g, '')
+    if (!cpf) {
+      setVoucherValid(false)
+      setVoucherMessage('Preencha o CPF antes de validar o voucher.')
+      return
+    }
+    if (!posInstallmentId) {
+      setVoucherValid(false)
+      setVoucherMessage('Selecione a parcela antes de validar o voucher.')
+      return
+    }
+    setVoucherValidating(true)
+    setVoucherValid(null)
+    setVoucherMessage('')
+    setVoucherData(null)
+    setVoucherInstallments([])
+    try {
+      const result = await validateVoucher(voucherCode.trim(), cpf, posInstallmentId)
+      const isValid = result.isValid ?? false
+      setVoucherValid(isValid)
+      if (isValid && result.paymentMethods?.length) {
+        setVoucherData(result)
+        // Pegar parcelas do método que bate com o selecionado
+        const matchingMethod = result.paymentMethods.find((pm) => pm.type === posPaymentMethodType)
+          || result.paymentMethods[0]
+        if (matchingMethod) {
+          setVoucherInstallments(matchingMethod.installments)
+          setVoucherMessage(`Voucher aplicado! ${matchingMethod.discountPercentage}% de desconto.`)
+        } else {
+          setVoucherMessage('Voucher válido!')
+        }
+      } else {
+        setVoucherMessage(result.message || 'Voucher inválido.')
+      }
+    } catch {
+      setVoucherValid(false)
+      setVoucherMessage('Erro ao validar voucher. Tente novamente.')
+    } finally {
+      setVoucherValidating(false)
+    }
+  }
+
   // Função para criar a matrícula após o pagamento ser confirmado
   const createInscriptionAfterPayment = async (data: FormSchema) => {
     try {
@@ -984,12 +1036,12 @@ const isFormValidForPayment =
         throw new Error('Detalhes da oferta não encontrados')
       }
 
-      let paymentMethod: { id: string; dueDay: string } | undefined
+      let paymentMethod: { id: string; dueDay: string; voucher?: string; voucherId?: number } | undefined
       if (typeof window !== 'undefined') {
         const stored = localStorage.getItem('pendingPosPaymentMethod')
         if (stored) {
           try {
-            paymentMethod = JSON.parse(stored) as { id: string; dueDay: string }
+            paymentMethod = JSON.parse(stored) as { id: string; dueDay: string; voucher?: string; voucherId?: number }
           } catch {
             // ignore
           }
@@ -1117,7 +1169,7 @@ const isFormValidForPayment =
             for (const pm of methods) {
               const inst = pm.installments.find((i) => i.id === paymentMethod.id)
               if (inst) {
-                paymentLabel = pm.type === 'CREDITO' ? 'Crédito' : pm.type === 'BOLETO' ? 'Boleto' : pm.type === 'PIX' ? 'PIX' : pm.type === 'CREDITO_RECORRENCIA' ? 'Cartão Recorrente' : pm.type
+                paymentLabel = pm.type === 'CREDITO' ? 'Crédito' : pm.type === 'BOLETO' ? 'Boleto' : pm.type === 'PIX' ? 'PIX' : pm.type === 'CREDITO_RECORRENCIA' ? 'Cartão Recorrente' : pm.type === 'VOUCHER' ? 'Voucher' : pm.type
                 installmentDescription = `${inst.number}x de ${formatCurrency(inst.installmentValue)}`
                 break
               }
@@ -1190,9 +1242,14 @@ const isFormValidForPayment =
             return
           }
           if (typeof window !== 'undefined') {
+            const pmData: { id: string; dueDay: string; voucher?: string; voucherId?: number } = { id: posInstallmentId, dueDay: '10' }
+            if (voucherCode.trim() && voucherValid && voucherData) {
+              pmData.voucher = voucherData.code || voucherCode.trim()
+              pmData.voucherId = voucherData.id
+            }
             localStorage.setItem(
               'pendingPosPaymentMethod',
-              JSON.stringify({ id: posInstallmentId, dueDay: '10' })
+              JSON.stringify(pmData)
             )
           }
         }
@@ -1437,7 +1494,12 @@ const isFormValidForPayment =
         const method = methods.find((pm) => pm.type === posPaymentMethodType)
         const inst = method?.installments?.find((i) => i.id === posInstallmentId)
         if (inst && typeof window !== 'undefined') {
-          localStorage.setItem('pendingPosPaymentMethod', JSON.stringify({ id: inst.id, dueDay: '10' }))
+          const pmData: { id: string; dueDay: string; voucher?: string; voucherId?: number } = { id: inst.id, dueDay: '10' }
+          if (voucherCode.trim() && voucherValid && voucherData) {
+            pmData.voucher = voucherData.code || voucherCode.trim()
+            pmData.voucherId = voucherData.id
+          }
+          localStorage.setItem('pendingPosPaymentMethod', JSON.stringify(pmData))
         }
       }
 
@@ -2156,7 +2218,7 @@ const isFormValidForPayment =
                           <div className="flex flex-wrap gap-2">
                             {(offerDetails.paymentMethods as PosPaymentMethod[]).map((pm) => {
                               const label =
-                                pm.type === 'CREDITO' ? 'Crédito' : pm.type === 'BOLETO' ? 'Boleto' : pm.type === 'PIX' ? 'PIX' : pm.type === 'CREDITO_RECORRENCIA' ? 'Cartão Recorrente' : pm.type
+                                pm.type === 'CREDITO' ? 'Crédito' : pm.type === 'BOLETO' ? 'Boleto' : pm.type === 'PIX' ? 'PIX' : pm.type === 'CREDITO_RECORRENCIA' ? 'Cartão Recorrente' : pm.type === 'VOUCHER' ? 'Voucher' : pm.type
                               return (
                                 <button
                                   key={pm.type}
@@ -2180,21 +2242,38 @@ const isFormValidForPayment =
                               <div className="space-y-2">
                                 {(
                                   (offerDetails.paymentMethods as PosPaymentMethod[]).find((pm) => pm.type === posPaymentMethodType)?.installments ?? []
-                                ).map((inst: PosInstallment) => (
-                                  <div
-                                    key={inst.id}
-                                    onClick={() => setPosInstallmentId(inst.id)}
-                                    className={`p-3 border-2 rounded-lg cursor-pointer transition-all flex justify-between items-center ${
-                                      posInstallmentId === inst.id ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'
-                                    }`}
-                                  >
-                                    <span className="font-medium text-sm">
-                                      {inst.number}x de {formatCurrency(inst.installmentValue)}
-                                    </span>
-                                    <span className="text-xs text-gray-500">Total: {formatCurrency(inst.totalValue)}</span>
-                                    {posInstallmentId === inst.id && <Check size={18} className="text-green-600" />}
-                                  </div>
-                                ))}
+                                ).map((inst: PosInstallment) => {
+                                  const voucherInst = voucherValid ? voucherInstallments.find((v) => v.number === inst.number) : null
+                                  const displayValue = voucherInst ? voucherInst.installmentValue : inst.installmentValue
+                                  const displayTotal = voucherInst ? voucherInst.totalValue : inst.totalValue
+                                  return (
+                                    <div
+                                      key={inst.id}
+                                      onClick={() => setPosInstallmentId(inst.id)}
+                                      className={`p-3 border-2 rounded-lg cursor-pointer transition-all flex justify-between items-center ${
+                                        posInstallmentId === inst.id ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'
+                                      }`}
+                                    >
+                                      <div>
+                                        <span className="font-medium text-sm">
+                                          {inst.number}x de {formatCurrency(displayValue)}
+                                        </span>
+                                        {voucherInst && (
+                                          <span className="text-xs text-gray-400 line-through ml-2">
+                                            {formatCurrency(inst.installmentValue)}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        {voucherInst && (
+                                          <span className="text-xs font-medium text-green-600">-{voucherInst.discountPercentage}%</span>
+                                        )}
+                                        <span className="text-xs text-gray-500">Total: {formatCurrency(displayTotal)}</span>
+                                        {posInstallmentId === inst.id && <Check size={18} className="text-green-600" />}
+                                      </div>
+                                    </div>
+                                  )
+                                })}
                               </div>
                               <p className="text-xs text-gray-600 mt-3">
                                 Vencimento: dia <strong>10</strong> de cada mês (fixo para pós-graduação).
@@ -2204,6 +2283,44 @@ const isFormValidForPayment =
                           <p className="text-sm text-gray-600 mt-3">
                             O valor da matrícula e das mensalidades será pago diretamente à instituição de ensino.
                           </p>
+
+                          {/* Voucher */}
+                          <div className="mt-4 p-3 border border-dashed border-gray-300 rounded-lg bg-gray-50">
+                            <label className="block text-xs font-medium text-gray-700 mb-2">Possui um voucher?</label>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={voucherCode}
+                                onChange={(e) => {
+                                  setVoucherCode(e.target.value)
+                                  setVoucherValid(null)
+                                  setVoucherMessage('')
+                                  setVoucherData(null)
+                                  setVoucherInstallments([])
+                                                              }}
+                                placeholder="Digite o código do voucher"
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
+                              />
+                              <button
+                                type="button"
+                                onClick={handleValidateVoucher}
+                                disabled={voucherValidating || !voucherCode.trim()}
+                                className="px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                              >
+                                {voucherValidating ? (
+                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  'Validar'
+                                )}
+                              </button>
+                            </div>
+                            {voucherMessage && (
+                              <p className={`text-xs mt-2 ${voucherValid ? 'text-green-600' : 'text-red-600'}`}>
+                                {voucherMessage}
+                              </p>
+                            )}
+                          </div>
+
                           <button
                             type="submit"
                             disabled={isSubmitting || pixLoading || !posInstallmentId}
@@ -2364,7 +2481,26 @@ const isFormValidForPayment =
               <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                 <p className="text-xs text-gray-500 mb-1">Valor da mensalidade</p>
                 <div className="flex items-center gap-2 flex-wrap">
-                  {offerDetails?.montlyFeeFrom && offerDetails.montlyFeeFrom > monthlyFee && (
+                  {voucherValid && voucherInstallments.length > 0 && (() => {
+                    // Encontrar parcela do voucher correspondente à selecionada
+                    const selectedOriginal = posInstallmentId
+                      ? ((offerDetails.paymentMethods as PosPaymentMethod[])
+                          .find((pm) => pm.type === posPaymentMethodType)
+                          ?.installments?.find((i) => i.id === posInstallmentId))
+                      : null
+                    const selectedNumber = selectedOriginal?.number
+                    const vInst = voucherInstallments.find((v) => v.number === selectedNumber) || voucherInstallments[0]
+                    return (
+                      <>
+                        <p className="text-sm text-gray-400 line-through">De {formatCurrency(vInst.originalInstallmentValue)} por</p>
+                        <p className="text-xl font-bold text-green-600">{formatCurrency(vInst.installmentValue)}</p>
+                        <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded">
+                          Voucher -{vInst.discountPercentage}%
+                        </span>
+                      </>
+                    )
+                  })()}
+                  {!(voucherValid && voucherInstallments.length > 0) && offerDetails?.montlyFeeFrom && offerDetails.montlyFeeFrom > monthlyFee ? (
                     <>
                       <p className="text-sm text-gray-400 line-through">De {formatCurrency(offerDetails.montlyFeeFrom)} por</p>
                       <p className="text-xl font-bold text-green-600 ">{formatCurrency(monthlyFee)}</p>
@@ -2372,8 +2508,7 @@ const isFormValidForPayment =
                         {Math.round(((offerDetails.montlyFeeFrom - monthlyFee) / offerDetails.montlyFeeFrom) * 100)}% de desconto
                       </span>
                     </>
-                  )}
-                  {(!offerDetails?.montlyFeeFrom || offerDetails.montlyFeeFrom <= monthlyFee) && (
+                  ) : (
                     <p className="text-xl font-bold text-green-600">{formatCurrency(monthlyFee)}</p>
                   )}
                 </div>

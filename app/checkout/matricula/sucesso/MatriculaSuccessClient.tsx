@@ -78,18 +78,21 @@ export default function MatriculaSuccessClient() {
     }
   }, [])
 
-  // Abre automaticamente a área do candidato em nova aba quando a página carregar
+  const portalUrl = isPos
+    ? 'https://kroton.platosedu.io/v2/lms/login'
+    : 'https://www.anhanguera.com/area-do-candidato/login'
+
+  // Abre automaticamente o portal em nova aba quando a página carregar
   useEffect(() => {
-    // Pequeno delay para garantir que a página carregou completamente
     const timer = setTimeout(() => {
-      window.open('https://www.anhanguera.com/area-do-candidato/login', '_blank')
+      window.open(portalUrl, '_blank')
     }, 1000)
 
     return () => clearTimeout(timer)
-  }, [])
+  }, [portalUrl])
 
   const handleAccessPortal = () => {
-    window.open('https://www.anhanguera.com/area-do-candidato/login', '_blank')
+    window.open(portalUrl, '_blank')
   }
 
   return (

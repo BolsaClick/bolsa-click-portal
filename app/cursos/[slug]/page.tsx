@@ -207,13 +207,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       occupationalCategory: curso.areas[0],
       url: `https://www.bolsaclick.com.br/cursos/${slug}`,
       image: imageUrl,
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: '4.8',
-        bestRating: '5',
-        ratingCount: '1247',
-        reviewCount: '863',
-      },
       offers: {
         '@type': 'AggregateOffer',
         priceCurrency: 'BRL',
@@ -292,9 +285,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       images: [imageUrl],
     },
-    other: {
-      'application/ld+json': JSON.stringify(schemas),
-    },
   }
 }
 
@@ -351,8 +341,97 @@ export default async function CursoPage({ params }: Props) {
   const nivelLabel = cursoMetadata.nivel === 'GRADUACAO' ? 'Graduação' : 'Pós-graduação'
   const nivelHref = cursoMetadata.nivel === 'GRADUACAO' ? '/graduacao' : '/pos-graduacao'
 
+  // Build JSON-LD schemas for SEO
+  const imageUrl = cursoMetadata.imageUrl.startsWith('http')
+    ? cursoMetadata.imageUrl
+    : `https://www.bolsaclick.com.br${cursoMetadata.imageUrl}`
+
+  const prices = (courseOffers || [])
+    .map((o: { minPrice?: number; prices?: { withDiscount?: number } }) => o.minPrice || o.prices?.withDiscount || 0)
+    .filter((p: number) => p > 0)
+  const maxPrices = (courseOffers || [])
+    .map((o: { maxPrice?: number; prices?: { withoutDiscount?: number } }) => o.maxPrice || o.prices?.withoutDiscount || 0)
+    .filter((p: number) => p > 0)
+  const lowPrice = prices.length > 0 ? Math.min(...prices) : 0
+  const highPrice = maxPrices.length > 0 ? Math.max(...maxPrices) : 0
+
+  const jsonLdSchemas = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Course',
+      name: cursoMetadata.fullName,
+      description: cursoMetadata.longDescription,
+      provider: {
+        '@type': 'Organization',
+        name: 'Bolsa Click',
+        url: 'https://www.bolsaclick.com.br',
+        logo: 'https://www.bolsaclick.com.br/assets/logo-bolsa-click-rosa.png',
+      },
+      educationalLevel: nivelLabel,
+      educationalCredentialAwarded: cursoMetadata.type,
+      courseMode: ['Presencial', 'EAD', 'Semipresencial'],
+      timeToComplete: cursoMetadata.duration,
+      url: `https://www.bolsaclick.com.br/cursos/${slug}`,
+      image: imageUrl,
+      ...(lowPrice > 0 ? {
+        offers: {
+          '@type': 'AggregateOffer',
+          priceCurrency: 'BRL',
+          lowPrice: lowPrice.toFixed(2),
+          highPrice: highPrice.toFixed(2),
+          offerCount: String(courseOffers?.length || 0),
+          availability: 'https://schema.org/InStock',
+        },
+      } : {}),
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: `O que é o curso de ${cursoMetadata.name}?`,
+          acceptedAnswer: { '@type': 'Answer', text: cursoMetadata.longDescription },
+        },
+        {
+          '@type': 'Question',
+          name: `Quanto tempo dura o curso de ${cursoMetadata.name}?`,
+          acceptedAnswer: { '@type': 'Answer', text: `O curso de ${cursoMetadata.fullName} tem duração de ${cursoMetadata.duration}.` },
+        },
+        {
+          '@type': 'Question',
+          name: `Quanto custa o curso de ${cursoMetadata.name} com bolsa?`,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: lowPrice > 0
+              ? `Com bolsa pelo Bolsa Click, o curso de ${cursoMetadata.name} pode ser encontrado a partir de R$ ${lowPrice.toFixed(2)} por mês, com descontos de até 80%.`
+              : `O Bolsa Click oferece bolsas de até 80% de desconto para o curso de ${cursoMetadata.name}. Cadastre-se grátis para ver as ofertas.`,
+          },
+        },
+        {
+          '@type': 'Question',
+          name: `Qual o salário médio de quem faz ${cursoMetadata.name}?`,
+          acceptedAnswer: { '@type': 'Answer', text: `O salário médio para profissionais formados em ${cursoMetadata.name} é de ${cursoMetadata.averageSalary}.` },
+        },
+      ],
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.bolsaclick.com.br' },
+        { '@type': 'ListItem', position: 2, name: nivelLabel, item: `https://www.bolsaclick.com.br${nivelHref}` },
+        { '@type': 'ListItem', position: 3, name: cursoMetadata.name, item: `https://www.bolsaclick.com.br/cursos/${slug}` },
+      ],
+    },
+  ]
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchemas) }}
+      />
       <div className="container mx-auto px-4 pt-4 pb-2">
         <Breadcrumb items={[
           { label: 'Home', href: '/' },

@@ -202,13 +202,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           addressCountry: 'BR',
         },
       },
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: '4.8',
-        bestRating: '5',
-        ratingCount: '1247',
-        reviewCount: '863',
-      },
       offers: {
         '@type': 'AggregateOffer',
         priceCurrency: 'BRL',
@@ -318,9 +311,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       images: [imageUrl],
     },
-    other: {
-      'application/ld+json': JSON.stringify(schemas),
-    },
   }
 }
 
@@ -388,9 +378,78 @@ export default async function CursoCidadePage({ params }: Props) {
 
   const nivelLabel = cursoMetadata.nivel === 'GRADUACAO' ? 'Graduação' : 'Pós-graduação'
   const nivelHref = cursoMetadata.nivel === 'GRADUACAO' ? '/graduacao' : '/pos-graduacao'
+  const pageUrl = `https://www.bolsaclick.com.br/cursos/${slug}/${citySlug}`
+  const imageUrl = cursoMetadata.imageUrl.startsWith('http')
+    ? cursoMetadata.imageUrl
+    : `https://www.bolsaclick.com.br${cursoMetadata.imageUrl}`
+
+  const prices = (courseOffers || [])
+    .map((o: { minPrice?: number; prices?: { withDiscount?: number } }) => o.minPrice || o.prices?.withDiscount || 0)
+    .filter((p: number) => p > 0)
+  const lowPrice = prices.length > 0 ? Math.min(...prices) : 0
+
+  const jsonLdSchemas = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Course',
+      name: cursoMetadata.fullName,
+      description: `${cursoMetadata.longDescription} Disponível em ${cityData.name}-${cityData.state} com bolsa de estudo.`,
+      provider: {
+        '@type': 'Organization',
+        name: 'Bolsa Click',
+        url: 'https://www.bolsaclick.com.br',
+      },
+      educationalLevel: nivelLabel,
+      courseMode: ['Presencial', 'EAD', 'Semipresencial'],
+      url: pageUrl,
+      image: imageUrl,
+      locationCreated: {
+        '@type': 'Place',
+        address: { '@type': 'PostalAddress', addressLocality: cityData.name, addressRegion: cityData.state, addressCountry: 'BR' },
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: `Quanto custa ${cursoMetadata.name} em ${cityData.name}?`,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: lowPrice > 0
+              ? `Em ${cityData.name}-${cityData.state}, o curso de ${cursoMetadata.name} pode ser encontrado a partir de R$ ${lowPrice.toFixed(2)} por mês com bolsa pelo Bolsa Click, com descontos de até 80%.`
+              : `O Bolsa Click oferece bolsas de até 80% de desconto para ${cursoMetadata.name} em ${cityData.name}. Cadastre-se grátis para ver as ofertas.`,
+          },
+        },
+        {
+          '@type': 'Question',
+          name: `Quais faculdades oferecem ${cursoMetadata.name} em ${cityData.name}?`,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: `Temos diversas faculdades parceiras que oferecem ${cursoMetadata.name} em ${cityData.name} e região. Compare preços e encontre a melhor bolsa.`,
+          },
+        },
+      ],
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.bolsaclick.com.br' },
+        { '@type': 'ListItem', position: 2, name: nivelLabel, item: `https://www.bolsaclick.com.br${nivelHref}` },
+        { '@type': 'ListItem', position: 3, name: cursoMetadata.name, item: `https://www.bolsaclick.com.br/cursos/${slug}` },
+        { '@type': 'ListItem', position: 4, name: cityData.name, item: pageUrl },
+      ],
+    },
+  ]
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchemas) }}
+      />
       <div className="container mx-auto px-4 pt-4 pb-2">
         <Breadcrumb items={[
           { label: 'Home', href: '/' },

@@ -164,6 +164,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-br">
       <head>
+        {/* Eclesiastes 3:1 — Tudo tem o seu tempo determinado, e há tempo para todo o propósito debaixo do céu. */}
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#ffffff" />
         <meta name="apple-mobile-web-app-title" content="Bolsa Click" />

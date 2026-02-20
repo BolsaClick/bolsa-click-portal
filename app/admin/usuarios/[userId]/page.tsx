@@ -574,7 +574,7 @@ export default function AdminUserDetailPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap gap-2">
                           {item.query && (
-                            <span className="text-sm text-gray-900">"{item.query}"</span>
+                            <span className="text-sm text-gray-900">&ldquo;{item.query}&rdquo;</span>
                           )}
                           {item.course && (
                             <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">{item.course}</span>

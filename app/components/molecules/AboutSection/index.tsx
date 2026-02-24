@@ -89,8 +89,11 @@ const AboutSection: React.FC = () => {
           <h2 className="text-2xl md:text-3xl font-bold mb-6 text-emerald-600">
             O que é o Bolsa<span className="text-red-500">Click</span>?
           </h2>
-          <p className="text-gray-600 max-w-3xl mx-auto">
-            O Bolsa Click é a maior plataforma de bolsa de estudo em faculdades do Brasil. Encontre desconto em faculdade de até 95% para graduação, pós-graduação e cursos técnicos. Mais de 30.000 faculdades parceiras com bolsas de estudos exclusivas. Nossa missão é democratizar o acesso à educação de qualidade, tornando o ensino superior acessível para todos.
+          <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            O Bolsa Click é a maior plataforma de bolsas de estudo em faculdades do Brasil.
+            Aqui você encontra descontos de até 95% em graduação, pós-graduação e cursos técnicos.
+            São mais de 30.000 faculdades parceiras com bolsas exclusivas.
+            Nossa missão é tornar o ensino superior acessível para todos.
           </p>
         </div>
 

@@ -36,10 +36,10 @@ export async function generateMetadata({
     }
   }
 
-  const title = institution.metaTitle || `${institution.name} - Bolsas de Estudo | Bolsa Click`
+  const title = institution.metaTitle || `Faculdade ${institution.name} - Bolsas de Estudo com até 80% de Desconto | Bolsa Click`
   const description =
     institution.metaDescription ||
-    `Encontre bolsas de estudo na ${institution.name} com até 95% de desconto. ${institution.description}`
+    `Encontre bolsas de estudo na faculdade ${institution.name} com até 95% de desconto. ${institution.description}`
 
   return {
     title,
@@ -108,28 +108,54 @@ export default async function FaculdadeDetailPage({
     mainEntity: [
       {
         '@type': 'Question',
-        name: `Qual a nota da ${institution.name} no MEC?`,
+        name: `Qual a nota da Faculdade ${institution.name} no MEC?`,
         acceptedAnswer: {
           '@type': 'Answer',
           text: institution.mecRating
-            ? `A ${institution.name} possui nota ${institution.mecRating} no MEC (em uma escala de 1 a 5), demonstrando a qualidade do ensino oferecido pela instituição.`
-            : `A nota da ${institution.name} no MEC pode ser consultada diretamente no portal e-MEC.`,
+            ? `A Faculdade ${institution.name} possui nota ${institution.mecRating} no MEC (em uma escala de 1 a 5), demonstrando a qualidade do ensino oferecido pela instituição.`
+            : `A nota da Faculdade ${institution.name} no MEC pode ser consultada diretamente no portal e-MEC.`,
         },
       },
       {
         '@type': 'Question',
-        name: `Como conseguir bolsa de estudo na ${institution.name}?`,
+        name: `Como conseguir bolsa de estudo na Faculdade ${institution.name}?`,
         acceptedAnswer: {
           '@type': 'Answer',
-          text: `Para conseguir bolsa de estudo na ${institution.name}, basta acessar o Bolsa Click, buscar pelo curso desejado, escolher a melhor oferta e se inscrever gratuitamente. As bolsas podem chegar a até 95% de desconto.`,
+          text: `Para conseguir bolsa de estudo na Faculdade ${institution.name}, basta acessar o Bolsa Click, buscar pelo curso desejado, escolher a melhor oferta e se inscrever gratuitamente. As bolsas podem chegar a até 95% de desconto.`,
         },
       },
       {
         '@type': 'Question',
-        name: `Quais cursos a ${institution.name} oferece?`,
+        name: `Quais cursos a Faculdade ${institution.name} oferece?`,
         acceptedAnswer: {
           '@type': 'Answer',
-          text: `A ${institution.name} oferece cursos de ${institution.academicLevels.map(l => l === 'GRADUACAO' ? 'graduação' : 'pós-graduação').join(' e ')} nas modalidades ${institution.modalities.map(m => m === 'EAD' ? 'EAD' : m === 'PRESENCIAL' ? 'presencial' : 'semipresencial').join(', ')}.${institution.coursesOffered ? ` São mais de ${institution.coursesOffered} cursos disponíveis.` : ''}`,
+          text: `A Faculdade ${institution.name} oferece cursos de ${institution.academicLevels.map(l => l === 'GRADUACAO' ? 'graduação' : 'pós-graduação').join(' e ')} nas modalidades ${institution.modalities.map(m => m === 'EAD' ? 'EAD' : m === 'PRESENCIAL' ? 'presencial' : 'semipresencial').join(', ')}.${institution.coursesOffered ? ` São mais de ${institution.coursesOffered} cursos disponíveis.` : ''}`,
+        },
+      },
+      {
+        '@type': 'Question',
+        name: `A Faculdade ${institution.name} é reconhecida pelo MEC?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: `Sim, a Faculdade ${institution.name} é uma instituição de ensino superior reconhecida pelo Ministério da Educação (MEC).${institution.mecRating ? ` Sua nota institucional é ${institution.mecRating} em uma escala de 1 a 5.` : ''}`,
+        },
+      },
+      {
+        '@type': 'Question',
+        name: `Quanto custa estudar na Faculdade ${institution.name}?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: `Os valores das mensalidades na Faculdade ${institution.name} variam de acordo com o curso e a modalidade escolhida. Pelo Bolsa Click, você encontra bolsas de estudo com descontos de até 80% nas mensalidades, tornando o ensino superior muito mais acessível.`,
+        },
+      },
+      {
+        '@type': 'Question',
+        name: `A Faculdade ${institution.name} tem cursos EAD?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: institution.modalities.includes('EAD')
+            ? `Sim, a Faculdade ${institution.name} oferece cursos na modalidade EAD (Ensino a Distância), permitindo que você estude de qualquer lugar do Brasil com flexibilidade de horários.`
+            : `Atualmente, a Faculdade ${institution.name} oferece cursos nas modalidades ${institution.modalities.map(m => m === 'PRESENCIAL' ? 'presencial' : 'semipresencial').join(' e ')}.`,
         },
       },
     ],

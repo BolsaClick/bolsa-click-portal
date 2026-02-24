@@ -39,8 +39,9 @@ export default function PopularCoursesSection() {
           <h2 className="text-2xl md:text-3xl font-bold text-blue-950 mb-3">
             Bolsas de Estudo nas Melhores Faculdades do Brasil
           </h2>
-          <p className="text-neutral-600 max-w-2xl mx-auto">
-            Compare preços e encontre bolsas de estudo de até 95% de desconto em graduação, pós-graduação e cursos tecnólogos.
+          <p className="text-neutral-600 max-w-2xl mx-auto leading-relaxed">
+            Compare preços entre faculdades. Encontre bolsas de estudo com até 95% de desconto.
+            Graduação, pós-graduação e cursos tecnólogos com inscrição grátis.
           </p>
         </div>
 

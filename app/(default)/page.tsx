@@ -7,6 +7,8 @@ import ScholarshipCarousel from '../components/molecules/ScolarShipCarousel'
 import AboutSection from '../components/molecules/AboutSection'
 import HowWork from '../components/organisms/Recommended/HowWork'
 import PopularCoursesSection from '../components/organisms/PopularCoursesSection'
+import ScholarshipInfoSection from '../components/organisms/ScholarshipInfoSection'
+import FaqSection from '../components/organisms/FaqSection'
 
 const theme = getCurrentTheme()
 
@@ -41,6 +43,9 @@ export const metadata: Metadata = {
     'melhor que quero bolsa',
     'graduação EAD',
     'educação superior',
+    'bolsas ead',
+    'bolsas faculdade',
+    'faculdade bolsa',
     'bolsa click',
     theme.shortTitle.toLowerCase(),
   ],
@@ -128,6 +133,22 @@ export default function HomePage() {
           "@type": "Answer",
           "text": "As condições variam conforme a faculdade e o tipo de bolsa. Recomendamos verificar as condições específicas de cada oferta antes de se cadastrar. Algumas bolsas podem ser combinadas com outros descontos, outras não."
         }
+      },
+      {
+        "@type": "Question",
+        "name": "Preciso da nota do ENEM para conseguir bolsa de estudo?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Não! No Bolsa Click, você não precisa de nota do ENEM para conseguir sua bolsa de estudo. Basta se cadastrar, escolher o curso e garantir seu desconto."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Existem bolsas EAD disponíveis?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sim! O Bolsa Click oferece milhares de bolsas EAD com descontos de até 80%. Os cursos a distância possuem diploma reconhecido pelo MEC, igual ao presencial. Estude de casa, no seu ritmo."
+        }
       }
     ]
   }
@@ -143,8 +164,10 @@ export default function HomePage() {
       <Cta />
       <ScholarshipCarousel />
       <PopularCoursesSection />
+      <ScholarshipInfoSection />
       <AboutSection />
       <HowWork />
+      <FaqSection />
     </>
   )
 }

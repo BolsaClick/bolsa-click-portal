@@ -98,15 +98,17 @@ export default function FaculdadePageClient({ institution }: Props) {
                 onError={(e) => {
                   const target = e.target as HTMLImageElement
                   target.style.display = 'none'
-                  target.parentElement!.innerHTML = `<span class="text-3xl font-bold text-bolsa-primary flex items-center justify-center w-full h-full">${institution.shortName.charAt(0)}</span>`
+                  if (target.parentElement) {
+                    target.parentElement.innerHTML = `<span class="text-3xl font-bold text-bolsa-primary flex items-center justify-center w-full h-full">${institution.shortName.charAt(0)}</span>`
+                  }
                 }}
               />
             </div>
 
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold">{institution.fullName}</h1>
+              <h1 className="text-3xl md:text-4xl font-bold">Faculdade {institution.name}</h1>
               <p className="text-white/80 mt-1 text-sm">
-                {typeLabels[institution.type]} {institution.founded ? `| Fundada em ${institution.founded}` : ''}
+                {institution.fullName} | {typeLabels[institution.type]} {institution.founded ? `| Fundada em ${institution.founded}` : ''}
               </p>
               <p className="text-white/90 mt-2 text-lg max-w-2xl">{institution.description}</p>
             </div>
@@ -164,11 +166,36 @@ export default function FaculdadePageClient({ institution }: Props) {
               </div>
             </section>
 
+            {/* Why Study Here */}
+            <section className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 md:p-8">
+              <h2 className="text-2xl font-bold text-neutral-800 mb-4">
+                Por que estudar na Faculdade {institution.name}?
+              </h2>
+              <div className="prose prose-neutral max-w-none">
+                <p className="text-neutral-600 leading-relaxed mb-4">
+                  A Faculdade {institution.name} é uma das principais instituições de ensino superior do Brasil
+                  {institution.founded ? `, com mais de ${new Date().getFullYear() - institution.founded} anos de tradição no mercado educacional` : ''}.
+                  {institution.studentCount ? ` Com mais de ${institution.studentCount} alunos,` : ''} a {institution.name} se destaca pela qualidade de ensino
+                  {institution.mecRating ? ` reconhecida pelo MEC com nota ${institution.mecRating}` : ''} e pela variedade de cursos oferecidos.
+                </p>
+                <p className="text-neutral-600 leading-relaxed mb-4">
+                  Estudar na Faculdade {institution.name} significa ter acesso a uma formação de qualidade com
+                  {' '}{institution.modalities.map(m => m === 'EAD' ? 'ensino a distância (EAD)' : m === 'PRESENCIAL' ? 'aulas presenciais' : 'formato semipresencial').join(', ')},
+                  permitindo que você escolha a modalidade que melhor se adapta à sua rotina.
+                  {institution.campusCount ? ` A instituição conta com ${institution.campusCount}+ polos e campus espalhados pelo Brasil, facilitando o acesso ao ensino superior de qualidade.` : ''}
+                </p>
+                <p className="text-neutral-600 leading-relaxed">
+                  Pelo Bolsa Click, você pode garantir bolsas de estudo na Faculdade {institution.name} com descontos de até 80% nas mensalidades.
+                  A inscrição é gratuita e você pode começar a estudar na próxima turma disponível.
+                </p>
+              </div>
+            </section>
+
             {/* Highlights */}
             {institution.highlights.length > 0 && (
               <section className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 md:p-8">
                 <h2 className="text-2xl font-bold text-neutral-800 mb-4">
-                  Diferenciais da {institution.name}
+                  Diferenciais da Faculdade {institution.name}
                 </h2>
                 <ul className="space-y-3">
                   {institution.highlights.map((highlight, i) => (
@@ -180,6 +207,51 @@ export default function FaculdadePageClient({ institution }: Props) {
                 </ul>
               </section>
             )}
+
+            {/* Modalities Detail */}
+            <section className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 md:p-8">
+              <h2 className="text-2xl font-bold text-neutral-800 mb-4">
+                Modalidades de Ensino na Faculdade {institution.name}
+              </h2>
+              <div className="space-y-4">
+                {institution.modalities.includes('EAD') && (
+                  <div className="border border-neutral-100 rounded-lg p-4">
+                    <h3 className="font-semibold text-neutral-800 mb-2 flex items-center gap-2">
+                      <GraduationCap size={18} className="text-bolsa-primary" />
+                      Cursos EAD na {institution.name}
+                    </h3>
+                    <p className="text-neutral-600 text-sm">
+                      Os cursos EAD da Faculdade {institution.name} oferecem flexibilidade total para você estudar de qualquer lugar.
+                      Com aulas online, material didático digital e suporte de tutores, você conquista seu diploma com a mesma qualidade do ensino presencial.
+                    </p>
+                  </div>
+                )}
+                {institution.modalities.includes('PRESENCIAL') && (
+                  <div className="border border-neutral-100 rounded-lg p-4">
+                    <h3 className="font-semibold text-neutral-800 mb-2 flex items-center gap-2">
+                      <GraduationCap size={18} className="text-bolsa-primary" />
+                      Cursos Presenciais na {institution.name}
+                    </h3>
+                    <p className="text-neutral-600 text-sm">
+                      Os cursos presenciais da Faculdade {institution.name} proporcionam uma experiência completa de ensino,
+                      com infraestrutura moderna, laboratórios equipados e contato direto com professores e colegas.
+                    </p>
+                  </div>
+                )}
+                {institution.modalities.includes('SEMIPRESENCIAL') && (
+                  <div className="border border-neutral-100 rounded-lg p-4">
+                    <h3 className="font-semibold text-neutral-800 mb-2 flex items-center gap-2">
+                      <GraduationCap size={18} className="text-bolsa-primary" />
+                      Cursos Semipresenciais na {institution.name}
+                    </h3>
+                    <p className="text-neutral-600 text-sm">
+                      Os cursos semipresenciais da Faculdade {institution.name} combinam o melhor dos dois mundos:
+                      a flexibilidade do EAD com encontros presenciais periódicos para atividades práticas e avaliações.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </section>
 
             {/* Offers Section */}
             <section id="ofertas">
@@ -270,39 +342,68 @@ export default function FaculdadePageClient({ institution }: Props) {
             {/* FAQ Section */}
             <section className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 md:p-8">
               <h2 className="text-2xl font-bold text-neutral-800 mb-4">
-                Perguntas Frequentes sobre a {institution.name}
+                Perguntas Frequentes sobre a Faculdade {institution.name}
               </h2>
               <div className="space-y-4">
                 <div className="border-b border-neutral-100 pb-4">
                   <h3 className="font-semibold text-neutral-800 mb-2">
-                    Qual a nota da {institution.name} no MEC?
+                    Qual a nota da Faculdade {institution.name} no MEC?
                   </h3>
                   <p className="text-neutral-600 text-sm">
                     {institution.mecRating
-                      ? `A ${institution.name} possui nota ${institution.mecRating} no MEC (em uma escala de 1 a 5), demonstrando a qualidade do ensino oferecido pela instituição.`
-                      : `A nota da ${institution.name} no MEC pode ser consultada diretamente no portal e-MEC.`}
+                      ? `A Faculdade ${institution.name} possui nota ${institution.mecRating} no MEC (em uma escala de 1 a 5), demonstrando a qualidade do ensino oferecido pela instituição.`
+                      : `A nota da Faculdade ${institution.name} no MEC pode ser consultada diretamente no portal e-MEC.`}
                   </p>
                 </div>
                 <div className="border-b border-neutral-100 pb-4">
                   <h3 className="font-semibold text-neutral-800 mb-2">
-                    Como conseguir bolsa de estudo na {institution.name}?
+                    Como conseguir bolsa de estudo na Faculdade {institution.name}?
                   </h3>
                   <p className="text-neutral-600 text-sm">
-                    Para conseguir bolsa de estudo na {institution.name}, basta acessar o Bolsa Click,
+                    Para conseguir bolsa de estudo na Faculdade {institution.name}, basta acessar o Bolsa Click,
                     buscar pelo curso desejado, escolher a melhor oferta e se inscrever gratuitamente.
                     As bolsas podem chegar a até 95% de desconto.
                   </p>
                 </div>
-                <div>
+                <div className="border-b border-neutral-100 pb-4">
                   <h3 className="font-semibold text-neutral-800 mb-2">
-                    Quais cursos a {institution.name} oferece?
+                    Quais cursos a Faculdade {institution.name} oferece?
                   </h3>
                   <p className="text-neutral-600 text-sm">
-                    A {institution.name} oferece cursos de{' '}
+                    A Faculdade {institution.name} oferece cursos de{' '}
                     {institution.academicLevels.map(l => l === 'GRADUACAO' ? 'graduação' : 'pós-graduação').join(' e ')}{' '}
                     nas modalidades{' '}
                     {institution.modalities.map(m => m === 'EAD' ? 'EAD' : m === 'PRESENCIAL' ? 'presencial' : 'semipresencial').join(', ')}.
                     {institution.coursesOffered ? ` São mais de ${institution.coursesOffered} cursos disponíveis.` : ''}
+                  </p>
+                </div>
+                <div className="border-b border-neutral-100 pb-4">
+                  <h3 className="font-semibold text-neutral-800 mb-2">
+                    A Faculdade {institution.name} é reconhecida pelo MEC?
+                  </h3>
+                  <p className="text-neutral-600 text-sm">
+                    Sim, a Faculdade {institution.name} é uma instituição de ensino superior reconhecida pelo Ministério da Educação (MEC).
+                    {institution.mecRating ? ` Sua nota institucional é ${institution.mecRating} em uma escala de 1 a 5.` : ''}
+                    {institution.emecLink ? ' Você pode verificar a situação da instituição diretamente no portal e-MEC.' : ''}
+                  </p>
+                </div>
+                <div className="border-b border-neutral-100 pb-4">
+                  <h3 className="font-semibold text-neutral-800 mb-2">
+                    Quanto custa estudar na Faculdade {institution.name}?
+                  </h3>
+                  <p className="text-neutral-600 text-sm">
+                    Os valores das mensalidades na Faculdade {institution.name} variam de acordo com o curso e a modalidade escolhida.
+                    Pelo Bolsa Click, você encontra bolsas de estudo com descontos de até 80% nas mensalidades, tornando o ensino superior muito mais acessível.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-neutral-800 mb-2">
+                    A Faculdade {institution.name} tem cursos EAD?
+                  </h3>
+                  <p className="text-neutral-600 text-sm">
+                    {institution.modalities.includes('EAD')
+                      ? `Sim, a Faculdade ${institution.name} oferece cursos na modalidade EAD (Ensino a Distância), permitindo que você estude de qualquer lugar do Brasil com flexibilidade de horários.`
+                      : `Atualmente, a Faculdade ${institution.name} oferece cursos nas modalidades ${institution.modalities.map(m => m === 'PRESENCIAL' ? 'presencial' : 'semipresencial').join(' e ')}.`}
                   </p>
                 </div>
               </div>

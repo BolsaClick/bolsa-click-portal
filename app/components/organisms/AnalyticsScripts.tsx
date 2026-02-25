@@ -57,6 +57,14 @@ export function AnalyticsScripts({ ga4, gtm, aw, facebookPixelId }: Props) {
           </Script>
         </>
       )}
+
+      {/* UTMify */}
+      <Script
+        src="https://cdn.utmify.com.br/scripts/utms/latest.js"
+        data-utmify-prevent-xcod-sck=""
+        data-utmify-prevent-subids=""
+        strategy="afterInteractive"
+      />
     </>
   )
 }

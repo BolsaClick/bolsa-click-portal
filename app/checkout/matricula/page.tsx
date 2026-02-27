@@ -864,7 +864,10 @@ const isFormValidForPayment =
             }
           }
 
-          // 5. Para ofertas ATHENAS, criar inscrição no marketplace
+          // Pagamento confirmado, criar matrícula (distribuidor primeiro)
+          await createInscriptionAfterPayment(formData)
+
+          // 5. Para ofertas ATHENAS, criar inscrição no marketplace (após distribuidor)
           if (isAthenasSource && offerDetails?.idDmhElastic) {
             console.log('📝 Criando inscrição no marketplace ATHENAS...')
             try {
@@ -903,16 +906,11 @@ const isFormValidForPayment =
                 })
               } else {
                 console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceResult.error)
-                // Não bloquear o fluxo - a inscrição principal ainda será criada
               }
             } catch (marketplaceError) {
               console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceError)
-              // Não bloquear o fluxo
             }
           }
-
-          // Pagamento confirmado, criar matrícula
-          await createInscriptionAfterPayment(formData)
           
           // Parar a verificação
           return
@@ -1544,9 +1542,12 @@ const isFormValidForPayment =
         }
       }
 
-      // Inscrição marketplace ATHENAS (se aplicável)
+      // Criar matrícula no distribuidor primeiro
+      const formData = getValues() as FormSchema
+      await createInscriptionAfterPayment(formData)
+
+      // Inscrição marketplace ATHENAS (após distribuidor)
       if (isAthenasSource && offerDetails.idDmhElastic) {
-        const formData = getValues()
         try {
           const marketplaceResult = await createMarketplaceInscription(
             {
@@ -1584,9 +1585,6 @@ const isFormValidForPayment =
           console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceError)
         }
       }
-
-      const formData = getValues() as FormSchema
-      await createInscriptionAfterPayment(formData)
     } finally {
       setPixLoading(false)
     }

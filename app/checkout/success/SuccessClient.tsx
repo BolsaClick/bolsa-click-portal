@@ -24,14 +24,24 @@ export default function SuccessClient() {
 useEffect(() => {
   if (typeof window !== 'undefined') {
     const theme = process.env.NEXT_PUBLIC_THEME || 'bolsaclick'
-    
+
     // Define o evento baseado no tema
     const eventName = theme === 'anhanguera' ? 'formSuccess' : 'formBSuccess'
-    
+
     type DataLayerEvent = Record<string, unknown>;
     const w = window as Window & { dataLayer?: DataLayerEvent[] };
     w.dataLayer = w.dataLayer ?? [];
     w.dataLayer.push({ event: eventName });
+
+    // Facebook Pixel - Purchase
+    const fbq = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
+    if (fbq) {
+      fbq('track', 'Purchase', {
+        value: payToday ? parseFloat(payToday) : 0,
+        currency: 'BRL',
+        content_name: course || undefined,
+      })
+    }
   }
 }, [])
 

@@ -15,11 +15,11 @@ const theme = getCurrentTheme()
 const idsByTheme = {
   bolsaclick: {
     gtm: 'GTM-K4KZBRF3',
-    facebookPixel: '3830716730578943',
+    facebookPixels: ['3830716730578943', '274906762977899'],
   },
   anhanguera: {
     gtm: 'GTM-PPD7PKN5',
-    facebookPixel: '3830716730578943',
+    facebookPixels: ['3830716730578943', '274906762977899'],
   },
 } as const
 
@@ -188,21 +188,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
         </noscript>
 
-        {/* Facebook Pixel (noscript) */}
-        {ids.facebookPixel && (
-          <noscript>
+        {/* Facebook Pixels (noscript) */}
+        {ids.facebookPixels.map(pixelId => (
+          <noscript key={pixelId}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               height="1"
               width="1"
               style={{ display: 'none' }}
-              src={`https://www.facebook.com/tr?id=${ids.facebookPixel}&ev=PageView&noscript=1`}
+              src={`https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1`}
               alt=""
             />
           </noscript>
-        )}
+        ))}
 
-        <AnalyticsScripts gtm={ids.gtm} facebookPixelId={ids.facebookPixel} />
+        <AnalyticsScripts gtm={ids.gtm} facebookPixelIds={ids.facebookPixels} />
 
         <Script
           src="https://cdn-cookieyes.com/client_data/2a0be4de7c11618e75d1c64f/script.js"

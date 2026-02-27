@@ -424,6 +424,16 @@ const isFormValidForPayment =
         city: offerDetails.unitCity,
         state: offerDetails.unitState,
       })
+
+      // Facebook Pixel - InitiateCheckout
+      const fbq = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
+      if (fbq) {
+        fbq('track', 'InitiateCheckout', {
+          content_name: offerDetails.course,
+          value: offerDetails.subscriptionValue || offerDetails.montlyFeeTo || 0,
+          currency: 'BRL',
+        })
+      }
     }
   }, [offerDetails, trackEvent])
 
@@ -821,6 +831,16 @@ const isFormValidForPayment =
             has_coupon: !!coupon,
             coupon_code: coupon?.code,
           })
+
+          // Facebook Pixel - Purchase (pagamento PIX confirmado)
+          const fbqPix = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
+          if (fbqPix) {
+            fbqPix('track', 'Purchase', {
+              content_name: offerDetails?.course,
+              value: matriculaAfterCoupon / 100,
+              currency: 'BRL',
+            })
+          }
 
           // 4. Atualizar transação local para PAID
           const storedLocalTransactionId = typeof window !== 'undefined'
@@ -1258,6 +1278,17 @@ const isFormValidForPayment =
           course_id: offerDetails.courseId,
           course_name: offerDetails.course,
         })
+
+        // Facebook Pixel - CompleteRegistration (inscrição sem pagamento)
+        const fbqReg = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
+        if (fbqReg) {
+          fbqReg('track', 'CompleteRegistration', {
+            content_name: offerDetails.course,
+            value: offerDetails.montlyFeeTo || 0,
+            currency: 'BRL',
+          })
+        }
+
         await createInscriptionAfterPayment(data)
         setPixLoading(false)
         return
@@ -1487,6 +1518,16 @@ const isFormValidForPayment =
         has_coupon: !!coupon,
         coupon_code: coupon?.code,
       })
+
+      // Facebook Pixel - Purchase (pagamento cartão confirmado)
+      const fbqCard = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
+      if (fbqCard) {
+        fbqCard('track', 'Purchase', {
+          content_name: offerDetails.course,
+          value: applyCouponToMatricula() / 100,
+          currency: 'BRL',
+        })
+      }
 
       // Pós-graduação: persistir método de pagamento selecionado para createInscriptionAfterPayment
       if (offerDetails.academicLevel === 'POS_GRADUACAO' && posInstallmentId && posPaymentMethodType) {
@@ -1839,6 +1880,16 @@ const isFormValidForPayment =
                                           course_id: offerDetails?.courseId,
                                           course_name: offerDetails?.course,
                                         })
+
+                                        // Facebook Pixel - AddPaymentInfo (dados pessoais preenchidos + CPF validado)
+                                        const fbqCpf = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
+                                        if (fbqCpf) {
+                                          fbqCpf('track', 'AddPaymentInfo', {
+                                            content_name: offerDetails?.course,
+                                            value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
+                                            currency: 'BRL',
+                                          })
+                                        }
                                       } else if (result.haveAnotherInscriptionInCycle) {
                                         // Tem outra inscrição no ciclo e não está permitido cadastrar
                                         setCpfValidationError(result.message || 'Este CPF possui outra inscrição no ciclo e não pode ser cadastrado.')

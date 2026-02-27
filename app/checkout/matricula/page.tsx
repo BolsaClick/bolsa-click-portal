@@ -792,17 +792,37 @@ const isFormValidForPayment =
     }
   }
 
-  // Função para verificar o status do pagamento periodicamente
+  // Função para verificar o status do pagamento com backoff progressivo
+  // - Espera 10s antes da primeira verificação
+  // - A cada 5s nas primeiras 12 tentativas (~1 min)
+  // - A cada 10s depois disso (até ~5 min total)
   const startPaymentStatusCheck = async (transactionIdValue: string, formData: FormSchema) => {
-    const maxAttempts = 60 // 5 minutos (60 * 5 segundos)
+    const maxAttempts = 36
     let attempts = 0
-    let intervalId: NodeJS.Timeout | null = null
+    let timeoutId: NodeJS.Timeout | null = null
+    let stopped = false
+
+    const getNextDelay = () => (attempts <= 12 ? 5000 : 10000)
+
+    const scheduleNext = () => {
+      if (stopped || attempts >= maxAttempts) return
+      timeoutId = setTimeout(checkStatus, getNextDelay())
+    }
+
+    const stopPolling = () => {
+      stopped = true
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+        timeoutId = null
+      }
+    }
 
     const checkStatus = async () => {
+      if (stopped) return
       try {
         attempts++
         console.log(`🔍 Verificando status do pagamento (tentativa ${attempts}/${maxAttempts})...`)
-        
+
         const statusResponse = await getCheckoutStatus(transactionIdValue)
         console.log('📊 Status do pagamento:', statusResponse)
 
@@ -812,12 +832,7 @@ const isFormValidForPayment =
 
         if (isPaid) {
           console.log('✅ Pagamento confirmado! Criando matrícula...')
-          
-          // Limpar intervalo se estiver rodando
-          if (intervalId) {
-            clearInterval(intervalId)
-            intervalId = null
-          }
+          stopPolling()
           
           toast.success('Pagamento confirmado! Finalizando matrícula...')
           
@@ -916,12 +931,7 @@ const isFormValidForPayment =
           return
         } else if (normalizedStatus === 'failed' || normalizedStatus === 'cancelled') {
           console.error('❌ Pagamento falhou ou foi cancelado')
-
-          // Limpar intervalo se estiver rodando
-          if (intervalId) {
-            clearInterval(intervalId)
-            intervalId = null
-          }
+          stopPolling()
 
           // Atualizar transação local para FAILED ou CANCELLED
           const storedLocalTxId = typeof window !== 'undefined'
@@ -949,15 +959,10 @@ const isFormValidForPayment =
           return
         }
 
-        // Se ainda está pendente e não excedeu o limite, continuar verificando
+        // Se ainda está pendente e não excedeu o limite, agendar próxima verificação
         if (attempts >= maxAttempts) {
           console.warn('⏱️ Timeout na verificação do pagamento')
-
-          // Limpar intervalo se estiver rodando
-          if (intervalId) {
-            clearInterval(intervalId)
-            intervalId = null
-          }
+          stopPolling()
 
           // Atualizar transação local para EXPIRED
           const storedExpiredTxId = typeof window !== 'undefined'
@@ -983,23 +988,24 @@ const isFormValidForPayment =
         }
       } catch (error: unknown) {
         console.error('Erro ao verificar status do pagamento:', error)
-        
+
         // Se excedeu o limite de tentativas, parar
         if (attempts >= maxAttempts) {
-          if (intervalId) {
-            clearInterval(intervalId)
-            intervalId = null
-          }
+          stopPolling()
           setPixLoading(false)
+        } else {
+          // Em caso de erro de rede, continuar tentando
+          scheduleNext()
         }
+        return
       }
+
+      // Se não retornou antes (status pendente), agendar próxima verificação
+      scheduleNext()
     }
 
-    // Verificar imediatamente na primeira vez
-    checkStatus()
-    
-    // Depois verificar a cada 3 segundos (mais frequente)
-    intervalId = setInterval(checkStatus, 3000)
+    // Esperar 10s antes da primeira verificação (PIX leva tempo para escanear e confirmar)
+    timeoutId = setTimeout(checkStatus, 10000)
   }
 
   // Função para validar voucher

@@ -99,9 +99,9 @@ export async function getLocationByIP(): Promise<LocationByIP | null> {
       console.warn('Erro com ipapi.co, tentando alternativa:', error)
     }
 
-    // Fallback: usar ip-api.com (alternativa gratuita)
+    // Fallback: usar ipwho.is (alternativa gratuita com HTTPS)
     try {
-      const response = await fetch('http://ip-api.com/json/?fields=status,message,city,regionName,region,country,countryCode', {
+      const response = await fetch('https://ipwho.is/', {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -110,23 +110,22 @@ export async function getLocationByIP(): Promise<LocationByIP | null> {
 
       if (response.ok) {
         const data = await response.json()
-        
-        if (data.status === 'success' && data.city && (data.regionName || data.region)) {
-          // ip-api.com retorna region como código (ex: "SP") ou regionName como nome completo; lat/lon opcionais
-          const stateUF = data.region || convertStateToUF(data.regionName || 'SP')
-          const lat = typeof data.lat === 'number' ? data.lat : (data.lat != null ? Number(data.lat) : undefined)
-          const lng = typeof data.lon === 'number' ? data.lon : (data.lon != null ? Number(data.lon) : undefined)
+
+        if (data.success && data.city && (data.region || data.region_code)) {
+          const stateUF = data.region_code || convertStateToUF(data.region || 'SP')
+          const lat = typeof data.latitude === 'number' ? data.latitude : undefined
+          const lng = typeof data.longitude === 'number' ? data.longitude : undefined
           return {
             city: data.city,
             region: stateUF,
             country: data.country || 'Brasil',
-            countryCode: data.countryCode || 'BR',
+            countryCode: data.country_code || 'BR',
             ...(lat != null && !Number.isNaN(lat) && lng != null && !Number.isNaN(lng) && { latitude: lat, longitude: lng }),
           }
         }
       }
     } catch (error) {
-      console.warn('Erro com ip-api.com:', error)
+      console.warn('Erro com ipwho.is:', error)
     }
 
     // Se ambas falharem, retornar valores padrão

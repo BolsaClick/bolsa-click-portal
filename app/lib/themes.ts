@@ -2,8 +2,8 @@ export const themes = {
   bolsaclick: {
     name: 'Bolsa Click',
     title: 'Bolsa Click - Bolsas de Estudo até 95% | 30.000+ Faculdades | 100.000+ Cursos',
-    shortTitle: 'Bolsa Click',
-    description: 'Encontre bolsa de estudo em mais de 30.000 faculdades com até 95% de desconto. Mais de 100.000 cursos disponíveis: graduação, pós-graduação, técnicos e EAD. Desconto em faculdade garantido. Cadastre-se grátis!',
+    shortTitle: 'Bolsa Click - Bolsas de Estudo',
+    description: 'Bolsa Click é a plataforma de bolsas de estudo com até 95% de desconto em mais de 30.000 faculdades. Graduação, pós-graduação, técnicos e EAD. Cadastre-se grátis!',
     favicon: '/favicon.ico',
     ogImage: 'https://www.bolsaclick.com.br/assets/og-image-bolsaclick.png',
     siteUrl: 'https://www.bolsaclick.com.br',

@@ -56,7 +56,10 @@ export const metadata: Metadata = {
     'graduação EAD',
     'educação superior',
     'bolsa click',
-    theme.shortTitle.toLowerCase(),
+    'bolsaclick',
+    'bolsa click bolsas de estudo',
+    'site bolsa click',
+    'plataforma bolsa click',
   ],
   openGraph: {
     title: theme.title,
@@ -91,9 +94,10 @@ export const metadata: Metadata = {
     canonical: theme.siteUrl,
   },
   applicationName: theme.name,
+  category: 'education',
   other: {
     copyright: 'Bolsa Click',
-    abstract: 'Bolsas de Estudo de até 95% para Faculdades e Escolas | Bolsa Click',
+    abstract: 'Bolsa Click é uma plataforma de bolsas de estudo para faculdades e universidades com descontos de até 95%. Graduação, pós-graduação, cursos técnicos e EAD em todo o Brasil.',
   },
 }
 
@@ -113,14 +117,26 @@ const jsonLd = [
   {
     '@context': 'https://schema.org',
     '@type': 'Organization',
+    '@id': `${theme.siteUrl}/#organization`,
     name: 'Bolsa Click',
+    alternateName: ['BolsaClick', 'Bolsa Click Bolsas de Estudo'],
+    description: 'Plataforma brasileira de bolsas de estudo com até 95% de desconto em faculdades e universidades. Graduação, pós-graduação, cursos técnicos e EAD.',
     url: theme.siteUrl,
     logo: `${theme.siteUrl}/logo-bolsa-click-rosa.png`,
+    image: theme.ogImage,
+    naics: '611710',
+    industry: 'Educação Superior',
+    knowsAbout: ['bolsas de estudo', 'educação superior', 'faculdades', 'graduação', 'pós-graduação', 'EAD'],
+    slogan: 'Bolsas de estudo com até 95% de desconto',
     sameAs: [
       'https://www.instagram.com/bolsaclick',
       'https://www.facebook.com/bolsaclickbrasil',
       'https://www.linkedin.com/company/bolsaclick',
     ],
+    areaServed: {
+      '@type': 'Country',
+      name: 'Brasil',
+    },
     contactPoint: {
       '@type': 'ContactPoint',
       telephone: '+55-11-99999-9999',

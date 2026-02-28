@@ -25,6 +25,7 @@
     "@vercel/analytics": "^1.5.0",
     "axios": "^1.8.4",
     "canvas-confetti": "^1.9.3",
+    "datafast": "^1.0.1",
     "date-fns": "^4.1.0",
     "firebase": "^12.8.0",
     "firebase-admin": "^13.6.1",

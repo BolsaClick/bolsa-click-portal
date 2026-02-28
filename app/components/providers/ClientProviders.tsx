@@ -5,13 +5,17 @@ import { queryClient } from '@/utils/react-query'
 import { GlobalProvider } from '@/app/context/GeoLocationContext'
 import { PostHogProvider } from './PostHogProvider'
 import { AuthProvider } from '@/app/contexts/AuthContext'
+import { DataFastProvider } from './DataFastProvider'
 
 export function ClientProviders({ children }: { children: React.ReactNode }) {
   return (
     <PostHogProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <GlobalProvider>{children}</GlobalProvider>
+          <GlobalProvider>
+            <DataFastProvider />
+            {children}
+          </GlobalProvider>
         </AuthProvider>
       </QueryClientProvider>
     </PostHogProvider>

@@ -9,6 +9,7 @@ Disallow: /favoritos
 Disallow: /minha-conta/
 Disallow: /cadastro
 Disallow: /recuperar-senha
+Disallow: /curso/resultado
 
 # Host
 Host: https://www.bolsaclick.com.br

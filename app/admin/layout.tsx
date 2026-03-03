@@ -18,6 +18,7 @@ import {
   X,
   Ticket,
   Building2,
+  ImageIcon,
 } from 'lucide-react'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { AdminProvider, useAdmin } from '@/app/contexts/AdminAuthContext'
@@ -81,6 +82,12 @@ const navigation = [
     name: 'Cupons',
     href: '/admin/cupons',
     icon: Ticket,
+    permission: 'dashboard',
+  },
+  {
+    name: 'Banners',
+    href: '/admin/banners',
+    icon: ImageIcon,
     permission: 'dashboard',
   },
 ]

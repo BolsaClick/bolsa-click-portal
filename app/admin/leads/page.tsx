@@ -8,7 +8,6 @@ import {
   ChevronRight,
   Building2,
   GraduationCap,
-  MapPin,
   Phone,
   Loader2,
   Filter,
@@ -16,32 +15,27 @@ import {
   Clock,
   XCircle,
   AlertCircle,
+  Mail,
+  User,
 } from 'lucide-react'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { useAdmin } from '@/app/contexts/AdminAuthContext'
 
 interface Lead {
   id: string
-  status: 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'CONVERTED' | 'LOST'
-  courseName: string
-  institutionName: string
-  modalidade: string
-  turno: string | null
-  unitName: string | null
-  city: string | null
-  state: string | null
-  originalPrice: number | null
-  finalPrice: number | null
-  discount: number | null
-  contactPhone: string | null
-  contactEmail: string | null
-  notes: string | null
+  name: string
+  cpf: string
+  email: string
+  phone: string
+  courseNames: string[]
+  courseId: string | null
+  courseName: string | null
+  institutionName: string | null
+  modalidade: string | null
+  status: 'NEW' | 'CONTACTED' | 'INTERESTED' | 'CONVERTED' | 'LOST'
+  convertedAt: string | null
   createdAt: string
-  user: {
-    name: string | null
-    email: string
-    phone: string | null
-  }
+  updatedAt: string
 }
 
 interface Pagination {
@@ -62,8 +56,8 @@ const statusConfig = {
     color: 'bg-yellow-100 text-yellow-800',
     icon: Phone,
   },
-  QUALIFIED: {
-    label: 'Qualificado',
+  INTERESTED: {
+    label: 'Interessado',
     color: 'bg-purple-100 text-purple-800',
     icon: CheckCircle2,
   },
@@ -175,12 +169,15 @@ export default function AdminLeadsPage() {
     })
   }
 
-  const formatCurrency = (value: number | null) => {
-    if (value === null) return '-'
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value)
+  const formatPhone = (phone: string) => {
+    const clean = phone.replace(/\D/g, '')
+    if (clean.length === 11) {
+      return `(${clean.slice(0, 2)}) ${clean.slice(2, 7)}-${clean.slice(7)}`
+    }
+    if (clean.length === 10) {
+      return `(${clean.slice(0, 2)}) ${clean.slice(2, 6)}-${clean.slice(6)}`
+    }
+    return phone
   }
 
   if (!hasPermission('users')) {
@@ -220,7 +217,7 @@ export default function AdminLeadsPage() {
               <option value="">Todos os status</option>
               <option value="NEW">Novos</option>
               <option value="CONTACTED">Contactados</option>
-              <option value="QUALIFIED">Qualificados</option>
+              <option value="INTERESTED">Interessados</option>
               <option value="CONVERTED">Convertidos</option>
               <option value="LOST">Perdidos</option>
             </select>
@@ -283,98 +280,87 @@ export default function AdminLeadsPage() {
 
                 <div className="p-4 md:p-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* User Info */}
+                    {/* Contact Info */}
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-2">Usuário</h3>
-                      <p className="text-gray-600">{lead.user.name || 'Sem nome'}</p>
-                      <p className="text-gray-500 text-sm">{lead.user.email}</p>
-                      {lead.user.phone && (
-                        <p className="text-gray-500 text-sm">{lead.user.phone}</p>
-                      )}
-                      {lead.contactPhone && lead.contactPhone !== lead.user.phone && (
-                        <p className="text-gray-500 text-sm flex items-center gap-1">
-                          <Phone className="w-3 h-3" />
-                          {lead.contactPhone}
-                        </p>
-                      )}
+                      <h3 className="font-semibold text-gray-900 mb-2">Contato</h3>
+                      <p className="text-gray-600 flex items-center gap-1">
+                        <User className="w-4 h-4 text-gray-400" />
+                        {lead.name}
+                      </p>
+                      <p className="text-gray-500 text-sm flex items-center gap-1">
+                        <Mail className="w-3 h-3" />
+                        {lead.email}
+                      </p>
+                      <p className="text-gray-500 text-sm flex items-center gap-1">
+                        <Phone className="w-3 h-3" />
+                        {formatPhone(lead.phone)}
+                      </p>
+                      <p className="text-gray-400 text-xs mt-1">
+                        CPF: {lead.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
+                      </p>
                     </div>
 
                     {/* Course Info */}
                     <div>
                       <h3 className="font-semibold text-gray-900 mb-2">Curso</h3>
                       <div className="space-y-1">
-                        <p className="text-gray-600 flex items-center gap-1">
-                          <GraduationCap className="w-4 h-4 text-gray-400" />
-                          {lead.courseName}
-                        </p>
-                        <p className="text-gray-500 text-sm flex items-center gap-1">
-                          <Building2 className="w-3 h-3" />
-                          {lead.institutionName}
-                        </p>
-                        <p className="text-gray-500 text-sm">
-                          {lead.modalidade}
-                          {lead.turno && lead.turno !== 'VIRTUAL' && ` - ${lead.turno}`}
-                        </p>
-                        {(lead.city || lead.state) && (
-                          <p className="text-gray-500 text-sm flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            {[lead.city, lead.state].filter(Boolean).join(', ')}
+                        {lead.courseName && (
+                          <p className="text-gray-600 flex items-center gap-1">
+                            <GraduationCap className="w-4 h-4 text-gray-400" />
+                            {lead.courseName}
                           </p>
+                        )}
+                        {lead.institutionName && (
+                          <p className="text-gray-500 text-sm flex items-center gap-1">
+                            <Building2 className="w-3 h-3" />
+                            {lead.institutionName}
+                          </p>
+                        )}
+                        {lead.modalidade && (
+                          <p className="text-gray-500 text-sm">
+                            {lead.modalidade}
+                          </p>
+                        )}
+                        {lead.courseNames.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-xs text-gray-400 mb-1">Cursos de interesse:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {lead.courseNames.map((name, i) => (
+                                <span
+                                  key={i}
+                                  className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full"
+                                >
+                                  {name}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
                         )}
                       </div>
                     </div>
 
-                    {/* Price & Status */}
+                    {/* Status Selector */}
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-2">Valor</h3>
-                      {lead.finalPrice && (
-                        <div className="mb-3">
-                          {lead.originalPrice && lead.originalPrice > lead.finalPrice && (
-                            <p className="text-sm text-gray-400 line-through">
-                              {formatCurrency(lead.originalPrice)}
-                            </p>
-                          )}
-                          <p className="text-xl font-bold text-green-600">
-                            {formatCurrency(lead.finalPrice)}
-                            <span className="text-sm font-normal text-gray-500">/mês</span>
-                          </p>
-                          {lead.discount && lead.discount > 0 && (
-                            <p className="text-sm text-green-600">
-                              Desconto de {formatCurrency(lead.discount)}
-                            </p>
-                          )}
-                        </div>
+                      <h3 className="font-semibold text-gray-900 mb-2">Alterar status</h3>
+                      <select
+                        value={lead.status}
+                        onChange={(e) => handleStatusChange(lead.id, e.target.value)}
+                        disabled={updating === lead.id}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bolsa-primary focus:border-transparent disabled:opacity-50"
+                      >
+                        <option value="NEW">Novo</option>
+                        <option value="CONTACTED">Contactado</option>
+                        <option value="INTERESTED">Interessado</option>
+                        <option value="CONVERTED">Convertido</option>
+                        <option value="LOST">Perdido</option>
+                      </select>
+                      {lead.convertedAt && (
+                        <p className="text-xs text-green-600 mt-1">
+                          Convertido em {formatDate(lead.convertedAt)}
+                        </p>
                       )}
-
-                      {/* Status Selector */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Alterar status
-                        </label>
-                        <select
-                          value={lead.status}
-                          onChange={(e) => handleStatusChange(lead.id, e.target.value)}
-                          disabled={updating === lead.id}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bolsa-primary focus:border-transparent disabled:opacity-50"
-                        >
-                          <option value="NEW">Novo</option>
-                          <option value="CONTACTED">Contactado</option>
-                          <option value="QUALIFIED">Qualificado</option>
-                          <option value="CONVERTED">Convertido</option>
-                          <option value="LOST">Perdido</option>
-                        </select>
-                      </div>
                     </div>
                   </div>
-
-                  {/* Notes */}
-                  {lead.notes && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <p className="text-sm text-gray-600">
-                        <span className="font-medium">Observações:</span> {lead.notes}
-                      </p>
-                    </div>
-                  )}
                 </div>
               </div>
             )

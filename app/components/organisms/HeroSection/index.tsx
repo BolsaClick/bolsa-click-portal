@@ -152,9 +152,9 @@ const Hero = () => {
     )
   }
 
-  // Banner slider — imagem cover + ondulação
+  // Banner slider — imagem cover + ondulação (hidden on mobile)
   return (
-    <section aria-label="Seção principal de destaque" className="relative">
+    <section aria-label="Seção principal de destaque" className="relative hidden md:block">
       {/* Spacer para o header fixo */}
       <div className="h-16 md:h-20" />
 

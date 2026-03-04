@@ -12,6 +12,7 @@ const PUBLIC_URL_BASE = `https://${BUCKET_NAME}.fly.storage.tigris.dev`
 const s3Client = new S3Client({
   region: 'auto',
   endpoint: ENDPOINT_URL,
+  forcePathStyle: true,
   credentials: {
     accessKeyId: ACCESS_KEY,
     secretAccessKey: SECRET_KEY,

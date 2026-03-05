@@ -284,7 +284,7 @@ const Filter = () => {
   return (
 
     <div
-      className={` container mx-auto px-4 z-40`}
+      className={` container mx-auto px-4 z-40 pt-20 md:pt-0`}
     >
       <div className="max-w-4xl mx-auto  w-full rounded-lg top-0 left-0 right-0 bg-white shadow-md z-40 transition-transform duration-300 md:-translate-y-32 ">
         {renderLevelTabs()}

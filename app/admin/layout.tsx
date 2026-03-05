@@ -19,6 +19,7 @@ import {
   Ticket,
   Building2,
   ImageIcon,
+  FileText,
 } from 'lucide-react'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { AdminProvider, useAdmin } from '@/app/contexts/AdminAuthContext'
@@ -89,6 +90,12 @@ const navigation = [
     href: '/admin/banners',
     icon: ImageIcon,
     permission: 'dashboard',
+  },
+  {
+    name: 'Blog',
+    href: '/admin/blog',
+    icon: FileText,
+    permission: 'blog',
   },
 ]
 

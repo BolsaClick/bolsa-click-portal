@@ -51,6 +51,7 @@ const mainCities = [
   { city: 'Palmas', state: 'TO' },
 ]
 
+/** @type {import('next-sitemap').IConfig} */
 module.exports = {
   siteUrl: 'https://www.bolsaclick.com.br',
   generateRobotsTxt: true,
@@ -144,6 +145,53 @@ module.exports = {
         })
       })
     })
+
+    // Blog index
+    paths.push({
+      loc: '/blog',
+      changefreq: 'daily',
+      priority: 0.9,
+      lastmod: new Date().toISOString(),
+    })
+
+    // Blog posts e categorias (dinâmicos via Prisma)
+    try {
+      const { PrismaClient } = require('@prisma/client')
+      const prisma = new PrismaClient()
+
+      const [blogPosts, blogCategories] = await Promise.all([
+        prisma.blogPost.findMany({
+          where: { isActive: true, publishedAt: { not: null } },
+          select: { slug: true, updatedAt: true },
+        }),
+        prisma.blogCategory.findMany({
+          where: { isActive: true },
+          select: { slug: true, updatedAt: true },
+        }),
+      ])
+
+      blogPosts.forEach(post => {
+        paths.push({
+          loc: `/blog/${post.slug}`,
+          changefreq: 'weekly',
+          priority: 0.8,
+          lastmod: post.updatedAt.toISOString(),
+        })
+      })
+
+      blogCategories.forEach(cat => {
+        paths.push({
+          loc: `/blog/categoria/${cat.slug}`,
+          changefreq: 'weekly',
+          priority: 0.7,
+          lastmod: cat.updatedAt.toISOString(),
+        })
+      })
+
+      await prisma.$disconnect()
+    } catch (e) {
+      console.error('Error fetching blog data for sitemap:', e)
+    }
 
     return paths
   },

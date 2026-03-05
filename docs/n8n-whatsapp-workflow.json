@@ -1,0 +1,456 @@
+{
+  "name": "WhatsApp Bot - Bolsa Click (Gemini + Evolution API)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-bot",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook WhatsApp",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "noData",
+        "options": {}
+      },
+      "name": "Respond 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [420, 260]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nif (body.event !== 'messages.upsert') return [];\nconst message = body.data;\nif (!message) return [];\nif (message.key?.fromMe === true) return [];\nconst text = message.message?.conversation || message.message?.extendedTextMessage?.text || '';\nif (!text.trim()) return [];\nconst remoteJid = message.key.remoteJid || '';\nconst phone = remoteJid.replace('@s.whatsapp.net', '');\nif (remoteJid.includes('@g.us')) return [];\nreturn [{ json: { phone, text: text.trim(), pushName: message.pushName || '', remoteJid, messageId: message.key.id, timestamp: new Date().toISOString() } }];"
+      },
+      "name": "Filtrar e Extrair Dados",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 520]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://www.bolsaclick.com.br/api/whatsapp/memory?phone={{ $json.phone }}",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "name": "Buscar Historico",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, 520],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const memoryResponse = $input.first().json;\nconst userData = $('Filtrar e Extrair Dados').first().json;\nconst memory = memoryResponse.memory || { messages: [], stage: 'greeting', leadData: {}, name: '' };\nconst recentMessages = (memory.messages || []).slice(-15);\nconst formattedHistory = recentMessages.map(m => `${m.role === 'user' ? 'Usuario' : 'Assistente'}: ${m.content}`).join('\\n');\nconst userName = memory.name || userData.pushName || '';\nreturn [{ json: { phone: userData.phone, text: userData.text, pushName: userData.pushName, remoteJid: userData.remoteJid, timestamp: userData.timestamp, history: formattedHistory, stage: memory.stage || 'greeting', leadData: memory.leadData || {}, userName, messageCount: recentMessages.length, previousMessages: recentMessages } }];"
+      },
+      "name": "Preparar Contexto",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 520]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=SUBSTITUIR_GEMINI_API_KEY",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": \"Voce eh a Ana, assistente virtual do Bolsa Click no WhatsApp.\\n\\n## Sua Identidade\\n- Tom: Amigavel, profissional, empatico e objetivo\\n- Idioma: Portugues brasileiro, informal mas respeitoso\\n- Use emojis com moderacao (1-2 por mensagem)\\n- Mensagens curtas (max 3 paragrafos)\\n- Use formatacao WhatsApp: *negrito*, _italico_\\n- Sempre termine com pergunta ou call-to-action\\n\\n## Sobre o Bolsa Click\\n- Maior plataforma de bolsas de estudo do Brasil\\n- Bolsas de ate 80% de desconto\\n- Parceria com Anhanguera, Unopar e Unime (Grupo Cogna)\\n- Graduacao (Bacharelado, Licenciatura, Tecnologo) e Pos-Graduacao\\n- Modalidades: EAD, Presencial e Semipresencial\\n- Inscricao 100% gratuita\\n- Site: https://www.bolsaclick.com.br\\n\\n## Faculdades Parceiras\\n- Anhanguera: Maior rede privada do Brasil, nota MEC 4, 500.000+ alunos\\n- Unopar: Referencia em EAD, presente em todo Brasil\\n- Unime: Forte no Nordeste, especialmente Bahia\\n\\n## Regras:\\n1. Cumprimente pelo nome se souber\\n2. Entenda o que o usuario procura (curso, cidade, modalidade)\\n3. Busque cursos quando pedirem\\n4. Colete dados de lead GRADUALMENTE (nome, email, telefone, CPF) - NAO peca tudo de uma vez\\n5. Direcione para checkout quando quiser matricular\\n6. Transfira para humano quando: reclamacoes, problemas tecnicos, questoes financeiras complexas, ou quando pedirem\\n7. NUNCA invente precos ou informacoes\\n8. NUNCA fale sobre concorrentes\\n\\n## Fluxo ideal:\\n1. Saudacao -> Perguntar o que procura\\n2. Descoberta -> Curso + modalidade + cidade\\n3. Apresentacao -> Mostrar opcoes\\n4. Interesse -> Coletar dados para lead\\n5. Conversao -> Enviar link do checkout\\n6. Pos-venda -> Ajudar com duvidas\\n\\n---\\n\\nESTAGIO ATUAL DA CONVERSA: {{ $json.stage }}\\nNOME DO USUARIO: {{ $json.userName || 'desconhecido' }}\\nDADOS JA COLETADOS: {{ JSON.stringify($json.leadData) }}\\n\\nHISTORICO DA CONVERSA:\\n{{ $json.history || '(primeira mensagem)' }}\\n\\nNOVA MENSAGEM DO USUARIO: {{ $json.text }}\\n\\n---\\n\\nResponda EXCLUSIVAMENTE com um JSON valido (sem markdown, sem ```json) contendo:\\n{\\n  \\\"intent\\\": \\\"BUSCAR_CURSO | INFO_ACADEMICA | CAPTURAR_LEAD | CHECKOUT | TRANSFERIR_HUMANO | CONVERSA_GERAL | STATUS_MATRICULA\\\",\\n  \\\"response\\\": \\\"texto para enviar ao usuario via WhatsApp\\\",\\n  \\\"courseQuery\\\": \\\"nome do curso para buscar na API (so se intent=BUSCAR_CURSO ou INFO_ACADEMICA)\\\",\\n  \\\"leadData\\\": {\\n    \\\"name\\\": \\\"nome se mencionou\\\",\\n    \\\"email\\\": \\\"email se mencionou\\\",\\n    \\\"cpf\\\": \\\"cpf se mencionou\\\",\\n    \\\"courseInterest\\\": \\\"curso de interesse\\\"\\n  },\\n  \\\"stage\\\": \\\"greeting | browsing | interested | collecting_data | checkout | support | handoff\\\"\\n}\"\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"temperature\": 0.7,\n    \"topP\": 0.9,\n    \"maxOutputTokens\": 1024\n  }\n}",
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "name": "Gemini Processar Mensagem",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1160, 520]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst prevData = $('Preparar Contexto').first().json;\nlet aiResponse;\ntry {\n  let text = input.candidates?.[0]?.content?.parts?.[0]?.text || '{}';\n  text = text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n  aiResponse = JSON.parse(text);\n} catch (e) {\n  const rawText = input.candidates?.[0]?.content?.parts?.[0]?.text || '';\n  aiResponse = { intent: 'CONVERSA_GERAL', response: rawText || 'Desculpe, tive um probleminha. Pode repetir? 😊', stage: prevData.stage || 'greeting', leadData: {} };\n}\nconst mergedLeadData = { ...prevData.leadData, ...(aiResponse.leadData || {}) };\nObject.keys(mergedLeadData).forEach(key => { if (!mergedLeadData[key] || mergedLeadData[key] === 'null' || mergedLeadData[key] === 'undefined') delete mergedLeadData[key]; });\nreturn [{ json: { phone: prevData.phone, remoteJid: prevData.remoteJid, text: prevData.text, pushName: prevData.pushName, timestamp: prevData.timestamp, userName: prevData.userName, previousMessages: prevData.previousMessages, intent: aiResponse.intent || 'CONVERSA_GERAL', response: aiResponse.response || 'Como posso te ajudar? 😊', courseQuery: aiResponse.courseQuery || '', leadData: mergedLeadData, stage: aiResponse.stage || prevData.stage || 'greeting' } }];"
+      },
+      "name": "Parsear Resposta Gemini",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1400, 520]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.intent }}",
+        "rules": {
+          "rules": [
+            { "value2": "BUSCAR_CURSO" },
+            { "value2": "INFO_ACADEMICA" },
+            { "value2": "CAPTURAR_LEAD" },
+            { "value2": "TRANSFERIR_HUMANO" }
+          ]
+        },
+        "fallbackOutput": "extra"
+      },
+      "name": "Switch por Intencao",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [1660, 520]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://www.bolsaclick.com.br/api/cursos?search={{ encodeURIComponent($json.courseQuery) }}&limit=5",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Buscar Cursos na API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1940, 200],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const coursesResponse = $input.first().json;\nconst prevData = $('Parsear Resposta Gemini').first().json;\nconst courses = coursesResponse.courses || [];\nlet finalResponse = prevData.response;\nif (courses.length > 0) {\n  const list = courses.map((c, i) => {\n    const tipo = c.type === 'BACHARELADO' ? 'Bacharelado' : c.type === 'LICENCIATURA' ? 'Licenciatura' : 'Tecnologo';\n    const nivel = c.nivel === 'GRADUACAO' ? 'Graduacao' : 'Pos-Graduacao';\n    const demanda = c.marketDemand === 'ALTA' ? '🟢 Alta' : c.marketDemand === 'MEDIA' ? '🟡 Media' : '🔴 Baixa';\n    return `*${i + 1}. ${c.fullName || c.name}*\\n   📚 ${tipo} | ${nivel}\\n   ⏱ Duracao: ${c.duration || 'Consultar'}\\n   💼 Demanda: ${demanda}\\n   🔗 https://www.bolsaclick.com.br/cursos/${c.slug}`;\n  }).join('\\n\\n');\n  finalResponse = finalResponse + '\\n\\n' + list + '\\n\\n💡 Quer saber os valores com bolsa? Me diga qual te interessa!';\n} else if (prevData.courseQuery) {\n  finalResponse = finalResponse + '\\n\\nNao encontrei cursos com esse nome. Tente de outra forma ou me diga a area de interesse! 😊';\n}\nreturn [{ json: { ...prevData, response: finalResponse } }];"
+      },
+      "name": "Formatar Lista de Cursos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2200, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=SUBSTITUIR_GEMINI_API_KEY",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": \"Busque informacoes detalhadas sobre o curso de {{ $json.courseQuery }} na faculdade Anhanguera. Inclua: descricao geral do curso, principais disciplinas/modulos, duracao, modalidades (EAD, presencial, semipresencial), mercado de trabalho e diferenciais. Formate a resposta de forma clara e concisa para enviar via WhatsApp (use *negrito* para titulos). Maximo 4 paragrafos.\"\n        }\n      ]\n    }\n  ],\n  \"tools\": [{ \"googleSearch\": {} }],\n  \"generationConfig\": {\n    \"temperature\": 0.3,\n    \"maxOutputTokens\": 800\n  }\n}",
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "name": "Gemini Info Academica",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1940, 400],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst prevData = $('Parsear Resposta Gemini').first().json;\nlet academicInfo = '';\ntry { academicInfo = input.candidates?.[0]?.content?.parts?.[0]?.text || ''; } catch (e) { academicInfo = ''; }\nlet finalResponse = prevData.response;\nif (academicInfo) { finalResponse = academicInfo + '\\n\\n💰 Quer saber os valores com bolsa no Bolsa Click?'; }\nreturn [{ json: { ...prevData, response: finalResponse } }];"
+      },
+      "name": "Formatar Info Academica",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2200, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.bolsaclick.com.br/api/leads",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"{{ $json.leadData.name || $json.userName || 'WhatsApp Lead' }}\",\n  \"email\": \"{{ $json.leadData.email || '' }}\",\n  \"phone\": \"{{ $json.phone }}\",\n  \"cpf\": \"{{ $json.leadData.cpf || '' }}\",\n  \"courseName\": \"{{ $json.leadData.courseInterest || '' }}\",\n  \"institutionName\": \"Anhanguera\",\n  \"courseNames\": [\"{{ $json.leadData.courseInterest || 'Nao informado' }}\"]\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Criar Lead no Bolsa Click",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1940, 600],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const leadResult = $input.first().json;\nconst prevData = $('Parsear Resposta Gemini').first().json;\nlet finalResponse = prevData.response;\nif (leadResult.lead?.id) { prevData.leadData.leadId = leadResult.lead.id; }\nreturn [{ json: { ...prevData, response: finalResponse } }];"
+      },
+      "name": "Processar Resultado Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2200, 600]
+    },
+    {
+      "parameters": {
+        "jsCode": "const prevData = $('Parsear Resposta Gemini').first().json;\nconst userMessage = prevData.response || '🤖 *Transferindo para atendimento humano...*\\n\\nUm de nossos consultores vai continuar seu atendimento em breve.\\nHorario de atendimento: Seg-Sex, 8h as 18h.\\n\\nEnquanto isso, explore nossas bolsas em:\\n👉 https://www.bolsaclick.com.br/cursos';\nconst internalAlert = '🔔 *NOVO ATENDIMENTO PARA HUMANO*\\n\\n' + '📱 Telefone: ' + prevData.phone + '\\n' + '👤 Nome: ' + (prevData.userName || prevData.pushName || 'Nao informado') + '\\n' + '💬 Ultima msg: ' + prevData.text + '\\n' + '📊 Estagio: ' + prevData.stage + '\\n' + '🎯 Curso: ' + (prevData.leadData?.courseInterest || 'Nao informado') + '\\n' + '📧 Email: ' + (prevData.leadData?.email || 'Nao informado');\nreturn [{ json: { ...prevData, response: userMessage, internalAlert: internalAlert, stage: 'handoff' } }];"
+      },
+      "name": "Preparar Handoff",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1940, 800]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evo.inovitdigital.com.br/message/sendText/SUBSTITUIR_INSTANCIA",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "apikey", "value": "SUBSTITUIR_API_KEY_EVOLUTION" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": \"SUBSTITUIR_NUMERO_ATENDENTE\",\n  \"text\": {{ JSON.stringify($json.internalAlert) }}\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Notificar Atendente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2200, 800],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const prevData = $('Parsear Resposta Gemini').first().json;\nlet response = prevData.response;\nif (prevData.intent === 'CHECKOUT' && prevData.leadData?.courseInterest) {\n  const slug = prevData.leadData.courseInterest.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');\n  if (!response.includes('bolsaclick.com.br')) { response += '\\n\\n👉 https://www.bolsaclick.com.br/cursos/' + slug; }\n}\nreturn [{ json: { ...prevData, response } }];"
+      },
+      "name": "Fallback Geral",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1940, 1000]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nlet response = (data.response || 'Como posso te ajudar? 😊').substring(0, 4000);\nreturn [{ json: { phone: data.phone, remoteJid: data.remoteJid, text: data.text, pushName: data.pushName, userName: data.userName, timestamp: data.timestamp, previousMessages: data.previousMessages || [], response, intent: data.intent, stage: data.stage, leadData: data.leadData || {} } }];"
+      },
+      "name": "Preparar Mensagem Final",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2500, 520]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evo.inovitdigital.com.br/message/sendText/SUBSTITUIR_INSTANCIA",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "apikey", "value": "SUBSTITUIR_API_KEY_EVOLUTION" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": \"{{ $json.phone }}\",\n  \"text\": {{ JSON.stringify($json.response) }}\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Enviar Resposta WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2760, 520]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('Preparar Mensagem Final').first().json;\nconst previousMessages = data.previousMessages || [];\npreviousMessages.push({ role: 'user', content: data.text, timestamp: data.timestamp });\npreviousMessages.push({ role: 'assistant', content: data.response, timestamp: new Date().toISOString() });\nconst trimmedMessages = previousMessages.slice(-30);\nreturn [{ json: { phone: data.phone, data: { name: data.userName || data.pushName || '', messages: trimmedMessages, stage: data.stage, leadData: data.leadData, lastInteraction: new Date().toISOString() } } }];"
+      },
+      "name": "Montar Dados de Memoria",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3020, 520]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.bolsaclick.com.br/api/whatsapp/memory",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "name": "Salvar Historico",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3280, 520],
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Webhook WhatsApp": {
+      "main": [
+        [
+          { "node": "Respond 200", "type": "main", "index": 0 },
+          { "node": "Filtrar e Extrair Dados", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Filtrar e Extrair Dados": {
+      "main": [
+        [
+          { "node": "Buscar Historico", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Buscar Historico": {
+      "main": [
+        [
+          { "node": "Preparar Contexto", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Preparar Contexto": {
+      "main": [
+        [
+          { "node": "Gemini Processar Mensagem", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Gemini Processar Mensagem": {
+      "main": [
+        [
+          { "node": "Parsear Resposta Gemini", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Parsear Resposta Gemini": {
+      "main": [
+        [
+          { "node": "Switch por Intencao", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Switch por Intencao": {
+      "main": [
+        [
+          { "node": "Buscar Cursos na API", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Gemini Info Academica", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Criar Lead no Bolsa Click", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Preparar Handoff", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Fallback Geral", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Buscar Cursos na API": {
+      "main": [
+        [
+          { "node": "Formatar Lista de Cursos", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Formatar Lista de Cursos": {
+      "main": [
+        [
+          { "node": "Preparar Mensagem Final", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Gemini Info Academica": {
+      "main": [
+        [
+          { "node": "Formatar Info Academica", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Formatar Info Academica": {
+      "main": [
+        [
+          { "node": "Preparar Mensagem Final", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Criar Lead no Bolsa Click": {
+      "main": [
+        [
+          { "node": "Processar Resultado Lead", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Processar Resultado Lead": {
+      "main": [
+        [
+          { "node": "Preparar Mensagem Final", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Preparar Handoff": {
+      "main": [
+        [
+          { "node": "Notificar Atendente", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Notificar Atendente": {
+      "main": [
+        [
+          { "node": "Preparar Mensagem Final", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Fallback Geral": {
+      "main": [
+        [
+          { "node": "Preparar Mensagem Final", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Preparar Mensagem Final": {
+      "main": [
+        [
+          { "node": "Enviar Resposta WhatsApp", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Enviar Resposta WhatsApp": {
+      "main": [
+        [
+          { "node": "Montar Dados de Memoria", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Montar Dados de Memoria": {
+      "main": [
+        [
+          { "node": "Salvar Historico", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}

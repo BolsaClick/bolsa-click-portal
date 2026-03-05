@@ -256,6 +256,11 @@ const Footer: React.FC = () => {
                       Fale Conosco
                     </Link>
                   </li>
+                  <li>
+                    <Link href="/blog" className={linkClass}>
+                      Blog
+                    </Link>
+                  </li>
                 </ul>
               </nav>
             </div>

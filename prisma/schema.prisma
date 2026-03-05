@@ -524,6 +524,76 @@ enum InstitutionType {
 }
 
 // ==========================================
+// BLOG (CONTENT HUB PARA SEO)
+// ==========================================
+
+model BlogCategory {
+  id              String     @id @default(uuid())
+  slug            String     @unique
+  title           String
+  description     String
+  order           Int        @default(0)
+  isActive        Boolean    @default(true)
+  metaTitle       String?
+  metaDescription String?
+
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  posts           BlogPost[]
+
+  @@index([slug])
+  @@index([isActive])
+}
+
+model BlogPost {
+  id              String        @id @default(uuid())
+  slug            String        @unique
+  title           String
+  excerpt         String
+  content         String        @db.Text  // HTML content
+  metaTitle       String?
+  metaDescription String?
+  keywords        String[]
+  featuredImage   String?       // URL da imagem no Tigris Storage
+  imageAlt        String?
+  author          String        @default("Equipe Bolsa Click")
+  readingTime     Int           @default(5) // minutos
+  categoryId      String
+  tags            String[]
+  isActive        Boolean       @default(true)
+  featured        Boolean       @default(false)
+  publishedAt     DateTime?     // null = rascunho
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  createdBy       String?
+  updatedBy       String?
+
+  category        BlogCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([isActive])
+  @@index([publishedAt])
+  @@index([featured])
+}
+
+// ==========================================
+// WHATSAPP BOT (MEMÓRIA DE CONVERSAS)
+// ==========================================
+
+model WhatsappMemory {
+  id        String   @id @default(uuid())
+  phone     String   @unique
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([phone])
+}
+
+// ==========================================
 // MODELOS EXISTENTES (CURSOS)
 // ==========================================
 

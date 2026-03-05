@@ -42,13 +42,18 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params
 
-    const postsCount = await prisma.blogPost.count({
-      where: { categoryId: id },
+    const category = await prisma.blogCategory.findUnique({
+      where: { id },
+      include: { _count: { select: { posts: true } } },
     })
 
-    if (postsCount > 0) {
+    if (!category) {
+      return NextResponse.json({ error: 'Categoria não encontrada' }, { status: 404 })
+    }
+
+    if (category._count.posts > 0) {
       return NextResponse.json(
-        { error: `Não é possível deletar. Esta categoria possui ${postsCount} post(s).` },
+        { error: `Não é possível deletar. Esta categoria possui ${category._count.posts} post(s).` },
         { status: 400 }
       )
     }

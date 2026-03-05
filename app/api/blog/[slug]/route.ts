@@ -18,7 +18,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         publishedAt: { not: null },
       },
       include: {
-        category: { select: { id: true, title: true, slug: true } },
+        categories: { select: { id: true, title: true, slug: true } },
       },
     })
 
@@ -26,10 +26,11 @@ export async function GET(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Post não encontrado' }, { status: 404 })
     }
 
-    // Posts relacionados (mesma categoria, excluindo o atual)
+    // Posts relacionados (compartilham pelo menos uma categoria, excluindo o atual)
+    const categoryIds = post.categories.map(c => c.id)
     const relatedPosts = await prisma.blogPost.findMany({
       where: {
-        categoryId: post.categoryId,
+        categories: { some: { id: { in: categoryIds } } },
         id: { not: post.id },
         isActive: true,
         publishedAt: { not: null },
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         imageAlt: true,
         readingTime: true,
         publishedAt: true,
-        category: { select: { title: true, slug: true } },
+        categories: { select: { title: true, slug: true } },
       },
       orderBy: { publishedAt: 'desc' },
       take: 4,

@@ -15,7 +15,7 @@ interface BlogPostCard {
   readingTime: number
   tags: string[]
   publishedAt: string
-  category: { id: string; title: string; slug: string }
+  categories: { id: string; title: string; slug: string }[]
 }
 
 interface BlogCategory {

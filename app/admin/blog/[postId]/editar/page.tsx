@@ -17,6 +17,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import SEOPanel from '@/app/components/atoms/SEOPanel'
+import CategoryMultiSelect from '@/app/components/atoms/CategoryMultiSelect'
 
 const RichTextEditor = dynamic(
   () => import('@/app/components/atoms/RichTextEditor'),
@@ -34,7 +35,7 @@ interface PostForm {
   slug: string
   excerpt: string
   content: string
-  categoryId: string
+  categoryIds: string[]
   tags: string
   featuredImage: string
   imageAlt: string
@@ -84,7 +85,7 @@ export default function AdminBlogEditPostPage() {
             slug: post.slug,
             excerpt: post.excerpt,
             content: post.content,
-            categoryId: post.categoryId,
+            categoryIds: (post.categories || []).map((c: BlogCategory) => c.id),
             tags: (post.tags || []).join(', '),
             featuredImage: post.featuredImage || '',
             imageAlt: post.imageAlt || '',
@@ -195,8 +196,8 @@ export default function AdminBlogEditPostPage() {
   const handleSubmit = async (publishNow?: boolean) => {
     if (!firebaseUser || !form) return
 
-    if (!form.title || !form.slug || !form.excerpt || !form.content || !form.categoryId) {
-      setError('Título, slug, resumo, conteúdo e categoria são obrigatórios')
+    if (!form.title || !form.slug || !form.excerpt || !form.content || form.categoryIds.length === 0) {
+      setError('Título, slug, resumo, conteúdo e pelo menos uma categoria são obrigatórios')
       return
     }
 
@@ -211,7 +212,7 @@ export default function AdminBlogEditPostPage() {
         slug: form.slug,
         excerpt: form.excerpt,
         content: form.content,
-        categoryId: form.categoryId,
+        categoryIds: form.categoryIds,
         tags: form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
         keywords: form.keywords ? form.keywords.split(',').map(k => k.trim()).filter(Boolean) : [],
         featuredImage: form.featuredImage || null,
@@ -384,19 +385,13 @@ export default function AdminBlogEditPostPage() {
 
             {/* Category + Author */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Categoria *</label>
-                <select
-                  value={form.categoryId}
-                  onChange={(e) => setForm(prev => prev ? { ...prev, categoryId: e.target.value } : prev)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bolsa-primary focus:border-transparent"
-                >
-                  <option value="">Selecione uma categoria</option>
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.title}</option>
-                  ))}
-                </select>
-              </div>
+              <CategoryMultiSelect
+                categories={categories}
+                selectedIds={form.categoryIds}
+                onChange={(ids) => setForm(prev => prev ? { ...prev, categoryIds: ids } : prev)}
+                onCategoryCreated={(cat) => setCategories(prev => [...prev, cat])}
+                firebaseUser={firebaseUser}
+              />
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Autor</label>
                 <input

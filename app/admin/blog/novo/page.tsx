@@ -17,6 +17,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import SEOPanel from '@/app/components/atoms/SEOPanel'
+import CategoryMultiSelect from '@/app/components/atoms/CategoryMultiSelect'
 
 const RichTextEditor = dynamic(
   () => import('@/app/components/atoms/RichTextEditor'),
@@ -34,7 +35,7 @@ interface PostForm {
   slug: string
   excerpt: string
   content: string
-  categoryId: string
+  categoryIds: string[]
   tags: string
   featuredImage: string
   imageAlt: string
@@ -51,7 +52,7 @@ const emptyForm: PostForm = {
   slug: '',
   excerpt: '',
   content: '',
-  categoryId: '',
+  categoryIds: [],
   tags: '',
   featuredImage: '',
   imageAlt: '',
@@ -186,8 +187,8 @@ export default function AdminBlogNewPostPage() {
   const handleSubmit = async (publishNow: boolean) => {
     if (!firebaseUser) return
 
-    if (!form.title || !form.slug || !form.excerpt || !form.content || !form.categoryId) {
-      setError('Título, slug, resumo, conteúdo e categoria são obrigatórios')
+    if (!form.title || !form.slug || !form.excerpt || !form.content || form.categoryIds.length === 0) {
+      setError('Título, slug, resumo, conteúdo e pelo menos uma categoria são obrigatórios')
       return
     }
 
@@ -346,19 +347,13 @@ export default function AdminBlogNewPostPage() {
 
             {/* Category + Author */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Categoria *</label>
-                <select
-                  value={form.categoryId}
-                  onChange={(e) => setForm(prev => ({ ...prev, categoryId: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bolsa-primary focus:border-transparent"
-                >
-                  <option value="">Selecione uma categoria</option>
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.title}</option>
-                  ))}
-                </select>
-              </div>
+              <CategoryMultiSelect
+                categories={categories}
+                selectedIds={form.categoryIds}
+                onChange={(ids) => setForm(prev => ({ ...prev, categoryIds: ids }))}
+                onCategoryCreated={(cat) => setCategories(prev => [...prev, cat])}
+                firebaseUser={firebaseUser}
+              />
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Autor</label>
                 <input

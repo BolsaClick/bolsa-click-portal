@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { withAdminAuth, isAuthError } from '@/app/lib/middleware/admin-auth'
 
+function generateSlug(text: string) {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}
+
 /**
  * GET /api/admin/blog/categories
  * Lista todas as categorias do blog
@@ -30,7 +39,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/admin/blog/categories
- * Cria uma nova categoria
+ * Cria uma nova categoria (suporta criação rápida inline)
  */
 export async function POST(request: NextRequest) {
   const authResult = await withAdminAuth(request, ['blog'])
@@ -38,14 +47,17 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { slug, title, description, metaTitle, metaDescription, isActive = true } = body
+    const { title, slug: providedSlug, description, metaTitle, metaDescription, isActive = true } = body
 
-    if (!slug || !title || !description) {
+    if (!title) {
       return NextResponse.json(
-        { error: 'slug, title e description são obrigatórios' },
+        { error: 'title é obrigatório' },
         { status: 400 }
       )
     }
+
+    const slug = providedSlug || generateSlug(title)
+    const finalDescription = description || `Artigos sobre ${title}`
 
     const existing = await prisma.blogCategory.findUnique({ where: { slug } })
     if (existing) {
@@ -63,7 +75,7 @@ export async function POST(request: NextRequest) {
       data: {
         slug,
         title,
-        description,
+        description: finalDescription,
         metaTitle: metaTitle || null,
         metaDescription: metaDescription || null,
         isActive,

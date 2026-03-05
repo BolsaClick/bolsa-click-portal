@@ -21,7 +21,7 @@ interface BlogPost {
   keywords: string[]
   publishedAt: string
   updatedAt: string
-  category: { id: string; title: string; slug: string }
+  categories: { id: string; title: string; slug: string }[]
 }
 
 interface RelatedPost {
@@ -33,7 +33,7 @@ interface RelatedPost {
   imageAlt: string | null
   readingTime: number
   publishedAt: string
-  category: { title: string; slug: string }
+  categories: { title: string; slug: string }[]
 }
 
 interface Props {
@@ -65,12 +65,17 @@ export default function BlogPostClient({ post, relatedPosts, tocItems, hasBeenUp
       {/* Article Header */}
       <header className="bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 text-white py-10 md:py-14">
         <div className="container mx-auto px-4 max-w-4xl">
-          <Link
-            href={`/blog/categoria/${post.category.slug}`}
-            className="inline-block bg-bolsa-primary text-white text-xs font-semibold px-3 py-1 rounded-full mb-4 hover:bg-pink-600 transition"
-          >
-            {post.category.title}
-          </Link>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {post.categories.map(cat => (
+              <Link
+                key={cat.slug}
+                href={`/blog/categoria/${cat.slug}`}
+                className="inline-block bg-bolsa-primary text-white text-xs font-semibold px-3 py-1 rounded-full hover:bg-pink-600 transition"
+              >
+                {cat.title}
+              </Link>
+            ))}
+          </div>
 
           <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4 leading-tight">
             {post.title}
@@ -192,7 +197,7 @@ export default function BlogPostClient({ post, relatedPosts, tocItems, hasBeenUp
           <aside className="w-full lg:w-72 flex-shrink-0 space-y-6">
             {/* Desktop TOC */}
             {tocItems.length > 0 && (
-              <div className="hidden lg:block sticky top-4">
+              <div className="hidden lg:block sticky top-28">
                 <TableOfContents items={tocItems} />
               </div>
             )}

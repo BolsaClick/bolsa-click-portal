@@ -18,7 +18,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const post = await prisma.blogPost.findUnique({
       where: { id },
       include: {
-        category: { select: { id: true, title: true, slug: true } },
+        categories: { select: { id: true, title: true, slug: true } },
       },
     })
 
@@ -48,23 +48,33 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const { id } = await context.params
     const body = await request.json()
 
+    // Extract categoryIds from body (not a direct Prisma field)
+    const { categoryIds, ...data } = body
+
     // Recalcula reading time se content foi atualizado
-    if (body.content) {
-      const textContent = body.content.replace(/<[^>]*>/g, '')
+    if (data.content) {
+      const textContent = data.content.replace(/<[^>]*>/g, '')
       const wordCount = textContent.split(/\s+/).filter(Boolean).length
-      body.readingTime = Math.max(1, Math.ceil(wordCount / 200))
+      data.readingTime = Math.max(1, Math.ceil(wordCount / 200))
     }
 
     // Converte publishedAt para Date se fornecido
-    if (body.publishedAt !== undefined) {
-      body.publishedAt = body.publishedAt ? new Date(body.publishedAt) : null
+    if (data.publishedAt !== undefined) {
+      data.publishedAt = data.publishedAt ? new Date(data.publishedAt) : null
+    }
+
+    // Build categories update if categoryIds provided
+    if (categoryIds !== undefined) {
+      data.categories = {
+        set: categoryIds.map((cid: string) => ({ id: cid })),
+      }
     }
 
     const post = await prisma.blogPost.update({
       where: { id },
-      data: body,
+      data,
       include: {
-        category: { select: { id: true, title: true, slug: true } },
+        categories: { select: { id: true, title: true, slug: true } },
       },
     })
 

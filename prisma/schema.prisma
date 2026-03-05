@@ -540,7 +540,7 @@ model BlogCategory {
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
-  posts           BlogPost[]
+  posts           BlogPost[] @relation("BlogPostCategories")
 
   @@index([slug])
   @@index([isActive])
@@ -559,7 +559,6 @@ model BlogPost {
   imageAlt        String?
   author          String        @default("Equipe Bolsa Click")
   readingTime     Int           @default(5) // minutos
-  categoryId      String
   tags            String[]
   isActive        Boolean       @default(true)
   featured        Boolean       @default(false)
@@ -570,10 +569,9 @@ model BlogPost {
   createdBy       String?
   updatedBy       String?
 
-  category        BlogCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categories      BlogCategory[] @relation("BlogPostCategories")
 
   @@index([slug])
-  @@index([categoryId])
   @@index([isActive])
   @@index([publishedAt])
   @@index([featured])

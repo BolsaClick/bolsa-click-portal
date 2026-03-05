@@ -20,7 +20,9 @@ export async function GET(request: NextRequest) {
 
     const where: Record<string, unknown> = {}
 
-    if (categoryId) where.categoryId = categoryId
+    if (categoryId) {
+      where.categories = { some: { id: categoryId } }
+    }
     if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
@@ -34,7 +36,7 @@ export async function GET(request: NextRequest) {
       prisma.blogPost.findMany({
         where,
         include: {
-          category: { select: { id: true, title: true, slug: true } },
+          categories: { select: { id: true, title: true, slug: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
@@ -82,7 +84,7 @@ export async function POST(request: NextRequest) {
       featuredImage,
       imageAlt,
       author = 'Equipe Bolsa Click',
-      categoryId,
+      categoryIds = [],
       tags = [],
       isActive = true,
       featured = false,
@@ -90,9 +92,9 @@ export async function POST(request: NextRequest) {
       createdBy,
     } = body
 
-    if (!slug || !title || !excerpt || !content || !categoryId) {
+    if (!slug || !title || !excerpt || !content || categoryIds.length === 0) {
       return NextResponse.json(
-        { error: 'slug, title, excerpt, content e categoryId são obrigatórios' },
+        { error: 'slug, title, excerpt, content e pelo menos uma categoria são obrigatórios' },
         { status: 400 }
       )
     }
@@ -123,7 +125,9 @@ export async function POST(request: NextRequest) {
         imageAlt: imageAlt || null,
         author,
         readingTime,
-        categoryId,
+        categories: {
+          connect: categoryIds.map((id: string) => ({ id })),
+        },
         tags,
         isActive,
         featured,
@@ -131,7 +135,7 @@ export async function POST(request: NextRequest) {
         createdBy: createdBy || null,
       },
       include: {
-        category: { select: { id: true, title: true, slug: true } },
+        categories: { select: { id: true, title: true, slug: true } },
       },
     })
 

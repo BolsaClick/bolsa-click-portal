@@ -24,7 +24,7 @@ async function getCategoryPosts(categoryId: string) {
   try {
     return await prisma.blogPost.findMany({
       where: {
-        categoryId,
+        categories: { some: { id: categoryId } },
         isActive: true,
         publishedAt: { not: null },
       },
@@ -39,7 +39,7 @@ async function getCategoryPosts(categoryId: string) {
         readingTime: true,
         tags: true,
         publishedAt: true,
-        category: { select: { id: true, title: true, slug: true } },
+        categories: { select: { id: true, title: true, slug: true } },
       },
       orderBy: { publishedAt: 'desc' },
     })

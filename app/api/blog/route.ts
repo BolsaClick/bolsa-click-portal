@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (categorySlug) {
-      where.category = { slug: categorySlug }
+      where.categories = { some: { slug: categorySlug } }
     }
 
     if (featured === 'true') {
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
           featured: true,
           publishedAt: true,
           createdAt: true,
-          category: { select: { id: true, title: true, slug: true } },
+          categories: { select: { id: true, title: true, slug: true } },
         },
         orderBy: { publishedAt: 'desc' },
         skip: (page - 1) * limit,

@@ -19,7 +19,7 @@ interface BlogPostCard {
   tags: string[]
   featured: boolean
   publishedAt: string
-  category: { id: string; title: string; slug: string }
+  categories: { id: string; title: string; slug: string }[]
 }
 
 interface BlogCategory {
@@ -45,7 +45,7 @@ export default function BlogIndexClient({ posts: initialPosts, categories, featu
   const [searching, setSearching] = useState(false)
 
   const filteredPosts = activeCategory
-    ? posts.filter(p => p.category.id === activeCategory)
+    ? posts.filter(p => p.categories.some(c => c.id === activeCategory))
     : posts
 
   const handleSearch = useCallback(async (query: string) => {
@@ -139,9 +139,13 @@ export default function BlogIndexClient({ posts: initialPosts, categories, featu
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <span className="inline-block bg-bolsa-primary text-white text-xs font-semibold px-3 py-1 rounded-full mb-3">
-                      {post.category.title}
-                    </span>
+                    <div className="flex flex-wrap gap-1 mb-3">
+                      {post.categories.map(cat => (
+                        <span key={cat.slug} className="inline-block bg-bolsa-primary text-white text-xs font-semibold px-3 py-1 rounded-full">
+                          {cat.title}
+                        </span>
+                      ))}
+                    </div>
                     <h2 className={`font-bold text-white mb-2 group-hover:text-pink-200 transition-colors ${
                       index === 0 ? 'text-xl md:text-2xl' : 'text-lg'
                     }`}>
@@ -243,10 +247,10 @@ export default function BlogIndexClient({ posts: initialPosts, categories, featu
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: Math.min(index * 0.05, 0.3) }}
-                  className="group"
+                  className="group h-full"
                 >
-                  <Link href={`/blog/${post.slug}`} className="block">
-                    <div className="relative h-48 rounded-xl overflow-hidden mb-4 bg-gray-100">
+                  <Link href={`/blog/${post.slug}`} className="flex flex-col h-full">
+                    <div className="relative h-48 rounded-xl overflow-hidden mb-4 bg-gray-100 flex-shrink-0">
                       {post.featuredImage ? (
                         <Image
                           src={post.featuredImage}
@@ -261,27 +265,30 @@ export default function BlogIndexClient({ posts: initialPosts, categories, featu
                       )}
                     </div>
 
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span
-                          role="link"
-                          tabIndex={0}
-                          className="text-xs font-semibold text-bolsa-primary hover:underline cursor-pointer"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            router.push(`/blog/categoria/${post.category.slug}`)
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
+                    <div className="flex flex-col flex-1 space-y-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {post.categories.map(cat => (
+                          <span
+                            key={cat.slug}
+                            role="link"
+                            tabIndex={0}
+                            className="text-xs font-semibold text-bolsa-primary hover:underline cursor-pointer"
+                            onClick={(e) => {
                               e.preventDefault()
                               e.stopPropagation()
-                              router.push(`/blog/categoria/${post.category.slug}`)
-                            }
-                          }}
-                        >
-                          {post.category.title}
-                        </span>
+                              router.push(`/blog/categoria/${cat.slug}`)
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                router.push(`/blog/categoria/${cat.slug}`)
+                              }
+                            }}
+                          >
+                            {cat.title}
+                          </span>
+                        ))}
                         <span className="text-gray-300">&middot;</span>
                         <span className="text-xs text-gray-500 flex items-center gap-1">
                           <Clock size={12} />
@@ -297,7 +304,7 @@ export default function BlogIndexClient({ posts: initialPosts, categories, featu
                         {post.excerpt}
                       </p>
 
-                      <div className="flex items-center justify-between pt-2">
+                      <div className="flex items-center justify-between pt-2 mt-auto">
                         <span className="text-xs text-gray-500">
                           {new Date(post.publishedAt).toLocaleDateString('pt-BR', {
                             day: '2-digit',

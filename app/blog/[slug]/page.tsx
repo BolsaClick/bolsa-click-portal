@@ -50,7 +50,7 @@ async function getPostBySlug(slug: string) {
     return await prisma.blogPost.findUnique({
       where: { slug, isActive: true, publishedAt: { not: null } },
       include: {
-        category: { select: { id: true, title: true, slug: true } },
+        categories: { select: { id: true, title: true, slug: true } },
       },
     })
   } catch (error) {
@@ -59,11 +59,11 @@ async function getPostBySlug(slug: string) {
   }
 }
 
-async function getRelatedPosts(categoryId: string, currentId: string) {
+async function getRelatedPosts(categoryIds: string[], currentId: string) {
   try {
     return await prisma.blogPost.findMany({
       where: {
-        categoryId,
+        categories: { some: { id: { in: categoryIds } } },
         id: { not: currentId },
         isActive: true,
         publishedAt: { not: null },
@@ -77,7 +77,7 @@ async function getRelatedPosts(categoryId: string, currentId: string) {
         imageAlt: true,
         readingTime: true,
         publishedAt: true,
-        category: { select: { title: true, slug: true } },
+        categories: { select: { title: true, slug: true } },
       },
       orderBy: { publishedAt: 'desc' },
       take: 4,
@@ -107,6 +107,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: 'Artigo não encontrado' }
   }
 
+  const firstCategory = post.categories[0]
   const title = post.metaTitle || `${post.title} | Blog Bolsa Click`
   const description = post.metaDescription || post.excerpt
   const imageUrl = post.featuredImage || 'https://www.bolsaclick.com.br/assets/logo-bolsa-click-rosa.png'
@@ -129,7 +130,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       publishedTime: post.publishedAt?.toISOString(),
       modifiedTime: post.updatedAt.toISOString(),
       authors: [post.author],
-      section: post.category.title,
+      section: firstCategory?.title,
       tags: post.tags,
       images: imageUrl ? [
         {
@@ -158,7 +159,8 @@ export default async function BlogPostPage({ params }: Props) {
     notFound()
   }
 
-  const relatedPosts = await getRelatedPosts(post.categoryId, post.id)
+  const categoryIds = post.categories.map(c => c.id)
+  const relatedPosts = await getRelatedPosts(categoryIds, post.id)
 
   // Process content: add heading IDs and extract TOC
   const processedContent = addHeadingIds(post.content)
@@ -174,6 +176,7 @@ export default async function BlogPostPage({ params }: Props) {
   const wordCount = textContent.split(/\s+/).filter(Boolean).length
 
   const imageUrl = post.featuredImage || undefined
+  const firstCategory = post.categories[0]
 
   const jsonLdSchemas = [
     {
@@ -203,7 +206,7 @@ export default async function BlogPostPage({ params }: Props) {
       },
       wordCount,
       keywords: post.keywords.join(', '),
-      articleSection: post.category.title,
+      articleSection: post.categories.map(c => c.title).join(', '),
       inLanguage: 'pt-BR',
     },
     {
@@ -212,8 +215,8 @@ export default async function BlogPostPage({ params }: Props) {
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.bolsaclick.com.br' },
         { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://www.bolsaclick.com.br/blog' },
-        { '@type': 'ListItem', position: 3, name: post.category.title, item: `https://www.bolsaclick.com.br/blog/categoria/${post.category.slug}` },
-        { '@type': 'ListItem', position: 4, name: post.title, item: `https://www.bolsaclick.com.br/blog/${slug}` },
+        ...(firstCategory ? [{ '@type': 'ListItem', position: 3, name: firstCategory.title, item: `https://www.bolsaclick.com.br/blog/categoria/${firstCategory.slug}` }] : []),
+        { '@type': 'ListItem', position: firstCategory ? 4 : 3, name: post.title, item: `https://www.bolsaclick.com.br/blog/${slug}` },
       ],
     },
   ]
@@ -233,7 +236,7 @@ export default async function BlogPostPage({ params }: Props) {
         <Breadcrumb items={[
           { label: 'Home', href: '/' },
           { label: 'Blog', href: '/blog' },
-          { label: post.category.title, href: `/blog/categoria/${post.category.slug}` },
+          ...(firstCategory ? [{ label: firstCategory.title, href: `/blog/categoria/${firstCategory.slug}` }] : []),
           { label: post.title },
         ]} />
       </div>

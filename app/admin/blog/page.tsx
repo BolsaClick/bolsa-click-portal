@@ -32,7 +32,7 @@ interface BlogPost {
   featured: boolean
   publishedAt: string | null
   createdAt: string
-  category: { id: string; title: string; slug: string }
+  categories: { id: string; title: string; slug: string }[]
 }
 
 interface BlogCategory {
@@ -313,9 +313,11 @@ export default function AdminBlogPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
-                  <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded">
-                    {post.category.title}
-                  </span>
+                  {post.categories.map(cat => (
+                    <span key={cat.id} className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded">
+                      {cat.title}
+                    </span>
+                  ))}
                   <span className="flex items-center gap-1">
                     <Clock size={12} />
                     {post.readingTime} min

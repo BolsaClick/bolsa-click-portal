@@ -232,7 +232,7 @@ export default async function BlogPostPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchemas) }}
       />
-      <div className="container mx-auto px-4 pt-4 pb-2">
+      <div className="container mx-auto px-4 pt-20 pb-2">
         <Breadcrumb items={[
           { label: 'Home', href: '/' },
           { label: 'Blog', href: '/blog' },

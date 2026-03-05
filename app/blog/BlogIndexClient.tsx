@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Clock, Calendar, ArrowRight, BookOpen, Search, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -34,6 +35,7 @@ interface Props {
 }
 
 export default function BlogIndexClient({ posts: initialPosts, categories, featuredPosts }: Props) {
+  const router = useRouter()
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [posts, setPosts] = useState(initialPosts)
@@ -261,13 +263,25 @@ export default function BlogIndexClient({ posts: initialPosts, categories, featu
 
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <Link
-                          href={`/blog/categoria/${post.category.slug}`}
-                          className="text-xs font-semibold text-bolsa-primary hover:underline"
-                          onClick={(e) => e.stopPropagation()}
+                        <span
+                          role="link"
+                          tabIndex={0}
+                          className="text-xs font-semibold text-bolsa-primary hover:underline cursor-pointer"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            router.push(`/blog/categoria/${post.category.slug}`)
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              router.push(`/blog/categoria/${post.category.slug}`)
+                            }
+                          }}
                         >
                           {post.category.title}
-                        </Link>
+                        </span>
                         <span className="text-gray-300">&middot;</span>
                         <span className="text-xs text-gray-500 flex items-center gap-1">
                           <Clock size={12} />

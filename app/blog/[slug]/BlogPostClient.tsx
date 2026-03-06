@@ -63,7 +63,7 @@ export default function BlogPostClient({ post, relatedPosts, tocItems, hasBeenUp
       <ReadingProgress />
 
       {/* Article Header */}
-      <header className="bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 text-white py-10 md:py-14">
+      <header className="bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 text-white pt-24 md:pt-28 pb-10 md:pb-14">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="flex flex-wrap gap-2 mb-4">
             {post.categories.map(cat => (

@@ -1,7 +1,6 @@
 import { Metadata } from 'next'
 import { prisma } from '@/app/lib/prisma'
 import BlogIndexClient from './BlogIndexClient'
-import Breadcrumb from '@/app/components/atoms/Breadcrumb'
 
 export const revalidate = 3600
 
@@ -142,12 +141,6 @@ export default async function BlogPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchemas) }}
       />
-      <div className="container mx-auto px-4 pt-20 pb-2 md:hidden">
-        <Breadcrumb items={[
-          { label: 'Home', href: '/' },
-          { label: 'Blog' },
-        ]} />
-      </div>
       <BlogIndexClient
         posts={JSON.parse(JSON.stringify(posts))}
         categories={categories}

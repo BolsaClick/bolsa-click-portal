@@ -95,98 +95,29 @@ export default function BlogIndexClient({ posts: initialPosts, categories, featu
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 text-white py-12 md:py-16">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl">
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-              Blog Bolsa Click
-            </h1>
-            <p className="text-lg md:text-xl text-blue-200 mb-6">
-              Dicas, guias e tudo que você precisa saber sobre bolsas de estudo, ENEM, vestibular e carreira.
+    <div className="min-h-screen pt-24">
+      {/* Compact Header with Search */}
+      <section className="container mx-auto px-4 mb-6">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-blue-950">Blog</h1>
+            <p className="text-gray-500 mt-1">
+              Dicas sobre bolsas de estudo, ENEM, vestibular e carreira.
             </p>
-            <div className="flex items-center gap-2 text-sm text-blue-300">
-              <BookOpen size={16} />
-              <span>{posts.length} artigos publicados</span>
-            </div>
           </div>
-        </div>
-      </section>
-
-      {/* Featured Posts */}
-      {featuredPosts.length > 0 && (
-        <section className="container mx-auto px-4 -mt-8 relative z-10 mb-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {featuredPosts.map((post, index) => (
-              <Link
-                key={post.id}
-                href={`/blog/${post.slug}`}
-                className={`group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all ${
-                  index === 0 ? 'md:col-span-2 md:row-span-2' : ''
-                }`}
-              >
-                <div className={`relative ${index === 0 ? 'h-64 md:h-full min-h-[300px]' : 'h-48'}`}>
-                  {post.featuredImage ? (
-                    <Image
-                      src={post.featuredImage}
-                      alt={post.imageAlt || post.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-bolsa-primary to-pink-600" />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {post.categories.map(cat => (
-                        <span key={cat.slug} className="inline-block bg-bolsa-primary text-white text-xs font-semibold px-3 py-1 rounded-full">
-                          {cat.title}
-                        </span>
-                      ))}
-                    </div>
-                    <h2 className={`font-bold text-white mb-2 group-hover:text-pink-200 transition-colors ${
-                      index === 0 ? 'text-xl md:text-2xl' : 'text-lg'
-                    }`}>
-                      {post.title}
-                    </h2>
-                    <div className="flex items-center gap-3 text-xs text-gray-300">
-                      <span className="flex items-center gap-1">
-                        <Clock size={12} />
-                        {post.readingTime} min de leitura
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar size={12} />
-                        {new Date(post.publishedAt).toLocaleDateString('pt-BR', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
+          <div className="relative w-full md:w-72">
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => handleSearch(e.target.value)}
+              placeholder="Buscar artigos..."
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-full bg-gray-50 focus:bg-white focus:ring-2 focus:ring-bolsa-primary focus:border-transparent text-sm transition-colors"
+            />
+            {searching && (
+              <Loader2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-bolsa-primary animate-spin" />
+            )}
           </div>
-        </section>
-      )}
-
-      {/* Search */}
-      <section className="container mx-auto px-4 mb-4">
-        <div className="relative max-w-md">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => handleSearch(e.target.value)}
-            placeholder="Buscar artigos..."
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-full focus:ring-2 focus:ring-bolsa-primary focus:border-transparent text-sm"
-          />
-          {searching && (
-            <Loader2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-bolsa-primary animate-spin" />
-          )}
         </div>
       </section>
 
@@ -216,6 +147,65 @@ export default function BlogIndexClient({ posts: initialPosts, categories, featu
               >
                 {cat.title}
               </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Featured Posts */}
+      {featuredPosts.length > 0 && !search && !activeCategory && (
+        <section className="container mx-auto px-4 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-4">
+            {featuredPosts.map((post, index) => (
+              <Link
+                key={post.id}
+                href={`/blog/${post.slug}`}
+                className={`group relative rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all ${
+                  index === 0 ? 'md:row-span-2' : ''
+                }`}
+              >
+                <div className={`relative ${index === 0 ? 'h-64 md:h-full min-h-[320px]' : 'h-48 md:h-full min-h-[154px]'}`}>
+                  {post.featuredImage ? (
+                    <Image
+                      src={post.featuredImage}
+                      alt={post.imageAlt || post.title}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-bolsa-primary to-pink-600" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {post.categories.map(cat => (
+                        <span key={cat.slug} className="inline-block bg-bolsa-primary text-white text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                          {cat.title}
+                        </span>
+                      ))}
+                    </div>
+                    <h2 className={`font-bold text-white mb-2 group-hover:text-pink-200 transition-colors ${
+                      index === 0 ? 'text-xl md:text-2xl' : 'text-base md:text-lg'
+                    }`}>
+                      {post.title}
+                    </h2>
+                    <div className="flex items-center gap-3 text-xs text-gray-300">
+                      <span className="flex items-center gap-1">
+                        <Clock size={12} />
+                        {post.readingTime} min de leitura
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Calendar size={12} />
+                        {new Date(post.publishedAt).toLocaleDateString('pt-BR', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
             ))}
           </div>
         </section>

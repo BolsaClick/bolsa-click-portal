@@ -49,7 +49,8 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        montserrat: ['Montserrat', 'sans-serif'],
+        montserrat: ['var(--font-montserrat)', 'sans-serif'],
+        sans: ['var(--font-montserrat)', 'sans-serif'],
       },
       maxWidth: {
         'screen-lg': '1440px',

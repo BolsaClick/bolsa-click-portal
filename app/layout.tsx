@@ -3,12 +3,20 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { Analytics } from '@vercel/analytics/react'
 import { Metadata } from 'next'
 import Script from 'next/script'
+import { Montserrat } from 'next/font/google'
 import { Toaster } from 'sonner'
 import { AnalyticsScripts } from './components/organisms/AnalyticsScripts'
 import { ClientProviders } from './components/providers/ClientProviders'
 import { WatiWhatsappWidget } from './components/WatiWhatsappWidget'
 import './globals.css'
 import { getCurrentTheme } from './lib/themes'
+
+const montserrat = Montserrat({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-montserrat',
+})
 
 const theme = getCurrentTheme()
 
@@ -178,7 +186,7 @@ const jsonLd = [
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-br">
+    <html lang="pt-br" className={montserrat.variable}>
       <head>
         {/* Eclesiastes 3:1 — Tudo tem o seu tempo determinado, e há tempo para todo o propósito debaixo do céu. */}
         <link rel="manifest" href="/manifest.json" />
@@ -193,7 +201,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="antialiased">
+      <body className={`${montserrat.className} antialiased`}>
         {/* GTM (noscript) */}
         <noscript>
           <iframe

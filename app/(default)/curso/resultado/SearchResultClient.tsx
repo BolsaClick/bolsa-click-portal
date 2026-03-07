@@ -21,6 +21,7 @@ import CourseCardNew from '@/app/components/CourseCardNew';
 import FiltersPanel from './FiltersPanel';
 import Breadcrumbs from '@/app/components/molecules/Breadcrumbs';
 import { Course } from '@/app/interface/course';
+import { isBot } from '@/app/lib/utils/is-bot';
 
 
 
@@ -199,6 +200,7 @@ export default function SearchResultClient() {
   // Detectar localização por IP se não houver cidade na URL.
   // Com pequeno delay ao vir da home: evita rodar com searchParams ainda vazios (client nav)
   // e sobrescrever a URL perdendo curso/cidade/estado.
+  // IMPORTANTE: Bots/crawlers NÃO executam geolocalização para evitar URLs com Mountain View, CA.
   useEffect(() => {
       if (cidade && estado) {
         setFilters((prev) => ({
@@ -210,6 +212,12 @@ export default function SearchResultClient() {
       }
 
     if (locationDetected) return;
+
+    // Não executar geolocalização para bots/crawlers
+    if (isBot()) {
+      setLocationDetected(true)
+      return
+    }
 
     const timeoutId = setTimeout(async () => {
       if (locationDetected) return;

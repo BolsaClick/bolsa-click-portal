@@ -653,22 +653,36 @@ const isFormValidForPayment =
   // Valor padrão da matrícula: R$ 449,00
   const defaultEnrollmentFee = 449
 
+  // Pós-graduação: habilitar checkout independente do source
+  const isPosGraduacao = offerDetails?.academicLevel === 'POS_GRADUACAO'
+
   // Lógica de cobrança:
-  // Só cobra matrícula quando: pix_enabled ATIVO + source === 'ATHENAS'
-  // Caso contrário: sem taxa, sem checkout (apenas create-inscription)
+  // Cobra matrícula quando pix_enabled ATIVO (todos os sources)
   // Mensalidade sempre é cobrada pela faculdade (não aparece no checkout)
+  // POS: valor da matrícula = minInstallmentValue (menor parcela dos paymentMethods)
+  const posMinInstallmentValue = isPosGraduacao
+    ? (offerDetails?.paymentMethods as PosPaymentMethod[] | undefined)
+        ?.flatMap(pm => pm.installments)
+        ?.reduce((min, inst) => inst.installmentValue < min ? inst.installmentValue : min, Infinity) ?? 0
+    : 0
+
   let enrollmentFee: number
-  if (!pixEnabled || !isAthenasSource) {
+  if (!pixEnabled) {
     enrollmentFee = 0
+  } else if (isPosGraduacao) {
+    // POS: usar minInstallmentValue como valor da matrícula
+    enrollmentFee = posMinInstallmentValue > 0 && posMinInstallmentValue !== Infinity
+      ? posMinInstallmentValue
+      : (offerDetails?.subscriptionValue || 0)
   } else {
-    // Prioridade: subscriptionValue da API > valor padrão (R$ 449,00)
+    // Graduação/outros: subscriptionValue da API ou fallback R$449
     enrollmentFee = offerDetails?.subscriptionValue !== undefined && offerDetails?.subscriptionValue !== null && offerDetails.subscriptionValue > 0
       ? offerDetails.subscriptionValue
       : defaultEnrollmentFee
   }
 
-  // Checkout habilitado apenas para ofertas ATHENAS com pix_enabled
-  const checkoutEnabled = pixEnabled && isAthenasSource
+  // Checkout habilitado para todas as ofertas com pix_enabled
+  const checkoutEnabled = pixEnabled
 
   const baseMatricula = Math.round(enrollmentFee * 100) // em centavos
 
@@ -682,6 +696,7 @@ const isFormValidForPayment =
         pixEnabled,
         offerSource,
         isAthenasSource,
+        isPosGraduacao,
         checkoutEnabled,
         subscriptionValue: offerDetails?.subscriptionValue,
         defaultEnrollmentFee,
@@ -691,6 +706,49 @@ const isFormValidForPayment =
       })
     }
   }, [offerDetails, pixEnabled, offerSource, isAthenasSource, checkoutEnabled, enrollmentFee, baseMatricula, monthlyFee])
+
+  // Auto-selecionar boleto 18x para pós-graduação
+  useEffect(() => {
+    if (!offerDetails || offerDetails.academicLevel !== 'POS_GRADUACAO') return
+    const methods = offerDetails.paymentMethods as PosPaymentMethod[] | undefined
+    if (!methods?.length) return
+    const boletoMethod = methods.find(pm => pm.type === 'BOLETO')
+    if (!boletoMethod) return
+    const inst18x = boletoMethod.installments.find(i => i.number === 18)
+    if (inst18x) {
+      setPosPaymentMethodType('BOLETO')
+      setPosInstallmentId(inst18x.id)
+    }
+  }, [offerDetails])
+
+  // Auto-validar voucher GALENA+15 para pós-graduação
+  const watchedCpf = watchedValues.cpf
+  useEffect(() => {
+    if (!offerDetails || offerDetails.academicLevel !== 'POS_GRADUACAO') return
+    if (!posInstallmentId) return
+    const cpf = (watchedCpf || '').replace(/\D/g, '')
+    if (cpf.length !== 11) return
+
+    const autoValidateVoucher = async () => {
+      try {
+        const result = await validateVoucher('GALENA+15', cpf, posInstallmentId)
+        const isValid = result.isValid ?? false
+        if (isValid) {
+          setVoucherCode('GALENA+15')
+          setVoucherValid(true)
+          setVoucherData(result)
+          const matchingMethod = result.paymentMethods?.find(pm => pm.type === 'BOLETO')
+            || result.paymentMethods?.[0]
+          if (matchingMethod) {
+            setVoucherInstallments(matchingMethod.installments)
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao validar voucher GALENA+15:', err)
+      }
+    }
+    autoValidateVoucher()
+  }, [offerDetails, posInstallmentId, watchedCpf])
 
   const applyCouponToMatricula = () => {
     if (!coupon) return baseMatricula
@@ -1307,9 +1365,14 @@ const isFormValidForPayment =
         const firstInstallment = pixMethod?.installments?.[0]
         if (firstInstallment) {
           posInstallmentIdForCheckout = firstInstallment.id
+          const pmData: { id: string; dueDay: string; voucher?: string; voucherId?: number } = { id: firstInstallment.id, dueDay: POS_DUE_DAY }
+          if (voucherValid && voucherData) {
+            pmData.voucher = voucherData.code || 'GALENA+15'
+            pmData.voucherId = voucherData.id
+          }
           localStorage.setItem(
             'pendingPosPaymentMethod',
-            JSON.stringify({ id: firstInstallment.id, dueDay: POS_DUE_DAY })
+            JSON.stringify(pmData)
           )
         }
       }

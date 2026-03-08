@@ -155,6 +155,20 @@ const jsonLd = [
   },
   {
     '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: [
+      { '@type': 'SiteNavigationElement', position: 1, name: 'Cursos', url: `${theme.siteUrl}/cursos` },
+      { '@type': 'SiteNavigationElement', position: 2, name: 'Graduação', url: `${theme.siteUrl}/graduacao` },
+      { '@type': 'SiteNavigationElement', position: 3, name: 'Pós-Graduação', url: `${theme.siteUrl}/pos-graduacao` },
+      { '@type': 'SiteNavigationElement', position: 4, name: 'Faculdades', url: `${theme.siteUrl}/faculdades` },
+      { '@type': 'SiteNavigationElement', position: 5, name: 'Blog', url: `${theme.siteUrl}/blog` },
+      { '@type': 'SiteNavigationElement', position: 6, name: 'Como Funciona', url: `${theme.siteUrl}/quem-somos` },
+      { '@type': 'SiteNavigationElement', position: 7, name: 'Central de Ajuda', url: `${theme.siteUrl}/central-de-ajuda` },
+      { '@type': 'SiteNavigationElement', position: 8, name: 'Contato', url: `${theme.siteUrl}/contato` },
+    ],
+  },
+  {
+    '@context': 'https://schema.org',
     '@type': 'EducationalOccupationalProgram',
     name: 'Bolsas de estudo com até 95% de desconto',
     educationalProgramMode: ['online', 'presencial', 'semipresencial'],

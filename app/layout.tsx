@@ -2,8 +2,8 @@ import { queryClient } from '@/utils/react-query'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { Analytics } from '@vercel/analytics/react'
 import { Metadata } from 'next'
-import Script from 'next/script'
 import { Montserrat } from 'next/font/google'
+import Script from 'next/script'
 import { Toaster } from 'sonner'
 import { AnalyticsScripts } from './components/organisms/AnalyticsScripts'
 import { ClientProviders } from './components/providers/ClientProviders'
@@ -187,6 +187,14 @@ const jsonLd = [
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-br" className={montserrat.variable}>
+      <Script id="utmify-pixel" strategy="afterInteractive">
+        {`window.pixelId = "69a7352596ee946eac5f88dd";
+        var a = document.createElement("script");
+        a.setAttribute("async", "");
+        a.setAttribute("defer", "");
+        a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
+        document.head.appendChild(a);`}
+      </Script>
       <head>
         {/* Eclesiastes 3:1 — Tudo tem o seu tempo determinado, e há tempo para todo o propósito debaixo do céu. */}
         <link rel="manifest" href="/manifest.json" />

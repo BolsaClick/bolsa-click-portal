@@ -7,7 +7,6 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "postbuild": "next-sitemap",
     "bolsaclick": "env-cmd -f .env.bolsaclick next dev",
     "anhanguera": "env-cmd -f .env.anhanguera next dev"
   },

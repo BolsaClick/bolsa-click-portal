@@ -1,0 +1,119 @@
+import { MetadataRoute } from 'next'
+import { prisma } from '@/app/lib/prisma'
+
+const SITE_URL = 'https://www.bolsaclick.com.br'
+
+function slugifyCity(text: string): string {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}
+
+const courseSlugs = [
+  'administracao', 'direito', 'enfermagem', 'psicologia',
+  'educacao-fisica', 'farmacia', 'medicina', 'engenharia-civil',
+  'pedagogia', 'analise-e-desenvolvimento-de-sistemas',
+  'gestao-de-recursos-humanos', 'marketing',
+  'nutricao', 'odontologia', 'fisioterapia', 'biomedicina',
+  'ciencias-contabeis', 'arquitetura-e-urbanismo',
+  'engenharia-de-producao', 'gestao-comercial',
+]
+
+const mainCities = [
+  'São Paulo', 'Rio de Janeiro', 'Belo Horizonte', 'Curitiba',
+  'Porto Alegre', 'Brasília', 'Salvador', 'Recife',
+  'Fortaleza', 'Goiânia', 'Manaus', 'Belém',
+  'Campinas', 'São Luís', 'Maceió', 'Campo Grande',
+  'Cuiabá', 'João Pessoa', 'Natal', 'Teresina',
+  'Aracaju', 'Florianópolis', 'Vitória', 'Porto Velho',
+  'Macapá', 'Rio Branco', 'Boa Vista', 'Palmas',
+]
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const now = new Date()
+
+  // Páginas estáticas
+  const staticPages: MetadataRoute.Sitemap = [
+    { url: SITE_URL, lastModified: now, changeFrequency: 'daily', priority: 1.0 },
+    { url: `${SITE_URL}/cursos`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${SITE_URL}/graduacao`, lastModified: now, changeFrequency: 'daily', priority: 0.95 },
+    { url: `${SITE_URL}/pos-graduacao`, lastModified: now, changeFrequency: 'daily', priority: 0.95 },
+    { url: `${SITE_URL}/faculdades`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
+    { url: `${SITE_URL}/blog`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${SITE_URL}/quem-somos`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${SITE_URL}/contato`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${SITE_URL}/central-de-ajuda`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+  ]
+
+  // Landing pages /cursos/[slug]/[city]
+  const courseCityPages: MetadataRoute.Sitemap = courseSlugs.flatMap(courseSlug =>
+    mainCities.map(city => ({
+      url: `${SITE_URL}/cursos/${courseSlug}/${slugifyCity(city)}`,
+      lastModified: now,
+      changeFrequency: 'weekly' as const,
+      priority: 0.85,
+    }))
+  )
+
+  // Dados dinâmicos do banco
+  let dynamicPages: MetadataRoute.Sitemap = []
+
+  try {
+    const [blogPosts, blogCategories, institutions, helpArticles] = await Promise.all([
+      prisma.blogPost.findMany({
+        where: { isActive: true, publishedAt: { not: null } },
+        select: { slug: true, updatedAt: true },
+      }),
+      prisma.blogCategory.findMany({
+        where: { isActive: true },
+        select: { slug: true, updatedAt: true },
+      }),
+      prisma.institution.findMany({
+        where: { isActive: true },
+        select: { slug: true, updatedAt: true },
+      }),
+      prisma.helpArticle.findMany({
+        where: { isActive: true },
+        select: { slug: true, updatedAt: true, category: { select: { slug: true } } },
+      }),
+    ])
+
+    dynamicPages = [
+      ...blogPosts.map((post: { slug: string; updatedAt: Date }) => ({
+        url: `${SITE_URL}/blog/${post.slug}`,
+        lastModified: post.updatedAt,
+        changeFrequency: 'weekly' as const,
+        priority: 0.8,
+      })),
+      ...blogCategories.map((cat: { slug: string; updatedAt: Date }) => ({
+        url: `${SITE_URL}/blog/categoria/${cat.slug}`,
+        lastModified: cat.updatedAt,
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+      })),
+      ...institutions.map((inst: { slug: string; updatedAt: Date }) => ({
+        url: `${SITE_URL}/faculdades/${inst.slug}`,
+        lastModified: inst.updatedAt,
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+      })),
+      ...helpArticles.map((article: { slug: string; updatedAt: Date; category: { slug: string } }) => ({
+        url: `${SITE_URL}/central-de-ajuda/${article.category.slug}/${article.slug}`,
+        lastModified: article.updatedAt,
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+      })),
+    ]
+  } catch (e) {
+    console.error('Erro ao buscar dados dinâmicos para sitemap:', e)
+  }
+
+  return [
+    ...staticPages,
+    ...courseCityPages,
+    ...dynamicPages,
+  ]
+}

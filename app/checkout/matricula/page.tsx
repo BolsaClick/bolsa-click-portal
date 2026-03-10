@@ -1453,6 +1453,8 @@ const isFormValidForPayment =
         description: `Matrícula - ${offerDetails.course}`,
         paymentMethod: 'pix' as const,
         brand: offerDetails.brand?.toLowerCase() || 'anhanguera',
+        channel: process.env.NEXT_PUBLIC_THEME || 'bolsaclick',
+        city: offerDetails.unitCity || '',
         metadata: {
           courseId: offerDetails.courseId,
           courseName: offerDetails.course,
@@ -2541,6 +2543,8 @@ const isFormValidForPayment =
 
                               description={`Matrícula - ${offerDetails.course}`}
                               brand={offerDetails.brand?.toLowerCase() || 'anhanguera'}
+                              channel={process.env.NEXT_PUBLIC_THEME || 'bolsaclick'}
+                              city={offerDetails.unitCity || ''}
                               metadata={{
                                 courseId: offerDetails.courseId,
                                 courseName: offerDetails.course,

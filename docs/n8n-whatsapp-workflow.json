@@ -1,0 +1,498 @@
+{
+  "name": "WhatsApp Bot - Bolsa Click (Gemini Agent + Tartarus + Evolution API)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-bot",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook WhatsApp",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "noData",
+        "options": {}
+      },
+      "name": "Respond 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [420, 260]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nif (body.event !== 'messages.upsert') return [];\nconst message = body.data;\nif (!message) return [];\nif (message.key?.fromMe === true) return [];\nconst text = message.message?.conversation || message.message?.extendedTextMessage?.text || '';\nif (!text.trim()) return [];\nconst remoteJid = message.key.remoteJid || '';\nconst phone = remoteJid.replace('@s.whatsapp.net', '');\nif (remoteJid.includes('@g.us')) return [];\nreturn [{ json: { phone, text: text.trim(), pushName: message.pushName || '', remoteJid, messageId: message.key.id, timestamp: new Date().toISOString() } }];"
+      },
+      "name": "Filtrar e Extrair Dados",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 520]
+    },
+    {
+      "parameters": {
+        "agent": "toolsAgent",
+        "promptType": "define",
+        "text": "=NOME DO USUARIO: {{ $json.pushName || 'desconhecido' }}\nTELEFONE: {{ $json.phone }}\n\nMENSAGEM DO USUARIO: {{ $json.text }}",
+        "options": {
+          "systemMessage": "Voce eh a Ana, consultora de educacao do Bolsa Click. Voce conversa no WhatsApp como uma pessoa real — calorosa, atenciosa e que realmente quer ajudar.\n\n## Como voce conversa\n- Como uma amiga que manja de faculdade, nao como atendente de telemarketing\n- Linguagem natural, leve e brasileira. Nada de respostas roboticas ou genericas\n- Varie suas respostas — NUNCA repita as mesmas frases\n- Emojis com moderacao e variados (nao sempre os mesmos)\n- Mensagens curtas (2-3 frases no maximo)\n- Use *negrito* e _italico_ do WhatsApp quando fizer sentido\n- SEMPRE demonstre interesse genuino pelo que a pessoa precisa\n\n## Sobre o Bolsa Click\n- Bolsas de estudo com ate 80% de desconto\n- Faculdades parceiras: Anhanguera, Unopar e Unime\n- Graduacao e Pos | EAD, Presencial e Semipresencial\n- Inscricao gratuita | Site: https://www.bolsaclick.com.br\n\n## REGRA CRITICA — QUANDO BUSCAR CURSOS:\n- Use intent BUSCAR_CURSO *SOMENTE* quando o cliente disser EXPLICITAMENTE o nome de um curso (ex: \"quero Administracao\", \"ADS\", \"Direito\")\n- Se o cliente mencionar apenas cidade, modalidade, area de interesse ou que \"quer estudar\" SEM dizer o curso especifico → use CONVERSA_GERAL e PERGUNTE qual curso quer\n- PRIMEIRO entenda o que a pessoa precisa, DEPOIS busque\n- Exemplos:\n  - \"quero me matricular em Brasilia\" → CONVERSA_GERAL (pergunte qual curso)\n  - \"tem cursos de tecnologia?\" → CONVERSA_GERAL (pergunte qual especificamente)\n  - \"quero Analise e Desenvolvimento de Sistemas\" → BUSCAR_CURSO\n  - \"ADS em Sao Paulo\" → BUSCAR_CURSO\n\n## Regras de negocio:\n1. Fazemos APENAS novas matriculas\n2. Cancelamentos → \"Isso eh diretamente com a universidade que voce escolheu. Mas posso te ajudar com uma nova matricula se precisar!\"\n3. Transferencias → somente no polo presencial da faculdade\n4. NAO temos info sobre matriculas existentes\n5. NUNCA invente precos ou informacoes\n6. NUNCA fale sobre concorrentes\n7. Colete dados (nome, email, CPF) aos poucos, naturalmente\n8. Se nao souber, direcione pro site ou atendente humano\n\n## Intencoes:\n- BUSCAR_CURSO: o cliente disse o NOME de um curso especifico e quer ver opcoes\n- DETALHE_CURSO: quer preco exato/parcelas de um curso ja mostrado\n- INFO_ACADEMICA: quer info geral sobre um curso (grade, mercado)\n- CAPTURAR_LEAD: forneceu dados pessoais ou quer se inscrever\n- CHECKOUT: quer finalizar matricula\n- TRANSFERIR_HUMANO: pede atendente ou tem problema complexo\n- CONVERSA_GERAL: todo o resto — saudacoes, duvidas gerais, quando AINDA NAO disse o curso\n\n## Fluxo natural (como uma conversa real):\n1. Cumprimente com calor humano\n2. Entenda: o que procura? qual curso? qual cidade? EAD ou presencial?\n3. SO DEPOIS de saber o curso, busque opcoes\n4. Apresente, tire duvidas, ajude a decidir\n5. Quando interessado, colete dados para inscricao\n6. Envie link para garantir a bolsa\n- NUNCA pule etapas. NUNCA mostre cursos sem saber o que a pessoa quer.\n\nResponda EXCLUSIVAMENTE com JSON valido (sem markdown, sem ```json):\n{\n  \"intent\": \"BUSCAR_CURSO | DETALHE_CURSO | INFO_ACADEMICA | CAPTURAR_LEAD | CHECKOUT | TRANSFERIR_HUMANO | CONVERSA_GERAL\",\n  \"response\": \"texto para WhatsApp\",\n  \"courseQuery\": \"nome do curso (SOMENTE se intent=BUSCAR_CURSO/DETALHE_CURSO/INFO_ACADEMICA)\",\n  \"academicLevel\": \"GRADUACAO | POS_GRADUACAO\",\n  \"modality\": \"EAD | PRESENCIAL | SEMIPRESENCIAL\",\n  \"city\": \"cidade se mencionada\",\n  \"leadData\": { \"name\": \"\", \"email\": \"\", \"cpf\": \"\", \"courseInterest\": \"\" },\n  \"stage\": \"greeting | browsing | interested | collecting_data | checkout | support | handoff\"\n}",
+          "maxIterations": 3
+        }
+      },
+      "name": "Gemini Processar Mensagem",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [700, 520]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {
+          "temperature": 0.7,
+          "maxOutputTokens": 1024,
+          "topP": 0.9
+        }
+      },
+      "name": "Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [620, 740],
+      "credentials": {
+        "googleGeminiApi": {
+          "id": "SUBSTITUIR_GEMINI_CREDENTIAL_ID",
+          "name": "Google Gemini API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.phone }}",
+        "contextWindowLength": 15
+      },
+      "name": "Memoria Conversa",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [780, 740]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst userData = $('Filtrar e Extrair Dados').first().json;\nlet aiResponse;\ntry {\n  let text = input.output || '{}';\n  // Remove markdown code blocks (handles invisible chars, whitespace variations)\n  text = text.replace(/[\\s\\S]*?```(?:json)?[\\s\\n]*/i, '');\n  text = text.replace(/```[\\s\\S]*/g, '');\n  text = text.trim();\n  // If text doesn't start with {, try to find a JSON object inside\n  if (!text.startsWith('{')) {\n    const jsonMatch = text.match(/\\{[\\s\\S]*\\}/);\n    if (jsonMatch) text = jsonMatch[0];\n  }\n  aiResponse = JSON.parse(text);\n} catch (e) {\n  // JSON parse failed - extract fields via regex to NEVER send raw JSON\n  const rawText = input.output || '';\n  let extractedResponse = '';\n  const respMatch = rawText.match(/\"response\"\\s*:\\s*\"((?:[^\"\\\\]|\\\\.)*)\"/);\n  if (respMatch) {\n    extractedResponse = respMatch[1].replace(/\\\\n/g, '\\n').replace(/\\\\\"/g, '\"').replace(/\\\\\\\\/g, '\\\\');\n  }\n  let extractedIntent = 'CONVERSA_GERAL';\n  const intMatch = rawText.match(/\"intent\"\\s*:\\s*\"([^\"]+)\"/);\n  if (intMatch) extractedIntent = intMatch[1];\n  let extractedStage = 'greeting';\n  const stgMatch = rawText.match(/\"stage\"\\s*:\\s*\"([^\"]+)\"/);\n  if (stgMatch) extractedStage = stgMatch[1];\n  let extractedCourse = '';\n  const crsMatch = rawText.match(/\"courseQuery\"\\s*:\\s*\"([^\"]*)\"/); \n  if (crsMatch) extractedCourse = crsMatch[1];\n  let extractedCity = '';\n  const cityMatch = rawText.match(/\"city\"\\s*:\\s*\"([^\"]*)\"/); \n  if (cityMatch) extractedCity = cityMatch[1];\n  aiResponse = {\n    intent: extractedIntent,\n    response: extractedResponse || 'Desculpe, tive um probleminha. Pode repetir? 😊',\n    stage: extractedStage,\n    courseQuery: extractedCourse,\n    city: extractedCity,\n    leadData: {}\n  };\n}\nconst leadData = aiResponse.leadData || {};\nObject.keys(leadData).forEach(key => { if (!leadData[key] || leadData[key] === 'null' || leadData[key] === 'undefined') delete leadData[key]; });\nreturn [{ json: { phone: userData.phone, remoteJid: userData.remoteJid, text: userData.text, pushName: userData.pushName, timestamp: userData.timestamp, userName: userData.pushName || '', intent: aiResponse.intent || 'CONVERSA_GERAL', response: aiResponse.response || 'Como posso te ajudar? 😊', courseQuery: aiResponse.courseQuery || '', academicLevel: aiResponse.academicLevel || 'GRADUACAO', modality: aiResponse.modality || 'EAD', city: aiResponse.city || '', leadData, stage: aiResponse.stage || 'greeting' } }];"
+      },
+      "name": "Parsear Resposta Gemini",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 520]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst intent = data.intent || 'CONVERSA_GERAL';\nconst item = [{ json: data }];\nconst empty = [];\n// Outputs: 0=BUSCAR_CURSO, 1=DETALHE_CURSO, 2=INFO_ACADEMICA, 3=CAPTURAR_LEAD, 4=TRANSFERIR_HUMANO, 5=FALLBACK\nconst outputs = [empty, empty, empty, empty, empty, empty];\nswitch (intent) {\n  case 'BUSCAR_CURSO': outputs[0] = item; break;\n  case 'DETALHE_CURSO': outputs[1] = item; break;\n  case 'INFO_ACADEMICA': outputs[2] = item; break;\n  case 'CAPTURAR_LEAD': outputs[3] = item; break;\n  case 'TRANSFERIR_HUMANO': outputs[4] = item; break;\n  default: outputs[5] = item; break;\n}\nreturn outputs;",
+        "mode": "runOnceForAllItems"
+      },
+      "name": "Switch por Intencao",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 520],
+      "outputs": ["main", "main", "main", "main", "main", "main"]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://tartarus-api.inovitdigital.com.br/api/cogna/courses/search?courseName={{ encodeURIComponent($json.courseQuery) }}&academicLevel={{ $json.academicLevel || 'GRADUACAO' }}&modality={{ $json.modality || 'EAD' }}{{ $json.city ? '&city=' + encodeURIComponent($json.city) : '' }}&size=5",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "name": "Buscar Cursos Tartarus",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1480, 100],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const coursesResponse = $input.first().json;\nconst prevData = $('Parsear Resposta Gemini').first().json;\nconst courses = coursesResponse.content || coursesResponse.data || coursesResponse || [];\nconst courseList = Array.isArray(courses) ? courses : [];\nlet finalResponse = prevData.response;\nif (courseList.length > 0) {\n  // Deduplica por brand+preco para nao mostrar cursos identicos\n  const seen = new Set();\n  const unique = courseList.filter(c => {\n    const brand = c.brand?.name || c.brandName || c.institution || c.unit?.name || '';\n    const price = c.minPrice || c.priceWithDiscount || 0;\n    const key = `${brand}-${price}`;\n    if (seen.has(key)) return false;\n    seen.add(key);\n    return true;\n  }).slice(0, 5);\n  const list = unique.map((c, i) => {\n    const name = c.name || c.courseName || 'Curso';\n    const brand = c.brand?.name || c.brandName || c.institution || c.unit?.name || '';\n    const modality = c.modality || prevData.modality || 'EAD';\n    const city = c.city || c.unit?.city || prevData.city || '';\n    const rawDuration = c.duration || c.semesters || c.workload || '';\n    let duration = '';\n    if (rawDuration) {\n      const num = Number(rawDuration);\n      if (num > 0 && num <= 12) duration = `${num} semestres (${num * 6} meses)`;\n      else if (num > 12) duration = `${num} meses`;\n      else duration = String(rawDuration);\n    }\n    const minPrice = c.minPrice || c.priceWithDiscount || c.installmentValue;\n    const maxPrice = c.maxPrice || c.originalPrice || c.fullPrice;\n    const discount = (minPrice && maxPrice && maxPrice > 0) ? Math.round((1 - minPrice / maxPrice) * 100) : null;\n    const tipo = c.type || c.courseType || '';\n    const tipoLabel = tipo === 'BACHARELADO' ? 'Bacharelado' : tipo === 'LICENCIATURA' ? 'Licenciatura' : tipo === 'TECNOLOGO' ? 'Tecnologo' : '';\n    let line = `*${i + 1}. ${name}*`;\n    if (brand || city) line += `\\n   🏫 ${brand}${city ? (brand ? ' - ' : '') + city : ''}`;\n    if (tipoLabel) line += `\\n   📚 ${tipoLabel} | ${modality}`;\n    else line += `\\n   📚 ${modality}`;\n    if (minPrice && maxPrice && discount && discount > 0) {\n      line += `\\n   💰 De ~R$${Number(maxPrice).toFixed(2)}~ por *R$${Number(minPrice).toFixed(2)}/mes* (${discount}% OFF)`;\n    } else if (minPrice) {\n      line += `\\n   💰 *R$${Number(minPrice).toFixed(2)}/mes*`;\n    }\n    if (duration) line += `\\n   ⏱ ${duration}`;\n    const slug = name.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');\n    line += `\\n   🔗 https://www.bolsaclick.com.br/cursos/${slug}`;\n    return line;\n  }).join('\\n\\n');\n  finalResponse += '\\n\\n' + list + '\\n\\nQual dessas opcoes te interessou? Me diz o numero que te passo mais detalhes! 😉';\n} else if (prevData.courseQuery) {\n  finalResponse += '\\n\\nNao encontrei esse curso no momento. Tenta me dizer de outra forma ou me conta a area que te interessa!';\n}\nreturn [{ json: { ...prevData, response: finalResponse } }];"
+      },
+      "name": "Formatar Lista de Cursos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1740, 100]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://tartarus-api.inovitdigital.com.br/api/cogna/courses/search?courseName={{ encodeURIComponent($json.courseQuery) }}&academicLevel={{ $json.academicLevel || 'GRADUACAO' }}&modality={{ $json.modality || 'EAD' }}{{ $json.city ? '&city=' + encodeURIComponent($json.city) : '' }}&size=1",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "name": "Buscar Curso para Detalhe",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1480, 300],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const searchResult = $input.first().json;\nconst prevData = $('Parsear Resposta Gemini').first().json;\nconst courses = searchResult.content || searchResult.data || searchResult || [];\nconst courseList = Array.isArray(courses) ? courses : [];\nif (courseList.length === 0) {\n  return [{ json: { ...prevData, response: prevData.response + '\\n\\nNao encontrei detalhes para esse curso. Pode me dizer o nome completo? 😊', skipDetail: true } }];\n}\nconst course = courseList[0];\nreturn [{ json: { ...prevData, detailCourse: course, businessKey: course.businessKey || course.groupId || course.id || '', unitId: course.unitId || course.unit?.id || '', detailModality: course.modality || prevData.modality || 'EAD', detailShift: course.shift || 'VIRTUAL', skipDetail: false } }];"
+      },
+      "name": "Extrair Dados para Detalhe",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1740, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://tartarus-api.inovitdigital.com.br/api/cogna/courses/details?groupId={{ $json.businessKey }}&shift={{ $json.detailShift || 'VIRTUAL' }}&modality={{ $json.detailModality || 'EAD' }}{{ $json.unitId ? '&unitId=' + $json.unitId : '' }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "name": "Buscar Detalhes Tartarus",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1980, 300],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const details = $input.first().json;\nconst prevData = $('Extrair Dados para Detalhe').first().json;\nif (prevData.skipDetail) {\n  return [{ json: { ...prevData } }];\n}\nconst course = prevData.detailCourse || {};\nconst name = course.name || course.courseName || prevData.courseQuery || 'Curso';\nconst brand = course.brand?.name || course.brandName || course.institution || course.unit?.name || '';\nconst modality = course.modality || prevData.modality || 'EAD';\nconst level = course.academicLevel || course.level || 'Graduacao';\nconst duration = course.duration || (course.semesters ? (course.semesters * 6) + ' meses' : '');\nconst offer = details.offer || details.data || details || {};\nconst minPrice = offer.minPrice || offer.priceWithDiscount || offer.installmentValue || course.minPrice;\nconst maxPrice = offer.maxPrice || offer.originalPrice || offer.fullPrice || course.maxPrice;\nconst discount = (minPrice && maxPrice && maxPrice > 0) ? Math.round((1 - minPrice / maxPrice) * 100) : null;\nconst installments = offer.installments || offer.parcelas || [];\nconst shift = offer.shift || course.shift || 'Virtual';\nlet msg = `📋 *Detalhes: ${name}*\\n`;\nmsg += `🏫 ${brand}\\n`;\nmsg += `📚 ${level} | ${modality}\\n`;\nif (shift) msg += `🕐 Turno: ${shift}\\n`;\nif (duration) msg += `⏱ Duracao: ${duration}\\n`;\nmsg += '\\n';\nif (minPrice && maxPrice && discount) {\n  msg += `💰 *Valor com bolsa:*\\n`;\n  msg += `   De ~R$${Number(maxPrice).toFixed(2)}~ por *R$${Number(minPrice).toFixed(2)}/mes*\\n`;\n  msg += `   🎉 *${discount}% de desconto!*\\n`;\n} else if (minPrice) {\n  msg += `💰 *Valor: R$${Number(minPrice).toFixed(2)}/mes*\\n`;\n}\nif (Array.isArray(installments) && installments.length > 0) {\n  msg += '\\n📊 *Opcoes de parcelas:*\\n';\n  installments.slice(0, 3).forEach(inst => {\n    const qty = inst.quantity || inst.installments || inst.parcelas;\n    const value = inst.value || inst.amount || inst.valor;\n    if (qty && value) msg += `   • ${qty}x de R$${Number(value).toFixed(2)}\\n`;\n  });\n}\nconst slug = name.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');\nmsg += `\\n👉 *Garanta sua bolsa:*\\nhttps://www.bolsaclick.com.br/cursos/${slug}\\n`;\nmsg += '\\nQuer se matricular ou tem alguma duvida? 😊';\nreturn [{ json: { ...prevData, response: msg } }];"
+      },
+      "name": "Formatar Detalhes Curso",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2220, 300]
+    },
+    {
+      "parameters": {
+        "agent": "toolsAgent",
+        "promptType": "define",
+        "text": "=Busque informacoes detalhadas sobre o curso de {{ $json.courseQuery }} na faculdade Anhanguera. Inclua: descricao geral do curso, principais disciplinas/modulos, duracao, modalidades (EAD, presencial, semipresencial), mercado de trabalho e diferenciais. Formate a resposta de forma clara e concisa para enviar via WhatsApp (use *negrito* para titulos). Maximo 4 paragrafos.",
+        "options": {
+          "systemMessage": "Voce eh um especialista em educacao superior brasileira. Forneca informacoes precisas e uteis sobre cursos de graduacao e pos-graduacao. Formate suas respostas para WhatsApp usando *negrito* para titulos. Seja conciso e informativo. Maximo 4 paragrafos.",
+          "maxIterations": 3
+        }
+      },
+      "name": "Gemini Info Academica",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [1480, 520]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {
+          "temperature": 0.3,
+          "maxOutputTokens": 800
+        }
+      },
+      "name": "Gemini Chat Model Info",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [1420, 740],
+      "credentials": {
+        "googleGeminiApi": {
+          "id": "SUBSTITUIR_GEMINI_CREDENTIAL_ID",
+          "name": "Google Gemini API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst prevData = $('Parsear Resposta Gemini').first().json;\nconst academicInfo = input.output || '';\nlet finalResponse = prevData.response;\nif (academicInfo) { finalResponse = academicInfo + '\\n\\n💰 Quer saber os valores com bolsa no Bolsa Click? Me diga a cidade e modalidade de interesse!'; }\nreturn [{ json: { ...prevData, response: finalResponse } }];"
+      },
+      "name": "Formatar Info Academica",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1740, 520]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.bolsaclick.com.br/api/leads",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"{{ $json.leadData.name || $json.userName || 'WhatsApp Lead' }}\",\n  \"email\": \"{{ $json.leadData.email || '' }}\",\n  \"phone\": \"{{ $json.phone }}\",\n  \"cpf\": \"{{ $json.leadData.cpf || '' }}\",\n  \"courseName\": \"{{ $json.leadData.courseInterest || '' }}\",\n  \"institutionName\": \"Anhanguera\",\n  \"courseNames\": [\"{{ $json.leadData.courseInterest || 'Nao informado' }}\"]\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Criar Lead no Bolsa Click",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1480, 720],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const leadResult = $input.first().json;\nconst prevData = $('Parsear Resposta Gemini').first().json;\nlet finalResponse = prevData.response;\nif (leadResult.lead?.id) { prevData.leadData.leadId = leadResult.lead.id; }\nreturn [{ json: { ...prevData, response: finalResponse } }];"
+      },
+      "name": "Processar Resultado Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1740, 720]
+    },
+    {
+      "parameters": {
+        "jsCode": "const prevData = $('Parsear Resposta Gemini').first().json;\nconst userMessage = prevData.response || '🤖 *Transferindo para atendimento humano...*\\n\\nUm de nossos consultores vai continuar seu atendimento em breve.\\nHorario de atendimento: Seg-Sex, 8h as 18h.\\n\\nEnquanto isso, explore nossas bolsas em:\\n👉 https://www.bolsaclick.com.br/cursos';\nconst internalAlert = '🔔 *NOVO ATENDIMENTO PARA HUMANO*\\n\\n' + '📱 Telefone: ' + prevData.phone + '\\n' + '👤 Nome: ' + (prevData.userName || prevData.pushName || 'Nao informado') + '\\n' + '💬 Ultima msg: ' + prevData.text + '\\n' + '📊 Estagio: ' + prevData.stage + '\\n' + '🎯 Curso: ' + (prevData.leadData?.courseInterest || 'Nao informado') + '\\n' + '📧 Email: ' + (prevData.leadData?.email || 'Nao informado');\nreturn [{ json: { ...prevData, response: userMessage, internalAlert: internalAlert, stage: 'handoff' } }];"
+      },
+      "name": "Preparar Handoff",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1480, 920]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evo.inovitdigital.com.br/message/sendText/SUBSTITUIR_INSTANCIA",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "apikey", "value": "SUBSTITUIR_API_KEY_EVOLUTION" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": \"SUBSTITUIR_NUMERO_ATENDENTE\",\n  \"text\": {{ JSON.stringify($json.internalAlert) }}\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Notificar Atendente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1740, 920],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const prevData = $('Parsear Resposta Gemini').first().json;\nlet response = prevData.response;\nif (prevData.intent === 'CHECKOUT' && prevData.leadData?.courseInterest) {\n  const slug = prevData.leadData.courseInterest.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');\n  if (!response.includes('bolsaclick.com.br')) { response += '\\n\\n👉 https://www.bolsaclick.com.br/cursos/' + slug; }\n}\nreturn [{ json: { ...prevData, response } }];"
+      },
+      "name": "Fallback Geral",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1480, 1120]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nlet response = (data.response || 'Como posso te ajudar? 😊').substring(0, 4000);\nreturn [{ json: { phone: data.phone, remoteJid: data.remoteJid, text: data.text, pushName: data.pushName, userName: data.userName, timestamp: data.timestamp, response, intent: data.intent, stage: data.stage, leadData: data.leadData || {} } }];"
+      },
+      "name": "Preparar Mensagem Final",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2500, 520]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evo.inovitdigital.com.br/message/sendText/SUBSTITUIR_INSTANCIA",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "apikey", "value": "SUBSTITUIR_API_KEY_EVOLUTION" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": \"{{ $json.phone }}\",\n  \"text\": {{ JSON.stringify($json.response) }}\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Enviar Resposta WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2760, 520]
+    }
+  ],
+  "connections": {
+    "Webhook WhatsApp": {
+      "main": [
+        [
+          { "node": "Respond 200", "type": "main", "index": 0 },
+          { "node": "Filtrar e Extrair Dados", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Filtrar e Extrair Dados": {
+      "main": [
+        [
+          { "node": "Gemini Processar Mensagem", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          { "node": "Gemini Processar Mensagem", "type": "ai_languageModel", "index": 0 }
+        ]
+      ]
+    },
+    "Memoria Conversa": {
+      "ai_memory": [
+        [
+          { "node": "Gemini Processar Mensagem", "type": "ai_memory", "index": 0 }
+        ]
+      ]
+    },
+    "Gemini Processar Mensagem": {
+      "main": [
+        [
+          { "node": "Parsear Resposta Gemini", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Parsear Resposta Gemini": {
+      "main": [
+        [
+          { "node": "Switch por Intencao", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Switch por Intencao": {
+      "main": [
+        [
+          { "node": "Buscar Cursos Tartarus", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Buscar Curso para Detalhe", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Gemini Info Academica", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Criar Lead no Bolsa Click", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Preparar Handoff", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Fallback Geral", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Buscar Cursos Tartarus": {
+      "main": [
+        [
+          { "node": "Formatar Lista de Cursos", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Formatar Lista de Cursos": {
+      "main": [
+        [
+          { "node": "Preparar Mensagem Final", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Buscar Curso para Detalhe": {
+      "main": [
+        [
+          { "node": "Extrair Dados para Detalhe", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Extrair Dados para Detalhe": {
+      "main": [
+        [
+          { "node": "Buscar Detalhes Tartarus", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Buscar Detalhes Tartarus": {
+      "main": [
+        [
+          { "node": "Formatar Detalhes Curso", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Formatar Detalhes Curso": {
+      "main": [
+        [
+          { "node": "Preparar Mensagem Final", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Gemini Chat Model Info": {
+      "ai_languageModel": [
+        [
+          { "node": "Gemini Info Academica", "type": "ai_languageModel", "index": 0 }
+        ]
+      ]
+    },
+    "Gemini Info Academica": {
+      "main": [
+        [
+          { "node": "Formatar Info Academica", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Formatar Info Academica": {
+      "main": [
+        [
+          { "node": "Preparar Mensagem Final", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Criar Lead no Bolsa Click": {
+      "main": [
+        [
+          { "node": "Processar Resultado Lead", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Processar Resultado Lead": {
+      "main": [
+        [
+          { "node": "Preparar Mensagem Final", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Preparar Handoff": {
+      "main": [
+        [
+          { "node": "Notificar Atendente", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Notificar Atendente": {
+      "main": [
+        [
+          { "node": "Preparar Mensagem Final", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Fallback Geral": {
+      "main": [
+        [
+          { "node": "Preparar Mensagem Final", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Preparar Mensagem Final": {
+      "main": [
+        [
+          { "node": "Enviar Resposta WhatsApp", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}

@@ -174,7 +174,7 @@ function RegisterForm() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" data-google-interstitial="false" autoComplete="on">
             {/* Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

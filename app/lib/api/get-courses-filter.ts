@@ -38,7 +38,7 @@ export async function getShowFiltersCourses(
     if (city && city.trim()) {
       try {
         const mostSearched = await getMostSearchedCourses(city)
-        
+
         // Se o most-searched vier vazio, fazer fallback para a API de busca normal
         if (!mostSearched.data || mostSearched.data.length === 0 || mostSearched.totalItems === 0) {
           // Continuar para a busca normal abaixo
@@ -52,21 +52,21 @@ export async function getShowFiltersCourses(
               return courseModality === modalityUpper
             })
           }
-          
+
           // Filtrar por estado se fornecido
           if (state && state.trim()) {
             filteredData = filteredData.filter((course: Course) => {
               return (course.uf || course.unitState || '').toUpperCase() === state.toUpperCase()
             })
           }
-          
+
           // Filtrar por academicLevel se fornecido
           if (academicLevel) {
             filteredData = filteredData.filter((course: Course) => {
               return (course.academicLevel || '').toUpperCase() === academicLevel.toUpperCase()
             })
           }
-          
+
           // Se não houver resultados após filtrar, fazer fallback para a API de busca normal
           if (filteredData.length === 0) {
             // Continuar para a busca normal abaixo
@@ -75,7 +75,7 @@ export async function getShowFiltersCourses(
             const startIndex = (page - 1) * size
             const endIndex = startIndex + size
             const paginatedData = filteredData.slice(startIndex, endIndex)
-            
+
             return {
               totalItems: filteredData.length,
               totalPages: Math.ceil(filteredData.length / size),

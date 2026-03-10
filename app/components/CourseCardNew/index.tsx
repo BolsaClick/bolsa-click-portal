@@ -123,6 +123,17 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
       is_favorite: isFavorite(course),
     })
 
+    // Facebook Pixel - ViewContent (curso selecionado)
+    const fbq = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
+    if (fbq) {
+      fbq('track', 'ViewContent', {
+        content_name: course.name,
+        content_type: 'product',
+        value: course.minPrice || 0,
+        currency: 'BRL',
+      })
+    }
+
     // Redirecionar para checkout (pós e graduação usam a mesma página de matrícula)
     window.location.href = `/checkout/matricula?${params.toString()}`
   }

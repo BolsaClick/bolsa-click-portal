@@ -2,6 +2,42 @@
 import { Metadata } from 'next'
 import GraduacaoClient from './GraduacaoClient';
 
+const jsonLdSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Cursos de Graduação com Bolsa de Estudo',
+  description: 'Descubra cursos de graduação presenciais, EAD e semipresenciais com bolsas de estudo de até 80% em diversas áreas do conhecimento. Bacharelado, Licenciatura e Tecnólogo.',
+  url: 'https://www.bolsaclick.com.br/graduacao',
+  provider: {
+    '@type': 'Organization',
+    name: 'Bolsa Click',
+    url: 'https://www.bolsaclick.com.br',
+    logo: 'https://www.bolsaclick.com.br/assets/logo-bolsa-click-rosa.png',
+    sameAs: [
+      'https://www.instagram.com/bolsaclick',
+      'https://www.facebook.com/bolsaclickbrasil',
+      'https://www.linkedin.com/company/bolsaclick',
+    ],
+  },
+  breadcrumb: {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://www.bolsaclick.com.br',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Graduação',
+        item: 'https://www.bolsaclick.com.br/graduacao',
+      },
+    ],
+  },
+}
+
 export const metadata: Metadata = {
   title: 'Bolsa de Estudo em Faculdades - Graduação com até 80% de Desconto',
   description: 'Encontre bolsa de estudo em faculdades para graduação com até 80% de desconto. Desconto em faculdade para bacharelado, licenciatura e tecnólogo. Mais de 30.000 faculdades parceiras. Cadastre-se grátis!',
@@ -58,63 +94,18 @@ export const metadata: Metadata = {
     site: '@bolsaclick',
     title: 'Bolsa de Estudo em Faculdades - Graduação com até 80% de Desconto',
     description: 'Graduação com bolsa de estudo? Encontre a sua na Bolsa Click. Desconto em faculdade de até 80%. Cadastre-se grátis!',
-    images: ['https://www.bolsaclick.com.br/favicon.png'],
-  },
-  other: {
-    'application/ld+json': JSON.stringify({
-      '@context': 'https://schema.org',
-      '@type': 'Course',
-      name: 'Cursos de Graduação',
-      description: 'Descubra cursos de graduação presenciais, EAD e semipresenciais com bolsas de estudo de até 80% em diversas áreas do conhecimento. Bacharelado, Licenciatura e Tecnólogo.',
-      provider: {
-        '@type': 'Organization',
-        name: 'Bolsa Click',
-        url: 'https://www.bolsaclick.com.br',
-        logo: 'https://www.bolsaclick.com.br/assets/logo-bolsa-click-rosa.png',
-        sameAs: [
-          'https://www.instagram.com/bolsaclick',
-          'https://www.facebook.com/bolsaclickbrasil',
-          'https://www.linkedin.com/company/bolsaclick',
-        ],
-      },
-      educationalLevel: 'Graduação',
-      courseMode: ['Presencial', 'EAD', 'Semipresencial'],
-      timeToComplete: 'P4Y',
-      occupationalCategory: 'Ensino Superior',
-      audience: {
-        '@type': 'EducationalAudience',
-        educationalRole: 'student',
-      },
-      offers: {
-        '@type': 'AggregateOffer',
-        priceCurrency: 'BRL',
-        lowPrice: '0',
-        highPrice: '0',
-        offerCount: '100000',
-        availability: 'https://schema.org/InStock',
-      },
-      url: 'https://www.bolsaclick.com.br/graduacao',
-      breadcrumb: {
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-          {
-            '@type': 'ListItem',
-            position: 1,
-            name: 'Home',
-            item: 'https://www.bolsaclick.com.br',
-          },
-          {
-            '@type': 'ListItem',
-            position: 2,
-            name: 'Graduação',
-            item: 'https://www.bolsaclick.com.br/graduacao',
-          },
-        ],
-      },
-    }),
+    images: ['https://www.bolsaclick.com.br/assets/og-image-bolsaclick.png'],
   },
 };
 
 export default function Page() {
-  return <GraduacaoClient />
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
+      />
+      <GraduacaoClient />
+    </>
+  )
 }

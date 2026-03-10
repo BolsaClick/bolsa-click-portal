@@ -11,6 +11,8 @@ export interface CreateCheckoutRequest {
   paymentMethod?: 'pix' | 'card'
   couponCode?: string
   brand?: string
+  channel?: string
+  city?: string
   metadata?: Record<string, unknown>
 }
 

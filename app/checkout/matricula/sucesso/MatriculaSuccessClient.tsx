@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { CheckCircle2, ExternalLink } from 'lucide-react'
 import { formatCurrency } from '@/utils/fomartCurrency'
+import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 
 export default function MatriculaSuccessClient() {
   const searchParams = useSearchParams()
@@ -13,22 +14,44 @@ export default function MatriculaSuccessClient() {
   const paymentMethod = searchParams.get('paymentMethod')
   const installmentDescription = searchParams.get('installmentDescription')
   const confettiCanvasRef = useRef<HTMLCanvasElement>(null)
+  const { trackEvent } = usePostHogTracking()
 
   const monthlyFee = monthlyFeeParam ? Number(monthlyFeeParam) : null
   const isGraduacao = monthlyFee != null && !Number.isNaN(monthlyFee)
   const isPos = Boolean(paymentMethod && installmentDescription)
 
   useEffect(() => {
+    trackEvent('enrollment_success_page_viewed', {
+      course_name: course || undefined,
+      monthly_fee: monthlyFee ?? undefined,
+      payment_method: paymentMethod || undefined,
+      installment_description: installmentDescription || undefined,
+      is_graduacao: isGraduacao,
+      is_pos: isPos,
+    })
+  }, [])
+
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const theme = process.env.NEXT_PUBLIC_THEME || 'bolsaclick'
-      
+
       // Define o evento baseado no tema
       const eventName = theme === 'anhanguera' ? 'formSuccess' : 'formBSuccess'
-      
+
       type DataLayerEvent = Record<string, unknown>;
       const w = window as Window & { dataLayer?: DataLayerEvent[] };
       w.dataLayer = w.dataLayer ?? [];
       w.dataLayer.push({ event: eventName });
+
+      // Facebook Pixel - Lead (inscrição realizada, pagamento será na universidade)
+      const fbq = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
+      if (fbq) {
+        fbq('track', 'Lead', {
+          content_name: course || undefined,
+          value: monthlyFee ?? 0,
+          currency: 'BRL',
+        })
+      }
     }
   }, [])
 
@@ -65,18 +88,21 @@ export default function MatriculaSuccessClient() {
     }
   }, [])
 
-  // Abre automaticamente a área do candidato em nova aba quando a página carregar
+  const portalUrl = isPos
+    ? 'https://kroton.platosedu.io/v2/lms/login'
+    : 'https://www.anhanguera.com/area-do-candidato/login'
+
+  // Abre automaticamente o portal em nova aba quando a página carregar
   useEffect(() => {
-    // Pequeno delay para garantir que a página carregou completamente
     const timer = setTimeout(() => {
-      window.open('https://www.anhanguera.com/area-do-candidato/login', '_blank')
+      window.open(portalUrl, '_blank')
     }, 1000)
 
     return () => clearTimeout(timer)
-  }, [])
+  }, [portalUrl])
 
   const handleAccessPortal = () => {
-    window.open('https://www.anhanguera.com/area-do-candidato/login', '_blank')
+    window.open(portalUrl, '_blank')
   }
 
   return (

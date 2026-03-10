@@ -50,6 +50,7 @@ const availablePermissions = [
   { key: 'dashboard', label: 'Dashboard' },
   { key: 'help_center', label: 'Central de Ajuda' },
   { key: 'courses', label: 'Cursos' },
+  { key: 'blog', label: 'Blog' },
   { key: 'users', label: 'Usuários/Leads/Matrículas' },
   { key: 'admin_management', label: 'Gerenciar Admins' },
 ]

@@ -71,8 +71,10 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
   // Determinar se a página deve ser indexada:
   // - Deve ter um curso selecionado (páginas genéricas não são indexadas)
+  // - Deve ter cidade E estado (sem eles, a página redireciona via geolocalização)
   // - Se tiver estado, deve ser brasileiro
-  const shouldIndex = hasCourseSelected && isValidBrazilianState
+  const hasLocation = !!(cidade && cidade.trim() && estado && estado.trim())
+  const shouldIndex = hasCourseSelected && hasLocation && isValidBrazilianState
   
   // Se não houver curso selecionado, usar título genérico "Buscar cursos"
   // Nota: O layout principal adiciona " | Bolsa Click" automaticamente via template
@@ -190,20 +192,59 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
       title,
       description,
     },
-    other: {
-      'application/ld+json': JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'BreadcrumbList',
-        itemListElement: breadcrumbItems,
-      }),
-    },
   }
 }
 
-export default function CursosPage() {
+export default async function CursosPage({ searchParams }: Props) {
+  const params = await searchParams
+  const curso = typeof params.c === 'string' ? params.c : ''
+  const nivel = typeof params.nivel === 'string' ? params.nivel : 'GRADUACAO'
+
+  const courseNameClean = curso ? removeCourseSuffix(curso) : ''
+  const courseName = courseNameClean ? capitalizeText(courseNameClean) : ''
+  const courseType = nivel === 'POS_GRADUACAO' ? 'Pós-graduação' :
+                     nivel === 'TECNICO' ? 'Técnico' :
+                     'Graduação'
+
+  const breadcrumbItems = [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Home',
+      item: 'https://www.bolsaclick.com.br',
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: courseType,
+      item: `https://www.bolsaclick.com.br/${nivel === 'GRADUACAO' ? 'graduacao' : nivel === 'POS_GRADUACAO' ? 'pos-graduacao' : 'cursos'}`,
+    },
+  ]
+
+  if (courseName && courseName.trim().length > 0) {
+    breadcrumbItems.push({
+      '@type': 'ListItem',
+      position: 3,
+      name: courseName,
+      item: 'https://www.bolsaclick.com.br/curso/resultado',
+    })
+  }
+
+  const jsonLdSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: breadcrumbItems,
+  }
+
   return (
-    <Suspense fallback={<div className="p-4 text-gray-500">Carregando cursos...</div>}>
-      <SearchResultClient />
-    </Suspense>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
+      />
+      <Suspense fallback={<div className="p-4 text-gray-500">Carregando cursos...</div>}>
+        <SearchResultClient />
+      </Suspense>
+    </>
   )
 }

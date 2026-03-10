@@ -1,34 +1,25 @@
-// Cursos populares para o sitemap (Graduação)
-const popularCourses = [
-  { name: 'Administração', suffix: 'Bacharelado', nivel: 'GRADUACAO' },
-  { name: 'Direito', suffix: 'Bacharelado', nivel: 'GRADUACAO' },
-  { name: 'Enfermagem', suffix: 'Bacharelado', nivel: 'GRADUACAO' },
-  { name: 'Psicologia', suffix: 'Bacharelado', nivel: 'GRADUACAO' },
-  { name: 'Educação Física', suffix: 'Bacharelado', nivel: 'GRADUACAO' },
-  { name: 'Farmácia', suffix: 'Bacharelado', nivel: 'GRADUACAO' },
-  { name: 'Medicina', suffix: 'Bacharelado', nivel: 'GRADUACAO' },
-  { name: 'Engenharia Civil', suffix: 'Bacharelado', nivel: 'GRADUACAO' },
-  { name: 'Pedagogia', suffix: 'Licenciatura', nivel: 'GRADUACAO' },
-  { name: 'Análise e Desenvolvimento de Sistemas', suffix: 'Tecnólogo', nivel: 'GRADUACAO' },
-  { name: 'Gestão de Recursos Humanos', suffix: 'Tecnólogo', nivel: 'GRADUACAO' },
-  { name: 'Marketing', suffix: 'Tecnólogo', nivel: 'GRADUACAO' },
+// Função para gerar slug de cidade (mesma lógica do brazilian-cities.ts)
+function slugifyCity(text) {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}
+
+// Slugs dos cursos populares para landing pages /cursos/[slug]/[city]
+const courseSlugs = [
+  'administracao', 'direito', 'enfermagem', 'psicologia',
+  'educacao-fisica', 'farmacia', 'medicina', 'engenharia-civil',
+  'pedagogia', 'analise-e-desenvolvimento-de-sistemas',
+  'gestao-de-recursos-humanos', 'marketing',
+  'nutricao', 'odontologia', 'fisioterapia', 'biomedicina',
+  'ciencias-contabeis', 'arquitetura-e-urbanismo',
+  'engenharia-de-producao', 'gestao-comercial',
 ]
 
-// Cursos de Pós-graduação mais populares (Top 10)
-const popularPosGraduacao = [
-  { name: 'BIM e Projetos aplicados à construção civil', nivel: 'POS_GRADUACAO' },
-  { name: 'Bilinguismo e Educação Bilíngue', nivel: 'POS_GRADUACAO' },
-  { name: 'Avaliação Psicológica e Psicodiagnóstico', nivel: 'POS_GRADUACAO' },
-  { name: 'Avaliação estratégica de investimentos e gestão financeira', nivel: 'POS_GRADUACAO' },
-  { name: 'Automação, controle e robótica na indústria', nivel: 'POS_GRADUACAO' },
-  { name: 'Automação industrial e robótica', nivel: 'POS_GRADUACAO' },
-  { name: 'Auditoria, perícia e licenciamento ambiental', nivel: 'POS_GRADUACAO' },
-  { name: 'Auditoria em enfermagem', nivel: 'POS_GRADUACAO' },
-  { name: 'Atendimento Educacional Especializado e Educação Inclusiva', nivel: 'POS_GRADUACAO' },
-  { name: 'Atendimento Educacional Especializado e Educação Especial', nivel: 'POS_GRADUACAO' },
-]
-
-// Cidades principais do Brasil
+// Capitais estaduais + Campinas (28 cidades)
 const mainCities = [
   { city: 'São Paulo', state: 'SP' },
   { city: 'Rio de Janeiro', state: 'RJ' },
@@ -39,29 +30,28 @@ const mainCities = [
   { city: 'Salvador', state: 'BA' },
   { city: 'Recife', state: 'PE' },
   { city: 'Fortaleza', state: 'CE' },
-  { city: 'Campinas', state: 'SP' },
   { city: 'Goiânia', state: 'GO' },
   { city: 'Manaus', state: 'AM' },
+  { city: 'Belém', state: 'PA' },
+  { city: 'Campinas', state: 'SP' },
+  { city: 'São Luís', state: 'MA' },
+  { city: 'Maceió', state: 'AL' },
+  { city: 'Campo Grande', state: 'MS' },
+  { city: 'Cuiabá', state: 'MT' },
+  { city: 'João Pessoa', state: 'PB' },
+  { city: 'Natal', state: 'RN' },
+  { city: 'Teresina', state: 'PI' },
+  { city: 'Aracaju', state: 'SE' },
+  { city: 'Florianópolis', state: 'SC' },
+  { city: 'Vitória', state: 'ES' },
+  { city: 'Porto Velho', state: 'RO' },
+  { city: 'Macapá', state: 'AP' },
+  { city: 'Rio Branco', state: 'AC' },
+  { city: 'Boa Vista', state: 'RR' },
+  { city: 'Palmas', state: 'TO' },
 ]
 
-// Modalidades disponíveis
-const modalidades = ['EAD', 'PRESENCIAL', 'SEMIPRESENCIAL']
-
-// Função para criar URL no formato novo
-function createCourseUrl(course, city, modalidade) {
-  const params = new URLSearchParams()
-  params.set('c', course.name)
-  // Para pós-graduação não tem sufixo (cn), apenas para graduação
-  if (course.suffix) {
-    params.set('cn', course.suffix)
-  }
-  params.set('cidade', city.city)
-  params.set('estado', city.state)
-  params.set('modalidade', modalidade)
-  params.set('nivel', course.nivel)
-  return `/curso/resultado?${params.toString()}`
-}
-
+/** @type {import('next-sitemap').IConfig} */
 module.exports = {
   siteUrl: 'https://www.bolsaclick.com.br',
   generateRobotsTxt: true,
@@ -70,18 +60,37 @@ module.exports = {
   priority: 0.7,
   exclude: [
     '/admin',
+    '/admin/*',
     '/login',
-    '/checkout/*',    // Wildcard para todas páginas de checkout
-    '/favoritos',     // Página privada
-    '/curso',         // Redirect page (não indexar)
-    '/ajuda',         // Páginas antigas (movidas para central-de-ajuda)
-    '/ajuda/*',       // Todas subpáginas de ajuda antigas
+    '/checkout/*',
+    '/favoritos',
+    '/curso',
+    '/curso/resultado',
+    '/curso/resultado*',
+    '/ajuda',
+    '/ajuda/*',
+    '/minha-conta',
+    '/minha-conta/*',
+    '/cadastro',
+    '/recuperar-senha',
+    '/api/*',
   ],
   robotsTxtOptions: {
     policies: [
       {
         userAgent: '*',
         allow: '/',
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/checkout/',
+          '/login',
+          '/favoritos',
+          '/minha-conta/',
+          '/cadastro',
+          '/recuperar-senha',
+          '/curso/resultado',
+        ],
       },
     ],
   },
@@ -96,111 +105,94 @@ module.exports = {
       lastmod: new Date().toISOString(),
     })
 
-    // Páginas principais com prioridade muito alta
+    // Páginas principais
     paths.push({
       loc: '/graduacao',
-      changefreq: 'daily',  // Mudou de weekly para daily
-      priority: 0.95,       // Aumentou de 0.9 para 0.95
+      changefreq: 'daily',
+      priority: 0.95,
       lastmod: new Date().toISOString(),
     })
 
     paths.push({
       loc: '/pos-graduacao',
-      changefreq: 'daily',  // Mudou de weekly para daily
-      priority: 0.95,       // Aumentou de 0.9 para 0.95
+      changefreq: 'daily',
+      priority: 0.95,
       lastmod: new Date().toISOString(),
     })
-    
-    // Gerar URLs para combinações de cursos populares + cidades principais + modalidades
-    // Prioridade alta (0.9): cursos mais buscados nas principais cidades
-    const topCourses = popularCourses.slice(0, 6) // Top 6 cursos
-    const topCities = mainCities.slice(0, 5) // Top 5 cidades
-    
-    topCourses.forEach(course => {
-      topCities.forEach(city => {
-        modalidades.forEach(modalidade => {
-          paths.push({
-            loc: createCourseUrl(course, city, modalidade),
-            changefreq: 'weekly',
-            priority: 0.9,
-            lastmod: new Date().toISOString(),
-          })
-        })
-      })
+
+    paths.push({
+      loc: '/cursos',
+      changefreq: 'daily',
+      priority: 0.9,
+      lastmod: new Date().toISOString(),
     })
-    
-    // Prioridade média (0.8): demais combinações
-    popularCourses.slice(6).forEach(course => {
+
+    paths.push({
+      loc: '/faculdades',
+      changefreq: 'weekly',
+      priority: 0.85,
+      lastmod: new Date().toISOString(),
+    })
+
+    // Landing pages estáticas /cursos/[slug]/[city] - alto valor SEO
+    courseSlugs.forEach(courseSlug => {
       mainCities.forEach(city => {
-        modalidades.forEach(modalidade => {
-          paths.push({
-            loc: createCourseUrl(course, city, modalidade),
-            changefreq: 'weekly',
-            priority: 0.8,
-            lastmod: new Date().toISOString(),
-          })
+        paths.push({
+          loc: `/cursos/${courseSlug}/${slugifyCity(city.city)}`,
+          changefreq: 'weekly',
+          priority: 0.85,
+          lastmod: new Date().toISOString(),
         })
       })
     })
-    
-    // Prioridade média (0.8): top cursos em todas as cidades
-    topCourses.forEach(course => {
-      mainCities.slice(5).forEach(city => {
-        modalidades.forEach(modalidade => {
-          paths.push({
-            loc: createCourseUrl(course, city, modalidade),
-            changefreq: 'weekly',
-            priority: 0.8,
-            lastmod: new Date().toISOString(),
-          })
+
+    // Blog index
+    paths.push({
+      loc: '/blog',
+      changefreq: 'daily',
+      priority: 0.9,
+      lastmod: new Date().toISOString(),
+    })
+
+    // Blog posts e categorias (dinâmicos via Prisma)
+    try {
+      const { PrismaClient } = require('@prisma/client')
+      const prisma = new PrismaClient()
+
+      const [blogPosts, blogCategories] = await Promise.all([
+        prisma.blogPost.findMany({
+          where: { isActive: true, publishedAt: { not: null } },
+          select: { slug: true, updatedAt: true },
+        }),
+        prisma.blogCategory.findMany({
+          where: { isActive: true },
+          select: { slug: true, updatedAt: true },
+        }),
+      ])
+
+      blogPosts.forEach(post => {
+        paths.push({
+          loc: `/blog/${post.slug}`,
+          changefreq: 'weekly',
+          priority: 0.8,
+          lastmod: post.updatedAt.toISOString(),
         })
       })
-    })
-    
-    // Pós-graduação: Top 10 cursos nas principais cidades
-    // Prioridade alta (0.9): Top 5 pós-graduação × Top 5 cidades × 3 modalidades
-    const topPosGraduacao = popularPosGraduacao.slice(0, 5)
-    topPosGraduacao.forEach(course => {
-      topCities.forEach(city => {
-        modalidades.forEach(modalidade => {
-          paths.push({
-            loc: createCourseUrl(course, city, modalidade),
-            changefreq: 'weekly',
-            priority: 0.9,
-            lastmod: new Date().toISOString(),
-          })
+
+      blogCategories.forEach(cat => {
+        paths.push({
+          loc: `/blog/categoria/${cat.slug}`,
+          changefreq: 'weekly',
+          priority: 0.7,
+          lastmod: cat.updatedAt.toISOString(),
         })
       })
-    })
-    
-    // Prioridade média (0.8): Demais pós-graduação em todas as cidades
-    popularPosGraduacao.slice(5).forEach(course => {
-      mainCities.forEach(city => {
-        modalidades.forEach(modalidade => {
-          paths.push({
-            loc: createCourseUrl(course, city, modalidade),
-            changefreq: 'weekly',
-            priority: 0.8,
-            lastmod: new Date().toISOString(),
-          })
-        })
-      })
-    })
-    
-    // Prioridade média (0.8): Top 5 pós-graduação nas demais cidades
-    topPosGraduacao.forEach(course => {
-      mainCities.slice(5).forEach(city => {
-        modalidades.forEach(modalidade => {
-          paths.push({
-            loc: createCourseUrl(course, city, modalidade),
-            changefreq: 'weekly',
-            priority: 0.8,
-            lastmod: new Date().toISOString(),
-          })
-        })
-      })
-    })
-    
+
+      await prisma.$disconnect()
+    } catch (e) {
+      console.error('Error fetching blog data for sitemap:', e)
+    }
+
     return paths
   },
 }

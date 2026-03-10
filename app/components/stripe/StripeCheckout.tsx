@@ -22,6 +22,10 @@ interface StripeCheckoutProps {
   metadata?: Record<string, unknown>
   // Brand (anhanguera, unopar, etc.)
   brand?: string
+  // Channel (bolsaclick ou anhanguera)
+  channel?: string
+  // Cidade da unidade
+  city?: string
   // Callbacks
   onSuccess?: (paymentIntentId: string, transactionId: string) => void
   onError?: (error: string) => void
@@ -46,6 +50,8 @@ export function StripeCheckout({
   description,
   metadata,
   brand,
+  channel,
+  city,
   onSuccess,
   onError,
   returnUrl,
@@ -104,6 +110,8 @@ export function StripeCheckout({
           description,
           paymentMethod: 'card',
           brand: brand || 'anhanguera',
+          channel: channel || process.env.NEXT_PUBLIC_THEME || 'bolsaclick',
+          city: city || '',
           metadata,
         }),
       })

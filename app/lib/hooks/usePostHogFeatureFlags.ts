@@ -81,3 +81,13 @@ export function usePixEnabledFeatureFlag() {
   return flagValue as boolean
 }
 
+/**
+ * Hook específico para feature flag de visibilidade do WhatsApp.
+ * Controla a exibição de todos os elementos de WhatsApp (links, botões, widget, checkbox).
+ * Padrão (true): WhatsApp visível. Configure rollout % no PostHog para controlar a porcentagem de usuários.
+ */
+export function useWhatsappFeatureFlag() {
+  const { flagValue } = usePostHogFeatureFlag('whatsapp_enabled', true)
+  return flagValue as boolean
+}
+

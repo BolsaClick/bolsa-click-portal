@@ -2,23 +2,32 @@ import { queryClient } from '@/utils/react-query'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { Analytics } from '@vercel/analytics/react'
 import { Metadata } from 'next'
+import { Montserrat } from 'next/font/google'
 import Script from 'next/script'
 import { Toaster } from 'sonner'
 import { AnalyticsScripts } from './components/organisms/AnalyticsScripts'
 import { ClientProviders } from './components/providers/ClientProviders'
+import { WatiWhatsappWidget } from './components/WatiWhatsappWidget'
 import './globals.css'
 import { getCurrentTheme } from './lib/themes'
+
+const montserrat = Montserrat({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-montserrat',
+})
 
 const theme = getCurrentTheme()
 
 const idsByTheme = {
   bolsaclick: {
     gtm: 'GTM-K4KZBRF3',
-    facebookPixel: '3830716730578943',
+    facebookPixels: ['3830716730578943', '274906762977899'],
   },
   anhanguera: {
     gtm: 'GTM-PPD7PKN5',
-    facebookPixel: '3830716730578943',
+    facebookPixels: ['3830716730578943', '274906762977899'],
   },
 } as const
 
@@ -55,7 +64,10 @@ export const metadata: Metadata = {
     'graduação EAD',
     'educação superior',
     'bolsa click',
-    theme.shortTitle.toLowerCase(),
+    'bolsaclick',
+    'bolsa click bolsas de estudo',
+    'site bolsa click',
+    'plataforma bolsa click',
   ],
   openGraph: {
     title: theme.title,
@@ -89,48 +101,116 @@ export const metadata: Metadata = {
   alternates: {
     canonical: theme.siteUrl,
   },
+  applicationName: theme.name,
+  category: 'education',
   other: {
     copyright: 'Bolsa Click',
-    abstract: 'Bolsas de Estudo de até 95% para Faculdades e Escolas | Bolsa Click',
-    'application/ld+json': JSON.stringify([
-      {
-        '@context': 'https://schema.org',
-        '@type': 'WebSite',
-        name: theme.name,
-        url: theme.siteUrl,
-        potentialAction: {
-          '@type': 'SearchAction',
-          target: `${theme.siteUrl}/curso/resultado?q={search_term_string}`,
-          'query-input': 'required name=search_term_string',
-        },
-      },
-      {
-        '@context': 'https://schema.org',
-        '@type': 'Organization',
-        name: 'Bolsa Click',
-        url: theme.siteUrl,
-        logo: `${theme.siteUrl}/logo-bolsa-click-rosa.png`,
-        sameAs: [
-          'https://www.instagram.com/bolsaclick',
-          'https://www.facebook.com/bolsaclickbrasil',
-          'https://www.linkedin.com/company/bolsaclick',
-        ],
-        contactPoint: {
-          '@type': 'ContactPoint',
-          telephone: '+55-11-99999-9999',
-          contactType: 'customer service',
-          areaServed: 'BR',
-          availableLanguage: ['Portuguese'],
-        },
-      },
-    ]),
+    abstract: 'Bolsa Click é uma plataforma de bolsas de estudo para faculdades e universidades com descontos de até 95%. Graduação, pós-graduação, cursos técnicos e EAD em todo o Brasil.',
   },
 }
 
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: theme.name,
+    alternateName: ['BolsaClick', 'Bolsa Click Brasil', 'bolsaclick.com.br'],
+    url: theme.siteUrl,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${theme.siteUrl}/curso/resultado?q={search_term_string}`,
+      'query-input': 'required name=search_term_string',
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    '@id': `${theme.siteUrl}/#organization`,
+    name: 'Bolsa Click',
+    alternateName: ['BolsaClick', 'Bolsa Click Bolsas de Estudo'],
+    description: 'Plataforma brasileira de bolsas de estudo com até 95% de desconto em faculdades e universidades. Graduação, pós-graduação, cursos técnicos e EAD.',
+    url: theme.siteUrl,
+    logo: `${theme.siteUrl}/logo-bolsa-click-rosa.png`,
+    image: theme.ogImage,
+    naics: '611710',
+    industry: 'Educação Superior',
+    knowsAbout: ['bolsas de estudo', 'educação superior', 'faculdades', 'graduação', 'pós-graduação', 'EAD'],
+    slogan: 'Bolsas de estudo com até 95% de desconto',
+    sameAs: [
+      'https://www.instagram.com/bolsaclick',
+      'https://www.facebook.com/bolsaclickbrasil',
+      'https://www.linkedin.com/company/bolsaclick',
+    ],
+    areaServed: {
+      '@type': 'Country',
+      name: 'Brasil',
+    },
+    contactPoint: {
+      '@type': 'ContactPoint',
+      telephone: '+55-11-99999-9999',
+      contactType: 'customer service',
+      areaServed: 'BR',
+      availableLanguage: ['Portuguese'],
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: [
+      { '@type': 'SiteNavigationElement', position: 1, name: 'Cursos', url: `${theme.siteUrl}/cursos` },
+      { '@type': 'SiteNavigationElement', position: 2, name: 'Graduação', url: `${theme.siteUrl}/graduacao` },
+      { '@type': 'SiteNavigationElement', position: 3, name: 'Pós-Graduação', url: `${theme.siteUrl}/pos-graduacao` },
+      { '@type': 'SiteNavigationElement', position: 4, name: 'Faculdades', url: `${theme.siteUrl}/faculdades` },
+      { '@type': 'SiteNavigationElement', position: 5, name: 'Blog', url: `${theme.siteUrl}/blog` },
+      { '@type': 'SiteNavigationElement', position: 6, name: 'Como Funciona', url: `${theme.siteUrl}/quem-somos` },
+      { '@type': 'SiteNavigationElement', position: 7, name: 'Central de Ajuda', url: `${theme.siteUrl}/central-de-ajuda` },
+      { '@type': 'SiteNavigationElement', position: 8, name: 'Contato', url: `${theme.siteUrl}/contato` },
+    ],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'EducationalOccupationalProgram',
+    name: 'Bolsas de estudo com até 95% de desconto',
+    educationalProgramMode: ['online', 'presencial', 'semipresencial'],
+    occupationalCredentialAwarded: [
+      'Graduação',
+      'Pós-graduação',
+      'Curso técnico',
+    ],
+    provider: {
+      '@type': 'Organization',
+      name: 'Bolsa Click',
+      url: theme.siteUrl,
+    },
+    programPrerequisites: 'Ensino médio completo',
+    offers: {
+      '@type': 'Offer',
+      url: theme.siteUrl,
+      price: '0',
+      priceCurrency: 'BRL',
+      availability: 'https://schema.org/InStock',
+      eligibleRegion: {
+        '@type': 'Country',
+        name: 'Brasil',
+      },
+      description: 'Inscreva-se gratuitamente para obter bolsas de estudo em universidades e escolas com até 95% de desconto.',
+    },
+  },
+]
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-br">
+    <html lang="pt-br" className={montserrat.variable}>
+      <Script id="utmify-pixel" strategy="afterInteractive">
+        {`window.pixelId = "69a7352596ee946eac5f88dd";
+        var a = document.createElement("script");
+        a.setAttribute("async", "");
+        a.setAttribute("defer", "");
+        a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
+        document.head.appendChild(a);`}
+      </Script>
       <head>
+        {/* Eclesiastes 3:1 — Tudo tem o seu tempo determinado, e há tempo para todo o propósito debaixo do céu. */}
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#ffffff" />
         <meta name="apple-mobile-web-app-title" content="Bolsa Click" />
@@ -138,8 +218,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="author" content="Bolsa Click" />
         <meta name="publisher" content="Bolsa Click" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
       </head>
-      <body className="antialiased">
+      <body className={`${montserrat.className} antialiased`}>
         {/* GTM (noscript) */}
         <noscript>
           <iframe
@@ -150,71 +234,28 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
         </noscript>
 
-        {/* Facebook Pixel (noscript) */}
-        {ids.facebookPixel && (
-          <noscript>
+        {/* Facebook Pixels (noscript) */}
+        {ids.facebookPixels.map(pixelId => (
+          <noscript key={pixelId}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               height="1"
               width="1"
               style={{ display: 'none' }}
-              src={`https://www.facebook.com/tr?id=${ids.facebookPixel}&ev=PageView&noscript=1`}
+              src={`https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1`}
               alt=""
             />
           </noscript>
-        )}
+        ))}
 
-        <AnalyticsScripts gtm={ids.gtm} facebookPixelId={ids.facebookPixel} />
+        <AnalyticsScripts gtm={ids.gtm} facebookPixelIds={ids.facebookPixels} />
 
         <Script
           src="https://cdn-cookieyes.com/client_data/2a0be4de7c11618e75d1c64f/script.js"
           strategy="afterInteractive"
         />
 
-        <Script id="wati-whatsapp" strategy="afterInteractive">
-          {`
-            (function() {
-              var url = 'https://wati-integration-prod-service.clare.ai/v2/watiWidget.js?85782';
-              var s = document.createElement('script');
-              s.type = 'text/javascript';
-              s.async = true;
-              s.src = url;
-
-              var options = {
-                enabled: true,
-                chatButtonSetting: {
-                  backgroundColor: "#023e73",
-                  ctaText: "Precisa de ajuda? 💙",
-                  borderRadius: "25",
-                  marginLeft: "0",
-                  marginRight: "20",
-                  marginBottom: "20",
-                  ctaIconWATI: false,
-                  position: "right"
-                },
-                brandSetting: {
-                  brandName: "Bolsa Click",
-                  brandSubTitle: "undefined",
-                  brandImg: "https://blog.bolsaclick.com.br/wp-content/uploads/2025/05/whatsappimage.png",
-                  welcomeText: "Seja bem-vindo! Como posso ajudar?",
-                  messageText: "Olá! 👋 Tudo certo? Estava dando uma olhada nessa página do Bolsa Click: {{page_link}} e surgiu uma dúvida. Você pode me ajudar? 💙",
-                  backgroundColor: "#023e73",
-                  ctaText: "Precisa de ajuda? 💙",
-                  borderRadius: "25",
-                  autoShow: false,
-                  phoneNumber: "5511936200198"
-                }
-              };
-
-              s.onload = function () {
-                CreateWhatsappChatWidget(options);
-              };
-
-              var x = document.getElementsByTagName('script')[0];
-              x.parentNode.insertBefore(s, x);
-            })();
-          `}
-        </Script>
+        <WatiWhatsappWidget />
 
         <Toaster richColors position="top-right" />
         <Analytics />

@@ -416,6 +416,24 @@ enum MarketDemand {
 }
 
 // ==========================================
+// BANNERS (SLIDER DA HOMEPAGE)
+// ==========================================
+
+model Banner {
+  id        String   @id @default(uuid())
+  title     String
+  subtitle  String?
+  imageUrl  String   // URL da imagem no Tigris Storage
+  linkUrl   String?  // Link opcional ao clicar no banner
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, order])
+}
+
+// ==========================================
 // LOG DE ATIVIDADES (AUDITORIA)
 // ==========================================
 
@@ -432,6 +450,145 @@ model ActivityLog {
   @@index([adminUserId])
   @@index([entity])
   @@index([createdAt])
+}
+
+// ==========================================
+// CONFIGURAÇÕES GERAIS DO SITE
+// ==========================================
+
+model SiteSettings {
+  id                String   @id @default("default")
+
+  // Contato
+  whatsappNumber    String   @default("5511936200198")
+  contactEmail      String   @default("contato@bolsaclick.com.br")
+  contactPhone      String   @default("(11) 93620-0198")
+
+  // Redes Sociais
+  facebookUrl       String   @default("https://facebook.com/bolsaclickbrasil")
+  instagramUrl      String   @default("https://instagram.com/bolsaclick")
+  linkedinUrl       String   @default("https://linkedin.com/company/bolsaclick")
+
+  // SEO
+  siteName          String   @default("Bolsa Click")
+  siteDescription   String   @default("O maior marketplace de bolsas de estudo do Brasil")
+  logoUrl           String   @default("/assets/logo-bolsa-click-rosa.png")
+
+  updatedAt         DateTime @updatedAt
+  updatedBy         String?
+}
+
+// ==========================================
+// INSTITUIÇÕES (FACULDADES PARCEIRAS)
+// ==========================================
+
+model Institution {
+  id                String            @id @default(uuid())
+  slug              String            @unique
+  name              String            // "Anhanguera"
+  shortName         String            // "ANHANGUERA"
+  fullName          String            // "Universidade Anhanguera"
+  description       String
+  longDescription   String            @db.Text
+  founded           Int?
+  type              InstitutionType
+  campusCount       Int?
+  studentCount      String?           // "500.000+"
+  coursesOffered    Int?
+  headquartersCity  String?
+  headquartersState String?
+  mecRating         Int?              // 1-5
+  emecLink          String?
+  modalities        String[]          // ["EAD", "PRESENCIAL", "SEMIPRESENCIAL"]
+  academicLevels    String[]          // ["GRADUACAO", "POS_GRADUACAO"]
+  highlights        String[]          // Diferenciais
+  logoUrl           String
+  imageUrl          String
+  imageAlt          String?
+  keywords          String[]
+  metaTitle         String?
+  metaDescription   String?
+  isActive          Boolean           @default(true)
+  order             Int               @default(0)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([slug])
+  @@index([isActive])
+}
+
+enum InstitutionType {
+  PRIVADA
+  PUBLICA_FEDERAL
+  PUBLICA_ESTADUAL
+}
+
+// ==========================================
+// BLOG (CONTENT HUB PARA SEO)
+// ==========================================
+
+model BlogCategory {
+  id              String     @id @default(uuid())
+  slug            String     @unique
+  title           String
+  description     String
+  order           Int        @default(0)
+  isActive        Boolean    @default(true)
+  metaTitle       String?
+  metaDescription String?
+
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  posts           BlogPost[] @relation("BlogPostCategories")
+
+  @@index([slug])
+  @@index([isActive])
+}
+
+model BlogPost {
+  id              String        @id @default(uuid())
+  slug            String        @unique
+  title           String
+  excerpt         String
+  content         String        @db.Text  // HTML content
+  metaTitle       String?
+  metaDescription String?
+  keywords        String[]
+  featuredImage   String?       // URL da imagem no Tigris Storage
+  imageAlt        String?
+  author          String        @default("Equipe Bolsa Click")
+  readingTime     Int           @default(5) // minutos
+  tags            String[]
+  isActive        Boolean       @default(true)
+  featured        Boolean       @default(false)
+  publishedAt     DateTime?     // null = rascunho
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  createdBy       String?
+  updatedBy       String?
+
+  categories      BlogCategory[] @relation("BlogPostCategories")
+
+  @@index([slug])
+  @@index([isActive])
+  @@index([publishedAt])
+  @@index([featured])
+}
+
+// ==========================================
+// WHATSAPP BOT (MEMÓRIA DE CONVERSAS)
+// ==========================================
+
+model WhatsappMemory {
+  id        String   @id @default(uuid())
+  phone     String   @unique
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([phone])
 }
 
 // ==========================================

@@ -10,6 +10,7 @@ import { useForm } from 'react-hook-form'
 import { useHookFormMask } from 'use-mask-input'
 
 import { z } from 'zod'
+import { useWhatsappFeatureFlag } from '@/app/lib/hooks/usePostHogFeatureFlags'
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -37,6 +38,7 @@ const formSchema = z.object({
 type FormSchema = z.infer<typeof formSchema>
 const FormCheckout = ({ onSubmit, disabled, setEmail, isPostGraduation,
   plans, }: any) => {
+  const showWhatsapp = useWhatsappFeatureFlag()
   const {
     register,
     handleSubmit,
@@ -229,10 +231,12 @@ const FormCheckout = ({ onSubmit, disabled, setEmail, isPostGraduation,
             )}
           </div>
         )}
-        <label className="flex items-center w-full text-sm md:flex-row mt-2 font-medium text-gray-700">
-          <input type="checkbox" {...register('whatsapp')} className="mr-2" />
-          Quero receber mensagens pelo WhatsApp
-        </label>
+        {showWhatsapp && (
+          <label className="flex items-center w-full text-sm md:flex-row mt-2 font-medium text-gray-700">
+            <input type="checkbox" {...register('whatsapp')} className="mr-2" />
+            Quero receber mensagens pelo WhatsApp
+          </label>
+        )}
 
         <button
           type="submit"

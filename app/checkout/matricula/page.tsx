@@ -36,6 +36,7 @@ import { FaPix } from 'react-icons/fa6'
 import { validateCpf } from '@/app/lib/api/validate-cpf'
 import { createLead } from '@/app/lib/api/create-lead'
 import { createInscription, buildInscriptionPayload } from '@/app/lib/api/create-inscription'
+import { validateVoucher, type ValidateVoucherResponse, type VoucherInstallment } from '@/app/lib/api/validate-voucher'
 import { createCheckout } from '@/app/lib/api/create-checkout'
 import { getCheckoutStatus } from '@/app/lib/api/checkout-status'
 import { createMarketplaceInscription } from '@/app/lib/api/create-inscription-marketplace'
@@ -132,10 +133,14 @@ function MatriculaContent() {
   // Quando disabled no PostHog: sem pagamento, sem endpoint de checkout — só create-inscription.
   const pixEnabled = usePixEnabledFeatureFlag()
 
-  const groupId = searchParams.get('groupId') || searchParams.get('id')
-  const unitId = searchParams.get('unitId')
-  const modality = searchParams.get('modality')
-  const shift = searchParams.get('shift') || 'VIRTUAL'
+  const storedCheckoutParams = typeof window !== 'undefined'
+    ? (() => { try { return JSON.parse(localStorage.getItem('pendingCheckoutParams') || '') } catch { return null } })()
+    : null
+
+  const groupId = searchParams.get('groupId') || searchParams.get('id') || storedCheckoutParams?.groupId
+  const unitId = searchParams.get('unitId') || storedCheckoutParams?.unitId
+  const modality = searchParams.get('modality') || storedCheckoutParams?.modality
+  const shift = searchParams.get('shift') || storedCheckoutParams?.shift || 'VIRTUAL'
 
   // Estados para login/registro no checkout
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -172,8 +177,20 @@ function MatriculaContent() {
   // Pós-graduação: método de pagamento e parcela (dia de vencimento fixo 10)
   const [posPaymentMethodType, setPosPaymentMethodType] = useState<string>('')
   const [posInstallmentId, setPosInstallmentId] = useState<string>('')
+  const [voucherCode, setVoucherCode] = useState<string>('')
+  const [voucherValidating, setVoucherValidating] = useState(false)
+  const [voucherValid, setVoucherValid] = useState<boolean | null>(null)
+  const [voucherMessage, setVoucherMessage] = useState<string>('')
+  const [voucherData, setVoucherData] = useState<ValidateVoucherResponse | null>(null)
+  const [voucherInstallments, setVoucherInstallments] = useState<VoucherInstallment[]>([])
   // Graduação: tipo de ingresso (ENEM ou VESTIBULAR)
   const [selectedIngressType, setSelectedIngressType] = useState<'ENEM' | 'VESTIBULAR'>('VESTIBULAR')
+  // Recovery: dados para efeito 2 (depende de offerDetails)
+  const [pendingRecoveryData, setPendingRecoveryData] = useState<{
+    status: string
+    formData: FormSchema
+    transactionId: string
+  } | null>(null)
 
   const {
     register,
@@ -407,6 +424,16 @@ const isFormValidForPayment =
         city: offerDetails.unitCity,
         state: offerDetails.unitState,
       })
+
+      // Facebook Pixel - InitiateCheckout
+      const fbq = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
+      if (fbq) {
+        fbq('track', 'InitiateCheckout', {
+          content_name: offerDetails.course,
+          value: offerDetails.subscriptionValue || offerDetails.montlyFeeTo || 0,
+          currency: 'BRL',
+        })
+      }
     }
   }, [offerDetails, trackEvent])
 
@@ -423,85 +450,107 @@ const isFormValidForPayment =
     }
   }, [offerDetails, shift, modality])
 
-  // Verificar se há uma transação pendente quando a página carrega
+  // Efeito 1: Recuperar transação pendente no mount (sem depender de offerDetails)
   useEffect(() => {
-    if (typeof window !== 'undefined' && offerDetails) {
-      const pendingTransactionId = localStorage.getItem('pendingTransactionId')
-      const pendingFormData = localStorage.getItem('pendingFormData')
-      
-      if (pendingTransactionId && pendingFormData) {
-        try {
-          const formData = JSON.parse(pendingFormData) as FormSchema
-          
-          // Verificar o status imediatamente
-          const checkPendingPayment = async () => {
-            try {
-              const statusResponse = await getCheckoutStatus(pendingTransactionId)
-              console.log('📊 Verificando transação pendente:', statusResponse)
-              
-              // Normalizar status para lowercase e verificar também o campo paid
-              const normalizedStatus = statusResponse.status?.toLowerCase()
-              const isPaid = normalizedStatus === 'paid' || (statusResponse as { paid?: boolean }).paid === true
-              
-              if (isPaid) {
-                // Pagamento já foi confirmado, criar matrícula
-                console.log('✅ Pagamento já confirmado! Criando matrícula...')
+    if (typeof window === 'undefined') return
 
-                // Atualizar transação local para PAID
-                const pendingLocalTxId = localStorage.getItem('pendingLocalTransactionId')
-                if (pendingLocalTxId) {
-                  try {
-                    await fetch(`/api/transactions/${pendingLocalTxId}`, {
-                      method: 'PATCH',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ status: 'PAID' }),
-                    })
-                    console.log('✅ Transação local atualizada para PAID')
-                    localStorage.removeItem('pendingLocalTransactionId')
-                  } catch (localTxErr) {
-                    console.error('⚠️ Erro ao atualizar transação local:', localTxErr)
-                  }
-                }
+    const pendingTxId = localStorage.getItem('pendingTransactionId')
+    const pendingFormDataStr = localStorage.getItem('pendingFormData')
+    if (!pendingTxId || !pendingFormDataStr) return
 
-                // Usar a função que será definida abaixo
-                createInscriptionAfterPayment(formData).catch(console.error)
+    let formData: FormSchema
+    try {
+      formData = JSON.parse(pendingFormDataStr) as FormSchema
+    } catch {
+      localStorage.removeItem('pendingTransactionId')
+      localStorage.removeItem('pendingFormData')
+      localStorage.removeItem('pendingLocalTransactionId')
+      localStorage.removeItem('pendingCheckoutParams')
+      return
+    }
 
-                // Limpar dados pendentes
-                localStorage.removeItem('pendingTransactionId')
-                localStorage.removeItem('pendingFormData')
-              } else if (statusResponse.status?.toLowerCase() === 'pending') {
-                // Ainda pendente, reiniciar verificação
-                console.log('🔄 Reiniciando verificação de pagamento pendente...')
-                setTransactionId(pendingTransactionId)
-                setPixQrCode({
-                  brCode: '',
-                  brCodeBase64: null,
-                })
-                setShowModal(true)
-                // Usar a função que será definida abaixo
-                startPaymentStatusCheck(pendingTransactionId, formData)
-              } else {
-                // Falhou ou cancelado, limpar
-                localStorage.removeItem('pendingTransactionId')
-                localStorage.removeItem('pendingFormData')
-                localStorage.removeItem('pendingLocalTransactionId')
-              }
-            } catch (error) {
-              console.error('Erro ao verificar transação pendente:', error)
-            }
-          }
-
-          checkPendingPayment()
-        } catch (error) {
-          console.error('Erro ao processar dados pendentes:', error)
+    const recoverPendingTransaction = async () => {
+      try {
+        const res = await fetch(`/api/checkout/status/${pendingTxId}`)
+        if (!res.ok) {
+          // Transação não encontrada, limpar
           localStorage.removeItem('pendingTransactionId')
           localStorage.removeItem('pendingFormData')
           localStorage.removeItem('pendingLocalTransactionId')
+          localStorage.removeItem('pendingCheckoutParams')
+          return
         }
+
+        const data = await res.json()
+        console.log('📊 Recuperando transação pendente:', data)
+
+        if (data.status === 'PAID') {
+          // Pagamento confirmado, delegar ao Efeito 2 (precisa de offerDetails)
+          setPendingRecoveryData({ status: 'PAID', formData, transactionId: pendingTxId })
+        } else if (data.status === 'PENDING') {
+          setTransactionId(pendingTxId)
+          // Restaurar QR Code real da API (não vazio!)
+          if (data.paymentMethod === 'pix' && data.pixBrCode && data.pixQrCodeBase64) {
+            setPixQrCode({
+              brCode: data.pixBrCode,
+              brCodeBase64: data.pixQrCodeBase64,
+            })
+            setShowModal(true)
+            console.log('🔄 QR Code PIX recuperado com sucesso')
+          }
+          // Delegar início do polling ao Efeito 2 (precisa de offerDetails para createInscriptionAfterPayment)
+          setPendingRecoveryData({ status: 'PENDING', formData, transactionId: pendingTxId })
+        } else {
+          // FAILED, CANCELLED, EXPIRED - limpar
+          localStorage.removeItem('pendingTransactionId')
+          localStorage.removeItem('pendingFormData')
+          localStorage.removeItem('pendingLocalTransactionId')
+          localStorage.removeItem('pendingCheckoutParams')
+        }
+      } catch (error) {
+        console.error('Erro ao recuperar transação pendente:', error)
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [offerDetails])
+
+    recoverPendingTransaction()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Efeito 2: Ações que dependem de offerDetails (polling, criar matrícula)
+  useEffect(() => {
+    if (!pendingRecoveryData || !offerDetails) return
+
+    const { status, formData, transactionId: pendingTxId } = pendingRecoveryData
+    setPendingRecoveryData(null) // Executar apenas uma vez
+
+    if (status === 'PAID') {
+      console.log('✅ Pagamento já confirmado! Criando matrícula...')
+
+      const pendingLocalTxId = localStorage.getItem('pendingLocalTransactionId')
+      if (pendingLocalTxId) {
+        fetch(`/api/transactions/${pendingLocalTxId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'PAID' }),
+        })
+          .then(() => {
+            console.log('✅ Transação local atualizada para PAID')
+            localStorage.removeItem('pendingLocalTransactionId')
+          })
+          .catch((err) => console.error('⚠️ Erro ao atualizar transação local:', err))
+      }
+
+      createInscriptionAfterPayment(formData).catch(console.error)
+
+      localStorage.removeItem('pendingTransactionId')
+      localStorage.removeItem('pendingFormData')
+      localStorage.removeItem('pendingCheckoutParams')
+    } else if (status === 'PENDING') {
+      console.log('🔄 Reiniciando verificação de pagamento pendente...')
+      startPaymentStatusCheck(pendingTxId, formData)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [offerDetails, pendingRecoveryData])
 
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }))
@@ -604,22 +653,36 @@ const isFormValidForPayment =
   // Valor padrão da matrícula: R$ 449,00
   const defaultEnrollmentFee = 449
 
+  // Pós-graduação: habilitar checkout independente do source
+  const isPosGraduacao = offerDetails?.academicLevel === 'POS_GRADUACAO'
+
   // Lógica de cobrança:
-  // Só cobra matrícula quando: pix_enabled ATIVO + source === 'ATHENAS'
-  // Caso contrário: sem taxa, sem checkout (apenas create-inscription)
+  // Cobra matrícula quando pix_enabled ATIVO (todos os sources)
   // Mensalidade sempre é cobrada pela faculdade (não aparece no checkout)
+  // POS: valor da matrícula = minInstallmentValue (menor parcela dos paymentMethods)
+  const posMinInstallmentValue = isPosGraduacao
+    ? (offerDetails?.paymentMethods as PosPaymentMethod[] | undefined)
+        ?.flatMap(pm => pm.installments)
+        ?.reduce((min, inst) => inst.installmentValue < min ? inst.installmentValue : min, Infinity) ?? 0
+    : 0
+
   let enrollmentFee: number
-  if (!pixEnabled || !isAthenasSource) {
+  if (!pixEnabled) {
     enrollmentFee = 0
+  } else if (isPosGraduacao) {
+    // POS: usar minInstallmentValue como valor da matrícula
+    enrollmentFee = posMinInstallmentValue > 0 && posMinInstallmentValue !== Infinity
+      ? posMinInstallmentValue
+      : (offerDetails?.subscriptionValue || 0)
   } else {
-    // Prioridade: subscriptionValue da API > valor padrão (R$ 449,00)
+    // Graduação/outros: subscriptionValue da API ou fallback R$449
     enrollmentFee = offerDetails?.subscriptionValue !== undefined && offerDetails?.subscriptionValue !== null && offerDetails.subscriptionValue > 0
       ? offerDetails.subscriptionValue
       : defaultEnrollmentFee
   }
 
-  // Checkout habilitado apenas para ofertas ATHENAS com pix_enabled
-  const checkoutEnabled = pixEnabled && isAthenasSource
+  // Checkout habilitado para todas as ofertas com pix_enabled
+  const checkoutEnabled = pixEnabled
 
   const baseMatricula = Math.round(enrollmentFee * 100) // em centavos
 
@@ -633,6 +696,7 @@ const isFormValidForPayment =
         pixEnabled,
         offerSource,
         isAthenasSource,
+        isPosGraduacao,
         checkoutEnabled,
         subscriptionValue: offerDetails?.subscriptionValue,
         defaultEnrollmentFee,
@@ -642,6 +706,49 @@ const isFormValidForPayment =
       })
     }
   }, [offerDetails, pixEnabled, offerSource, isAthenasSource, checkoutEnabled, enrollmentFee, baseMatricula, monthlyFee])
+
+  // Auto-selecionar boleto 18x para pós-graduação
+  useEffect(() => {
+    if (!offerDetails || offerDetails.academicLevel !== 'POS_GRADUACAO') return
+    const methods = offerDetails.paymentMethods as PosPaymentMethod[] | undefined
+    if (!methods?.length) return
+    const boletoMethod = methods.find(pm => pm.type === 'BOLETO')
+    if (!boletoMethod) return
+    const inst18x = boletoMethod.installments.find(i => i.number === 18)
+    if (inst18x) {
+      setPosPaymentMethodType('BOLETO')
+      setPosInstallmentId(inst18x.id)
+    }
+  }, [offerDetails])
+
+  // Auto-validar voucher GALENA+15 para pós-graduação
+  const watchedCpf = watchedValues.cpf
+  useEffect(() => {
+    if (!offerDetails || offerDetails.academicLevel !== 'POS_GRADUACAO') return
+    if (!posInstallmentId) return
+    const cpf = (watchedCpf || '').replace(/\D/g, '')
+    if (cpf.length !== 11) return
+
+    const autoValidateVoucher = async () => {
+      try {
+        const result = await validateVoucher('GALENA+15', cpf, posInstallmentId)
+        const isValid = result.isValid ?? false
+        if (isValid) {
+          setVoucherCode('GALENA+15')
+          setVoucherValid(true)
+          setVoucherData(result)
+          const matchingMethod = result.paymentMethods?.find(pm => pm.type === 'BOLETO')
+            || result.paymentMethods?.[0]
+          if (matchingMethod) {
+            setVoucherInstallments(matchingMethod.installments)
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao validar voucher GALENA+15:', err)
+      }
+    }
+    autoValidateVoucher()
+  }, [offerDetails, posInstallmentId, watchedCpf])
 
   const applyCouponToMatricula = () => {
     if (!coupon) return baseMatricula
@@ -743,17 +850,37 @@ const isFormValidForPayment =
     }
   }
 
-  // Função para verificar o status do pagamento periodicamente
+  // Função para verificar o status do pagamento com backoff progressivo
+  // - Espera 10s antes da primeira verificação
+  // - A cada 5s nas primeiras 12 tentativas (~1 min)
+  // - A cada 10s depois disso (até ~5 min total)
   const startPaymentStatusCheck = async (transactionIdValue: string, formData: FormSchema) => {
-    const maxAttempts = 60 // 5 minutos (60 * 5 segundos)
+    const maxAttempts = 36
     let attempts = 0
-    let intervalId: NodeJS.Timeout | null = null
+    let timeoutId: NodeJS.Timeout | null = null
+    let stopped = false
+
+    const getNextDelay = () => (attempts <= 12 ? 5000 : 10000)
+
+    const scheduleNext = () => {
+      if (stopped || attempts >= maxAttempts) return
+      timeoutId = setTimeout(checkStatus, getNextDelay())
+    }
+
+    const stopPolling = () => {
+      stopped = true
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+        timeoutId = null
+      }
+    }
 
     const checkStatus = async () => {
+      if (stopped) return
       try {
         attempts++
         console.log(`🔍 Verificando status do pagamento (tentativa ${attempts}/${maxAttempts})...`)
-        
+
         const statusResponse = await getCheckoutStatus(transactionIdValue)
         console.log('📊 Status do pagamento:', statusResponse)
 
@@ -763,12 +890,7 @@ const isFormValidForPayment =
 
         if (isPaid) {
           console.log('✅ Pagamento confirmado! Criando matrícula...')
-          
-          // Limpar intervalo se estiver rodando
-          if (intervalId) {
-            clearInterval(intervalId)
-            intervalId = null
-          }
+          stopPolling()
           
           toast.success('Pagamento confirmado! Finalizando matrícula...')
           
@@ -782,6 +904,16 @@ const isFormValidForPayment =
             has_coupon: !!coupon,
             coupon_code: coupon?.code,
           })
+
+          // Facebook Pixel - Purchase (pagamento PIX confirmado)
+          const fbqPix = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
+          if (fbqPix) {
+            fbqPix('track', 'Purchase', {
+              content_name: offerDetails?.course,
+              value: matriculaAfterCoupon / 100,
+              currency: 'BRL',
+            })
+          }
 
           // 4. Atualizar transação local para PAID
           const storedLocalTransactionId = typeof window !== 'undefined'
@@ -805,7 +937,10 @@ const isFormValidForPayment =
             }
           }
 
-          // 5. Para ofertas ATHENAS, criar inscrição no marketplace
+          // Pagamento confirmado, criar matrícula (distribuidor primeiro)
+          await createInscriptionAfterPayment(formData)
+
+          // 5. Para ofertas ATHENAS, criar inscrição no marketplace (após distribuidor)
           if (isAthenasSource && offerDetails?.idDmhElastic) {
             console.log('📝 Criando inscrição no marketplace ATHENAS...')
             try {
@@ -844,27 +979,17 @@ const isFormValidForPayment =
                 })
               } else {
                 console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceResult.error)
-                // Não bloquear o fluxo - a inscrição principal ainda será criada
               }
             } catch (marketplaceError) {
               console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceError)
-              // Não bloquear o fluxo
             }
           }
-
-          // Pagamento confirmado, criar matrícula
-          await createInscriptionAfterPayment(formData)
           
           // Parar a verificação
           return
         } else if (normalizedStatus === 'failed' || normalizedStatus === 'cancelled') {
           console.error('❌ Pagamento falhou ou foi cancelado')
-
-          // Limpar intervalo se estiver rodando
-          if (intervalId) {
-            clearInterval(intervalId)
-            intervalId = null
-          }
+          stopPolling()
 
           // Atualizar transação local para FAILED ou CANCELLED
           const storedLocalTxId = typeof window !== 'undefined'
@@ -892,15 +1017,10 @@ const isFormValidForPayment =
           return
         }
 
-        // Se ainda está pendente e não excedeu o limite, continuar verificando
+        // Se ainda está pendente e não excedeu o limite, agendar próxima verificação
         if (attempts >= maxAttempts) {
           console.warn('⏱️ Timeout na verificação do pagamento')
-
-          // Limpar intervalo se estiver rodando
-          if (intervalId) {
-            clearInterval(intervalId)
-            intervalId = null
-          }
+          stopPolling()
 
           // Atualizar transação local para EXPIRED
           const storedExpiredTxId = typeof window !== 'undefined'
@@ -926,23 +1046,69 @@ const isFormValidForPayment =
         }
       } catch (error: unknown) {
         console.error('Erro ao verificar status do pagamento:', error)
-        
+
         // Se excedeu o limite de tentativas, parar
         if (attempts >= maxAttempts) {
-          if (intervalId) {
-            clearInterval(intervalId)
-            intervalId = null
-          }
+          stopPolling()
           setPixLoading(false)
+        } else {
+          // Em caso de erro de rede, continuar tentando
+          scheduleNext()
         }
+        return
       }
+
+      // Se não retornou antes (status pendente), agendar próxima verificação
+      scheduleNext()
     }
 
-    // Verificar imediatamente na primeira vez
-    checkStatus()
-    
-    // Depois verificar a cada 3 segundos (mais frequente)
-    intervalId = setInterval(checkStatus, 3000)
+    // Esperar 10s antes da primeira verificação (PIX leva tempo para escanear e confirmar)
+    timeoutId = setTimeout(checkStatus, 10000)
+  }
+
+  // Função para validar voucher
+  const handleValidateVoucher = async () => {
+    if (!voucherCode.trim()) return
+    const cpf = (getValues('cpf') || '').replace(/\D/g, '')
+    if (!cpf) {
+      setVoucherValid(false)
+      setVoucherMessage('Preencha o CPF antes de validar o voucher.')
+      return
+    }
+    if (!posInstallmentId) {
+      setVoucherValid(false)
+      setVoucherMessage('Selecione a parcela antes de validar o voucher.')
+      return
+    }
+    setVoucherValidating(true)
+    setVoucherValid(null)
+    setVoucherMessage('')
+    setVoucherData(null)
+    setVoucherInstallments([])
+    try {
+      const result = await validateVoucher(voucherCode.trim(), cpf, posInstallmentId)
+      const isValid = result.isValid ?? false
+      setVoucherValid(isValid)
+      if (isValid && result.paymentMethods?.length) {
+        setVoucherData(result)
+        // Pegar parcelas do método que bate com o selecionado
+        const matchingMethod = result.paymentMethods.find((pm) => pm.type === posPaymentMethodType)
+          || result.paymentMethods[0]
+        if (matchingMethod) {
+          setVoucherInstallments(matchingMethod.installments)
+          setVoucherMessage(`Voucher aplicado! ${matchingMethod.discountPercentage}% de desconto.`)
+        } else {
+          setVoucherMessage('Voucher válido!')
+        }
+      } else {
+        setVoucherMessage(result.message || 'Voucher inválido.')
+      }
+    } catch {
+      setVoucherValid(false)
+      setVoucherMessage('Erro ao validar voucher. Tente novamente.')
+    } finally {
+      setVoucherValidating(false)
+    }
   }
 
   // Função para criar a matrícula após o pagamento ser confirmado
@@ -952,12 +1118,12 @@ const isFormValidForPayment =
         throw new Error('Detalhes da oferta não encontrados')
       }
 
-      let paymentMethod: { id: string; dueDay: string } | undefined
+      let paymentMethod: { id: string; dueDay: string; voucher?: string; voucherId?: number } | undefined
       if (typeof window !== 'undefined') {
         const stored = localStorage.getItem('pendingPosPaymentMethod')
         if (stored) {
           try {
-            paymentMethod = JSON.parse(stored) as { id: string; dueDay: string }
+            paymentMethod = JSON.parse(stored) as { id: string; dueDay: string; voucher?: string; voucherId?: number }
           } catch {
             // ignore
           }
@@ -1085,7 +1251,7 @@ const isFormValidForPayment =
             for (const pm of methods) {
               const inst = pm.installments.find((i) => i.id === paymentMethod.id)
               if (inst) {
-                paymentLabel = pm.type === 'CREDITO' ? 'Crédito' : pm.type === 'BOLETO' ? 'Boleto' : pm.type === 'PIX' ? 'PIX' : pm.type === 'CREDITO_RECORRENCIA' ? 'Cartão Recorrente' : pm.type
+                paymentLabel = pm.type === 'CREDITO' ? 'Crédito' : pm.type === 'BOLETO' ? 'Boleto' : pm.type === 'PIX' ? 'PIX' : pm.type === 'CREDITO_RECORRENCIA' ? 'Cartão Recorrente' : pm.type === 'VOUCHER' ? 'Voucher' : pm.type
                 installmentDescription = `${inst.number}x de ${formatCurrency(inst.installmentValue)}`
                 break
               }
@@ -1109,6 +1275,7 @@ const isFormValidForPayment =
           localStorage.removeItem('pendingTransactionId')
           localStorage.removeItem('pendingFormData')
           localStorage.removeItem('pendingPosPaymentMethod')
+          localStorage.removeItem('pendingCheckoutParams')
         }
 
         router.push(`/checkout/matricula/sucesso?${params.toString()}`)
@@ -1127,30 +1294,6 @@ const isFormValidForPayment =
       // Validar CPF antes de prosseguir
       if (cpfValidationError) {
         toast.error('Por favor, corrija o CPF antes de continuar.')
-        return
-      }
-
-      // Exigir login/cadastro se usuário não estiver logado
-      if (!user) {
-        // Salvar CPF para pre-preencher no cadastro
-        const cleanCpf = data.cpf.replace(/\D/g, '')
-        setPendingCpfForRegistration(cleanCpf)
-
-        // Se CPF já existe no banco, pedir login
-        if (cpfExistsInDb) {
-          toast.error('Este CPF já possui uma conta. Faça login para continuar.')
-          setAuthMode('login')
-          setShowAuthModal(true)
-          return
-        }
-
-        // Se CPF não existe, pedir para criar conta
-        toast.info('Crie uma conta para finalizar sua matrícula.')
-        setAuthMode('register')
-        // Pre-preencher email no modal
-        setAuthEmail(data.email)
-        setAuthName(data.name)
-        setShowAuthModal(true)
         return
       }
 
@@ -1181,9 +1324,14 @@ const isFormValidForPayment =
             return
           }
           if (typeof window !== 'undefined') {
+            const pmData: { id: string; dueDay: string; voucher?: string; voucherId?: number } = { id: posInstallmentId, dueDay: '10' }
+            if (voucherCode.trim() && voucherValid && voucherData) {
+              pmData.voucher = voucherData.code || voucherCode.trim()
+              pmData.voucherId = voucherData.id
+            }
             localStorage.setItem(
               'pendingPosPaymentMethod',
-              JSON.stringify({ id: posInstallmentId, dueDay: '10' })
+              JSON.stringify(pmData)
             )
           }
         }
@@ -1192,6 +1340,17 @@ const isFormValidForPayment =
           course_id: offerDetails.courseId,
           course_name: offerDetails.course,
         })
+
+        // Facebook Pixel - CompleteRegistration (inscrição sem pagamento)
+        const fbqReg = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
+        if (fbqReg) {
+          fbqReg('track', 'CompleteRegistration', {
+            content_name: offerDetails.course,
+            value: offerDetails.montlyFeeTo || 0,
+            currency: 'BRL',
+          })
+        }
+
         await createInscriptionAfterPayment(data)
         setPixLoading(false)
         return
@@ -1206,9 +1365,14 @@ const isFormValidForPayment =
         const firstInstallment = pixMethod?.installments?.[0]
         if (firstInstallment) {
           posInstallmentIdForCheckout = firstInstallment.id
+          const pmData: { id: string; dueDay: string; voucher?: string; voucherId?: number } = { id: firstInstallment.id, dueDay: POS_DUE_DAY }
+          if (voucherValid && voucherData) {
+            pmData.voucher = voucherData.code || 'GALENA+15'
+            pmData.voucherId = voucherData.id
+          }
           localStorage.setItem(
             'pendingPosPaymentMethod',
-            JSON.stringify({ id: firstInstallment.id, dueDay: POS_DUE_DAY })
+            JSON.stringify(pmData)
           )
         }
       }
@@ -1289,6 +1453,8 @@ const isFormValidForPayment =
         description: `Matrícula - ${offerDetails.course}`,
         paymentMethod: 'pix' as const,
         brand: offerDetails.brand?.toLowerCase() || 'anhanguera',
+        channel: process.env.NEXT_PUBLIC_THEME || 'bolsaclick',
+        city: offerDetails.unitCity || '',
         metadata: {
           courseId: offerDetails.courseId,
           courseName: offerDetails.course,
@@ -1354,6 +1520,9 @@ const isFormValidForPayment =
         if (createdLocalTransactionId) {
           localStorage.setItem('pendingLocalTransactionId', createdLocalTransactionId)
         }
+        localStorage.setItem('pendingCheckoutParams', JSON.stringify({
+          groupId, unitId, modality, shift,
+        }))
       }
 
       // Verificar se tem QR Code na resposta
@@ -1419,19 +1588,37 @@ const isFormValidForPayment =
         coupon_code: coupon?.code,
       })
 
+      // Facebook Pixel - Purchase (pagamento cartão confirmado)
+      const fbqCard = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
+      if (fbqCard) {
+        fbqCard('track', 'Purchase', {
+          content_name: offerDetails.course,
+          value: applyCouponToMatricula() / 100,
+          currency: 'BRL',
+        })
+      }
+
       // Pós-graduação: persistir método de pagamento selecionado para createInscriptionAfterPayment
       if (offerDetails.academicLevel === 'POS_GRADUACAO' && posInstallmentId && posPaymentMethodType) {
         const methods = (offerDetails.paymentMethods ?? []) as PosPaymentMethod[]
         const method = methods.find((pm) => pm.type === posPaymentMethodType)
         const inst = method?.installments?.find((i) => i.id === posInstallmentId)
         if (inst && typeof window !== 'undefined') {
-          localStorage.setItem('pendingPosPaymentMethod', JSON.stringify({ id: inst.id, dueDay: '10' }))
+          const pmData: { id: string; dueDay: string; voucher?: string; voucherId?: number } = { id: inst.id, dueDay: '10' }
+          if (voucherCode.trim() && voucherValid && voucherData) {
+            pmData.voucher = voucherData.code || voucherCode.trim()
+            pmData.voucherId = voucherData.id
+          }
+          localStorage.setItem('pendingPosPaymentMethod', JSON.stringify(pmData))
         }
       }
 
-      // Inscrição marketplace ATHENAS (se aplicável)
+      // Criar matrícula no distribuidor primeiro
+      const formData = getValues() as FormSchema
+      await createInscriptionAfterPayment(formData)
+
+      // Inscrição marketplace ATHENAS (após distribuidor)
       if (isAthenasSource && offerDetails.idDmhElastic) {
-        const formData = getValues()
         try {
           const marketplaceResult = await createMarketplaceInscription(
             {
@@ -1469,9 +1656,6 @@ const isFormValidForPayment =
           console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceError)
         }
       }
-
-      const formData = getValues() as FormSchema
-      await createInscriptionAfterPayment(formData)
     } finally {
       setPixLoading(false)
     }
@@ -1765,6 +1949,16 @@ const isFormValidForPayment =
                                           course_id: offerDetails?.courseId,
                                           course_name: offerDetails?.course,
                                         })
+
+                                        // Facebook Pixel - AddPaymentInfo (dados pessoais preenchidos + CPF validado)
+                                        const fbqCpf = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
+                                        if (fbqCpf) {
+                                          fbqCpf('track', 'AddPaymentInfo', {
+                                            content_name: offerDetails?.course,
+                                            value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
+                                            currency: 'BRL',
+                                          })
+                                        }
                                       } else if (result.haveAnotherInscriptionInCycle) {
                                         // Tem outra inscrição no ciclo e não está permitido cadastrar
                                         setCpfValidationError(result.message || 'Este CPF possui outra inscrição no ciclo e não pode ser cadastrado.')
@@ -1817,9 +2011,9 @@ const isFormValidForPayment =
                         {cpfValidationError && <p className="text-red-500 text-xs mt-1">{cpfValidationError}</p>}
                         {/* Mensagem quando CPF já existe no nosso banco */}
                         {cpfExistsInDb && !user && (
-                          <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md">
-                            <p className="text-xs text-amber-800">
-                              <strong>Este CPF já possui uma conta.</strong>
+                          <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                            <p className="text-xs text-blue-800">
+                              Este CPF já possui uma conta.
                               {cpfEmailHint && <span> Email: {cpfEmailHint}</span>}
                             </p>
                             <button
@@ -1830,15 +2024,9 @@ const isFormValidForPayment =
                               }}
                               className="mt-1 text-xs text-bolsa-primary font-medium hover:underline"
                             >
-                              Clique aqui para fazer login
+                              Fazer login (opcional)
                             </button>
                           </div>
-                        )}
-                        {/* Mensagem quando CPF não existe - pode criar conta */}
-                        {cpfExistsInDb === false && !user && (
-                          <p className="text-green-600 text-xs mt-1">
-                            CPF disponível. Você precisará criar uma conta para finalizar.
-                          </p>
                         )}
                       </div>
                       <div>
@@ -2150,7 +2338,7 @@ const isFormValidForPayment =
                           <div className="flex flex-wrap gap-2">
                             {(offerDetails.paymentMethods as PosPaymentMethod[]).map((pm) => {
                               const label =
-                                pm.type === 'CREDITO' ? 'Crédito' : pm.type === 'BOLETO' ? 'Boleto' : pm.type === 'PIX' ? 'PIX' : pm.type === 'CREDITO_RECORRENCIA' ? 'Cartão Recorrente' : pm.type
+                                pm.type === 'CREDITO' ? 'Crédito' : pm.type === 'BOLETO' ? 'Boleto' : pm.type === 'PIX' ? 'PIX' : pm.type === 'CREDITO_RECORRENCIA' ? 'Cartão Recorrente' : pm.type === 'VOUCHER' ? 'Voucher' : pm.type
                               return (
                                 <button
                                   key={pm.type}
@@ -2174,21 +2362,38 @@ const isFormValidForPayment =
                               <div className="space-y-2">
                                 {(
                                   (offerDetails.paymentMethods as PosPaymentMethod[]).find((pm) => pm.type === posPaymentMethodType)?.installments ?? []
-                                ).map((inst: PosInstallment) => (
-                                  <div
-                                    key={inst.id}
-                                    onClick={() => setPosInstallmentId(inst.id)}
-                                    className={`p-3 border-2 rounded-lg cursor-pointer transition-all flex justify-between items-center ${
-                                      posInstallmentId === inst.id ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'
-                                    }`}
-                                  >
-                                    <span className="font-medium text-sm">
-                                      {inst.number}x de {formatCurrency(inst.installmentValue)}
-                                    </span>
-                                    <span className="text-xs text-gray-500">Total: {formatCurrency(inst.totalValue)}</span>
-                                    {posInstallmentId === inst.id && <Check size={18} className="text-green-600" />}
-                                  </div>
-                                ))}
+                                ).map((inst: PosInstallment) => {
+                                  const voucherInst = voucherValid ? voucherInstallments.find((v) => v.number === inst.number) : null
+                                  const displayValue = voucherInst ? voucherInst.installmentValue : inst.installmentValue
+                                  const displayTotal = voucherInst ? voucherInst.totalValue : inst.totalValue
+                                  return (
+                                    <div
+                                      key={inst.id}
+                                      onClick={() => setPosInstallmentId(inst.id)}
+                                      className={`p-3 border-2 rounded-lg cursor-pointer transition-all flex justify-between items-center ${
+                                        posInstallmentId === inst.id ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'
+                                      }`}
+                                    >
+                                      <div>
+                                        <span className="font-medium text-sm">
+                                          {inst.number}x de {formatCurrency(displayValue)}
+                                        </span>
+                                        {voucherInst && (
+                                          <span className="text-xs text-gray-400 line-through ml-2">
+                                            {formatCurrency(inst.installmentValue)}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        {voucherInst && (
+                                          <span className="text-xs font-medium text-green-600">-{voucherInst.discountPercentage}%</span>
+                                        )}
+                                        <span className="text-xs text-gray-500">Total: {formatCurrency(displayTotal)}</span>
+                                        {posInstallmentId === inst.id && <Check size={18} className="text-green-600" />}
+                                      </div>
+                                    </div>
+                                  )
+                                })}
                               </div>
                               <p className="text-xs text-gray-600 mt-3">
                                 Vencimento: dia <strong>10</strong> de cada mês (fixo para pós-graduação).
@@ -2198,6 +2403,44 @@ const isFormValidForPayment =
                           <p className="text-sm text-gray-600 mt-3">
                             O valor da matrícula e das mensalidades será pago diretamente à instituição de ensino.
                           </p>
+
+                          {/* Voucher */}
+                          <div className="mt-4 p-3 border border-dashed border-gray-300 rounded-lg bg-gray-50">
+                            <label className="block text-xs font-medium text-gray-700 mb-2">Possui um voucher?</label>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={voucherCode}
+                                onChange={(e) => {
+                                  setVoucherCode(e.target.value)
+                                  setVoucherValid(null)
+                                  setVoucherMessage('')
+                                  setVoucherData(null)
+                                  setVoucherInstallments([])
+                                                              }}
+                                placeholder="Digite o código do voucher"
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
+                              />
+                              <button
+                                type="button"
+                                onClick={handleValidateVoucher}
+                                disabled={voucherValidating || !voucherCode.trim()}
+                                className="px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                              >
+                                {voucherValidating ? (
+                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  'Validar'
+                                )}
+                              </button>
+                            </div>
+                            {voucherMessage && (
+                              <p className={`text-xs mt-2 ${voucherValid ? 'text-green-600' : 'text-red-600'}`}>
+                                {voucherMessage}
+                              </p>
+                            )}
+                          </div>
+
                           <button
                             type="submit"
                             disabled={isSubmitting || pixLoading || !posInstallmentId}
@@ -2300,6 +2543,8 @@ const isFormValidForPayment =
 
                               description={`Matrícula - ${offerDetails.course}`}
                               brand={offerDetails.brand?.toLowerCase() || 'anhanguera'}
+                              channel={process.env.NEXT_PUBLIC_THEME || 'bolsaclick'}
+                              city={offerDetails.unitCity || ''}
                               metadata={{
                                 courseId: offerDetails.courseId,
                                 courseName: offerDetails.course,
@@ -2358,7 +2603,26 @@ const isFormValidForPayment =
               <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                 <p className="text-xs text-gray-500 mb-1">Valor da mensalidade</p>
                 <div className="flex items-center gap-2 flex-wrap">
-                  {offerDetails?.montlyFeeFrom && offerDetails.montlyFeeFrom > monthlyFee && (
+                  {voucherValid && voucherInstallments.length > 0 && (() => {
+                    // Encontrar parcela do voucher correspondente à selecionada
+                    const selectedOriginal = posInstallmentId
+                      ? ((offerDetails.paymentMethods as PosPaymentMethod[])
+                          .find((pm) => pm.type === posPaymentMethodType)
+                          ?.installments?.find((i) => i.id === posInstallmentId))
+                      : null
+                    const selectedNumber = selectedOriginal?.number
+                    const vInst = voucherInstallments.find((v) => v.number === selectedNumber) || voucherInstallments[0]
+                    return (
+                      <>
+                        <p className="text-sm text-gray-400 line-through">De {formatCurrency(vInst.originalInstallmentValue)} por</p>
+                        <p className="text-xl font-bold text-green-600">{formatCurrency(vInst.installmentValue)}</p>
+                        <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded">
+                          Voucher -{vInst.discountPercentage}%
+                        </span>
+                      </>
+                    )
+                  })()}
+                  {!(voucherValid && voucherInstallments.length > 0) && offerDetails?.montlyFeeFrom && offerDetails.montlyFeeFrom > monthlyFee ? (
                     <>
                       <p className="text-sm text-gray-400 line-through">De {formatCurrency(offerDetails.montlyFeeFrom)} por</p>
                       <p className="text-xl font-bold text-green-600 ">{formatCurrency(monthlyFee)}</p>
@@ -2366,8 +2630,7 @@ const isFormValidForPayment =
                         {Math.round(((offerDetails.montlyFeeFrom - monthlyFee) / offerDetails.montlyFeeFrom) * 100)}% de desconto
                       </span>
                     </>
-                  )}
-                  {(!offerDetails?.montlyFeeFrom || offerDetails.montlyFeeFrom <= monthlyFee) && (
+                  ) : (
                     <p className="text-xl font-bold text-green-600">{formatCurrency(monthlyFee)}</p>
                   )}
                 </div>

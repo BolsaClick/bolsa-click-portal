@@ -95,7 +95,7 @@ export default function ResetPasswordPage() {
               </Link>
             </div>
           ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" data-google-interstitial="false" autoComplete="on">
               {/* Email */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -107,6 +107,7 @@ export default function ResetPasswordPage() {
                     type="email"
                     {...register('email')}
                     placeholder="seu@email.com"
+                    autoComplete="username"
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-bolsa-primary focus:border-transparent outline-none transition-all"
                   />
                 </div>

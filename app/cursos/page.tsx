@@ -3,8 +3,8 @@ import { prisma } from '@/app/lib/prisma'
 import CursosPageClient from './CursosPageClient'
 
 export const metadata: Metadata = {
-  title: 'Cursos com Bolsa de Estudo | Bolsa Click',
-  description: 'Descubra os cursos mais procurados com bolsas de estudo de até 80% de desconto. Graduação, Tecnólogo e Licenciatura nas melhores faculdades do Brasil.',
+  title: 'Cursos com Bolsa de até 80% - Graduação, Licenciatura e Tecnólogo',
+  description: 'Compare bolsas de estudo com até 80% de desconto nos cursos mais procurados. Graduação, Licenciatura e Tecnólogo em mais de 30.000 faculdades. Veja salários, duração e inscreva-se grátis!',
   keywords: [
     'cursos com bolsa',
     'cursos graduação',
@@ -45,43 +45,6 @@ export const metadata: Metadata = {
     description: 'Descubra os cursos mais procurados com bolsas de estudo de até 80% de desconto.',
     images: ['https://www.bolsaclick.com.br/assets/og-image-bolsaclick.png'],
   },
-  other: {
-    'application/ld+json': JSON.stringify({
-      '@context': 'https://schema.org',
-      '@type': 'CollectionPage',
-      name: 'Cursos com Bolsa de Estudo',
-      description: 'Descubra os cursos mais procurados com bolsas de estudo de até 80% de desconto em diversas áreas do conhecimento.',
-      url: 'https://www.bolsaclick.com.br/cursos',
-      provider: {
-        '@type': 'Organization',
-        name: 'Bolsa Click',
-        url: 'https://www.bolsaclick.com.br',
-        logo: 'https://www.bolsaclick.com.br/assets/logo-bolsa-click-rosa.png',
-        sameAs: [
-          'https://www.instagram.com/bolsaclick',
-          'https://www.facebook.com/bolsaclickbrasil',
-          'https://www.linkedin.com/company/bolsaclick',
-        ],
-      },
-      breadcrumb: {
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-          {
-            '@type': 'ListItem',
-            position: 1,
-            name: 'Home',
-            item: 'https://www.bolsaclick.com.br',
-          },
-          {
-            '@type': 'ListItem',
-            position: 2,
-            name: 'Cursos',
-            item: 'https://www.bolsaclick.com.br/cursos',
-          },
-        ],
-      },
-    }),
-  },
 }
 
 // ISR: Revalidar a cada 1 hora
@@ -97,6 +60,7 @@ async function getCourses() {
         slug: true,
         name: true,
         fullName: true,
+        apiCourseName: true,
         type: true,
         nivel: true,
         description: true,
@@ -114,8 +78,52 @@ async function getCourses() {
   }
 }
 
+const jsonLdSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Cursos com Bolsa de Estudo',
+  description: 'Descubra os cursos mais procurados com bolsas de estudo de até 80% de desconto em diversas áreas do conhecimento.',
+  url: 'https://www.bolsaclick.com.br/cursos',
+  provider: {
+    '@type': 'Organization',
+    name: 'Bolsa Click',
+    url: 'https://www.bolsaclick.com.br',
+    logo: 'https://www.bolsaclick.com.br/assets/logo-bolsa-click-rosa.png',
+    sameAs: [
+      'https://www.instagram.com/bolsaclick',
+      'https://www.facebook.com/bolsaclickbrasil',
+      'https://www.linkedin.com/company/bolsaclick',
+    ],
+  },
+  breadcrumb: {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://www.bolsaclick.com.br',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Cursos',
+        item: 'https://www.bolsaclick.com.br/cursos',
+      },
+    ],
+  },
+}
+
 export default async function CursosPage() {
   const courses = await getCourses()
 
-  return <CursosPageClient courses={courses} />
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
+      />
+      <CursosPageClient courses={courses} />
+    </>
+  )
 }

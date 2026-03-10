@@ -17,6 +17,9 @@ import {
   Menu,
   X,
   Ticket,
+  Building2,
+  ImageIcon,
+  FileText,
 } from 'lucide-react'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { AdminProvider, useAdmin } from '@/app/contexts/AdminAuthContext'
@@ -38,6 +41,12 @@ const navigation = [
     name: 'Cursos em Destaque',
     href: '/admin/cursos',
     icon: GraduationCap,
+    permission: 'courses',
+  },
+  {
+    name: 'Faculdades',
+    href: '/admin/faculdades',
+    icon: Building2,
     permission: 'courses',
   },
   {
@@ -76,6 +85,18 @@ const navigation = [
     icon: Ticket,
     permission: 'dashboard',
   },
+  {
+    name: 'Banners',
+    href: '/admin/banners',
+    icon: ImageIcon,
+    permission: 'dashboard',
+  },
+  {
+    name: 'Blog',
+    href: '/admin/blog',
+    icon: FileText,
+    permission: 'blog',
+  },
 ]
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
@@ -98,7 +119,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
   // Se estiver na página de login, renderizar apenas o children
   if (isLoginPage) {
-    return <>{children}</>
+    return <><meta name="robots" content="noindex, nofollow" />{children}</>
   }
 
   if (loading) {
@@ -123,7 +144,9 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <>
+      <meta name="robots" content="noindex, nofollow" />
+      <div className="min-h-screen bg-gray-100">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
@@ -232,6 +255,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
         <main className="p-6">{children}</main>
       </div>
     </div>
+    </>
   )
 }
 

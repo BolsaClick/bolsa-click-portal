@@ -38,21 +38,23 @@ export async function POST(request: NextRequest) {
     // 1. Cadastrar no Elysium (API externa)
     let elysiumId: string | null = null
     try {
-      const elysiumPayload: Record<string, unknown> = {
+      const elysiumPayload = {
         name,
         cpf: cleanCpf,
         email,
+        phone: cleanPhone,
         courseNames: courseNames || [courseName].filter(Boolean),
       }
-      // Só envia phone se existir
-      if (cleanPhone) {
-        elysiumPayload.phone = cleanPhone
-      }
+      console.log('📤 Enviando estudante para Elysium:', { ...elysiumPayload, cpf: '***' })
       const elysiumResponse = await elysium.post<ElysiumStudentResponse>('/students', elysiumPayload)
       elysiumId = elysiumResponse.data?.id || null
       console.log('✅ Estudante cadastrado no Elysium:', elysiumId)
     } catch (elysiumError) {
-      console.error('⚠️ Erro ao cadastrar no Elysium (continuando):', elysiumError)
+      const axiosErr = elysiumError as { response?: { status?: number; data?: unknown } }
+      console.error('⚠️ Erro ao cadastrar no Elysium (continuando):', {
+        status: axiosErr.response?.status,
+        data: axiosErr.response?.data,
+      })
       // Continua mesmo se Elysium falhar - não bloqueia o fluxo
     }
 

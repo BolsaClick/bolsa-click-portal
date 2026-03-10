@@ -4,8 +4,12 @@ import Cta from '../components/organisms/Cta'
 import Filter from '../components/molecules/Filter'
 import { getCurrentTheme } from '../lib/themes'
 import ScholarshipCarousel from '../components/molecules/ScolarShipCarousel'
-import AboutSection from '../components/molecules/AboutSection'
 import HowWork from '../components/organisms/Recommended/HowWork'
+import PopularCoursesSection from '../components/organisms/PopularCoursesSection'
+import ScholarshipInfoSection from '../components/organisms/ScholarshipInfoSection'
+import FaqSection from '../components/organisms/FaqSection'
+import LatestBlogPosts from '../components/organisms/LatestBlogPosts'
+import { prisma } from '../lib/prisma'
 
 const theme = getCurrentTheme()
 
@@ -40,6 +44,9 @@ export const metadata: Metadata = {
     'melhor que quero bolsa',
     'graduação EAD',
     'educação superior',
+    'bolsas ead',
+    'bolsas faculdade',
+    'faculdade bolsa',
     'bolsa click',
     theme.shortTitle.toLowerCase(),
   ],
@@ -75,7 +82,40 @@ export const metadata: Metadata = {
   // Schema.org removido: já definido em layout.tsx para evitar duplicação
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const latestPosts = await prisma.blogPost.findMany({
+    where: { isActive: true, publishedAt: { not: null, lte: new Date() } },
+    orderBy: { publishedAt: 'desc' },
+    take: 3,
+    select: {
+      slug: true,
+      title: true,
+      excerpt: true,
+      featuredImage: true,
+      imageAlt: true,
+      readingTime: true,
+      publishedAt: true,
+      categories: { select: { title: true, slug: true } },
+    },
+  })
+
+  const blogPosts = latestPosts.map((p: typeof latestPosts[number]) => ({
+    ...p,
+    publishedAt: p.publishedAt!.toISOString(),
+  }))
+
+  const educationalOrgSchema = {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    "name": "Bolsa Click",
+    "url": "https://www.bolsaclick.com.br",
+    "description": "O Bolsa Click é a maior plataforma de bolsas de estudo do Brasil, com descontos de até 95% para ensino superior. Encontre bolsas em mais de 30.000 faculdades parceiras com facilidade e suporte.",
+    "sameAs": [
+      "https://www.instagram.com/bolsaclick",
+      "https://www.facebook.com/bolsaclick"
+    ]
+  }
+
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -127,6 +167,22 @@ export default function HomePage() {
           "@type": "Answer",
           "text": "As condições variam conforme a faculdade e o tipo de bolsa. Recomendamos verificar as condições específicas de cada oferta antes de se cadastrar. Algumas bolsas podem ser combinadas com outros descontos, outras não."
         }
+      },
+      {
+        "@type": "Question",
+        "name": "Preciso da nota do ENEM para conseguir bolsa de estudo?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Não! No Bolsa Click, você não precisa de nota do ENEM para conseguir sua bolsa de estudo. Basta se cadastrar, escolher o curso e garantir seu desconto."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Existem bolsas EAD disponíveis?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sim! O Bolsa Click oferece milhares de bolsas EAD com descontos de até 80%. Os cursos a distância possuem diploma reconhecido pelo MEC, igual ao presencial. Estude de casa, no seu ritmo."
+        }
       }
     ]
   }
@@ -135,14 +191,21 @@ export default function HomePage() {
     <>
       <script
         type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(educationalOrgSchema) }}
+      />
+      <script
+        type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
       <HeroSection />
       <Filter />
       <Cta />
       <ScholarshipCarousel />
-      <AboutSection />
+      <PopularCoursesSection />
+      <ScholarshipInfoSection />
+      <LatestBlogPosts posts={blogPosts} />
       <HowWork />
+      <FaqSection />
     </>
   )
 }

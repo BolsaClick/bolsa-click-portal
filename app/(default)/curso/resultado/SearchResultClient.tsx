@@ -21,6 +21,7 @@ import CourseCardNew from '@/app/components/CourseCardNew';
 import FiltersPanel from './FiltersPanel';
 import Breadcrumbs from '@/app/components/molecules/Breadcrumbs';
 import { Course } from '@/app/interface/course';
+import { isBot } from '@/app/lib/utils/is-bot';
 
 
 
@@ -28,13 +29,57 @@ export default function SearchResultClient() {
   const { trackEvent } = usePostHogTracking()
   const searchParams = useSearchParams();
   
-  // Ler parâmetros da nova estrutura de URL
-  const curso = searchParams.get('c') ?? '';  // Nome do curso limpo (para exibição)
-  const cursoNomeCompleto = searchParams.get('cn') ?? '';  // Nome completo com sufixo (para busca exata)
-  const cidade = searchParams.get('cidade') ?? '';
-  const estado = searchParams.get('estado') ?? '';
-  const modalidade = searchParams.get('modalidade') ?? '';
-  const nivel = searchParams.get('nivel') ?? 'GRADUACAO';  // GRADUACAO, POS_GRADUACAO, TECNICO
+  // Ler parâmetros da URL com fallback para window.location.search
+  // O fallback é necessário porque useSearchParams pode não ter os valores imediatamente
+  // durante a primeira navegação client-side (ex: vindo de /cursos/[slug]/[city])
+  const [resolvedParams, setResolvedParams] = useState(() => ({
+    c: searchParams.get('c') ?? '',
+    cn: searchParams.get('cn') ?? '',
+    cidade: searchParams.get('cidade') ?? '',
+    estado: searchParams.get('estado') ?? '',
+    modalidade: searchParams.get('modalidade') ?? '',
+    nivel: searchParams.get('nivel') ?? 'GRADUACAO',
+  }))
+
+  // Sincronizar params quando useSearchParams muda ou no mount (fallback para window.location.search)
+  useEffect(() => {
+    const fromSP = {
+      c: searchParams.get('c') ?? '',
+      cn: searchParams.get('cn') ?? '',
+      cidade: searchParams.get('cidade') ?? '',
+      estado: searchParams.get('estado') ?? '',
+      modalidade: searchParams.get('modalidade') ?? '',
+      nivel: searchParams.get('nivel') ?? 'GRADUACAO',
+    }
+
+    if (fromSP.cidade || fromSP.estado || fromSP.c) {
+      setResolvedParams(fromSP)
+      return
+    }
+
+    // Fallback: ler de window.location.search quando useSearchParams está vazio
+    if (typeof window !== 'undefined') {
+      const wp = new URLSearchParams(window.location.search)
+      const fromWindow = {
+        c: wp.get('c') ?? '',
+        cn: wp.get('cn') ?? '',
+        cidade: wp.get('cidade') ?? '',
+        estado: wp.get('estado') ?? '',
+        modalidade: wp.get('modalidade') ?? '',
+        nivel: wp.get('nivel') ?? 'GRADUACAO',
+      }
+      if (fromWindow.cidade || fromWindow.estado || fromWindow.c) {
+        setResolvedParams(fromWindow)
+      }
+    }
+  }, [searchParams])
+
+  const curso = resolvedParams.c
+  const cursoNomeCompleto = resolvedParams.cn
+  const cidade = resolvedParams.cidade
+  const estado = resolvedParams.estado
+  const modalidade = resolvedParams.modalidade
+  const nivel = resolvedParams.nivel
 
 
 
@@ -155,6 +200,7 @@ export default function SearchResultClient() {
   // Detectar localização por IP se não houver cidade na URL.
   // Com pequeno delay ao vir da home: evita rodar com searchParams ainda vazios (client nav)
   // e sobrescrever a URL perdendo curso/cidade/estado.
+  // IMPORTANTE: Bots/crawlers NÃO executam geolocalização para evitar URLs com Mountain View, CA.
   useEffect(() => {
       if (cidade && estado) {
         setFilters((prev) => ({
@@ -166,6 +212,12 @@ export default function SearchResultClient() {
       }
 
     if (locationDetected) return;
+
+    // Não executar geolocalização para bots/crawlers
+    if (isBot()) {
+      setLocationDetected(true)
+      return
+    }
 
     const timeoutId = setTimeout(async () => {
       if (locationDetected) return;

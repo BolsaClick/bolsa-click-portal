@@ -1,27 +1,22 @@
-"use client";
+import { Metadata } from 'next'
+import ContatoClient from './ContatoClient'
 
-import React from 'react';
-import Header from './Header';
-import ContactForm from './ContactForm';
-import ContactInfo from './ContactInfo';
-import GetInTouch from './GetInTouch';
-import Faq from './Faq';
-import Map from './Map';
+export const metadata: Metadata = {
+  title: 'Contato | Bolsa Click',
+  description:
+    'Entre em contato com o Bolsa Click. Tire suas dúvidas sobre bolsas de estudo, matrículas e descontos em faculdades de todo o Brasil.',
+  keywords: [
+    'contato bolsa click',
+    'fale conosco',
+    'dúvidas bolsa de estudo',
+    'atendimento bolsa click',
+    'suporte bolsa de estudo',
+  ],
+  alternates: {
+    canonical: 'https://www.bolsaclick.com.br/contato',
+  },
+}
 
-
-export default function Contato() {
-  return (
-    <main className="min-h-screen bg-white">
-      <Header />
-      <div className="container mx-auto px-4 py-20">
-        <div className="grid md:grid-cols-2 gap-12">
-          <ContactForm />
-          <ContactInfo />
-        </div>
-      </div>
-      <Map />
-      <Faq />
-      <GetInTouch />
-    </main>
-  );
+export default function ContatoPage() {
+  return <ContatoClient />
 }

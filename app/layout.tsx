@@ -20,19 +20,11 @@ const montserrat = Montserrat({
 
 const theme = getCurrentTheme()
 
-const idsByTheme = {
-  bolsaclick: {
-    gtm: 'GTM-K4KZBRF3',
-    facebookPixels: ['3830716730578943', '274906762977899'],
-  },
-  anhanguera: {
-    gtm: 'GTM-PPD7PKN5',
-    facebookPixels: ['3830716730578943', '274906762977899'],
-  },
-} as const
-
-const themeName = process.env.NEXT_PUBLIC_THEME || 'bolsaclick'
-const ids = idsByTheme[themeName as keyof typeof idsByTheme]
+const gtmId = process.env.NEXT_PUBLIC_GTM_ID || ''
+const ga4Id = process.env.NEXT_PUBLIC_GA4_ID || ''
+const facebookPixelIds = process.env.NEXT_PUBLIC_FB_PIXEL_IDS
+  ? process.env.NEXT_PUBLIC_FB_PIXEL_IDS.split(',')
+  : []
 
 export const metadata: Metadata = {
   title: {
@@ -225,17 +217,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${montserrat.className} antialiased`}>
         {/* GTM (noscript) */}
-        <noscript>
-          <iframe
-            src={`https://www.googletagmanager.com/ns.html?id=${ids.gtm}`}
-            height="0"
-            width="0"
-            style={{ display: 'none', visibility: 'hidden' }}
-          />
-        </noscript>
+        {gtmId && (
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${gtmId}`}
+              height="0"
+              width="0"
+              style={{ display: 'none', visibility: 'hidden' }}
+            />
+          </noscript>
+        )}
 
         {/* Facebook Pixels (noscript) */}
-        {ids.facebookPixels.map(pixelId => (
+        {facebookPixelIds.map(pixelId => (
           <noscript key={pixelId}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -248,7 +242,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </noscript>
         ))}
 
-        <AnalyticsScripts gtm={ids.gtm} facebookPixelIds={ids.facebookPixels} />
+        <AnalyticsScripts gtmId={gtmId} ga4Id={ga4Id} facebookPixelIds={facebookPixelIds} />
 
         <Script
           src="https://cdn-cookieyes.com/client_data/2a0be4de7c11618e75d1c64f/script.js"

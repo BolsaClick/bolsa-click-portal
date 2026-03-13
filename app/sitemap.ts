@@ -48,6 +48,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/central-de-ajuda`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
   ]
 
+  // Páginas individuais de curso /cursos/[slug]
+  const coursePages: MetadataRoute.Sitemap = courseSlugs.map(courseSlug => ({
+    url: `${SITE_URL}/cursos/${courseSlug}`,
+    lastModified: now,
+    changeFrequency: 'daily' as const,
+    priority: 0.9,
+  }))
+
   // Landing pages /cursos/[slug]/[city]
   const courseCityPages: MetadataRoute.Sitemap = courseSlugs.flatMap(courseSlug =>
     mainCities.map(city => ({
@@ -113,6 +121,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...staticPages,
+    ...coursePages,
     ...courseCityPages,
     ...dynamicPages,
   ]

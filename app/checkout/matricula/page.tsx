@@ -1113,6 +1113,10 @@ const isFormValidForPayment =
 
   // Função para criar a matrícula após o pagamento ser confirmado
   const createInscriptionAfterPayment = async (data: FormSchema) => {
+    // Capturar tipo de pagamento do checkout antes do try block
+    // (variável local 'paymentMethod' dentro do try faz shadowing do state)
+    const checkoutPaymentType = paymentMethod // 'pix' | 'credit_card'
+
     try {
       if (!offerDetails) {
         throw new Error('Detalhes da oferta não encontrados')
@@ -1234,25 +1238,36 @@ const isFormValidForPayment =
         }
 
         // Montar params para a página de sucesso antes de limpar o localStorage
+        // Envia TODOS os 4 params para ambos os tipos (Graduação e Pós)
+        // para que os JS de tracking do GTM funcionem corretamente
         const params = new URLSearchParams()
+
+        // ID de transação único para evitar duplicação de conversões no GTM
+        params.set('transactionId', `BC-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`)
+
         if (offerDetails.course) {
           params.set('course', offerDetails.course)
         }
         const level = offerDetails.academicLevel
         if (level === 'GRADUACAO' || !level) {
-          // Graduação: enviar valor da mensalidade (ex: 108)
+          // Graduação: mensalidade + método de pagamento do checkout
           params.set('monthlyFee', String(monthlyFee))
+          const gradPaymentLabel = checkoutPaymentType === 'pix' ? 'PIX' : 'Cartão de Crédito'
+          params.set('paymentMethod', gradPaymentLabel)
+          params.set('installmentDescription', `Mensalidade ${formatCurrency(monthlyFee)}/mês`)
         } else if (level === 'POS_GRADUACAO' && offerDetails.paymentMethods?.length) {
-          // Pós: enviar opção escolhida (ex: Boleto em 18x de R$ 129)
+          // Pós: opção de pagamento escolhida + valor da parcela como monthlyFee
           const methods = offerDetails.paymentMethods as PosPaymentMethod[]
           let paymentLabel = ''
           let installmentDescription = ''
+          let installmentValue = 0
           if (paymentMethod) {
             for (const pm of methods) {
               const inst = pm.installments.find((i) => i.id === paymentMethod.id)
               if (inst) {
                 paymentLabel = pm.type === 'CREDITO' ? 'Crédito' : pm.type === 'BOLETO' ? 'Boleto' : pm.type === 'PIX' ? 'PIX' : pm.type === 'CREDITO_RECORRENCIA' ? 'Cartão Recorrente' : pm.type === 'VOUCHER' ? 'Voucher' : pm.type
                 installmentDescription = `${inst.number}x de ${formatCurrency(inst.installmentValue)}`
+                installmentValue = inst.installmentValue
                 break
               }
             }
@@ -1264,10 +1279,13 @@ const isFormValidForPayment =
             if (firstInst) {
               paymentLabel = 'PIX'
               installmentDescription = `${firstInst.number}x de ${formatCurrency(firstInst.installmentValue)}`
+              installmentValue = firstInst.installmentValue
             }
           }
           if (paymentLabel) params.set('paymentMethod', paymentLabel)
           if (installmentDescription) params.set('installmentDescription', installmentDescription)
+          // Pós: enviar valor da parcela como monthlyFee para o JS de valor do GTM
+          params.set('monthlyFee', String(installmentValue || monthlyFee))
         }
 
         // Limpar dados pendentes do localStorage

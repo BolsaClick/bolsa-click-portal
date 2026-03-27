@@ -132,13 +132,13 @@ export async function createMarketplaceInscription(
     const formattedBirthDate = formatBirthDate(formData.birthDate);
 
     // Construir objeto ENEM baseado no tipo de ingresso
-    const isEnem = formData.ingressType === "ENEM";
 
     // Construir payload
     const payload: MarketplaceInscriptionPayload = {
       inscricao: {
         enem: {
-          utilizar: isEnem,
+          utilizar: true,
+          protocolo: "171",
         },
         anoConclusao: parseInt(formData.schoolYear) || new Date().getFullYear(),
         aceiteTermo: formData.acceptTerms !== false,

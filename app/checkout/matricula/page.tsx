@@ -31,22 +31,17 @@ import { getCep } from '@/app/lib/api/get-cep'
 import { validarCPF } from '@/utils/cpf-validate'
 import { formatCurrency } from '@/utils/fomartCurrency'
 import { toast } from 'sonner'
-import { validateCoupon } from '@/app/lib/api/get-coupon'
-import { FaPix } from 'react-icons/fa6'
+// [CUPOM] import { validateCoupon } from '@/app/lib/api/get-coupon'
 import { validateCpf } from '@/app/lib/api/validate-cpf'
 import { createLead } from '@/app/lib/api/create-lead'
 import { createInscription, buildInscriptionPayload } from '@/app/lib/api/create-inscription'
-import { validateVoucher, type ValidateVoucherResponse, type VoucherInstallment } from '@/app/lib/api/validate-voucher'
-import { createCheckout } from '@/app/lib/api/create-checkout'
-import { getCheckoutStatus } from '@/app/lib/api/checkout-status'
 import { createMarketplaceInscription } from '@/app/lib/api/create-inscription-marketplace'
+import { validateVoucher, type ValidateVoucherResponse, type VoucherInstallment } from '@/app/lib/api/validate-voucher'
 import type { PosPaymentMethod, PosInstallment } from '@/app/lib/api/get-offer-details'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
-import { usePixBeforeEnrollmentFeatureFlag, usePixEnabledFeatureFlag } from '@/app/lib/hooks/usePostHogFeatureFlags'
 import { formatPhone } from '@/utils/formatters'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { Loader2 } from 'lucide-react'
-import { StripeCheckout } from '@/app/components/stripe'
 
 
 // Validação melhorada seguindo o exemplo
@@ -112,14 +107,15 @@ const formSchema = z.object({
 
 type FormSchema = z.infer<typeof formSchema>
 
-interface CouponData {
-  type: 'percent' | 'amount'
-  value: number
-  finalAmount: number
-  originalAmount: number
-  discountApplied: number
-  code?: string
-}
+// [CUPOM] Comentado para possível reativação futura
+// interface CouponData {
+//   type: 'percent' | 'amount'
+//   value: number
+//   finalAmount: number
+//   originalAmount: number
+//   discountApplied: number
+//   code?: string
+// }
 
 function MatriculaContent() {
   const searchParams = useSearchParams()
@@ -127,11 +123,6 @@ function MatriculaContent() {
   const { trackEvent, identifyUser } = usePostHogTracking()
   const { user, firebaseUser, loading: authLoading, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth()
 
-  // Feature flags do PostHog
-  const requirePixBeforeEnrollment = usePixBeforeEnrollmentFeatureFlag()
-  // Por padrão (true): checkout habilitado com cobrança de matrícula via PIX.
-  // Quando disabled no PostHog: sem pagamento, sem endpoint de checkout — só create-inscription.
-  const pixEnabled = usePixEnabledFeatureFlag()
 
   const storedCheckoutParams = typeof window !== 'undefined'
     ? (() => { try { return JSON.parse(localStorage.getItem('pendingCheckoutParams') || '') } catch { return null } })()
@@ -157,16 +148,10 @@ function MatriculaContent() {
     pagamento: true,
   })
 
-  const [paymentMethod, setPaymentMethod] = useState<'pix' | 'credit_card'>('pix')
-  const [couponCode, setCouponCode] = useState('')
-  const [coupon, setCoupon] = useState<CouponData | null>(null)
-  const [couponError, setCouponError] = useState<string | null>(null)
-  const [showModal, setShowModal] = useState(false)
-  const [pixQrCode, setPixQrCode] = useState<{ brCode: string; brCodeBase64: string | null } | null>(null)
-  const [pixLoading, setPixLoading] = useState(false)
-  const [pixError, setPixError] = useState<string | null>(null)
-  const [transactionId, setTransactionId] = useState<string | null>(null)
-  const [, setLocalTransactionId] = useState<string | null>(null)
+  // [CUPOM] Comentado para possível reativação futura
+  // const [couponCode, setCouponCode] = useState('')
+  // const [coupon, setCoupon] = useState<CouponData | null>(null)
+  // const [couponError, setCouponError] = useState<string | null>(null)
   const [cpfValidationError, setCpfValidationError] = useState<string | null>(null)
   const [isValidatingCpf, setIsValidatingCpf] = useState(false)
   const [cpfExistsInDb, setCpfExistsInDb] = useState<boolean | null>(null)
@@ -185,12 +170,6 @@ function MatriculaContent() {
   const [voucherInstallments, setVoucherInstallments] = useState<VoucherInstallment[]>([])
   // Graduação: tipo de ingresso (ENEM ou VESTIBULAR)
   const [selectedIngressType, setSelectedIngressType] = useState<'ENEM' | 'VESTIBULAR'>('VESTIBULAR')
-  // Recovery: dados para efeito 2 (depende de offerDetails)
-  const [pendingRecoveryData, setPendingRecoveryData] = useState<{
-    status: string
-    formData: FormSchema
-    transactionId: string
-  } | null>(null)
 
   const {
     register,
@@ -450,108 +429,6 @@ const isFormValidForPayment =
     }
   }, [offerDetails, shift, modality])
 
-  // Efeito 1: Recuperar transação pendente no mount (sem depender de offerDetails)
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-
-    const pendingTxId = localStorage.getItem('pendingTransactionId')
-    const pendingFormDataStr = localStorage.getItem('pendingFormData')
-    if (!pendingTxId || !pendingFormDataStr) return
-
-    let formData: FormSchema
-    try {
-      formData = JSON.parse(pendingFormDataStr) as FormSchema
-    } catch {
-      localStorage.removeItem('pendingTransactionId')
-      localStorage.removeItem('pendingFormData')
-      localStorage.removeItem('pendingLocalTransactionId')
-      localStorage.removeItem('pendingCheckoutParams')
-      return
-    }
-
-    const recoverPendingTransaction = async () => {
-      try {
-        const res = await fetch(`/api/checkout/status/${pendingTxId}`)
-        if (!res.ok) {
-          // Transação não encontrada, limpar
-          localStorage.removeItem('pendingTransactionId')
-          localStorage.removeItem('pendingFormData')
-          localStorage.removeItem('pendingLocalTransactionId')
-          localStorage.removeItem('pendingCheckoutParams')
-          return
-        }
-
-        const data = await res.json()
-        console.log('📊 Recuperando transação pendente:', data)
-
-        if (data.status === 'PAID') {
-          // Pagamento confirmado, delegar ao Efeito 2 (precisa de offerDetails)
-          setPendingRecoveryData({ status: 'PAID', formData, transactionId: pendingTxId })
-        } else if (data.status === 'PENDING') {
-          setTransactionId(pendingTxId)
-          // Restaurar QR Code real da API (não vazio!)
-          if (data.paymentMethod === 'pix' && data.pixBrCode && data.pixQrCodeBase64) {
-            setPixQrCode({
-              brCode: data.pixBrCode,
-              brCodeBase64: data.pixQrCodeBase64,
-            })
-            setShowModal(true)
-            console.log('🔄 QR Code PIX recuperado com sucesso')
-          }
-          // Delegar início do polling ao Efeito 2 (precisa de offerDetails para createInscriptionAfterPayment)
-          setPendingRecoveryData({ status: 'PENDING', formData, transactionId: pendingTxId })
-        } else {
-          // FAILED, CANCELLED, EXPIRED - limpar
-          localStorage.removeItem('pendingTransactionId')
-          localStorage.removeItem('pendingFormData')
-          localStorage.removeItem('pendingLocalTransactionId')
-          localStorage.removeItem('pendingCheckoutParams')
-        }
-      } catch (error) {
-        console.error('Erro ao recuperar transação pendente:', error)
-      }
-    }
-
-    recoverPendingTransaction()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // Efeito 2: Ações que dependem de offerDetails (polling, criar matrícula)
-  useEffect(() => {
-    if (!pendingRecoveryData || !offerDetails) return
-
-    const { status, formData, transactionId: pendingTxId } = pendingRecoveryData
-    setPendingRecoveryData(null) // Executar apenas uma vez
-
-    if (status === 'PAID') {
-      console.log('✅ Pagamento já confirmado! Criando matrícula...')
-
-      const pendingLocalTxId = localStorage.getItem('pendingLocalTransactionId')
-      if (pendingLocalTxId) {
-        fetch(`/api/transactions/${pendingLocalTxId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'PAID' }),
-        })
-          .then(() => {
-            console.log('✅ Transação local atualizada para PAID')
-            localStorage.removeItem('pendingLocalTransactionId')
-          })
-          .catch((err) => console.error('⚠️ Erro ao atualizar transação local:', err))
-      }
-
-      createInscriptionAfterPayment(formData).catch(console.error)
-
-      localStorage.removeItem('pendingTransactionId')
-      localStorage.removeItem('pendingFormData')
-      localStorage.removeItem('pendingCheckoutParams')
-    } else if (status === 'PENDING') {
-      console.log('🔄 Reiniciando verificação de pagamento pendente...')
-      startPaymentStatusCheck(pendingTxId, formData)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [offerDetails, pendingRecoveryData])
-
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }))
   }
@@ -646,66 +523,8 @@ const isFormValidForPayment =
 
   const monthlyFee = offerDetails?.montlyFeeTo || 0
 
-  // Verificar se a oferta é do source ATHENAS (único que cobra matrícula)
   const offerSource = offerDetails?.dmhSource?.source
   const isAthenasSource = offerSource === 'ATHENAS'
-
-  // Valor padrão da matrícula: R$ 449,00
-  const defaultEnrollmentFee = 449
-
-  // Pós-graduação: habilitar checkout independente do source
-  const isPosGraduacao = offerDetails?.academicLevel === 'POS_GRADUACAO'
-
-  // Lógica de cobrança:
-  // Cobra matrícula quando pix_enabled ATIVO (todos os sources)
-  // Mensalidade sempre é cobrada pela faculdade (não aparece no checkout)
-  // POS: valor da matrícula = minInstallmentValue (menor parcela dos paymentMethods)
-  const posMinInstallmentValue = isPosGraduacao
-    ? (offerDetails?.paymentMethods as PosPaymentMethod[] | undefined)
-        ?.flatMap(pm => pm.installments)
-        ?.reduce((min, inst) => inst.installmentValue < min ? inst.installmentValue : min, Infinity) ?? 0
-    : 0
-
-  let enrollmentFee: number
-  if (!pixEnabled) {
-    enrollmentFee = 0
-  } else if (isPosGraduacao) {
-    // POS: usar minInstallmentValue como valor da matrícula
-    enrollmentFee = posMinInstallmentValue > 0 && posMinInstallmentValue !== Infinity
-      ? posMinInstallmentValue
-      : (offerDetails?.subscriptionValue || 0)
-  } else {
-    // Graduação/outros: subscriptionValue da API ou fallback R$449
-    enrollmentFee = offerDetails?.subscriptionValue !== undefined && offerDetails?.subscriptionValue !== null && offerDetails.subscriptionValue > 0
-      ? offerDetails.subscriptionValue
-      : defaultEnrollmentFee
-  }
-
-  // Checkout habilitado para todas as ofertas com pix_enabled
-  const checkoutEnabled = pixEnabled
-
-  const baseMatricula = Math.round(enrollmentFee * 100) // em centavos
-
-  // Texto do label: sempre "matrícula"
-  const enrollmentLabel = 'matrícula'
-
-  // Debug: verificar valores
-  useEffect(() => {
-    if (offerDetails) {
-      console.log('🔍 Debug Checkout:', {
-        pixEnabled,
-        offerSource,
-        isAthenasSource,
-        isPosGraduacao,
-        checkoutEnabled,
-        subscriptionValue: offerDetails?.subscriptionValue,
-        defaultEnrollmentFee,
-        enrollmentFee,
-        monthlyFee,
-        baseMatricula,
-      })
-    }
-  }, [offerDetails, pixEnabled, offerSource, isAthenasSource, checkoutEnabled, enrollmentFee, baseMatricula, monthlyFee])
 
   // Auto-selecionar boleto 18x para pós-graduação
   useEffect(() => {
@@ -750,322 +569,37 @@ const isFormValidForPayment =
     autoValidateVoucher()
   }, [offerDetails, posInstallmentId, watchedCpf])
 
-  const applyCouponToMatricula = () => {
-    if (!coupon) return baseMatricula
-    // Usar o finalAmount pré-calculado pela API para garantir consistência
-    // entre o valor exibido na UI e o valor enviado para pagamento
-    if (coupon.finalAmount !== undefined && coupon.finalAmount > 0) {
-      return coupon.finalAmount
-    }
-    // Fallback: recalcular localmente se não tiver finalAmount
-    if (coupon.type === 'amount') {
-      return Math.max(0, baseMatricula - coupon.value)
-    }
-    if (coupon.type === 'percent') {
-      const factor = (100 - coupon.value) / 100
-      return Math.max(0, Math.round(baseMatricula * factor))
-    }
-    return baseMatricula
-  }
+  // [CUPOM] Funções de cupom comentadas para possível reativação futura
+  // const applyCouponToMatricula = () => {
+  //   if (!coupon) return baseMatricula
+  //   if (coupon.finalAmount !== undefined && coupon.finalAmount > 0) {
+  //     return coupon.finalAmount
+  //   }
+  //   if (coupon.type === 'amount') {
+  //     return Math.max(0, baseMatricula - coupon.value)
+  //   }
+  //   if (coupon.type === 'percent') {
+  //     const factor = (100 - coupon.value) / 100
+  //     return Math.max(0, Math.round(baseMatricula * factor))
+  //   }
+  //   return baseMatricula
+  // }
+  // const matriculaAfterCoupon = applyCouponToMatricula()
+  // const subtotal = coupon ? (coupon.originalAmount / 100) : enrollmentFee
+  // const total = matriculaAfterCoupon / 100
 
-  const matriculaAfterCoupon = applyCouponToMatricula()
-
-  // Calcular subtotal e total
-  // Cobrança apenas da matrícula (mensalidade é cobrada pela faculdade)
-  const subtotal = coupon ? (coupon.originalAmount / 100) : enrollmentFee
-  const total = matriculaAfterCoupon / 100
-
-  const handleApplyCoupon = async () => {
-    try {
-      setCouponError(null)
-      
-      if (!couponCode || !couponCode.trim()) {
-        setCouponError('Digite um código de cupom')
-        trackEvent('coupon_apply_attempted', {
-          coupon_code: couponCode.trim().toUpperCase(),
-          error: 'empty_code',
-          course_id: offerDetails?.courseId,
-          course_name: offerDetails?.course,
-        })
-        return
-      }
-
-      // Validar cupom usando o valor da matrícula em centavos
-      const result = await validateCoupon(couponCode.trim().toUpperCase(), baseMatricula)
-
-      if (!result.valid || !result.coupon) {
-        setCouponError(result.error || 'Cupom inválido')
-        toast.error(result.error || 'Cupom inválido')
-        trackEvent('coupon_apply_failed', {
-          coupon_code: couponCode.trim().toUpperCase(),
-          error: result.error || 'invalid_coupon',
-          course_id: offerDetails?.courseId,
-          course_name: offerDetails?.course,
-        })
-        return
-      }
-
-      // Aplicar cupom
-      const couponData: CouponData = {
-        type: result.coupon.type === 'PERCENT' ? 'percent' : 'amount',
-        value: result.coupon.type === 'PERCENT' 
-          ? result.coupon.discount 
-          : (result.discountAmount || 0) / 100, // converter centavos para reais se for amount
-        finalAmount: result.finalAmount || baseMatricula,
-        originalAmount: baseMatricula,
-        discountApplied: result.discountAmount || 0,
-        code: couponCode.trim().toUpperCase(),
-      }
-
-      setCoupon(couponData)
-      setCouponError(null)
-      
-      const discountValue = result.discountAmount 
-        ? formatCurrency(result.discountAmount / 100)
-        : `${result.coupon.discount}%`
-      
-      toast.success(`Cupom aplicado com sucesso! Você economizou ${discountValue}`)
-      
-      trackEvent('coupon_applied', {
-        coupon_code: couponCode.trim().toUpperCase(),
-        coupon_type: result.coupon.type,
-        discount_value: result.coupon.type === 'PERCENT' ? result.coupon.discount : (result.discountAmount || 0) / 100,
-        discount_amount: result.discountAmount || 0,
-        original_amount: baseMatricula,
-        final_amount: result.finalAmount || baseMatricula,
-        course_id: offerDetails?.courseId,
-        course_name: offerDetails?.course,
-      })
-    } catch (err: unknown) {
-      const axiosError = err as { response?: { data?: { error?: string } }; message?: string }
-      const message = axiosError.response?.data?.error || axiosError.message || 'Erro ao aplicar cupom'
-      setCouponError(message)
-      toast.error(message)
-      trackEvent('coupon_apply_error', {
-        coupon_code: couponCode.trim().toUpperCase(),
-        error: message,
-        course_id: offerDetails?.courseId,
-        course_name: offerDetails?.course,
-      })
-    }
-  }
-
-  // Função para verificar o status do pagamento com backoff progressivo
-  // - Espera 10s antes da primeira verificação
-  // - A cada 5s nas primeiras 12 tentativas (~1 min)
-  // - A cada 10s depois disso (até ~5 min total)
-  const startPaymentStatusCheck = async (transactionIdValue: string, formData: FormSchema) => {
-    const maxAttempts = 36
-    let attempts = 0
-    let timeoutId: NodeJS.Timeout | null = null
-    let stopped = false
-
-    const getNextDelay = () => (attempts <= 12 ? 5000 : 10000)
-
-    const scheduleNext = () => {
-      if (stopped || attempts >= maxAttempts) return
-      timeoutId = setTimeout(checkStatus, getNextDelay())
-    }
-
-    const stopPolling = () => {
-      stopped = true
-      if (timeoutId) {
-        clearTimeout(timeoutId)
-        timeoutId = null
-      }
-    }
-
-    const checkStatus = async () => {
-      if (stopped) return
-      try {
-        attempts++
-        console.log(`🔍 Verificando status do pagamento (tentativa ${attempts}/${maxAttempts})...`)
-
-        const statusResponse = await getCheckoutStatus(transactionIdValue)
-        console.log('📊 Status do pagamento:', statusResponse)
-
-        // Normalizar status para lowercase e verificar também o campo paid
-        const normalizedStatus = statusResponse.status?.toLowerCase()
-        const isPaid = normalizedStatus === 'paid' || (statusResponse as { paid?: boolean }).paid === true
-
-        if (isPaid) {
-          console.log('✅ Pagamento confirmado! Criando matrícula...')
-          stopPolling()
-          
-          toast.success('Pagamento confirmado! Finalizando matrícula...')
-          
-          trackEvent('payment_confirmed', {
-            transaction_id: transactionIdValue,
-            course_id: offerDetails?.courseId,
-            course_name: offerDetails?.course,
-            amount_in_cents: matriculaAfterCoupon,
-            amount_in_reais: matriculaAfterCoupon / 100,
-            payment_method: 'pix',
-            has_coupon: !!coupon,
-            coupon_code: coupon?.code,
-          })
-
-          // Facebook Pixel - Purchase (pagamento PIX confirmado)
-          const fbqPix = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
-          if (fbqPix) {
-            fbqPix('track', 'Purchase', {
-              content_name: offerDetails?.course,
-              value: matriculaAfterCoupon / 100,
-              currency: 'BRL',
-            })
-          }
-
-          // 4. Atualizar transação local para PAID
-          const storedLocalTransactionId = typeof window !== 'undefined'
-            ? localStorage.getItem('pendingLocalTransactionId')
-            : null
-
-          if (storedLocalTransactionId) {
-            try {
-              const updatePaidResponse = await fetch(`/api/transactions/${storedLocalTransactionId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: 'PAID' }),
-              })
-              if (updatePaidResponse.ok) {
-                console.log('✅ Transação local atualizada para PAID')
-                // Limpar localStorage após atualizar
-                localStorage.removeItem('pendingLocalTransactionId')
-              }
-            } catch (updatePaidError) {
-              console.error('⚠️ Erro ao atualizar transação local para PAID:', updatePaidError)
-            }
-          }
-
-          // Pagamento confirmado, criar matrícula (distribuidor primeiro)
-          await createInscriptionAfterPayment(formData)
-
-          // 5. Para ofertas ATHENAS, criar inscrição no marketplace (após distribuidor)
-          if (isAthenasSource && offerDetails?.idDmhElastic) {
-            console.log('📝 Criando inscrição no marketplace ATHENAS...')
-            try {
-              const marketplaceResult = await createMarketplaceInscription(
-                {
-                  name: formData.name,
-                  cpf: formData.cpf,
-                  email: formData.email,
-                  phone: formData.phone,
-                  rg: formData.rg,
-                  birthDate: formData.birthDate,
-                  gender: formData.gender || 'masculino',
-                  cep: formData.cep,
-                  address: formData.address,
-                  addressNumber: formData.addressNumber,
-                  neighborhood: formData.neighborhood || '',
-                  city: formData.city || '',
-                  state: formData.state || '',
-                  ingressType: selectedIngressType,
-                  schoolYear: formData.schoolYear || String(new Date().getFullYear()),
-                  acceptTerms: true,
-                  acceptEmail: true,
-                  acceptSms: true,
-                  acceptWhatsapp: true,
-                },
-                offerDetails
-              )
-
-              if (marketplaceResult.success) {
-                console.log('✅ Inscrição no marketplace ATHENAS criada com sucesso')
-                trackEvent('marketplace_inscription_created', {
-                  transaction_id: transactionIdValue,
-                  course_id: offerDetails.courseId,
-                  course_name: offerDetails.course,
-                  idDmhElastic: offerDetails.idDmhElastic,
-                })
-              } else {
-                console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceResult.error)
-              }
-            } catch (marketplaceError) {
-              console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceError)
-            }
-          }
-          
-          // Parar a verificação
-          return
-        } else if (normalizedStatus === 'failed' || normalizedStatus === 'cancelled') {
-          console.error('❌ Pagamento falhou ou foi cancelado')
-          stopPolling()
-
-          // Atualizar transação local para FAILED ou CANCELLED
-          const storedLocalTxId = typeof window !== 'undefined'
-            ? localStorage.getItem('pendingLocalTransactionId')
-            : null
-
-          if (storedLocalTxId) {
-            try {
-              const failedStatus = normalizedStatus === 'cancelled' ? 'CANCELLED' : 'FAILED'
-              await fetch(`/api/transactions/${storedLocalTxId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: failedStatus }),
-              })
-              console.log(`✅ Transação local atualizada para ${failedStatus}`)
-              localStorage.removeItem('pendingLocalTransactionId')
-            } catch (failedTxError) {
-              console.error('⚠️ Erro ao atualizar transação local:', failedTxError)
-            }
-          }
-
-          toast.error('Pagamento não foi confirmado. Tente novamente.')
-          setPixError('Pagamento não foi confirmado')
-          setPixLoading(false)
-          return
-        }
-
-        // Se ainda está pendente e não excedeu o limite, agendar próxima verificação
-        if (attempts >= maxAttempts) {
-          console.warn('⏱️ Timeout na verificação do pagamento')
-          stopPolling()
-
-          // Atualizar transação local para EXPIRED
-          const storedExpiredTxId = typeof window !== 'undefined'
-            ? localStorage.getItem('pendingLocalTransactionId')
-            : null
-
-          if (storedExpiredTxId) {
-            try {
-              await fetch(`/api/transactions/${storedExpiredTxId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: 'EXPIRED' }),
-              })
-              console.log('✅ Transação local atualizada para EXPIRED')
-              localStorage.removeItem('pendingLocalTransactionId')
-            } catch (expiredTxError) {
-              console.error('⚠️ Erro ao atualizar transação local:', expiredTxError)
-            }
-          }
-
-          toast.warning('Tempo limite excedido. Verifique o status do pagamento manualmente.')
-          setPixLoading(false)
-        }
-      } catch (error: unknown) {
-        console.error('Erro ao verificar status do pagamento:', error)
-
-        // Se excedeu o limite de tentativas, parar
-        if (attempts >= maxAttempts) {
-          stopPolling()
-          setPixLoading(false)
-        } else {
-          // Em caso de erro de rede, continuar tentando
-          scheduleNext()
-        }
-        return
-      }
-
-      // Se não retornou antes (status pendente), agendar próxima verificação
-      scheduleNext()
-    }
-
-    // Esperar 10s antes da primeira verificação (PIX leva tempo para escanear e confirmar)
-    timeoutId = setTimeout(checkStatus, 10000)
-  }
-
+  // [CUPOM] handleApplyCoupon comentado para possível reativação futura
+  // const handleApplyCoupon = async () => {
+  //   try {
+  //     setCouponError(null)
+  //     if (!couponCode || !couponCode.trim()) { ... }
+  //     const result = await validateCoupon(couponCode.trim().toUpperCase(), baseMatricula)
+  //     if (!result.valid || !result.coupon) { ... }
+  //     const couponData: CouponData = { ... }
+  //     setCoupon(couponData)
+  //     toast.success(...)
+  //   } catch (err) { ... }
+  // }
   // Função para validar voucher
   const handleValidateVoucher = async () => {
     if (!voucherCode.trim()) return
@@ -1111,12 +645,8 @@ const isFormValidForPayment =
     }
   }
 
-  // Função para criar a matrícula após o pagamento ser confirmado
+  // Função para criar a matrícula (inscrição direta, sem pagamento no checkout)
   const createInscriptionAfterPayment = async (data: FormSchema) => {
-    // Capturar tipo de pagamento do checkout antes do try block
-    // (variável local 'paymentMethod' dentro do try faz shadowing do state)
-    const checkoutPaymentType = paymentMethod // 'pix' | 'credit_card'
-
     try {
       if (!offerDetails) {
         throw new Error('Detalhes da oferta não encontrados')
@@ -1186,9 +716,7 @@ const isFormValidForPayment =
           shift: offerDetails.shift,
           student_email: data.email,
           student_cpf: data.cpf.replace(/\D/g, ''),
-          amount_paid: matriculaAfterCoupon / 100,
-          has_coupon: !!coupon,
-          coupon_code: coupon?.code,
+          amount_paid: 0,
           promoter_id: promoterId,
         })
         
@@ -1224,7 +752,7 @@ const isFormValidForPayment =
                   ? offerDetails.montlyFeeFrom - offerDetails.montlyFeeTo
                   : null,
                 externalId: response.id || null,
-                paymentId: transactionId || null,
+                paymentId: null,
                 unitId: offerDetails.unitId,
                 unitCity: offerDetails.unitCity,
                 unitState: offerDetails.unitState,
@@ -1234,6 +762,50 @@ const isFormValidForPayment =
           } catch (enrollError) {
             console.error('Erro ao salvar inscrição no banco:', enrollError)
             // Não bloquear o fluxo se falhar
+          }
+        }
+
+        // Para ofertas ATHENAS, criar inscrição no marketplace
+        if (isAthenasSource && offerDetails?.idDmhElastic) {
+          console.log('📝 Criando inscrição no marketplace ATHENAS...')
+          try {
+            const marketplaceResult = await createMarketplaceInscription(
+              {
+                name: data.name,
+                cpf: data.cpf,
+                email: data.email,
+                phone: data.phone,
+                rg: data.rg,
+                birthDate: data.birthDate,
+                gender: data.gender || 'masculino',
+                cep: data.cep,
+                address: data.address,
+                addressNumber: data.addressNumber,
+                neighborhood: data.neighborhood || '',
+                city: data.city || '',
+                state: data.state || '',
+                ingressType: selectedIngressType,
+                schoolYear: data.schoolYear || String(new Date().getFullYear()),
+                acceptTerms: true,
+                acceptEmail: true,
+                acceptSms: true,
+                acceptWhatsapp: true,
+              },
+              offerDetails
+            )
+
+            if (marketplaceResult.success) {
+              console.log('✅ Inscrição no marketplace ATHENAS criada com sucesso')
+              trackEvent('marketplace_inscription_created', {
+                course_id: offerDetails.courseId,
+                course_name: offerDetails.course,
+                idDmhElastic: offerDetails.idDmhElastic,
+              })
+            } else {
+              console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceResult.error)
+            }
+          } catch (marketplaceError) {
+            console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceError)
           }
         }
 
@@ -1250,10 +822,8 @@ const isFormValidForPayment =
         }
         const level = offerDetails.academicLevel
         if (level === 'GRADUACAO' || !level) {
-          // Graduação: mensalidade + método de pagamento do checkout
+          // Graduação: mensalidade (pagamento à instituição)
           params.set('monthlyFee', String(monthlyFee))
-          const gradPaymentLabel = checkoutPaymentType === 'pix' ? 'PIX' : 'Cartão de Crédito'
-          params.set('paymentMethod', gradPaymentLabel)
           params.set('installmentDescription', `Mensalidade ${formatCurrency(monthlyFee)}/mês`)
         } else if (level === 'POS_GRADUACAO' && offerDetails.paymentMethods?.length) {
           // Pós: opção de pagamento escolhida + valor da parcela como monthlyFee
@@ -1270,16 +840,6 @@ const isFormValidForPayment =
                 installmentValue = inst.installmentValue
                 break
               }
-            }
-          }
-          // Fluxo PIX: não tem pendingPosPaymentMethod; usar primeira parcela PIX
-          if (!paymentLabel && methods.length) {
-            const pixMethod = methods.find((pm) => pm.type === 'PIX')
-            const firstInst = pixMethod?.installments?.[0]
-            if (firstInst) {
-              paymentLabel = 'PIX'
-              installmentDescription = `${firstInst.number}x de ${formatCurrency(firstInst.installmentValue)}`
-              installmentValue = firstInst.installmentValue
             }
           }
           if (paymentLabel) params.set('paymentMethod', paymentLabel)
@@ -1303,380 +863,69 @@ const isFormValidForPayment =
     } catch (error: unknown) {
       console.error('Erro ao criar matrícula:', error)
       toast.error('Erro ao finalizar matrícula. Entre em contato com o suporte.')
-      setPixLoading(false)
     }
   }
 
   const onSubmit = async (data: FormSchema) => {
-    try {
-      // Validar CPF antes de prosseguir
-      if (cpfValidationError) {
-        toast.error('Por favor, corrija o CPF antes de continuar.')
+    // Validar CPF antes de prosseguir
+    if (cpfValidationError) {
+      toast.error('Por favor, corrija o CPF antes de continuar.')
+      return
+    }
+
+    if (!offerDetails) {
+      toast.error('Detalhes da oferta não encontrados.')
+      return
+    }
+
+    // Pós-graduação: validar parcela selecionada e salvar no localStorage
+    const isPosGrad = offerDetails.academicLevel === 'POS_GRADUACAO' && (offerDetails.paymentMethods?.length ?? 0) > 0
+    if (isPosGrad) {
+      if (!posInstallmentId) {
+        toast.error('Selecione a quantidade de parcelas.')
         return
       }
-
-      if (!offerDetails) {
-        throw new Error('Detalhes da oferta não encontrados')
+      let selectedInstallment: PosInstallment | null = null
+      for (const pm of (offerDetails.paymentMethods ?? []) as PosPaymentMethod[]) {
+        const found = pm.installments.find((i) => i.id === posInstallmentId)
+        if (found) {
+          selectedInstallment = found
+          break
+        }
       }
-
-      // Checkout DESABILITADO (source !== ATHENAS ou pix_enabled false): não chama checkout; apenas create-inscription
-      // Graduação: vai direto para create-inscription
-      // Pós: exige seleção de parcelas (enviamos para create-inscription), depois create-inscription
-      if (!checkoutEnabled) {
-        const isPosNoCheckout = offerDetails.academicLevel === 'POS_GRADUACAO' && (offerDetails.paymentMethods?.length ?? 0) > 0
-        if (isPosNoCheckout) {
-          if (!posInstallmentId) {
-            toast.error('Selecione a quantidade de parcelas.')
-            return
-          }
-          let selectedInstallment: PosInstallment | null = null
-          for (const pm of (offerDetails.paymentMethods ?? []) as PosPaymentMethod[]) {
-            const found = pm.installments.find((i) => i.id === posInstallmentId)
-            if (found) {
-              selectedInstallment = found
-              break
-            }
-          }
-          if (!selectedInstallment) {
-            toast.error('Plano de pagamento inválido.')
-            return
-          }
-          if (typeof window !== 'undefined') {
-            const pmData: { id: string; dueDay: string; voucher?: string; voucherId?: number } = { id: posInstallmentId, dueDay: '10' }
-            if (voucherCode.trim() && voucherValid && voucherData) {
-              pmData.voucher = voucherData.code || voucherCode.trim()
-              pmData.voucherId = voucherData.id
-            }
-            localStorage.setItem(
-              'pendingPosPaymentMethod',
-              JSON.stringify(pmData)
-            )
-          }
-        }
-        setPixLoading(true)
-        trackEvent('checkout_pix_disabled_inscription_only', {
-          course_id: offerDetails.courseId,
-          course_name: offerDetails.course,
-        })
-
-        // Facebook Pixel - CompleteRegistration (inscrição sem pagamento)
-        const fbqReg = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
-        if (fbqReg) {
-          fbqReg('track', 'CompleteRegistration', {
-            content_name: offerDetails.course,
-            value: offerDetails.montlyFeeTo || 0,
-            currency: 'BRL',
-          })
-        }
-
-        await createInscriptionAfterPayment(data)
-        setPixLoading(false)
+      if (!selectedInstallment) {
+        toast.error('Plano de pagamento inválido.')
         return
       }
-
-      // Pós-graduação com PIX: usar primeira parcela do método PIX para a inscrição (fluxo único PIX para graduação e pós)
-      const isPos = offerDetails.academicLevel === 'POS_GRADUACAO' && (offerDetails.paymentMethods?.length ?? 0) > 0
-      const POS_DUE_DAY = '10'
-      let posInstallmentIdForCheckout: string | undefined
-      if (isPos && typeof window !== 'undefined') {
-        const pixMethod = (offerDetails.paymentMethods as PosPaymentMethod[]).find((pm) => pm.type === 'PIX')
-        const firstInstallment = pixMethod?.installments?.[0]
-        if (firstInstallment) {
-          posInstallmentIdForCheckout = firstInstallment.id
-          const pmData: { id: string; dueDay: string; voucher?: string; voucherId?: number } = { id: firstInstallment.id, dueDay: POS_DUE_DAY }
-          if (voucherValid && voucherData) {
-            pmData.voucher = voucherData.code || 'GALENA+15'
-            pmData.voucherId = voucherData.id
-          }
-          localStorage.setItem(
-            'pendingPosPaymentMethod',
-            JSON.stringify(pmData)
-          )
-        }
-      }
-
-      // Se a flag requirePixBeforeEnrollment estiver ativa, 
-      // criar matrícula diretamente sem checkout
-      if (requirePixBeforeEnrollment) {
-        console.log('📝 Modo: PIX antes da matrícula está ativo - Criando matrícula diretamente')
-        
-        setPixLoading(true)
-        
-        trackEvent('pix_before_enrollment_mode_activated', {
-          course_id: offerDetails.courseId,
-          course_name: offerDetails.course,
-        })
-        
-        // Criar matrícula diretamente sem checkout
-        await createInscriptionAfterPayment(data)
-        
-        setPixLoading(false)
-        return
-      }
-
-      // Fluxo normal: criar checkout primeiro
-      setPixError(null)
-      setPixLoading(true)
-
-      // Valor a pagar em centavos (com desconto do cupom se houver)
-      const amountInCents = matriculaAfterCoupon
-
-      // 1. Criar transação local no nosso banco de dados
-      console.log('📝 Criando transação local...')
-      let createdLocalTransactionId: string | null = null
-      try {
-        const localTransactionResponse = await fetch('/api/transactions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: data.name,
-            cpf: data.cpf.replace(/\D/g, ''),
-            email: data.email,
-            phone: data.phone.replace(/\D/g, ''),
-            amountInCents,
-            courseId: offerDetails.courseId,
-            courseName: offerDetails.course,
-            institutionName: offerDetails.brand,
-            metadata: {
-              unitId: offerDetails.unitId,
-              modality: offerDetails.modality,
-              shift: offerDetails.shift,
-              ...(coupon ? { couponCode: coupon.code, couponDiscount: coupon.discountApplied } : {}),
-            },
-          }),
-        })
-
-        if (localTransactionResponse.ok) {
-          const localTransactionData = await localTransactionResponse.json()
-          createdLocalTransactionId = localTransactionData.transaction?.id
-          setLocalTransactionId(createdLocalTransactionId)
-          console.log('✅ Transação local criada:', createdLocalTransactionId)
-        } else {
-          console.error('⚠️ Erro ao criar transação local, continuando sem ela')
-        }
-      } catch (localTxError) {
-        console.error('⚠️ Erro ao criar transação local:', localTxError)
-        // Não bloquear o fluxo se falhar
-      }
-
-      // 2. Criar checkout na API Elysium
-      // O cupom é aplicado apenas no cálculo do valor total (matriculaAfterCoupon)
-      // e não é enviado no checkout
-      const checkoutData = {
-        name: data.name,
-        cpf: data.cpf.replace(/\D/g, ''),
-        email: data.email,
-        phone: data.phone.replace(/\D/g, ''),
-        amountInCents,
-        description: `Matrícula - ${offerDetails.course}`,
-        paymentMethod: 'pix' as const,
-        brand: offerDetails.brand?.toLowerCase() || 'anhanguera',
-        channel: process.env.NEXT_PUBLIC_THEME || 'bolsaclick',
-        city: offerDetails.unitCity || '',
-        metadata: {
-          courseId: offerDetails.courseId,
-          courseName: offerDetails.course,
-          unitId: offerDetails.unitId,
-          localTransactionId: createdLocalTransactionId, // Incluir ID da transação local
-          ...(isPos && posInstallmentIdForCheckout
-            ? { posInstallmentId: posInstallmentIdForCheckout, posDueDay: '10' }
-            : {}),
-        },
-      }
-
-      console.log('💳 Criando checkout na API Elysium...', checkoutData)
-      
-      trackEvent('checkout_initiated', {
-        course_id: offerDetails.courseId,
-        course_name: offerDetails.course,
-        brand: offerDetails.brand,
-        amount_in_cents: amountInCents,
-        amount_in_reais: amountInCents / 100,
-        has_coupon: !!coupon,
-        coupon_code: coupon?.code,
-        payment_method: paymentMethod,
-        student_email: data.email,
-        student_cpf: data.cpf.replace(/\D/g, ''),
-      })
-      
-      const checkoutResponse = await createCheckout(checkoutData)
-      console.log('✅ Checkout criado:', checkoutResponse)
-
-      // Salvar transactionId
-      const transactionIdValue = checkoutResponse.transactionId
-      if (!transactionIdValue) {
-        throw new Error('TransactionId não encontrado na resposta do checkout')
-      }
-
-      setTransactionId(transactionIdValue)
-
-      // 3. Atualizar transação local com o ID externo do Elysium e QR Code PIX
-      if (createdLocalTransactionId) {
-        try {
-          const updateLocalTxResponse = await fetch(`/api/transactions/${createdLocalTransactionId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              externalTransactionId: transactionIdValue,
-              status: 'PROCESSING',
-              pixBrCode: checkoutResponse.pixQrCode?.brCode,
-              pixQrCodeBase64: checkoutResponse.pixQrCode?.brCodeBase64,
-            }),
-          })
-          if (updateLocalTxResponse.ok) {
-            console.log('✅ Transação local atualizada com ID externo:', transactionIdValue)
-          }
-        } catch (updateTxError) {
-          console.error('⚠️ Erro ao atualizar transação local:', updateTxError)
-        }
-      }
-
-      // Salvar transactionId e dados do formulário no localStorage para verificação posterior
       if (typeof window !== 'undefined') {
-        localStorage.setItem('pendingTransactionId', transactionIdValue)
-        localStorage.setItem('pendingFormData', JSON.stringify(data))
-        if (createdLocalTransactionId) {
-          localStorage.setItem('pendingLocalTransactionId', createdLocalTransactionId)
+        const pmData: { id: string; dueDay: string; voucher?: string; voucherId?: number } = { id: posInstallmentId, dueDay: '10' }
+        if (voucherCode.trim() && voucherValid && voucherData) {
+          pmData.voucher = voucherData.code || voucherCode.trim()
+          pmData.voucherId = voucherData.id
         }
-        localStorage.setItem('pendingCheckoutParams', JSON.stringify({
-          groupId, unitId, modality, shift,
-        }))
+        localStorage.setItem(
+          'pendingPosPaymentMethod',
+          JSON.stringify(pmData)
+        )
       }
+    }
 
-      // Verificar se tem QR Code na resposta
-      if (checkoutResponse.pixQrCode?.brCode && checkoutResponse.pixQrCode?.brCodeBase64) {
-        setPixQrCode({
-          brCode: checkoutResponse.pixQrCode.brCode,
-          brCodeBase64: checkoutResponse.pixQrCode.brCodeBase64,
-        })
-        setPixLoading(false)
-        setShowModal(true)
-        toast.success('QR Code Pix gerado com sucesso!')
-        
-        trackEvent('pix_qr_code_generated', {
-          transaction_id: transactionIdValue,
-          course_id: offerDetails.courseId,
-          course_name: offerDetails.course,
-          amount_in_cents: amountInCents,
-          amount_in_reais: amountInCents / 100,
-          has_coupon: !!coupon,
-          coupon_code: coupon?.code,
-        })
-        
-        // Iniciar verificação do status do pagamento imediatamente
-        startPaymentStatusCheck(transactionIdValue, data)
-      } else {
-        throw new Error('QR Code Pix não encontrado na resposta do checkout')
-      }
-    } catch (err: unknown) {
-      console.error('Erro no fluxo de checkout:', err)
-      const axiosError = err as { response?: { data?: { message?: string } }; message?: string }
-      const errorMessage = axiosError.response?.data?.message || axiosError.message || 'Erro ao processar checkout.'
-      setPixError(errorMessage)
-      setPixLoading(false)
-      toast.error(errorMessage)
-      
-      trackEvent('checkout_error', {
-        error: errorMessage,
-        course_id: offerDetails?.courseId,
-        course_name: offerDetails?.course,
-        amount_in_cents: matriculaAfterCoupon,
-        payment_method: paymentMethod,
-        has_coupon: !!coupon,
-        coupon_code: coupon?.code,
-        pix_before_enrollment: requirePixBeforeEnrollment,
+    trackEvent('checkout_inscription_submitted', {
+      course_id: offerDetails.courseId,
+      course_name: offerDetails.course,
+    })
+
+    // Facebook Pixel - CompleteRegistration
+    const fbqReg = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
+    if (fbqReg) {
+      fbqReg('track', 'CompleteRegistration', {
+        content_name: offerDetails.course,
+        value: offerDetails.montlyFeeTo || 0,
+        currency: 'BRL',
       })
     }
-  }
 
-  /** Chamado quando o pagamento com cartão (Stripe) é confirmado: cria matrícula e redireciona para sucesso */
-  const handleStripeSuccess = async (paymentIntentId: string, transactionIdElysium: string) => {
-    if (!offerDetails) return
-    setTransactionId(transactionIdElysium)
-    setPixLoading(true)
-    try {
-      trackEvent('payment_confirmed', {
-        transaction_id: transactionIdElysium,
-        course_id: offerDetails.courseId,
-        course_name: offerDetails.course,
-        amount_in_cents: Math.round(applyCouponToMatricula()),
-        amount_in_reais: applyCouponToMatricula() / 100,
-        payment_method: 'card',
-        has_coupon: !!coupon,
-        coupon_code: coupon?.code,
-      })
-
-      // Facebook Pixel - Purchase (pagamento cartão confirmado)
-      const fbqCard = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
-      if (fbqCard) {
-        fbqCard('track', 'Purchase', {
-          content_name: offerDetails.course,
-          value: applyCouponToMatricula() / 100,
-          currency: 'BRL',
-        })
-      }
-
-      // Pós-graduação: persistir método de pagamento selecionado para createInscriptionAfterPayment
-      if (offerDetails.academicLevel === 'POS_GRADUACAO' && posInstallmentId && posPaymentMethodType) {
-        const methods = (offerDetails.paymentMethods ?? []) as PosPaymentMethod[]
-        const method = methods.find((pm) => pm.type === posPaymentMethodType)
-        const inst = method?.installments?.find((i) => i.id === posInstallmentId)
-        if (inst && typeof window !== 'undefined') {
-          const pmData: { id: string; dueDay: string; voucher?: string; voucherId?: number } = { id: inst.id, dueDay: '10' }
-          if (voucherCode.trim() && voucherValid && voucherData) {
-            pmData.voucher = voucherData.code || voucherCode.trim()
-            pmData.voucherId = voucherData.id
-          }
-          localStorage.setItem('pendingPosPaymentMethod', JSON.stringify(pmData))
-        }
-      }
-
-      // Criar matrícula no distribuidor primeiro
-      const formData = getValues() as FormSchema
-      await createInscriptionAfterPayment(formData)
-
-      // Inscrição marketplace ATHENAS (após distribuidor)
-      if (isAthenasSource && offerDetails.idDmhElastic) {
-        try {
-          const marketplaceResult = await createMarketplaceInscription(
-            {
-              name: formData.name,
-              cpf: formData.cpf,
-              email: formData.email,
-              phone: formData.phone,
-              rg: formData.rg,
-              birthDate: formData.birthDate,
-              gender: formData.gender || 'masculino',
-              cep: formData.cep,
-              address: formData.address,
-              addressNumber: formData.addressNumber,
-              neighborhood: formData.neighborhood || '',
-              city: formData.city || '',
-              state: formData.state || '',
-              ingressType: selectedIngressType,
-              schoolYear: formData.schoolYear || String(new Date().getFullYear()),
-              acceptTerms: true,
-              acceptEmail: true,
-              acceptSms: true,
-              acceptWhatsapp: true,
-            },
-            offerDetails
-          )
-          if (marketplaceResult.success) {
-            trackEvent('marketplace_inscription_created', {
-              transaction_id: transactionIdElysium,
-              course_id: offerDetails.courseId,
-              course_name: offerDetails.course,
-              idDmhElastic: offerDetails.idDmhElastic,
-            })
-          }
-        } catch (marketplaceError) {
-          console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceError)
-        }
-      }
-    } finally {
-      setPixLoading(false)
-    }
+    await createInscriptionAfterPayment(data)
   }
 
   const getModalityLabel = (mod: string) => {
@@ -1756,9 +1005,7 @@ const isFormValidForPayment =
         <div className="pt-10 mb-6 md:mb-8">
           <h1 className="text-xl md:text-2xl font-bold text-gray-900">Checkout {offerDetails.brand}</h1>
           <p className="text-gray-600 mt-1 text-sm">
-            {checkoutEnabled
-              ? `Complete seus dados para finalizar a ${enrollmentLabel}`
-              : 'Complete seus dados para finalizar a matrícula. O valor da matrícula e das mensalidades será pago diretamente à instituição.'}
+            Complete seus dados para finalizar a matrícula. O valor da matrícula e das mensalidades será pago diretamente à instituição.
           </p>
         </div>
 
@@ -2334,9 +1581,7 @@ const isFormValidForPayment =
                     <CreditCard size={18} className="text-orange-600" />
                     <div>
                       <h2 className="text-base font-semibold text-gray-900">Forma de Pagamento</h2>
-                      <p className="text-xs text-gray-500">
-                        {checkoutEnabled ? 'Selecione a melhor forma de pagar' : 'Valor da matrícula pago diretamente à instituição'}
-                      </p>
+                      <p className="text-xs text-gray-500">Valor da matrícula pago diretamente à instituição</p>
                     </div>
                   </div>
                   {expandedSections.pagamento ? (
@@ -2348,9 +1593,8 @@ const isFormValidForPayment =
                 
                 {expandedSections.pagamento && (
                   <div className="px-4 pb-4 space-y-3">
-                    {!checkoutEnabled ? (
-                      // Sem checkout: pós mostra parcelas (para create-inscription); graduação só botão
-                      offerDetails.academicLevel === 'POS_GRADUACAO' && (offerDetails.paymentMethods?.length ?? 0) > 0 ? (
+                    {/* Sem checkout: pós mostra parcelas; graduação só botão */}
+                    {offerDetails.academicLevel === 'POS_GRADUACAO' && (offerDetails.paymentMethods?.length ?? 0) > 0 ? (
                         <>
                           <label className="block text-xs font-medium text-gray-700">Método de pagamento</label>
                           <div className="flex flex-wrap gap-2">
@@ -2461,10 +1705,10 @@ const isFormValidForPayment =
 
                           <button
                             type="submit"
-                            disabled={isSubmitting || pixLoading || !posInstallmentId}
+                            disabled={isSubmitting || !posInstallmentId}
                             className="w-full mt-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-lg font-semibold text-base hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            {isSubmitting || pixLoading ? (
+                            {isSubmitting ? (
                               <div className="flex items-center justify-center space-x-2">
                                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                                 <span>Processando...</span>
@@ -2481,11 +1725,10 @@ const isFormValidForPayment =
                           </p>
                           <button
                             type="submit"
-                            disabled={isSubmitting || pixLoading || !isFormValidForPayment}
-
+                            disabled={isSubmitting || !isFormValidForPayment}
                             className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-lg font-semibold text-base hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            {isSubmitting || pixLoading ? (
+                            {isSubmitting ? (
                               <div className="flex items-center justify-center space-x-2">
                                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                                 <span>Processando...</span>
@@ -2495,110 +1738,7 @@ const isFormValidForPayment =
                             )}
                           </button>
                         </>
-                      )
-                    ) : (
-                      <>
-                        {/* Opções de pagamento */}
-                        <div className="space-y-2">
-                          {/* PIX */}
-                          <div
-                            onClick={() => setPaymentMethod('pix')}
-                            className={`p-3 border-2 rounded-lg cursor-pointer transition-all hover:border-green-300 ${
-                              paymentMethod === 'pix'
-                                ? 'border-green-500 bg-green-50'
-                                : 'border-gray-200'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-2">
-                                <div className="w-5 h-5 rounded flex items-center justify-center">
-                                  <FaPix className="w-6 h-6 text-green-600" />
-                                </div>
-                                <div>
-                                  <span className="font-medium text-sm text-gray-900">Pix</span>
-                                  <p className="text-xs text-gray-500">O pagamento será aprovado em instantes.</p>
-                                </div>
-                              </div>
-                              {paymentMethod === 'pix' && <Check size={18} className="text-green-600" />}
-                            </div>
-                          </div>
-
-                          {/* Cartão de Crédito */}
-                          <div
-                            onClick={() => setPaymentMethod('credit_card')}
-                            className={`p-3 border-2 rounded-lg cursor-pointer transition-all hover:border-blue-300 ${
-                              paymentMethod === 'credit_card'
-                                ? 'border-blue-500 bg-blue-50'
-                                : 'border-gray-200'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-2">
-                                <div className="w-5 h-5 rounded flex items-center justify-center">
-                                  <CreditCard className="w-5 h-5 text-blue-600" />
-                                </div>
-                                <div>
-                                  <span className="font-medium text-sm text-gray-900">Cartão de Crédito</span>
-                                  <p className="text-xs text-gray-500">Pagamento seguro.</p>
-                                </div>
-                              </div>
-                              {paymentMethod === 'credit_card' && <Check size={18} className="text-blue-600" />}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Formulário de cartão (Stripe) */}
-                        {paymentMethod === 'credit_card' && (
-                          <div className="mt-4">
-                            <StripeCheckout
-                              customerData={{
-                                name: getValues('name') || '',
-                                cpf: getValues('cpf') || '',
-                                email: getValues('email') || '',
-                                phone: getValues('phone') || '',
-                              }}
-                              amountInCents={Math.round(applyCouponToMatricula())}
-
-                              description={`Matrícula - ${offerDetails.course}`}
-                              brand={offerDetails.brand?.toLowerCase() || 'anhanguera'}
-                              channel={process.env.NEXT_PUBLIC_THEME || 'bolsaclick'}
-                              city={offerDetails.unitCity || ''}
-                              metadata={{
-                                courseId: offerDetails.courseId,
-                                courseName: offerDetails.course,
-                                unitId: offerDetails.unitId,
-                                institutionName: offerDetails.brand,
-                              }}
-                              returnUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/checkout/matricula/sucesso`}
-                              onSuccess={handleStripeSuccess}
-                              onError={(msg) => {
-                                toast.error(msg)
-                                setPixError(msg)
-                              }}
-                            />
-                          </div>
-                        )}
-
-                        {/* Botão para PIX */}
-                        {paymentMethod === 'pix' && (
-                          <button
-                            type="submit"
-                            disabled={isSubmitting || pixLoading}
-                            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-lg font-semibold text-base hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {isSubmitting || pixLoading ? (
-                              <div className="flex items-center justify-center space-x-2">
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                <span>Processando...</span>
-                              </div>
-                            ) : (
-                              'Finalizar Matrícula'
-                            )}
-                          </button>
-                        )}
-                        <p className="text-center text-xs text-gray-500">Escolha o método de pagamento *</p>
-                      </>
-                    )}
+                      )}
                   </div>
                 )}
               </div>
@@ -2655,60 +1795,19 @@ const isFormValidForPayment =
                 <p className="text-xs text-gray-500 mt-1 italic">Paga diretamente à instituição</p>
               </div>
 
-              {!checkoutEnabled ? (
-                <>
-                  {/* Sem checkout: não exibir valores de taxas/matrícula — só aviso de pagamento à instituição */}
-                  <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-3">
-                    <div className="flex items-start gap-2 mb-2">
-                      <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-white text-xs font-bold">!</span>
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-xs font-semibold text-blue-900 mb-1">Matrícula e mensalidade na instituição</p>
-                        <p className="text-xs text-blue-700">
-                          O valor da matrícula e das mensalidades será pago diretamente à instituição de ensino. Nenhuma taxa é cobrada neste checkout.
-                        </p>
-                      </div>
-                    </div>
+              <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-3">
+                <div className="flex items-start gap-2 mb-2">
+                  <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-white text-xs font-bold">!</span>
                   </div>
-                </>
-              ) : (
-                <>
-                  {/* Checkout habilitado: mostrar matrícula */}
-                  <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-3">
-                    <div className="flex items-start gap-2 mb-2">
-                      <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-white text-xs font-bold">!</span>
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-xs font-semibold text-blue-900 mb-1">Você paga apenas a matrícula</p>
-                        <p className="text-xs text-blue-700">
-                          A mensalidade será paga diretamente à instituição.
-                        </p>
-                      </div>
-                    </div>
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold text-blue-900 mb-1">Matrícula e mensalidade na instituição</p>
+                    <p className="text-xs text-blue-700">
+                      O valor da matrícula e das mensalidades será pago diretamente à instituição de ensino. Nenhuma taxa é cobrada neste checkout.
+                    </p>
                   </div>
-
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Valor da {enrollmentLabel}</p>
-                    <div className="flex items-center gap-2">
-                      <p className="text-base font-semibold text-gray-900">{formatCurrency(matriculaAfterCoupon / 100)}</p>
-                      {coupon && (
-                        <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
-                          {coupon.type === 'percent'
-                            ? `-${coupon.value}%`
-                            : `-${formatCurrency(coupon.value)}`}
-                        </span>
-                      )}
-                    </div>
-                    {coupon && (
-                      <p className="text-xs text-gray-400 line-through mt-1">
-                        {formatCurrency(enrollmentFee)}
-                      </p>
-                    )}
-                  </div>
-                </>
-              )}
+                </div>
+              </div>
 
               <div className="space-y-2 pt-3 border-t border-gray-200">
                 <div className="flex items-center gap-2 text-xs text-gray-600">
@@ -2735,163 +1834,17 @@ const isFormValidForPayment =
                 </p>
               </div>
 
-              {checkoutEnabled && (
-                <div className="pt-3 border-t border-gray-200">
-                  <label className="block text-xs font-medium text-gray-700 mb-2">Digite seu cupom</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value)}
-                      placeholder="Código do cupom"
-                      disabled={!!coupon}
-                      className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-                    />
-                    {coupon ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCoupon(null)
-                          setCouponCode('')
-                          toast.info('Cupom removido')
-                        }}
-                        className="p-2 bg-red-100 text-red-600 rounded-md hover:bg-red-200"
-                      >
-                        <X size={16} />
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={handleApplyCoupon}
-                        className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                      >
-                        Aplicar
-                      </button>
-                    )}
-                  </div>
-                  {couponError && <p className="text-xs text-red-600 mt-1">{couponError}</p>}
-                </div>
-              )}
+              {/* [CUPOM] Seção de cupom comentada para possível reativação futura */}
 
               <div className="pt-3 border-t border-gray-200 space-y-2">
-                {/* Mensalidade - exibida como informação (não somada); quando !checkoutEnabled não exibir taxas/total */}
-                {checkoutEnabled && (
-                  <div className="flex justify-between text-xs">
-                    <span className="text-gray-600">Mensalidade</span>
-                    <span className="text-gray-500 italic">{formatCurrency(monthlyFee)}</span>
-                  </div>
-                )}
-                
-                {!checkoutEnabled ? (
-                  <div className="text-xs text-gray-600 italic">
-                    Matrícula e mensalidades: pago diretamente à instituição. Nenhuma taxa neste checkout.
-                  </div>
-                ) : (
-                  <>
-                    {/* Checkout habilitado: mostrar matrícula */}
-                    <div className="flex justify-between text-xs">
-                      <span className="text-gray-600">Valor da matrícula</span>
-                      <span className="text-gray-900">
-                        {coupon
-                          ? formatCurrency((coupon.originalAmount / 100))
-                          : formatCurrency(enrollmentFee)}
-                      </span>
-                    </div>
-                  </>
-                )}
-                {checkoutEnabled && coupon && (
-                  <div className="flex justify-between text-xs">
-                    <span className="text-gray-600">Cupom</span>
-                    <span className="text-green-600 font-medium">
-                      {coupon.type === 'percent'
-                        ? `-${coupon.value}%`
-                        : `-${formatCurrency(coupon.value)}`}
-                    </span>
-                  </div>
-                )}
-                {checkoutEnabled && (
-                  <div className="flex justify-between text-base font-semibold pt-2 border-t border-gray-200">
-                    <span className="text-gray-900">Total</span>
-                    <div className="flex flex-col items-end gap-0.5">
-                      {coupon && (
-                        <span className="text-xs text-gray-400 line-through">
-                          {formatCurrency(subtotal)}
-                        </span>
-                      )}
-                      <span className="text-green-600">{formatCurrency(total)}</span>
-                    </div>
-                  </div>
-                )}
+                <div className="text-xs text-gray-600 italic">
+                  Matrícula e mensalidades: pago diretamente à instituição. Nenhuma taxa neste checkout.
+                </div>
               </div>
             </div>
-
-            <p className="text-xs text-gray-400 text-center mt-4">Powered by Inovit Pay</p>
           </div>
         </div>
       </div>
-
-      {/* Modal de Pagamento Pix */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="text-lg font-bold text-gray-900">Pagamento via Pix</h3>
-              <button
-                onClick={() => setShowModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X size={18} className="text-gray-500" />
-              </button>
-            </div>
-            <div className="p-4">
-              {pixLoading ? (
-                <div className="text-center py-8">
-                  <div className="w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                  <p className="text-gray-600">Gerando QR Code Pix...</p>
-                </div>
-              ) : pixError ? (
-                <div className="text-center py-8">
-                  <p className="text-red-600">{pixError}</p>
-                </div>
-              ) : pixQrCode ? (
-                <div className="space-y-4 text-center">
-                  {pixQrCode.brCodeBase64 ? (
-                    <Image
-                      src={pixQrCode.brCodeBase64}
-                      alt="QR Code Pix"
-                      width={192}
-                      height={192}
-                      className="mx-auto"
-                      unoptimized
-                    />
-                  ) : (
-                    <div className="mx-auto w-48 h-48 bg-gray-200 rounded-lg flex items-center justify-center">
-                      <p className="text-gray-500 text-sm">QR Code não disponível</p>
-                    </div>
-                  )}
-                  <div className="bg-gray-100 border border-gray-300 p-3 rounded-md font-mono break-all text-xs">
-                    {pixQrCode.brCode || 'Código Pix não disponível'}
-                  </div>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(pixQrCode.brCode || '')
-                      toast.success('Código Pix copiado!')
-                    }}
-                    className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    Copiar código Pix
-                  </button>
-                  {transactionId && (
-                    <p className="text-xs text-gray-500 mt-2">
-                      ID da transação: {transactionId}
-                    </p>
-                  )}
-                </div>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Modal de Login/Registro */}
       {showAuthModal && (

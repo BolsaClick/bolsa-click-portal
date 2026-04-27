@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { CheckCircle2, ExternalLink } from 'lucide-react'
 import { formatCurrency } from '@/utils/fomartCurrency'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
+import { trackFbq } from '@/app/lib/analytics/fbq'
 
 export default function MatriculaSuccessClient() {
   const searchParams = useSearchParams()
@@ -44,14 +45,11 @@ export default function MatriculaSuccessClient() {
       w.dataLayer.push({ event: eventName });
 
       // Facebook Pixel - Lead (inscrição realizada, pagamento será na universidade)
-      const fbq = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
-      if (fbq) {
-        fbq('track', 'Lead', {
-          content_name: course || undefined,
-          value: monthlyFee ?? 0,
-          currency: 'BRL',
-        })
-      }
+      trackFbq('Lead', {
+        content_name: course || undefined,
+        value: monthlyFee ?? 0,
+        currency: 'BRL',
+      })
     }
   }, [])
 

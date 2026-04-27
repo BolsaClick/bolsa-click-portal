@@ -11,6 +11,8 @@ import FaqSection from '../components/organisms/FaqSection'
 import LatestBlogPosts from '../components/organisms/LatestBlogPosts'
 import { prisma } from '../lib/prisma'
 
+export const revalidate = 3600
+
 const theme = getCurrentTheme()
 
 export const metadata: Metadata = {

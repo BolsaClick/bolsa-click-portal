@@ -153,9 +153,9 @@ const AboutSection: React.FC = () => {
                     <Image
                       src={testimonial.image}
                       alt={testimonial.author}
-                      className="author-image"
-                      width={70}
-                      height={40}
+                      className="rounded-full object-cover w-12 h-12"
+                      width={48}
+                      height={48}
                     />
                     <div className="author-info">
                       <h4>{testimonial.author}</h4>

@@ -99,6 +99,7 @@ const HeaderNew: React.FC = () => {
             {/* User Icon + Dropdown */}
             <div className="relative" ref={userMenuRef}>
               <button
+                aria-label="Menu do usuário"
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 className={`flex items-center gap-2 px-3 py-2 rounded-full transition-colors ${scrolled
                   ? 'text-gray-700 hover:bg-gray-100'
@@ -189,7 +190,7 @@ const HeaderNew: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={toggleMenu}
-            className="flex-shrink-0 p-1 text-gray-800 focus:outline-none"
+            className="flex-shrink-0 p-2 text-gray-800 focus:outline-2 focus:outline-bolsa-primary"
             aria-label="Abrir menu"
           >
             {menuOpen ? <X size={24} /> : (
@@ -231,7 +232,7 @@ const HeaderNew: React.FC = () => {
         <div className="relative z-10 bg-white h-full w-[80%] p-6 shadow-xl rounded-r-xl transition-all duration-300 ease-in-out">
           <div className="flex justify-between items-center mb-6  w-full">
             <Image src={logoColor} alt="Logo" width={80} height={30} />
-            <button onClick={toggleMenu}>
+            <button onClick={toggleMenu} aria-label="Fechar menu">
               <X size={28} />
             </button>
           </div>

@@ -1,5 +1,6 @@
 'use client'
 
+import { useCallback } from 'react'
 import { usePostHog } from 'posthog-js/react'
 
 type PostHogProperties = Record<string, string | number | boolean | null | undefined>
@@ -7,26 +8,37 @@ type PostHogProperties = Record<string, string | number | boolean | null | undef
 export function usePostHogTracking() {
   const posthog = usePostHog()
 
-  const trackEvent = (eventName: string, properties?: PostHogProperties) => {
-    if (posthog) {
-      posthog.capture(eventName, {
-        ...properties,
-        timestamp: new Date().toISOString(),
-      })
-    }
-  }
+  // Memoized so consumers can safely use these in useEffect deps
+  // without re-firing the effect on every render.
+  const trackEvent = useCallback(
+    (eventName: string, properties?: PostHogProperties) => {
+      if (posthog) {
+        posthog.capture(eventName, {
+          ...properties,
+          timestamp: new Date().toISOString(),
+        })
+      }
+    },
+    [posthog],
+  )
 
-  const identifyUser = (userId: string, properties?: PostHogProperties) => {
-    if (posthog) {
-      posthog.identify(userId, properties)
-    }
-  }
+  const identifyUser = useCallback(
+    (userId: string, properties?: PostHogProperties) => {
+      if (posthog) {
+        posthog.identify(userId, properties)
+      }
+    },
+    [posthog],
+  )
 
-  const setUserProperties = (properties: PostHogProperties) => {
-    if (posthog) {
-      posthog.setPersonProperties(properties)
-    }
-  }
+  const setUserProperties = useCallback(
+    (properties: PostHogProperties) => {
+      if (posthog) {
+        posthog.setPersonProperties(properties)
+      }
+    },
+    [posthog],
+  )
 
   return {
     trackEvent,

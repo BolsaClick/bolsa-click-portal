@@ -1,5 +1,3 @@
-import { queryClient } from '@/utils/react-query'
-import { QueryClientProvider } from '@tanstack/react-query'
 import { Analytics } from '@vercel/analytics/react'
 import { Metadata } from 'next'
 import { Montserrat } from 'next/font/google'
@@ -13,7 +11,7 @@ import { getCurrentTheme } from './lib/themes'
 
 const montserrat = Montserrat({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
+  weight: ['400', '600', '700'],
   display: 'swap',
   variable: '--font-montserrat',
 })
@@ -193,13 +191,33 @@ const jsonLd = [
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-br" className={montserrat.variable}>
-      <Script id="utmify-pixel" strategy="afterInteractive">
-        {`window.pixelId = "69a7352596ee946eac5f88dd";
-        var a = document.createElement("script");
-        a.setAttribute("async", "");
-        a.setAttribute("defer", "");
-        a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
-        document.head.appendChild(a);`}
+      <Script
+        id="utmify-pixel"
+        strategy="lazyOnload"
+        onError={(event) => {
+          if (process.env.NODE_ENV === 'development') {
+            // eslint-disable-next-line no-console
+            console.warn('[analytics] UTMify pixel failed to load', event)
+          }
+        }}
+      >
+        {`(function(){
+          function boot(){
+            window.pixelId = "69a7352596ee946eac5f88dd";
+            var a = document.createElement("script");
+            a.setAttribute("async", "");
+            a.setAttribute("defer", "");
+            a.setAttribute("crossorigin", "anonymous");
+            a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
+            (document.head || document.body || document.documentElement).appendChild(a);
+          }
+          var idle = window.requestIdleCallback || function (cb) { return setTimeout(cb, 1500); };
+          if (document.readyState === 'complete') {
+            idle(boot);
+          } else {
+            window.addEventListener('load', function(){ idle(boot); }, { once: true });
+          }
+        })();`}
       </Script>
       <head>
         {/* Eclesiastes 3:1 — Tudo tem o seu tempo determinado, e há tempo para todo o propósito debaixo do céu. */}
@@ -246,20 +264,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <Script
           src="https://cdn-cookieyes.com/client_data/2a0be4de7c11618e75d1c64f/script.js"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
+          crossOrigin="anonymous"
+          onError={(event) => {
+            if (process.env.NODE_ENV === 'development') {
+              // eslint-disable-next-line no-console
+              console.warn('[analytics] CookieYes failed to load', event)
+            }
+          }}
         />
 
         <WatiWhatsappWidget />
 
         <Toaster richColors position="top-right" />
         <Analytics />
-        <QueryClientProvider client={queryClient}>
-          <ClientProviders>
-            <div className="flex min-h-screen flex-col">
-              <main className="flex flex-1 flex-col">{children}</main>
-            </div>
-          </ClientProviders>
-        </QueryClientProvider>
+        <ClientProviders>
+          <div className="flex min-h-screen flex-col">
+            <main className="flex flex-1 flex-col">{children}</main>
+          </div>
+        </ClientProviders>
       </body>
     </html>
   )

@@ -3,7 +3,7 @@ import { Course } from "@/app/interface/course"
 import { postSearch } from "@/app/lib/api/post-search"
 import { useFavorites } from "@/app/lib/hooks/useFavorites"
 import { usePostHogTracking } from "@/app/lib/hooks/usePostHogTracking"
-import { motion } from "framer-motion"
+import { trackFbq } from "@/app/lib/analytics/fbq"
 import { Building2, Clock, Heart, MapPin, Star } from "lucide-react"
 import Image from "next/image"
 import { useState } from "react"
@@ -124,15 +124,12 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
     })
 
     // Facebook Pixel - ViewContent (curso selecionado)
-    const fbq = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
-    if (fbq) {
-      fbq('track', 'ViewContent', {
-        content_name: course.name,
-        content_type: 'product',
-        value: course.minPrice || 0,
-        currency: 'BRL',
-      })
-    }
+    trackFbq('ViewContent', {
+      content_name: course.name,
+      content_type: 'product',
+      value: course.minPrice || 0,
+      currency: 'BRL',
+    })
 
     // Redirecionar para checkout (pós e graduação usam a mesma página de matrícula)
     window.location.href = `/checkout/matricula?${params.toString()}`
@@ -251,13 +248,8 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(courseSchema) }}
       />
-      <motion.article
-        key={course.id}
-        layout
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className={`bg-white rounded-xl shadow-card hover:shadow-hover transition-all duration-300 flex flex-col h-full ${viewMode === "list" ? "p-6" : ""
+      <article
+        className={`bg-white rounded-xl shadow-card hover:shadow-hover transition-all duration-300 flex flex-col h-full animate-fade-in ${viewMode === "list" ? "p-6" : ""
           }`}
         itemScope
         itemType="https://schema.org/Course"
@@ -376,6 +368,7 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
                 <div className="flex items-center text-neutral-600">
                   <Clock size={18} className="mr-1 flex-shrink-0" />
                   <select
+                    aria-label="Selecione o turno"
                     value={selectedShift}
                     onChange={(e) => {
                       setSelectedShift(e.target.value)
@@ -530,7 +523,7 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
             </div>
           </div>
         </div>
-      </motion.article>
+      </article>
     </>
   );
 }

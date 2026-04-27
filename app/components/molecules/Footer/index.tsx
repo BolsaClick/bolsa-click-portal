@@ -1,12 +1,11 @@
-'use client'
-import React, { useEffect, useState } from 'react';
-import { Phone, Mail, MapPin, Facebook, Instagram, Linkedin, MessageCircle } from 'lucide-react';
+import React from 'react';
+import { Mail, MapPin, Facebook, Instagram, Linkedin } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import Container from '../../atoms/Container';
-import { useWhatsappFeatureFlag } from '@/app/lib/hooks/usePostHogFeatureFlags';
+import { WhatsAppSocialIcon, WhatsAppPhoneLink } from './WhatsAppContactLink';
 
-const linkClass = 'text-neutral-400 text-sm hover:text-white transition-colors'
+const linkClass = 'text-neutral-300 text-sm hover:text-white transition-colors'
 
 const cursosGraduacao = [
   { nome: 'Administração', slug: 'administracao' },
@@ -60,21 +59,14 @@ const bolsasPorCidade = [
   { nome: 'Pedagogia em Goiânia', curso: 'pedagogia', cidade: 'goiania' },
 ]
 
+const currentTheme = process.env.NEXT_PUBLIC_THEME || 'bolsaclick'
+
+const logoColor =
+  currentTheme === 'anhanguera'
+    ? '/assets/logo-anhanguera-bolsa-click.svg'
+    : '/assets/logo-bolsa-click-rosa.png'
+
 const Footer: React.FC = () => {
-  const showWhatsapp = useWhatsappFeatureFlag()
-  const [currentTheme, setCurrentTheme] = useState('bolsaclick')
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setCurrentTheme(process.env.NEXT_PUBLIC_THEME || 'bolsaclick')
-    }
-  }, [])
-
-  const logoColor =
-    currentTheme === 'anhanguera'
-      ? '/assets/logo-anhanguera-bolsa-click.svg'
-      : '/assets/logo-bolsa-click-rosa.png'
-
   return (
     <footer className="bg-[#0c111d] w-full">
       <Container>
@@ -82,7 +74,7 @@ const Footer: React.FC = () => {
         <div className="pt-16 pb-12 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-x-8 gap-y-10">
           {/* Cursos de Graduação */}
           <div>
-            <h4 className="text-white font-medium text-sm mb-4">Cursos de Graduação</h4>
+            <h3 className="text-white font-medium text-sm mb-4">Cursos de Graduação</h3>
             <nav aria-label="Cursos de graduação">
               <ul className="space-y-2.5">
                 {cursosGraduacao.map((curso) => (
@@ -98,7 +90,7 @@ const Footer: React.FC = () => {
 
           {/* Cursos Tecnólogos + Por Nível */}
           <div>
-            <h4 className="text-white font-medium text-sm mb-4">Cursos Tecnólogos</h4>
+            <h3 className="text-white font-medium text-sm mb-4">Cursos Tecnólogos</h3>
             <nav aria-label="Cursos tecnólogos">
               <ul className="space-y-2.5">
                 {cursosTecnologos.map((curso) => (
@@ -111,7 +103,7 @@ const Footer: React.FC = () => {
               </ul>
             </nav>
 
-            <h4 className="text-white font-medium text-sm mb-4 mt-8">Por Nível</h4>
+            <h3 className="text-white font-medium text-sm mb-4 mt-8">Por Nível</h3>
             <nav aria-label="Níveis de ensino">
               <ul className="space-y-2.5">
                 <li><Link href="/graduacao" className={linkClass}>Graduação com Bolsa</Link></li>
@@ -123,7 +115,7 @@ const Footer: React.FC = () => {
 
           {/* Bolsas por Cidade */}
           <div>
-            <h4 className="text-white font-medium text-sm mb-4">Bolsas por Cidade</h4>
+            <h3 className="text-white font-medium text-sm mb-4">Bolsas por Cidade</h3>
             <nav aria-label="Bolsas por cidade">
               <ul className="space-y-2.5">
                 {cidadesPopulares.map((cidade) => (
@@ -142,7 +134,7 @@ const Footer: React.FC = () => {
 
           {/* Faculdades Parceiras */}
           <div>
-            <h4 className="text-white font-medium text-sm mb-4">Faculdades Parceiras</h4>
+            <h3 className="text-white font-medium text-sm mb-4">Faculdades Parceiras</h3>
             <nav aria-label="Faculdades parceiras">
               <ul className="space-y-2.5">
                 <li><Link href="/faculdades/anhanguera" className={linkClass}>Anhanguera</Link></li>
@@ -155,7 +147,7 @@ const Footer: React.FC = () => {
 
           {/* Cursos em Destaque */}
           <div>
-            <h4 className="text-white font-medium text-sm mb-4">Cursos em Destaque</h4>
+            <h3 className="text-white font-medium text-sm mb-4">Cursos em Destaque</h3>
             <nav aria-label="Cursos em destaque por cidade">
               <ul className="space-y-2.5">
                 {bolsasPorCidade.map((item) => (
@@ -185,10 +177,9 @@ const Footer: React.FC = () => {
               alt="Logo do Bolsa Click - Marketplace de bolsas de estudo"
               width={100}
               height={37}
-              priority
               className="brightness-0 invert"
             />
-            <p className="text-neutral-500 text-sm leading-relaxed">
+            <p className="text-neutral-400 text-sm leading-relaxed">
               O maior marketplace de bolsas de estudo do Brasil. Encontre bolsas de até 95% de desconto em mais de 30.000 faculdades.
             </p>
             <div className="flex space-x-4 pt-2">
@@ -219,23 +210,13 @@ const Footer: React.FC = () => {
               >
                 <Linkedin size={18} />
               </a>
-              {showWhatsapp && (
-                <a
-                  href="https://wa.me/5511936200198"
-                  className="text-neutral-500 hover:text-white transition-colors"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="WhatsApp"
-                >
-                  <MessageCircle size={18} />
-                </a>
-              )}
+              <WhatsAppSocialIcon />
             </div>
           </div>
 
           {/* Institucional */}
           <div>
-            <h4 className="text-white font-medium text-sm mb-4">Institucional</h4>
+            <h3 className="text-white font-medium text-sm mb-4">Institucional</h3>
             <nav aria-label="Links institucionais">
               <ul className="space-y-2.5">
                 <li>
@@ -269,7 +250,7 @@ const Footer: React.FC = () => {
 
           {/* Para Estudantes */}
           <div>
-            <h4 className="text-white font-medium text-sm mb-4">Para Estudantes</h4>
+            <h3 className="text-white font-medium text-sm mb-4">Para Estudantes</h3>
             <nav aria-label="Links para estudantes">
               <ul className="space-y-2.5">
                 <li>
@@ -308,7 +289,7 @@ const Footer: React.FC = () => {
 
           {/* Cursos Mais Buscados */}
           <div>
-            <h4 className="text-white font-medium text-sm mb-4">Mais Buscados</h4>
+            <h3 className="text-white font-medium text-sm mb-4">Mais Buscados</h3>
             <nav aria-label="Cursos mais buscados">
               <ul className="space-y-2.5">
                 <li><Link href="/cursos/administracao" className={linkClass}>Administração</Link></li>
@@ -323,26 +304,18 @@ const Footer: React.FC = () => {
 
           {/* Contato */}
           <div>
-            <h4 className="text-white font-medium text-sm mb-4">Contato</h4>
+            <h3 className="text-white font-medium text-sm mb-4">Contato</h3>
             <address className="not-italic space-y-3">
-              {showWhatsapp && (
-                <a
-                  href="https://wa.me/5511936200198"
-                  className="flex items-center text-neutral-400 text-sm hover:text-white transition-colors"
-                >
-                  <Phone size={16} className="text-neutral-500 mr-2 flex-shrink-0" />
-                  (11) 93620-0198
-                </a>
-              )}
+              <WhatsAppPhoneLink />
               <a
                 href="mailto:contato@bolsaclick.com.br"
-                className="flex items-center text-neutral-400 text-sm hover:text-white transition-colors"
+                className="flex items-center text-neutral-300 text-sm hover:text-white transition-colors"
               >
-                <Mail size={16} className="text-neutral-500 mr-2 flex-shrink-0" />
+                <Mail size={16} className="text-neutral-400 mr-2 flex-shrink-0" />
                 contato@bolsaclick.com.br
               </a>
-              <div className="flex items-start text-neutral-400 text-sm">
-                <MapPin size={16} className="text-neutral-500 mr-2 mt-0.5 flex-shrink-0" />
+              <div className="flex items-start text-neutral-300 text-sm">
+                <MapPin size={16} className="text-neutral-400 mr-2 mt-0.5 flex-shrink-0" />
                 <span>
                   Av. Paulista, 1106<br />
                   São Paulo - SP<br />
@@ -358,20 +331,20 @@ const Footer: React.FC = () => {
       <div className="border-t border-white/10 bg-[#080b14]">
         <Container>
           <div className="py-6 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-neutral-600 text-xs">
+            <p className="text-neutral-400 text-xs">
               © {new Date().getFullYear()} Bolsa Click. Todos os direitos reservados.
             </p>
             <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-              <Link href="/central-de-ajuda/seguranca-dados-privacidade/termos-de-uso" className="text-neutral-600 text-xs hover:text-neutral-400 transition-colors">
+              <Link href="/central-de-ajuda/seguranca-dados-privacidade/termos-de-uso" className="text-neutral-400 text-xs hover:text-neutral-300 transition-colors">
                 Termos de Uso
               </Link>
-              <Link href="/central-de-ajuda/seguranca-dados-privacidade/politica-de-privacidade" className="text-neutral-600 text-xs hover:text-neutral-400 transition-colors">
+              <Link href="/central-de-ajuda/seguranca-dados-privacidade/politica-de-privacidade" className="text-neutral-400 text-xs hover:text-neutral-300 transition-colors">
                 Privacidade
               </Link>
-              <Link href="/central-de-ajuda/seguranca-dados-privacidade/politica-de-cookies" className="text-neutral-600 text-xs hover:text-neutral-400 transition-colors">
+              <Link href="/central-de-ajuda/seguranca-dados-privacidade/politica-de-cookies" className="text-neutral-400 text-xs hover:text-neutral-300 transition-colors">
                 Cookies
               </Link>
-              <Link href="/central-de-ajuda/seguranca-dados-privacidade/lgpd" className="text-neutral-600 text-xs hover:text-neutral-400 transition-colors">
+              <Link href="/central-de-ajuda/seguranca-dados-privacidade/lgpd" className="text-neutral-400 text-xs hover:text-neutral-300 transition-colors">
                 LGPD
               </Link>
             </div>

@@ -296,6 +296,7 @@ function RegisterForm() {
                   href="/central-de-ajuda/seguranca-dados-privacidade/termos-de-uso"
                   className="text-bolsa-primary hover:underline"
                   target="_blank"
+                  rel="noopener noreferrer"
                 >
                   Termos de Uso
                 </Link>{' '}
@@ -304,6 +305,7 @@ function RegisterForm() {
                   href="/central-de-ajuda/seguranca-dados-privacidade/politica-de-privacidade"
                   className="text-bolsa-primary hover:underline"
                   target="_blank"
+                  rel="noopener noreferrer"
                 >
                   Política de Privacidade
                 </Link>

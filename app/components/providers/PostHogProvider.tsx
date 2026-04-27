@@ -22,6 +22,22 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
       capture_pageleave: true, // Enable pageleave capture
       debug: process.env.NODE_ENV === "development",
       advanced_disable_feature_flags_on_first_load: false, // Habilitar feature flags
+      // Decode URL-encoded UTM/campaign props so the same campaign isn't counted twice
+      // (e.g. "[ABO] Campanha 01" vs "%5BABO%5D Campanha 01").
+      sanitize_properties: (properties) => {
+        if (!properties) return properties
+        for (const key of Object.keys(properties)) {
+          if (!/utm_|campaign|referrer/i.test(key)) continue
+          const value = properties[key]
+          if (typeof value !== "string" || !value.includes("%")) continue
+          try {
+            properties[key] = decodeURIComponent(value)
+          } catch {
+            // leave as-is if not decodable
+          }
+        }
+        return properties
+      },
       loaded: () => {
         // Garantir que feature flags sejam carregadas
         if (process.env.NODE_ENV === "development") {

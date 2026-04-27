@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti'
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { formatCurrency } from '@/utils/fomartCurrency'
+import { trackFbq } from '@/app/lib/analytics/fbq'
 
 
 
@@ -34,14 +35,11 @@ useEffect(() => {
     w.dataLayer.push({ event: eventName });
 
     // Facebook Pixel - Purchase
-    const fbq = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
-    if (fbq) {
-      fbq('track', 'Purchase', {
-        value: payToday ? parseFloat(payToday) : 0,
-        currency: 'BRL',
-        content_name: course || undefined,
-      })
-    }
+    trackFbq('Purchase', {
+      value: payToday ? parseFloat(payToday) : 0,
+      currency: 'BRL',
+      content_name: course || undefined,
+    })
   }
 }, [])
 

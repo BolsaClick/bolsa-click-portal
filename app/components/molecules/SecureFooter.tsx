@@ -47,7 +47,7 @@ export const SecureFooter: React.FC = () => {
 
         {/* Links */}
         <div className="flex flex-col md:flex-row justify-center items-center gap-4 text-sm text-gray-600 text-center">
-          <a href={central} target="_blank" className="hover:text-gray-900">Central de ajuda</a>
+          <a href={central} target="_blank" rel="noopener noreferrer" className="hover:text-gray-900">Central de ajuda</a>
           <a href="/ajuda/termos-de-uso" className="hover:text-gray-900">Termos e Condições</a>
           <a href="/ajuda/politica-de-privacidade" className="hover:text-gray-900">Política de privacidade</a>
           <a href="/ajuda/politica-de-cookies" className="hover:text-gray-900">Política de cookies</a>

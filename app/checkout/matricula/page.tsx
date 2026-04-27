@@ -4,22 +4,24 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { getOfferDetails, OfferDetails } from '@/app/lib/api/get-offer-details'
 import Skeleton from '@/app/components/atoms/Skeleton'
-import { 
-  ArrowLeft, 
-  User, 
-  MapPin, 
-  CreditCard, 
-  Building2, 
-  BookOpen, 
-  Clock, 
-  Check, 
-  ChevronUp, 
+import {
+  ArrowLeft,
+  User,
+  MapPin,
+  CreditCard,
+  Building2,
+  BookOpen,
+  Clock,
+  Check,
+  ChevronUp,
   ChevronDown,
   X,
   Mail,
   Phone,
   Calendar,
-  GraduationCap
+  GraduationCap,
+  ShieldCheck,
+  Award
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -39,6 +41,7 @@ import { createMarketplaceInscription } from '@/app/lib/api/create-inscription-m
 import { validateVoucher, type ValidateVoucherResponse, type VoucherInstallment } from '@/app/lib/api/validate-voucher'
 import type { PosPaymentMethod, PosInstallment } from '@/app/lib/api/get-offer-details'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
+import { trackFbq } from '@/app/lib/analytics/fbq'
 import { formatPhone } from '@/utils/formatters'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { Loader2 } from 'lucide-react'
@@ -154,6 +157,7 @@ function MatriculaContent() {
   // const [couponError, setCouponError] = useState<string | null>(null)
   const [cpfValidationError, setCpfValidationError] = useState<string | null>(null)
   const [isValidatingCpf, setIsValidatingCpf] = useState(false)
+  const [cpfValidationOk, setCpfValidationOk] = useState(false)
   const [cpfExistsInDb, setCpfExistsInDb] = useState<boolean | null>(null)
   const [cpfEmailHint, setCpfEmailHint] = useState<string | null>(null)
   const [pendingCpfForRegistration, setPendingCpfForRegistration] = useState<string | null>(null)
@@ -405,14 +409,11 @@ const isFormValidForPayment =
       })
 
       // Facebook Pixel - InitiateCheckout
-      const fbq = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
-      if (fbq) {
-        fbq('track', 'InitiateCheckout', {
-          content_name: offerDetails.course,
-          value: offerDetails.subscriptionValue || offerDetails.montlyFeeTo || 0,
-          currency: 'BRL',
-        })
-      }
+      trackFbq('InitiateCheckout', {
+        content_name: offerDetails.course,
+        value: offerDetails.subscriptionValue || offerDetails.montlyFeeTo || 0,
+        currency: 'BRL',
+      })
     }
   }, [offerDetails, trackEvent])
 
@@ -916,14 +917,11 @@ const isFormValidForPayment =
     })
 
     // Facebook Pixel - CompleteRegistration
-    const fbqReg = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
-    if (fbqReg) {
-      fbqReg('track', 'CompleteRegistration', {
-        content_name: offerDetails.course,
-        value: offerDetails.montlyFeeTo || 0,
-        currency: 'BRL',
-      })
-    }
+    trackFbq('CompleteRegistration', {
+      content_name: offerDetails.course,
+      value: offerDetails.montlyFeeTo || 0,
+      currency: 'BRL',
+    })
 
     await createInscriptionAfterPayment(data)
   }
@@ -947,13 +945,73 @@ const isFormValidForPayment =
   const yearOptions = Array.from({ length: 25 }, (_, i) => new Date().getFullYear() - i)
 
   if (isLoading) {
+    // Optimistic preview: pull course name and price from the previously
+    // viewed course in localStorage so the user sees the offer immediately
+    // (cuts perceived LCP without waiting for the API).
+    const cachedCourse = typeof window !== 'undefined'
+      ? (() => {
+          try {
+            const raw = localStorage.getItem('selectedCourse')
+            return raw ? JSON.parse(raw) as { name?: string; brand?: string; minPrice?: number } : null
+          } catch {
+            return null
+          }
+        })()
+      : null
+
     return (
       <div className="min-h-screen bg-gray-50 py-8 md:py-12">
         <div className="max-w-6xl mx-auto px-4">
-          <Skeleton className="h-6 w-48 mb-6" />
+          <Link
+            href="/curso/resultado"
+            className="inline-flex items-center text-bolsa-primary hover:text-bolsa-secondary mb-6 text-sm"
+          >
+            <ArrowLeft className="mr-2" size={16} />
+            Voltar
+          </Link>
+
+          <div className="pt-4 mb-6">
+            {cachedCourse?.name ? (
+              <>
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900">Checkout {cachedCourse.brand || ''}</h1>
+                <p className="text-gray-600 mt-1 text-sm">
+                  Carregando {cachedCourse.name}…
+                </p>
+              </>
+            ) : (
+              <Skeleton className="h-6 w-48" />
+            )}
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
             <Skeleton className="h-96" />
-            <Skeleton className="h-96" />
+            <div className="bg-white rounded-lg shadow-md p-4 md:p-5 space-y-3">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                <BookOpen size={18} className="mr-2 text-blue-600" /> Detalhes do Curso
+              </h2>
+              {cachedCourse?.name ? (
+                <>
+                  <div>
+                    <p className="text-xs text-gray-500">Curso</p>
+                    <p className="font-medium text-sm text-gray-900">{cachedCourse.name}</p>
+                  </div>
+                  {cachedCourse.minPrice ? (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <p className="text-xs text-gray-500 mb-1">Mensalidade a partir de</p>
+                      <p className="text-xl font-bold text-green-600">{formatCurrency(cachedCourse.minPrice)}</p>
+                      <p className="text-xs text-gray-500 mt-1 italic">Confirmando valores…</p>
+                    </div>
+                  ) : (
+                    <Skeleton className="h-20" />
+                  )}
+                </>
+              ) : (
+                <>
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-20" />
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -1007,60 +1065,57 @@ const isFormValidForPayment =
           <p className="text-gray-600 mt-1 text-sm">
             Complete seus dados para finalizar a matrícula. O valor da matrícula e das mensalidades será pago diretamente à instituição.
           </p>
+
+          {/* Stepper visual — dá ao usuário a sensação de funil curto e claro */}
+          <ol className="mt-5 flex items-center gap-2 text-xs sm:text-sm" aria-label="Etapas do checkout">
+            <li className="flex items-center gap-2 font-medium text-bolsa-primary">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-bolsa-primary text-white text-xs font-semibold">1</span>
+              Seus dados
+            </li>
+            <span className="h-px w-6 sm:w-10 bg-gray-300" aria-hidden="true" />
+            <li className="flex items-center gap-2 text-gray-500">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-gray-600 text-xs font-semibold">2</span>
+              Contato
+            </li>
+            <span className="h-px w-6 sm:w-10 bg-gray-300" aria-hidden="true" />
+            <li className="flex items-center gap-2 text-gray-500">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-gray-600 text-xs font-semibold">3</span>
+              Confirmação
+            </li>
+          </ol>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
           {/* Coluna Esquerda - Formulário */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            {/* Banner de Login/Registro */}
+            {/* Mini-prompt de login (compacto, não bloqueia atenção) */}
             {!user && !authLoading && (
-              <div className="bg-gradient-to-r from-bolsa-primary/10 to-bolsa-secondary/10 p-4 border-b">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-bolsa-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
-                    <User size={20} className="text-bolsa-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">Já tem uma conta?</p>
-                    <p className="text-xs text-gray-600 mb-2">
-                      Entre para preencher automaticamente seus dados e acompanhar suas matrículas
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setAuthMode('login')
-                          setShowAuthModal(true)
-                        }}
-                        className="px-3 py-1.5 bg-bolsa-primary text-white text-xs font-medium rounded-lg hover:bg-bolsa-primary/90 transition-colors"
-                      >
-                        Entrar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setAuthMode('register')
-                          setShowAuthModal(true)
-                        }}
-                        className="px-3 py-1.5 border border-bolsa-primary text-bolsa-primary text-xs font-medium rounded-lg hover:bg-bolsa-primary/10 transition-colors"
-                      >
-                        Criar conta
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleAuthWithGoogle}
-                        className="px-3 py-1.5 border border-gray-300 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1"
-                      >
-                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
-                          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                        </svg>
-                        Google
-                      </button>
-                    </div>
-                  </div>
-                </div>
+              <div className="px-4 pt-3 pb-2 border-b border-gray-100 flex items-center justify-end gap-3 text-xs">
+                <span className="text-gray-500">Já tem conta?</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('login')
+                    setShowAuthModal(true)
+                  }}
+                  className="text-bolsa-primary font-medium hover:underline"
+                >
+                  Entrar
+                </button>
+                <span className="text-gray-300">·</span>
+                <button
+                  type="button"
+                  onClick={handleAuthWithGoogle}
+                  className="text-gray-700 hover:underline inline-flex items-center gap-1"
+                >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                  </svg>
+                  Google
+                </button>
               </div>
             )}
 
@@ -1150,6 +1205,7 @@ const isFormValidForPayment =
                           name="cpf"
                           render={({ field }) => (
                             <div>
+                              <div className="relative">
                               <input
                                 value={field.value}
                                 onChange={(e) => {
@@ -1159,6 +1215,8 @@ const isFormValidForPayment =
                                     .replace(/(\d{3})(\d)/, '$1.$2')
                                     .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
                                   field.onChange(masked)
+                                  if (cpfValidationOk) setCpfValidationOk(false)
+                                  if (cpfValidationError) setCpfValidationError(null)
                                 }}
                                 onBlur={async (e) => {
                                   field.onBlur()
@@ -1166,6 +1224,7 @@ const isFormValidForPayment =
                                   if (cleanCpf.length === 11 && validarCPF(cleanCpf)) {
                                     setIsValidatingCpf(true)
                                     setCpfValidationError(null)
+                                    setCpfValidationOk(false)
                                     setCpfExistsInDb(null)
                                     setCpfEmailHint(null)
                                     try {
@@ -1206,6 +1265,7 @@ const isFormValidForPayment =
                                       if (result.inscriptionAllowed) {
                                         // Pode cadastrar
                                         setCpfValidationError(null)
+                                        setCpfValidationOk(true)
                                         toast.success('CPF validado com sucesso!')
                                         trackEvent('cpf_validated', {
                                           cpf_valid: true,
@@ -1216,14 +1276,11 @@ const isFormValidForPayment =
                                         })
 
                                         // Facebook Pixel - AddPaymentInfo (dados pessoais preenchidos + CPF validado)
-                                        const fbqCpf = (window as unknown as Record<string, unknown>).fbq as ((...args: unknown[]) => void) | undefined
-                                        if (fbqCpf) {
-                                          fbqCpf('track', 'AddPaymentInfo', {
-                                            content_name: offerDetails?.course,
-                                            value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
-                                            currency: 'BRL',
-                                          })
-                                        }
+                                        trackFbq('AddPaymentInfo', {
+                                          content_name: offerDetails?.course,
+                                          value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
+                                          currency: 'BRL',
+                                        })
                                       } else if (result.haveAnotherInscriptionInCycle) {
                                         // Tem outra inscrição no ciclo e não está permitido cadastrar
                                         setCpfValidationError(result.message || 'Este CPF possui outra inscrição no ciclo e não pode ser cadastrado.')
@@ -1262,12 +1319,28 @@ const isFormValidForPayment =
                                 }}
                                 placeholder="000.000.000-00"
                                 maxLength={14}
-                                className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary ${
-                                  cpfValidationError ? 'border-red-500' : 'border-gray-300'
+                                className={`w-full px-3 py-2 pr-9 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary ${
+                                  cpfValidationError
+                                    ? 'border-red-500'
+                                    : cpfValidationOk
+                                      ? 'border-green-500'
+                                      : 'border-gray-300'
                                 }`}
                               />
+                              <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
+                                {isValidatingCpf && (
+                                  <Loader2 size={16} className="text-bolsa-primary animate-spin" aria-label="Validando CPF" />
+                                )}
+                                {!isValidatingCpf && cpfValidationOk && (
+                                  <Check size={16} className="text-green-600" aria-label="CPF validado" />
+                                )}
+                              </div>
+                              </div>
                               {isValidatingCpf && (
                                 <p className="text-blue-500 text-xs mt-1">Validando CPF...</p>
+                              )}
+                              {!isValidatingCpf && cpfValidationOk && (
+                                <p className="text-green-600 text-xs mt-1">CPF validado — você pode continuar.</p>
                               )}
                             </div>
                           )}
@@ -1836,9 +1909,25 @@ const isFormValidForPayment =
 
               {/* [CUPOM] Seção de cupom comentada para possível reativação futura */}
 
+              {/* Sinais de confiança — pagamento, parceria e segurança */}
               <div className="pt-3 border-t border-gray-200 space-y-2">
-                <div className="text-xs text-gray-600 italic">
-                  Matrícula e mensalidades: pago diretamente à instituição. Nenhuma taxa neste checkout.
+                <div className="flex items-start gap-2 text-xs text-gray-700">
+                  <ShieldCheck size={16} className="text-green-600 flex-shrink-0 mt-0.5" />
+                  <span>
+                    <strong className="font-semibold">Sem cobrança aqui.</strong> Você só paga matrícula e mensalidade à instituição.
+                  </span>
+                </div>
+                <div className="flex items-start gap-2 text-xs text-gray-700">
+                  <Award size={16} className="text-bolsa-primary flex-shrink-0 mt-0.5" />
+                  <span>
+                    Parceiro oficial das principais instituições de ensino do Brasil.
+                  </span>
+                </div>
+                <div className="flex items-start gap-2 text-xs text-gray-700">
+                  <Check size={16} className="text-green-600 flex-shrink-0 mt-0.5" />
+                  <span>
+                    Mais de 100 mil estudantes já garantiram bolsa pelo Bolsa Click.
+                  </span>
                 </div>
               </div>
             </div>

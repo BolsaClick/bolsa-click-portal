@@ -97,7 +97,7 @@ export async function getShowFiltersCourses(
   const params: Record<string, string | number | string[]> = {
     page,
     size: Math.min(size, 50), // Limitar a 50 itens por página
-    academicLevel: [academicLevel], // GRADUACAO, POS_GRADUACAO ou TECNICO
+    academicLevel: [academicLevel], // GRADUACAO, POS_GRADUACAO ou CURSOS_PROFISSIONALIZANTES
   }
 
   // Só adiciona courseName se vier da URL

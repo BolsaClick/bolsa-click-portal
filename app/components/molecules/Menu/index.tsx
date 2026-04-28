@@ -6,6 +6,7 @@ const menuItems = [
   { label: 'Cursos', href: '/cursos' },
   { label: 'Graduação', href: '/graduacao' },
   { label: 'Pós-graduação', href: '/pos-graduacao' },
+  { label: 'Profissionalizantes', href: '/cursos-profissionalizantes' },
   // { label: 'Meus favoritos', href: '/favoritos' },
   { label: 'Central de Ajuda', href: '/central-de-ajuda' },
 ]

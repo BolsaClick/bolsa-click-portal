@@ -18,13 +18,13 @@ type FormValues = {
   modalidade: 'EAD' | 'PRESENCIAL' | 'SEMIPRESENCIAL'
   course: { name: string; id: string; slug: string }
   city: { state: string; city: string }
-  levels: 'graduacao' | 'pos' | 'tecnico'
+  levels: 'graduacao' | 'pos' | 'profissionalizante'
 }
 
 const educationLevels: { levels: FormValues['levels']; label: string }[] = [
   { levels: 'graduacao', label: 'Graduação' },
   { levels: 'pos', label: 'Pós-graduação' },
-  { levels: 'tecnico', label: 'Técnico' }
+  { levels: 'profissionalizante', label: 'Profissionalizante' }
 ]
 const Filter = () => {
   const navigate = useRouter()
@@ -32,7 +32,14 @@ const Filter = () => {
   const [searchCity, setSearchCity] = useState('')
   const [activeTab, setActiveTab] = useState<FormValues['levels']>(() => {
     if (typeof window !== 'undefined') {
-      return (localStorage.getItem('selectedLevel') as FormValues['levels']) || 'graduacao'
+      const savedLevel = localStorage.getItem('selectedLevel')
+      if (savedLevel === 'tecnico') {
+        return 'profissionalizante'
+      }
+      if (savedLevel === 'graduacao' || savedLevel === 'pos' || savedLevel === 'profissionalizante') {
+        return savedLevel
+      }
+      return 'graduacao'
     }
     return 'graduacao'
   })
@@ -40,7 +47,7 @@ const Filter = () => {
   const academicLevelMap: Record<FormValues['levels'], string> = {
     graduacao: 'GRADUACAO',
     pos: 'POS_GRADUACAO',
-    tecnico: 'TECNICO',
+    profissionalizante: 'CURSOS_PROFISSIONALIZANTES',
   }
 
 
@@ -79,10 +86,10 @@ const Filter = () => {
     enabled: activeTab === 'pos',
   })
 
-  const { data: tecnicoCourses } = useQuery({
-    queryFn: () => getShowCourses(academicLevelMap.tecnico),
-    queryKey: ['courses', 'tecnico'],
-    enabled: activeTab === 'tecnico',
+  const { data: profissionalizanteCourses } = useQuery({
+    queryFn: () => getShowCourses(academicLevelMap.profissionalizante),
+    queryKey: ['courses', 'profissionalizante'],
+    enabled: activeTab === 'profissionalizante',
   })
 
   const { data: responseCity } = useQuery({
@@ -109,8 +116,8 @@ const Filter = () => {
     ? graduationCourses
     : activeTab === 'pos'
       ? postCourses
-      : activeTab === 'tecnico'
-        ? tecnicoCourses
+      : activeTab === 'profissionalizante'
+        ? profissionalizanteCourses
         : []
 
   const courseOptions =
@@ -187,11 +194,11 @@ const Filter = () => {
     const modalidadeFormatada = convertModalityToAPI(data.modalidade)
     params.push(`modalidade=${encodeURIComponent(modalidadeFormatada)}`);
     
-    // Adicionar nível acadêmico para diferenciar graduação, pós e técnico
+    // Adicionar nível acadêmico para diferenciar graduação, pós e profissionalizante
     if (activeTab === 'pos') {
       params.push(`nivel=POS_GRADUACAO`);
-    } else if (activeTab === 'tecnico') {
-      params.push(`nivel=TECNICO`);
+    } else if (activeTab === 'profissionalizante') {
+      params.push(`nivel=CURSOS_PROFISSIONALIZANTES`);
     } else {
       params.push(`nivel=GRADUACAO`);
     }
@@ -206,7 +213,7 @@ const Filter = () => {
   const renderLevelTabs = () => (
     <div className="grid grid-cols-3 border-b border-gray-300">
       {educationLevels.map((level) => {
-        const isDisabled = level.levels === 'tecnico'
+        const isDisabled = false
 
         return (
           <button

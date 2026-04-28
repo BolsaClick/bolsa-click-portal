@@ -108,6 +108,7 @@ const Footer: React.FC = () => {
               <ul className="space-y-2.5">
                 <li><Link href="/graduacao" className={linkClass}>Graduação com Bolsa</Link></li>
                 <li><Link href="/pos-graduacao" className={linkClass}>Pós-Graduação com Bolsa</Link></li>
+                <li><Link href="/cursos-profissionalizantes" className={linkClass}>Profissionalizante com Bolsa</Link></li>
                 <li><Link href="/cursos" className={linkClass}>Todos os Cursos</Link></li>
               </ul>
             </nav>
@@ -266,6 +267,11 @@ const Footer: React.FC = () => {
                 <li>
                   <Link href="/pos-graduacao" className={linkClass}>
                     Bolsa para Pós-Graduação
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/cursos-profissionalizantes" className={linkClass}>
+                    Bolsa para Profissionalizante
                   </Link>
                 </li>
                 <li>

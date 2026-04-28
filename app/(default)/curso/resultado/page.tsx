@@ -55,10 +55,12 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const courseName = courseNameClean ? capitalizeText(courseNameClean) : ''
   const modalidadeFormatted = capitalizeText(modalidade === 'EAD' ? 'A Distância' : modalidade)
   const locationText = cidade && estado ? ` em ${cidade} - ${estado}` : ''
+  const isProfessionalizingLevel =
+    nivel === 'CURSOS_PROFISSIONALIZANTES' || nivel === 'cursos_profissionalizantes' || nivel === 'TECNICO'
   
   // Determinar o tipo de curso baseado no nível
   const courseType = nivel === 'POS_GRADUACAO' ? 'Pós-graduação' : 
-                     nivel === 'TECNICO' ? 'Técnico' : 
+                     isProfessionalizingLevel ? 'Profissionalizante' : 
                      'Graduação'
 
   // Verificar se há curso selecionado (cidade/estado sozinhos não contam como filtro para o título)
@@ -155,7 +157,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
       '@type': 'ListItem',
       position: 2,
       name: courseType, // Graduação, Pós-graduação, etc
-      item: `https://www.bolsaclick.com.br/${nivel === 'GRADUACAO' ? 'graduacao' : nivel === 'POS_GRADUACAO' ? 'pos-graduacao' : 'cursos'}`,
+      item: `https://www.bolsaclick.com.br/${nivel === 'GRADUACAO' ? 'graduacao' : nivel === 'POS_GRADUACAO' ? 'pos-graduacao' : isProfessionalizingLevel ? 'cursos-profissionalizantes' : 'cursos'}`,
     },
   ]
 
@@ -202,8 +204,10 @@ export default async function CursosPage({ searchParams }: Props) {
 
   const courseNameClean = curso ? removeCourseSuffix(curso) : ''
   const courseName = courseNameClean ? capitalizeText(courseNameClean) : ''
+  const isProfessionalizingLevel =
+    nivel === 'CURSOS_PROFISSIONALIZANTES' || nivel === 'cursos_profissionalizantes' || nivel === 'TECNICO'
   const courseType = nivel === 'POS_GRADUACAO' ? 'Pós-graduação' :
-                     nivel === 'TECNICO' ? 'Técnico' :
+                     isProfessionalizingLevel ? 'Profissionalizante' :
                      'Graduação'
 
   const breadcrumbItems = [
@@ -217,7 +221,7 @@ export default async function CursosPage({ searchParams }: Props) {
       '@type': 'ListItem',
       position: 2,
       name: courseType,
-      item: `https://www.bolsaclick.com.br/${nivel === 'GRADUACAO' ? 'graduacao' : nivel === 'POS_GRADUACAO' ? 'pos-graduacao' : 'cursos'}`,
+      item: `https://www.bolsaclick.com.br/${nivel === 'GRADUACAO' ? 'graduacao' : nivel === 'POS_GRADUACAO' ? 'pos-graduacao' : isProfessionalizingLevel ? 'cursos-profissionalizantes' : 'cursos'}`,
     },
   ]
 

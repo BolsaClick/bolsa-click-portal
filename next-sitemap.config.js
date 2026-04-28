@@ -121,6 +121,13 @@ module.exports = {
     })
 
     paths.push({
+      loc: '/cursos-profissionalizantes',
+      changefreq: 'daily',
+      priority: 0.95,
+      lastmod: new Date().toISOString(),
+    })
+
+    paths.push({
       loc: '/cursos',
       changefreq: 'daily',
       priority: 0.9,

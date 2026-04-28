@@ -470,9 +470,15 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
               Nível Acadêmico
             </h3>
             <div className="space-y-2">
-              {['GRADUACAO', 'POS_GRADUACAO'].map((level) => {
-                const label = level === 'GRADUACAO' ? 'Graduação' : 'Pós-graduação'
-                const isChecked = academicLevel === level
+              {['GRADUACAO', 'POS_GRADUACAO', 'CURSOS_PROFISSIONALIZANTES'].map((level) => {
+                const label = level === 'GRADUACAO'
+                  ? 'Graduação'
+                  : level === 'POS_GRADUACAO'
+                    ? 'Pós-graduação'
+                    : 'Profissionalizante'
+                const isChecked =
+                  academicLevel === level ||
+                  (level === 'CURSOS_PROFISSIONALIZANTES' && (academicLevel === 'cursos_profissionalizantes' || academicLevel === 'TECNICO'))
                 
                 return (
                   <label key={level} className="flex items-center">

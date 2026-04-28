@@ -320,7 +320,11 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
                     <p className="text-neutral-600 text-sm">
                       {course.academicLevel === 'GRADUACAO' ? 'Graduação' :
                         course.academicLevel === 'POS_GRADUACAO' ? 'Pós-graduação' :
-                          course.academicLevel === 'TECNICO' ? 'Técnico' :
+                          course.academicLevel === 'TECNICO' ||
+                          course.academicLevel === 'CURSOS_PROFISSIONALIZANTES' ||
+                          course.academicLevel === 'cursos_profissionalizantes'
+                            ? 'Profissionalizante'
+                            :
                             course.academicLevel}
                     </p>
                   </>

@@ -194,12 +194,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <Script
         id="utmify-pixel"
         strategy="lazyOnload"
-        onError={(event) => {
-          if (process.env.NODE_ENV === 'development') {
-            // eslint-disable-next-line no-console
-            console.warn('[analytics] UTMify pixel failed to load', event)
-          }
-        }}
       >
         {`(function(){
           function boot(){
@@ -266,12 +260,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           src="https://cdn-cookieyes.com/client_data/2a0be4de7c11618e75d1c64f/script.js"
           strategy="lazyOnload"
           crossOrigin="anonymous"
-          onError={(event) => {
-            if (process.env.NODE_ENV === 'development') {
-              // eslint-disable-next-line no-console
-              console.warn('[analytics] CookieYes failed to load', event)
-            }
-          }}
         />
 
         <WatiWhatsappWidget />

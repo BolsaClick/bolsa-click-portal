@@ -4,6 +4,7 @@ import { postSearch } from "@/app/lib/api/post-search"
 import { useFavorites } from "@/app/lib/hooks/useFavorites"
 import { usePostHogTracking } from "@/app/lib/hooks/usePostHogTracking"
 import { trackFbq } from "@/app/lib/analytics/fbq"
+import { getAcademicLevelLabel } from "@/app/lib/academic-level"
 import { Building2, Clock, Heart, MapPin, Star } from "lucide-react"
 import Image from "next/image"
 import { useState } from "react"
@@ -314,18 +315,11 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
                             course.academicDegree}
                   </p>
                 )}
-                {course.academicLevel && (
+                {(course.academicLevel || course.academicDegree === 'PROFISSIONALIZANTE') && (
                   <>
                     {course.academicDegree && <span className="text-neutral-400">•</span>}
                     <p className="text-neutral-600 text-sm">
-                      {course.academicLevel === 'GRADUACAO' ? 'Graduação' :
-                        course.academicLevel === 'POS_GRADUACAO' ? 'Pós-graduação' :
-                          course.academicLevel === 'TECNICO' ||
-                          course.academicLevel === 'CURSOS_PROFISSIONALIZANTES' ||
-                          course.academicLevel === 'cursos_profissionalizantes'
-                            ? 'Profissionalizante'
-                            :
-                            course.academicLevel}
+                      {getAcademicLevelLabel(course.academicLevel, course.academicDegree)}
                     </p>
                   </>
                 )}

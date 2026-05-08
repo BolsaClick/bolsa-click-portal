@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { Suspense } from 'react'
 import SearchResultClient from './SearchResultClient'
+import { ACADEMIC_LEVEL, isProfissionalizanteLevel, normalizeAcademicLevel } from '@/app/lib/academic-level'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,12 +56,13 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const courseName = courseNameClean ? capitalizeText(courseNameClean) : ''
   const modalidadeFormatted = capitalizeText(modalidade === 'EAD' ? 'A Distância' : modalidade)
   const locationText = cidade && estado ? ` em ${cidade} - ${estado}` : ''
-  const isProfessionalizingLevel =
-    nivel === 'CURSOS_PROFISSIONALIZANTES' || nivel === 'cursos_profissionalizantes' || nivel === 'TECNICO'
-  
+  const isProfessionalizingLevel = isProfissionalizanteLevel(nivel)
+  const isTecnicoLevel = nivel === ACADEMIC_LEVEL.CURSO_TECNICO || nivel === ACADEMIC_LEVEL.TECNICO
+
   // Determinar o tipo de curso baseado no nível
-  const courseType = nivel === 'POS_GRADUACAO' ? 'Pós-graduação' : 
-                     isProfessionalizingLevel ? 'Profissionalizante' : 
+  const courseType = nivel === ACADEMIC_LEVEL.POS_GRADUACAO ? 'Pós-graduação' :
+                     isProfessionalizingLevel ? 'Profissionalizante' :
+                     isTecnicoLevel ? 'Técnico' :
                      'Graduação'
 
   // Verificar se há curso selecionado (cidade/estado sozinhos não contam como filtro para o título)
@@ -112,7 +114,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   
   // Sempre incluir modalidade e nivel (valores padrão se não especificados)
   canonicalParams.set('modalidade', modalidade)
-  canonicalParams.set('nivel', nivel)
+  canonicalParams.set('nivel', normalizeAcademicLevel(nivel))
   
   // URL canônica auto-referencial: sempre aponta para a própria página com www
   // Normalizada para evitar múltiplas URLs apontando para o mesmo conteúdo
@@ -157,7 +159,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
       '@type': 'ListItem',
       position: 2,
       name: courseType, // Graduação, Pós-graduação, etc
-      item: `https://www.bolsaclick.com.br/${nivel === 'GRADUACAO' ? 'graduacao' : nivel === 'POS_GRADUACAO' ? 'pos-graduacao' : isProfessionalizingLevel ? 'cursos-profissionalizantes' : 'cursos'}`,
+      item: `https://www.bolsaclick.com.br/${nivel === ACADEMIC_LEVEL.GRADUACAO ? 'graduacao' : nivel === ACADEMIC_LEVEL.POS_GRADUACAO ? 'pos-graduacao' : isProfessionalizingLevel ? 'cursos-profissionalizantes' : 'cursos'}`,
     },
   ]
 
@@ -204,10 +206,11 @@ export default async function CursosPage({ searchParams }: Props) {
 
   const courseNameClean = curso ? removeCourseSuffix(curso) : ''
   const courseName = courseNameClean ? capitalizeText(courseNameClean) : ''
-  const isProfessionalizingLevel =
-    nivel === 'CURSOS_PROFISSIONALIZANTES' || nivel === 'cursos_profissionalizantes' || nivel === 'TECNICO'
-  const courseType = nivel === 'POS_GRADUACAO' ? 'Pós-graduação' :
+  const isProfessionalizingLevel = isProfissionalizanteLevel(nivel)
+  const isTecnicoLevel = nivel === ACADEMIC_LEVEL.CURSO_TECNICO || nivel === ACADEMIC_LEVEL.TECNICO
+  const courseType = nivel === ACADEMIC_LEVEL.POS_GRADUACAO ? 'Pós-graduação' :
                      isProfessionalizingLevel ? 'Profissionalizante' :
+                     isTecnicoLevel ? 'Técnico' :
                      'Graduação'
 
   const breadcrumbItems = [
@@ -221,7 +224,7 @@ export default async function CursosPage({ searchParams }: Props) {
       '@type': 'ListItem',
       position: 2,
       name: courseType,
-      item: `https://www.bolsaclick.com.br/${nivel === 'GRADUACAO' ? 'graduacao' : nivel === 'POS_GRADUACAO' ? 'pos-graduacao' : isProfessionalizingLevel ? 'cursos-profissionalizantes' : 'cursos'}`,
+      item: `https://www.bolsaclick.com.br/${nivel === ACADEMIC_LEVEL.GRADUACAO ? 'graduacao' : nivel === ACADEMIC_LEVEL.POS_GRADUACAO ? 'pos-graduacao' : isProfessionalizingLevel ? 'cursos-profissionalizantes' : 'cursos'}`,
     },
   ]
 

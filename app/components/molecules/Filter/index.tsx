@@ -13,6 +13,7 @@ import { getLocalities } from '@/app/lib/api/get-localites'
 import { ModalitySelect } from '../../atoms/ModalitySelect'
 import { GraduationCap, MapPin } from 'lucide-react'
 import { useGeoLocation } from '@/app/context/GeoLocationContext'
+import { ACADEMIC_LEVEL } from '@/app/lib/academic-level'
 
 type FormValues = {
   modalidade: 'EAD' | 'PRESENCIAL' | 'SEMIPRESENCIAL'
@@ -45,9 +46,9 @@ const Filter = () => {
   })
 
   const academicLevelMap: Record<FormValues['levels'], string> = {
-    graduacao: 'GRADUACAO',
-    pos: 'POS_GRADUACAO',
-    profissionalizante: 'CURSOS_PROFISSIONALIZANTES',
+    graduacao: ACADEMIC_LEVEL.GRADUACAO,
+    pos: ACADEMIC_LEVEL.POS_GRADUACAO,
+    profissionalizante: ACADEMIC_LEVEL.CURSO_PROFISSIONALIZANTE,
   }
 
 
@@ -195,13 +196,7 @@ const Filter = () => {
     params.push(`modalidade=${encodeURIComponent(modalidadeFormatada)}`);
     
     // Adicionar nível acadêmico para diferenciar graduação, pós e profissionalizante
-    if (activeTab === 'pos') {
-      params.push(`nivel=POS_GRADUACAO`);
-    } else if (activeTab === 'profissionalizante') {
-      params.push(`nivel=CURSOS_PROFISSIONALIZANTES`);
-    } else {
-      params.push(`nivel=GRADUACAO`);
-    }
+    params.push(`nivel=${academicLevelMap[activeTab]}`);
     
     navigate.push(`/curso/resultado?${params.join('&')}`);
   }

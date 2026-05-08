@@ -10,7 +10,7 @@ export default function CursosProfissionalizantesClient() {
   const infoSectionRef = useRef<HTMLElement>(null)
 
   const handleComecarAgora = () => {
-    router.push('/curso/resultado?nivel=CURSOS_PROFISSIONALIZANTES')
+    router.push('/curso/resultado?nivel=CURSO_PROFISSIONALIZANTE')
   }
 
   const handleSaibaMais = () => {

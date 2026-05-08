@@ -16,6 +16,7 @@ import { useForm } from 'react-hook-form'
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
+import { normalizeAcademicLevel } from '@/app/lib/academic-level'
 
 import CourseCardNew from '@/app/components/CourseCardNew';
 import FiltersPanel from './FiltersPanel';
@@ -282,17 +283,19 @@ export default function SearchResultClient() {
   // Assim, ao vir da home com filtros na URL, a API é chamada logo no primeiro render.
   const canSearch = !!cidade?.trim() && !!estado?.trim();
 
+  const normalizedNivel = normalizeAcademicLevel(nivel)
+
   const { data: showCourses, isLoading } = useQuery({
     queryFn: () => getShowFiltersCourses(
-      courseNameForAPI,  
+      courseNameForAPI,
       cidade || undefined, // city
       estado || undefined, // state
       modalidade && modalidade.trim() ? modalidade : undefined, // Só passar se tiver valor
-      nivel || 'GRADUACAO', // academicLevel
+      normalizedNivel, // academicLevel (normalizado para o enum oficial do BFF)
       1, // page
       20 // size (20 itens por página)
     ),
-    queryKey: ['courses', 'filter', courseNameForAPI, cidade, estado, modalidade, nivel],
+    queryKey: ['courses', 'filter', courseNameForAPI, cidade, estado, modalidade, normalizedNivel],
     enabled: canSearch,
     staleTime: 0, // Permitir refetch quando os parâmetros mudarem
     refetchOnWindowFocus: false, // Não refetch quando a janela ganha foco
@@ -309,7 +312,7 @@ export default function SearchResultClient() {
         city: cidade,
         state: estado,
         modality: modalidade,
-        academic_level: nivel,
+        academic_level: normalizedNivel,
         results_count: coursesCount,
         has_results: coursesCount > 0,
       })
@@ -446,7 +449,7 @@ const onSubmit = (data: any) => {
       course_name_full: courseNameFull,
       city: cidade,
       state: estado,
-      academic_level: nivel,
+      academic_level: normalizedNivel,
     })
   }, [updateURL, trackEvent, cidade, estado, nivel])
 
@@ -460,7 +463,7 @@ const onSubmit = (data: any) => {
       city: newCity,
       state: newState,
       course_name: courseNameForAPI,
-      academic_level: nivel,
+      academic_level: normalizedNivel,
     })
   }, [updateURL, trackEvent, courseNameForAPI, nivel])
 

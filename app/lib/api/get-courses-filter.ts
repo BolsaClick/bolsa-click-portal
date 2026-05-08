@@ -1,5 +1,6 @@
 import { tartarus } from "./axios"
 import { getMostSearchedCourses } from "./get-most-searched-courses"
+import { normalizeAcademicLevel } from "../academic-level"
 
 interface Course {
   modality?: string
@@ -7,6 +8,7 @@ interface Course {
   uf?: string
   unitState?: string
   academicLevel?: string
+  academicDegree?: string
   [key: string]: unknown
 }
 
@@ -25,14 +27,17 @@ export async function getShowFiltersCourses(
   city?: string,
   state?: string,
   modality?: string,
-  academicLevel: string = 'GRADUACAO',
+  academicLevelInput: string = 'GRADUACAO',
   page: number = 1,
   size: number = 10
 ) {
+  // Normalizar para o enum oficial do BFF (aceita aliases legados como CURSOS_PROFISSIONALIZANTES)
+  const academicLevel = normalizeAcademicLevel(academicLevelInput)
+
   // Se NÃO houver courseName (undefined, null, string vazia ou só espaços), usar a API de cursos mais buscados
   // Exceto para pós-graduação: o endpoint /offers/most-searched pode não retornar POS; usar sempre cogna/courses/search
   const hasCourseName = courseName && courseName.trim() && courseName.trim().length > 0
-  const isPosGraduation = academicLevel.toUpperCase() === 'POS_GRADUACAO'
+  const isPosGraduation = academicLevel === 'POS_GRADUACAO'
 
   if (!hasCourseName && !isPosGraduation) {
     if (city && city.trim()) {
@@ -61,9 +66,17 @@ export async function getShowFiltersCourses(
           }
 
           // Filtrar por academicLevel se fornecido
+          // Para profissionalizante, considerar também academicDegree === 'PROFISSIONALIZANTE'
+          // (algumas ofertas vêm marcadas só pelo degree com academicLevel em outro valor)
           if (academicLevel) {
+            const isProfissionalizante = academicLevel === 'CURSO_PROFISSIONALIZANTE'
             filteredData = filteredData.filter((course: Course) => {
-              return (course.academicLevel || '').toUpperCase() === academicLevel.toUpperCase()
+              const courseLevel = (course.academicLevel || '').toUpperCase()
+              if (courseLevel === academicLevel) return true
+              if (isProfissionalizante && (course.academicDegree || '').toUpperCase() === 'PROFISSIONALIZANTE') {
+                return true
+              }
+              return false
             })
           }
 
@@ -97,7 +110,7 @@ export async function getShowFiltersCourses(
   const params: Record<string, string | number | string[]> = {
     page,
     size: Math.min(size, 50), // Limitar a 50 itens por página
-    academicLevel: [academicLevel], // GRADUACAO, POS_GRADUACAO ou CURSOS_PROFISSIONALIZANTES
+    academicLevel: [academicLevel], // GRADUACAO, POS_GRADUACAO, CURSO_TECNICO, TECNICO, CURSO_LIVRE ou CURSO_PROFISSIONALIZANTE
   }
 
   // Só adiciona courseName se vier da URL

@@ -6,6 +6,7 @@ import PriceRangeSlider from '@/app/components/atoms/PriceRange'
 import { useQuery } from '@tanstack/react-query'
 import { getShowCourses } from '@/app/lib/api/get-courses'
 import { getLocalities } from '@/app/lib/api/get-localites'
+import { ACADEMIC_LEVEL, isProfissionalizanteLevel } from '@/app/lib/academic-level'
 
 interface FiltersPanelProps {
   city: string
@@ -470,15 +471,15 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
               Nível Acadêmico
             </h3>
             <div className="space-y-2">
-              {['GRADUACAO', 'POS_GRADUACAO', 'CURSOS_PROFISSIONALIZANTES'].map((level) => {
-                const label = level === 'GRADUACAO'
+              {[ACADEMIC_LEVEL.GRADUACAO, ACADEMIC_LEVEL.POS_GRADUACAO, ACADEMIC_LEVEL.CURSO_PROFISSIONALIZANTE].map((level) => {
+                const label = level === ACADEMIC_LEVEL.GRADUACAO
                   ? 'Graduação'
-                  : level === 'POS_GRADUACAO'
+                  : level === ACADEMIC_LEVEL.POS_GRADUACAO
                     ? 'Pós-graduação'
                     : 'Profissionalizante'
                 const isChecked =
                   academicLevel === level ||
-                  (level === 'CURSOS_PROFISSIONALIZANTES' && (academicLevel === 'cursos_profissionalizantes' || academicLevel === 'TECNICO'))
+                  (level === ACADEMIC_LEVEL.CURSO_PROFISSIONALIZANTE && isProfissionalizanteLevel(academicLevel))
                 
                 return (
                   <label key={level} className="flex items-center">

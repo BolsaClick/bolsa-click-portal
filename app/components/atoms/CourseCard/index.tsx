@@ -47,7 +47,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
         return '/assets/logo-pitagoras.svg'
 
       default:
-        return '/assets/logo-bolsa-click-green-dark.svg'
+        return '/assets/logo-bolsa-click-rosa.png'
     }
   }
   const handleClick = () => {

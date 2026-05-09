@@ -8,7 +8,6 @@ import {
   ArrowRight,
   Award,
   Check,
-  ChevronDown,
   MapPin,
   Monitor,
 } from 'lucide-react'

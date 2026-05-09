@@ -7,7 +7,6 @@ import Link from 'next/link'
 import {
   ArrowRight,
   Check,
-  ChevronDown,
   GraduationCap,
   MapPin,
   Monitor,

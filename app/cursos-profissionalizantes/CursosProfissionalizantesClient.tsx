@@ -8,7 +8,6 @@ import {
   ArrowRight,
   Briefcase,
   Check,
-  Clock,
   MapPin,
   Monitor,
 } from 'lucide-react'

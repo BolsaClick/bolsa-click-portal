@@ -5,7 +5,6 @@ import debounce from 'lodash.debounce'
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 
-import { Button } from '../../atoms/Button'
 import { ComboBox } from '../ComboBox'
 import { useRouter } from 'next/navigation'
 import { getShowCourses } from '@/app/lib/api/get-courses'

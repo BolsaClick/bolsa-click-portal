@@ -13,7 +13,6 @@ import {
   BookOpen,
   Clock,
   Check,
-  ChevronUp,
   ChevronDown,
   X,
   Mail,

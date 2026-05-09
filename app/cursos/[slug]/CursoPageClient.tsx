@@ -4,11 +4,8 @@ import { Course } from '@/app/interface/course'
 import {
   ArrowRight,
   Briefcase,
-  Check,
-  Clock,
   GraduationCap,
   MapPin,
-  Monitor,
   Star,
   TrendingUp,
 } from 'lucide-react'

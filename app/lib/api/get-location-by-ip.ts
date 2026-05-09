@@ -66,79 +66,105 @@ function convertStateToUF(stateName: string): string {
   return normalizedState.toUpperCase()
 }
 
-export async function getLocationByIP(): Promise<LocationByIP | null> {
-  try {
-    // Tentar primeiro com ipapi.co
+const DEFAULT_LOCATION: LocationByIP = {
+  city: 'São Paulo',
+  region: 'SP',
+  country: 'Brasil',
+  countryCode: 'BR',
+}
+
+const fetchWithTimeout = async (url: string, ms = 4000): Promise<Response | null> => {
+  if (typeof window === 'undefined' || typeof AbortController === 'undefined') {
     try {
-      const response = await fetch('https://ipapi.co/json/', {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        
-        // Verificar se temos cidade e estado válidos
-        // ipapi.co pode retornar region_code (sigla) ou region (nome completo); latitude/longitude opcionais
-        if (data.city && (data.region || data.region_code)) {
-          const stateUF = data.region_code || convertStateToUF(data.region || 'SP')
-          const lat = typeof data.latitude === 'number' ? data.latitude : (data.latitude != null ? Number(data.latitude) : undefined)
-          const lng = typeof data.longitude === 'number' ? data.longitude : (data.longitude != null ? Number(data.longitude) : undefined)
-          return {
-            city: data.city,
-            region: stateUF,
-            country: data.country_name || 'Brasil',
-            countryCode: data.country_code || 'BR',
-            ...(lat != null && !Number.isNaN(lat) && lng != null && !Number.isNaN(lng) && { latitude: lat, longitude: lng }),
-          }
-        }
-      }
-    } catch (error) {
-      console.warn('Erro com ipapi.co, tentando alternativa:', error)
-    }
-
-    // Fallback: usar ipwho.is (alternativa gratuita com HTTPS)
-    try {
-      const response = await fetch('https://ipwho.is/', {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-
-        if (data.success && data.city && (data.region || data.region_code)) {
-          const stateUF = data.region_code || convertStateToUF(data.region || 'SP')
-          const lat = typeof data.latitude === 'number' ? data.latitude : undefined
-          const lng = typeof data.longitude === 'number' ? data.longitude : undefined
-          return {
-            city: data.city,
-            region: stateUF,
-            country: data.country || 'Brasil',
-            countryCode: data.country_code || 'BR',
-            ...(lat != null && !Number.isNaN(lat) && lng != null && !Number.isNaN(lng) && { latitude: lat, longitude: lng }),
-          }
-        }
-      }
-    } catch (error) {
-      console.warn('Erro com ipwho.is:', error)
-    }
-
-    // Se ambas falharem, retornar valores padrão
-    throw new Error('Todas as APIs de geolocalização falharam')
-  } catch (error) {
-    console.error('Erro ao detectar localização por IP:', error)
-    // Retornar valores padrão em caso de erro
-    return {
-      city: 'São Paulo',
-      region: 'SP',
-      country: 'Brasil',
-      countryCode: 'BR',
+      return await fetch(url, { headers: { Accept: 'application/json' } })
+    } catch {
+      return null
     }
   }
+  const ctrl = new AbortController()
+  const t = setTimeout(() => ctrl.abort(), ms)
+  try {
+    return await fetch(url, {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+      signal: ctrl.signal,
+    })
+  } catch {
+    return null
+  } finally {
+    clearTimeout(t)
+  }
+}
+
+export async function getLocationByIP(): Promise<LocationByIP | null> {
+  // 1) Endpoint local — sem CORS, sem adblocker, IP detectado no servidor
+  try {
+    const r = await fetchWithTimeout('/api/geolocation', 4500)
+    if (r?.ok) {
+      const data = await r.json()
+      if (data?.city && data?.region) {
+        return {
+          city: String(data.city),
+          region: convertStateToUF(String(data.region)),
+          country: String(data.country ?? 'Brasil'),
+          countryCode: String(data.countryCode ?? 'BR'),
+          ...(typeof data.latitude === 'number' && typeof data.longitude === 'number'
+            ? { latitude: data.latitude, longitude: data.longitude }
+            : {}),
+        }
+      }
+    }
+  } catch {
+    /* tenta fallback externo */
+  }
+
+  // 2) Fallback direto: ipapi.co
+  try {
+    const response = await fetchWithTimeout('https://ipapi.co/json/', 4000)
+    if (response?.ok) {
+      const data = await response.json()
+      if (data?.city && (data?.region || data?.region_code)) {
+        const stateUF = data.region_code || convertStateToUF(data.region || 'SP')
+        const lat = typeof data.latitude === 'number' ? data.latitude : Number(data.latitude)
+        const lng = typeof data.longitude === 'number' ? data.longitude : Number(data.longitude)
+        return {
+          city: data.city,
+          region: stateUF,
+          country: data.country_name || 'Brasil',
+          countryCode: data.country_code || 'BR',
+          ...(Number.isFinite(lat) && Number.isFinite(lng)
+            ? { latitude: lat, longitude: lng }
+            : {}),
+        }
+      }
+    }
+  } catch {
+    /* tenta próximo */
+  }
+
+  // 3) Fallback: ipwho.is
+  try {
+    const response = await fetchWithTimeout('https://ipwho.is/', 4000)
+    if (response?.ok) {
+      const data = await response.json()
+      if (data?.success && data?.city && (data?.region || data?.region_code)) {
+        const stateUF = data.region_code || convertStateToUF(data.region || 'SP')
+        const lat = typeof data.latitude === 'number' ? data.latitude : undefined
+        const lng = typeof data.longitude === 'number' ? data.longitude : undefined
+        return {
+          city: data.city,
+          region: stateUF,
+          country: data.country || 'Brasil',
+          countryCode: data.country_code || 'BR',
+          ...(lat != null && lng != null ? { latitude: lat, longitude: lng } : {}),
+        }
+      }
+    }
+  } catch {
+    /* fallback final */
+  }
+
+  // 4) Default — sem console.error pra não poluir o console
+  return DEFAULT_LOCATION
 }
 

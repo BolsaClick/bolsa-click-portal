@@ -3,15 +3,18 @@
 'use client'
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Search, MapPin,
-  Building2, ArrowLeft,
-  ListFilter, LayoutGrid, LayoutList,
-  ArrowRight
+  MapPin,
+  Building2,
+  ArrowLeft,
+  ListFilter,
+  LayoutGrid,
+  LayoutList,
+  ArrowRight,
+  X,
 } from 'lucide-react';
 
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
@@ -20,9 +23,17 @@ import { normalizeAcademicLevel } from '@/app/lib/academic-level'
 
 import CourseCardNew from '@/app/components/CourseCardNew';
 import FiltersPanel from './FiltersPanel';
-import Breadcrumbs from '@/app/components/molecules/Breadcrumbs';
 import { Course } from '@/app/interface/course';
 import { isBot } from '@/app/lib/utils/is-bot';
+
+const NIVEL_LABEL: Record<string, string> = {
+  GRADUACAO: 'Graduação',
+  POS_GRADUACAO: 'Pós-graduação',
+  CURSO_PROFISSIONALIZANTE: 'Profissionalizante',
+  CURSO_TECNICO: 'Técnico',
+  TECNICO: 'Técnico',
+  CURSO_LIVRE: 'Curso livre',
+}
 
 
 
@@ -284,24 +295,63 @@ export default function SearchResultClient() {
   const canSearch = !!cidade?.trim() && !!estado?.trim();
 
   const normalizedNivel = normalizeAcademicLevel(nivel)
+  const queryClient = useQueryClient()
 
-  const { data: showCourses, isLoading } = useQuery({
+  // Cache agressivo:
+  // - staleTime 5 min: dados são considerados frescos por 5 min, sem refetch
+  // - gcTime 30 min: cache permanece em memória 30 min após o último uso
+  // - keepPreviousData: ao trocar filtro/página, mostra resultado antigo enquanto busca novo
+  // - sem refetchOnMount/Focus/Reconnect: confiamos no cache até staleTime expirar
+  const SEARCH_STALE_TIME = 5 * 60 * 1000
+  const SEARCH_GC_TIME = 30 * 60 * 1000
+
+  const buildQueryKey = useCallback(
+    (page: number) =>
+      ['courses', 'filter', courseNameForAPI, cidade, estado, modalidade, normalizedNivel, page] as const,
+    [courseNameForAPI, cidade, estado, modalidade, normalizedNivel],
+  )
+
+  const { data: showCourses, isLoading, isFetching } = useQuery({
     queryFn: () => getShowFiltersCourses(
       courseNameForAPI,
-      cidade || undefined, // city
-      estado || undefined, // state
-      modalidade && modalidade.trim() ? modalidade : undefined, // Só passar se tiver valor
-      normalizedNivel, // academicLevel (normalizado para o enum oficial do BFF)
-      1, // page
-      20 // size (20 itens por página)
+      cidade || undefined,
+      estado || undefined,
+      modalidade && modalidade.trim() ? modalidade : undefined,
+      normalizedNivel,
+      1,
+      20,
     ),
-    queryKey: ['courses', 'filter', courseNameForAPI, cidade, estado, modalidade, normalizedNivel],
+    queryKey: buildQueryKey(1),
     enabled: canSearch,
-    staleTime: 0, // Permitir refetch quando os parâmetros mudarem
-    refetchOnWindowFocus: false, // Não refetch quando a janela ganha foco
-    refetchOnMount: true, // Refetch quando o componente monta novamente (quando URL muda)
-    refetchOnReconnect: false, // Não refetch quando reconecta
-  });
+    staleTime: SEARCH_STALE_TIME,
+    gcTime: SEARCH_GC_TIME,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
+  })
+
+  // Prefetch da próxima "página API" em background — backend só retorna 20 por chamada,
+  // então enquanto o cliente pagina nos 20, já preparamos a próxima leva.
+  useEffect(() => {
+    if (!canSearch || !showCourses) return
+    const nextKey = ['courses', 'filter', courseNameForAPI, cidade, estado, modalidade, normalizedNivel, 2] as const
+    queryClient.prefetchQuery({
+      queryKey: nextKey,
+      queryFn: () =>
+        getShowFiltersCourses(
+          courseNameForAPI,
+          cidade || undefined,
+          estado || undefined,
+          modalidade && modalidade.trim() ? modalidade : undefined,
+          normalizedNivel,
+          2,
+          20,
+        ),
+      staleTime: SEARCH_STALE_TIME,
+      gcTime: SEARCH_GC_TIME,
+    })
+  }, [canSearch, showCourses, courseNameForAPI, cidade, estado, modalidade, normalizedNivel, queryClient, SEARCH_STALE_TIME, SEARCH_GC_TIME])
 
   // Track search completion
   useEffect(() => {
@@ -481,20 +531,85 @@ const onSubmit = (data: any) => {
     })
   }, [updateURL, trackEvent, courseNameForAPI, cidade, estado, modalidade])
 
+  const nivelLabel = NIVEL_LABEL[normalizedNivel] ?? 'Cursos'
+  const totalResults = filteredByPrice.length
+
   return (
-    <div className="w-full  bg-neutral-50">
-      {/* Enhanced Header */}
-      <header className="w-full bg-bolsa-primary shadow-sm z-50">
-        <div className='pt-24 pb-6'>
-          <div className="p-4 mx-auto max-w-7xl">
-            <div className="flex flex-col md:flex-row items-center justify-between mb-4">
-              <button onClick={router.back} className="hidden sm:inline-flex items-center justify-center rounded-md py-2.5 px-4 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 bg-bolsa-secondary text-neutral-50 hover:bg-slate-600 focus:ring-bolsa-secondary/20">
-                <ArrowLeft size={20} className="mr-2" />
-                <span className="hidden sm:inline">Voltar para Busca</span>
-              </button>
-              <div className="flex items-center space-x-2 flex-shrink-0">
-                <div className="hidden sm:flex items-center space-x-2 bg-white rounded-lg border border-neutral-200 p-1">
+    <div className="w-full bg-paper min-h-screen">
+      {/* HERO compacto navy editorial */}
+      <section className="relative bg-bolsa-primary overflow-hidden">
+        <div
+          aria-hidden="true"
+          className="absolute -top-24 -right-32 w-[28rem] h-[28rem] rounded-full bg-bolsa-secondary/20 blur-3xl"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute -bottom-32 -left-24 w-[28rem] h-[28rem] rounded-full bg-blue-400/15 blur-3xl"
+        />
+        <div className="container mx-auto px-4 pt-20 pb-12 md:pt-24 md:pb-14 relative">
+          <div className="max-w-6xl mx-auto">
+            <button
+              type="button"
+              onClick={router.back}
+              className="inline-flex items-center gap-2 font-mono text-[10px] tracking-[0.22em] uppercase text-white/60 hover:text-white transition-colors mb-6"
+            >
+              <ArrowLeft size={12} />
+              Voltar
+            </button>
+
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+              <div className="min-w-0">
+                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-white/60 inline-flex items-center gap-2 mb-3">
+                  <span className="h-px w-8 bg-white/30" />
+                  {nivelLabel} · Resultados da busca
+                </span>
+                <h1 className="font-display text-3xl md:text-4xl lg:text-[48px] font-semibold text-white leading-[1.05]">
+                  {courseDisplayName ? (
+                    <>
+                      Bolsas de{' '}
+                      <span className="italic text-white/85">{courseDisplayName}</span>
+                    </>
+                  ) : (
+                    <>
+                      Bolsas em{' '}
+                      <span className="italic text-white/85">{nivelLabel}</span>
+                    </>
+                  )}
+                </h1>
+
+                <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-[11px] tracking-[0.18em] uppercase text-white/70">
+                  {cidade && estado && (
+                    <span className="inline-flex items-center gap-1.5">
+                      <MapPin size={13} />
+                      {cidade} — {estado}
+                    </span>
+                  )}
+                  {modalidade && modalidade.trim() && (
+                    <>
+                      <span className="text-white/30">·</span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <Building2 size={13} />
+                        {formatModalidade(modalidade)}
+                      </span>
+                    </>
+                  )}
+                  {!isLoading && totalResults > 0 && (
+                    <>
+                      <span className="text-white/30">·</span>
+                      <span className="inline-flex items-center gap-1.5 num-tabular">
+                        {totalResults} {totalResults === 1 ? 'oferta' : 'ofertas'}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* View mode + filtros mobile */}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="hidden sm:inline-flex items-center bg-white/10 backdrop-blur border border-white/20 rounded-full p-1">
                   <button
+                    type="button"
+                    aria-label="Visualizar em grade"
                     onClick={() => {
                       setViewMode('grid')
                       trackEvent('course_search_view_changed', {
@@ -504,11 +619,15 @@ const onSubmit = (data: any) => {
                         state: estado,
                       })
                     }}
-                    className={`p-2 rounded ${viewMode === 'grid' ? 'bg-emerald-50 text-bolsa-secondary' : 'text-neutral-500 hover:bg-neutral-50'}`}
+                    className={`p-2 rounded-full transition-colors ${
+                      viewMode === 'grid' ? 'bg-white text-ink-900' : 'text-white/70 hover:text-white'
+                    }`}
                   >
-                    <LayoutGrid size={20} />
+                    <LayoutGrid size={16} />
                   </button>
                   <button
+                    type="button"
+                    aria-label="Visualizar em lista"
                     onClick={() => {
                       setViewMode('list')
                       trackEvent('course_search_view_changed', {
@@ -518,88 +637,33 @@ const onSubmit = (data: any) => {
                         state: estado,
                       })
                     }}
-                    className={`p-2 rounded ${viewMode === 'list' ? 'bg-emerald-50 text-bolsa-secondary' : 'text-neutral-500 hover:bg-neutral-50'}`}
+                    className={`p-2 rounded-full transition-colors ${
+                      viewMode === 'list' ? 'bg-white text-ink-900' : 'text-white/70 hover:text-white'
+                    }`}
                   >
-                    <LayoutList size={20} />
+                    <LayoutList size={16} />
                   </button>
                 </div>
-
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-2">
-                {/* Só mostrar título se tiver curso */}
-                {courseDisplayName && (
-                  <div className="flex items-center space-x-2">
-                    <Search size={20} className="text-emerald-100" />
-                    <h1 className="text-xl font-bold text-emerald-50">
-                      Resultados para: <span className="text-emerald-200">{courseDisplayName}</span>
-                    </h1>
-                  </div>
-                )}
-                <div className="flex flex-wrap gap-2 sm:gap-3 text-sm text-emerald-50">
-                  {cidade && estado && (
-                    <>
-                      <div className="flex items-center">
-                        <MapPin size={16} className="mr-1 text-bolsa-secondary" />
-                        {cidade} - {estado}
-                      </div>
-                      {/* Só mostrar separador se tiver modalidade */}
-                      {modalidade && modalidade.trim() && <span className="hidden sm:inline">•</span>}
-                    </>
-                  )}
-                  {/* Só mostrar modalidade se tiver valor */}
-                  {modalidade && modalidade.trim() && (
-                    <div className="flex items-center">
-                      <Building2 size={16} className="mr-1 text-bolsa-secondary" />
-                      {formatModalidade(modalidade)}
-                    </div>
-                  )}
-                  
-                </div>
-                <div className="mx-auto flex justify-start ">
-        {/* Breadcrumbs */}
-        <Breadcrumbs
-          items={[
-            ...(courseDisplayName
-              ? [
-                  { label: 'Cursos', href: '/curso' },
-                  { 
-                    label: courseDisplayName, 
-                    href: `/curso/resultado?${new URLSearchParams({ 
-                      ...(curso ? { c: curso } : {}),
-                      ...(cursoNomeCompleto ? { cn: cursoNomeCompleto } : {}),
-                      ...(cidade ? { cidade } : {}),
-                      ...(estado ? { estado } : {}),
-                      ...(modalidade ? { modalidade } : {}),
-                      ...(nivel ? { nivel } : {})
-                    }).toString()}` 
-                  }
-                ]
-              : [{ label: 'Cursos', href: '/curso' }])
-          ]}
-        />
-      </div>
+                <button
+                  type="button"
+                  onClick={() => setShowMobileFilters(true)}
+                  className="lg:hidden inline-flex items-center gap-2 px-4 py-2 bg-bolsa-secondary text-white font-semibold rounded-full text-[13px] hover:bg-bolsa-secondary/90 transition-colors"
+                >
+                  <ListFilter size={14} />
+                  Filtros
+                </button>
               </div>
             </div>
           </div>
         </div>
-        
-      </header>
+      </section>
 
-     
-
-      <div className="mx-auto max-w-7xl pt-8 pb-16">
-        <div className="flex gap-8">
-          {/* Desktop Filters Sidebar */}
-          <AnimatePresence>
-            <motion.aside
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="hidden lg:block w-80 flex-shrink-0"
-            >
+      {/* CONTEÚDO */}
+      <section className="container mx-auto px-4 py-10 md:py-12">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* SIDEBAR FILTROS — sticky desktop */}
+          <aside className="hidden lg:block lg:col-span-4 xl:col-span-3">
+            <div className="sticky top-24">
               <FiltersPanel
                 city={cidade}
                 state={estado}
@@ -615,134 +679,172 @@ const onSubmit = (data: any) => {
                 onCourseSelect={handleCourseSelect}
                 onClose={() => setShowMobileFilters(false)}
               />
-            </motion.aside>
-          </AnimatePresence>
-
-          {/* Mobile Filters Modal */}
-          <AnimatePresence>
-            {showMobileFilters && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden"
-                onClick={() => setShowMobileFilters(false)}
-              >
-                <motion.div
-                  initial={{ x: '100%' }}
-                  animate={{ x: 0 }}
-                  exit={{ x: '100%' }}
-                  className="absolute right-0 top-0 h-full w-full max-w-sm bg-neutral-50 p-4"
-                  onClick={e => e.stopPropagation()}
-                >
-                  <FiltersPanel
-                city={cidade}
-                state={estado}
-                modality={modalidade}
-                academicLevel={nivel}
-                courseName={curso}
-                courseSuffix={cursoNomeCompleto}
-                onModalityChange={handleModalityChange}
-                onCitySelect={handleCitySelect}
-                onAcademicLevelChange={handleAcademicLevelChange}
-                priceRange={filters.montlyFeeToMin}
-                onPriceChange={handlePriceChange}
-                onCourseSelect={handleCourseSelect}
-                onClose={() => setShowMobileFilters(false)}
-              />
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Enhanced Results Grid */}
-          <div className="flex-1">
-            <div className="flex justify-between items-center mb-6 px-6">
-
-
-
-              <button
-                onClick={() => setShowMobileFilters(true)}
-                className="lg:hidden bg-bolsa-secondary px-3 py-2 items-center flex rounded-md text-zinc-100"
-              >
-                <ListFilter size={18} className="mr-2" />
-                Filtros
-              </button>
             </div>
+          </aside>
+
+          {/* MOBILE FILTROS DRAWER */}
+          {showMobileFilters && (
+            <div
+              className="fixed inset-0 z-[60] lg:hidden"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Filtros"
+            >
+              <button
+                type="button"
+                aria-label="Fechar filtros"
+                className="absolute inset-0 bg-ink-900/50 backdrop-blur-sm"
+                onClick={() => setShowMobileFilters(false)}
+              />
+              <div className="absolute right-0 top-0 h-full w-full max-w-sm bg-paper shadow-2xl overflow-y-auto">
+                <div className="flex items-center justify-between px-5 h-[60px] border-b border-hairline bg-white sticky top-0 z-10">
+                  <span className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
+                    Filtros
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowMobileFilters(false)}
+                    aria-label="Fechar"
+                    className="p-2 -mr-2 text-ink-700 hover:text-ink-900"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+                <div className="p-4">
+                  <FiltersPanel
+                    city={cidade}
+                    state={estado}
+                    modality={modalidade}
+                    academicLevel={nivel}
+                    courseName={curso}
+                    courseSuffix={cursoNomeCompleto}
+                    onModalityChange={handleModalityChange}
+                    onCitySelect={handleCitySelect}
+                    onAcademicLevelChange={handleAcademicLevelChange}
+                    priceRange={filters.montlyFeeToMin}
+                    onPriceChange={handlePriceChange}
+                    onCourseSelect={handleCourseSelect}
+                    onClose={() => setShowMobileFilters(false)}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* RESULTADOS */}
+          <div className="lg:col-span-8 xl:col-span-9 min-w-0">
+            {/* Toolbar de resultados */}
+            {!isLoading && totalResults > 0 && (
+              <div className="flex items-baseline justify-between hairline-b pb-3 mb-6">
+                <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
+                  {totalResults === 1 ? 'oferta encontrada' : 'ofertas encontradas'}
+                  {isFetching && <span className="ml-2 text-ink-300 normal-case">atualizando…</span>}
+                </h2>
+                <span className="font-mono num-tabular text-[11px] text-ink-500">
+                  Página {currentPage} / {Math.max(totalPages, 1)}
+                </span>
+              </div>
+            )}
 
             {isLoading ? (
               <div
-                className={`grid ${viewMode === 'grid'
-                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6'
-                  : 'grid-cols-1 gap-4'
-                  }`}
+                className={`grid ${
+                  viewMode === 'grid'
+                    ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5'
+                    : 'grid-cols-1 gap-4'
+                }`}
               >
                 {Array.from({ length: 6 }).map((_, i) => (
-
-
-                  <div key={i} className="bg-white rounded-xl shadow-card p-6 animate-pulse space-y-4">
-                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/3"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2 mt-4"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2 mt-4"></div>
-                    <div className="h-8 bg-gray-200 rounded w-full mt-6"></div>
+                  <div
+                    key={i}
+                    className="bg-white border border-hairline rounded-2xl p-5 md:p-6 animate-pulse"
+                  >
+                    <div className="flex items-start justify-between mb-5">
+                      <div className="h-9 w-24 bg-paper-warm rounded" />
+                      <div className="h-6 w-12 bg-paper-warm rounded-full" />
+                    </div>
+                    <div className="h-5 bg-paper-warm rounded w-3/4 mb-2" />
+                    <div className="h-5 bg-paper-warm rounded w-1/2 mb-5" />
+                    <div className="h-px bg-hairline mb-4" />
+                    <div className="flex items-end justify-between">
+                      <div>
+                        <div className="h-3 w-20 bg-paper-warm rounded mb-2" />
+                        <div className="h-7 w-24 bg-paper-warm rounded" />
+                      </div>
+                      <div className="h-10 w-10 bg-paper-warm rounded-full" />
+                    </div>
                   </div>
-
                 ))}
               </div>
-            ) : (
-              <div className={`grid ${viewMode === 'grid'
-                ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6'
-                : 'grid-cols-1 gap-4'
-                }`}>
-                {filteredByPrice.length === 0 ? (
-                  <div className="col-span-full text-center py-12">
-                    <p className="text-lg text-neutral-600 mb-6">
-                      Nenhuma oferta encontrada para essa modalidade nessa cidade. 😢
-                    </p>
-                    <button
-                      onClick={() => {
-                        const other = modalidade === 'PRESENCIAL'
+            ) : totalResults === 0 ? (
+              <div className="bg-white border border-hairline rounded-2xl p-10 md:p-14 text-center">
+                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 inline-flex items-center gap-3 mb-4">
+                  <span className="h-px w-8 bg-ink-300" />
+                  Sem resultados
+                  <span className="h-px w-8 bg-ink-300" />
+                </span>
+                <h3 className="font-display text-2xl md:text-3xl text-ink-900 leading-tight mb-3">
+                  Nenhuma oferta encontrada{' '}
+                  <span className="italic text-ink-700">com esses filtros.</span>
+                </h3>
+                <p className="text-ink-500 text-[15px] leading-relaxed max-w-md mx-auto mb-6">
+                  Tente ajustar a modalidade, ampliar a faixa de preço ou buscar em outra cidade.
+                </p>
+                {modalidade && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const other =
+                        modalidade === 'PRESENCIAL'
                           ? 'SEMIPRESENCIAL'
                           : modalidade === 'SEMIPRESENCIAL'
-                            ? 'EAD'
-                            : 'PRESENCIAL';
-
-                        const params = new URLSearchParams();
-                        if (curso) params.set('c', curso);
-                        params.set('cidade', cidade);
-                        params.set('estado', estado);
-                        params.set('modalidade', other);
-                        router.push(`/curso/resultado?${params.toString()}`);
-                      }}
-                      className="inline-flex items-center px-6 py-3 bg-bolsa-secondary text-white font-semibold rounded hover:bg-emerald-700 transition"
-                    >
-                      Buscar em outra modalidade
-                      <ArrowRight className="ml-2" size={18} />
-                    </button>
-                  </div>
-                ) : (
-                  paginatedCourses.map((course: Course, index: number) => {
-                    return (
-                      <CourseCardNew
-                        key={index}
-                        courseName={courseDisplayName || course.name || ''}
-                        course={course}
-                        setFormData={(name: string, value: unknown) => setValue(name, value)}
-                        viewMode={viewMode}
-                        triggerSubmit={handleSubmit(onSubmit)}
-                      />
-                    )
-                  })
+                          ? 'EAD'
+                          : 'PRESENCIAL'
+                      const params = new URLSearchParams()
+                      if (curso) params.set('c', curso)
+                      params.set('cidade', cidade)
+                      params.set('estado', estado)
+                      params.set('modalidade', other)
+                      params.set('nivel', normalizedNivel)
+                      router.push(`/curso/resultado?${params.toString()}`)
+                    }}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-bolsa-secondary text-white font-semibold rounded-full text-[14px] hover:bg-bolsa-secondary/90 transition-colors"
+                  >
+                    Buscar em outra modalidade
+                    <ArrowRight size={16} />
+                  </button>
                 )}
-
               </div>
+            ) : (
+              <ul
+                className={`grid ${
+                  viewMode === 'grid'
+                    ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5 items-stretch'
+                    : 'grid-cols-1 gap-4'
+                }`}
+              >
+                {paginatedCourses.map((course: Course, index: number) => (
+                  <li key={`${course.id ?? index}-${index}`} className="h-full">
+                    <CourseCardNew
+                      courseName={courseDisplayName || course.name || ''}
+                      course={course}
+                      setFormData={(name: string, value: unknown) => setValue(name, value)}
+                      viewMode={viewMode}
+                      triggerSubmit={handleSubmit(onSubmit)}
+                    />
+                  </li>
+                ))}
+              </ul>
             )}
 
-            {!isLoading && (
-              <div className="mt-8 flex justify-center items-center space-x-2">
+            {/* PAGINATION */}
+            {!isLoading && totalPages > 1 && (
+              <nav
+                aria-label="Paginação"
+                className="mt-10 flex items-center justify-between gap-4 hairline-t pt-6"
+              >
                 <button
+                  type="button"
                   onClick={() => {
                     setCurrentPage((prev) => {
                       const newPage = Math.max(prev - 1, 1)
@@ -757,31 +859,45 @@ const onSubmit = (data: any) => {
                     })
                   }}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 bg-neutral-200 text-neutral-800 rounded transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:text-bolsa-secondary disabled:hover:text-neutral-800"
+                  className="inline-flex items-center gap-2 px-4 py-2 font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700 hover:text-ink-900 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
-                  <ArrowLeft size={20} />
+                  <ArrowLeft size={14} />
+                  Anterior
                 </button>
 
-                {Array.from({ length: totalPages }).map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      setCurrentPage(i + 1)
-                      trackEvent('course_search_page_changed', {
-                        page: i + 1,
-                        direction: 'direct',
-                        course_name: courseNameForAPI,
-                        city: cidade,
-                        state: estado,
-                      })
-                    }}
-                    className={`px-4 py-2 rounded ${currentPage === i + 1 ? 'bg-bolsa-secondary text-white' : 'bg-white border text-neutral-800'}`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+                <ol className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }).map((_, i) => {
+                    const page = i + 1
+                    const active = currentPage === page
+                    return (
+                      <li key={page}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCurrentPage(page)
+                            trackEvent('course_search_page_changed', {
+                              page,
+                              direction: 'direct',
+                              course_name: courseNameForAPI,
+                              city: cidade,
+                              state: estado,
+                            })
+                          }}
+                          className={`min-w-[36px] h-9 px-3 font-mono num-tabular text-[12px] rounded-full transition-colors ${
+                            active
+                              ? 'bg-ink-900 text-white'
+                              : 'text-ink-700 hover:bg-paper-warm'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ol>
 
                 <button
+                  type="button"
                   onClick={() => {
                     setCurrentPage((prev) => {
                       const newPage = Math.min(prev + 1, totalPages)
@@ -796,16 +912,17 @@ const onSubmit = (data: any) => {
                     })
                   }}
                   disabled={currentPage === totalPages}
-                  className="px-4 py-2 bg-neutral-200 text-neutral-800 rounded transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:text-bolsa-secondary disabled:hover:text-neutral-800"
+                  className="inline-flex items-center gap-2 px-4 py-2 font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700 hover:text-ink-900 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
-                  <ArrowRight size={20} />
+                  Próxima
+                  <ArrowRight size={14} />
                 </button>
-              </div>
+              </nav>
             )}
           </div>
         </div>
-      </div>
+      </section>
     </div>
-  );
-};
+  )
+}
 

@@ -14,6 +14,7 @@ import { ModalitySelect } from '../../atoms/ModalitySelect'
 import { GraduationCap, MapPin } from 'lucide-react'
 import { useGeoLocation } from '@/app/context/GeoLocationContext'
 import { ACADEMIC_LEVEL } from '@/app/lib/academic-level'
+import { useLastSearch } from '@/app/lib/personalization/hooks'
 
 type FormValues = {
   modalidade: 'EAD' | 'PRESENCIAL' | 'SEMIPRESENCIAL'
@@ -30,6 +31,7 @@ const educationLevels: { levels: FormValues['levels']; label: string }[] = [
 const Filter = () => {
   const navigate = useRouter()
   const { city: geoCity, state: geoState } = useGeoLocation()
+  const { saveSearch } = useLastSearch()
   const [searchCity, setSearchCity] = useState('')
   const [activeTab, setActiveTab] = useState<FormValues['levels']>(() => {
     if (typeof window !== 'undefined') {
@@ -196,8 +198,18 @@ const Filter = () => {
     params.push(`modalidade=${encodeURIComponent(modalidadeFormatada)}`);
     
     // Adicionar nível acadêmico para diferenciar graduação, pós e profissionalizante
-    params.push(`nivel=${academicLevelMap[activeTab]}`);
-    
+    const nivel = academicLevelMap[activeTab]
+    params.push(`nivel=${nivel}`);
+
+    // Salvar última busca pra personalização (gated por consent)
+    saveSearch({
+      course: courseNameClean || undefined,
+      city: city || undefined,
+      state: state || undefined,
+      modality: modalidadeFormatada,
+      level: nivel,
+    })
+
     navigate.push(`/curso/resultado?${params.join('&')}`);
   }
 
@@ -206,27 +218,25 @@ const Filter = () => {
   }, 300)
 
   const renderLevelTabs = () => (
-    <div className="grid grid-cols-3 border-b border-gray-300">
-      {educationLevels.map((level) => {
-        const isDisabled = false
-
+    <div className="grid grid-cols-3 border-b border-hairline">
+      {educationLevels.map((level, idx) => {
+        const isActive = activeTab === level.levels
+        const isLast = idx === educationLevels.length - 1
         return (
           <button
             key={level.levels}
-            className={`flex-1 py-4 px-6 text-center font-medium text-nowrap transition-colors
-            ${activeTab === level.levels
-                ? 'text-bolsa-secondary/90 border-b-2 border-bolsa-secondary'
-                : isDisabled
-                  ? 'text-gray-400 cursor-not-allowed'
-                  : 'text-gray-600 hover:text-emerald-600'
-              }`}
-            onClick={() => {
-              if (!isDisabled) handleLevelChange(level.levels)
-            }}
+            className={`relative flex-1 py-5 px-4 text-center text-[13px] tracking-wide font-medium font-mono uppercase transition-colors
+              ${!isLast ? 'border-r border-hairline' : ''}
+              ${isActive ? 'text-ink-900' : 'text-ink-500 hover:text-ink-900'}`}
+            onClick={() => handleLevelChange(level.levels)}
             type="button"
-            disabled={isDisabled}
           >
             {level.label}
+            <span
+              className={`absolute -bottom-px left-0 right-0 h-[2px] bg-ink-900 transition-transform duration-300 origin-center ${
+                isActive ? 'scale-x-100' : 'scale-x-0'
+              }`}
+            />
           </button>
         )
       })}
@@ -235,10 +245,12 @@ const Filter = () => {
 
 
 
+  const showModality = activeTab === 'graduacao'
+
   const renderSearchForm = () => (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="w-full ">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+      <div className={`grid grid-cols-1 gap-4 ${showModality ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+        <div className="w-full">
           <ComboBox
             key={`course-${activeTab}`}
             control={control}
@@ -249,49 +261,67 @@ const Filter = () => {
           />
         </div>
 
-        <div className="w-full ">
+        <div className="w-full">
           <ComboBox
             control={control}
             name="city"
             options={cityOptions}
             placeholder="Digite uma cidade"
             icon={<MapPin size={20} />}
-
             onInputChange={(inputValue) => handleCityChange(inputValue)}
           />
         </div>
-        <div className="w-full">
-          {activeTab === 'graduacao' && (
+        {showModality && (
+          <div className="w-full">
             <ModalitySelect
               value={convertModalityFromAPI(watch('modalidade'))}
               onChange={(value) => setValue('modalidade', convertModalityToAPI(value))}
               variant="default"
             />
-          )}
-
-        </div>
-
-
+          </div>
+        )}
       </div>
 
-      <Button
+      <button
         type="submit"
-        variant='secondary'
-        className='transition-colors shadow-md  bg-bolsa-secondary hover:bg-bolsa-secondary/80 text-white font-medium'
+        className="group relative w-full md:w-auto md:self-end px-7 py-3.5 bg-ink-900 hover:bg-bolsa-secondary text-white font-semibold text-[14px] tracking-wide rounded-full transition-colors duration-300"
       >
-        Buscar Bolsas
-      </Button>
+        <span className="relative z-10 flex items-center justify-center gap-3">
+          Buscar bolsas
+          <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
+        </span>
+      </button>
     </form>
   )
-  return (
 
-    <div
-      className={` container mx-auto px-4 z-40 pt-20 md:pt-0`}
-    >
-      <div className="max-w-4xl mx-auto  w-full rounded-lg top-0 left-0 right-0 bg-white shadow-md z-40 transition-transform duration-300 md:-translate-y-32 ">
-        {renderLevelTabs()}
-        <div className='p-4'>
-          {renderSearchForm()}
+  return (
+    <div className="container mx-auto px-4 z-40 relative">
+      <div className="max-w-4xl mx-auto w-full bg-white border border-hairline rounded-2xl shadow-[0_30px_60px_-30px_rgba(11,31,60,0.18)]">
+        {/* Cabeçalho navy editorial */}
+        <div className="bg-bolsa-primary px-6 md:px-8 py-6 md:py-7 text-white rounded-t-2xl">
+          <div className="flex items-center gap-2.5 mb-2">
+            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-bolsa-secondary text-white">
+              <GraduationCap size={16} />
+            </span>
+            <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-white/70">
+              Busca de bolsas
+            </span>
+          </div>
+          <h2 className="font-display text-xl md:text-[26px] leading-tight font-semibold mb-1.5">
+            Encontre sua bolsa em segundos
+          </h2>
+          <p className="text-white/75 text-[13px] md:text-[14px] max-w-xl leading-relaxed">
+            Escolha o nível, digite o curso e a cidade. A gente compara as faculdades parceiras
+            e mostra a melhor bolsa pra você.
+          </p>
+        </div>
+
+        {/* Tabs e form */}
+        <div className="bg-white">
+          {renderLevelTabs()}
+          <div className="p-6 md:p-8">
+            {renderSearchForm()}
+          </div>
         </div>
       </div>
     </div>

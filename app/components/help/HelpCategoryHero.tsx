@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { ChevronRight } from 'lucide-react'
 import { ReactNode } from 'react'
 
 interface HelpCategoryHeroProps {
@@ -12,50 +11,58 @@ interface HelpCategoryHeroProps {
   }
 }
 
-export function HelpCategoryHero({ title, description, icon, breadcrumb }: HelpCategoryHeroProps) {
+export function HelpCategoryHero({
+  title,
+  description,
+  icon,
+  breadcrumb,
+}: HelpCategoryHeroProps) {
   return (
-    <div className="bg-gradient-to-br from-bolsa-primary via-blue-800 to-blue-900 pt-28 pb-16 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 left-0 w-72 h-72 bg-white rounded-full -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/3 translate-y-1/3" />
-      </div>
+    <section className="relative bg-bolsa-primary overflow-hidden">
+      <div
+        aria-hidden="true"
+        className="absolute -top-24 -right-32 w-[28rem] h-[28rem] rounded-full bg-bolsa-secondary/20 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute -bottom-32 -left-24 w-[28rem] h-[28rem] rounded-full bg-blue-400/15 blur-3xl"
+      />
+      <div className="container mx-auto px-4 pt-16 pb-14 md:pt-20 md:pb-16 relative">
+        <div className="max-w-4xl mx-auto">
+          <nav className="flex items-center gap-2 font-mono text-[10px] tracking-[0.22em] uppercase text-white/60 mb-6">
+            <Link href="/central-de-ajuda" className="hover:text-white transition-colors">
+              Central de ajuda
+            </Link>
+            {breadcrumb && (
+              <>
+                <span aria-hidden="true">/</span>
+                <Link
+                  href={breadcrumb.href}
+                  className="hover:text-white transition-colors"
+                >
+                  {breadcrumb.label}
+                </Link>
+              </>
+            )}
+          </nav>
 
-      <div className="mx-auto max-w-5xl px-4 relative z-10">
-        {/* Breadcrumb */}
-        <nav className="mb-6 flex items-center gap-2 text-sm text-white/70">
-          <Link href="/central-de-ajuda" className="hover:text-white transition-colors">
-            Central de Ajuda
-          </Link>
-          {breadcrumb && (
-            <>
-              <ChevronRight size={14} />
-              <Link href={breadcrumb.href} className="hover:text-white transition-colors">
-                {breadcrumb.label}
-              </Link>
-            </>
-          )}
-        </nav>
-
-        <div className="flex items-start gap-4">
-          {/* Icon */}
-          {icon && (
-            <div className="hidden sm:flex w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-sm items-center justify-center text-white flex-shrink-0">
-              {icon}
+          <div className="flex items-start gap-5">
+            {icon && (
+              <div className="hidden sm:flex w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm items-center justify-center text-white flex-shrink-0 border border-white/20">
+                {icon}
+              </div>
+            )}
+            <div className="min-w-0">
+              <h1 className="font-display text-3xl md:text-4xl lg:text-[44px] font-semibold text-white leading-[1.05] mb-3">
+                {title}
+              </h1>
+              <p className="text-white/75 text-[15px] md:text-base max-w-2xl leading-relaxed">
+                {description}
+              </p>
             </div>
-          )}
-
-          {/* Content */}
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
-              {title}
-            </h1>
-            <p className="text-lg text-white/80 max-w-2xl">
-              {description}
-            </p>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   )
 }

@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Container from '../../atoms/Container';
 import { WhatsAppSocialIcon, WhatsAppPhoneLink } from './WhatsAppContactLink';
+import { ManageCookiesButton } from './ManageCookiesButton';
 
 const linkClass = 'text-neutral-300 text-sm hover:text-white transition-colors'
 
@@ -353,6 +354,7 @@ const Footer: React.FC = () => {
               <Link href="/central-de-ajuda/seguranca-dados-privacidade/lgpd" className="text-neutral-400 text-xs hover:text-neutral-300 transition-colors">
                 LGPD
               </Link>
+              <ManageCookiesButton />
             </div>
           </div>
         </Container>

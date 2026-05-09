@@ -2,7 +2,16 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Clock, Calendar, User, Tag, ArrowRight, BookOpen, GraduationCap, Building2, RefreshCw } from 'lucide-react'
+import {
+  ArrowRight,
+  BookOpen,
+  Building2,
+  Clock,
+  GraduationCap,
+  RefreshCw,
+  Tag,
+  User,
+} from 'lucide-react'
 import ReadingProgress from '@/app/components/atoms/ReadingProgress'
 import TableOfContents, { TocItem } from '@/app/components/atoms/TableOfContents'
 import ShareButtons from '@/app/components/atoms/ShareButtons'
@@ -51,122 +60,163 @@ const sidebarLinks = [
   { label: 'Bolsa para Pedagogia', href: '/cursos/pedagogia', icon: GraduationCap },
   { label: 'Faculdade Anhanguera', href: '/faculdades/anhanguera', icon: Building2 },
   { label: 'Faculdade Unopar', href: '/faculdades/unopar', icon: Building2 },
-  { label: 'Todas as Faculdades', href: '/faculdades', icon: Building2 },
-  { label: 'Todos os Cursos', href: '/cursos', icon: BookOpen },
+  { label: 'Todas as faculdades', href: '/faculdades', icon: Building2 },
+  { label: 'Todos os cursos', href: '/cursos', icon: BookOpen },
 ]
 
-export default function BlogPostClient({ post, relatedPosts, tocItems, hasBeenUpdated }: Props) {
+const fmtDate = (iso: string) =>
+  new Date(iso).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  })
+
+export default function BlogPostClient({
+  post,
+  relatedPosts,
+  tocItems,
+  hasBeenUpdated,
+}: Props) {
   const postUrl = `https://www.bolsaclick.com.br/blog/${post.slug}`
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="bg-paper">
       <ReadingProgress />
 
-      {/* Article Header */}
-      <header className="bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 text-white pt-24 md:pt-28 pb-10 md:pb-14">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <div className="flex flex-wrap gap-2 mb-4">
-            {post.categories.map(cat => (
-              <Link
-                key={cat.slug}
-                href={`/blog/categoria/${cat.slug}`}
-                className="inline-block bg-bolsa-primary text-white text-xs font-semibold px-3 py-1 rounded-full hover:bg-pink-600 transition"
-              >
-                {cat.title}
+      {/* HEADER navy editorial */}
+      <header className="relative bg-bolsa-primary overflow-hidden">
+        <div
+          aria-hidden="true"
+          className="absolute -top-24 -right-32 w-[28rem] h-[28rem] rounded-full bg-bolsa-secondary/20 blur-3xl"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute -bottom-32 -left-24 w-[28rem] h-[28rem] rounded-full bg-blue-400/15 blur-3xl"
+        />
+        <div className="container mx-auto px-4 pt-24 pb-16 md:pt-28 md:pb-20 relative">
+          <div className="max-w-4xl mx-auto">
+            <nav className="flex items-center gap-2 font-mono text-[10px] tracking-[0.22em] uppercase text-white/60 mb-6">
+              <Link href="/blog" className="hover:text-white transition-colors">
+                Blog
               </Link>
-            ))}
-          </div>
+              {post.categories[0] && (
+                <>
+                  <span aria-hidden="true">/</span>
+                  <Link
+                    href={`/blog/categoria/${post.categories[0].slug}`}
+                    className="hover:text-white transition-colors"
+                  >
+                    {post.categories[0].title}
+                  </Link>
+                </>
+              )}
+            </nav>
 
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4 leading-tight">
-            {post.title}
-          </h1>
+            <div className="flex flex-wrap gap-2 mb-6">
+              {post.categories.map((cat) => (
+                <Link
+                  key={cat.slug}
+                  href={`/blog/categoria/${cat.slug}`}
+                  className="inline-flex items-center px-3 py-1 rounded-full bg-white/10 backdrop-blur border border-white/20 text-white/90 text-[10px] font-bold tracking-[0.18em] uppercase hover:bg-white hover:text-ink-900 transition-colors"
+                >
+                  {cat.title}
+                </Link>
+              ))}
+            </div>
 
-          <p className="text-lg text-blue-200 mb-6">
-            {post.excerpt}
-          </p>
+            <h1 className="font-display text-3xl md:text-4xl lg:text-[52px] font-semibold text-white leading-[1.05] mb-5">
+              {post.title}
+            </h1>
 
-          <div className="flex flex-wrap items-center gap-4 text-sm text-blue-300">
-            <span className="flex items-center gap-1.5">
-              <User size={14} />
-              {post.author}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Calendar size={14} />
-              {new Date(post.publishedAt).toLocaleDateString('pt-BR', {
-                day: '2-digit',
-                month: 'long',
-                year: 'numeric',
-              })}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Clock size={14} />
-              {post.readingTime} min de leitura
-            </span>
-            {hasBeenUpdated && (
-              <span className="flex items-center gap-1.5 text-blue-400">
-                <RefreshCw size={14} />
-                Atualizado em {new Date(post.updatedAt).toLocaleDateString('pt-BR', {
-                  day: '2-digit',
-                  month: 'long',
-                  year: 'numeric',
-                })}
+            <p className="text-white/80 text-base md:text-lg leading-relaxed max-w-3xl mb-8">
+              {post.excerpt}
+            </p>
+
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 font-mono text-[11px] tracking-[0.18em] uppercase text-white/70">
+              <span className="inline-flex items-center gap-1.5">
+                <User size={13} />
+                {post.author}
               </span>
-            )}
+              <span className="text-white/30">·</span>
+              <span className="inline-flex items-center gap-1.5 num-tabular normal-case tracking-normal">
+                {fmtDate(post.publishedAt)}
+              </span>
+              <span className="text-white/30">·</span>
+              <span className="inline-flex items-center gap-1.5">
+                <Clock size={13} />
+                {post.readingTime} min
+              </span>
+              {hasBeenUpdated && (
+                <>
+                  <span className="text-white/30">·</span>
+                  <span className="inline-flex items-center gap-1.5 text-bolsa-secondary">
+                    <RefreshCw size={13} />
+                    Atualizado em {fmtDate(post.updatedAt)}
+                  </span>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Featured Image */}
+      {/* IMAGEM destacada */}
       {post.featuredImage && (
-        <div className="container mx-auto px-4 -mt-6 relative z-10 max-w-4xl">
-          <div className="relative w-full h-64 md:h-96 rounded-2xl overflow-hidden shadow-xl">
+        <div className="container mx-auto px-4 -mt-8 md:-mt-10 relative z-10 max-w-4xl">
+          <div className="relative w-full aspect-[16/9] md:aspect-[16/8] rounded-2xl overflow-hidden border border-hairline shadow-[0_30px_60px_-30px_rgba(11,31,60,0.35)]">
             <Image
               src={post.featuredImage}
               alt={post.imageAlt || post.title}
               fill
               className="object-cover"
               priority
+              sizes="(min-width: 1024px) 1024px, 100vw"
             />
           </div>
         </div>
       )}
 
-      {/* Content + Sidebar */}
-      <div className="container mx-auto px-4 py-10">
-        <div className="flex flex-col lg:flex-row gap-10 max-w-6xl mx-auto">
-          {/* Main Content */}
-          <article className="flex-1 min-w-0 max-w-4xl">
+      {/* CONTEÚDO + SIDEBAR */}
+      <div className="container mx-auto px-4 py-12 md:py-16">
+        <div className="flex flex-col lg:flex-row gap-12 max-w-6xl mx-auto">
+          {/* MAIN CONTENT */}
+          <article className="flex-1 min-w-0 lg:max-w-3xl">
             {/* Mobile TOC */}
             {tocItems.length > 0 && (
-              <div className="mb-8 lg:hidden">
+              <div className="mb-10 lg:hidden">
                 <TableOfContents items={tocItems} />
               </div>
             )}
 
             <div
               className="prose prose-lg max-w-none
-                prose-headings:text-blue-950 prose-headings:font-bold prose-headings:scroll-mt-4
-                prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
-                prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
-                prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-4
-                prose-a:text-bolsa-primary prose-a:font-medium prose-a:no-underline hover:prose-a:underline
-                prose-strong:text-blue-950
-                prose-ul:my-4 prose-ol:my-4
-                prose-li:text-gray-700 prose-li:mb-1
-                prose-blockquote:border-bolsa-primary prose-blockquote:bg-pink-50 prose-blockquote:py-1 prose-blockquote:rounded-r-lg
-                prose-img:rounded-xl prose-img:shadow-md"
+                prose-headings:font-display prose-headings:font-semibold prose-headings:text-ink-900 prose-headings:tracking-tight prose-headings:scroll-mt-24
+                prose-h2:text-2xl prose-h2:md:text-[30px] prose-h2:mt-12 prose-h2:mb-5 prose-h2:leading-tight
+                prose-h3:text-xl prose-h3:md:text-2xl prose-h3:mt-10 prose-h3:mb-4 prose-h3:leading-tight
+                prose-p:text-ink-700 prose-p:leading-relaxed prose-p:text-[16px] prose-p:mb-5
+                prose-a:text-bolsa-secondary prose-a:no-underline prose-a:font-medium hover:prose-a:underline
+                prose-strong:text-ink-900 prose-strong:font-semibold
+                prose-li:text-ink-700 prose-li:leading-relaxed prose-li:mb-1.5
+                prose-ul:my-6 prose-ol:my-6
+                prose-blockquote:border-l-2 prose-blockquote:border-bolsa-secondary prose-blockquote:bg-paper-warm prose-blockquote:py-1 prose-blockquote:px-6 prose-blockquote:not-italic prose-blockquote:font-display prose-blockquote:text-ink-900 prose-blockquote:rounded-r-lg
+                prose-code:bg-paper-warm prose-code:text-ink-900 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-[14px] prose-code:font-mono prose-code:font-normal prose-code:before:content-none prose-code:after:content-none
+                prose-img:rounded-2xl prose-img:border prose-img:border-hairline
+                prose-hr:border-hairline prose-hr:my-12"
               dangerouslySetInnerHTML={{ __html: post.content }}
             />
 
             {/* Tags + Share */}
-            <div className="mt-10 pt-6 border-t border-gray-200 space-y-4">
+            <div className="mt-12 pt-8 hairline-t space-y-6">
               {post.tags.length > 0 && (
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Tag size={16} className="text-gray-400" />
-                  {post.tags.map(tag => (
+                  <Tag size={14} className="text-ink-300" />
+                  <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mr-1">
+                    Tags
+                  </span>
+                  {post.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="inline-block bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full"
+                      className="inline-flex items-center px-3 py-1 rounded-full bg-paper-warm border border-hairline text-ink-700 text-[12px]"
                     >
                       {tag}
                     </span>
@@ -177,129 +227,170 @@ export default function BlogPostClient({ post, relatedPosts, tocItems, hasBeenUp
               <ShareButtons url={postUrl} title={post.title} />
             </div>
 
-            {/* Author Box */}
-            <div className="mt-8 p-6 bg-blue-50 rounded-2xl">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-bolsa-primary flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
+            {/* Author */}
+            <aside className="mt-10 bg-paper-warm border border-hairline rounded-2xl p-6 md:p-7">
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 inline-flex items-center gap-2 mb-4">
+                <span className="h-px w-6 bg-ink-300" />
+                Sobre o autor
+              </span>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-ink-900 text-white flex items-center justify-center font-display text-[20px] font-semibold flex-shrink-0">
                   {post.author.charAt(0)}
                 </div>
-                <div>
-                  <p className="font-bold text-blue-950">{post.author}</p>
-                  <p className="text-sm text-gray-600">
-                    Equipe de conteúdo do Bolsa Click. Especialistas em educação superior e bolsas de estudo no Brasil.
+                <div className="min-w-0">
+                  <p className="font-display text-lg text-ink-900 leading-tight">{post.author}</p>
+                  <p className="text-[13px] text-ink-500 mt-1.5 leading-relaxed">
+                    Equipe de conteúdo do Bolsa Click. Especialistas em educação superior e bolsas
+                    de estudo no Brasil.
                   </p>
                 </div>
               </div>
-            </div>
+            </aside>
           </article>
 
-          {/* Sidebar */}
+          {/* SIDEBAR */}
           <aside className="w-full lg:w-72 flex-shrink-0 space-y-6">
             {/* Desktop TOC */}
             {tocItems.length > 0 && (
-              <div className="hidden lg:block sticky top-28">
+              <div className="hidden lg:block sticky top-24">
                 <TableOfContents items={tocItems} />
               </div>
             )}
 
-            {/* CTA Box */}
-            <div className="bg-gradient-to-br from-bolsa-primary to-pink-600 rounded-2xl p-6 text-white">
-              <h3 className="text-lg font-bold mb-2">Encontre sua bolsa!</h3>
-              <p className="text-sm text-pink-100 mb-4">
-                Bolsas de até 80% de desconto. Inscrição 100% gratuita.
-              </p>
-              <Link
-                href="/cursos"
-                className="inline-flex items-center gap-2 bg-white text-bolsa-primary font-bold text-sm px-5 py-2.5 rounded-full hover:shadow-lg transition-all"
-              >
-                Buscar Bolsas
-                <ArrowRight size={14} />
-              </Link>
+            {/* CTA editorial */}
+            <div className="bg-bolsa-primary rounded-2xl p-6 text-white relative overflow-hidden">
+              <div
+                aria-hidden="true"
+                className="absolute -top-12 -right-10 w-32 h-32 rounded-full bg-bolsa-secondary/30 blur-2xl"
+              />
+              <div className="relative">
+                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-white/60 inline-flex items-center gap-2 mb-3">
+                  <span className="h-px w-5 bg-white/30" />
+                  Bolsa Click
+                </span>
+                <h3 className="font-display text-2xl text-white leading-tight mb-2">
+                  Encontre sua bolsa{' '}
+                  <span className="italic text-white/85">aqui.</span>
+                </h3>
+                <p className="text-[12px] text-white/70 leading-relaxed mb-5">
+                  Até 80% de desconto em mais de 30 mil faculdades. Cadastro grátis, sem ENEM.
+                </p>
+                <Link
+                  href="/cursos"
+                  className="group inline-flex items-center gap-2 bg-bolsa-secondary text-white font-semibold text-[13px] px-5 py-2.5 rounded-full hover:bg-bolsa-secondary/90 transition-colors shadow-lg shadow-bolsa-secondary/30"
+                >
+                  Buscar bolsas
+                  <ArrowRight
+                    size={14}
+                    className="transition-transform duration-300 group-hover:translate-x-0.5"
+                  />
+                </Link>
+              </div>
             </div>
 
-            {/* Internal Links */}
-            <div className="bg-gray-50 rounded-2xl p-6">
-              <h3 className="font-bold text-blue-950 mb-4">Explore mais</h3>
-              <nav aria-label="Links internos">
-                <ul className="space-y-2">
-                  {sidebarLinks.map(link => (
-                    <li key={link.href}>
-                      <Link
-                        href={link.href}
-                        className="flex items-center gap-2 text-sm text-gray-600 hover:text-bolsa-primary transition-colors py-1"
-                      >
-                        <link.icon size={14} className="flex-shrink-0" />
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
+            {/* Internal links */}
+            <div className="bg-white border border-hairline rounded-2xl p-6">
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 inline-flex items-center gap-2 mb-4">
+                <span className="h-px w-5 bg-ink-300" />
+                Explore mais
+              </span>
+              <ul className="space-y-1">
+                {sidebarLinks.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="group flex items-center gap-3 text-[13px] text-ink-700 hover:text-ink-900 transition-colors py-1.5"
+                    >
+                      <link.icon size={13} className="text-ink-300 group-hover:text-bolsa-secondary transition-colors flex-shrink-0" />
+                      <span>{link.label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
           </aside>
         </div>
       </div>
 
-      {/* Related Posts */}
+      {/* RELACIONADOS */}
       {relatedPosts.length > 0 && (
-        <section className="bg-slate-50 py-12">
+        <section className="bg-white border-t border-hairline py-14 md:py-16">
           <div className="container mx-auto px-4">
-            <h2 className="text-xl font-bold text-blue-950 mb-6">
-              Artigos Relacionados
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {relatedPosts.map(related => (
-                <Link
-                  key={related.id}
-                  href={`/blog/${related.slug}`}
-                  className="group bg-white rounded-xl overflow-hidden border border-gray-200 hover:shadow-md transition-all"
-                >
-                  <div className="relative h-36 bg-gray-100">
-                    {related.featuredImage ? (
-                      <Image
-                        src={related.featuredImage}
-                        alt={related.imageAlt || related.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <BookOpen size={24} className="text-gray-300" />
+            <div className="max-w-6xl mx-auto">
+              <div className="flex items-baseline justify-between hairline-b pb-3 mb-8">
+                <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
+                  Artigos relacionados
+                </h2>
+                <span className="font-mono num-tabular text-[11px] text-ink-500">
+                  ({String(relatedPosts.length).padStart(2, '0')})
+                </span>
+              </div>
+
+              <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10">
+                {relatedPosts.map((related) => (
+                  <li key={related.id} className="group">
+                    <Link href={`/blog/${related.slug}`} className="flex flex-col h-full">
+                      <div className="relative aspect-[4/3] mb-4 overflow-hidden bg-paper-warm">
+                        {related.featuredImage ? (
+                          <Image
+                            src={related.featuredImage}
+                            alt={related.imageAlt || related.title}
+                            fill
+                            className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                            sizes="(min-width: 1024px) 22vw, 45vw"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <BookOpen size={24} className="text-ink-300" />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-blue-950 text-sm line-clamp-2 group-hover:text-bolsa-primary transition-colors">
-                      {related.title}
-                    </h3>
-                    <div className="flex items-center gap-2 text-xs text-gray-500 mt-2">
-                      <Clock size={12} />
-                      {related.readingTime} min
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                      <div className="flex items-center gap-2 mb-2 font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500">
+                        {related.categories[0] && (
+                          <>
+                            <span>{related.categories[0].title}</span>
+                            <span className="text-ink-300">·</span>
+                          </>
+                        )}
+                        <span className="inline-flex items-center gap-1 num-tabular">
+                          <Clock size={10} /> {related.readingTime} min
+                        </span>
+                      </div>
+                      <h3 className="font-display text-[18px] text-ink-900 leading-snug group-hover:italic transition-all duration-300 line-clamp-3">
+                        {related.title}
+                      </h3>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </section>
       )}
 
-      {/* Bottom CTA */}
-      <section className="bg-gradient-to-r from-bolsa-primary to-pink-600 py-10">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-2xl font-bold text-white mb-3">
-            Pronto para garantir sua bolsa de estudo?
-          </h2>
-          <p className="text-pink-100 mb-6">
-            Compare preços e encontre a melhor bolsa para você.
-          </p>
-          <Link
-            href="/cursos"
-            className="inline-flex items-center gap-2 bg-white text-bolsa-primary font-bold px-8 py-3 rounded-full hover:shadow-lg transition-all hover:scale-105"
-          >
-            Ver Bolsas Disponíveis
-            <ArrowRight size={18} />
-          </Link>
+      {/* CTA FINAL */}
+      <section className="bg-bolsa-primary py-14 md:py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center">
+            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-white/60 inline-flex items-center gap-3 mb-4">
+              <span className="h-px w-8 bg-white/30" />
+              Próximo passo
+            </span>
+            <h2 className="font-display text-3xl md:text-[40px] font-semibold text-white leading-tight mb-4">
+              Pronto pra garantir{' '}
+              <span className="italic text-white/85">sua bolsa?</span>
+            </h2>
+            <p className="text-white/75 text-[15px] md:text-base leading-relaxed mb-8 max-w-xl mx-auto">
+              Compare ofertas em mais de 30 mil faculdades parceiras. Cadastro grátis, sem ENEM.
+            </p>
+            <Link
+              href="/cursos"
+              className="inline-flex items-center gap-3 px-8 py-4 bg-bolsa-secondary text-white font-semibold rounded-full text-[15px] hover:bg-bolsa-secondary/90 transition-colors shadow-lg shadow-bolsa-secondary/30"
+            >
+              Ver bolsas disponíveis
+              <ArrowRight size={18} />
+            </Link>
+          </div>
         </div>
       </section>
     </div>

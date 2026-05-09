@@ -145,6 +145,16 @@ function mapOfferDetailsResponse(
   const city = unitParts[0]?.trim() || ''
   const state = unitParts[1]?.split('-')[0]?.trim() || ''
 
+  // Preços: a API agora retorna em basePricing.default.* — `prices.*` ficou null/legado.
+  // Mantemos fallback pra compatibilidade.
+  const base = response.basePricing?.default
+  const enrollmentPrice =
+    base?.enrollmentPrice ?? response.prices?.enrollment ?? 0
+  const priceWithoutDiscount =
+    base?.priceWithoutDiscount ?? response.prices?.withoutDiscount ?? 0
+  const priceWithDiscount =
+    base?.priceWithDiscount ?? response.prices?.withDiscount ?? 0
+
   return {
     offerId: response.id,
     offerBusinessKey: response.businessKey,
@@ -152,9 +162,9 @@ function mapOfferDetailsResponse(
     shift: shift,
     modality: modality,
     unitId: response.unit.id,
-    subscriptionValue: response.prices.enrollment,
-    montlyFeeFrom: response.prices.withoutDiscount,
-    montlyFeeTo: response.prices.withDiscount,
+    subscriptionValue: enrollmentPrice,
+    montlyFeeFrom: priceWithoutDiscount,
+    montlyFeeTo: priceWithDiscount,
     expiredAt: '', // Não vem na resposta atual
     weekday: weekdays,
     classTimeStart: classTimeStart,

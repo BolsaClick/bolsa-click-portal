@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import HeroSection from '../components/organisms/HeroSection'
 import Cta from '../components/organisms/Cta'
-import Filter from '../components/molecules/Filter'
 import { getCurrentTheme } from '../lib/themes'
 import ScholarshipCarousel from '../components/molecules/ScolarShipCarousel'
 import HowWork from '../components/organisms/Recommended/HowWork'
@@ -9,6 +8,9 @@ import PopularCoursesSection from '../components/organisms/PopularCoursesSection
 import ScholarshipInfoSection from '../components/organisms/ScholarshipInfoSection'
 import FaqSection from '../components/organisms/FaqSection'
 import LatestBlogPosts from '../components/organisms/LatestBlogPosts'
+import PartnersStrip from '../components/organisms/PartnersStrip'
+import BestOffersSection from '../components/organisms/BestOffersSection'
+import PersonalizationStrip from '../components/organisms/PersonalizationStrip'
 import { prisma } from '../lib/prisma'
 
 export const revalidate = 3600
@@ -200,7 +202,9 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
       <HeroSection />
-      <Filter />
+      <PersonalizationStrip />
+      <BestOffersSection />
+      <PartnersStrip />
       <Cta />
       <ScholarshipCarousel />
       <PopularCoursesSection />

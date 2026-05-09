@@ -21,7 +21,8 @@ import {
   Calendar,
   GraduationCap,
   ShieldCheck,
-  Award
+  Award,
+  ArrowRight,
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -959,59 +960,134 @@ const isFormValidForPayment =
         })()
       : null
 
+    const SkeletonBlock = ({ className = '' }: { className?: string }) => (
+      <div className={`animate-pulse bg-paper-warm rounded-xl ${className}`} />
+    )
+
     return (
-      <div className="min-h-screen bg-gray-50 py-8 md:py-12">
+      <div className="min-h-screen bg-paper pt-20 md:pt-24 pb-12 md:pb-16">
         <div className="max-w-6xl mx-auto px-4">
           <Link
             href="/curso/resultado"
-            className="inline-flex items-center text-bolsa-primary hover:text-bolsa-secondary mb-6 text-sm"
+            className="inline-flex items-center gap-2 font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 hover:text-ink-900 transition-colors mb-6"
           >
-            <ArrowLeft className="mr-2" size={16} />
+            <ArrowLeft size={12} />
             Voltar
           </Link>
 
-          <div className="pt-4 mb-6">
+          <div className="pt-2 mb-8">
+            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 inline-flex items-center gap-2 mb-3">
+              <span className="h-px w-6 bg-ink-300" />
+              Inscrição · Bolsa Click
+            </span>
             {cachedCourse?.name ? (
               <>
-                <h1 className="text-xl md:text-2xl font-bold text-gray-900">Checkout {cachedCourse.brand || ''}</h1>
-                <p className="text-gray-600 mt-1 text-sm">
+                <h1 className="font-display text-3xl md:text-[40px] font-semibold text-ink-900 leading-tight">
+                  Checkout{' '}
+                  <span className="italic text-ink-700">
+                    {cachedCourse.brand || cachedCourse.name}
+                  </span>
+                </h1>
+                <p className="text-ink-500 text-[14px] mt-2 inline-flex items-center gap-2">
+                  <span className="inline-block w-3 h-3 rounded-full border-2 border-bolsa-secondary border-t-transparent animate-spin" />
                   Carregando {cachedCourse.name}…
                 </p>
               </>
             ) : (
-              <Skeleton className="h-6 w-48" />
+              <>
+                <SkeletonBlock className="h-10 w-72 mb-2" />
+                <SkeletonBlock className="h-4 w-48" />
+              </>
             )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-            <Skeleton className="h-96" />
-            <div className="bg-white rounded-lg shadow-md p-4 md:p-5 space-y-3">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-                <BookOpen size={18} className="mr-2 text-blue-600" /> Detalhes do Curso
-              </h2>
-              {cachedCourse?.name ? (
-                <>
-                  <div>
-                    <p className="text-xs text-gray-500">Curso</p>
-                    <p className="font-medium text-sm text-gray-900">{cachedCourse.name}</p>
-                  </div>
-                  {cachedCourse.minPrice ? (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <p className="text-xs text-gray-500 mb-1">Mensalidade a partir de</p>
-                      <p className="text-xl font-bold text-green-600">{formatCurrency(cachedCourse.minPrice)}</p>
-                      <p className="text-xs text-gray-500 mt-1 italic">Confirmando valores…</p>
-                    </div>
-                  ) : (
-                    <Skeleton className="h-20" />
-                  )}
-                </>
-              ) : (
-                <>
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-20" />
-                </>
-              )}
+            {/* Skeleton do form (esquerda) */}
+            <div className="bg-white border border-hairline rounded-2xl p-6 space-y-4">
+              <div className="flex items-baseline justify-between hairline-b pb-3">
+                <SkeletonBlock className="h-3 w-24" />
+                <SkeletonBlock className="h-3 w-12" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <SkeletonBlock className="h-3 w-16" />
+                  <SkeletonBlock className="h-11" />
+                </div>
+                <div className="space-y-2">
+                  <SkeletonBlock className="h-3 w-20" />
+                  <SkeletonBlock className="h-11" />
+                </div>
+                <div className="space-y-2">
+                  <SkeletonBlock className="h-3 w-12" />
+                  <SkeletonBlock className="h-11" />
+                </div>
+                <div className="space-y-2">
+                  <SkeletonBlock className="h-3 w-12" />
+                  <SkeletonBlock className="h-11" />
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <SkeletonBlock className="h-3 w-28" />
+                  <SkeletonBlock className="h-11" />
+                </div>
+              </div>
+              <div className="hairline-t pt-4">
+                <SkeletonBlock className="h-12 w-full" />
+              </div>
             </div>
+
+            {/* Skeleton da sidebar de detalhes do curso */}
+            <aside className="bg-white border border-hairline rounded-2xl p-6 md:p-7 h-fit">
+              <div className="hairline-b pb-5 mb-5">
+                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 inline-flex items-center gap-2 mb-2">
+                  <BookOpen size={11} />
+                  Detalhes do curso
+                </span>
+                {cachedCourse?.name ? (
+                  <h2 className="font-display text-2xl text-ink-900 leading-tight">
+                    {cachedCourse.name}
+                  </h2>
+                ) : (
+                  <SkeletonBlock className="h-8 w-3/4" />
+                )}
+              </div>
+
+              {cachedCourse?.minPrice ? (
+                <div className="bg-paper-warm border border-hairline rounded-2xl p-5 mb-5">
+                  <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 mb-2 block">
+                    Mensalidade com bolsa
+                  </span>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-[14px] text-ink-700 font-medium">R$</span>
+                    <span className="font-display num-tabular text-[40px] font-bold text-bolsa-secondary leading-none">
+                      {cachedCourse.minPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                    <span className="text-[12px] text-ink-500">/mês</span>
+                  </div>
+                  <p className="text-[11px] text-ink-500 mt-3 italic inline-flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-bolsa-secondary animate-pulse" />
+                    Confirmando valores com a instituição…
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-paper-warm border border-hairline rounded-2xl p-5 mb-5">
+                  <SkeletonBlock className="h-3 w-32 mb-3" />
+                  <SkeletonBlock className="h-10 w-40 mb-2" />
+                  <SkeletonBlock className="h-3 w-48" />
+                </div>
+              )}
+
+              <div className="space-y-2.5 hairline-b pb-5 mb-5">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <SkeletonBlock key={i} className="h-4 w-full" />
+                ))}
+              </div>
+
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <SkeletonBlock key={i} className="h-3 w-5/6" />
+                ))}
+              </div>
+            </aside>
           </div>
         </div>
       </div>
@@ -1020,27 +1096,32 @@ const isFormValidForPayment =
 
   if (error || !offerDetails) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8 md:py-12">
+      <div className="min-h-screen bg-paper pt-20 md:pt-24 pb-12 md:pb-16">
         <div className="max-w-6xl mx-auto px-4">
-          <Link 
+          <Link
             href="/curso/resultado"
-            className="inline-flex items-center text-bolsa-primary hover:text-bolsa-secondary mb-6 text-sm"
+            className="inline-flex items-center gap-2 font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 hover:text-ink-900 transition-colors mb-6"
           >
-            <ArrowLeft className="mr-2" size={16} />
+            <ArrowLeft size={12} />
             Voltar
           </Link>
-          <div className="bg-white rounded-lg shadow-md p-4 md:p-5">
-            <h1 className="text-xl font-bold text-gray-900 mb-3">
-              Erro ao carregar detalhes
+          <div className="bg-white border border-hairline rounded-2xl p-6 md:p-8">
+            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-bolsa-secondary mb-3 block">
+              Erro
+            </span>
+            <h1 className="font-display text-2xl md:text-[28px] text-ink-900 leading-tight mb-3">
+              Não foi possível{' '}
+              <span className="italic text-ink-700">carregar os detalhes.</span>
             </h1>
-            <p className="text-sm text-gray-600 mb-4">
-              {error?.message || 'Não foi possível carregar os detalhes da oferta.'}
+            <p className="text-[14px] text-ink-500 mb-6 leading-relaxed">
+              {error?.message || 'Tente novamente ou volte para busca.'}
             </p>
             <button
               onClick={() => router.push('/curso/resultado')}
-              className="px-4 py-2 text-sm bg-bolsa-secondary text-white rounded-lg hover:bg-bolsa-primary"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-ink-900 hover:bg-bolsa-secondary text-white font-semibold rounded-full text-[14px] transition-colors"
             >
               Voltar para busca
+              <ArrowRight size={14} />
             </button>
           </div>
         </div>
@@ -1049,64 +1130,114 @@ const isFormValidForPayment =
   }
 
   return (
-    <div className="min-h-screen bg-gray-50  flex items-start justify-center">
-      <div className="max-w-5xl w-full mx-auto px-4">
-        <Link 
+    <div className="min-h-screen bg-paper pt-20 md:pt-24">
+      <div className="max-w-6xl w-full mx-auto px-4 pb-12 md:pb-16">
+        <Link
           href="/curso/resultado"
-          className="inline-flex items-center text-bolsa-primary hover:text-bolsa-secondary mb-6 text-sm"
+          className="inline-flex items-center gap-2 font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 hover:text-ink-900 transition-colors mb-6"
         >
-          <ArrowLeft className="mr-2" size={16} />
+          <ArrowLeft size={12} />
           Voltar
         </Link>
 
         {/* Header */}
-        <div className="pt-10 mb-6 md:mb-8">
-          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Checkout {offerDetails.brand}</h1>
-          <p className="text-gray-600 mt-1 text-sm">
-            Complete seus dados para finalizar a matrícula. O valor da matrícula e das mensalidades será pago diretamente à instituição.
+        <header className="mb-8 md:mb-10">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 inline-flex items-center gap-2 mb-3">
+            <span className="h-px w-6 bg-ink-300" />
+            Inscrição · {offerDetails.brand}
+          </span>
+          <h1 className="font-display text-3xl md:text-[40px] font-semibold text-ink-900 leading-[1.1]">
+            Garanta sua bolsa{' '}
+            <span className="italic text-ink-700">em poucos passos.</span>
+          </h1>
+          <p className="text-ink-500 text-[14px] md:text-[15px] mt-3 leading-relaxed max-w-2xl">
+            Complete seus dados pra finalizar a matrícula. O valor da matrícula e das mensalidades é pago diretamente à instituição.
           </p>
 
-          {/* Stepper visual — dá ao usuário a sensação de funil curto e claro */}
-          <ol className="mt-5 flex items-center gap-2 text-xs sm:text-sm" aria-label="Etapas do checkout">
-            <li className="flex items-center gap-2 font-medium text-bolsa-primary">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-bolsa-primary text-white text-xs font-semibold">1</span>
-              Seus dados
-            </li>
-            <span className="h-px w-6 sm:w-10 bg-gray-300" aria-hidden="true" />
-            <li className="flex items-center gap-2 text-gray-500">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-gray-600 text-xs font-semibold">2</span>
-              Contato
-            </li>
-            <span className="h-px w-6 sm:w-10 bg-gray-300" aria-hidden="true" />
-            <li className="flex items-center gap-2 text-gray-500">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-gray-600 text-xs font-semibold">3</span>
-              Confirmação
-            </li>
-          </ol>
-        </div>
+          {/* Stepper editorial — sincronizado com as 3 sections do form */}
+          {(() => {
+            const dadosOk = !!(
+              watchedValues.email &&
+              watchedValues.name &&
+              cpfValidationOk
+            )
+            const contatoOk = !!(
+              watchedValues.phone &&
+              watchedValues.cep &&
+              watchedValues.address
+            )
+            const steps = [
+              { n: '01', label: 'Estudante', done: dadosOk, active: !dadosOk },
+              { n: '02', label: 'Contato', done: contatoOk, active: dadosOk && !contatoOk },
+              { n: '03', label: 'Pagamento', done: false, active: dadosOk && contatoOk },
+            ]
+            return (
+              <ol
+                className="mt-8 flex items-center gap-3 md:gap-4 text-[11px] md:text-[12px]"
+                aria-label="Etapas do checkout"
+              >
+                {steps.map((step, idx, arr) => {
+                  const visible = step.active || step.done
+                  return (
+                    <li key={step.n} className="flex items-center gap-3 md:gap-4">
+                      <div
+                        className={`flex items-center gap-2.5 ${
+                          visible ? 'text-ink-900' : 'text-ink-300'
+                        }`}
+                      >
+                        <span
+                          className={`flex h-7 w-7 items-center justify-center rounded-full font-mono num-tabular text-[10px] tracking-wider transition-colors ${
+                            step.done
+                              ? 'bg-bolsa-secondary text-white'
+                              : step.active
+                              ? 'bg-ink-900 text-white'
+                              : 'bg-white border border-hairline text-ink-500'
+                          }`}
+                        >
+                          {step.done ? <Check size={12} strokeWidth={3} /> : step.n}
+                        </span>
+                        <span className="font-mono uppercase tracking-[0.18em] font-medium hidden sm:inline">
+                          {step.label}
+                        </span>
+                      </div>
+                      {idx < arr.length - 1 && (
+                        <span
+                          className={`h-px w-8 md:w-12 transition-colors ${
+                            step.done ? 'bg-ink-900' : 'bg-hairline'
+                          }`}
+                          aria-hidden="true"
+                        />
+                      )}
+                    </li>
+                  )
+                })}
+              </ol>
+            )
+          })()}
+        </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
           {/* Coluna Esquerda - Formulário */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="lg:col-span-7 bg-white border border-hairline rounded-2xl overflow-hidden shadow-[0_30px_60px_-40px_rgba(11,31,60,0.18)]">
             {/* Mini-prompt de login (compacto, não bloqueia atenção) */}
             {!user && !authLoading && (
-              <div className="px-4 pt-3 pb-2 border-b border-gray-100 flex items-center justify-end gap-3 text-xs">
-                <span className="text-gray-500">Já tem conta?</span>
+              <div className="px-6 py-3 border-b border-hairline bg-paper-warm/40 flex items-center justify-end gap-3 font-mono text-[11px] tracking-[0.12em] uppercase">
+                <span className="text-ink-500 normal-case tracking-normal">Já tem conta?</span>
                 <button
                   type="button"
                   onClick={() => {
                     setAuthMode('login')
                     setShowAuthModal(true)
                   }}
-                  className="text-bolsa-primary font-medium hover:underline"
+                  className="font-semibold text-ink-900 hover:text-bolsa-secondary transition-colors normal-case tracking-normal"
                 >
                   Entrar
                 </button>
-                <span className="text-gray-300">·</span>
+                <span className="text-ink-300">·</span>
                 <button
                   type="button"
                   onClick={handleAuthWithGoogle}
-                  className="text-gray-700 hover:underline inline-flex items-center gap-1"
+                  className="font-semibold text-ink-700 hover:text-ink-900 transition-colors inline-flex items-center gap-1.5 normal-case tracking-normal"
                 >
                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" aria-hidden="true">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -1121,7 +1252,7 @@ const isFormValidForPayment =
 
             {/* Banner mostrando que está logado */}
             {user && (
-              <div className="bg-green-50 p-4 border-b border-green-100">
+              <div className="bg-paper-warm border-b border-hairline px-6 py-4">
                 <div className="flex items-center gap-3">
                   {user.avatar ? (
                     <Image
@@ -1129,77 +1260,89 @@ const isFormValidForPayment =
                       alt={user.name || 'Avatar'}
                       width={40}
                       height={40}
-                      className="w-10 h-10 rounded-full object-cover"
+                      className="w-10 h-10 rounded-full object-cover ring-2 ring-white"
                       unoptimized
                     />
                   ) : (
-                    <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
-                      <User size={20} className="text-white" />
+                    <div className="w-10 h-10 bg-ink-900 rounded-full flex items-center justify-center ring-2 ring-white">
+                      <User size={18} className="text-white" />
                     </div>
                   )}
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-green-900">
-                      Olá, {user.name?.split(' ')[0] || 'Usuário'}!
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-semibold text-ink-900 leading-tight">
+                      Olá, {user.name?.split(' ')[0] || 'Usuário'}.
                     </p>
-                    <p className="text-xs text-green-700">
-                      Seus dados foram preenchidos automaticamente
+                    <p className="text-[12px] text-ink-500 mt-0.5">
+                      Seus dados foram preenchidos automaticamente.
                     </p>
                   </div>
-                  <Check size={20} className="text-green-600" />
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-bolsa-secondary text-white">
+                    <Check size={14} strokeWidth={3} />
+                  </span>
                 </div>
               </div>
             )}
 
             <form onSubmit={handleSubmit(onSubmit)}>
               {/* Dados do Aluno - Seção Expansível */}
-              <div className="border-b">
+              <div className="border-b border-hairline">
                 <button
                   type="button"
                   onClick={() => toggleSection('dadosPessoais')}
-                  className="w-full p-4 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                  className="w-full px-6 py-5 text-left flex items-center justify-between hover:bg-paper-warm/40 transition-colors"
+                  aria-expanded={expandedSections.dadosPessoais}
                 >
-                  <div className="flex items-center gap-2">
-                    <User size={18} className="text-bolsa-primary" />
-                    <div>
-                      <h2 className="text-base font-semibold text-gray-900">Dados do Aluno</h2>
-                      <p className="text-xs text-gray-500">Informações pessoais e acadêmicas</p>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-paper-warm text-ink-900 flex-shrink-0">
+                      <User size={15} />
+                    </span>
+                    <div className="min-w-0">
+                      <span className="font-mono num-tabular text-[10px] tracking-[0.22em] uppercase text-ink-500 mb-0.5 block">
+                        01 · Estudante
+                      </span>
+                      <h2 className="font-display text-[18px] text-ink-900 leading-tight">
+                        Dados do aluno
+                      </h2>
                     </div>
                   </div>
-                  {expandedSections.dadosPessoais ? (
-                    <ChevronUp size={18} className="text-gray-400" />
-                  ) : (
-                    <ChevronDown size={18} className="text-gray-400" />
-                  )}
+                  <span
+                    aria-hidden="true"
+                    className={`flex-shrink-0 w-7 h-7 rounded-full border border-hairline flex items-center justify-center text-ink-500 transition-all ${
+                      expandedSections.dadosPessoais ? 'rotate-180 border-ink-900 text-ink-900' : ''
+                    }`}
+                  >
+                    <ChevronDown size={14} />
+                  </span>
                 </button>
                 {expandedSections.dadosPessoais && (
-                  <div className="px-4 pb-4 space-y-3">
+                  <div className="px-6 pb-6 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
                           <Mail size={14} className="inline mr-1" /> E-mail
                         </label>
                         <input
                           type="email"
                           {...register('email')}
                           placeholder="seuemail@exemplo.com"
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary"
+                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
                         />
                         {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Nome Completo</label>
+                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Nome Completo</label>
                         <input
                           type="text"
                           {...register('name')}
                           placeholder="Ex: Rodrigo Silva"
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary"
+                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
                         />
                         {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">CPF</label>
+                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">CPF</label>
                         <Controller
                           control={control}
                           name="cpf"
@@ -1368,20 +1511,20 @@ const isFormValidForPayment =
                         )}
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">RG</label>
+                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">RG</label>
                         <input
                           type="text"
                           {...register('rg')}
                           placeholder="Ex: 12.345.678-9"
                           maxLength={15}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary"
+                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
                         />
                         {errors.rg && <p className="text-red-500 text-xs mt-1">{errors.rg.message}</p>}
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
                           <Calendar size={14} className="inline mr-1" /> Data de Nascimento
                         </label>
                         <Controller
@@ -1400,19 +1543,19 @@ const isFormValidForPayment =
                               }}
                               placeholder="DD-MM-AAAA"
                               maxLength={10}
-                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary"
+                              className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
                             />
                           )}
                         />
                         {errors.birthDate && <p className="text-red-500 text-xs mt-1">{errors.birthDate.message}</p>}
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
                           <GraduationCap size={14} className="inline mr-1" /> Ano de Conclusão
                         </label>
                         <select
                           {...register('schoolYear')}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary"
+                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
                         >
                           <option value="">Selecione</option>
                           {yearOptions.map((year) => (
@@ -1421,10 +1564,10 @@ const isFormValidForPayment =
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Gênero</label>
+                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Gênero</label>
                         <select
                           {...register('gender')}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary"
+                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
                         >
                           <option value="">Selecione</option>
                           <option value="masculino">Masculino</option>
@@ -1438,36 +1581,45 @@ const isFormValidForPayment =
               </div>
 
               {/* Contato - Seção Expansível */}
-              <div className="border-b">
+              <div className="border-b border-hairline">
                 <button
                   type="button"
                   onClick={() => {
                     toggleSection('contato')
-                    // Tentar cadastrar quando expandir a seção
                     if (!expandedSections.contato) {
                       setTimeout(() => tryCreateStudent(), 100)
                     }
                   }}
-                  className="w-full p-4 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                  className="w-full px-6 py-5 text-left flex items-center justify-between hover:bg-paper-warm/40 transition-colors"
+                  aria-expanded={expandedSections.contato}
                 >
-                  <div className="flex items-center gap-2">
-                    <MapPin size={18} className="text-green-600" />
-                    <div>
-                      <h2 className="text-base font-semibold text-gray-900">Contato</h2>
-                      <p className="text-xs text-gray-500">Informações de contato e endereço</p>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-paper-warm text-ink-900 flex-shrink-0">
+                      <MapPin size={15} />
+                    </span>
+                    <div className="min-w-0">
+                      <span className="font-mono num-tabular text-[10px] tracking-[0.22em] uppercase text-ink-500 mb-0.5 block">
+                        02 · Contato
+                      </span>
+                      <h2 className="font-display text-[18px] text-ink-900 leading-tight">
+                        Telefone e endereço
+                      </h2>
                     </div>
                   </div>
-                  {expandedSections.contato ? (
-                    <ChevronUp size={18} className="text-gray-400" />
-                  ) : (
-                    <ChevronDown size={18} className="text-gray-400" />
-                  )}
+                  <span
+                    aria-hidden="true"
+                    className={`flex-shrink-0 w-7 h-7 rounded-full border border-hairline flex items-center justify-center text-ink-500 transition-all ${
+                      expandedSections.contato ? 'rotate-180 border-ink-900 text-ink-900' : ''
+                    }`}
+                  >
+                    <ChevronDown size={14} />
+                  </span>
                 </button>
                 {expandedSections.contato && (
-                  <div className="px-4 pb-4 space-y-3">
+                  <div className="px-6 pb-6 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
                           <Phone size={14} className="inline mr-1" /> Telefone
                         </label>
                         <Controller
@@ -1487,14 +1639,14 @@ const isFormValidForPayment =
                               }}
                               placeholder="(00) 00000-0000"
                               maxLength={15}
-                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary"
+                              className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
                             />
                           )}
                         />
                         {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">CEP</label>
+                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">CEP</label>
                         <Controller
                           name="cep"
                           control={control}
@@ -1521,7 +1673,7 @@ const isFormValidForPayment =
                               }}
                               placeholder="00000-000"
                               maxLength={9}
-                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary"
+                              className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
                             />
                           )}
                         />
@@ -1529,7 +1681,7 @@ const isFormValidForPayment =
                       </div>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Endereço</label>
+                      <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Endereço</label>
                       <input
                         type="text"
                         {...register('address')}
@@ -1542,49 +1694,49 @@ const isFormValidForPayment =
                           tryCreateStudent()
                         }}
                         placeholder="Ex: Avenida Paulista"
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary"
+                        className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
                       />
                       {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>}
                     </div>
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Número</label>
+                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Número</label>
                         <input
                           type="text"
                           {...register('addressNumber')}
                           placeholder="1106"
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary"
+                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
                         />
                         {errors.addressNumber && <p className="text-red-500 text-xs mt-1">{errors.addressNumber.message}</p>}
                       </div>
                       <div className="col-span-2">
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Bairro</label>
+                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Bairro</label>
                         <input
                           type="text"
                           {...register('neighborhood')}
                           placeholder="Ex: Centro"
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary"
+                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
                         />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Cidade</label>
+                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Cidade</label>
                         <input
                           type="text"
                           {...register('city')}
                           placeholder="Ex: São Paulo"
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary"
+                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Estado</label>
+                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Estado</label>
                         <input
                           type="text"
                           {...register('state')}
                           placeholder="Ex: SP"
                           maxLength={2}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary"
+                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
                         />
                       </div>
                     </div>
@@ -1643,29 +1795,39 @@ const isFormValidForPayment =
                 </div>
               )}
 
-              {/* Forma de Pagamento - Seção Expansível (oculta opções quando pix_enabled = false) */}
+              {/* Forma de Pagamento - Seção Expansível */}
               <div>
                 <button
                   type="button"
                   onClick={() => toggleSection('pagamento')}
-                  className="w-full p-4 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                  className="w-full px-6 py-5 text-left flex items-center justify-between hover:bg-paper-warm/40 transition-colors"
+                  aria-expanded={expandedSections.pagamento}
                 >
-                  <div className="flex items-center gap-2">
-                    <CreditCard size={18} className="text-orange-600" />
-                    <div>
-                      <h2 className="text-base font-semibold text-gray-900">Forma de Pagamento</h2>
-                      <p className="text-xs text-gray-500">Valor da matrícula pago diretamente à instituição</p>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-paper-warm text-ink-900 flex-shrink-0">
+                      <CreditCard size={15} />
+                    </span>
+                    <div className="min-w-0">
+                      <span className="font-mono num-tabular text-[10px] tracking-[0.22em] uppercase text-ink-500 mb-0.5 block">
+                        03 · Pagamento
+                      </span>
+                      <h2 className="font-display text-[18px] text-ink-900 leading-tight">
+                        Confirmar inscrição
+                      </h2>
                     </div>
                   </div>
-                  {expandedSections.pagamento ? (
-                    <ChevronUp size={18} className="text-gray-400" />
-                  ) : (
-                    <ChevronDown size={18} className="text-gray-400" />
-                  )}
+                  <span
+                    aria-hidden="true"
+                    className={`flex-shrink-0 w-7 h-7 rounded-full border border-hairline flex items-center justify-center text-ink-500 transition-all ${
+                      expandedSections.pagamento ? 'rotate-180 border-ink-900 text-ink-900' : ''
+                    }`}
+                  >
+                    <ChevronDown size={14} />
+                  </span>
                 </button>
-                
+
                 {expandedSections.pagamento && (
-                  <div className="px-4 pb-4 space-y-3">
+                  <div className="px-6 pb-6 space-y-4">
                     {/* Sem checkout: pós mostra parcelas; graduação só botão */}
                     {offerDetails.academicLevel === 'POS_GRADUACAO' && (offerDetails.paymentMethods?.length ?? 0) > 0 ? (
                         <>
@@ -1779,15 +1941,21 @@ const isFormValidForPayment =
                           <button
                             type="submit"
                             disabled={isSubmitting || !posInstallmentId}
-                            className="w-full mt-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-lg font-semibold text-base hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="group w-full mt-4 inline-flex items-center justify-center gap-3 bg-bolsa-secondary text-white py-4 px-6 rounded-full font-semibold text-[15px] hover:bg-bolsa-secondary/90 disabled:bg-ink-300 disabled:cursor-not-allowed shadow-lg shadow-bolsa-secondary/25 hover:shadow-bolsa-secondary/40 transition-all duration-300"
                           >
                             {isSubmitting ? (
-                              <div className="flex items-center justify-center space-x-2">
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                <span>Processando...</span>
-                              </div>
+                              <span className="inline-flex items-center justify-center gap-2">
+                                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                Processando…
+                              </span>
                             ) : (
-                              'Finalizar Matrícula'
+                              <>
+                                Finalizar matrícula
+                                <ArrowRight
+                                  size={16}
+                                  className="transition-transform duration-300 group-hover:translate-x-1"
+                                />
+                              </>
                             )}
                           </button>
                         </>
@@ -1799,15 +1967,21 @@ const isFormValidForPayment =
                           <button
                             type="submit"
                             disabled={isSubmitting || !isFormValidForPayment}
-                            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-lg font-semibold text-base hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="group w-full inline-flex items-center justify-center gap-3 bg-bolsa-secondary text-white py-4 px-6 rounded-full font-semibold text-[15px] hover:bg-bolsa-secondary/90 disabled:bg-ink-300 disabled:cursor-not-allowed shadow-lg shadow-bolsa-secondary/25 hover:shadow-bolsa-secondary/40 transition-all duration-300"
                           >
                             {isSubmitting ? (
-                              <div className="flex items-center justify-center space-x-2">
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                <span>Processando...</span>
-                              </div>
+                              <span className="inline-flex items-center justify-center gap-2">
+                                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                Processando…
+                              </span>
                             ) : (
-                              'Finalizar Matrícula'
+                              <>
+                                Finalizar matrícula
+                                <ArrowRight
+                                  size={16}
+                                  className="transition-transform duration-300 group-hover:translate-x-1"
+                                />
+                              </>
                             )}
                           </button>
                         </>
@@ -1818,120 +1992,152 @@ const isFormValidForPayment =
             </form>
           </div>
 
-          {/* Coluna Direita - Detalhes do Curso */}
-          <div className="bg-white rounded-lg shadow-md p-4 md:p-5 h-fit">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <BookOpen size={18} className="mr-2 text-blue-600" /> Detalhes do Curso
-            </h2>
-            
-            <div className="space-y-3">
-              <div>
-                <p className="text-xs text-gray-500">Curso</p>
-                <p className="font-medium text-sm text-gray-900">{offerDetails.course}</p>
-              </div>
+          {/* Coluna Direita - Detalhes do Curso (DS editorial) */}
+          <aside className="lg:col-span-5 bg-white border border-hairline rounded-2xl p-6 md:p-7 h-fit shadow-[0_30px_60px_-40px_rgba(11,31,60,0.18)] lg:sticky lg:top-24">
+            {/* Eyebrow + Curso */}
+            <div className="hairline-b pb-5 mb-5">
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 inline-flex items-center gap-2 mb-2">
+                <BookOpen size={11} />
+                Detalhes do curso
+              </span>
+              <h2 className="font-display text-2xl text-ink-900 leading-tight">
+                {offerDetails.course}
+              </h2>
+            </div>
 
-              {/* Mensalidade - sempre exibida como informação */}
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <p className="text-xs text-gray-500 mb-1">Valor da mensalidade</p>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {voucherValid && voucherInstallments.length > 0 && (() => {
-                    // Encontrar parcela do voucher correspondente à selecionada
-                    const selectedOriginal = posInstallmentId
-                      ? ((offerDetails.paymentMethods as PosPaymentMethod[])
-                          .find((pm) => pm.type === posPaymentMethodType)
-                          ?.installments?.find((i) => i.id === posInstallmentId))
-                      : null
-                    const selectedNumber = selectedOriginal?.number
-                    const vInst = voucherInstallments.find((v) => v.number === selectedNumber) || voucherInstallments[0]
-                    return (
-                      <>
-                        <p className="text-sm text-gray-400 line-through">De {formatCurrency(vInst.originalInstallmentValue)} por</p>
-                        <p className="text-xl font-bold text-green-600">{formatCurrency(vInst.installmentValue)}</p>
-                        <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded">
-                          Voucher -{vInst.discountPercentage}%
-                        </span>
-                      </>
-                    )
-                  })()}
-                  {!(voucherValid && voucherInstallments.length > 0) && offerDetails?.montlyFeeFrom && offerDetails.montlyFeeFrom > monthlyFee ? (
+            {/* Bloco de preço */}
+            <div className="bg-paper-warm border border-hairline rounded-2xl p-5 mb-5 relative overflow-hidden">
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 mb-2 block">
+                Mensalidade com bolsa
+              </span>
+
+              {voucherValid && voucherInstallments.length > 0 ? (
+                (() => {
+                  const selectedOriginal = posInstallmentId
+                    ? ((offerDetails.paymentMethods as PosPaymentMethod[])
+                        .find((pm) => pm.type === posPaymentMethodType)
+                        ?.installments?.find((i) => i.id === posInstallmentId))
+                    : null
+                  const selectedNumber = selectedOriginal?.number
+                  const vInst = voucherInstallments.find((v) => v.number === selectedNumber) || voucherInstallments[0]
+                  return (
                     <>
-                      <p className="text-sm text-gray-400 line-through">De {formatCurrency(offerDetails.montlyFeeFrom)} por</p>
-                      <p className="text-xl font-bold text-green-600 ">{formatCurrency(monthlyFee)}</p>
-                      <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded">
-                        {Math.round(((offerDetails.montlyFeeFrom - monthlyFee) / offerDetails.montlyFeeFrom) * 100)}% de desconto
-                      </span>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-[14px] text-ink-700 font-medium">R$</span>
+                        <span className="font-display num-tabular text-[40px] font-bold text-bolsa-secondary leading-none">
+                          {vInst.installmentValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                        <span className="text-[12px] text-ink-500">/mês</span>
+                      </div>
+                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <span className="text-[12px] text-ink-300 line-through num-tabular">
+                          De {formatCurrency(vInst.originalInstallmentValue)}
+                        </span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-bolsa-secondary text-white text-[10px] font-bold tracking-wide">
+                          Voucher −{vInst.discountPercentage}%
+                        </span>
+                      </div>
                     </>
-                  ) : (
-                    <p className="text-xl font-bold text-green-600">{formatCurrency(monthlyFee)}</p>
-                  )}
-                </div>
-                <p className="text-xs text-gray-500 mt-1 italic">Paga diretamente à instituição</p>
-              </div>
-
-              <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-3">
-                <div className="flex items-start gap-2 mb-2">
-                  <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-white text-xs font-bold">!</span>
+                  )
+                })()
+              ) : !(voucherValid && voucherInstallments.length > 0) && offerDetails?.montlyFeeFrom && offerDetails.montlyFeeFrom > monthlyFee ? (
+                <>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-[14px] text-ink-700 font-medium">R$</span>
+                    <span className="font-display num-tabular text-[40px] font-bold text-bolsa-secondary leading-none">
+                      {monthlyFee.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                    <span className="text-[12px] text-ink-500">/mês</span>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-xs font-semibold text-blue-900 mb-1">Matrícula e mensalidade na instituição</p>
-                    <p className="text-xs text-blue-700">
-                      O valor da matrícula e das mensalidades será pago diretamente à instituição de ensino. Nenhuma taxa é cobrada neste checkout.
-                    </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span className="text-[12px] text-ink-300 line-through num-tabular">
+                      De {formatCurrency(offerDetails.montlyFeeFrom)}
+                    </span>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-bolsa-secondary text-white text-[10px] font-bold tracking-wide">
+                      −{Math.round(((offerDetails.montlyFeeFrom - monthlyFee) / offerDetails.montlyFeeFrom) * 100)}%
+                    </span>
                   </div>
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-3 border-t border-gray-200">
-                <div className="flex items-center gap-2 text-xs text-gray-600">
-                  <Building2 size={16} className="text-purple-600" />
-                  <span>{offerDetails.brand}</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-gray-600">
-                  <BookOpen size={16} className="text-blue-600" />
-                  <span>{getModalityLabel(offerDetails.modality)}</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-gray-600">
-                  <Clock size={16} className="text-orange-600" />
-                  <span>{getShiftLabel(offerDetails.shift)}</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-gray-600">
-                  <MapPin size={16} className="text-red-600" />
-                  <span className="break-words">{offerDetails.unitCity}, {offerDetails.unitState} - {offerDetails.unit?.replace(/.*- /, '') || ''}</span>
-                </div>
-              </div>
-
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                <p className="text-xs text-orange-800">
-                  * Este desconto é válido para todas as mensalidades, exceto rematrículas e dependências
-                </p>
-              </div>
-
-              {/* [CUPOM] Seção de cupom comentada para possível reativação futura */}
-
-              {/* Sinais de confiança — pagamento, parceria e segurança */}
-              <div className="pt-3 border-t border-gray-200 space-y-2">
-                <div className="flex items-start gap-2 text-xs text-gray-700">
-                  <ShieldCheck size={16} className="text-green-600 flex-shrink-0 mt-0.5" />
-                  <span>
-                    <strong className="font-semibold">Sem cobrança aqui.</strong> Você só paga matrícula e mensalidade à instituição.
+                </>
+              ) : (
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-[14px] text-ink-700 font-medium">R$</span>
+                  <span className="font-display num-tabular text-[40px] font-bold text-bolsa-secondary leading-none">
+                    {monthlyFee.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
+                  <span className="text-[12px] text-ink-500">/mês</span>
                 </div>
-                <div className="flex items-start gap-2 text-xs text-gray-700">
-                  <Award size={16} className="text-bolsa-primary flex-shrink-0 mt-0.5" />
-                  <span>
-                    Parceiro oficial das principais instituições de ensino do Brasil.
-                  </span>
-                </div>
-                <div className="flex items-start gap-2 text-xs text-gray-700">
-                  <Check size={16} className="text-green-600 flex-shrink-0 mt-0.5" />
-                  <span>
-                    Mais de 100 mil estudantes já garantiram bolsa pelo Bolsa Click.
-                  </span>
+              )}
+
+              <p className="text-[11px] text-ink-500 mt-3 italic">
+                Pago diretamente à instituição de ensino
+              </p>
+            </div>
+
+            {/* Aviso "Matrícula e mensalidade na instituição" */}
+            <div className="bg-bolsa-primary/5 border border-bolsa-primary/15 rounded-xl p-4 mb-5">
+              <div className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-bolsa-primary text-white flex items-center justify-center font-bold text-[11px]">
+                  i
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[12px] font-semibold text-ink-900 mb-1">
+                    Matrícula e mensalidade na instituição
+                  </p>
+                  <p className="text-[12px] text-ink-500 leading-relaxed">
+                    O valor da matrícula e das mensalidades será pago diretamente à instituição de ensino. Nenhuma taxa é cobrada neste checkout.
+                  </p>
                 </div>
               </div>
             </div>
-          </div>
+
+            {/* Metadata da oferta */}
+            <ul className="space-y-2.5 hairline-b pb-5 mb-5">
+              <li className="flex items-center gap-3 text-[13px] text-ink-700">
+                <Building2 size={14} className="text-ink-300 flex-shrink-0" />
+                <span className="font-medium text-ink-900">{offerDetails.brand}</span>
+              </li>
+              <li className="flex items-center gap-3 text-[13px] text-ink-700">
+                <BookOpen size={14} className="text-ink-300 flex-shrink-0" />
+                <span>{getModalityLabel(offerDetails.modality)}</span>
+              </li>
+              <li className="flex items-center gap-3 text-[13px] text-ink-700">
+                <Clock size={14} className="text-ink-300 flex-shrink-0" />
+                <span>{getShiftLabel(offerDetails.shift)}</span>
+              </li>
+              <li className="flex items-start gap-3 text-[13px] text-ink-700">
+                <MapPin size={14} className="text-ink-300 flex-shrink-0 mt-0.5" />
+                <span className="break-words">
+                  {offerDetails.unitCity}, {offerDetails.unitState}
+                  {offerDetails.unit?.replace(/.*- /, '') ? ` · ${offerDetails.unit.replace(/.*- /, '')}` : ''}
+                </span>
+              </li>
+            </ul>
+
+            {/* Disclaimer do desconto */}
+            <p className="text-[11px] text-ink-500 leading-relaxed mb-5">
+              <span className="text-bolsa-secondary font-semibold">*</span> Desconto válido para todas as mensalidades, exceto rematrículas e dependências.
+            </p>
+
+            {/* Sinais de confiança */}
+            <ul className="space-y-3">
+              <li className="flex items-start gap-3 text-[12px] text-ink-700 leading-relaxed">
+                <ShieldCheck size={14} className="text-ink-900 flex-shrink-0 mt-0.5" />
+                <span>
+                  <strong className="font-semibold text-ink-900">Sem cobrança aqui.</strong> Você só paga matrícula e mensalidade à instituição.
+                </span>
+              </li>
+              <li className="flex items-start gap-3 text-[12px] text-ink-700 leading-relaxed">
+                <Award size={14} className="text-ink-900 flex-shrink-0 mt-0.5" />
+                <span>Parceiro oficial das principais instituições de ensino do Brasil.</span>
+              </li>
+              <li className="flex items-start gap-3 text-[12px] text-ink-700 leading-relaxed">
+                <Check size={14} className="text-ink-900 flex-shrink-0 mt-0.5" />
+                <span>
+                  Mais de <strong className="font-semibold num-tabular text-ink-900">100 mil</strong> estudantes já garantiram bolsa pelo Bolsa Click.
+                </span>
+              </li>
+            </ul>
+          </aside>
         </div>
       </div>
 
@@ -1992,30 +2198,30 @@ const isFormValidForPayment =
               <form onSubmit={handleAuthWithEmail} className="space-y-3">
                 {authMode === 'register' && (
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Nome completo</label>
+                    <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Nome completo</label>
                     <input
                       type="text"
                       value={authName}
                       onChange={(e) => setAuthName(e.target.value)}
                       placeholder="Seu nome"
                       required
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary"
+                      className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
                     />
                   </div>
                 )}
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>
+                  <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Email</label>
                   <input
                     type="email"
                     value={authEmail}
                     onChange={(e) => setAuthEmail(e.target.value)}
                     placeholder="seu@email.com"
                     required
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary"
+                    className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Senha</label>
+                  <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Senha</label>
                   <input
                     type="password"
                     value={authPassword}
@@ -2023,7 +2229,7 @@ const isFormValidForPayment =
                     placeholder="Sua senha"
                     required
                     minLength={6}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary"
+                    className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
                   />
                 </div>
 

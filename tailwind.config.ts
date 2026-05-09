@@ -51,6 +51,8 @@ module.exports = {
       fontFamily: {
         montserrat: ['var(--font-montserrat)', 'sans-serif'],
         sans: ['var(--font-montserrat)', 'sans-serif'],
+        display: ['var(--font-fraunces)', 'Georgia', 'serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'monospace'],
       },
       maxWidth: {
         'screen-lg': '1440px',
@@ -62,6 +64,18 @@ module.exports = {
         'bolsa-white': '#FAFAFA',
         'bolsa-gray-dark': '#242424',
         'bolsa-gray-light': '#F1F1F1',
+        ink: {
+          900: '#0B1F3C',
+          700: '#243652',
+          500: '#5A6B82',
+          300: '#9AA8BD',
+          100: '#D7DEE8',
+        },
+        paper: {
+          DEFAULT: '#FAF7F2',
+          warm: '#F4EFE5',
+          cream: '#E8DFC8',
+        },
         emerald: emerald,
       },
        keyframes: {

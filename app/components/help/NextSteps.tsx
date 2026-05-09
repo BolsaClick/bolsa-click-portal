@@ -12,37 +12,44 @@ interface NextStepsProps {
 
 export function NextSteps({ steps }: NextStepsProps) {
   return (
-    <div className="mb-8 rounded-xl bg-gradient-to-br from-bolsa-primary to-blue-900 p-6 text-white">
-      <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
-        <svg
-          className="h-5 w-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M13 7l5 5m0 0l-5 5m5-5H6"
-          />
-        </svg>
-        Próximos Passos
-      </h2>
-      <div className="space-y-3">
-        {steps.map((step, index) => (
-          <Link
-            key={index}
-            href={step.href}
-            className="group block rounded-lg bg-white/10 p-4 backdrop-blur-sm transition-all hover:bg-white/20"
-          >
-            <h3 className="mb-1 font-semibold group-hover:underline">
-              {step.title}
-            </h3>
-            <p className="text-sm text-white/90">{step.description}</p>
-          </Link>
-        ))}
+    <aside className="not-prose my-10">
+      <div className="flex items-baseline justify-between hairline-b pb-3 mb-4">
+        <span className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
+          Próximos passos
+        </span>
+        <span className="font-mono num-tabular text-[11px] text-ink-500">
+          ({String(steps.length).padStart(2, '0')})
+        </span>
       </div>
-    </div>
+
+      <ol className="grid grid-cols-1 md:grid-cols-2 gap-px bg-hairline border border-hairline rounded-2xl overflow-hidden">
+        {steps.map((step, index) => (
+          <li key={index} className="bg-white">
+            <Link
+              href={step.href}
+              className="group flex items-start gap-4 h-full px-5 py-5 transition-colors duration-200 hover:bg-paper-warm"
+            >
+              <span className="font-display num-tabular text-3xl text-ink-100 leading-none flex-shrink-0 group-hover:text-bolsa-secondary/70 transition-colors">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-display text-lg text-ink-900 leading-snug mb-1 group-hover:italic transition-all duration-200">
+                  {step.title}
+                </span>
+                <span className="block text-[13px] text-ink-500 leading-relaxed">
+                  {step.description}
+                </span>
+              </span>
+              <span
+                aria-hidden="true"
+                className="text-ink-300 group-hover:text-bolsa-secondary group-hover:translate-x-1 transition-all duration-300 mt-1 flex-shrink-0"
+              >
+                →
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ol>
+    </aside>
   )
 }

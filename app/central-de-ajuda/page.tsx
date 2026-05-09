@@ -34,55 +34,103 @@ export const metadata: Metadata = {
 
 export default async function CentralDeAjudaPage() {
   const categories = await getHelpCategories()
+  const totalArticles = categories.reduce((sum, c) => sum + (c.articleCount || 0), 0)
 
   return (
     <>
-      {/* Hero Section */}
-      <div className="bg-gradient-to-br from-bolsa-primary via-blue-800 to-blue-900 pt-32 pb-16 text-white relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-72 h-72 bg-white rounded-full -translate-x-1/2 -translate-y-1/2" />
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/3 translate-y-1/3" />
-          <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-white rounded-full -translate-x-1/2 -translate-y-1/2" />
-        </div>
+      {/* HERO editorial — paper-warm com serif XL */}
+      <section className="relative bg-paper-warm overflow-hidden">
+        <div
+          aria-hidden="true"
+          className="absolute -top-32 -right-32 w-[32rem] h-[32rem] rounded-full bg-bolsa-secondary/10 blur-3xl"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute -bottom-40 -left-32 w-[32rem] h-[32rem] rounded-full bg-bolsa-primary/10 blur-3xl"
+        />
+        <div className="container mx-auto px-4 pt-20 pb-16 md:pt-28 md:pb-20 relative">
+          <div className="max-w-4xl mx-auto text-center flex flex-col items-center">
+            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 inline-flex items-center gap-3 mb-6">
+              <span className="h-px w-8 bg-ink-300" />
+              Central de ajuda · Suporte humano
+              <span className="h-px w-8 bg-ink-300" />
+            </span>
+            <h1 className="font-display text-4xl md:text-5xl lg:text-[64px] font-semibold text-ink-900 leading-[1.05] mb-5">
+              Como podemos{' '}
+              <span className="italic text-ink-700">te ajudar?</span>
+            </h1>
+            <p className="text-ink-500 text-base md:text-lg max-w-2xl leading-relaxed">
+              Encontre respostas sobre matrícula, bolsas, pagamento, reembolso e tudo o que precisa
+              pra começar seu curso com tranquilidade.
+            </p>
 
-        <div className="mx-auto max-w-5xl px-4 relative z-10">
-          <div className="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium text-white/90 mb-4">
-            Suporte 24/7
+            {/* Stats inline */}
+            <dl className="mt-10 grid grid-cols-3 max-w-2xl w-full divide-x divide-hairline border-y border-hairline">
+              <div className="px-4 py-5 text-center">
+                <dt className="font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500">
+                  Categorias
+                </dt>
+                <dd className="font-display num-tabular text-2xl md:text-3xl text-ink-900 mt-1">
+                  {String(categories.length).padStart(2, '0')}
+                </dd>
+              </div>
+              <div className="px-4 py-5 text-center">
+                <dt className="font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500">
+                  Artigos
+                </dt>
+                <dd className="font-display num-tabular text-2xl md:text-3xl text-ink-900 mt-1">
+                  {totalArticles}+
+                </dd>
+              </div>
+              <div className="px-4 py-5 text-center">
+                <dt className="font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500">
+                  Resposta
+                </dt>
+                <dd className="font-display text-2xl md:text-3xl text-ink-900 mt-1">
+                  <span className="text-bolsa-secondary">&lt; 5 min</span>
+                </dd>
+              </div>
+            </dl>
           </div>
-          <h1 className="mb-4 text-4xl font-bold md:text-5xl">Central de Ajuda</h1>
-          <p className="text-lg text-white/80 max-w-2xl">
-            Tire suas dúvidas e encontre todas as informações que precisa sobre o Bolsa Click.
-            Estamos aqui para ajudar você a realizar o sonho de estudar.
-          </p>
         </div>
-      </div>
+      </section>
 
-      {/* Content Section */}
-      <div className="min-h-screen bg-gray-50">
-        {/* Categories Grid */}
-        <div className="mx-auto max-w-5xl px-4 py-12">
-          <div className="grid gap-5 sm:grid-cols-2">
-            {categories.map((category) => (
-              <HelpCategory
-                key={category.id}
-                icon={renderIcon(category.icon)}
-                title={category.title}
-                description={category.description}
-                href={`/central-de-ajuda/${category.slug}`}
-                articleCount={category.articleCount}
+      {/* CATEGORIAS */}
+      <section className="bg-paper py-16 md:py-20">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-baseline justify-between hairline-b pb-3 mb-8">
+              <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
+                Categorias
+              </h2>
+              <span className="font-mono num-tabular text-[11px] text-ink-500">
+                ({String(categories.length).padStart(2, '0')})
+              </span>
+            </div>
+
+            <ul className="grid gap-4 md:gap-5 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
+              {categories.map((category) => (
+                <li key={category.id} className="h-full">
+                  <HelpCategory
+                    icon={renderIcon(category.icon)}
+                    title={category.title}
+                    description={category.description}
+                    href={`/central-de-ajuda/${category.slug}`}
+                    articleCount={category.articleCount}
+                  />
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-12">
+              <ContactCTA
+                title="Não encontrou sua resposta?"
+                description="Fale com nossa equipe humana pelo WhatsApp em poucos minutos — sem fila, sem robô."
               />
-            ))}
+            </div>
           </div>
-
-          {/* Quick Contact */}
-          <ContactCTA
-            title="Não encontrou o que procurava?"
-            description="Fale diretamente com nossa equipe pelo WhatsApp ou envie uma mensagem"
-            className="mt-12"
-          />
         </div>
-      </div>
+      </section>
     </>
   )
 }

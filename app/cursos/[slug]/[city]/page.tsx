@@ -5,7 +5,6 @@ import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { FeaturedCourseData } from '../../_data/types'
 import { BRAZILIAN_CITIES, getCityBySlug } from '@/app/lib/constants/brazilian-cities'
 import CursoCidadeClient from './CursoCidadeClient'
-import Breadcrumb from '@/app/components/atoms/Breadcrumb'
 
 type Props = {
   params: Promise<{ slug: string; city: string }>
@@ -277,14 +276,6 @@ export default async function CursoCidadePage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchemas) }}
       />
-      <div className="container mx-auto px-4 pt-4 pb-2">
-        <Breadcrumb items={[
-          { label: 'Home', href: '/' },
-          { label: nivelLabel, href: nivelHref },
-          { label: cursoMetadata.name, href: `/cursos/${slug}` },
-          { label: cityData.name },
-        ]} />
-      </div>
       <CursoCidadeClient
         cursoMetadata={cursoMetadata}
         courseOffers={courseOffers}

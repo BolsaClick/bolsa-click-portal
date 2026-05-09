@@ -60,30 +60,32 @@ const ScholarshipCard: React.FC<ScholarshipCardProps> = ({ curso }) => {
         </div>
       </div>
       <div className="scholarship-content">
-        <h3 className="text-lg font-bold mb-2 text-blue-950">{curso.fullName}</h3>
-        <p className="text-gray-500 text-sm mb-4 line-clamp-2">{curso.description}</p>
+        <h3 className="text-xl mb-3 text-ink-900">{curso.fullName}</h3>
+        <p className="text-ink-500 text-sm mb-5 line-clamp-2 leading-relaxed">{curso.description}</p>
 
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="flex flex-wrap gap-2 mb-5">
           <span className="badge">
-            <Monitor size={12} className="mr-1" />
+            <Monitor size={11} className="mr-1.5" />
             {getTypeLabel(curso.type)}
           </span>
           <span className="badge">
-            <Clock size={12} className="mr-1" />
+            <Clock size={11} className="mr-1.5" />
             {curso.duration}
           </span>
           <span className="badge">
-            <Book size={12} className="mr-1" />
+            <Book size={11} className="mr-1.5" />
             Graduação
           </span>
         </div>
 
         <div className="price-container">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-xs text-gray-400 uppercase tracking-wide">Salário médio</div>
-              <div className="font-bold text-bolsa-primary text-lg">{curso.averageSalary}</div>
-            </div>
+          <div className="flex items-baseline justify-between">
+            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500">
+              Salário médio
+            </span>
+            <span className="font-display num-tabular text-xl text-ink-900">
+              {curso.averageSalary}
+            </span>
           </div>
         </div>
 
@@ -91,7 +93,7 @@ const ScholarshipCard: React.FC<ScholarshipCardProps> = ({ curso }) => {
           href={`/cursos/${curso.slug}`}
           className="scholarship-button block text-center"
         >
-          Ver bolsas disponíveis
+          Ver bolsas disponíveis →
         </Link>
       </div>
     </div>
@@ -162,21 +164,29 @@ const ScholarshipCarouselClient: React.FC<ScholarshipCarouselClientProps> = ({ c
 
   return (
     <section
-      className="scholarships-section py-16"
+      className="scholarships-section py-24 md:py-32"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <span className="inline-block px-4 py-1.5 bg-blue-50 text-bolsa-primary text-sm font-semibold rounded-full mb-4">
-            TOP 10 CURSOS
-          </span>
-          <h2 className="text-3xl md:text-4xl font-bold text-blue-950 mb-4">
-            Cursos em Destaque
-          </h2>
-          <p className="text-gray-500 max-w-xl mx-auto">
-            Encontre bolsas de estudo com até <span className="text-bolsa-primary font-semibold">80% de desconto</span> para os cursos mais procurados do Brasil
-          </p>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-16 md:mb-20">
+          <div className="md:col-span-6">
+            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 flex items-center gap-3 mb-6">
+              <span className="h-px w-8 bg-ink-300" />
+              Top 10 cursos
+            </span>
+            <h2 className="font-display display-tight text-4xl md:text-5xl text-ink-900 leading-[1.05]">
+              Cursos em destaque<br />
+              <span className="italic text-ink-700">para começar agora.</span>
+            </h2>
+          </div>
+          <div className="md:col-span-5 md:col-start-8 md:pt-3">
+            <p className="text-ink-500 leading-relaxed text-[15px]">
+              Os cursos mais buscados do Brasil com bolsas de até{' '}
+              <span className="text-ink-900 font-medium">80% de desconto</span>. Veja a duração,
+              salário médio e demanda do mercado.
+            </p>
+          </div>
         </div>
 
         <div className="carousel-container">
@@ -229,13 +239,13 @@ const ScholarshipCarouselClient: React.FC<ScholarshipCarouselClientProps> = ({ c
           </div>
         </div>
 
-        <div className="text-center mt-10">
+        <div className="text-center mt-12">
           <Link
             href="/cursos"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-white border-2 border-blue-950 text-blue-950 font-semibold rounded-xl hover:bg-blue-950 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md"
+            className="group inline-flex items-center gap-3 font-mono text-[12px] tracking-[0.22em] uppercase text-ink-900 border-b-2 border-ink-900 pb-1 hover:text-bolsa-secondary hover:border-bolsa-secondary transition-colors"
           >
             Ver todos os cursos
-            <ChevronRight size={20} />
+            <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
           </Link>
         </div>
       </div>

@@ -11,47 +11,54 @@ interface ContactCTAProps {
 
 export function ContactCTA({
   title = 'Ainda com dúvidas?',
-  description = 'Nossa equipe está pronta para ajudar você a encontrar a bolsa ideal',
-  className = 'mt-10',
+  description = 'Nossa equipe responde no WhatsApp em poucos minutos — sem fila, sem robô, com gente de verdade.',
+  className = '',
 }: ContactCTAProps) {
   const showWhatsapp = useWhatsappFeatureFlag()
 
   return (
-    <div className={`${className} rounded-2xl bg-gradient-to-br from-blue-950 to-blue-900 p-8 md:p-10 text-center relative overflow-hidden`}>
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-white rounded-full translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-1/2 translate-y-1/2" />
-      </div>
+    <aside
+      className={`${className} relative bg-paper-warm border border-hairline rounded-2xl p-7 md:p-10 overflow-hidden`}
+    >
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-center">
+        <div className="md:col-span-7">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 inline-flex items-center gap-2 mb-3">
+            <span className="h-px w-6 bg-ink-300" />
+            Suporte humano
+          </span>
+          <h2 className="font-display text-2xl md:text-[30px] text-ink-900 leading-tight mb-2">
+            {title.split(' ').slice(0, -1).join(' ')}{' '}
+            <span className="italic text-ink-700">{title.split(' ').slice(-1)}</span>
+          </h2>
+          <p className="text-ink-500 text-[14px] md:text-[15px] leading-relaxed max-w-md">
+            {description}
+          </p>
+        </div>
 
-      <div className="relative z-10">
-        <h2 className="mb-2 text-2xl font-bold text-white">
-          {title}
-        </h2>
-        <p className="mb-6 text-blue-200">
-          {description}
-        </p>
-        <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+        <div className="md:col-span-5 flex flex-col gap-2.5">
           {showWhatsapp && (
             <a
               href="https://wa.me/5511936200198"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-500 px-6 py-3 font-semibold text-white transition-all hover:bg-green-400 hover:scale-105 shadow-lg shadow-green-500/30"
+              className="group inline-flex items-center justify-center gap-2 px-5 py-3 bg-bolsa-secondary text-white font-semibold rounded-full text-[14px] hover:bg-bolsa-secondary/90 transition-colors shadow-lg shadow-bolsa-secondary/25"
             >
-              <MessageCircle size={20} />
+              <MessageCircle size={16} />
               Falar no WhatsApp
+              <span className="inline-block transition-transform duration-300 group-hover:translate-x-0.5">
+                →
+              </span>
             </a>
           )}
           <a
             href="/contato"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 px-6 py-3 font-semibold text-white transition-all hover:bg-white/20"
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white border border-hairline text-ink-900 font-semibold rounded-full text-[14px] hover:border-ink-900 hover:bg-ink-900 hover:text-white transition-all"
           >
-            <Mail size={20} />
+            <Mail size={16} />
             Enviar mensagem
           </a>
         </div>
       </div>
-    </div>
+    </aside>
   )
 }

@@ -1,19 +1,29 @@
-import { Analytics } from '@vercel/analytics/react'
 import { Metadata } from 'next'
-import { Montserrat } from 'next/font/google'
+import { Fraunces, Montserrat } from 'next/font/google'
 import Script from 'next/script'
 import { Toaster } from 'sonner'
 import { AnalyticsScripts } from './components/organisms/AnalyticsScripts'
+import CookieConsent from './components/organisms/CookieConsent'
 import { ClientProviders } from './components/providers/ClientProviders'
+import { ConsentProvider } from './components/providers/ConsentProvider'
+import { GatedVercelAnalytics } from './components/providers/GatedVercelAnalytics'
 import { WatiWhatsappWidget } from './components/WatiWhatsappWidget'
 import './globals.css'
 import { getCurrentTheme } from './lib/themes'
 
 const montserrat = Montserrat({
   subsets: ['latin'],
-  weight: ['400', '600', '700'],
+  weight: ['400', '500', '600', '700'],
   display: 'swap',
   variable: '--font-montserrat',
+})
+
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+  display: 'swap',
+  variable: '--font-fraunces',
 })
 
 const theme = getCurrentTheme()
@@ -191,7 +201,7 @@ const jsonLd = [
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-br" className={montserrat.variable}>
+    <html lang="pt-br" className={`${montserrat.variable} ${fraunces.variable}`}>
       <Script
         id="utmify-pixel"
         strategy="lazyOnload"
@@ -229,49 +239,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className={`${montserrat.className} antialiased`}>
-        {/* GTM (noscript) */}
-        {gtmId && (
-          <noscript>
-            <iframe
-              src={`https://www.googletagmanager.com/ns.html?id=${gtmId}`}
-              height="0"
-              width="0"
-              style={{ display: 'none', visibility: 'hidden' }}
-            />
-          </noscript>
-        )}
+        <ConsentProvider>
+          <AnalyticsScripts gtmId={gtmId} ga4Id={ga4Id} facebookPixelIds={facebookPixelIds} />
 
-        {/* Facebook Pixels (noscript) */}
-        {facebookPixelIds.map(pixelId => (
-          <noscript key={pixelId}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              height="1"
-              width="1"
-              style={{ display: 'none' }}
-              src={`https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1`}
-              alt=""
-            />
-          </noscript>
-        ))}
+          <WatiWhatsappWidget />
 
-        <AnalyticsScripts gtmId={gtmId} ga4Id={ga4Id} facebookPixelIds={facebookPixelIds} />
+          <Toaster richColors position="top-right" />
+          <GatedVercelAnalytics />
+          <ClientProviders>
+            <div className="flex min-h-screen flex-col">
+              <main className="flex flex-1 flex-col">{children}</main>
+            </div>
+          </ClientProviders>
 
-        <Script
-          src="https://cdn-cookieyes.com/client_data/2a0be4de7c11618e75d1c64f/script.js"
-          strategy="lazyOnload"
-          crossOrigin="anonymous"
-        />
-
-        <WatiWhatsappWidget />
-
-        <Toaster richColors position="top-right" />
-        <Analytics />
-        <ClientProviders>
-          <div className="flex min-h-screen flex-col">
-            <main className="flex flex-1 flex-col">{children}</main>
-          </div>
-        </ClientProviders>
+          <CookieConsent />
+        </ConsentProvider>
       </body>
     </html>
   )

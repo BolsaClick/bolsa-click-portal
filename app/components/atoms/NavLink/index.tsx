@@ -5,11 +5,11 @@ import { usePathname } from 'next/navigation'
 import { ComponentProps } from 'react'
 
 type NavLinkProps = ComponentProps<typeof Link> & {
+  // Mantida apenas para compat com chamadas antigas; ignorada visualmente.
   isScrolled?: boolean
 }
 
-
-export function NavLink({ href, children, isScrolled, className = '', ...rest }: NavLinkProps) {
+export function NavLink({ href, children, className = '', ...rest }: NavLinkProps) {
   const pathname = usePathname()
   const isActive = pathname === href
 
@@ -17,11 +17,9 @@ export function NavLink({ href, children, isScrolled, className = '', ...rest }:
     <Link
       href={href}
       className={`
-        font-montserrat relative w-full lg:w-auto
-        justify-between lg:justify-center flex items-center
-        transition-all duration-300 text-zinc-900 ${isScrolled ? 'lg:text-zinc-800 hover:text-emerald-500' : 'lg:text-zinc-200 hover:text-bolsa-secondary'}  px-3 font-medium
-        
-        ${isActive && 'text-zinc-900'}
+        font-montserrat relative inline-flex items-center justify-center w-full lg:w-auto
+        text-[15px] font-medium transition-colors duration-150 px-1.5 py-2
+        ${isActive ? 'text-ink-900' : 'text-ink-700 hover:text-ink-900'}
         ${className}
       `}
       {...rest}

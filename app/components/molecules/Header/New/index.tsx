@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuth } from '@/app/contexts/AuthContext'
-import { ChevronDown, LogOut, User, X } from 'lucide-react'
+import { LogOut, Menu as MenuIcon, User, X } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import React, { useEffect, useRef, useState } from 'react'
@@ -9,12 +9,10 @@ import { Menu } from '../../Menu'
 
 const HeaderNew: React.FC = () => {
   const { user, logout } = useAuth()
-  const [scrolled, setScrolled] = useState(false)
   const [currentTheme, setCurrentTheme] = useState('bolsaclick')
   const [menuOpen, setMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
-
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -22,33 +20,10 @@ const HeaderNew: React.FC = () => {
     }
   }, [])
 
-  const theme = process.env.NEXT_PUBLIC_THEME
-  const sectionBg =
-    theme === 'anhanguera'
-      ? 'mt-2 p-3 rounded-full bg-[#d63c06]/10 backdrop-blur-md border-[#d63c06]/70 border-[1px]'
-      : 'mt-2 p-2 max-w-5xl w-full rounded-full bg-bolsa-secondary/10 backdrop-blur-md border-bolsa-secondary/70 border-[1px]'
-
-  const logoWhite =
-    currentTheme === 'anhanguera'
-      ? '/assets/logo-anhanguera-bolsa-click-branco.svg'
-      : '/assets/logo-bolsa-click-branco.png'
-
   const logoColor =
     currentTheme === 'anhanguera'
       ? '/assets/logo-anhanguera-bolsa-click.svg'
       : '/assets/logo-bolsa-click-rosa.png'
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const isScrolled = window.scrollY > 40
-      if (isScrolled !== scrolled) {
-        setScrolled(isScrolled)
-      }
-    }
-
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [scrolled])
 
   // Close user menu when clicking outside
   useEffect(() => {
@@ -61,7 +36,18 @@ const HeaderNew: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const toggleMenu = () => setMenuOpen(!menuOpen)
+  // Lock body scroll when mobile drawer open
+  useEffect(() => {
+    if (menuOpen) {
+      const previous = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = previous
+      }
+    }
+  }, [menuOpen])
+
+  const toggleMenu = () => setMenuOpen((m) => !m)
 
   const handleLogout = async () => {
     await logout()
@@ -69,237 +55,210 @@ const HeaderNew: React.FC = () => {
   }
 
   return (
-    <header className={`fixed top-0 left-0 w-full z-[1000] transition-all duration-500 ${scrolled ? '' : 'bg-gradient-to-r from-bolsa-primary to-blue-700'
-      }`}>
-      <div
-        className={`hidden max-w-6xl lg:flex items-center mx-auto transition-all duration-500 ${menuOpen
-          ? 'bg-white text-emerald-950'
-          : scrolled
-            ? sectionBg
-            : 'py-4 border-transparent'
-          }`}
-      >
-        <div
-          className={`flex items-center justify-between w-full mx-auto transition-all duration-500 ${scrolled ? 'bg-white px-10 py-4 rounded-full' : 'px-4'
-            }`}
-        >
-          <Link href="/" className="flex items-center">
-            <Image
-              src={scrolled ? logoColor : logoWhite}
-              alt="Logo"
-              width={90}
-              height={33}
-              priority
-            />
-          </Link>
+    <header className="sticky top-0 z-[1000] bg-white border-b border-hairline shadow-[0_1px_0_rgba(11,31,60,0.04)]">
+      {/* DESKTOP */}
+      <div className="hidden lg:block">
+        <div className="max-w-[1280px] mx-auto px-5">
+          <div className="flex items-center h-[68px] gap-4 xl:gap-6">
+            <Link href="/" className="flex-shrink-0">
+              <Image
+                src={logoColor}
+                alt="Bolsa Click"
+                width={120}
+                height={38}
+                priority
+                className="h-[36px] w-auto"
+              />
+            </Link>
 
-          <nav className="hidden lg:flex gap-10 items-center">
-            <Menu isScrolled={scrolled} />
+            <Menu className="flex-1 justify-start ml-4" />
 
-            {/* User Icon + Dropdown */}
-            <div className="relative" ref={userMenuRef}>
-              <button
-                aria-label="Menu do usuário"
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-full transition-colors ${scrolled
-                  ? 'text-gray-700 hover:bg-gray-100'
-                  : 'text-white hover:bg-white/10'
-                  }`}
-              >
-                {user?.avatar ? (
-                  <Image
-                    src={user.avatar}
-                    alt={user.name || 'Avatar'}
-                    width={32}
-                    height={32}
-                    className="w-8 h-8 rounded-full object-cover"
-                    unoptimized
-                  />
-                ) : (
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${scrolled ? 'bg-bolsa-primary text-white' : 'bg-white/20'
-                    }`}>
-                    <User size={18} />
-                  </div>
-                )}
-                <ChevronDown size={16} className={`transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
-              </button>
+            <div className="flex items-center gap-2 xl:gap-3 flex-shrink-0">
+              {user ? (
+                <div className="relative" ref={userMenuRef}>
+                  <button
+                    aria-label="Menu do usuário"
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-full text-ink-700 hover:bg-paper-warm transition-colors"
+                  >
+                    {user.avatar ? (
+                      <Image
+                        src={user.avatar}
+                        alt={user.name || 'Avatar'}
+                        width={32}
+                        height={32}
+                        className="w-8 h-8 rounded-full object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-bolsa-primary text-white flex items-center justify-center">
+                        <User size={16} />
+                      </div>
+                    )}
+                    <span className="text-[14px] font-medium hidden xl:inline">
+                      {user.name?.split(' ')[0] || 'Minha conta'}
+                    </span>
+                  </button>
 
-              {/* Dropdown Menu */}
-              {userMenuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
-                  {user ? (
-                    <>
+                  {userMenuOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-hairline rounded-xl shadow-[0_20px_50px_-20px_rgba(11,31,60,0.18)] py-2 z-50">
                       <Link
                         href="/minha-conta"
-                        className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                        className="flex items-center gap-3 px-4 py-2.5 text-ink-700 hover:bg-paper-warm transition-colors text-[14px]"
                         onClick={() => setUserMenuOpen(false)}
                       >
-                        <User size={18} />
-                        Minha Conta
+                        <User size={16} />
+                        Minha conta
                       </Link>
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors"
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-bolsa-secondary hover:bg-bolsa-secondary/5 transition-colors text-[14px]"
                       >
-                        <LogOut size={18} />
+                        <LogOut size={16} />
                         Sair
                       </button>
-                    </>
-                  ) : (
-                    <>
-                      <Link
-                        href="/login"
-                        className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
-                        onClick={() => setUserMenuOpen(false)}
-                      >
-                        <User size={18} />
-                        Entrar
-                      </Link>
-                      <Link
-                        href="/cadastro"
-                        className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
-                        onClick={() => setUserMenuOpen(false)}
-                      >
-                        <User size={18} />
-                        Criar conta
-                      </Link>
-                    </>
+                    </div>
                   )}
                 </div>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="px-3 py-2 text-[14px] font-medium text-ink-900 hover:text-bolsa-secondary transition-colors whitespace-nowrap"
+                  >
+                    Entrar
+                  </Link>
+                  <Link
+                    href="/cadastro"
+                    className="inline-flex items-center px-4 xl:px-5 py-2.5 text-[13px] xl:text-[14px] font-semibold text-white bg-bolsa-secondary hover:bg-bolsa-secondary/90 rounded-full transition-colors shadow-sm whitespace-nowrap"
+                  >
+                    Cadastre-se grátis
+                  </Link>
+                </>
               )}
             </div>
-
-            {/* Inscreva-se Button - only when not logged in */}
-            {!user && (
-              <Link
-                href="/cursos"
-
-                className={`px-6 py-2 rounded-full font-semibold transition-colors ${scrolled
-                  ? 'bg-bolsa-primary text-white hover:bg-bolsa-primary/90'
-                  : 'bg-white text-bolsa-primary hover:bg-white/90'
-                  }`}
-              >
-                Inscreva-se
-              </Link>
-            )}
-          </nav>
+          </div>
         </div>
       </div>
-      {/* MOBILE HEADER */}
-      <div className="flex lg:hidden items-center justify-between bg-white px-4 py-3 border-b border-gray-200 shadow-sm">
-        <div className="flex items-center gap-3">
+
+      {/* MOBILE BAR */}
+      <div className="flex lg:hidden items-center justify-between bg-white px-4 h-[64px]">
+        <div className="flex items-center gap-2">
           <button
             onClick={toggleMenu}
-            className="flex-shrink-0 p-2 text-gray-800 focus:outline-2 focus:outline-bolsa-primary"
+            className="p-2 -ml-2 text-ink-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-bolsa-secondary rounded-md"
             aria-label="Abrir menu"
+            aria-expanded={menuOpen}
           >
-            {menuOpen ? <X size={24} /> : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            )}
+            {menuOpen ? <X size={24} /> : <MenuIcon size={24} />}
           </button>
           <Link href="/" className="flex-shrink-0">
-            <Image src={logoColor} alt="Logo" width={80} height={30} priority />
+            <Image src={logoColor} alt="Bolsa Click" width={108} height={36} priority className="h-[36px] w-auto" />
           </Link>
         </div>
         {!user && (
           <Link
-            href="/cursos"
-            className="px-4 py-2 mr-2 bg-bolsa-primary text-white rounded-full font-semibold text-sm whitespace-nowrap hover:bg-bolsa-primary/90 transition-colors"
+            href="/cadastro"
+            className="px-4 py-2 bg-bolsa-secondary text-white rounded-full font-semibold text-[13px] whitespace-nowrap hover:bg-bolsa-secondary/90 transition-colors"
           >
-            Inscreva-se
+            Cadastre-se
           </Link>
         )}
       </div>
 
-      {/* MENU MOBILE COM TRANSIÇÃO */}
-      <div className={`lg:hidden fixed inset-0 z-50 transition-all duration-300 ease-in-out ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        {/* Overlay */}
-        {menuOpen && (
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            onClick={toggleMenu}
-          />
-        )}
-
-        {/* Side Menu */}
-        <div className="relative z-10 bg-white h-full w-[80%] p-6 shadow-xl rounded-r-xl transition-all duration-300 ease-in-out">
-          <div className="flex justify-between items-center mb-6  w-full">
-            <Image src={logoColor} alt="Logo" width={80} height={30} />
-            <button onClick={toggleMenu} aria-label="Fechar menu">
-              <X size={28} />
+      {/* MOBILE DRAWER */}
+      <div
+        className={`lg:hidden fixed inset-0 z-[999] transition-all duration-300 ease-out ${
+          menuOpen ? 'visible' : 'invisible'
+        }`}
+        aria-hidden={!menuOpen}
+      >
+        <button
+          tabIndex={-1}
+          aria-label="Fechar menu"
+          className={`absolute inset-0 bg-ink-900/40 backdrop-blur-sm transition-opacity duration-300 ${
+            menuOpen ? 'opacity-100' : 'opacity-0'
+          }`}
+          onClick={toggleMenu}
+        />
+        <div
+          className={`relative z-10 bg-white h-full w-[88%] max-w-[400px] shadow-2xl transition-transform duration-300 ease-out flex flex-col ${
+            menuOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          <div className="flex justify-between items-center px-5 h-[64px] border-b border-hairline">
+            <Link href="/" onClick={toggleMenu}>
+              <Image src={logoColor} alt="Bolsa Click" width={108} height={36} className="h-[36px] w-auto" />
+            </Link>
+            <button onClick={toggleMenu} aria-label="Fechar menu" className="p-2 -mr-2 text-ink-900">
+              <X size={24} />
             </button>
           </div>
-          <Menu />
 
-          {/* Mobile User Section - Show login by default, user info when logged in */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            {user ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 px-2">
-                  {user.avatar ? (
-                    <Image
-                      src={user.avatar}
-                      alt={user.name || 'Avatar'}
-                      width={40}
-                      height={40}
-                      className="w-10 h-10 rounded-full object-cover"
-                      unoptimized
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-bolsa-primary text-white flex items-center justify-center">
-                      <User size={20} />
+          <div className="flex-1 overflow-y-auto px-5 pt-2">
+            <Menu variant="mobile" onNavigate={toggleMenu} />
+
+            <div className="mt-8 pt-6 border-t border-hairline pb-8">
+              {user ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 px-1">
+                    {user.avatar ? (
+                      <Image
+                        src={user.avatar}
+                        alt={user.name || 'Avatar'}
+                        width={44}
+                        height={44}
+                        className="w-11 h-11 rounded-full object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="w-11 h-11 rounded-full bg-bolsa-primary text-white flex items-center justify-center">
+                        <User size={20} />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="font-semibold text-ink-900 truncate">{user.name || 'Usuário'}</p>
+                      <p className="text-sm text-ink-500 truncate">{user.email}</p>
                     </div>
-                  )}
-                  <div>
-                    <p className="font-medium text-gray-900">{user.name || 'Usuário'}</p>
-                    <p className="text-sm text-gray-500">{user.email}</p>
                   </div>
+                  <Link
+                    href="/minha-conta"
+                    className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-paper-warm rounded-full text-ink-900 font-semibold text-[14px]"
+                    onClick={toggleMenu}
+                  >
+                    <User size={18} />
+                    Minha conta
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleLogout()
+                      toggleMenu()
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-hairline rounded-full text-bolsa-secondary font-semibold text-[14px]"
+                  >
+                    <LogOut size={18} />
+                    Sair da conta
+                  </button>
                 </div>
-                <Link
-                  href="/minha-conta"
-                  className="flex items-center gap-3 px-4 py-3 bg-gray-100 rounded-xl text-gray-700 font-medium"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  <User size={20} />
-                  Minha Conta
-                </Link>
-                <button
-                  onClick={() => {
-                    handleLogout()
-                    setMenuOpen(false)
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 bg-red-50 rounded-xl text-red-600 font-medium"
-                >
-                  <LogOut size={20} />
-                  Sair da conta
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <Link
-                  href="/login"
-                  className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-bolsa-primary text-white rounded-xl font-semibold"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  <User size={20} />
-                  Entrar
-                </Link>
-                <Link
-                  href="/cadastro"
-                  className="flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-bolsa-primary text-bolsa-primary rounded-xl font-semibold"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Criar conta grátis
-                </Link>
-              </div>
-            )}
+              ) : (
+                <div className="space-y-3">
+                  <Link
+                    href="/cadastro"
+                    onClick={toggleMenu}
+                    className="flex items-center justify-center w-full px-4 py-3 bg-bolsa-secondary text-white rounded-full font-semibold text-[15px] hover:bg-bolsa-secondary/90 transition-colors"
+                  >
+                    Cadastre-se grátis
+                  </Link>
+                  <Link
+                    href="/login"
+                    onClick={toggleMenu}
+                    className="flex items-center justify-center w-full px-4 py-3 border border-ink-900 text-ink-900 rounded-full font-semibold text-[15px] hover:bg-ink-900 hover:text-white transition-colors"
+                  >
+                    Entrar
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

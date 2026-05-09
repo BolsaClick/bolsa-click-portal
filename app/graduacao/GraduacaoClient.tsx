@@ -1,759 +1,579 @@
-// app/graduacao/App.tsx
 'use client'
 
-import { useState, useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import {
-  GraduationCap, BookOpen, Clock, Award, Building2,
-  FileSpreadsheet, Globe, Users, Brain, Target, Laptop,
-  CheckCircle, TrendingUp, Calendar, BookMarked,
-  ArrowRight, Mail, Star, Sparkles, MapPin, ChevronDown
-} from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
+import {
+  ArrowRight,
+  Check,
+  ChevronDown,
+  GraduationCap,
+  MapPin,
+  Monitor,
+} from 'lucide-react'
+
+const STATS = [
+  { value: '50k+', label: 'Cursos de graduação' },
+  { value: '30k+', label: 'Faculdades parceiras' },
+  { value: 'até 80%', label: 'de desconto em bolsas' },
+  { value: '100%', label: 'sem necessidade de ENEM' },
+]
+
+type Offer = {
+  course: string
+  institution: string
+  logo: string
+  modality: 'EAD' | 'PRESENCIAL' | 'SEMIPRESENCIAL'
+  city: string
+  uf: string
+  finalPrice: number
+  originalPrice: number
+  discountPct: number
+  href: string
+}
+
+const OFFERS: Offer[] = [
+  {
+    course: 'Direito',
+    institution: 'Anhanguera',
+    logo: '/assets/logo-anhanguera-bolsa-click.svg',
+    modality: 'PRESENCIAL',
+    city: 'São Paulo',
+    uf: 'SP',
+    finalPrice: 549,
+    originalPrice: 2329,
+    discountPct: 76,
+    href: '/curso/resultado?c=direito&nivel=GRADUACAO',
+  },
+  {
+    course: 'Engenharia Civil',
+    institution: 'Unopar',
+    logo: '/assets/logo-unopar.svg',
+    modality: 'EAD',
+    city: 'Rio de Janeiro',
+    uf: 'RJ',
+    finalPrice: 298.99,
+    originalPrice: 3200,
+    discountPct: 90,
+    href: '/curso/resultado?c=engenharia-civil&nivel=GRADUACAO&modalidade=EAD',
+  },
+  {
+    course: 'Pedagogia',
+    institution: 'Pitágoras',
+    logo: '/assets/logo-pitagoras.svg',
+    modality: 'EAD',
+    city: 'Belo Horizonte',
+    uf: 'MG',
+    finalPrice: 119,
+    originalPrice: 950,
+    discountPct: 87,
+    href: '/curso/resultado?c=pedagogia&nivel=GRADUACAO&modalidade=EAD',
+  },
+  {
+    course: 'Administração',
+    institution: 'Ampli',
+    logo: '/assets/ampli-logo.png',
+    modality: 'EAD',
+    city: 'Curitiba',
+    uf: 'PR',
+    finalPrice: 99.99,
+    originalPrice: 1290,
+    discountPct: 92,
+    href: '/curso/resultado?c=administracao&nivel=GRADUACAO&modalidade=EAD',
+  },
+  {
+    course: 'Enfermagem',
+    institution: 'Pitágoras',
+    logo: '/assets/logo-pitagoras.svg',
+    modality: 'PRESENCIAL',
+    city: 'Salvador',
+    uf: 'BA',
+    finalPrice: 589,
+    originalPrice: 2280,
+    discountPct: 74,
+    href: '/curso/resultado?c=enfermagem&nivel=GRADUACAO&modalidade=PRESENCIAL',
+  },
+  {
+    course: 'Análise e Desenvolvimento de Sistemas',
+    institution: 'Anhanguera',
+    logo: '/assets/logo-anhanguera-bolsa-click.svg',
+    modality: 'EAD',
+    city: 'Recife',
+    uf: 'PE',
+    finalPrice: 109,
+    originalPrice: 1100,
+    discountPct: 90,
+    href: '/curso/resultado?c=analise-e-desenvolvimento-de-sistemas&nivel=GRADUACAO&modalidade=EAD',
+  },
+]
+
+const TYPES = [
+  {
+    n: '01',
+    title: 'Bacharelado',
+    duration: '4 a 5 anos',
+    description: 'Formação ampla para atuar em diferentes áreas. Ideal pra quem quer um diploma versátil — Direito, Administração, Engenharia, Psicologia.',
+  },
+  {
+    n: '02',
+    title: 'Licenciatura',
+    duration: '4 anos',
+    description: 'Pra quem quer ser professor. Forma educadores pra educação básica e ensino médio — Pedagogia, Letras, Matemática, História.',
+  },
+  {
+    n: '03',
+    title: 'Tecnólogo',
+    duration: '2 a 3 anos',
+    description: 'Curso curto e prático, focado em uma área específica do mercado — ADS, Marketing, Logística, Recursos Humanos.',
+  },
+]
+
+const MODALITIES = [
+  {
+    label: 'EAD',
+    title: 'Ensino a distância',
+    description: 'Estude online, no seu ritmo. Diploma reconhecido pelo MEC, com mensalidades a partir de R$ 99.',
+  },
+  {
+    label: 'Presencial',
+    title: 'Sala de aula tradicional',
+    description: 'Contato direto com professores e colegas. Acesso a laboratórios e infraestrutura completa.',
+  },
+  {
+    label: 'Semipresencial',
+    title: 'O melhor dos dois mundos',
+    description: 'Flexibilidade do EAD com encontros presenciais para práticas e networking.',
+  },
+]
+
+const PARTNERS = [
+  { name: 'Anhanguera', src: '/assets/logo-anhanguera-bolsa-click.svg' },
+  { name: 'Unopar', src: '/assets/logo-unopar.svg' },
+  { name: 'Pitágoras', src: '/assets/logo-pitagoras.svg' },
+  { name: 'Ampli', src: '/assets/ampli-logo.png' },
+  { name: 'Unime', src: '/assets/logo-unime-p.png' },
+]
+
+const FAQ = [
+  {
+    q: 'Quanto tempo dura uma graduação?',
+    a: 'Bacharelados e licenciaturas duram de 4 a 5 anos. Tecnólogos têm duração de 2 a 3 anos. A duração varia conforme o curso e a modalidade.',
+  },
+  {
+    q: 'Qual a diferença entre Bacharelado, Licenciatura e Tecnólogo?',
+    a: 'Bacharelado forma pra atuar em várias áreas; licenciatura prepara professores; tecnólogo é curto e focado em uma especialidade do mercado.',
+  },
+  {
+    q: 'Diploma EAD tem o mesmo valor do presencial?',
+    a: 'Sim. Cursos EAD reconhecidos pelo MEC têm validade idêntica aos presenciais — não há distinção no diploma.',
+  },
+  {
+    q: 'Preciso de nota do ENEM para conseguir bolsa?',
+    a: 'Não. No Bolsa Click você encontra bolsas sem precisar do ENEM. Basta se cadastrar gratuitamente e escolher o curso.',
+  },
+  {
+    q: 'Como funciona a bolsa de estudo?',
+    a: 'Você busca o curso, compara preços e descontos de até 80%, escolhe a melhor opção e garante sua bolsa. Cadastro 100% gratuito.',
+  },
+]
+
+const formatPrice = (n: number) =>
+  n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+const modalityLabel = (m: Offer['modality']) =>
+  m === 'EAD' ? 'EAD' : m === 'SEMIPRESENCIAL' ? 'Semipresencial' : 'Presencial'
 
 export default function GraduacaoClient() {
-  const [activeTab, setActiveTab] = useState('vantagens')
   const router = useRouter()
-  const infoSectionRef = useRef<HTMLElement>(null)
+  const offersRef = useRef<HTMLElement>(null)
+  const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(0)
 
-  const handleComecarAgora = () => {
-    router.push('/curso?nivel=GRADUACAO')
+  const handleBuscar = () => {
+    router.push('/curso/resultado?nivel=GRADUACAO')
   }
 
-  const handleSaibaMais = () => {
-    infoSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  const handleVerOfertas = () => {
+    offersRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   return (
-   <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white">
-       
-        <header className="relative bg-gradient-to-r  from-emerald-950 to-emerald-700 text-white py-32 overflow-hidden">
-          <motion.div 
-            className="absolute inset-0 z-0 opacity-20"
-            initial={{ scale: 1.1 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 20, repeat: Infinity, repeatType: "reverse" }}
-            style={{
-              backgroundImage: 'url("https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80")',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center'
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-b  from-emerald-950 to-emerald-700/50" />
-          <motion.div 
-            className="container mx-auto px-4 text-center relative z-10"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <motion.div
-              animate={{ y: [0, -10, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              <GraduationCap className="w-24 h-24 mx-auto mb-8" />
-            </motion.div>
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white to-emerald-200">
-              Cursos de Graduação
+    <div className="bg-paper">
+      {/* HERO */}
+      <section className="relative bg-bolsa-primary overflow-hidden">
+        <div
+          aria-hidden="true"
+          className="absolute -top-24 -right-32 w-[28rem] h-[28rem] rounded-full bg-bolsa-secondary/20 blur-3xl"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute -bottom-32 -left-24 w-[28rem] h-[28rem] rounded-full bg-blue-400/15 blur-3xl"
+        />
+        <div className="container mx-auto px-4 py-20 md:py-28 relative">
+          <div className="max-w-3xl mx-auto text-center flex flex-col items-center">
+            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-semibold text-white leading-[1.05] mb-5">
+              A graduação que abre{' '}
+              <span className="italic text-white/85">portas pra você.</span>
             </h1>
-            <p className="text-xl md:text-2xl text-emerald-100 max-w-3xl mx-auto leading-relaxed">
-              Descubra o caminho para sua formação superior e transforme seu futuro profissional
+            <p className="text-white/80 text-base md:text-lg max-w-2xl leading-relaxed mb-8">
+              Bacharelado, licenciatura ou tecnólogo — em mais de 30 mil faculdades parceiras.
+              Sem ENEM, sem fila, com diploma reconhecido pelo MEC.
             </p>
-            <div className="mt-12 flex flex-col sm:flex-row justify-center gap-6">
-              <motion.button 
-                onClick={handleComecarAgora}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-white text-emerald-700 px-8 py-4 rounded-full font-semibold hover:bg-emerald-50 transition-colors flex items-center gap-2 justify-center group"
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={handleBuscar}
+                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-bolsa-secondary text-white font-semibold rounded-full hover:bg-bolsa-secondary/90 transition-colors text-[15px] shadow-lg shadow-bolsa-secondary/30"
               >
-                <Target className="w-5 h-5" />
-                <span>Começar Agora</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </motion.button>
-              <motion.button 
-                onClick={handleSaibaMais}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="border-2 border-white text-white px-8 py-4 rounded-full font-semibold hover:bg-white/10 transition-colors flex items-center gap-2 justify-center"
+                Buscar bolsas de graduação
+                <ArrowRight size={18} />
+              </button>
+              <button
+                onClick={handleVerOfertas}
+                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 border border-white/30 text-white font-medium rounded-full hover:bg-white/10 transition-colors text-[15px]"
               >
-                <Brain className="w-5 h-5" />
-                <span>Saiba Mais</span>
-              </motion.button>
-            </div>
-          </motion.div>
-        </header>
-  
-        {/* Floating Stats Cards */}
-        <section className="py-12 -mt-24 relative z-10">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {[
-                { icon: Users, title: '+1000', subtitle: 'Alunos Formados', color: 'from-emerald-500 to-bolsa-primary' },
-                { icon: BookMarked, title: '+100', subtitle: 'Cursos Disponíveis', color: 'from-purple-500 to-purple-600' },
-                { icon: Award, title: '+50', subtitle: 'Prêmios Recebidos', color: 'from-pink-500 to-pink-600' },
-                { icon: TrendingUp, title: '95%', subtitle: 'Taxa de Empregabilidade', color: 'from-emerald-500 to-emerald-600' }
-              ].map((stat, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="bg-white rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
-                >
-                  <div className={`rounded-xl p-4 bg-gradient-to-r ${stat.color} text-white mb-4`}>
-                    <stat.icon className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-3xl font-bold text-gray-800 mb-2">{stat.title}</h3>
-                  <p className="text-gray-600">{stat.subtitle}</p>
-                </motion.div>
-              ))}
+                Ver ofertas em destaque
+              </button>
             </div>
           </div>
-        </section>
-  
-        {/* What is Graduation Section with 3D Card Effect */}
-        <section ref={infoSectionRef} className="py-20 container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-            >
-              <h2 className="text-4xl font-bold mb-6 bg-gradient-to-r from-emerald-700 to-emerald-500 bg-clip-text text-transparent">
-                O que é curso de graduação?
+        </div>
+      </section>
+
+      {/* STATS BAR */}
+      <section className="bg-white border-b border-hairline">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-hairline">
+            {STATS.map((s) => (
+              <div key={s.label} className="px-4 py-8 md:py-10 text-center">
+                <div className="font-display num-tabular text-3xl md:text-4xl text-ink-900 leading-none">
+                  {s.value}
+                </div>
+                <div className="text-[12px] md:text-[13px] text-ink-500 mt-2 leading-snug">
+                  {s.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* OFERTAS EM DESTAQUE */}
+      <section ref={offersRef} className="py-16 md:py-20 bg-paper">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8 md:mb-10">
+            <div>
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 flex items-center gap-3 mb-3">
+                <span className="h-px w-8 bg-ink-300" />
+                Cursos de graduação
+              </span>
+              <h2 className="font-display text-3xl md:text-[36px] font-semibold text-ink-900 leading-tight">
+                Ofertas em destaque
               </h2>
-              <p className="text-gray-600 text-lg leading-relaxed mb-6">
-                A graduação é o primeiro nível da formação superior no Brasil. São cursos que oferecem diploma de bacharel, licenciatura ou 
-                tecnólogo, permitindo que o profissional atue de forma legal no mercado de trabalho.
+              <p className="text-ink-500 text-[15px] mt-1 max-w-2xl">
+                Os cursos de graduação mais procurados, com bolsa garantida e mensalidades reduzidas.
               </p>
-              <div className="grid grid-cols-2 gap-4 mt-8">
-                <motion.div 
-                  whileHover={{ scale: 1.05 }}
-                  className="bg-emerald-50 rounded-xl p-6 border-2 border-emerald-100"
-                >
-                  <Star className="w-8 h-8 text-bolsa-primary mb-3" />
-                  <h3 className="font-semibold text-emerald-700">Diploma Reconhecido</h3>
-                </motion.div>
-                <motion.div 
-                  whileHover={{ scale: 1.05 }}
-                  className="bg-emerald-50 rounded-xl p-6 border-2 border-emerald-100"
-                >
-                  <Sparkles className="w-8 h-8 text-bolsa-primary mb-3" />
-                  <h3 className="font-semibold text-emerald-700">Carreira Profissional</h3>
-                </motion.div>
-              </div>
-            </motion.div>
-            <motion.div 
-              className="relative perspective-1000"
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-            >
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl transform hover:rotate-y-10 transition-transform duration-500">
-                <Image
-                  width={1000}
-                  height={1000}
-                  src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80" 
-                  alt="Estudantes em sala de aula"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/50 to-transparent" />
-                <div className="absolute bottom-6 left-6 text-white">
-                  <Calendar className="w-8 h-8 mb-2" />
-                  <p className="text-2xl font-bold">2025</p>
-                  <p>Inscrições Abertas</p>
-                </div>
-              </div>
-              <motion.div
-                animate={{ 
-                  rotate: [0, 5, 0, -5, 0],
-                  scale: [1, 1.02, 1, 1.02, 1]
-                }}
-                transition={{ duration: 5, repeat: Infinity }}
-                className="absolute -top-6 -right-6 bg-gradient-to-r from-bolsa-primary to-emerald-400 text-white p-6 rounded-xl shadow-lg"
-              >
-                <MapPin className="w-8 h-8 mb-2" />
-                <p className="text-2xl font-bold">+50</p>
-                <p>Cidades</p>
-              </motion.div>
-            </motion.div>
-          </div>
-        </section>
-  
-        {/* Types of Graduation with Interactive Cards */}
-        <section className="py-20 bg-gradient-to-b from-white to-emerald-50">
-          <div className="container mx-auto px-4">
-            <motion.h2 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-4xl font-bold text-center mb-16"
-            >
-              Tipos de Graduação
-            </motion.h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              {[
-                {
-                  title: 'Bacharelado',
-                  icon: BookOpen,
-                  color: 'from-emerald-500 to-bolsa-primary',
-                  items: [
-                    { icon: Clock, text: 'Duração: 4-5 anos' },
-                    { icon: Brain, text: 'Formação ampla e profunda' },
-                    { icon: FileSpreadsheet, text: 'Foco em pesquisa' }
-                  ]
-                },
-                {
-                  title: 'Licenciatura',
-                  icon: Building2,
-                  color: 'from-purple-500 to-purple-600',
-                  items: [
-                    { icon: Clock, text: 'Duração: 4 anos' },
-                    { icon: Users, text: 'Foco em ensino' },
-                    { icon: BookMarked, text: 'Prática pedagógica' }
-                  ]
-                },
-                {
-                  title: 'Tecnólogo',
-                  icon: Laptop,
-                  color: 'from-pink-500 to-pink-600',
-                  items: [
-                    { icon: Clock, text: 'Duração: 2-3 anos' },
-                    { icon: Target, text: 'Formação específica' },
-                    { icon: TrendingUp, text: 'Foco prático' }
-                  ]
-                }
-              ].map((type, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.2 }}
-                  whileHover={{ scale: 1.02 }}
-                  className="bg-white rounded-2xl p-8 shadow-xl relative overflow-hidden group"
-                >
-                  <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${type.color} opacity-10 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-150`} />
-                  <div className={`inline-block rounded-xl p-4 bg-gradient-to-r ${type.color} text-white mb-6`}>
-                    <type.icon className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-2xl font-bold mb-6">{type.title}</h3>
-                  <ul className="space-y-4">
-                    {type.items.map((item, itemIndex) => (
-                      <motion.li 
-                        key={itemIndex}
-                        className="flex items-center gap-3 text-gray-600"
-                        initial={{ opacity: 0, x: -20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: (index * 0.2) + (itemIndex * 0.1) }}
-                      >
-                        <item.icon className="w-5 h-5 text-bolsa-primary" />
-                        <span>{item.text}</span>
-                      </motion.li>
-                    ))}
-                  </ul>
-                </motion.div>
-              ))}
             </div>
-          </div>
-        </section>
-  
-        {/* Areas of Knowledge with Hover Effects */}
-        <section className="py-20 bg-emerald-50">
-          <div className="container mx-auto px-4">
-            <motion.h2 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-4xl font-bold text-center mb-16"
+            <Link
+              href="/curso/resultado?nivel=GRADUACAO"
+              className="inline-flex items-center gap-2 text-[14px] font-semibold text-bolsa-secondary hover:text-bolsa-secondary/80 transition-colors"
             >
-              Áreas de Conhecimento
-            </motion.h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {[
-                {
-                  title: 'Ciências Exatas',
-                  image: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-                  courses: ['Engenharias', 'Matemática', 'Física', 'Computação'],
-                  color: 'from-bolsa-primary to-emerald-400'
-                },
-                {
-                  title: 'Ciências Humanas',
-                  image: 'https://images.unsplash.com/photo-1513128034602-7814ccaddd4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-                  courses: ['Direito', 'Psicologia', 'Pedagogia', 'História'],
-                  color: 'from-purple-600 to-purple-400'
-                },
-                {
-                  title: 'Ciências Biológicas',
-                  image: 'https://images.unsplash.com/photo-1576086213369-97a306d36557?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-                  courses: ['Medicina', 'Enfermagem', 'Nutrição', 'Biologia'],
-                  color: 'from-emerald-600 to-emerald-400'
-                },
-                {
-                  title: 'Ciências Sociais',
-                  image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-                  courses: ['Administração', 'Economia', 'Contabilidade', 'Marketing'],
-                  color: 'from-pink-600 to-pink-400'
-                }
-              ].map((area, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ y: -10 }}
-                  className="bg-white rounded-2xl overflow-hidden shadow-lg group"
-                >
-                  <div className="relative h-48 overflow-hidden">
-                    <div className={`absolute inset-0 bg-gradient-to-b ${area.color} mix-blend-multiply opacity-60`} />
-                    <Image 
-                      width={1000}
-                      height={1000}
-                      src={area.image} 
-                      alt={area.title}
-                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <h3 className="text-2xl font-bold text-white text-center px-4">{area.title}</h3>
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <ul className="space-y-2">
-                      {area.courses.map((course, courseIndex) => (
-                        <motion.li 
-                          key={course}
-                          initial={{ opacity: 0, x: -20 }}
-                          whileInView={{ opacity: 1, x: 0 }}
-                          viewport={{ once: true }}
-                          transition={{ delay: (index * 0.1) + (courseIndex * 0.1) }}
-                          className="flex items-center gap-2 text-gray-600"
-                        >
-                          <CheckCircle className="w-4 h-4 text-bolsa-primary" />
-                          {course}
-                        </motion.li>
-                      ))}
-                    </ul>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+              Ver todas as ofertas
+              <ArrowRight size={16} />
+            </Link>
           </div>
-        </section>
-  
-        {/* EAD Section with Interactive Tabs */}
-        <section className="py-20 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-              >
-                <h2 className="text-4xl font-bold mb-6">Graduação à Distância (EAD)</h2>
-                <p className="text-gray-600 text-lg mb-8">
-                  A graduação EAD é uma modalidade que permite estudar de forma flexível, com aulas online e 
-                  algumas atividades presenciais.
-                </p>
-                <div className="flex gap-4 mb-6">
-                  <button
-                    onClick={() => setActiveTab('vantagens')}
-                    className={`px-6 py-3 rounded-xl font-semibold transition-colors ${
-                      activeTab === 'vantagens' 
-                        ? 'bg-bolsa-primary text-white' 
-                        : 'bg-emerald-50 text-bolsa-primary hover:bg-emerald-100'
-                    }`}
-                  >
-                    Vantagens
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('requisitos')}
-                    className={`px-6 py-3 rounded-xl font-semibold transition-colors ${
-                      activeTab === 'requisitos' 
-                        ? 'bg-bolsa-primary text-white' 
-                        : 'bg-emerald-50 text-bolsa-primary hover:bg-emerald-100'
-                    }`}
-                  >
-                    Requisitos
-                  </button>
-                </div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="bg-emerald-50 rounded-xl p-6"
-                >
-                  {activeTab === 'vantagens' ? (
-                    <ul className="space-y-4">
-                      <motion.li 
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="flex items-center gap-3 text-gray-600"
-                      >
-                        <Clock className="w-5 h-5 text-bolsa-primary" />
-                        <span>Flexibilidade de horários</span>
-                      </motion.li>
-                      <motion.li 
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="flex items-center gap-3 text-gray-600"
-                      >
-                        <TrendingUp className="w-5 h-5 text-bolsa-primary" />
-                        <span>Menor custo</span>
-                      </motion.li>
-                      <motion.li 
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="flex items-center gap-3 text-gray-600"
-                      >
-                        <Target className="w-5 h-5 text-bolsa-primary" />
-                        <span>Estudo no seu ritmo</span>
-                      </motion.li>
-                      <motion.li 
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="flex items-center gap-3 text-gray-600"
-                      >
-                        <Award className="w-5 h-5 text-bolsa-primary" />
-                        <span>Mesmo valor do diploma</span>
-                      </motion.li>
-                    </ul>
-                  ) : (
-                    <ul className="space-y-4">
-                      <motion.li 
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="flex items-center gap-3 text-gray-600"
-                      >
-                        <Brain className="w-5 h-5 text-bolsa-primary" />
-                        <span>Autodisciplina</span>
-                      </motion.li>
-                      <motion.li 
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="flex items-center gap-3 text-gray-600"
-                      >
-                        <Laptop className="w-5 h-5 text-bolsa-primary" />
-                        <span>Computador com internet</span>
-                      </motion.li>
-                      <motion.li 
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="flex items-center gap-3 text-gray-600"
-                      >
-                        <Calendar className="w-5 h-5 text-bolsa-primary" />
-                        <span>Organização do tempo</span>
-                      </motion.li>
-                      <motion.li 
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="flex items-center gap-3 text-gray-600"
-                      >
-                        <CheckCircle className="w-5 h-5 text-bolsa-primary" />
-                        <span>Comprometimento</span>
-                      </motion.li>
-                    </ul>
-                  )}
-                </motion.div>
-              </motion.div>
-              <motion.div 
-                className="relative"
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-              >
-                <div className="rounded-2xl overflow-hidden shadow-2xl transform hover:scale-105 transition-transform duration-500">
-                  <Image 
-                  width={100}
-                  height={100}
-                    src="https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80"
-                    alt="Estudante EAD"
-                    className="w-full"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/50 to-transparent" />
-                </div>
-                <motion.div 
-                  className="absolute -bottom-6 -left-6 bg-gradient-to-r from-bolsa-primary to-bolsa-primary text-white p-6 rounded-xl"
-                  animate={{ 
-                    rotate: [0, 5, 0, -5, 0],
-                    scale: [1, 1.02, 1, 1.02, 1]
-                  }}
-                  transition={{ duration: 5, repeat: Infinity }}
-                >
-                  <Globe className="w-8 h-8 mb-2" />
-                  <p className="text-2xl font-bold">100%</p>
-                  <p>Online</p>
-                </motion.div>
-              </motion.div>
-            </div>
-          </div>
-        </section>
 
-        {/* Seção: Por que fazer uma Graduação? */}
-        <section className="py-20 container mx-auto px-4">
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 items-stretch">
+            {OFFERS.map((o) => (
+              <li key={`${o.course}-${o.institution}-${o.city}`} className="h-full">
+                <Link
+                  href={o.href}
+                  className="group flex flex-col h-full bg-white border border-hairline rounded-2xl p-5 md:p-6 hover:shadow-[0_20px_50px_-25px_rgba(11,31,60,0.25)] hover:border-ink-300 transition-all duration-300"
+                >
+                  <div className="flex items-start justify-between gap-3 mb-5">
+                    <div className="h-9 flex items-center">
+                      <Image
+                        src={o.logo}
+                        alt={o.institution}
+                        width={120}
+                        height={36}
+                        className="h-9 w-auto object-contain"
+                        unoptimized
+                      />
+                    </div>
+                    <span className="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-bolsa-secondary text-white text-[11px] font-bold tracking-wide">
+                      -{o.discountPct}%
+                    </span>
+                  </div>
+
+                  <h3 className="text-[17px] font-bold text-ink-900 leading-snug mb-3 group-hover:text-bolsa-secondary transition-colors line-clamp-2 min-h-[2.6em]">
+                    {o.course}
+                  </h3>
+
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-ink-500 mb-5">
+                    <span className="inline-flex items-center gap-1">
+                      <Monitor size={14} />
+                      {modalityLabel(o.modality)}
+                    </span>
+                    <span className="text-ink-300">·</span>
+                    <span className="inline-flex items-center gap-1">
+                      <MapPin size={14} />
+                      {o.city} — {o.uf}
+                    </span>
+                  </div>
+
+                  <div className="mt-auto border-t border-hairline pt-4 flex items-end justify-between">
+                    <div>
+                      <div className="text-[11px] text-ink-500 uppercase tracking-wide font-medium">
+                        Mensalidade com bolsa
+                      </div>
+                      <div className="flex items-baseline gap-1 mt-1">
+                        <span className="text-[13px] text-ink-700 font-medium">R$</span>
+                        <span className="font-display num-tabular text-3xl font-bold text-bolsa-secondary leading-none">
+                          {formatPrice(o.finalPrice)}
+                        </span>
+                        <span className="text-[12px] text-ink-500">/mês</span>
+                      </div>
+                      <div className="text-[12px] text-ink-300 line-through num-tabular mt-1">
+                        De R$ {formatPrice(o.originalPrice)}
+                      </div>
+                    </div>
+                    <span className="flex-shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full bg-ink-900 text-white group-hover:bg-bolsa-secondary transition-colors">
+                      →
+                    </span>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* TIPOS DE GRADUAÇÃO */}
+      <section className="bg-white py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-12">
+            <div className="md:col-span-6">
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 flex items-center gap-3 mb-4">
+                <span className="h-px w-8 bg-ink-300" />
+                Tipos de graduação
+              </span>
+              <h2 className="font-display text-3xl md:text-4xl text-ink-900 leading-tight">
+                Três caminhos.{' '}
+                <span className="italic text-ink-700">Mesmo ensino superior.</span>
+              </h2>
+            </div>
+            <div className="md:col-span-5 md:col-start-8 md:pt-3">
+              <p className="text-ink-500 text-[15px] leading-relaxed">
+                Bacharelado, licenciatura e tecnólogo formam a base do ensino superior brasileiro.
+                Todos com diploma reconhecido pelo MEC e aceitos no mercado de trabalho.
+              </p>
+            </div>
+          </div>
+
+          <ol className="grid grid-cols-1 md:grid-cols-3 border-t border-hairline">
+            {TYPES.map((t) => (
+              <li
+                key={t.n}
+                className="px-2 md:px-6 py-8 md:py-10 border-b border-hairline md:border-r last:md:border-r-0"
+              >
+                <div className="flex items-baseline justify-between mb-5">
+                  <span className="font-mono num-tabular text-[11px] tracking-[0.22em] uppercase text-ink-700">
+                    {t.n}
+                  </span>
+                  <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500">
+                    {t.duration}
+                  </span>
+                </div>
+                <h3 className="font-display text-2xl md:text-[28px] text-ink-900 leading-tight mb-3">
+                  {t.title}
+                </h3>
+                <p className="text-ink-500 leading-relaxed text-[15px]">{t.description}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* MODALIDADES */}
+      <section className="bg-paper-warm py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center mb-12">
+            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 inline-flex items-center gap-3 mb-4">
+              <span className="h-px w-8 bg-ink-300" />
+              Modalidades
+              <span className="h-px w-8 bg-ink-300" />
+            </span>
+            <h2 className="font-display text-3xl md:text-4xl text-ink-900 leading-tight">
+              Estude do jeito{' '}
+              <span className="italic text-ink-700">que cabe no seu dia.</span>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-hairline border border-hairline">
+            {MODALITIES.map((m) => (
+              <article key={m.label} className="bg-white p-7 md:p-8">
+                <span className="inline-flex items-center px-3 py-1 rounded-full bg-bolsa-primary/5 text-bolsa-primary text-[11px] font-bold tracking-wider uppercase mb-4">
+                  {m.label}
+                </span>
+                <h3 className="font-display text-xl md:text-[22px] text-ink-900 leading-tight mb-3">
+                  {m.title}
+                </h3>
+                <p className="text-ink-500 leading-relaxed text-[14px]">{m.description}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* POR QUE FAZER GRADUAÇÃO */}
+      <section className="bg-white py-16 md:py-24">
+        <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <motion.h2
-              className="text-4xl md:text-5xl font-bold text-center mb-12 text-emerald-900"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-            >
-              Por que fazer uma Graduação?
-            </motion.h2>
-
-            <div className="prose prose-lg max-w-none text-gray-700 space-y-6">
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-              >
-                A graduação é o primeiro passo para construir uma carreira profissional sólida e
-                alcançar seus objetivos profissionais. Com um diploma de ensino superior, você
-                aumenta significativamente suas chances de conquistar melhores oportunidades no
-                mercado de trabalho e salários mais competitivos.
-              </motion.p>
-
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1 }}
-              >
-                No Brasil, profissionais com graduação ganham, em média, 2,5 vezes mais do que
-                aqueles que têm apenas o ensino médio. Além disso, a taxa de empregabilidade é
-                consideravelmente maior entre os graduados, garantindo maior estabilidade financeira
-                e crescimento na carreira.
-              </motion.p>
-
-              <motion.h3
-                className="text-2xl font-bold text-emerald-800 mt-8 mb-4"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.2 }}
-              >
-                Tipos de Graduação Disponíveis
-              </motion.h3>
-
-              <ul className="space-y-3">
-                <motion.li
-                  className="flex items-start"
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <CheckCircle className="w-6 h-6 text-emerald-600 mr-3 mt-1 flex-shrink-0" />
-                  <div>
-                    <strong>Bacharelado:</strong> Formação generalista que prepara para diversas
-                    áreas de atuação profissional. Duração média de 4 anos.
-                  </div>
-                </motion.li>
-                <motion.li
-                  className="flex items-start"
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.4 }}
-                >
-                  <CheckCircle className="w-6 h-6 text-emerald-600 mr-3 mt-1 flex-shrink-0" />
-                  <div>
-                    <strong>Licenciatura:</strong> Voltada para quem deseja ser professor.
-                    Permite atuar na educação básica e ensino médio.
-                  </div>
-                </motion.li>
-                <motion.li
-                  className="flex items-start"
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <CheckCircle className="w-6 h-6 text-emerald-600 mr-3 mt-1 flex-shrink-0" />
-                  <div>
-                    <strong>Tecnólogo:</strong> Curso de curta duração (2 a 3 anos) focado em
-                    competências específicas para o mercado de trabalho.
-                  </div>
-                </motion.li>
-              </ul>
-
-              <motion.h3
-                className="text-2xl font-bold text-emerald-800 mt-8 mb-4"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.6 }}
-              >
-                Modalidades de Ensino
-              </motion.h3>
-
-              <div className="grid md:grid-cols-3 gap-6 mt-6">
-                <motion.div
-                  className="bg-emerald-50 p-6 rounded-xl"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.7 }}
-                >
-                  <h4 className="font-bold text-lg text-emerald-900 mb-3">EAD (Ensino a Distância)</h4>
-                  <p className="text-sm text-gray-600">
-                    Estude no seu ritmo, de qualquer lugar. Ideal para quem precisa de flexibilidade
-                    de horários e economia com deslocamento.
-                  </p>
-                </motion.div>
-                <motion.div
-                  className="bg-emerald-50 p-6 rounded-xl"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.8 }}
-                >
-                  <h4 className="font-bold text-lg text-emerald-900 mb-3">Presencial</h4>
-                  <p className="text-sm text-gray-600">
-                    Interação direta com professores e colegas. Acesso a laboratórios e infraestrutura
-                    completa da instituição.
-                  </p>
-                </motion.div>
-                <motion.div
-                  className="bg-emerald-50 p-6 rounded-xl"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.9 }}
-                >
-                  <h4 className="font-bold text-lg text-emerald-900 mb-3">Semipresencial</h4>
-                  <p className="text-sm text-gray-600">
-                    Combina o melhor dos dois mundos: flexibilidade do EAD com encontros presenciais
-                    para práticas e networking.
-                  </p>
-                </motion.div>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12">
+              <div className="md:col-span-5">
+                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 flex items-center gap-3 mb-4">
+                  <span className="h-px w-8 bg-ink-300" />
+                  Por quê
+                </span>
+                <h2 className="font-display text-3xl md:text-4xl text-ink-900 leading-tight">
+                  Vale a pena fazer{' '}
+                  <span className="italic text-ink-700">uma graduação?</span>
+                </h2>
+              </div>
+              <div className="md:col-span-7 space-y-6">
+                <p className="text-ink-700 text-[16px] leading-relaxed">
+                  No Brasil, profissionais com graduação ganham em média{' '}
+                  <span className="font-semibold text-ink-900">2,5 vezes mais</span> do que
+                  aqueles com apenas o ensino médio. A taxa de empregabilidade também é maior, e o
+                  diploma abre portas pra cargos de liderança e concursos públicos.
+                </p>
+                <ul className="space-y-3 hairline-t pt-6">
+                  {[
+                    'Diploma reconhecido pelo MEC, aceito em todo o Brasil',
+                    'Acesso a concursos públicos e cargos de gestão',
+                    'Especialização e pós-graduação como próximos passos',
+                    'Bolsas de até 80% no Bolsa Click — sem ENEM, cadastro grátis',
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-3">
+                      <span className="flex-shrink-0 mt-0.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-bolsa-secondary/10 text-bolsa-secondary">
+                        <Check size={12} strokeWidth={3} />
+                      </span>
+                      <span className="text-ink-700 text-[15px] leading-relaxed">{item}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Seção de FAQ */}
-        <section className="py-20 bg-gradient-to-b from-white to-emerald-50">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <motion.h2
-              className="text-4xl md:text-5xl font-bold text-center mb-12 text-emerald-900"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-            >
-              Perguntas Frequentes sobre Graduação
-            </motion.h2>
-
-            <div className="space-y-4">
-              {[
-                {
-                  question: "Quanto tempo dura uma graduação?",
-                  answer: "A duração varia conforme o tipo: Bacharelados e Licenciaturas geralmente levam de 4 a 5 anos, enquanto cursos Tecnólogos têm duração de 2 a 3 anos."
-                },
-                {
-                  question: "Qual a diferença entre Bacharelado e Licenciatura?",
-                  answer: "O Bacharelado forma profissionais para atuar em diferentes áreas do mercado, enquanto a Licenciatura prepara professores para lecionar na educação básica e ensino médio."
-                },
-                {
-                  question: "Posso fazer graduação EAD e ter o mesmo diploma?",
-                  answer: "Sim! O diploma de cursos EAD reconhecidos pelo MEC tem a mesma validade que os presenciais, sem distinção na certificação."
-                },
-                {
-                  question: "Como funciona a bolsa de estudos no Bolsa Click?",
-                  answer: "É simples: você busca o curso desejado, compara preços e descontos de até 80%, escolhe a melhor opção e garante sua bolsa. O cadastro é totalmente gratuito."
-                },
-                {
-                  question: "Preciso fazer ENEM para conseguir bolsa?",
-                  answer: "Não! No Bolsa Click você encontra bolsas de estudo sem precisar da nota do ENEM. Basta se cadastrar gratuitamente e escolher o curso."
-                },
-                {
-                  question: "Posso transferir minha faculdade e manter a bolsa?",
-                  answer: "Isso depende das políticas de cada instituição. Recomendamos consultar diretamente a faculdade sobre as possibilidades de transferência mantendo o desconto."
-                }
-              ].map((faq, index) => (
-                <motion.div
-                  key={index}
-                  className="bg-white rounded-xl shadow-md overflow-hidden"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <details className="group">
-                    <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
-                      <h3 className="text-lg font-semibold text-emerald-900 pr-4">
-                        {faq.question}
-                      </h3>
-                      <ChevronDown className="w-6 h-6 text-emerald-600 transition-transform group-open:rotate-180" />
-                    </summary>
-                    <div className="px-6 pb-6 text-gray-600">
-                      <p>{faq.answer}</p>
-                    </div>
-                  </details>
-                </motion.div>
-              ))}
-            </div>
+      {/* PARCEIROS */}
+      <section className="bg-paper border-y border-hairline py-12">
+        <div className="container mx-auto px-4">
+          <p className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 text-center mb-8">
+            Faculdades parceiras
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 grayscale opacity-70">
+            {PARTNERS.map((p) => (
+              <Image
+                key={p.name}
+                src={p.src}
+                alt={p.name}
+                width={140}
+                height={36}
+                className="h-9 w-auto object-contain"
+                unoptimized
+              />
+            ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Newsletter Section with Animation */}
-        <section className="pt-20 bg-gradient-to-r from-emerald-950 to-bolsa-primary text-white relative overflow-hidden">
-          <motion.div 
-            className="absolute inset-0 opacity-10"
-            animate={{ 
-              backgroundPosition: ['0% 0%', '100% 100%'],
-            }}
-            transition={{ duration: 20, repeat: Infinity, repeatType: 'reverse' }}
-            style={{
-              backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%239C92AC" fill-opacity="0.4"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
-            }}
-          />
-          <div className="container mx-auto px-4 text-center relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-4xl font-bold mb-6">Receba alertas sobre vagas!</h2>
-              <p className="text-xl mb-12 text-emerald-100">Fique por dentro das melhores oportunidades de graduação.</p>
-              <div className="max-w-md mx-auto">
-                <div className="flex gap-4 mb-4">
-                  <motion.div 
-                    className="flex-1 relative"
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                      type="email"
-                      placeholder="Seu e-mail"
-                      className="w-full px-12 py-4 rounded-xl text-gray-900 text-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                    />
-                  </motion.div>
-                  <motion.button 
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="bg-white text-emerald-700 px-8 py-4 rounded-xl font-semibold hover:bg-emerald-50 transition-colors text-lg flex items-center gap-2"
-                  >
-                    <span>Cadastrar</span>
-                    <ArrowRight className="w-5 h-5" />
-                  </motion.button>
-                </div>
-                <p className="text-sm text-emerald-200">
-                  Ao se cadastrar, você concorda em receber nossas comunicações
+      {/* FAQ */}
+      <section className="bg-white py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-12 max-w-6xl mx-auto">
+            <div className="md:col-span-5">
+              <div className="md:sticky md:top-28">
+                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 flex items-center gap-3 mb-4">
+                  <span className="h-px w-8 bg-ink-300" />
+                  FAQ
+                </span>
+                <h2 className="font-display text-3xl md:text-4xl text-ink-900 leading-tight mb-4">
+                  Dúvidas sobre{' '}
+                  <span className="italic text-ink-700">graduação?</span>
+                </h2>
+                <p className="text-ink-500 text-[15px] leading-relaxed">
+                  Tirou todas as suas dúvidas? Comece sua busca e garanta a bolsa que cabe no seu plano.
                 </p>
               </div>
-            </motion.div>
+            </div>
+            <div className="md:col-span-7">
+              <ul className="border-t border-hairline">
+                {FAQ.map((faq, idx) => {
+                  const open = openFaqIdx === idx
+                  return (
+                    <li key={idx} className="border-b border-hairline">
+                      <button
+                        type="button"
+                        onClick={() => setOpenFaqIdx(open ? null : idx)}
+                        aria-expanded={open}
+                        className="w-full flex items-start justify-between gap-6 py-6 text-left"
+                      >
+                        <span className="flex items-baseline gap-4 min-w-0">
+                          <span className="font-mono num-tabular text-[11px] tracking-[0.2em] text-ink-500 pt-1">
+                            {String(idx + 1).padStart(2, '0')}
+                          </span>
+                          <span className="font-display text-xl md:text-2xl text-ink-900 leading-snug">
+                            {faq.q}
+                          </span>
+                        </span>
+                        <span
+                          aria-hidden="true"
+                          className={`flex-shrink-0 w-7 h-7 rounded-full border border-hairline flex items-center justify-center text-ink-500 transition-all duration-200 ${
+                            open ? 'rotate-45 border-ink-900 text-ink-900' : ''
+                          }`}
+                        >
+                          +
+                        </span>
+                      </button>
+                      {open && (
+                        <div className="pb-6 pl-10 pr-12">
+                          <p className="text-ink-500 leading-relaxed text-[15px]">{faq.a}</p>
+                        </div>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
+
+      {/* CTA FINAL */}
+      <section className="bg-bolsa-primary py-16 md:py-20">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center">
+            <GraduationCap className="w-12 h-12 mx-auto mb-6 text-bolsa-secondary" />
+            <h2 className="font-display text-3xl md:text-[40px] font-semibold text-white leading-tight mb-4">
+              Pronto pra escolher{' '}
+              <span className="italic text-white/85">sua graduação?</span>
+            </h2>
+            <p className="text-white/75 text-[15px] md:text-base leading-relaxed mb-8 max-w-xl mx-auto">
+              Em poucos cliques você compara mensalidades, faculdades, modalidades e descontos.
+              Cadastro grátis, sem ENEM, sem compromisso.
+            </p>
+            <button
+              onClick={handleBuscar}
+              className="inline-flex items-center gap-3 px-8 py-4 bg-bolsa-secondary text-white font-semibold rounded-full hover:bg-bolsa-secondary/90 transition-colors text-[15px] shadow-lg shadow-bolsa-secondary/30"
+            >
+              Buscar bolsas de graduação
+              <ArrowRight size={18} />
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
   )
 }

@@ -282,47 +282,56 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
     }
   }
 
+  const labelMono =
+    'font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 flex items-center gap-2 mb-3'
+  const inputBase =
+    'w-full pl-10 pr-10 py-2.5 bg-white border border-hairline rounded-full text-[14px] text-ink-900 placeholder:text-ink-300 focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors'
+  const dropdownBase =
+    'absolute z-[9999] w-full mt-2 bg-white border border-hairline rounded-2xl shadow-[0_30px_60px_-30px_rgba(11,31,60,0.25)] max-h-[280px] overflow-auto py-1'
+
   return (
-    <div ref={containerRef} className="bg-white rounded-xl shadow-card p-6 sticky top-32">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center">
-          <Filter size={18} className="text-emerald-500 mr-2" />
-          <h2 className="font-bold text-lg">Filtros</h2>
-        </div>
+    <aside
+      ref={containerRef}
+      className="bg-white border border-hairline rounded-2xl p-5 md:p-6"
+      aria-label="Filtros de busca"
+    >
+      <div className="flex items-baseline justify-between hairline-b pb-3 mb-5">
+        <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700 inline-flex items-center gap-2">
+          <Filter size={12} />
+          Filtros
+        </h2>
         {onClose && (
           <button
             onClick={onClose}
-            className="lg:hidden text-neutral-500 hover:text-neutral-700"
+            aria-label="Fechar filtros"
+            className="lg:hidden p-1.5 -mr-1 text-ink-500 hover:text-ink-900 transition-colors"
           >
-            <X size={20} />
+            <X size={16} />
           </button>
         )}
       </div>
 
       <div className="space-y-6">
-        {/* Course Search Filter */}
-        <div className="space-y-3">
-          <h3 className="font-medium flex items-center">
-            <GraduationCap size={16} className="text-primary-500 mr-2" />
-            Buscar Curso
-          </h3>
+        {/* Curso */}
+        <div>
+          <label className={labelMono}>
+            <GraduationCap size={11} />
+            Curso
+          </label>
           <div className="relative">
-            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
-              <GraduationCap size={20} />
-            </div>
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-300 pointer-events-none">
+              <GraduationCap size={16} />
+            </span>
             <input
               ref={courseInputRef}
               type="text"
               value={searchCourse}
               onChange={handleCourseInputChange}
               onFocus={() => {
-                // Abrir o dropdown quando focado, mostrando todos os cursos disponíveis
-                if (courseOptions.length > 0) {
-                  setIsCourseDropdownOpen(true)
-                }
+                if (courseOptions.length > 0) setIsCourseDropdownOpen(true)
               }}
-              className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bolsa-secondary focus:border-bolsa-secondary outline-none transition-colors"
-              placeholder="Digite o curso (mín. 3 letras)"
+              className={inputBase}
+              placeholder="Digite o curso"
               autoComplete="off"
             />
             {searchCourse && (
@@ -333,63 +342,59 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
                   setIsCourseDropdownOpen(false)
                   onCourseSelect('', '')
                 }}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-300 hover:text-ink-700 transition-colors"
                 aria-label="Limpar curso"
               >
-                <X size={18} />
+                <X size={14} />
               </button>
             )}
             {isCourseDropdownOpen && courseOptions.length > 0 && (
-              <ul className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-[300px] overflow-auto">
+              <ul className={dropdownBase}>
                 {courseOptions.map((option) => (
-                  <li
-                    key={option.id}
-                    className="px-5 py-3 hover:bg-emerald-500 hover:text-white cursor-pointer text-zinc-400"
-                    onMouseDown={(e) => {
-                      e.preventDefault()
-                      if (courseInputRef.current) {
-                        courseInputRef.current.focus()
-                      }
-                    }}
-                    onClick={() => handleCourseSelect(option)}
-                  >
-                    {option.name}
+                  <li key={option.id}>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        courseInputRef.current?.focus()
+                      }}
+                      onClick={() => handleCourseSelect(option)}
+                      className="block w-full text-left px-4 py-2.5 text-[14px] text-ink-700 hover:bg-paper-warm hover:text-ink-900 transition-colors"
+                    >
+                      {option.name}
+                    </button>
                   </li>
                 ))}
               </ul>
             )}
             {isCourseDropdownOpen && courseOptions.length === 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
-                <div className="px-5 py-3 text-gray-500">
-                  Nenhum curso encontrado
-                </div>
+              <div className={dropdownBase}>
+                <p className="px-4 py-3 text-[13px] text-ink-500">Nenhum curso encontrado</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* City Filter */}
-        <div className="space-y-3">
-          <h3 className="font-medium flex items-center">
-            <MapPin size={16} className="text-primary-500 mr-2" />
-            Buscar Cidade
-          </h3>
+        {/* Cidade */}
+        <div className="hairline-t pt-6">
+          <label className={labelMono}>
+            <MapPin size={11} />
+            Cidade
+          </label>
           <div className="relative">
-            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
-              <MapPin size={20} />
-            </div>
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-300 pointer-events-none">
+              <MapPin size={16} />
+            </span>
             <input
               ref={cityInputRef}
               type="text"
               value={searchCity}
               onChange={handleCityInputChange}
               onFocus={() => {
-                if (searchCity.length >= 3) {
-                  setIsCityDropdownOpen(true)
-                }
+                if (searchCity.length >= 3) setIsCityDropdownOpen(true)
               }}
-              className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bolsa-secondary focus:border-bolsa-secondary outline-none transition-colors"
-              placeholder="Digite a cidade (mín. 3 letras)"
+              className={inputBase}
+              placeholder="Digite a cidade"
               autoComplete="off"
             />
             {searchCity && (
@@ -400,119 +405,148 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
                   setIsCityDropdownOpen(false)
                   onCitySelect('', '')
                 }}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-300 hover:text-ink-700 transition-colors"
                 aria-label="Limpar cidade"
               >
-                <X size={18} />
+                <X size={14} />
               </button>
             )}
             {isCityDropdownOpen && cityOptions.length > 0 && searchCity.length >= 3 && (
-              <ul className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-[300px] overflow-auto">
+              <ul className={dropdownBase}>
                 {cityOptions.map((option, index) => (
-                  <li
-                    key={`${option.city}-${option.state}-${index}`}
-                    className="px-5 py-3 hover:bg-emerald-500 hover:text-white cursor-pointer text-zinc-400"
-                    onMouseDown={(e) => {
-                      e.preventDefault()
-                      if (cityInputRef.current) {
-                        cityInputRef.current.focus()
-                      }
-                    }}
-                    onClick={() => handleCitySelect(option)}
-                  >
-                    {option.city} - {option.state}
+                  <li key={`${option.city}-${option.state}-${index}`}>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        cityInputRef.current?.focus()
+                      }}
+                      onClick={() => handleCitySelect(option)}
+                      className="block w-full text-left px-4 py-2.5 text-[14px] text-ink-700 hover:bg-paper-warm hover:text-ink-900 transition-colors"
+                    >
+                      <span className="font-medium">{option.city}</span>{' '}
+                      <span className="text-ink-500">— {option.state}</span>
+                    </button>
                   </li>
                 ))}
               </ul>
             )}
             {isCityDropdownOpen && cityOptions.length === 0 && searchCity.length >= 3 && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
-                <div className="px-5 py-3 text-gray-500">
-                  Nenhuma cidade encontrada
-                </div>
+              <div className={dropdownBase}>
+                <p className="px-4 py-3 text-[13px] text-ink-500">Nenhuma cidade encontrada</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Modality Filter */}
-        <div className="space-y-3">
-          <h3 className="font-medium flex items-center">
-            <Building2 size={16} className="text-primary-500 mr-2" />
+        {/* Modalidade */}
+        <div className="hairline-t pt-6">
+          <label className={labelMono}>
+            <Building2 size={11} />
             Modalidade
-          </h3>
-          <div className="space-y-2">
+          </label>
+          <div className="space-y-1">
             {['EAD', 'PRESENCIAL', 'SEMIPRESENCIAL'].map((mode) => {
               const modeFormatted = formatModalidade(mode)
-              // Só marcar como checked se houver modalidade e for igual
-              const isChecked = !!(modality && modality.trim() && modality.toUpperCase() === mode.toUpperCase())
-              
+              const isChecked = !!(
+                modality &&
+                modality.trim() &&
+                modality.toUpperCase() === mode.toUpperCase()
+              )
               return (
-                <label key={mode} className="flex items-center">
-                  <input
-                    type="radio"
-                    name="modality"
-                    checked={isChecked}
-                    onChange={() => onModalityChange(mode)}
-                    className="w-4 h-4 text-primary-500 border-neutral-300 rounded focus:ring-primary-500"
-                  />
-                  <span className="ml-2 text-neutral-700">{modeFormatted}</span>
-                </label>
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => onModalityChange(mode)}
+                  aria-pressed={isChecked}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl text-[14px] flex items-center gap-3 transition-all ${
+                    isChecked
+                      ? 'bg-paper-warm text-ink-900 font-medium'
+                      : 'text-ink-700 hover:bg-paper-warm/60'
+                  }`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                      isChecked ? 'border-bolsa-secondary' : 'border-ink-300'
+                    }`}
+                  >
+                    {isChecked && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-bolsa-secondary" />
+                    )}
+                  </span>
+                  {modeFormatted}
+                </button>
               )
             })}
           </div>
         </div>
 
-        {/* Academic Level Filter */}
+        {/* Nível acadêmico */}
         {onAcademicLevelChange && (
-          <div className="space-y-3">
-            <h3 className="font-medium flex items-center">
-              <GraduationCap size={16} className="text-primary-500 mr-2" />
-              Nível Acadêmico
-            </h3>
-            <div className="space-y-2">
-              {[ACADEMIC_LEVEL.GRADUACAO, ACADEMIC_LEVEL.POS_GRADUACAO, ACADEMIC_LEVEL.CURSO_PROFISSIONALIZANTE].map((level) => {
-                const label = level === ACADEMIC_LEVEL.GRADUACAO
-                  ? 'Graduação'
-                  : level === ACADEMIC_LEVEL.POS_GRADUACAO
+          <div className="hairline-t pt-6">
+            <label className={labelMono}>
+              <GraduationCap size={11} />
+              Nível acadêmico
+            </label>
+            <div className="space-y-1">
+              {[
+                ACADEMIC_LEVEL.GRADUACAO,
+                ACADEMIC_LEVEL.POS_GRADUACAO,
+                ACADEMIC_LEVEL.CURSO_PROFISSIONALIZANTE,
+              ].map((level) => {
+                const label =
+                  level === ACADEMIC_LEVEL.GRADUACAO
+                    ? 'Graduação'
+                    : level === ACADEMIC_LEVEL.POS_GRADUACAO
                     ? 'Pós-graduação'
                     : 'Profissionalizante'
                 const isChecked =
                   academicLevel === level ||
-                  (level === ACADEMIC_LEVEL.CURSO_PROFISSIONALIZANTE && isProfissionalizanteLevel(academicLevel))
-                
+                  (level === ACADEMIC_LEVEL.CURSO_PROFISSIONALIZANTE &&
+                    isProfissionalizanteLevel(academicLevel))
                 return (
-                  <label key={level} className="flex items-center">
-                    <input
-                      type="radio"
-                      name="academicLevel"
-                      checked={isChecked}
-                      onChange={() => onAcademicLevelChange(level)}
-                      className="w-4 h-4 text-primary-500 border-neutral-300 rounded focus:ring-primary-500"
-                    />
-                    <span className="ml-2 text-neutral-700">{label}</span>
-                  </label>
+                  <button
+                    key={level}
+                    type="button"
+                    onClick={() => onAcademicLevelChange(level)}
+                    aria-pressed={isChecked}
+                    className={`w-full text-left px-3 py-2.5 rounded-xl text-[14px] flex items-center gap-3 transition-all ${
+                      isChecked
+                        ? 'bg-paper-warm text-ink-900 font-medium'
+                        : 'text-ink-700 hover:bg-paper-warm/60'
+                    }`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                        isChecked ? 'border-bolsa-secondary' : 'border-ink-300'
+                      }`}
+                    >
+                      {isChecked && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-bolsa-secondary" />
+                      )}
+                    </span>
+                    {label}
+                  </button>
                 )
               })}
             </div>
           </div>
         )}
 
-        {/* Price Range Filter */}
-        <div className="space-y-3">
-          <h3 className="font-medium flex items-center">
-            <span className="text-primary-500 mr-2">R$</span>
-            Faixa de Preço
-          </h3>
-          <div className="space-y-4">
-            <PriceRangeSlider
-              value={priceRange}
-              onChange={onPriceChange}
-            />
+        {/* Faixa de preço */}
+        <div className="hairline-t pt-6">
+          <div className="flex items-baseline justify-between mb-3">
+            <span className={labelMono.replace(' mb-3', '')}>R$ Faixa de preço</span>
+            <span className="font-mono num-tabular text-[10px] text-ink-500">
+              R${priceRange[0]} – R${priceRange[1]}
+            </span>
           </div>
+          <PriceRangeSlider value={priceRange} onChange={onPriceChange} />
         </div>
       </div>
-    </div>
+    </aside>
   )
 })
 

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Clock, ArrowRight, BookOpen, ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ArrowRight, BookOpen, Clock } from 'lucide-react'
 
 interface BlogPostCard {
   id: string
@@ -36,132 +36,185 @@ interface Props {
   otherCategories: OtherCategory[]
 }
 
+const fmtDate = (iso: string, opts?: Intl.DateTimeFormatOptions) =>
+  new Date(iso).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    ...opts,
+  })
+
 export default function CategoryPageClient({ category, posts, otherCategories }: Props) {
   return (
-    <div className="min-h-screen">
-      {/* Hero */}
-      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 text-white py-10 md:py-14">
-        <div className="container mx-auto px-4">
-          <Link
-            href="/blog"
-            className="inline-flex items-center gap-1 text-sm text-blue-300 hover:text-white transition mb-4"
-          >
-            <ArrowLeft size={14} />
-            Voltar ao Blog
-          </Link>
-          <h1 className="text-3xl md:text-4xl font-bold mb-3">
-            {category.title}
-          </h1>
-          <p className="text-lg text-blue-200 max-w-2xl">
-            {category.description}
-          </p>
-          <div className="flex items-center gap-2 text-sm text-blue-300 mt-4">
-            <BookOpen size={16} />
-            <span>{posts.length} {posts.length === 1 ? 'artigo' : 'artigos'}</span>
+    <div className="bg-paper">
+      {/* HERO navy editorial */}
+      <section className="relative bg-bolsa-primary overflow-hidden">
+        <div
+          aria-hidden="true"
+          className="absolute -top-24 -right-32 w-[28rem] h-[28rem] rounded-full bg-bolsa-secondary/20 blur-3xl"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute -bottom-32 -left-24 w-[28rem] h-[28rem] rounded-full bg-blue-400/15 blur-3xl"
+        />
+        <div className="container mx-auto px-4 pt-24 pb-14 md:pt-28 md:pb-16 relative">
+          <div className="max-w-4xl mx-auto">
+            <Link
+              href="/blog"
+              className="inline-flex items-center gap-2 font-mono text-[10px] tracking-[0.22em] uppercase text-white/60 hover:text-white transition-colors mb-6"
+            >
+              <ArrowLeft size={12} />
+              Voltar ao blog
+            </Link>
+
+            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-white/60 inline-flex items-center gap-3 mb-4">
+              <span className="h-px w-8 bg-white/30" />
+              Categoria
+            </span>
+            <h1 className="font-display text-3xl md:text-4xl lg:text-[52px] font-semibold text-white leading-[1.05] mb-4">
+              {category.title}
+            </h1>
+            <p className="text-white/80 text-base md:text-lg leading-relaxed max-w-3xl mb-6">
+              {category.description}
+            </p>
+            <div className="flex items-center gap-2 font-mono text-[11px] tracking-[0.18em] uppercase text-white/70">
+              <BookOpen size={13} />
+              <span className="num-tabular">
+                {posts.length} {posts.length === 1 ? 'artigo' : 'artigos'}
+              </span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Posts Grid */}
-      <section className="container mx-auto px-4 py-12">
+      {/* GRID DE POSTS */}
+      <section className="container mx-auto px-4 py-14 md:py-16">
         {posts.length === 0 ? (
-          <div className="text-center py-16 max-w-md mx-auto">
-            <BookOpen size={48} className="mx-auto text-gray-300 mb-4" />
-            <p className="text-gray-500 text-lg mb-2">Nenhum artigo publicado nesta categoria ainda.</p>
-            <p className="text-gray-400 text-sm mb-6">
-              Estamos preparando conteúdos incríveis sobre {category.title.toLowerCase()}. Enquanto isso, explore outras categorias:
+          <div className="bg-white border border-hairline rounded-2xl py-16 px-6 text-center max-w-2xl mx-auto">
+            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 inline-flex items-center gap-3 mb-4">
+              <span className="h-px w-8 bg-ink-300" />
+              Em breve
+              <span className="h-px w-8 bg-ink-300" />
+            </span>
+            <h3 className="font-display text-2xl md:text-3xl text-ink-900 leading-tight mb-3">
+              Ainda não há artigos{' '}
+              <span className="italic text-ink-700">por aqui.</span>
+            </h3>
+            <p className="text-ink-500 text-[14px] mb-6 leading-relaxed max-w-md mx-auto">
+              Estamos preparando conteúdos incríveis sobre {category.title.toLowerCase()}.
+              Enquanto isso, explore outras categorias:
             </p>
-            <div className="flex flex-wrap justify-center gap-2 mb-6">
-              {otherCategories.map(cat => (
-                <Link
-                  key={cat.slug}
-                  href={`/blog/categoria/${cat.slug}`}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-bolsa-primary hover:text-white transition"
-                >
-                  {cat.title}
-                </Link>
-              ))}
-            </div>
+            {otherCategories.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-2 mb-8">
+                {otherCategories.map((cat) => (
+                  <Link
+                    key={cat.slug}
+                    href={`/blog/categoria/${cat.slug}`}
+                    className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-paper-warm border border-hairline text-ink-700 text-[12px] font-semibold hover:border-ink-300 hover:text-ink-900 transition-colors"
+                  >
+                    {cat.title}
+                  </Link>
+                ))}
+              </div>
+            )}
             <Link
               href="/blog"
-              className="inline-flex items-center gap-2 text-bolsa-primary font-medium hover:underline"
+              className="inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.22em] uppercase text-ink-900 hover:text-bolsa-secondary transition-colors"
             >
-              <ArrowLeft size={16} />
+              <ArrowLeft size={12} />
               Ver todos os artigos
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {posts.map(post => (
-              <article key={post.id} className="group">
-                <Link href={`/blog/${post.slug}`} className="block">
-                  <div className="relative h-48 rounded-xl overflow-hidden mb-4 bg-gray-100">
-                    {post.featuredImage ? (
-                      <Image
-                        src={post.featuredImage}
-                        alt={post.imageAlt || post.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                        <BookOpen size={32} className="text-gray-400" />
-                      </div>
-                    )}
-                  </div>
+          <>
+            <div className="flex items-baseline justify-between hairline-b pb-3 mb-8 max-w-6xl mx-auto">
+              <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
+                Artigos em {category.title}
+              </h2>
+              <span className="font-mono num-tabular text-[11px] text-ink-500">
+                ({String(posts.length).padStart(2, '0')})
+              </span>
+            </div>
 
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <Clock size={12} />
-                        {post.readingTime} min de leitura
+            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 md:gap-x-8 gap-y-10 md:gap-y-12 max-w-6xl mx-auto">
+              {posts.map((post) => (
+                <li key={post.id} className="group">
+                  <Link href={`/blog/${post.slug}`} className="flex flex-col h-full">
+                    <div className="relative aspect-[4/3] mb-4 overflow-hidden bg-paper-warm">
+                      {post.featuredImage ? (
+                        <Image
+                          src={post.featuredImage}
+                          alt={post.imageAlt || post.title}
+                          fill
+                          className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                          sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <BookOpen size={28} className="text-ink-300" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 mb-3 font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500">
+                      <span>{category.title}</span>
+                      <span className="text-ink-300">·</span>
+                      <span className="inline-flex items-center gap-1.5 num-tabular">
+                        <Clock size={11} /> {post.readingTime} min
                       </span>
                     </div>
 
-                    <h2 className="text-lg font-bold text-blue-950 group-hover:text-bolsa-primary transition-colors line-clamp-2">
+                    <h3 className="font-display text-xl md:text-[22px] text-ink-900 leading-snug mb-3 group-hover:italic transition-all duration-300 line-clamp-2">
                       {post.title}
-                    </h2>
+                    </h3>
 
-                    <p className="text-sm text-gray-600 line-clamp-3">
+                    <p className="text-ink-500 text-[14px] leading-relaxed line-clamp-3">
                       {post.excerpt}
                     </p>
 
-                    <div className="flex items-center justify-between pt-2">
-                      <span className="text-xs text-gray-500">
-                        {new Date(post.publishedAt).toLocaleDateString('pt-BR', {
-                          day: '2-digit',
-                          month: 'long',
-                          year: 'numeric',
-                        })}
+                    <div className="flex items-center justify-between mt-4 pt-3 hairline-t">
+                      <span className="font-mono num-tabular text-[10px] tracking-[0.2em] uppercase text-ink-300">
+                        {fmtDate(post.publishedAt, { month: 'short' })}
                       </span>
-                      <span className="text-sm text-bolsa-primary font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
-                        Ler mais <ArrowRight size={14} />
+                      <span className="inline-flex items-center gap-1.5 font-mono text-[11px] tracking-[0.2em] uppercase text-ink-700 group-hover:text-bolsa-secondary transition-colors">
+                        Ler
+                        <ArrowRight
+                          size={12}
+                          className="transition-transform duration-300 group-hover:translate-x-0.5"
+                        />
                       </span>
                     </div>
-                  </div>
-                </Link>
-              </article>
-            ))}
-          </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </section>
 
-      {/* CTA Section */}
-      <section className="bg-gradient-to-r from-bolsa-primary to-pink-600 py-10">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-2xl font-bold text-white mb-3">
-            Encontre sua bolsa de estudo ideal
-          </h2>
-          <p className="text-pink-100 mb-6 max-w-xl mx-auto">
-            Bolsas de até 80% de desconto em mais de 1.000 faculdades.
-          </p>
-          <Link
-            href="/cursos"
-            className="inline-flex items-center gap-2 bg-white text-bolsa-primary font-bold px-8 py-3 rounded-full hover:shadow-lg transition-all hover:scale-105"
-          >
-            Buscar Bolsas de Estudo
-            <ArrowRight size={18} />
-          </Link>
+      {/* CTA FINAL */}
+      <section className="bg-bolsa-primary py-14 md:py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center">
+            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-white/60 inline-flex items-center gap-3 mb-4">
+              <span className="h-px w-8 bg-white/30" />
+              Próximo passo
+            </span>
+            <h2 className="font-display text-3xl md:text-[40px] font-semibold text-white leading-tight mb-4">
+              Encontre sua bolsa{' '}
+              <span className="italic text-white/85">depois da leitura.</span>
+            </h2>
+            <p className="text-white/75 text-[15px] md:text-base leading-relaxed mb-8 max-w-xl mx-auto">
+              Bolsas de até 80% em mais de 30 mil faculdades. Cadastro grátis, sem ENEM.
+            </p>
+            <Link
+              href="/cursos"
+              className="inline-flex items-center gap-3 px-8 py-4 bg-bolsa-secondary text-white font-semibold rounded-full text-[15px] hover:bg-bolsa-secondary/90 transition-colors shadow-lg shadow-bolsa-secondary/30"
+            >
+              Buscar bolsas de estudo
+              <ArrowRight size={18} />
+            </Link>
+          </div>
         </div>
       </section>
     </div>

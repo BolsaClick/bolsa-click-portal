@@ -2,19 +2,28 @@
 
 import posthog from "posthog-js"
 import { PostHogProvider as PHProvider, usePostHog } from "posthog-js/react"
-import { Suspense, useEffect } from "react"
+import { Suspense, useEffect, useRef } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
+import { useConsent } from "./ConsentProvider"
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
+  const { hydrated, isCategoryEnabled } = useConsent()
+  const initializedRef = useRef(false)
+  const analyticsAllowed = hydrated && isCategoryEnabled("analytics")
+
   useEffect(() => {
+    if (!analyticsAllowed || initializedRef.current) return
+
     const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY
     const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.posthog.com"
-    
+
     if (!posthogKey) {
       console.warn("⚠️ NEXT_PUBLIC_POSTHOG_KEY não está definida")
       return
     }
-    
+
+    initializedRef.current = true
+
     posthog.init(posthogKey, {
       api_host: posthogHost,
       ui_host: posthogHost,
@@ -48,7 +57,9 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         }
       },
     })
-  }, [])
+  }, [analyticsAllowed])
+
+  if (!analyticsAllowed) return <>{children}</>
 
   return (
     <PHProvider client={posthog}>

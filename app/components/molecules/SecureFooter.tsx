@@ -2,6 +2,7 @@
 import React from 'react';
 import { CreditCard, ShieldCheck, Lock, HelpCircle } from 'lucide-react';
 import Image from 'next/image';
+import { CONSENT_OPEN_EVENT } from '@/app/lib/consent/storage';
 
 export const SecureFooter: React.FC = () => {
   const theme = process.env.NEXT_PUBLIC_THEME
@@ -51,6 +52,13 @@ export const SecureFooter: React.FC = () => {
           <a href="/ajuda/termos-de-uso" className="hover:text-gray-900">Termos e Condições</a>
           <a href="/ajuda/politica-de-privacidade" className="hover:text-gray-900">Política de privacidade</a>
           <a href="/ajuda/politica-de-cookies" className="hover:text-gray-900">Política de cookies</a>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent(CONSENT_OPEN_EVENT))}
+            className="hover:text-gray-900"
+          >
+            Gerenciar cookies
+          </button>
           {/* <a href="#" className="hover:text-gray-900">Imprensa</a>
           <a href="#" className="hover:text-gray-900">Torne-se um parceiro</a> */}
         </div>

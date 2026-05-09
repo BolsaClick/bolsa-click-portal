@@ -5,7 +5,6 @@ import { prisma } from '@/app/lib/prisma'
 import CursoPageClient from './CursoPageClient'
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { FeaturedCourseData } from '../_data/types'
-import Breadcrumb from '@/app/components/atoms/Breadcrumb'
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -299,39 +298,43 @@ export default async function CursoPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchemas) }}
       />
-      <div className="container mx-auto px-4 pt-4 pb-2">
-        <Breadcrumb items={[
-          { label: 'Home', href: '/' },
-          { label: nivelLabel, href: nivelHref },
-          { label: cursoMetadata.name },
-        ]} />
-      </div>
       <CursoPageClient
         cursoMetadata={cursoMetadata}
         courseOffers={courseOffers}
       />
       {relatedCourses.length > 0 && (
-        <section className="bg-slate-50 py-12">
+        <section className="bg-white py-16 md:py-20 border-t border-hairline">
           <div className="container mx-auto px-4">
-            <h2 className="text-xl font-bold text-blue-950 mb-6">
-              Cursos Relacionados com Bolsa de Estudo
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {relatedCourses.map((curso) => (
-                <Link
-                  key={curso.slug}
-                  href={`/cursos/${curso.slug}`}
-                  className="group rounded-lg border border-neutral-200 bg-white p-4 hover:border-pink-400 hover:shadow-md transition-all"
-                >
-                  <span className="text-sm font-medium text-blue-950 group-hover:text-bolsa-primary transition-colors">
-                    Bolsa para {curso.name}
-                  </span>
-                  <span className="block text-xs text-neutral-500 mt-1">
-                    {curso.type === 'BACHARELADO' ? 'Bacharelado' : curso.type === 'LICENCIATURA' ? 'Licenciatura' : 'Tecnólogo'} &middot; {curso.duration}
-                  </span>
-                </Link>
-              ))}
+            <div className="flex items-baseline justify-between hairline-b pb-3 mb-6">
+              <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
+                Cursos relacionados
+              </h2>
+              <span className="font-mono num-tabular text-[11px] text-ink-500">
+                ({String(relatedCourses.length).padStart(2, '0')})
+              </span>
             </div>
+            <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-px bg-hairline">
+              {relatedCourses.map((curso) => (
+                <li key={curso.slug} className="bg-white">
+                  <Link
+                    href={`/cursos/${curso.slug}`}
+                    className="group flex flex-col px-5 py-5 transition-colors duration-200 hover:bg-paper"
+                  >
+                    <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1">
+                      {curso.type === 'BACHARELADO'
+                        ? 'Bacharelado'
+                        : curso.type === 'LICENCIATURA'
+                        ? 'Licenciatura'
+                        : 'Tecnólogo'}{' '}
+                      · {curso.duration}
+                    </span>
+                    <span className="font-display text-lg text-ink-900 group-hover:italic transition-all duration-200">
+                      {curso.name}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
       )}

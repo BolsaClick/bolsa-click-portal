@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { ReactNode } from 'react'
-import { ChevronRight } from 'lucide-react'
 
 interface HelpCategoryProps {
   icon: ReactNode
@@ -10,31 +9,43 @@ interface HelpCategoryProps {
   articleCount: number
 }
 
-export function HelpCategory({ icon, title, description, href, articleCount }: HelpCategoryProps) {
+export function HelpCategory({
+  icon,
+  title,
+  description,
+  href,
+  articleCount,
+}: HelpCategoryProps) {
   return (
     <Link
       href={href}
-      className="group flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-6 transition-all duration-300 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-50"
+      className="group relative flex flex-col h-full bg-white border border-hairline rounded-2xl p-6 md:p-7 transition-all duration-300 hover:border-ink-300 hover:shadow-[0_20px_50px_-30px_rgba(11,31,60,0.18)]"
     >
-      <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-bolsa-primary to-blue-700 text-white transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-lg shadow-blue-200">
+      <div className="flex items-start justify-between gap-4 mb-5">
+        <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-paper-warm text-ink-900 group-hover:bg-bolsa-secondary group-hover:text-white transition-colors">
           {icon}
-        </div>
-        <div className="flex-1">
-          <h3 className="mb-1.5 text-lg font-bold text-blue-950 group-hover:text-bolsa-primary transition-colors">
-            {title}
-          </h3>
-          <p className="text-sm text-gray-500 leading-relaxed line-clamp-2">{description}</p>
-        </div>
-      </div>
-      <div className="flex items-center justify-between border-t border-gray-100 pt-4">
-        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-400 bg-gray-50 px-2.5 py-1 rounded-full">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-          {articleCount} artigos
         </span>
-        <span className="inline-flex items-center gap-1 text-sm font-semibold text-bolsa-primary group-hover:gap-2 transition-all">
-          Ver todos
-          <ChevronRight size={16} />
+        <span className="font-mono num-tabular text-[10px] tracking-[0.22em] uppercase text-ink-500">
+          {String(articleCount).padStart(2, '0')} artigos
+        </span>
+      </div>
+
+      <h3 className="font-display text-2xl text-ink-900 leading-tight mb-2 group-hover:italic transition-all duration-200">
+        {title}
+      </h3>
+      <p className="text-ink-500 text-[14px] leading-relaxed line-clamp-2">
+        {description}
+      </p>
+
+      <div className="mt-auto pt-5 hairline-t flex items-center justify-between">
+        <span className="font-mono text-[11px] tracking-[0.2em] uppercase text-ink-700 group-hover:text-bolsa-secondary transition-colors">
+          Ver categoria
+        </span>
+        <span
+          aria-hidden="true"
+          className="text-ink-300 group-hover:text-bolsa-secondary group-hover:translate-x-1 transition-all duration-300"
+        >
+          →
         </span>
       </div>
     </Link>

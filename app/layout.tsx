@@ -9,6 +9,7 @@ import { ConsentProvider } from './components/providers/ConsentProvider'
 import { GatedVercelAnalytics } from './components/providers/GatedVercelAnalytics'
 import { WatiWhatsappWidget } from './components/WatiWhatsappWidget'
 import './globals.css'
+import { business } from './lib/constants/business'
 import { getCurrentTheme } from './lib/themes'
 
 const montserrat = Montserrat({
@@ -82,7 +83,7 @@ export const metadata: Metadata = {
         alt: theme.name,
       },
     ],
-    locale: 'pt_br',
+    locale: 'pt_BR',
     type: 'website',
   },
   twitter: {
@@ -98,9 +99,6 @@ export const metadata: Metadata = {
     apple: theme.favicon,
   },
   robots: 'index, follow',
-  alternates: {
-    canonical: theme.siteUrl,
-  },
   applicationName: theme.name,
   category: 'education',
   other: {
@@ -128,6 +126,8 @@ const jsonLd = [
     '@id': `${theme.siteUrl}/#organization`,
     name: 'Bolsa Click',
     alternateName: ['BolsaClick', 'Bolsa Click Bolsas de Estudo'],
+    ...(business.legalName && { legalName: business.legalName }),
+    ...(business.cnpj && { taxID: business.cnpj, vatID: business.cnpj }),
     description: 'Plataforma brasileira de bolsas de estudo com até 95% de desconto em faculdades e universidades. Graduação, pós-graduação, cursos técnicos e EAD.',
     url: theme.siteUrl,
     logo: `${theme.siteUrl}/logo-bolsa-click-rosa.png`,
@@ -145,13 +145,24 @@ const jsonLd = [
       '@type': 'Country',
       name: 'Brasil',
     },
-    contactPoint: {
-      '@type': 'ContactPoint',
-      telephone: '+55-11-99999-9999',
-      contactType: 'customer service',
-      areaServed: 'BR',
-      availableLanguage: ['Portuguese'],
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: business.address.street,
+      addressLocality: business.address.locality,
+      addressRegion: business.address.region,
+      postalCode: business.address.postalCode,
+      addressCountry: business.address.country,
     },
+    ...(business.supportPhone && {
+      contactPoint: {
+        '@type': 'ContactPoint',
+        telephone: business.supportPhone,
+        contactType: 'customer service',
+        areaServed: 'BR',
+        availableLanguage: ['Portuguese'],
+        email: business.supportEmail,
+      },
+    }),
   },
   {
     '@context': 'https://schema.org',

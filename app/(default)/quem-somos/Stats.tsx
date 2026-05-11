@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
+import { getStats } from '@/app/lib/constants/stats';
 
 export default function Stats() {
   const [ref, inView] = useInView({
@@ -10,11 +11,12 @@ export default function Stats() {
     threshold: 0.2
   });
 
+  const s = getStats();
   const stats = [
-    { number: '+25', label: 'Instituições Parceiras', delay: 0 },
-    { number: '+85%', label: 'De Desconto Oferecido', delay: 0.2 },
-    { number: '+2000', label: 'Cursos Disponíveis', delay: 0.4 },
-    { number: '+10k', label: 'Alunos Beneficiados', delay: 0.6 }
+    { number: s.partnersCount, label: 'Grupos Educacionais Parceiros', delay: 0 },
+    { number: `até ${s.maxDiscount}%`, label: 'De Desconto Oferecido', delay: 0.2 },
+    { number: s.coursesCount, label: 'Cursos Disponíveis', delay: 0.4 },
+    { number: s.studentsCount, label: 'Alunos Beneficiados', delay: 0.6 }
   ];
 
   return (

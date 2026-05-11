@@ -24,6 +24,8 @@ export interface HelpArticleData {
   content: string
   metaTitle: string | null
   metaDescription: string | null
+  updatedAt: Date
+  createdAt: Date
   category: {
     slug: string
     title: string
@@ -135,6 +137,8 @@ export const getHelpArticle = cache(async (
     content: article.content,
     metaTitle: article.metaTitle,
     metaDescription: article.metaDescription,
+    updatedAt: article.updatedAt,
+    createdAt: article.createdAt,
     category: article.category,
   }
 })

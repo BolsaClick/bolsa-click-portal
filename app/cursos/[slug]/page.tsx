@@ -5,6 +5,12 @@ import { prisma } from '@/app/lib/prisma'
 import CursoPageClient from './CursoPageClient'
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { FeaturedCourseData } from '../_data/types'
+import {
+  OffersComparisonTable,
+  VisibleFaq,
+  CitiesGrid,
+  buildCourseFaqItems,
+} from './_seo/CourseSeoSections'
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -292,6 +298,8 @@ export default async function CursoPage({ params }: Props) {
     },
   ]
 
+  const faqItems = buildCourseFaqItems(cursoMetadata, lowPrice)
+
   return (
     <>
       <script
@@ -302,6 +310,12 @@ export default async function CursoPage({ params }: Props) {
         cursoMetadata={cursoMetadata}
         courseOffers={courseOffers}
       />
+      <OffersComparisonTable offers={courseOffers || []} courseName={cursoMetadata.name} />
+      <VisibleFaq
+        items={faqItems}
+        heading={`Perguntas frequentes sobre ${cursoMetadata.name}`}
+      />
+      <CitiesGrid courseSlug={slug} courseName={cursoMetadata.name} />
       {relatedCourses.length > 0 && (
         <section className="bg-white py-16 md:py-20 border-t border-hairline">
           <div className="container mx-auto px-4">

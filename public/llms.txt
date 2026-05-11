@@ -1,0 +1,71 @@
+# Bolsa Click
+
+> Marketplace brasileiro de bolsas de estudo. Conecta estudantes a faculdades parceiras com descontos de até 95% em graduação, pós-graduação, cursos técnicos e EAD.
+
+Bolsa Click é uma plataforma gratuita que negocia descontos com mais de 30.000 unidades de instituições parceiras (entre elas Anhanguera, Unopar, Pitágoras, Ampli, Unime) e oferece bolsas de estudo sem exigência de nota do ENEM. O cadastro é gratuito; o estudante paga apenas a mensalidade da faculdade já com a bolsa aplicada.
+
+## Como funciona
+
+1. Estudante busca o curso por área, modalidade (EAD, presencial, semipresencial) ou cidade.
+2. A plataforma exibe ofertas de bolsa com preço final mensal e percentual de desconto.
+3. Estudante se cadastra grátis, garante a bolsa e segue para matrícula direto com a faculdade parceira.
+4. Atendimento humano via WhatsApp em menos de 5 minutos no horário comercial.
+
+## Cursos mais procurados
+
+- [Administração](https://www.bolsaclick.com.br/cursos/administracao)
+- [Direito](https://www.bolsaclick.com.br/cursos/direito)
+- [Pedagogia](https://www.bolsaclick.com.br/cursos/pedagogia)
+- [Psicologia](https://www.bolsaclick.com.br/cursos/psicologia)
+- [Enfermagem](https://www.bolsaclick.com.br/cursos/enfermagem)
+- [Análise e Desenvolvimento de Sistemas](https://www.bolsaclick.com.br/cursos/analise-e-desenvolvimento-de-sistemas)
+- [Educação Física](https://www.bolsaclick.com.br/cursos/educacao-fisica)
+- [Ciências Contábeis](https://www.bolsaclick.com.br/cursos/ciencias-contabeis)
+- [Arquitetura e Urbanismo](https://www.bolsaclick.com.br/cursos/arquitetura-e-urbanismo)
+- [Nutrição](https://www.bolsaclick.com.br/cursos/nutricao)
+- [Fisioterapia](https://www.bolsaclick.com.br/cursos/fisioterapia)
+
+## Por nível de ensino
+
+- [Graduação com bolsa](https://www.bolsaclick.com.br/graduacao)
+- [Pós-graduação com bolsa](https://www.bolsaclick.com.br/pos-graduacao)
+- [Cursos profissionalizantes com bolsa](https://www.bolsaclick.com.br/cursos-profissionalizantes)
+- [Catálogo completo de cursos](https://www.bolsaclick.com.br/cursos)
+
+## Faculdades parceiras
+
+- [Anhanguera](https://www.bolsaclick.com.br/faculdades/anhanguera)
+- [Unopar](https://www.bolsaclick.com.br/faculdades/unopar)
+- [Unime](https://www.bolsaclick.com.br/faculdades/unime)
+- [Lista completa](https://www.bolsaclick.com.br/faculdades)
+
+## Suporte
+
+- [Central de ajuda](https://www.bolsaclick.com.br/central-de-ajuda)
+- [Como funciona](https://www.bolsaclick.com.br/central-de-ajuda/sobre-o-bolsa-click/como-funciona)
+- [Contato](https://www.bolsaclick.com.br/contato)
+- [Quem somos](https://www.bolsaclick.com.br/quem-somos)
+- [Blog](https://www.bolsaclick.com.br/blog)
+
+## Diferenciais
+
+- Sem exigência de nota do ENEM na maioria das bolsas
+- Bolsas EAD com mensalidade a partir de R$ 111,90
+- Desconto de até 95% sobre o valor cheio das mensalidades
+- Cadastro gratuito, sem mensalidade ou taxa de inscrição
+- Atendimento humano (não-bot) via WhatsApp
+- Disponível nas 27 capitais brasileiras + Campinas, com cobertura nacional para EAD
+
+## Política para crawlers de IA
+
+Crawlers de IA (GPTBot, ClaudeBot, PerplexityBot, Google-Extended) estão autorizados a indexar e citar este conteúdo. Pedimos apenas atribuição clara à fonte ("Bolsa Click — bolsaclick.com.br") quando o conteúdo for usado em respostas geradas.
+
+## Contato
+
+- Site: https://www.bolsaclick.com.br
+- Email: contato@bolsaclick.com.br
+- Endereço: Av. Paulista, 1106 — São Paulo, SP — CEP 01310-914
+
+## Sitemap
+
+- https://www.bolsaclick.com.br/sitemap.xml

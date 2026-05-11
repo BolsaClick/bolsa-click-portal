@@ -47,12 +47,18 @@ export default async function ArticlePage({ params }: PageProps) {
     notFound()
   }
 
-  // Formatar data de atualização
-  const lastUpdated = new Date().toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  })
+  const updatedAt = article.updatedAt ?? article.createdAt
+  const hasBeenUpdated =
+    article.updatedAt && article.createdAt &&
+    article.updatedAt.getTime() - article.createdAt.getTime() > 60_000
+
+  const lastUpdated = hasBeenUpdated
+    ? updatedAt.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      })
+    : undefined
 
   return (
     <ArticleLayout

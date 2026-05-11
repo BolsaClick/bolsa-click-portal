@@ -4,6 +4,61 @@ import { ContactCTA } from '@/app/components/help/ContactCTA'
 import { getHelpCategories } from './_lib/data'
 import { renderIcon } from './_lib/icons'
 
+const helpFaqItems = [
+  {
+    question: 'Como funcionam as bolsas de estudo do Bolsa Click?',
+    answer:
+      'O Bolsa Click negocia descontos com faculdades parceiras e disponibiliza bolsas de até 95% sem nota de corte do ENEM. Você escolhe o curso e a modalidade, faz o cadastro grátis, garante a bolsa e segue direto para a matrícula com a instituição.',
+  },
+  {
+    question: 'Preciso pagar alguma coisa pra usar o Bolsa Click?',
+    answer:
+      'Não. O cadastro e a busca são 100% gratuitos. Você só paga a faculdade depois de garantir a vaga, com o valor já com desconto da bolsa aplicado.',
+  },
+  {
+    question: 'Posso conseguir bolsa sem ter feito o ENEM?',
+    answer:
+      'Sim. A maior parte das bolsas do Bolsa Click é via processo seletivo próprio das instituições — sem exigência de nota do ENEM. Existem opções para EAD, presencial e semipresencial.',
+  },
+  {
+    question: 'Em quanto tempo recebo o resultado depois do cadastro?',
+    answer:
+      'Em poucos minutos você já vê as bolsas disponíveis para o curso e cidade que escolheu. A confirmação da matrícula depende da faculdade — em geral, ocorre em até 48h.',
+  },
+  {
+    question: 'O Bolsa Click oferece pós-graduação e cursos técnicos?',
+    answer:
+      'Sim. Além de graduação, temos bolsas para pós-graduação (MBA, especialização e mestrado profissional) e cursos técnicos profissionalizantes em todo o Brasil.',
+  },
+  {
+    question: 'Posso falar com uma pessoa de verdade pra tirar dúvidas?',
+    answer:
+      'Sim. Nosso atendimento é humano via WhatsApp, com resposta em menos de 5 minutos no horário comercial. Você não vai cair em chatbot nem fila de espera.',
+  },
+]
+
+const helpFaqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: helpFaqItems.map((it) => ({
+    '@type': 'Question',
+    name: it.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: it.answer,
+    },
+  })),
+}
+
+const helpBreadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.bolsaclick.com.br' },
+    { '@type': 'ListItem', position: 2, name: 'Central de Ajuda', item: 'https://www.bolsaclick.com.br/central-de-ajuda' },
+  ],
+}
+
 export const revalidate = 3600 // Revalidar a cada 1 hora
 
 export const metadata: Metadata = {
@@ -38,6 +93,12 @@ export default async function CentralDeAjudaPage() {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify([helpFaqSchema, helpBreadcrumbSchema]),
+        }}
+      />
       {/* HERO editorial — paper-warm com serif XL */}
       <section className="relative bg-paper-warm overflow-hidden">
         <div
@@ -127,6 +188,37 @@ export default async function CentralDeAjudaPage() {
                 title="Não encontrou sua resposta?"
                 description="Fale com nossa equipe humana pelo WhatsApp em poucos minutos — sem fila, sem robô."
               />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ visível em HTML — para LLMs/AI search e usuários sem JS */}
+      <section className="bg-white py-16 md:py-20 border-t border-hairline">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto">
+            <div className="hairline-b pb-3 mb-8 flex items-baseline justify-between">
+              <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
+                Perguntas frequentes
+              </h2>
+              <span className="font-mono num-tabular text-[11px] text-ink-500">
+                ({String(helpFaqItems.length).padStart(2, '0')})
+              </span>
+            </div>
+            <div className="divide-y divide-hairline border-y border-hairline">
+              {helpFaqItems.map((it, i) => (
+                <details key={i} className="group py-5">
+                  <summary className="flex items-baseline justify-between cursor-pointer list-none gap-6">
+                    <h3 className="font-display text-lg md:text-xl text-ink-900 group-open:italic">
+                      {it.question}
+                    </h3>
+                    <span className="font-mono text-xs text-ink-500 group-open:rotate-45 transition-transform">
+                      +
+                    </span>
+                  </summary>
+                  <p className="mt-4 text-ink-700 leading-relaxed">{it.answer}</p>
+                </details>
+              ))}
             </div>
           </div>
         </div>

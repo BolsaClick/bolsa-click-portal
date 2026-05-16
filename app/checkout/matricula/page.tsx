@@ -728,6 +728,18 @@ const isFormValidForPayment =
           phone: data.phone.replace(/\D/g, ''),
         })
 
+        // Notealy (estágio 2): marca o contato como "inscrito". Não-bloqueante.
+        fetch('/api/leads/confirm-inscription', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: data.name,
+            email: data.email,
+            phone: data.phone.replace(/\D/g, ''),
+            cpf: data.cpf.replace(/\D/g, ''),
+          }),
+        }).catch((e) => console.error('Notealy confirm falhou:', e))
+
         // Atualizar perfil do usuário no PostgreSQL (se estiver logado)
         if (firebaseUser) {
           await updateUserProfileInDB(data)

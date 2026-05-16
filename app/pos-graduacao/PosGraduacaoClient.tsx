@@ -8,9 +8,11 @@ import {
   ArrowRight,
   Award,
   Check,
+  GraduationCap,
   MapPin,
   Monitor,
 } from 'lucide-react'
+import type { VitrineCourse } from '@/app/lib/api/get-vitrine'
 
 const STATS = [
   { value: '10k+', label: 'Cursos de pós-graduação' },
@@ -19,93 +21,13 @@ const STATS = [
   { value: '6 a 18', label: 'meses de duração' },
 ]
 
-type Offer = {
-  course: string
-  institution: string
-  logo: string
-  modality: 'EAD' | 'PRESENCIAL' | 'SEMIPRESENCIAL'
-  city: string
-  uf: string
-  finalPrice: number
-  originalPrice: number
-  discountPct: number
-  href: string
+const BRAND_LOGOS: Record<string, string> = {
+  ANHANGUERA: '/assets/logo-anhanguera-bolsa-click.svg',
+  UNOPAR: '/assets/logo-unopar.svg',
+  PITAGORAS: '/assets/logo-pitagoras.svg',
+  AMPLI: '/assets/ampli-logo.png',
+  UNIME: '/assets/logo-unime-p.png',
 }
-
-const OFFERS: Offer[] = [
-  {
-    course: 'MBA em Gestão de Projetos',
-    institution: 'Anhanguera',
-    logo: '/assets/logo-anhanguera-bolsa-click.svg',
-    modality: 'EAD',
-    city: 'São Paulo',
-    uf: 'SP',
-    finalPrice: 199,
-    originalPrice: 890,
-    discountPct: 78,
-    href: '/curso/resultado?c=mba-gestao-projetos&nivel=POS_GRADUACAO',
-  },
-  {
-    course: 'Especialização em Direito Tributário',
-    institution: 'Unopar',
-    logo: '/assets/logo-unopar.svg',
-    modality: 'EAD',
-    city: 'Curitiba',
-    uf: 'PR',
-    finalPrice: 249,
-    originalPrice: 1100,
-    discountPct: 77,
-    href: '/curso/resultado?c=direito-tributario&nivel=POS_GRADUACAO',
-  },
-  {
-    course: 'Psicologia Clínica e Psicoterapia',
-    institution: 'Pitágoras',
-    logo: '/assets/logo-pitagoras.svg',
-    modality: 'EAD',
-    city: 'Rio de Janeiro',
-    uf: 'RJ',
-    finalPrice: 179,
-    originalPrice: 980,
-    discountPct: 81,
-    href: '/curso/resultado?c=psicologia-clinica&nivel=POS_GRADUACAO',
-  },
-  {
-    course: 'MBA em Marketing Digital',
-    institution: 'Ampli',
-    logo: '/assets/ampli-logo.png',
-    modality: 'EAD',
-    city: 'Belo Horizonte',
-    uf: 'MG',
-    finalPrice: 159,
-    originalPrice: 850,
-    discountPct: 81,
-    href: '/curso/resultado?c=mba-marketing-digital&nivel=POS_GRADUACAO',
-  },
-  {
-    course: 'Engenharia de Segurança do Trabalho',
-    institution: 'Anhanguera',
-    logo: '/assets/logo-anhanguera-bolsa-click.svg',
-    modality: 'EAD',
-    city: 'Salvador',
-    uf: 'BA',
-    finalPrice: 229,
-    originalPrice: 1050,
-    discountPct: 78,
-    href: '/curso/resultado?c=engenharia-seguranca&nivel=POS_GRADUACAO',
-  },
-  {
-    course: 'Gestão de Pessoas e Liderança',
-    institution: 'Pitágoras',
-    logo: '/assets/logo-pitagoras.svg',
-    modality: 'EAD',
-    city: 'Recife',
-    uf: 'PE',
-    finalPrice: 149,
-    originalPrice: 720,
-    discountPct: 79,
-    href: '/curso/resultado?c=gestao-pessoas&nivel=POS_GRADUACAO',
-  },
-]
 
 const TYPES = [
   {
@@ -180,10 +102,22 @@ const FAQ = [
 const formatPrice = (n: number) =>
   n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-const modalityLabel = (m: Offer['modality']) =>
+const modalityLabel = (m: VitrineCourse['modality']) =>
   m === 'EAD' ? 'EAD' : m === 'SEMIPRESENCIAL' ? 'Semipresencial' : 'Presencial'
 
-export default function PosGraduacaoClient() {
+const buildOfferHref = (o: VitrineCourse) => {
+  const params = new URLSearchParams()
+  params.set('c', o.searchTerm)
+  params.set('nivel', o.academicLevel)
+  if (o.modality) params.set('modalidade', o.modality)
+  return `/curso/resultado?${params.toString()}`
+}
+
+type Props = {
+  offers: VitrineCourse[]
+}
+
+export default function PosGraduacaoClient({ offers }: Props) {
   const router = useRouter()
   const offersRef = useRef<HTMLElement>(null)
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(0)
@@ -280,69 +214,111 @@ export default function PosGraduacaoClient() {
             </Link>
           </div>
 
-          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 items-stretch">
-            {OFFERS.map((o) => (
-              <li key={`${o.course}-${o.institution}-${o.city}`} className="h-full">
-                <Link
-                  href={o.href}
-                  className="group flex flex-col h-full bg-white border border-hairline rounded-2xl p-5 md:p-6 hover:shadow-[0_20px_50px_-25px_rgba(11,31,60,0.25)] hover:border-ink-300 transition-all duration-300"
-                >
-                  <div className="flex items-start justify-between gap-3 mb-5">
-                    <div className="h-9 flex items-center">
-                      <Image
-                        src={o.logo}
-                        alt={o.institution}
-                        width={120}
-                        height={36}
-                        className="h-9 w-auto object-contain"
-                        unoptimized
-                      />
-                    </div>
-                    <span className="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-bolsa-secondary text-white text-[11px] font-bold tracking-wide">
-                      -{o.discountPct}%
-                    </span>
-                  </div>
-
-                  <h3 className="text-[17px] font-bold text-ink-900 leading-snug mb-3 group-hover:text-bolsa-secondary transition-colors line-clamp-2 min-h-[2.6em]">
-                    {o.course}
-                  </h3>
-
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-ink-500 mb-5">
-                    <span className="inline-flex items-center gap-1">
-                      <Monitor size={14} />
-                      {modalityLabel(o.modality)}
-                    </span>
-                    <span className="text-ink-300">·</span>
-                    <span className="inline-flex items-center gap-1">
-                      <MapPin size={14} />
-                      {o.city} — {o.uf}
-                    </span>
-                  </div>
-
-                  <div className="mt-auto border-t border-hairline pt-4 flex items-end justify-between">
-                    <div>
-                      <div className="text-[11px] text-ink-500 uppercase tracking-wide font-medium">
-                        Mensalidade com bolsa
+          {offers.length === 0 ? (
+            <div className="bg-white border border-hairline rounded-2xl p-10 text-center">
+              <p className="text-ink-500 text-[15px] mb-6">
+                Não conseguimos carregar as ofertas em destaque agora. Veja todas no catálogo.
+              </p>
+              <Link
+                href="/curso/resultado?nivel=POS_GRADUACAO"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-bolsa-secondary text-white font-semibold rounded-full text-[14px] hover:bg-bolsa-secondary/90 transition-colors"
+              >
+                Ver todas as pós-graduações
+                <ArrowRight size={16} />
+              </Link>
+            </div>
+          ) : (
+            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 items-stretch">
+              {offers.map((o) => {
+                const brandKey = (o.brand || '').toUpperCase()
+                const logo = BRAND_LOGOS[brandKey]
+                const monthly = o.durationInMonths && o.durationInMonths > 0
+                  ? o.minPrice / o.durationInMonths
+                  : o.minPrice
+                const monthlyFull = o.durationInMonths && o.durationInMonths > 0
+                  ? o.maxPrice / o.durationInMonths
+                  : o.maxPrice
+                return (
+                  <li key={`${o.id}-${o.searchTerm}-${o.modality}`} className="h-full">
+                    <Link
+                      href={buildOfferHref(o)}
+                      className="group flex flex-col h-full bg-white border border-hairline rounded-2xl p-5 md:p-6 hover:shadow-[0_20px_50px_-25px_rgba(11,31,60,0.25)] hover:border-ink-300 transition-all duration-300"
+                    >
+                      <div className="flex items-start justify-between gap-3 mb-5">
+                        <div className="h-9 flex items-center">
+                          {logo ? (
+                            <Image
+                              src={logo}
+                              alt={o.brand}
+                              width={120}
+                              height={36}
+                              className="h-9 w-auto object-contain"
+                              unoptimized
+                            />
+                          ) : (
+                            <span className="inline-flex items-center gap-2 text-ink-700">
+                              <GraduationCap size={18} />
+                              <span className="font-display text-[15px] font-semibold">
+                                {o.brand || 'Bolsa Click'}
+                              </span>
+                            </span>
+                          )}
+                        </div>
+                        {o.discountPct > 0 && (
+                          <span className="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-bolsa-secondary text-white text-[11px] font-bold tracking-wide">
+                            -{o.discountPct}%
+                          </span>
+                        )}
                       </div>
-                      <div className="flex items-baseline gap-1 mt-1">
-                        <span className="text-[13px] text-ink-700 font-medium">R$</span>
-                        <span className="font-display num-tabular text-3xl font-bold text-bolsa-secondary leading-none">
-                          {formatPrice(o.finalPrice)}
+
+                      <h3 className="text-[17px] font-bold text-ink-900 leading-snug mb-3 group-hover:text-bolsa-secondary transition-colors line-clamp-2 min-h-[2.6em]">
+                        {o.name}
+                      </h3>
+
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-ink-500 mb-5">
+                        <span className="inline-flex items-center gap-1">
+                          <Monitor size={14} />
+                          {modalityLabel(o.modality)}
                         </span>
-                        <span className="text-[12px] text-ink-500">/mês</span>
+                        {o.city && o.uf && (
+                          <>
+                            <span className="text-ink-300">·</span>
+                            <span className="inline-flex items-center gap-1">
+                              <MapPin size={14} />
+                              {o.city} — {o.uf}
+                            </span>
+                          </>
+                        )}
                       </div>
-                      <div className="text-[12px] text-ink-300 line-through num-tabular mt-1">
-                        De R$ {formatPrice(o.originalPrice)}
+
+                      <div className="mt-auto border-t border-hairline pt-4 flex items-end justify-between">
+                        <div>
+                          <div className="text-[11px] text-ink-500 uppercase tracking-wide font-medium">
+                            Mensalidade com bolsa
+                          </div>
+                          <div className="flex items-baseline gap-1 mt-1">
+                            <span className="text-[13px] text-ink-700 font-medium">R$</span>
+                            <span className="font-display num-tabular text-3xl font-bold text-bolsa-secondary leading-none">
+                              {formatPrice(monthly)}
+                            </span>
+                            <span className="text-[12px] text-ink-500">/mês</span>
+                          </div>
+                          {monthlyFull > monthly && (
+                            <div className="text-[12px] text-ink-300 line-through num-tabular mt-1">
+                              De R$ {formatPrice(monthlyFull)}
+                            </div>
+                          )}
+                        </div>
+                        <span className="flex-shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full bg-ink-900 text-white group-hover:bg-bolsa-secondary transition-colors">
+                          →
+                        </span>
                       </div>
-                    </div>
-                    <span className="flex-shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full bg-ink-900 text-white group-hover:bg-bolsa-secondary transition-colors">
-                      →
-                    </span>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
         </div>
       </section>
 

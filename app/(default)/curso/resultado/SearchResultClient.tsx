@@ -213,6 +213,8 @@ export default function SearchResultClient() {
   // Com pequeno delay ao vir da home: evita rodar com searchParams ainda vazios (client nav)
   // e sobrescrever a URL perdendo curso/cidade/estado.
   // IMPORTANTE: Bots/crawlers NÃO executam geolocalização para evitar URLs com Mountain View, CA.
+  // IMPORTANTE: Se já tem curso na URL, NÃO bloquear a busca esperando geolocalização —
+  // a query roda nacional na hora, e o usuário pode filtrar cidade depois.
   useEffect(() => {
       if (cidade && estado) {
         setFilters((prev) => ({
@@ -222,6 +224,15 @@ export default function SearchResultClient() {
         }));
         return;
       }
+
+    if (curso && curso.trim()) {
+      setFilters((prev) => ({
+        ...prev,
+        modalidades: modalidade && modalidade.trim() ? [formatModalidade(modalidade)] : [],
+      }));
+      setLocationDetected(true);
+      return;
+    }
 
     if (locationDetected) return;
 
@@ -290,9 +301,9 @@ export default function SearchResultClient() {
     return cursoNomeCompleto || curso || undefined
   }, [curso, cursoNomeCompleto])
 
-  // Habilitar busca assim que tiver cidade e estado (da URL ou após detecção por IP).
-  // Assim, ao vir da home com filtros na URL, a API é chamada logo no primeiro render.
-  const canSearch = !!cidade?.trim() && !!estado?.trim();
+  // Habilitar busca assim que tiver cidade e estado (da URL ou após detecção por IP),
+  // OU quando já há curso definido — nesse caso buscamos nacional na hora, sem esperar geo.
+  const canSearch = (!!cidade?.trim() && !!estado?.trim()) || !!curso?.trim() || !!cursoNomeCompleto?.trim();
 
   const normalizedNivel = normalizeAcademicLevel(nivel)
   const queryClient = useQueryClient()

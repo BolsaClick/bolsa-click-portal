@@ -1,6 +1,9 @@
 // app/pos-graduacao/page.tsx
 import { Metadata } from 'next'
 import PosGraduacaoClient from './PosGraduacaoClient';
+import { getVitrine } from '@/app/lib/api/get-vitrine'
+
+export const revalidate = 600
 
 const jsonLdSchema = {
   '@context': 'https://schema.org',
@@ -98,14 +101,19 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Page() {
+export default async function Page() {
+  const offers = await getVitrine({
+    levels: ['POS_GRADUACAO'],
+    perLevel: 6,
+  })
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
       />
-      <PosGraduacaoClient />
+      <PosGraduacaoClient offers={offers} />
     </>
   )
 }

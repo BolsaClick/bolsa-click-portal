@@ -404,24 +404,25 @@ export default function SearchResultClient() {
     })
   }, [showCourses, modalidade])
 
-  // Deduplicar por ID quando não houver filtro de cidade
+  // Deduplicar por ID quando o usuário NÃO está buscando um curso específico.
+  // - Com curso definido (c=...): mostra todas as unidades — usuário quer saber onde tem
+  // - Sem curso (modo descoberta): deduplica por id pra mostrar variedade de cursos
   const deduplicatedCourses = useMemo(() => {
-    // Se houver cidade na URL, não deduplicar (mostrar todas as unidades)
-    if (cidade && cidade.trim()) {
+    const hasSpecificCourse = !!(curso?.trim() || cursoNomeCompleto?.trim())
+    if (hasSpecificCourse) {
       return filteredByModality
     }
-    
-    // Se não houver cidade, deduplicar por ID (mostrar apenas uma vez cada curso)
+
     const seenIds = new Set<string>()
     return filteredByModality.filter((course: { id?: string }) => {
-      if (!course.id) return true // Se não tiver ID, manter (não deveria acontecer)
+      if (!course.id) return true
       if (seenIds.has(course.id)) {
-        return false // Já vimos este ID, remover
+        return false
       }
-      seenIds.add(course.id) // Primeira vez vendo este ID, manter
+      seenIds.add(course.id)
       return true
     })
-  }, [filteredByModality, cidade])
+  }, [filteredByModality, curso, cursoNomeCompleto])
 
   const filteredByPrice = useMemo(() => {
     return deduplicatedCourses.filter((course: { minPrice?: number; montlyFeeToMin?: number; monthlyFee?: number; price?: number }) => {
@@ -545,6 +546,13 @@ const onSubmit = (data: any) => {
   const nivelLabel = NIVEL_LABEL[normalizedNivel] ?? 'Cursos'
   const totalResults = filteredByPrice.length
 
+  // "Não tenho dado ainda" → mostrar skeleton. Isso cobre:
+  // - query desabilitada (esperando geolocalização ou filtros)
+  // - primeira request em andamento (isLoading=true)
+  // - hidratação client-side antes de useSearchParams resolver
+  // O empty state só aparece quando temos uma resposta de fato com 0 itens.
+  const awaitingResults = !showCourses || isLoading
+
   return (
     <div className="w-full bg-paper min-h-screen">
       {/* HERO compacto navy editorial */}
@@ -604,7 +612,7 @@ const onSubmit = (data: any) => {
                       </span>
                     </>
                   )}
-                  {!isLoading && totalResults > 0 && (
+                  {!awaitingResults && totalResults > 0 && (
                     <>
                       <span className="text-white/30">·</span>
                       <span className="inline-flex items-center gap-1.5 num-tabular">
@@ -745,7 +753,7 @@ const onSubmit = (data: any) => {
           {/* RESULTADOS */}
           <div className="lg:col-span-8 xl:col-span-9 min-w-0">
             {/* Toolbar de resultados */}
-            {!isLoading && totalResults > 0 && (
+            {!awaitingResults && totalResults > 0 && (
               <div className="flex items-baseline justify-between hairline-b pb-3 mb-6">
                 <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
                   {totalResults === 1 ? 'oferta encontrada' : 'ofertas encontradas'}
@@ -757,7 +765,7 @@ const onSubmit = (data: any) => {
               </div>
             )}
 
-            {isLoading ? (
+            {awaitingResults ? (
               <div
                 className={`grid ${
                   viewMode === 'grid'
@@ -849,7 +857,7 @@ const onSubmit = (data: any) => {
             )}
 
             {/* PAGINATION */}
-            {!isLoading && totalPages > 1 && (
+            {!awaitingResults && totalPages > 1 && (
               <nav
                 aria-label="Paginação"
                 className="mt-10 flex items-center justify-between gap-4 hairline-t pt-6"

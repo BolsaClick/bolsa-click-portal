@@ -150,7 +150,11 @@ interface CitiesGridProps {
 }
 
 export function CitiesGrid({ courseSlug, courseName, currentCitySlug }: CitiesGridProps) {
-  const cities = BRAZILIAN_CITIES.filter(c => c.slug !== currentCitySlug)
+  // Com 100 cidades na base, mostrar todas no grid de uma vez fica ruim de
+  // escanear. Limitamos a 30 destaques (top por relevância na lista) + um link
+  // pro hub geral pra preservar crawl path.
+  const allOthers = BRAZILIAN_CITIES.filter(c => c.slug !== currentCitySlug)
+  const cities = allOthers.slice(0, 30)
   return (
     <section className="bg-white py-12 md:py-16 border-t border-hairline">
       <div className="container mx-auto px-4">
@@ -160,7 +164,7 @@ export function CitiesGrid({ courseSlug, courseName, currentCitySlug }: CitiesGr
               {courseName} em outras cidades
             </h2>
             <span className="font-mono num-tabular text-[11px] text-ink-500">
-              ({String(cities.length).padStart(2, '0')})
+              ({String(cities.length).padStart(2, '0')} de {String(allOthers.length).padStart(2, '0')})
             </span>
           </div>
           <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-px bg-hairline">
@@ -180,6 +184,16 @@ export function CitiesGrid({ courseSlug, courseName, currentCitySlug }: CitiesGr
               </li>
             ))}
           </ul>
+          {allOthers.length > cities.length && (
+            <div className="mt-6 text-center">
+              <Link
+                href="/bolsas-de-estudo"
+                className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink-700 hover:text-ink-900 border-b border-ink-700 hover:border-ink-900 pb-1"
+              >
+                Ver todas as cidades →
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </section>

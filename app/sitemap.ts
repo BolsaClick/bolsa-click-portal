@@ -1,16 +1,8 @@
 import { MetadataRoute } from 'next'
 import { prisma } from '@/app/lib/prisma'
+import { BRAZILIAN_CITIES } from '@/app/lib/constants/brazilian-cities'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
-
-function slugifyCity(text: string): string {
-  return text
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
-}
 
 const courseSlugs = [
   'administracao', 'direito', 'enfermagem', 'psicologia',
@@ -20,16 +12,6 @@ const courseSlugs = [
   'nutricao', 'odontologia', 'fisioterapia', 'biomedicina',
   'ciencias-contabeis', 'arquitetura-e-urbanismo',
   'engenharia-de-producao', 'gestao-comercial',
-]
-
-const mainCities = [
-  'São Paulo', 'Rio de Janeiro', 'Belo Horizonte', 'Curitiba',
-  'Porto Alegre', 'Brasília', 'Salvador', 'Recife',
-  'Fortaleza', 'Goiânia', 'Manaus', 'Belém',
-  'Campinas', 'São Luís', 'Maceió', 'Campo Grande',
-  'Cuiabá', 'João Pessoa', 'Natal', 'Teresina',
-  'Aracaju', 'Florianópolis', 'Vitória', 'Porto Velho',
-  'Macapá', 'Rio Branco', 'Boa Vista', 'Palmas',
 ]
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -57,15 +39,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.9,
   }))
 
-  // Landing pages /cursos/[slug]/[city]
+  // Landing pages /cursos/[slug]/[city] — 20 cursos × 100 cidades = 2000 URLs
   const courseCityPages: MetadataRoute.Sitemap = courseSlugs.flatMap(courseSlug =>
-    mainCities.map(city => ({
-      url: `${SITE_URL}/cursos/${courseSlug}/${slugifyCity(city)}`,
+    BRAZILIAN_CITIES.map(city => ({
+      url: `${SITE_URL}/cursos/${courseSlug}/${city.slug}`,
       lastModified: now,
       changeFrequency: 'weekly' as const,
       priority: 0.85,
     }))
   )
+
+  // Hubs de cidade /bolsas-de-estudo/[city] — 100 URLs
+  const cityHubPages: MetadataRoute.Sitemap = BRAZILIAN_CITIES.map(city => ({
+    url: `${SITE_URL}/bolsas-de-estudo/${city.slug}`,
+    lastModified: now,
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
+  }))
 
   // Dados dinâmicos do banco
   let dynamicPages: MetadataRoute.Sitemap = []
@@ -115,6 +105,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: 'weekly' as const,
         priority: 0.7,
       })),
+      // Faculdade × cidade /faculdades/[slug]/em/[city] — N instituições × 100 cidades
+      ...institutions.flatMap((inst: { slug: string; updatedAt: Date }) =>
+        BRAZILIAN_CITIES.map(city => ({
+          url: `${SITE_URL}/faculdades/${inst.slug}/em/${city.slug}`,
+          lastModified: inst.updatedAt,
+          changeFrequency: 'weekly' as const,
+          priority: 0.75,
+        }))
+      ),
     ]
   } catch (e) {
     console.error('Erro ao buscar dados dinâmicos para sitemap:', e)
@@ -124,6 +123,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...staticPages,
     ...coursePages,
     ...courseCityPages,
+    ...cityHubPages,
     ...dynamicPages,
   ]
 }

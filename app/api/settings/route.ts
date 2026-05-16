@@ -4,9 +4,9 @@ import { prisma } from '@/app/lib/prisma'
 const SETTINGS_ID = 'default'
 
 const DEFAULTS = {
-  whatsappNumber: '5511936200198',
+  whatsappNumber: '551153043216',
   contactEmail: 'contato@bolsaclick.com.br',
-  contactPhone: '(11) 93620-0198',
+  contactPhone: '(11) 5304-3216',
   facebookUrl: 'https://facebook.com/bolsaclickbrasil',
   instagramUrl: 'https://instagram.com/bolsaclick',
   linkedinUrl: 'https://linkedin.com/company/bolsaclick',

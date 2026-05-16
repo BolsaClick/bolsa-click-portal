@@ -16,8 +16,8 @@ export default function ContactInfo() {
       icon: <Phone className="h-5 w-5 text-emerald-300" />,
       title: 'Telefone',
       details: [
-        { label: 'Central de Atendimento', value: '(11) 4002-8922' },
-        { label: 'Suporte ao Estudante', value: '(11) 4003-8933' }
+        { label: 'Central de Atendimento', value: '(11) 5304-3216' },
+        { label: 'Suporte ao Estudante', value: '(11) 5304-3216' }
       ],
       delay: 0
     },

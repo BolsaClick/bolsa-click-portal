@@ -37,7 +37,7 @@ export default function Header() {
               <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mr-3">
                 <Phone className="h-5 w-5 text-emerald-200" />
               </div>
-              <span>(11) 94006-3113</span>
+              <span>(11) 5304-3216</span>
             </div>
             <div className="flex items-center text-white">
               <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mr-3">

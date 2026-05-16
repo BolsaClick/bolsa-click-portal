@@ -38,7 +38,7 @@ export function ContactCTA({
         <div className="md:col-span-5 flex flex-col gap-2.5">
           {showWhatsapp && (
             <a
-              href="https://wa.me/5511936200198"
+              href="https://wa.me/551153043216"
               target="_blank"
               rel="noopener noreferrer"
               className="group inline-flex items-center justify-center gap-2 px-5 py-3 bg-bolsa-secondary text-white font-semibold rounded-full text-[14px] hover:bg-bolsa-secondary/90 transition-colors shadow-lg shadow-bolsa-secondary/25"

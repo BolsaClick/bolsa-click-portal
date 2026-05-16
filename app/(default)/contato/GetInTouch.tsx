@@ -26,7 +26,7 @@ export default function GetInTouch() {
       title: "Telefone",
       description: "Prefere conversar por telefone? Nossa central está pronta para te atender.",
       cta: "Ligar Agora",
-      link: "tel:+551140028922",
+      link: "tel:+551153043216",
       delay: 0.2
     },
     {

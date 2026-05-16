@@ -48,6 +48,14 @@ const cidadesPopulares = [
   { nome: 'Manaus', slug: 'manaus' },
 ]
 
+const programasGoverno = [
+  { nome: 'ENEM', slug: 'enem' },
+  { nome: 'PROUNI', slug: 'prouni' },
+  { nome: 'SISU', slug: 'sisu' },
+  { nome: 'FIES', slug: 'fies' },
+  { nome: 'ENCCEJA', slug: 'encceja' },
+]
+
 const bolsasPorCidade = [
   { nome: 'Administração em São Paulo', curso: 'administracao', cidade: 'sao-paulo' },
   { nome: 'Direito em São Paulo', curso: 'direito', cidade: 'sao-paulo' },
@@ -72,8 +80,8 @@ const Footer: React.FC = () => {
   return (
     <footer className="bg-[#0c111d] w-full">
       <Container>
-        {/* Links SEO — grid de 5 colunas */}
-        <div className="pt-16 pb-12 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-x-8 gap-y-10">
+        {/* Links SEO — grid de 6 colunas */}
+        <div className="pt-16 pb-12 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-x-8 gap-y-10">
           {/* Cursos de Graduação */}
           <div>
             <h3 className="text-white font-medium text-sm mb-4">Cursos de Graduação</h3>
@@ -123,11 +131,29 @@ const Footer: React.FC = () => {
               <ul className="space-y-2.5">
                 {cidadesPopulares.map((cidade) => (
                   <li key={cidade.slug}>
-                    <Link
-                      href={`/curso/resultado?cidade=${encodeURIComponent(cidade.nome)}&estado=${cidade.slug === 'brasilia' ? 'DF' : cidade.slug === 'sao-paulo' || cidade.slug === 'campinas' ? 'SP' : cidade.slug === 'rio-de-janeiro' ? 'RJ' : cidade.slug === 'belo-horizonte' ? 'MG' : cidade.slug === 'curitiba' ? 'PR' : cidade.slug === 'porto-alegre' ? 'RS' : cidade.slug === 'salvador' ? 'BA' : cidade.slug === 'recife' ? 'PE' : cidade.slug === 'fortaleza' ? 'CE' : cidade.slug === 'goiania' ? 'GO' : cidade.slug === 'manaus' ? 'AM' : ''}&nivel=GRADUACAO`}
-                      className={linkClass}
-                    >
+                    <Link href={`/bolsas-de-estudo/${cidade.slug}`} className={linkClass}>
                       Bolsas em {cidade.nome}
+                    </Link>
+                  </li>
+                ))}
+                <li>
+                  <Link href="/bolsas-de-estudo" className={linkClass}>
+                    Ver todas as cidades
+                  </Link>
+                </li>
+              </ul>
+            </nav>
+          </div>
+
+          {/* Programas do Governo */}
+          <div>
+            <h3 className="text-white font-medium text-sm mb-4">Programas do Governo</h3>
+            <nav aria-label="Programas governamentais de educação">
+              <ul className="space-y-2.5">
+                {programasGoverno.map((p) => (
+                  <li key={p.slug}>
+                    <Link href={`/${p.slug}`} className={linkClass}>
+                      {p.nome}
                     </Link>
                   </li>
                 ))}

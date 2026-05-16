@@ -207,16 +207,6 @@ export default async function InstitutionCityPage({ params }: Props) {
             addressRegion: cityData.state,
             addressCountry: 'BR',
           },
-          ...(institution.mecRating && {
-            aggregateRating: {
-              '@type': 'AggregateRating',
-              ratingValue: String(institution.mecRating),
-              bestRating: '5',
-              worstRating: '1',
-              ratingCount: '1',
-              reviewCount: '1',
-            },
-          }),
         },
         {
           '@context': 'https://schema.org',

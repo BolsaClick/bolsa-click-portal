@@ -92,16 +92,6 @@ export default async function FaculdadeDetailPage({
         addressCountry: 'BR',
       },
     }),
-    ...(institution.mecRating && {
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: String(institution.mecRating),
-        bestRating: '5',
-        worstRating: '1',
-        ratingCount: '1',
-        reviewCount: '1',
-      },
-    }),
   }
 
   const faqSchema = {

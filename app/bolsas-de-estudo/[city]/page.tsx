@@ -161,6 +161,29 @@ export default async function CityHubPage({ params }: Props) {
     offerBrands.has(normalize(i.name)) || offerBrands.has(normalize(i.shortName))
   )
 
+  // Stats para o bloco editorial — derivados das ofertas reais
+  const prices = offers.map(o => o.minPrice || 0).filter(p => p > 0)
+  const minPrice = prices.length ? Math.min(...prices) : 0
+  const maxPrice = prices.length ? Math.max(...prices) : 0
+  const avgPrice = prices.length ? prices.reduce((a, b) => a + b, 0) / prices.length : 0
+
+  const modalityCounts = offers.reduce<Record<string, number>>((acc, o) => {
+    const m = (o.modality || '').toUpperCase()
+    if (m) acc[m] = (acc[m] || 0) + 1
+    return acc
+  }, {})
+  const topModality = Object.entries(modalityCounts).sort((a, b) => b[1] - a[1])[0]?.[0]
+  const modalityLabel = (m: string) =>
+    m === 'EAD' ? 'EAD' : m === 'PRESENCIAL' ? 'presencial' : m === 'SEMIPRESENCIAL' ? 'semipresencial' : m
+
+  // Cidades do mesmo estado (mais relevantes que slice top 30)
+  const sameStateCities = BRAZILIAN_CITIES
+    .filter(c => c.state === cityData.state && c.slug !== citySlug)
+  const otherCities = BRAZILIAN_CITIES
+    .filter(c => c.state !== cityData.state)
+    .slice(0, Math.max(0, 30 - sameStateCities.length))
+  const linkedCities = [...sameStateCities, ...otherCities]
+
   const pageUrl = `${SITE_URL}/bolsas-de-estudo/${citySlug}`
 
   const breadcrumbSchema = {
@@ -242,6 +265,57 @@ export default async function CityHubPage({ params }: Props) {
         </div>
       </header>
 
+      {offers.length > 0 && (
+        <section className="bg-white py-12 md:py-16 border-b border-hairline">
+          <div className="container mx-auto px-4 max-w-3xl prose prose-neutral prose-headings:font-display prose-h2:text-2xl prose-h2:font-semibold prose-h2:mb-4 prose-p:text-ink-700 prose-p:leading-relaxed">
+            <h2>Sobre estudar em {cityData.name}</h2>
+            <p>
+              {cityData.name}/{cityData.state} é uma das cidades atendidas pela rede de
+              faculdades parceiras do Bolsa Click. No momento há{' '}
+              <strong>{offers.length} cursos de graduação</strong> com bolsa disponível em{' '}
+              <strong>{cityInstitutions.length || 'diversas'} instituições</strong> presentes
+              na cidade ou que oferecem polo EAD com atendimento local.
+            </p>
+            {avgPrice > 0 && (
+              <p>
+                As mensalidades das ofertas ativas em {cityData.name} vão de{' '}
+                <strong>R$ {minPrice.toFixed(0)}</strong> a{' '}
+                <strong>R$ {maxPrice.toFixed(0)}</strong> por mês com bolsa, com média de{' '}
+                R$ {avgPrice.toFixed(0)}. Os valores variam conforme curso, modalidade e
+                duração — graduações tecnólogas costumam ter mensalidade menor que
+                bacharelados, e cursos EAD geralmente custam metade do presencial.
+              </p>
+            )}
+            {topModality && (
+              <p>
+                A modalidade mais ofertada na cidade é a{' '}
+                <strong>{modalityLabel(topModality)}</strong>
+                {modalityCounts.EAD > 0 && topModality !== 'EAD' && (
+                  <>, mas você também encontra opções EAD com flexibilidade total de horário</>
+                )}
+                {modalityCounts.PRESENCIAL > 0 && topModality !== 'PRESENCIAL' && (
+                  <>. Para presencial, confira as unidades de cada faculdade nas ofertas acima</>
+                )}
+                . Você escolhe o formato que melhor se encaixa na sua rotina.
+              </p>
+            )}
+            {courses.length > 0 && (
+              <p>
+                Os cursos mais procurados em {cityData.name} pelo Bolsa Click são{' '}
+                {courses.slice(0, 3).map((c, i) => (
+                  <span key={c.name}>
+                    <strong>{c.name}</strong>
+                    {i < Math.min(2, courses.length - 1) - 1 ? ', ' : i === Math.min(2, courses.length - 1) - 1 ? ' e ' : ''}
+                  </span>
+                ))}
+                . Veja a lista completa abaixo, compare os valores e finalize a inscrição
+                gratuitamente — a bolsa vale durante todo o curso.
+              </p>
+            )}
+          </div>
+        </section>
+      )}
+
       {courses.length > 0 && (
         <section className="bg-white py-12 md:py-16 border-b border-hairline">
           <div className="container mx-auto px-4 max-w-6xl">
@@ -321,11 +395,13 @@ export default async function CityHubPage({ params }: Props) {
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="flex items-baseline justify-between hairline-b pb-3 mb-6">
             <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
-              Bolsas em outras cidades
+              {sameStateCities.length > 0
+                ? `Bolsas em outras cidades de ${cityData.state}${otherCities.length > 0 ? ' e Brasil' : ''}`
+                : 'Bolsas em outras cidades'}
             </h2>
           </div>
           <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-px bg-hairline">
-            {BRAZILIAN_CITIES.filter(c => c.slug !== citySlug).slice(0, 30).map(c => (
+            {linkedCities.map(c => (
               <li key={c.slug} className="bg-white">
                 <Link
                   href={`/bolsas-de-estudo/${c.slug}`}

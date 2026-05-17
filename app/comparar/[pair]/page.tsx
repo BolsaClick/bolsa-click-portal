@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import { cache } from 'react'
+import { unstable_cache } from 'next/cache'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -8,6 +8,7 @@ import { prisma } from '@/app/lib/prisma'
 import { getCurrentTheme } from '@/app/lib/themes'
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { Course } from '@/app/interface/course'
+import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
 import { VisibleFaq } from '@/app/cursos/[slug]/_seo/CourseSeoSections'
 
 const theme = getCurrentTheme()
@@ -43,23 +44,38 @@ function normalize(text: string): string {
     .trim()
 }
 
-// Amostra os 5 cursos mais populares (cobertura ampla na maioria das brands)
-// e bucketeia depois por marca. Cached + ISR 24h, então a carga na Cogna é baixa.
-const TOP_COURSE_SAMPLE = ['Administração', 'Direito', 'Enfermagem', 'Psicologia', 'Pedagogia']
-
-const fetchOffersSample = cache(async (): Promise<Course[]> => {
-  const results = await Promise.all(
-    TOP_COURSE_SAMPLE.map(courseName =>
-      getShowFiltersCourses(courseName, undefined, undefined, undefined, 'GRADUACAO', 1, 50)
-        .then(r => (r?.data || []) as Course[])
-        .catch(error => {
-          console.error(`⚠️ Falha ao buscar ofertas de ${courseName} pra comparação:`, error)
-          return [] as Course[]
-        })
+// Fetcha offers dos TOP_CURSOS inteiros (22 cursos × 50 offers = pool de ~1100).
+// Usa `unstable_cache` (não `react.cache`) pra dedupar entre os 15 builds das
+// páginas comparativas — caso contrário seriam 22×15 = 330 calls na Cogna.
+// Revalidate 24h alinha com o ISR da página.
+const fetchOffersSample = unstable_cache(
+  async (): Promise<Course[]> => {
+    const results = await Promise.all(
+      TOP_CURSOS.map(curso =>
+        getShowFiltersCourses(
+          curso.apiCourseName,
+          undefined,
+          undefined,
+          undefined,
+          'GRADUACAO',
+          1,
+          50
+        )
+          .then(r => (r?.data || []) as Course[])
+          .catch(error => {
+            console.error(
+              `⚠️ Falha ao buscar ofertas de ${curso.apiCourseName} pra comparação:`,
+              error
+            )
+            return [] as Course[]
+          })
+      )
     )
-  )
-  return results.flat()
-})
+    return results.flat()
+  },
+  ['compare-offers-sample-v1'],
+  { revalidate: 86400, tags: ['compare-offers'] }
+)
 
 interface BrandStats {
   offerCount: number
@@ -417,8 +433,8 @@ export default async function CompareInstitutionsPage({ params }: Props) {
           </div>
           {hasLiveData && (
             <p className="mt-4 font-mono text-[11px] text-ink-500">
-              * Amostra dos cursos mais procurados ({TOP_COURSE_SAMPLE.join(', ')}).
-              Pode subestimar marcas com catálogo mais amplo. Atualizado a cada 24h.
+              * Baseado nos {TOP_CURSOS.length} cursos de graduação ativos no Bolsa Click.
+              Atualizado a cada 24h.
             </p>
           )}
         </div>

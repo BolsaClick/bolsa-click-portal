@@ -5,7 +5,7 @@ export interface FeaturedCourseData {
   apiCourseName: string
   name: string
   fullName: string
-  type: 'BACHARELADO' | 'LICENCIATURA' | 'TECNOLOGO'
+  type: 'BACHARELADO' | 'LICENCIATURA' | 'TECNOLOGO' | 'ESPECIALIZACAO' | 'MBA'
   nivel: 'GRADUACAO' | 'POS_GRADUACAO'
   description: string
   longDescription: string
@@ -20,6 +20,9 @@ export interface FeaturedCourseData {
   keywords: string[]
   order: number
   isActive: boolean
+  hasCityPages?: boolean
+  enrichedAt?: Date | null
+  enrichmentNote?: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -31,7 +34,7 @@ export interface FeaturedCourseListItem {
   name: string
   fullName: string
   apiCourseName: string
-  type: 'BACHARELADO' | 'LICENCIATURA' | 'TECNOLOGO'
+  type: 'BACHARELADO' | 'LICENCIATURA' | 'TECNOLOGO' | 'ESPECIALIZACAO' | 'MBA'
   nivel: 'GRADUACAO' | 'POS_GRADUACAO'
   description: string
   duration: string

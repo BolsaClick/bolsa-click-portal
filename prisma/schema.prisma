@@ -395,18 +395,29 @@ model FeaturedCourse {
   order    Int     @default(0)
   isActive Boolean @default(true)
 
+  // SEO programmatic: só emite /cursos/[slug]/[city] pra cursos com conteúdo
+  // editorial rico + inventário real (gate manual; default false).
+  hasCityPages Boolean @default(false)
+
+  // Marca cursos enriquecidos via scripts/enrich-courses.mjs (vs cadastro manual no admin).
+  enrichedAt     DateTime?
+  enrichmentNote String?   @db.Text
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([slug])
   @@index([isActive])
   @@index([order])
+  @@index([hasCityPages])
 }
 
 enum CourseType {
   BACHARELADO
   LICENCIATURA
   TECNOLOGO
+  ESPECIALIZACAO
+  MBA
 }
 
 enum CourseLevel {

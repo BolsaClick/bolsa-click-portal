@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/app/lib/prisma'
 import CursoPageClient from './CursoPageClient'
+import { courseTypeLabel } from '@/app/lib/courseTypeLabel'
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { FeaturedCourseData } from '../_data/types'
 import {
@@ -316,6 +317,28 @@ export default async function CursoPage({ params }: Props) {
         heading={`Perguntas frequentes sobre ${cursoMetadata.name}`}
       />
       <CitiesGrid courseSlug={slug} courseName={cursoMetadata.name} />
+      <section className="bg-paper py-12 md:py-16 border-t border-hairline">
+        <div className="container mx-auto px-4 max-w-3xl">
+          <div className="hairline-b pb-3 mb-6 flex items-baseline justify-between">
+            <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
+              Quer saber sobre a carreira?
+            </h2>
+            <span className="font-mono num-tabular text-[11px] text-ink-500">
+              {cursoMetadata.averageSalary}
+            </span>
+          </div>
+          <p className="text-ink-900 text-lg leading-relaxed">
+            Salário médio, mercado de trabalho, áreas de atuação e o que faz um profissional de{' '}
+            <strong>{cursoMetadata.name}</strong>. Veja o guia completo da profissão.
+          </p>
+          <Link
+            href={`/carreiras/${slug}`}
+            className="mt-6 inline-flex items-center gap-2 border border-ink-900 bg-white px-6 py-3 font-mono text-[11px] tracking-[0.18em] uppercase text-ink-900 hover:bg-ink-900 hover:text-white transition-colors"
+          >
+            Ver carreira de {cursoMetadata.name} →
+          </Link>
+        </div>
+      </section>
       {relatedCourses.length > 0 && (
         <section className="bg-white py-16 md:py-20 border-t border-hairline">
           <div className="container mx-auto px-4">
@@ -335,12 +358,7 @@ export default async function CursoPage({ params }: Props) {
                     className="group flex flex-col px-5 py-5 transition-colors duration-200 hover:bg-paper"
                   >
                     <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1">
-                      {curso.type === 'BACHARELADO'
-                        ? 'Bacharelado'
-                        : curso.type === 'LICENCIATURA'
-                        ? 'Licenciatura'
-                        : 'Tecnólogo'}{' '}
-                      · {curso.duration}
+                      {courseTypeLabel(curso.type)} · {curso.duration}
                     </span>
                     <span className="font-display text-lg text-ink-900 group-hover:italic transition-all duration-200">
                       {curso.name}

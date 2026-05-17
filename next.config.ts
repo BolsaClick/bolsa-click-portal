@@ -56,6 +56,22 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    // Canonicaliza slugs duplicados/bugados que vêm da API Tartarus pra suas
+    // versões canônicas no nosso catálogo enriched. Evita conteúdo duplicado
+    // e preserva autoridade SEO via 301 caso algum link externo aponte pra
+    // essas variantes.
+    const courseDupes = [
+      ['letras-portuguesingles', 'letras-portugues-e-ingles-bacharelado'],
+      ['engenharia-de-controle-de-automacao', 'engenharia-de-controle-e-automacao-bacharelado'],
+      ['cst-em-mecatronica-industrial', 'mecatronica-industrial-tecnologo'],
+      ['cst-em-automacao-industrial', 'automacao-industrial-tecnologo'],
+    ]
+    return courseDupes.flatMap(([from, to]) => [
+      { source: `/cursos/${from}`, destination: `/cursos/${to}`, permanent: true },
+      { source: `/carreiras/${from}`, destination: `/carreiras/${to}`, permanent: true },
+    ])
+  },
   // This is required to support PostHog trailing slash API requests
   skipTrailingSlashRedirect: true,
 };

@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react'
 import { FeaturedCourseListItem } from './_data/types'
+import { courseTypeLabel } from '../lib/courseTypeLabel'
 
 interface CursosPageClientProps {
   courses: FeaturedCourseListItem[]
@@ -429,7 +430,7 @@ export default function CursosPageClient({ courses }: CursosPageClientProps) {
                     {/* TOP META */}
                     <div className="flex items-center justify-between mb-4">
                       <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-700">
-                        {TYPE_LABEL[curso.type]}
+                        {courseTypeLabel(curso.type)}
                       </span>
                       {curso.marketDemand === 'ALTA' && (
                         <span className="inline-flex items-center gap-1 text-[10px] font-mono tracking-wider uppercase text-bolsa-secondary">

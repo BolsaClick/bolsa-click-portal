@@ -1,0 +1,436 @@
+#!/usr/bin/env node
+// scripts/enrich-courses.mjs
+//
+// Enriquecimento editorial em massa do catálogo de cursos (FeaturedCourse).
+// Para cada curso da API Tartarus que não tem editorial completo, chama Claude
+// com web search habilitado pra pesquisar dados reais (salário, carreira, mercado),
+// gera conteúdo único em pt-BR e upserta na tabela FeaturedCourse com isActive=true.
+//
+// USO:
+//   npm install @anthropic-ai/sdk    # 1x
+//   ANTHROPIC_API_KEY=sk-ant-... adicionado ao .env
+//   node --env-file=.env scripts/enrich-courses.mjs [flags]
+//
+// FLAGS:
+//   --dry-run             Não escreve no DB, só loga o que faria
+//   --slug=<slug>         Enriquece um curso específico (skip listagem da API)
+//   --limit=<n>           Máx de cursos a processar nesta execução (default: 10)
+//   --concurrency=<n>     Requisições paralelas (default: 3 — respeitar rate limits)
+//   --model=<name>        Override do modelo (default: claude-sonnet-4-6)
+//   --grad-only           Só graduação
+//   --pos-only            Só pós-graduação
+//   --force-existing      Re-enriquece cursos já enrichedAt
+//   --start-after=<slug>  Pular cursos até passar deste slug (resume após falha)
+//
+// EXEMPLOS:
+//   # Testar 1 curso sem escrever:
+//   node --env-file=.env scripts/enrich-courses.mjs --slug=teologia-bacharelado --dry-run
+//
+//   # Primeira leva — 20 graduações:
+//   node --env-file=.env scripts/enrich-courses.mjs --grad-only --limit=20
+//
+//   # Background completo (rodar em screen/tmux):
+//   node --env-file=.env scripts/enrich-courses.mjs --limit=1000 --concurrency=3
+//
+// CUSTO ESTIMADO (sonnet-4-6, ~$3/M in, $15/M out, com prompt cache):
+//   Por curso: ~$0.05–0.10 (web search + ~3k output tokens)
+//   888 cursos novos: ~$45–90 USD total
+//
+// MONITORAR:
+//   - Logs: stdout (sucesso/erro por curso)
+//   - DB: SELECT slug, enrichedAt, length(longDescription) FROM "FeaturedCourse"
+//          WHERE enrichedAt IS NOT NULL ORDER BY enrichedAt DESC LIMIT 20;
+//   - GSC após 30 dias: ratio de "Crawled - currently not indexed" vs "Indexada".
+//     Se > 30%, pausar e revisar prompt.
+
+import Anthropic from '@anthropic-ai/sdk'
+import { PrismaClient } from '@prisma/client'
+
+// -- Args --
+const args = Object.fromEntries(
+  process.argv.slice(2).map((arg) => {
+    if (arg.startsWith('--')) {
+      const eq = arg.indexOf('=')
+      if (eq === -1) return [arg.slice(2), true]
+      return [arg.slice(2, eq), arg.slice(eq + 1)]
+    }
+    return [arg, true]
+  }),
+)
+
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
+if (!ANTHROPIC_API_KEY) {
+  console.error('ERRO: ANTHROPIC_API_KEY não está no env. Adicione no .env.')
+  process.exit(1)
+}
+
+const TARTARUS_API = process.env.NEXT_PUBLIC_TARTARUS_API
+if (!TARTARUS_API) {
+  console.error('ERRO: NEXT_PUBLIC_TARTARUS_API não está no env.')
+  process.exit(1)
+}
+
+const MODEL = args.model || 'claude-sonnet-4-6'
+const DRY_RUN = !!args['dry-run']
+const LIMIT = Number(args.limit) || 10
+const CONCURRENCY = Math.max(1, Number(args.concurrency) || 3)
+const ONLY_GRAD = !!args['grad-only']
+const ONLY_POS = !!args['pos-only']
+const FORCE_EXISTING = !!args['force-existing']
+const SINGLE_SLUG = args.slug
+const START_AFTER = args['start-after']
+
+const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY })
+const prisma = new PrismaClient()
+
+// -- Tipos de saída esperada --
+// (validação leve; o prompt instrui o formato)
+const REQUIRED_FIELDS = [
+  'description', 'longDescription', 'duration', 'averageSalary',
+  'marketDemand', 'type',
+]
+const REQUIRED_ARRAYS = ['areas', 'skills', 'careerPaths', 'keywords']
+const VALID_TYPES = ['BACHARELADO', 'LICENCIATURA', 'TECNOLOGO', 'ESPECIALIZACAO', 'MBA']
+const VALID_DEMAND = ['ALTA', 'MEDIA', 'BAIXA']
+
+// Placeholder de imagem por nível. User pode substituir depois.
+const DEFAULT_IMAGES = {
+  GRADUACAO: '/assets/og-image-bolsaclick.png',
+  POS_GRADUACAO: '/assets/og-image-bolsaclick.png',
+}
+
+// Parse type from API slug (e.g. "psicologia-bacharelado" -> "BACHARELADO")
+function parseTypeFromSlug(slug, nivel) {
+  if (nivel === 'POS_GRADUACAO') {
+    if (slug.toLowerCase().includes('mba')) return 'MBA'
+    return 'ESPECIALIZACAO'
+  }
+  const lower = slug.toLowerCase()
+  if (lower.endsWith('-bacharelado')) return 'BACHARELADO'
+  if (lower.endsWith('-licenciatura')) return 'LICENCIATURA'
+  if (lower.endsWith('-tecnologo')) return 'TECNOLOGO'
+  return null // Claude decide
+}
+
+// Display name limpo (sem sufixo " - Bacharelado")
+function cleanCourseName(apiName) {
+  return apiName.replace(/\s*-\s*(Bacharelado|Licenciatura|Tecnólogo)$/i, '').trim()
+}
+
+// -- Fetch catálogo da API --
+async function fetchCatalog() {
+  const levels = []
+  if (!ONLY_POS) levels.push('GRADUACAO')
+  if (!ONLY_GRAD) levels.push('POS_GRADUACAO')
+
+  const all = []
+  for (const lvl of levels) {
+    const res = await fetch(`${TARTARUS_API}/courses?academicLevel=${lvl}`)
+    if (!res.ok) throw new Error(`API ${lvl} retornou ${res.status}`)
+    const data = await res.json()
+    if (!Array.isArray(data)) throw new Error(`API ${lvl} retornou não-array`)
+    data.forEach((c) => all.push({ ...c, academicLevel: lvl }))
+  }
+  return all
+}
+
+// -- Prompts --
+
+const SYSTEM_PROMPT = `Você é um redator SEO especialista em educação superior brasileira. Sua tarefa é gerar conteúdo editorial único, factual e útil para landing pages de cursos de graduação e pós-graduação.
+
+REGRAS DURAS:
+1. Pesquise dados reais via web_search (salários atualizados via Glassdoor/Catho/Vagas, descrição da profissão via fontes oficiais como CBO/MEC quando relevante).
+2. NÃO invente números. Se não achar salário confiável, use faixa conservadora baseada em pesquisa.
+3. NÃO copie texto literal de competidores (educamaisbrasil.com.br, querobolsa.com.br, edupass.com.br) — paráfrase, sintetize com voz própria.
+4. Português do Brasil. Tom: prático, direto, sem hype. Nada de "descubra agora", "venha conhecer", "garanta sua vaga".
+5. Foco em quem ESTUDA: o que aprende, onde trabalha, quanto ganha, como é o dia a dia.
+
+FORMATO DE SAÍDA (último bloco da resposta deve ser JSON válido entre \`\`\`json ... \`\`\`):
+
+{
+  "description": "Resumo de até 160 caracteres (meta description). Sem clichê.",
+  "longDescription": "Texto editorial de 250–400 palavras explicando: o que o curso forma, áreas de atuação principais, dia a dia do profissional, e por que vale a pena fazer (sem promessa). Sem markdown. Parágrafos separados por \\n\\n.",
+  "duration": "Duração padrão (ex: '4 anos', '5 anos', '18 a 24 meses').",
+  "areas": ["Lista de 4–8 áreas de atuação reais"],
+  "skills": ["Lista de 4–8 habilidades desenvolvidas no curso"],
+  "careerPaths": ["Lista de 4–8 cargos/caminhos de carreira concretos"],
+  "averageSalary": "Faixa salarial em formato 'R$ X.XXX a R$ XX.XXX' baseada em pesquisa real",
+  "marketDemand": "ALTA | MEDIA | BAIXA — baseado em sinais de demanda (vagas abertas, crescimento setorial)",
+  "type": "BACHARELADO | LICENCIATURA | TECNOLOGO | ESPECIALIZACAO | MBA",
+  "keywords": ["10–15 keywords pt-BR sem repetir 'bolsa de estudo' (já é palavra base do site)"]
+}`
+
+function userPromptFor(course) {
+  const cleanName = cleanCourseName(course.name)
+  const niveLabel = course.academicLevel === 'GRADUACAO' ? 'graduação' : 'pós-graduação'
+  return `Pesquise e gere o conteúdo editorial para o curso de ${niveLabel}:
+
+NOME: ${course.name}
+NIVEL: ${course.academicLevel}
+SLUG: ${course.slug}
+
+Use web_search para pesquisar (em pt-BR):
+1. "${cleanName} salário" — faixa salarial real no Brasil
+2. "${cleanName} mercado de trabalho" — demanda atual
+3. "o que faz ${cleanName}" — atuação profissional
+
+Retorne SOMENTE o JSON especificado no system prompt.`
+}
+
+// -- Claude call com web_search (tool use loop) --
+async function enrichWithClaude(course) {
+  const messages = [
+    { role: 'user', content: userPromptFor(course) },
+  ]
+
+  let iterations = 0
+  const MAX_ITERATIONS = 8
+
+  while (iterations++ < MAX_ITERATIONS) {
+    const response = await anthropic.messages.create({
+      model: MODEL,
+      max_tokens: 4096,
+      system: [
+        {
+          type: 'text',
+          text: SYSTEM_PROMPT,
+          cache_control: { type: 'ephemeral' },
+        },
+      ],
+      tools: [
+        {
+          type: 'web_search_20250305',
+          name: 'web_search',
+          max_uses: 4,
+        },
+      ],
+      messages,
+    })
+
+    // Anexa resposta ao histórico
+    messages.push({ role: 'assistant', content: response.content })
+
+    if (response.stop_reason === 'end_turn') {
+      // Extrai texto final
+      const textBlocks = response.content.filter((b) => b.type === 'text')
+      const fullText = textBlocks.map((b) => b.text).join('\n')
+      return { rawText: fullText, usage: response.usage }
+    }
+
+    if (response.stop_reason === 'tool_use') {
+      // Web search é server-side (managed by Anthropic) — nessa API,
+      // o tool_result vem automaticamente no histórico via server_tool_use blocks.
+      // Não precisamos enviar tool_result manualmente; continuamos o loop.
+      // Mas pra garantir terminação, se o último bloco for tool_use sem result, quebramos.
+      const lastBlock = response.content[response.content.length - 1]
+      if (lastBlock?.type === 'tool_use' && lastBlock?.name !== 'web_search') {
+        throw new Error(`Tool inesperado: ${lastBlock.name}`)
+      }
+      // Continua loop
+      continue
+    }
+
+    if (response.stop_reason === 'max_tokens') {
+      throw new Error('Max tokens atingido sem completar JSON')
+    }
+
+    throw new Error(`Stop reason inesperado: ${response.stop_reason}`)
+  }
+  throw new Error(`Excedeu ${MAX_ITERATIONS} iterações`)
+}
+
+// -- Parse + validate JSON --
+function extractJson(text) {
+  const fenceMatch = text.match(/```json\s*([\s\S]*?)\s*```/)
+  const raw = fenceMatch ? fenceMatch[1] : text
+  // Tenta achar o objeto mais externo se não tem fence
+  const jsonStart = raw.indexOf('{')
+  const jsonEnd = raw.lastIndexOf('}')
+  if (jsonStart === -1 || jsonEnd === -1) throw new Error('JSON não encontrado na resposta')
+  const candidate = raw.slice(jsonStart, jsonEnd + 1)
+  return JSON.parse(candidate)
+}
+
+function validate(parsed, course) {
+  for (const field of REQUIRED_FIELDS) {
+    if (!parsed[field] || typeof parsed[field] !== 'string' || !parsed[field].trim()) {
+      throw new Error(`Campo obrigatório vazio ou inválido: ${field}`)
+    }
+  }
+  for (const field of REQUIRED_ARRAYS) {
+    if (!Array.isArray(parsed[field]) || parsed[field].length === 0) {
+      throw new Error(`Array obrigatório vazio: ${field}`)
+    }
+  }
+  if (!VALID_TYPES.includes(parsed.type)) {
+    throw new Error(`type inválido: ${parsed.type}`)
+  }
+  if (!VALID_DEMAND.includes(parsed.marketDemand)) {
+    throw new Error(`marketDemand inválido: ${parsed.marketDemand}`)
+  }
+  if (parsed.longDescription.length < 800) {
+    throw new Error(`longDescription muito curto (${parsed.longDescription.length} chars; min 800)`)
+  }
+  if (parsed.description.length > 200) {
+    throw new Error(`description muito longo (${parsed.description.length} chars; max 200)`)
+  }
+  // Sanity: type deve casar com nivel
+  if (course.academicLevel === 'GRADUACAO' && !['BACHARELADO', 'LICENCIATURA', 'TECNOLOGO'].includes(parsed.type)) {
+    throw new Error(`type ${parsed.type} incompatível com GRADUACAO`)
+  }
+  if (course.academicLevel === 'POS_GRADUACAO' && !['ESPECIALIZACAO', 'MBA'].includes(parsed.type)) {
+    throw new Error(`type ${parsed.type} incompatível com POS_GRADUACAO`)
+  }
+}
+
+// -- Upsert no DB --
+async function upsertCourse(course, enriched) {
+  const cleanName = cleanCourseName(course.name)
+  const fullName = course.name // Mantém com sufixo " - Bacharelado" se vier
+  const nivel = course.academicLevel
+  const imageUrl = DEFAULT_IMAGES[nivel]
+
+  const data = {
+    apiCourseName: cleanName,
+    name: cleanName,
+    fullName,
+    type: enriched.type,
+    nivel,
+    description: enriched.description,
+    longDescription: enriched.longDescription,
+    duration: enriched.duration,
+    areas: enriched.areas,
+    skills: enriched.skills,
+    careerPaths: enriched.careerPaths,
+    averageSalary: enriched.averageSalary,
+    marketDemand: enriched.marketDemand,
+    imageUrl,
+    keywords: enriched.keywords,
+    isActive: true,
+    enrichedAt: new Date(),
+    enrichmentNote: `via enrich-courses.mjs (${MODEL})`,
+  }
+
+  if (DRY_RUN) {
+    console.log(`  [DRY] upsert ${course.slug}:`, JSON.stringify({ ...data, longDescription: data.longDescription.slice(0, 100) + '…' }, null, 2))
+    return
+  }
+
+  return prisma.featuredCourse.upsert({
+    where: { slug: course.slug },
+    create: { slug: course.slug, ...data },
+    update: data,
+  })
+}
+
+// -- Concurrency limiter --
+async function pMap(items, fn, concurrency) {
+  const results = new Array(items.length)
+  let idx = 0
+  const workers = Array.from({ length: concurrency }, async () => {
+    while (idx < items.length) {
+      const i = idx++
+      try {
+        results[i] = await fn(items[i], i)
+      } catch (e) {
+        results[i] = { error: e }
+      }
+    }
+  })
+  await Promise.all(workers)
+  return results
+}
+
+// -- Pipeline por curso --
+async function processCourse(course, idx) {
+  const label = `[${idx + 1}] ${course.academicLevel} ${course.slug}`
+  console.log(`${label} — iniciando…`)
+  try {
+    const { rawText, usage } = await enrichWithClaude(course)
+    const parsed = extractJson(rawText)
+    // Force type to match parsed-from-slug if confident
+    const typeFromSlug = parseTypeFromSlug(course.slug, course.academicLevel)
+    if (typeFromSlug && parsed.type !== typeFromSlug) {
+      console.log(`${label} — type ajustado: ${parsed.type} → ${typeFromSlug} (do slug)`)
+      parsed.type = typeFromSlug
+    }
+    validate(parsed, course)
+    await upsertCourse(course, parsed)
+    console.log(`${label} ✓ (input: ${usage?.input_tokens || '?'} / output: ${usage?.output_tokens || '?'} / cache_read: ${usage?.cache_read_input_tokens || 0})`)
+    return { ok: true, slug: course.slug, usage }
+  } catch (e) {
+    console.error(`${label} ✗ ${e.message}`)
+    return { ok: false, slug: course.slug, error: e.message }
+  }
+}
+
+// -- Main --
+async function main() {
+  console.log('=== enrich-courses ===')
+  console.log({ MODEL, DRY_RUN, LIMIT, CONCURRENCY, ONLY_GRAD, ONLY_POS, FORCE_EXISTING, SINGLE_SLUG })
+
+  let pool = []
+
+  if (SINGLE_SLUG) {
+    // Modo curso único — busca o curso na API direto
+    const all = await fetchCatalog()
+    const found = all.find((c) => c.slug === SINGLE_SLUG)
+    if (!found) {
+      console.error(`Slug ${SINGLE_SLUG} não encontrado no catálogo`)
+      process.exit(1)
+    }
+    pool = [found]
+  } else {
+    const catalog = await fetchCatalog()
+    console.log(`Catálogo API: ${catalog.length} cursos totais`)
+
+    // Filtra cursos já enriquecidos (a menos que --force-existing)
+    const existing = await prisma.featuredCourse.findMany({
+      select: { slug: true, enrichedAt: true },
+    })
+    const enrichedSet = new Set(
+      existing.filter((e) => e.enrichedAt !== null).map((e) => e.slug),
+    )
+
+    pool = catalog.filter((c) => FORCE_EXISTING || !enrichedSet.has(c.slug))
+    console.log(`Após filtro de já-enriquecidos: ${pool.length}`)
+
+    if (START_AFTER) {
+      const idx = pool.findIndex((c) => c.slug === START_AFTER)
+      if (idx >= 0) pool = pool.slice(idx + 1)
+    }
+
+    pool = pool.slice(0, LIMIT)
+    console.log(`Processando esta leva: ${pool.length}`)
+  }
+
+  if (pool.length === 0) {
+    console.log('Nada a processar.')
+    await prisma.$disconnect()
+    return
+  }
+
+  const start = Date.now()
+  const results = await pMap(pool, processCourse, CONCURRENCY)
+  const elapsed = ((Date.now() - start) / 1000).toFixed(1)
+
+  const ok = results.filter((r) => r?.ok).length
+  const fail = results.filter((r) => !r?.ok).length
+  console.log(`\n=== RESUMO ===`)
+  console.log(`✓ Sucessos: ${ok}`)
+  console.log(`✗ Falhas: ${fail}`)
+  console.log(`⏱  Tempo: ${elapsed}s (${(elapsed / pool.length).toFixed(1)}s/curso)`)
+
+  if (fail > 0) {
+    console.log('\nFalhas:')
+    results.filter((r) => !r?.ok).forEach((r) => console.log(`  - ${r?.slug}: ${r?.error}`))
+  }
+
+  await prisma.$disconnect()
+}
+
+main().catch((e) => {
+  console.error('Fatal:', e)
+  prisma.$disconnect()
+  process.exit(1)
+})

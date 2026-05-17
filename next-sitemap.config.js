@@ -2,14 +2,15 @@
 function slugifyCity(text) {
   return text
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
 }
 
-// Slugs dos cursos populares para landing pages /cursos/[slug]/[city]
-const courseSlugs = [
+// Slugs de fallback usados quando o DB não responde no build do sitemap.
+// Em condições normais, puxamos a lista real de cursos ativos do Prisma.
+const FALLBACK_COURSE_SLUGS = [
   'administracao', 'direito', 'enfermagem', 'psicologia',
   'educacao-fisica', 'farmacia', 'medicina', 'engenharia-civil',
   'pedagogia', 'analise-e-desenvolvimento-de-sistemas',
@@ -19,36 +20,48 @@ const courseSlugs = [
   'engenharia-de-producao', 'gestao-comercial',
 ]
 
-// Capitais estaduais + Campinas (28 cidades)
-const mainCities = [
-  { city: 'São Paulo', state: 'SP' },
-  { city: 'Rio de Janeiro', state: 'RJ' },
-  { city: 'Belo Horizonte', state: 'MG' },
-  { city: 'Curitiba', state: 'PR' },
-  { city: 'Porto Alegre', state: 'RS' },
-  { city: 'Brasília', state: 'DF' },
-  { city: 'Salvador', state: 'BA' },
-  { city: 'Recife', state: 'PE' },
-  { city: 'Fortaleza', state: 'CE' },
-  { city: 'Goiânia', state: 'GO' },
-  { city: 'Manaus', state: 'AM' },
-  { city: 'Belém', state: 'PA' },
-  { city: 'Campinas', state: 'SP' },
-  { city: 'São Luís', state: 'MA' },
-  { city: 'Maceió', state: 'AL' },
-  { city: 'Campo Grande', state: 'MS' },
-  { city: 'Cuiabá', state: 'MT' },
-  { city: 'João Pessoa', state: 'PB' },
-  { city: 'Natal', state: 'RN' },
-  { city: 'Teresina', state: 'PI' },
-  { city: 'Aracaju', state: 'SE' },
-  { city: 'Florianópolis', state: 'SC' },
-  { city: 'Vitória', state: 'ES' },
-  { city: 'Porto Velho', state: 'RO' },
-  { city: 'Macapá', state: 'AP' },
-  { city: 'Rio Branco', state: 'AC' },
-  { city: 'Boa Vista', state: 'RR' },
-  { city: 'Palmas', state: 'TO' },
+// 102 municípios cobrindo as 27 capitais + maiores cidades por população (IBGE 2022).
+// Mantém em sincronia com app/lib/constants/brazilian-cities.ts (RAW_CITIES).
+// A página /cursos/[slug]/[city] já emite noindex + canonical pra nacional
+// quando não há oferta local, então listar todas é seguro do ponto de vista
+// de Helpful Content (Google descarta thin pages via noindex; o canonical
+// consolida sinais). Monitorar GSC: se >30% das URLs ficarem "submitted
+// but not indexed" por meses, considerar pré-filtrar via API.
+const ALL_CITIES = [
+  ['São Paulo', 'SP'], ['Rio de Janeiro', 'RJ'], ['Brasília', 'DF'],
+  ['Fortaleza', 'CE'], ['Salvador', 'BA'], ['Belo Horizonte', 'MG'],
+  ['Manaus', 'AM'], ['Curitiba', 'PR'], ['Recife', 'PE'],
+  ['Goiânia', 'GO'], ['Belém', 'PA'], ['Porto Alegre', 'RS'],
+  ['Guarulhos', 'SP'], ['Campinas', 'SP'], ['São Luís', 'MA'],
+  ['São Gonçalo', 'RJ'], ['Maceió', 'AL'], ['Duque de Caxias', 'RJ'],
+  ['Campo Grande', 'MS'], ['Natal', 'RN'], ['Teresina', 'PI'],
+  ['São Bernardo do Campo', 'SP'], ['Nova Iguaçu', 'RJ'], ['João Pessoa', 'PB'],
+  ['Santo André', 'SP'], ['Osasco', 'SP'], ['Jaboatão dos Guararapes', 'PE'],
+  ['São José dos Campos', 'SP'], ['Ribeirão Preto', 'SP'], ['Uberlândia', 'MG'],
+  ['Sorocaba', 'SP'], ['Contagem', 'MG'], ['Aracaju', 'SE'],
+  ['Feira de Santana', 'BA'], ['Cuiabá', 'MT'], ['Joinville', 'SC'],
+  ['Juiz de Fora', 'MG'], ['Londrina', 'PR'], ['Aparecida de Goiânia', 'GO'],
+  ['Ananindeua', 'PA'], ['Florianópolis', 'SC'], ['Niterói', 'RJ'],
+  ['Serra', 'ES'], ['Belford Roxo', 'RJ'], ['Campos dos Goytacazes', 'RJ'],
+  ['Caxias do Sul', 'RS'], ['Vila Velha', 'ES'], ['São João de Meriti', 'RJ'],
+  ['Mauá', 'SP'], ['Carapicuíba', 'SP'], ['Mogi das Cruzes', 'SP'],
+  ['Santos', 'SP'], ['Diadema', 'SP'], ['Olinda', 'PE'],
+  ['Betim', 'MG'], ['Maringá', 'PR'], ['Jundiaí', 'SP'],
+  ['Caucaia', 'CE'], ['Anápolis', 'GO'], ['Piracicaba', 'SP'],
+  ['Itaquaquecetuba', 'SP'], ['Vitória', 'ES'], ['Montes Claros', 'MG'],
+  ['São José do Rio Preto', 'SP'], ['Cariacica', 'ES'], ['Caruaru', 'PE'],
+  ['Pelotas', 'RS'], ['Bauru', 'SP'], ['Canoas', 'RS'],
+  ['Blumenau', 'SC'], ['Suzano', 'SP'], ['Vitória da Conquista', 'BA'],
+  ['Ribeirão das Neves', 'MG'], ['Franca', 'SP'], ['Petrolina', 'PE'],
+  ['Ponta Grossa', 'PR'], ['Paulista', 'PE'], ['Camaçari', 'BA'],
+  ['Petrópolis', 'RJ'], ['Uberaba', 'MG'], ['Cascavel', 'PR'],
+  ['Praia Grande', 'SP'], ['Taubaté', 'SP'], ['Limeira', 'SP'],
+  ['Santa Maria', 'RS'], ['Gravataí', 'RS'], ['Mossoró', 'RN'],
+  ['Volta Redonda', 'RJ'], ['Sumaré', 'SP'], ['Várzea Grande', 'MT'],
+  ['Imperatriz', 'MA'], ['Foz do Iguaçu', 'PR'], ['São Vicente', 'SP'],
+  ['Embu das Artes', 'SP'], ['Hortolândia', 'SP'], ['Marília', 'SP'],
+  ['Indaiatuba', 'SP'], ['Porto Velho', 'RO'], ['Macapá', 'AP'],
+  ['Rio Branco', 'AC'], ['Boa Vista', 'RR'], ['Palmas', 'TO'],
 ]
 
 /** @type {import('next-sitemap').IConfig} */
@@ -96,77 +109,32 @@ module.exports = {
   },
   additionalPaths: async () => {
     const paths = []
+    const now = new Date().toISOString()
 
-    // Home com prioridade máxima
-    paths.push({
-      loc: '/',
-      changefreq: 'daily',
-      priority: 1.0,
-      lastmod: new Date().toISOString(),
-    })
+    // Páginas core
+    const corePages = [
+      { loc: '/', priority: 1.0, changefreq: 'daily' },
+      { loc: '/graduacao', priority: 0.95, changefreq: 'daily' },
+      { loc: '/pos-graduacao', priority: 0.95, changefreq: 'daily' },
+      { loc: '/cursos-profissionalizantes', priority: 0.95, changefreq: 'daily' },
+      { loc: '/cursos', priority: 0.9, changefreq: 'daily' },
+      { loc: '/faculdades', priority: 0.85, changefreq: 'weekly' },
+      { loc: '/carreiras', priority: 0.9, changefreq: 'weekly' },
+      { loc: '/blog', priority: 0.9, changefreq: 'daily' },
+    ]
+    corePages.forEach((p) => paths.push({ ...p, lastmod: now }))
 
-    // Páginas principais
-    paths.push({
-      loc: '/graduacao',
-      changefreq: 'daily',
-      priority: 0.95,
-      lastmod: new Date().toISOString(),
-    })
-
-    paths.push({
-      loc: '/pos-graduacao',
-      changefreq: 'daily',
-      priority: 0.95,
-      lastmod: new Date().toISOString(),
-    })
-
-    paths.push({
-      loc: '/cursos-profissionalizantes',
-      changefreq: 'daily',
-      priority: 0.95,
-      lastmod: new Date().toISOString(),
-    })
-
-    paths.push({
-      loc: '/cursos',
-      changefreq: 'daily',
-      priority: 0.9,
-      lastmod: new Date().toISOString(),
-    })
-
-    paths.push({
-      loc: '/faculdades',
-      changefreq: 'weekly',
-      priority: 0.85,
-      lastmod: new Date().toISOString(),
-    })
-
-    // Landing pages estáticas /cursos/[slug]/[city] - alto valor SEO
-    courseSlugs.forEach(courseSlug => {
-      mainCities.forEach(city => {
-        paths.push({
-          loc: `/cursos/${courseSlug}/${slugifyCity(city.city)}`,
-          changefreq: 'weekly',
-          priority: 0.85,
-          lastmod: new Date().toISOString(),
-        })
-      })
-    })
-
-    // Blog index
-    paths.push({
-      loc: '/blog',
-      changefreq: 'daily',
-      priority: 0.9,
-      lastmod: new Date().toISOString(),
-    })
-
-    // Blog posts e categorias (dinâmicos via Prisma)
+    // Cursos + carreiras + blog (todos via Prisma — fallback pra constantes se DB falhar)
+    let activeCourseSlugs = FALLBACK_COURSE_SLUGS
     try {
       const { PrismaClient } = require('@prisma/client')
       const prisma = new PrismaClient()
 
-      const [blogPosts, blogCategories] = await Promise.all([
+      const [activeCourses, blogPosts, blogCategories] = await Promise.all([
+        prisma.featuredCourse.findMany({
+          where: { isActive: true },
+          select: { slug: true, updatedAt: true, hasCityPages: true },
+        }),
         prisma.blogPost.findMany({
           where: { isActive: true, publishedAt: { not: null } },
           select: { slug: true, updatedAt: true },
@@ -177,7 +145,35 @@ module.exports = {
         }),
       ])
 
-      blogPosts.forEach(post => {
+      if (activeCourses.length > 0) {
+        activeCourseSlugs = activeCourses.map((c) => c.slug)
+      }
+
+      // /carreiras/[slug] — uma página de profissão por curso ativo
+      activeCourses.forEach((c) => {
+        paths.push({
+          loc: `/carreiras/${c.slug}`,
+          changefreq: 'weekly',
+          priority: 0.85,
+          lastmod: c.updatedAt.toISOString(),
+        })
+      })
+
+      // /cursos/[slug]/[city] — só pros cursos com hasCityPages=true (gate manual).
+      // Evita explosão a 92k+ URLs thin quando catálogo escala pra 900+ cursos.
+      const cityEligibleSlugs = activeCourses.filter((c) => c.hasCityPages).map((c) => c.slug)
+      cityEligibleSlugs.forEach((slug) => {
+        ALL_CITIES.forEach(([cityName]) => {
+          paths.push({
+            loc: `/cursos/${slug}/${slugifyCity(cityName)}`,
+            changefreq: 'weekly',
+            priority: 0.8,
+            lastmod: now,
+          })
+        })
+      })
+
+      blogPosts.forEach((post) => {
         paths.push({
           loc: `/blog/${post.slug}`,
           changefreq: 'weekly',
@@ -186,7 +182,7 @@ module.exports = {
         })
       })
 
-      blogCategories.forEach(cat => {
+      blogCategories.forEach((cat) => {
         paths.push({
           loc: `/blog/categoria/${cat.slug}`,
           changefreq: 'weekly',
@@ -197,8 +193,27 @@ module.exports = {
 
       await prisma.$disconnect()
     } catch (e) {
-      console.error('Error fetching blog data for sitemap:', e)
+      console.error('Sitemap: falha ao buscar dados do Prisma, usando fallback:', e)
+      // Emite carreiras pelos slugs de fallback se DB falhar
+      activeCourseSlugs.forEach((slug) => {
+        paths.push({
+          loc: `/carreiras/${slug}`,
+          changefreq: 'weekly',
+          priority: 0.85,
+          lastmod: now,
+        })
+      })
     }
+
+    // /cursos/[slug] (nacional) — todos os cursos ativos vão pro sitemap
+    activeCourseSlugs.forEach((slug) => {
+      paths.push({
+        loc: `/cursos/${slug}`,
+        changefreq: 'weekly',
+        priority: 0.9,
+        lastmod: now,
+      })
+    })
 
     return paths
   },

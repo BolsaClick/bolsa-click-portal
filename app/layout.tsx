@@ -8,6 +8,7 @@ import { ClientProviders } from './components/providers/ClientProviders'
 import { ConsentProvider } from './components/providers/ConsentProvider'
 import { GatedVercelAnalytics } from './components/providers/GatedVercelAnalytics'
 import { WatiWhatsappWidget } from './components/WatiWhatsappWidget'
+import { VocationalTab } from './components/VocationalTab'
 import './globals.css'
 import { business } from './lib/constants/business'
 import { getCurrentTheme } from './lib/themes'
@@ -254,6 +255,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AnalyticsScripts gtmId={gtmId} ga4Id={ga4Id} facebookPixelIds={facebookPixelIds} />
 
           <WatiWhatsappWidget />
+          <VocationalTab />
 
           <Toaster richColors position="top-right" />
           <GatedVercelAnalytics />

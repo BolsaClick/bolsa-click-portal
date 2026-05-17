@@ -342,6 +342,35 @@ export default function SearchResultClient() {
     placeholderData: keepPreviousData,
   })
 
+  // Fallback automático: quando a busca exata vier vazia mas o usuário pediu
+  // curso + cidade + modalidade, refazemos a query SEM a modalidade. Assim
+  // mostramos o mesmo curso disponível em outras modalidades em vez de
+  // simplesmente dizer "não encontramos nada".
+  const mainResultsCount = (showCourses?.data?.length ?? 0) as number
+  const hasCourseFilter = !!(curso?.trim() || cursoNomeCompleto?.trim())
+  const hasModalityFilter = !!(modalidade && modalidade.trim())
+  const shouldFetchFallback =
+    !!showCourses && mainResultsCount === 0 && hasCourseFilter && hasModalityFilter
+
+  const { data: fallbackData, isLoading: fallbackLoading } = useQuery({
+    queryFn: () => getShowFiltersCourses(
+      courseNameForAPI,
+      cidade || undefined,
+      estado || undefined,
+      undefined,
+      normalizedNivel,
+      1,
+      12,
+    ),
+    queryKey: ['courses', 'fallback-no-modality', courseNameForAPI, cidade, estado, normalizedNivel] as const,
+    enabled: shouldFetchFallback,
+    staleTime: SEARCH_STALE_TIME,
+    gcTime: SEARCH_GC_TIME,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  })
+
   // Prefetch da próxima "página API" em background — backend só retorna 20 por chamada,
   // então enquanto o cliente pagina nos 20, já preparamos a próxima leva.
   useEffect(() => {
@@ -439,6 +468,27 @@ export default function SearchResultClient() {
   );
 
   const totalPages = Math.ceil(filteredByPrice.length / itemsPerPage);
+
+  // Alternativas do fallback: dedup por id+modalidade pra mostrar variedade
+  // (1 card por modalidade do mesmo curso) e descartar a modalidade que o
+  // usuário buscou (que já retornou 0).
+  const fallbackCourses = useMemo(() => {
+    const list = (fallbackData?.data || []) as Array<{
+      id?: string
+      modality?: string
+      commercialModality?: string
+    }>
+    const blockedModality = (modalidade || '').toUpperCase()
+    const seen = new Set<string>()
+    return list.filter((c) => {
+      const mod = (c.commercialModality || c.modality || '').toUpperCase()
+      if (blockedModality && mod === blockedModality) return false
+      const key = `${c.id ?? ''}-${mod}`
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    }).slice(0, 6)
+  }, [fallbackData, modalidade])
 
 
 
@@ -796,42 +846,119 @@ const onSubmit = (data: any) => {
                 ))}
               </div>
             ) : totalResults === 0 ? (
-              <div className="bg-white border border-hairline rounded-2xl p-10 md:p-14 text-center">
-                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 inline-flex items-center gap-3 mb-4">
-                  <span className="h-px w-8 bg-ink-300" />
-                  Sem resultados
-                  <span className="h-px w-8 bg-ink-300" />
-                </span>
-                <h3 className="font-display text-2xl md:text-3xl text-ink-900 leading-tight mb-3">
-                  Nenhuma oferta encontrada{' '}
-                  <span className="italic text-ink-700">com esses filtros.</span>
-                </h3>
-                <p className="text-ink-500 text-[15px] leading-relaxed max-w-md mx-auto mb-6">
-                  Tente ajustar a modalidade, ampliar a faixa de preço ou buscar em outra cidade.
-                </p>
-                {modalidade && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const other =
-                        modalidade === 'PRESENCIAL'
-                          ? 'SEMIPRESENCIAL'
-                          : modalidade === 'SEMIPRESENCIAL'
-                          ? 'EAD'
-                          : 'PRESENCIAL'
-                      const params = new URLSearchParams()
-                      if (curso) params.set('c', curso)
-                      params.set('cidade', cidade)
-                      params.set('estado', estado)
-                      params.set('modalidade', other)
-                      params.set('nivel', normalizedNivel)
-                      router.push(`/curso/resultado?${params.toString()}`)
-                    }}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-bolsa-secondary text-white font-semibold rounded-full text-[14px] hover:bg-bolsa-secondary/90 transition-colors"
+              <div className="space-y-6">
+                {/* Banner: combinação indisponível */}
+                <div className="bg-white border border-hairline rounded-2xl p-6 md:p-8">
+                  <div className="flex items-start gap-4">
+                    <span className="flex-shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full bg-red-50 text-red-500">
+                      <X size={18} strokeWidth={2.5} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-red-500 inline-flex items-center gap-2 mb-2">
+                        Indisponível
+                      </span>
+                      <h3 className="font-display text-xl md:text-2xl text-ink-900 leading-tight">
+                        {courseDisplayName || 'Cursos'}
+                        {modalidade && (
+                          <>
+                            {' '}
+                            <span className="text-ink-500 line-through decoration-red-300">
+                              {formatModalidade(modalidade)}
+                            </span>
+                          </>
+                        )}
+                        {cidade && (
+                          <span className="text-ink-500"> em {cidade}</span>
+                        )}
+                      </h3>
+                      <p className="text-ink-500 text-[14px] mt-2 leading-relaxed">
+                        Não encontramos ofertas com essa combinação exata de filtros.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Alternativas em outras modalidades */}
+                {shouldFetchFallback && fallbackLoading ? (
+                  <div
+                    className={`grid ${
+                      viewMode === 'grid'
+                        ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5'
+                        : 'grid-cols-1 gap-4'
+                    }`}
                   >
-                    Buscar em outra modalidade
-                    <ArrowRight size={16} />
-                  </button>
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="bg-white border border-hairline rounded-2xl p-5 md:p-6 animate-pulse"
+                      >
+                        <div className="h-9 w-24 bg-paper-warm rounded mb-5" />
+                        <div className="h-5 bg-paper-warm rounded w-3/4 mb-2" />
+                        <div className="h-5 bg-paper-warm rounded w-1/2 mb-5" />
+                        <div className="h-7 w-24 bg-paper-warm rounded" />
+                      </div>
+                    ))}
+                  </div>
+                ) : fallbackCourses.length > 0 ? (
+                  <div>
+                    <div className="flex items-baseline justify-between hairline-b pb-3 mb-6">
+                      <h4 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
+                        Disponível em outras modalidades
+                      </h4>
+                      <span className="font-mono num-tabular text-[11px] text-ink-500">
+                        {fallbackCourses.length} {fallbackCourses.length === 1 ? 'opção' : 'opções'}
+                      </span>
+                    </div>
+                    <ul
+                      className={`grid ${
+                        viewMode === 'grid'
+                          ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5 items-stretch'
+                          : 'grid-cols-1 gap-4'
+                      }`}
+                    >
+                      {fallbackCourses.map((course, index) => (
+                        <li key={`fb-${(course as Course).id ?? index}-${index}`} className="h-full">
+                          <CourseCardNew
+                            courseName={courseDisplayName || (course as Course).name || ''}
+                            course={course as Course}
+                            setFormData={(name: string, value: unknown) => setValue(name, value)}
+                            viewMode={viewMode}
+                            triggerSubmit={handleSubmit(onSubmit)}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <div className="bg-white border border-hairline rounded-2xl p-8 md:p-10 text-center">
+                    <p className="text-ink-500 text-[15px] leading-relaxed max-w-md mx-auto mb-6">
+                      Tente ampliar a faixa de preço, trocar a cidade ou buscar outro curso.
+                    </p>
+                    {modalidade && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const other =
+                            modalidade === 'PRESENCIAL'
+                              ? 'SEMIPRESENCIAL'
+                              : modalidade === 'SEMIPRESENCIAL'
+                              ? 'EAD'
+                              : 'PRESENCIAL'
+                          const params = new URLSearchParams()
+                          if (curso) params.set('c', curso)
+                          params.set('cidade', cidade)
+                          params.set('estado', estado)
+                          params.set('modalidade', other)
+                          params.set('nivel', normalizedNivel)
+                          router.push(`/curso/resultado?${params.toString()}`)
+                        }}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-bolsa-secondary text-white font-semibold rounded-full text-[14px] hover:bg-bolsa-secondary/90 transition-colors"
+                      >
+                        Buscar em outra modalidade
+                        <ArrowRight size={16} />
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             ) : (

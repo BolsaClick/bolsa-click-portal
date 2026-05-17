@@ -43,7 +43,7 @@
     "next": "^15.5.18",
     "next-seo": "^6.6.0",
     "next-sitemap": "^4.2.3",
-    "posthog-js": "^1.334.0",
+    "posthog-js": "^1.373.5",
     "posthog-node": "^4.17.1",
     "react": "19.2.6",
     "react-dom": "19.2.6",

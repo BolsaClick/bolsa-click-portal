@@ -212,15 +212,6 @@ export default function AdminReviewsPage() {
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-medium text-gray-900">{r.authorName}</span>
-                      {r.emailVerified ? (
-                        <span className="text-[10px] font-mono uppercase tracking-wider text-green-700 bg-green-50 px-1.5 py-0.5 rounded">
-                          Email verificado
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-mono uppercase tracking-wider text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
-                          Email não verificado
-                        </span>
-                      )}
                     </div>
                     <div className="text-xs text-gray-500">
                       {r.authorEmail} ·{' '}

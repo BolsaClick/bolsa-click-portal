@@ -97,3 +97,28 @@ export async function sendNotealyEmail(input: SendEmailInput): Promise<void> {
     vars: input.vars ?? {},
   })
 }
+
+interface SendExternalEmailInput {
+  email: string
+  templateId: string
+  vars?: Record<string, unknown>
+}
+
+/**
+ * Envia um email transacional com template para um endereço arbitrário.
+ * Diferente de sendNotealyEmail: NÃO requer contato no CRM (não cria poluição).
+ * Usado para magic links de fluxos públicos (verificação de review, etc).
+ * Scope necessário no token: email:send:to
+ */
+export async function sendNotealyEmailExternal(input: SendExternalEmailInput): Promise<void> {
+  if (!NOTEALY_API_TOKEN) {
+    console.warn('⚠️ NOTEALY_API_TOKEN não configurado — envio de email externo ignorado')
+    return
+  }
+
+  await notealyRequest('/email/send/external', {
+    email: input.email,
+    templateId: input.templateId,
+    vars: input.vars ?? {},
+  })
+}

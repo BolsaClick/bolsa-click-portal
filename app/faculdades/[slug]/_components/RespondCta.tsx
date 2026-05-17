@@ -4,8 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import Script from 'next/script'
 import { Loader2, MessageSquare, CheckCircle2, X } from 'lucide-react'
 
-import '@/app/types/turnstile'
-
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''
 
 interface RespondCtaProps {

@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
-import { sendEmail } from '@/app/lib/email'
 import { verifyTurnstile } from '@/app/lib/captcha'
-import {
-  generateToken,
-  expiresAt,
-  VERIFICATION_TOKEN_TTL_MS,
-} from '@/app/lib/review-tokens'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.bolsaclick.com.br'
 const MAX_REVIEWS_PER_EMAIL_24H = 5
 
 interface CreateReviewBody {
@@ -102,49 +95,10 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    const token = generateToken()
-    await prisma.reviewVerificationToken.create({
-      data: {
-        token,
-        reviewId: review.id,
-        email: review.authorEmail,
-        expiresAt: expiresAt(VERIFICATION_TOKEN_TTL_MS),
-      },
-    })
-
-    const verifyUrl = `${SITE_URL}/avaliar/verificar?token=${token}`
-    const html = `
-      <div style="font-family: -apple-system, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
-        <h2 style="font-size: 20px; margin-bottom: 12px;">Confirme seu email para publicar a avaliação</h2>
-        <p style="color: #444; line-height: 1.5;">Olá ${review.authorName},</p>
-        <p style="color: #444; line-height: 1.5;">
-          Recebemos sua avaliação da <strong>${institution.name}</strong> no Bolsa Click. Para publicá-la,
-          confirme que esse email é seu clicando no botão abaixo. O link vale por 24 horas.
-        </p>
-        <p style="margin: 24px 0;">
-          <a href="${verifyUrl}" style="display: inline-block; padding: 12px 24px; background: #00a07a; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">Confirmar email</a>
-        </p>
-        <p style="color: #888; font-size: 13px; line-height: 1.5;">
-          Após a confirmação, sua avaliação passa por uma moderação rápida antes de aparecer publicamente
-          (analisamos só spam/abuso — opiniões negativas são bem-vindas, ajudam outros candidatos).
-        </p>
-        <p style="color: #888; font-size: 13px; line-height: 1.5;">
-          Se você não enviou essa avaliação, pode ignorar este email.
-        </p>
-      </div>
-    `
-
-    await sendEmail({
-      to: review.authorEmail,
-      subject: `Confirme seu email — avaliação da ${institution.name}`,
-      html,
-      text: `Olá ${review.authorName},\n\nRecebemos sua avaliação da ${institution.name} no Bolsa Click. Confirme seu email para publicá-la em até 24h: ${verifyUrl}\n\nSe não foi você, ignore este email.`,
-    })
-
     return NextResponse.json({
       ok: true,
       reviewId: review.id,
-      message: 'Avaliação recebida. Confirme seu email para publicar.',
+      message: 'Avaliação recebida. Em breve passa por moderação e aparece no site.',
     })
   } catch (error) {
     console.error('Erro ao criar review:', error)

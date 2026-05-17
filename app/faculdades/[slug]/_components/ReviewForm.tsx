@@ -4,8 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import Script from 'next/script'
 import { Star, Loader2, CheckCircle2, AlertCircle, ThumbsUp, ThumbsDown } from 'lucide-react'
 
-import '@/app/types/turnstile'
-
 interface ReviewFormProps {
   institutionSlug: string
   institutionName: string
@@ -94,9 +92,9 @@ export function ReviewForm({ institutionSlug, institutionName }: ReviewFormProps
           Avaliação enviada
         </h3>
         <p className="text-sm text-gray-700">
-          Enviamos um link de confirmação para <strong>{email}</strong>. Clique no
-          link para publicar sua avaliação — depois ela passa por uma moderação rápida
-          (só rejeitamos spam, abuso ou dados pessoais expostos).
+          Sua avaliação foi recebida e está aguardando moderação. Em breve
+          aparece publicamente nesta página — só rejeitamos spam, abuso ou
+          dados pessoais expostos.
         </p>
       </div>
     )
@@ -117,8 +115,7 @@ export function ReviewForm({ institutionSlug, institutionName }: ReviewFormProps
         </h3>
         <p className="text-sm text-ink-700">
           Sua opinião ajuda outros candidatos a escolher. Mostramos avaliações positivas e
-          negativas — a faculdade pode responder. Email é só pra verificar que é você (não
-          aparece publicamente).
+          negativas — a faculdade pode responder. Email não aparece publicamente.
         </p>
 
         <div>

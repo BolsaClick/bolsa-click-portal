@@ -53,9 +53,12 @@
     "react-input-mask-br": "^1.1.8",
     "react-intersection-observer": "^9.16.0",
     "sonner": "^1.7.0",
-    "swiper": "^11.1.14",
+    "swiper": "^12.1.4",
     "use-mask-input": "^3.4.2",
     "zod": "^3.24.2"
+  },
+  "overrides": {
+    "postcss": "^8.5.14"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -71,7 +74,7 @@
     "env-cmd": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "15.3.0",
-    "postcss": "^8",
+    "postcss": "^8.5.14",
     "prisma": "^6.6.0",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"

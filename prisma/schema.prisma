@@ -155,7 +155,7 @@ enum PaymentStatus {
 model Lead {
   id          String   @id @default(uuid())
   name        String
-  cpf         String
+  cpf         String? // Opcional: leads de teste vocacional não pedem CPF
   email       String
   phone       String
   courseNames String[] // Cursos de interesse
@@ -165,6 +165,10 @@ model Lead {
   courseName      String?
   institutionName String?
   modalidade      String?
+
+  // Origem do lead (checkout, teste-vocacional, etc) + payload livre
+  source    String?
+  extraData Json?
 
   // Status do lead
   status      LeadStatus @default(NEW)
@@ -176,6 +180,7 @@ model Lead {
   @@index([cpf])
   @@index([email])
   @@index([status])
+  @@index([source])
 }
 
 enum LeadStatus {

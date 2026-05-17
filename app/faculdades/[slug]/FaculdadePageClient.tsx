@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useQuery } from '@tanstack/react-query'
 import {
   Star,
   MapPin,
@@ -15,17 +14,16 @@ import {
   CheckCircle2,
   BookOpen,
   ArrowRight,
-  Loader2,
 } from 'lucide-react'
 import Container from '@/app/components/atoms/Container'
 import Breadcrumb from '@/app/components/atoms/Breadcrumb'
 import CourseCardNew from '@/app/components/CourseCardNew'
-import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { Course } from '@/app/interface/course'
 import type { InstitutionData } from '../_data/types'
 
 type Props = {
   institution: InstitutionData
+  initialCourses: Course[]
 }
 
 const modalityLabels: Record<string, string> = {
@@ -45,31 +43,18 @@ const typeLabels: Record<string, string> = {
   PUBLICA_ESTADUAL: 'Instituição Pública Estadual',
 }
 
-export default function FaculdadePageClient({ institution }: Props) {
+export default function FaculdadePageClient({ institution, initialCourses }: Props) {
   const [selectedModality, setSelectedModality] = useState<string>('')
   const [visibleCount, setVisibleCount] = useState(6)
 
-  const { data: coursesData, isLoading: isLoadingCourses } = useQuery({
-    queryFn: () => getShowFiltersCourses(
-      undefined,
-      undefined,
-      undefined,
-      selectedModality || undefined,
-      'GRADUACAO',
-      1,
-      50
-    ),
-    queryKey: ['institution-courses', institution.name, selectedModality],
-    staleTime: 1000 * 60 * 5,
-    refetchOnWindowFocus: false,
-  })
-
   const institutionCourses = useMemo(() => {
-    if (!coursesData?.data) return []
-    return (coursesData.data as Course[]).filter(
-      (course) => course.brand?.toLowerCase() === institution.name.toLowerCase()
-    )
-  }, [coursesData, institution.name])
+    if (!selectedModality) return initialCourses
+    const target = selectedModality.toUpperCase()
+    return initialCourses.filter(c => {
+      const m = (c.modality ?? c.commercialModality ?? '').toUpperCase()
+      return m === target
+    })
+  }, [initialCourses, selectedModality])
 
   const visibleCourses = institutionCourses.slice(0, visibleCount)
 
@@ -290,12 +275,7 @@ export default function FaculdadePageClient({ institution }: Props) {
               </div>
 
               {/* Course Cards */}
-              {isLoadingCourses ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="animate-spin text-bolsa-primary" size={32} />
-                  <span className="ml-3 text-neutral-500">Carregando ofertas...</span>
-                </div>
-              ) : institutionCourses.length === 0 ? (
+              {institutionCourses.length === 0 ? (
                 <div className="bg-white rounded-xl border border-neutral-200 p-8 text-center">
                   <GraduationCap className="mx-auto text-neutral-300 mb-3" size={40} />
                   <p className="text-neutral-500 mb-4">

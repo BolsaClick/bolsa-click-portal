@@ -8,6 +8,7 @@ import {
   getInstitutionReviewSummary,
   buildAggregateRatingSchema,
 } from '@/app/lib/reviews'
+import { getInstitutionCourses } from '@/app/lib/api/get-institution-courses'
 import FaculdadePageClient from './FaculdadePageClient'
 import { ReviewList } from './_components/ReviewList'
 import { ReviewForm } from './_components/ReviewForm'
@@ -89,6 +90,7 @@ export default async function FaculdadeDetailPage({
 
   const reviewSummary = await getInstitutionReviewSummary(institution.id)
   const aggregateRating = buildAggregateRatingSchema(reviewSummary)
+  const institutionCourses = await getInstitutionCourses(institution.name)
 
   const educationalOrgSchema = {
     '@context': 'https://schema.org',
@@ -210,7 +212,7 @@ export default async function FaculdadeDetailPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <FaculdadePageClient institution={institution} />
+      <FaculdadePageClient institution={institution} initialCourses={institutionCourses} />
 
       <section className="bg-white py-12 md:py-16 border-t border-hairline">
         <div className="container mx-auto px-4 max-w-3xl">

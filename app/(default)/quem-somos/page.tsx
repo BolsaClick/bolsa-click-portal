@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import QuemSomosCliente from "./ClienteQuemSomos";
 
 export const metadata: Metadata = {
-  title: 'Quem Somos - Bolsa Click | Bolsas de Estudo com até 85% de Desconto',
+  title: 'Quem Somos - Bolsas de Estudo com até 85% de Desconto',
   description:
     'Conheça o Bolsa Click, a plataforma que conecta alunos a bolsas de estudo de até 85%. Saiba mais sobre nossa missão, valores e como ajudamos milhares de brasileiros a acessarem o ensino superior com qualidade e economia.',
   keywords: [

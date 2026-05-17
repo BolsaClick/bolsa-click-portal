@@ -136,7 +136,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const canonicalUrl = `${theme.siteUrl}/comparar/${a}-vs-${b}`
 
-  const title = `${instA.name} vs ${instB.name}: Qual a Melhor Faculdade? | Bolsa Click`
+  const title = `${instA.name} vs ${instB.name}: Qual a Melhor Faculdade?`
   const description = `Compare ${instA.fullName} e ${instB.fullName}: nota MEC, modalidades, polos, cursos e bolsas. Veja qual faculdade combina mais com seu perfil e estude com até 80% de desconto.`
 
   return {

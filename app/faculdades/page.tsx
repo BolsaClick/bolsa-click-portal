@@ -8,7 +8,7 @@ const theme = getCurrentTheme()
 export const revalidate = 3600
 
 export const metadata: Metadata = {
-  title: 'Faculdades Parceiras com Bolsa de Estudo | Bolsa Click',
+  title: 'Faculdades Parceiras com Bolsa de Estudo',
   description: 'Conheça as faculdades parceiras do Bolsa Click. Encontre bolsas de estudo com até 95% de desconto em universidades reconhecidas pelo MEC em todo o Brasil.',
   keywords: [
     'faculdades parceiras',

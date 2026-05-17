@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `${category.title} | Central de Ajuda Bolsa Click`,
+    title: `${category.title} | Central de Ajuda`,
     description: category.description,
     robots: 'index, follow',
     alternates: {

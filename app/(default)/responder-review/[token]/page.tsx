@@ -8,7 +8,7 @@ import type { Metadata } from 'next'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.bolsaclick.com.br'
 
 export const metadata: Metadata = {
-  title: 'Responder avaliação | Bolsa Click',
+  title: 'Responder avaliação',
   robots: { index: false, follow: false },
 }
 

@@ -10,7 +10,7 @@ const SITE_URL = 'https://www.bolsaclick.com.br'
 export const revalidate = 86400 // 24h — conteúdo institucional muda devagar
 
 export const metadata: Metadata = {
-  title: 'Bolsas de Estudo - Encontre Faculdade com até 80% de Desconto | Bolsa Click',
+  title: 'Bolsas de Estudo - Encontre Faculdade com até 80% de Desconto',
   description: `Bolsa Click: ${BRAZILIAN_CITIES.length} cidades cobertas, ${TOP_CURSOS.length}+ cursos de graduação e pós com bolsas de até 80% em faculdades parceiras. Inscrição grátis.`,
   keywords: [
     'bolsa de estudo',

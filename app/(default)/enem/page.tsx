@@ -9,7 +9,7 @@ const DATA_PUBLISHED = '2024-01-15'
 const DATA_MODIFIED = '2026-05-15'
 
 export const metadata: Metadata = {
-  title: 'ENEM 2026 - Datas, Inscrição, Notas de Corte e Como Usar | Bolsa Click',
+  title: 'ENEM 2026 - Datas, Inscrição, Notas de Corte e Como Usar',
   description:
     'Tudo sobre o ENEM 2026: datas das provas, inscrição, estrutura, cálculo da nota TRI, redação e como usar sua nota em SISU, PROUNI, FIES e nas faculdades parceiras Bolsa Click.',
   keywords: [

@@ -9,7 +9,7 @@ const DATA_PUBLISHED = '2024-01-15'
 const DATA_MODIFIED = '2026-05-15'
 
 export const metadata: Metadata = {
-  title: 'FIES 2026 - Como Funciona, Inscrição, Juros e Quem Pode | Bolsa Click',
+  title: 'FIES 2026 - Como Funciona, Inscrição, Juros e Quem Pode',
   description:
     'Tudo sobre o FIES 2026: requisitos, valores financiados, juros, prazo de pagamento, P-FIES e como combinar com PROUNI ou bolsa do Bolsa Click.',
   keywords: [

@@ -7,7 +7,7 @@ import { AIChat } from './_components/AIChat'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.bolsaclick.com.br'
 
 export const metadata: Metadata = {
-  title: 'Teste Vocacional Online Grátis com IA — Descubra Seu Curso Ideal | Bolsa Click',
+  title: 'Teste Vocacional Online Grátis com IA — Descubra Seu Curso Ideal',
   description:
     'Não sabe qual faculdade fazer? Faça nosso teste vocacional com IA em 3 minutos: uma conversa adaptativa que descobre os 3 cursos que mais combinam com seu perfil. Grátis e sem CPF.',
   keywords: [

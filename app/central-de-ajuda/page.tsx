@@ -62,7 +62,7 @@ const helpBreadcrumbSchema = {
 export const revalidate = 3600 // Revalidar a cada 1 hora
 
 export const metadata: Metadata = {
-  title: 'Central de Ajuda | Bolsa Click - Tire suas dúvidas sobre bolsas de estudo',
+  title: 'Central de Ajuda - Tire suas dúvidas sobre bolsas de estudo',
   description:
     'Encontre respostas sobre como funcionam as bolsas de estudo, matrícula, pagamento, reembolso e muito mais. Atendimento humanizado para você realizar seu sonho de estudar.',
   keywords: [

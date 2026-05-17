@@ -108,7 +108,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const firstCategory = post.categories[0]
-  const title = post.metaTitle || `${post.title} | Blog Bolsa Click`
+  const title = post.metaTitle || `${post.title} | Blog`
   const description = post.metaDescription || post.excerpt
   const imageUrl = post.featuredImage || 'https://www.bolsaclick.com.br/assets/logo-bolsa-click-rosa.png'
 

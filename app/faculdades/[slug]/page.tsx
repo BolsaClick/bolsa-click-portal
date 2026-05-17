@@ -44,7 +44,7 @@ export async function generateMetadata({
     }
   }
 
-  const title = institution.metaTitle || `Faculdade ${institution.name} - Bolsas de Estudo com até 80% de Desconto | Bolsa Click`
+  const title = institution.metaTitle || `Faculdade ${institution.name} - Bolsas de Estudo com até 80% de Desconto`
   const description =
     institution.metaDescription ||
     `Encontre bolsas de estudo na faculdade ${institution.name} com até 95% de desconto. ${institution.description}`

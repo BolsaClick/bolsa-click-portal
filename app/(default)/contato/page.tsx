@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import ContatoClient from './ContatoClient'
 
 export const metadata: Metadata = {
-  title: 'Contato | Bolsa Click',
+  title: 'Contato',
   description:
     'Entre em contato com o Bolsa Click. Tire suas dúvidas sobre bolsas de estudo, matrículas e descontos em faculdades de todo o Brasil.',
   keywords: [

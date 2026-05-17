@@ -9,7 +9,7 @@ const DATA_PUBLISHED = '2024-01-15'
 const DATA_MODIFIED = '2026-05-15'
 
 export const metadata: Metadata = {
-  title: 'PROUNI 2026 - Inscrição, Notas, Renda e Bolsas | Bolsa Click',
+  title: 'PROUNI 2026 - Inscrição, Notas, Renda e Bolsas',
   description:
     'Tudo sobre o PROUNI 2026: requisitos de renda, nota mínima do ENEM, inscrição, bolsas integrais e parciais, faculdades participantes e como combinar com outras formas de bolsa.',
   keywords: [

@@ -9,7 +9,7 @@ const DATA_PUBLISHED = '2024-01-15'
 const DATA_MODIFIED = '2026-05-15'
 
 export const metadata: Metadata = {
-  title: 'ENCCEJA 2026 - Inscrição, Provas e Certificação de Ensino Médio | Bolsa Click',
+  title: 'ENCCEJA 2026 - Inscrição, Provas e Certificação de Ensino Médio',
   description:
     'Tudo sobre o ENCCEJA 2026: como funciona o exame para certificação do ensino fundamental e médio, quem pode fazer, datas, como se inscrever e como entrar em faculdade depois.',
   keywords: [

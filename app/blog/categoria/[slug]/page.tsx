@@ -68,7 +68,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: 'Categoria não encontrada' }
   }
 
-  const title = category.metaTitle || `${category.title} - Blog Bolsa Click`
+  const title = category.metaTitle || `${category.title} - Blog`
   const description = category.metaDescription || `Artigos sobre ${category.title.toLowerCase()}. ${category.description}`
 
   return {

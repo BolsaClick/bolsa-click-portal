@@ -4,7 +4,7 @@ import SuccessClient from './SuccessClient'
 import { Suspense } from 'react'
 
 export const metadata: Metadata = {
-  title: 'Parabéns | Bolsa Click',
+  title: 'Parabéns',
   description: 'Sua matrícula foi realizada com sucesso, fique atento ao seu e-mail para mais informações.',
 }
 

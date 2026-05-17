@@ -9,7 +9,7 @@ const DATA_PUBLISHED = '2024-01-15'
 const DATA_MODIFIED = '2026-05-15'
 
 export const metadata: Metadata = {
-  title: 'SISU 2026 - Inscrição, Notas de Corte e Como Funciona | Bolsa Click',
+  title: 'SISU 2026 - Inscrição, Notas de Corte e Como Funciona',
   description:
     'Tudo sobre o SISU 2026: como funciona, calendário de inscrição, notas de corte por curso, lista de espera, segunda chamada e diferença para PROUNI e Bolsa Click.',
   keywords: [

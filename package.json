@@ -71,7 +71,7 @@
     "@types/react-gtm-module": "^2.0.4",
     "@types/react-input-mask": "^3.0.6",
     "autoprefixer": "^10.4.21",
-    "env-cmd": "^10.1.0",
+    "env-cmd": "^11.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.3.0",
     "postcss": "^8.5.14",

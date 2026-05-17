@@ -12,39 +12,39 @@ generator client {
 // ==========================================
 
 model User {
-  id            String    @id @default(uuid())
-  firebaseUid   String    @unique // UID do Firebase Auth
-  email         String    @unique
-  name          String?
-  phone         String?
-  cpf           String?   @unique
-  avatar        String?   // URL da foto de perfil
+  id          String  @id @default(uuid())
+  firebaseUid String  @unique // UID do Firebase Auth
+  email       String  @unique
+  name        String?
+  phone       String?
+  cpf         String? @unique
+  avatar      String? // URL da foto de perfil
 
   // Endereço
-  cep           String?
-  street        String?
-  number        String?
-  complement    String?
-  neighborhood  String?
-  city          String?
-  state         String?
+  cep          String?
+  street       String?
+  number       String?
+  complement   String?
+  neighborhood String?
+  city         String?
+  state        String?
 
   // Dados acadêmicos
-  educationLevel String?  // ENSINO_MEDIO, GRADUACAO, POS_GRADUACAO
+  educationLevel String? // ENSINO_MEDIO, GRADUACAO, POS_GRADUACAO
   currentSchool  String?
 
   // Status
-  emailVerified Boolean   @default(false)
-  isActive      Boolean   @default(true)
+  emailVerified Boolean @default(false)
+  isActive      Boolean @default(true)
 
   // Preferências
-  receiveEmails Boolean   @default(true)
-  receiveSms    Boolean   @default(true)
+  receiveEmails   Boolean @default(true)
+  receiveSms      Boolean @default(true)
   receiveWhatsapp Boolean @default(true)
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  lastLoginAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lastLoginAt DateTime?
 
   // Relacionamentos
   favorites     Favorite[]
@@ -58,27 +58,27 @@ model User {
 }
 
 model Favorite {
-  id        String   @id @default(uuid())
-  userId    String
-  courseId  String   // ID do curso na API externa
-  courseName String
-  courseSlug String
+  id              String  @id @default(uuid())
+  userId          String
+  courseId        String // ID do curso na API externa
+  courseName      String
+  courseSlug      String
   institutionName String?
-  modalidade String?
-  price     Float?
-  discount  Float?
+  modalidade      String?
+  price           Float?
+  discount        Float?
 
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
   @@index([userId])
 }
 
 model Enrollment {
-  id              String   @id @default(uuid())
-  userId          String
+  id     String @id @default(uuid())
+  userId String
 
   // Dados do curso
   courseId        String
@@ -88,64 +88,64 @@ model Enrollment {
   turno           String?
 
   // Valores
-  originalPrice   Float?
-  finalPrice      Float?
-  discount        Float?
+  originalPrice Float?
+  finalPrice    Float?
+  discount      Float?
 
   // Status
-  status          EnrollmentStatus @default(PENDING)
-  paymentStatus   PaymentStatus    @default(PENDING)
+  status        EnrollmentStatus @default(PENDING)
+  paymentStatus PaymentStatus    @default(PENDING)
 
   // Datas
-  enrollmentDate  DateTime?
-  startDate       DateTime?
+  enrollmentDate DateTime?
+  startDate      DateTime?
 
   // Referências externas
-  externalId      String?  // ID no sistema externo
-  paymentId       String?  // ID do pagamento
+  externalId String? // ID no sistema externo
+  paymentId  String? // ID do pagamento
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
 }
 
 model SearchHistory {
-  id          String   @id @default(uuid())
-  userId      String
+  id     String @id @default(uuid())
+  userId String
 
-  query       String?
-  course      String?
-  city        String?
-  state       String?
-  modalidade  String?
-  nivel       String?
+  query      String?
+  course     String?
+  city       String?
+  state      String?
+  modalidade String?
+  nivel      String?
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
 enum EnrollmentStatus {
-  PENDING         // Aguardando matrícula
-  IN_PROGRESS     // Matrícula em andamento
-  ENROLLED        // Matriculado
-  CANCELLED       // Cancelado
-  COMPLETED       // Concluído
+  PENDING // Aguardando matrícula
+  IN_PROGRESS // Matrícula em andamento
+  ENROLLED // Matriculado
+  CANCELLED // Cancelado
+  COMPLETED // Concluído
 }
 
 enum PaymentStatus {
-  PENDING         // Aguardando pagamento
-  PROCESSING      // Processando
-  PAID            // Pago
-  FAILED          // Falhou
-  REFUNDED        // Reembolsado
-  CANCELLED       // Cancelado
+  PENDING // Aguardando pagamento
+  PROCESSING // Processando
+  PAID // Pago
+  FAILED // Falhou
+  REFUNDED // Reembolsado
+  CANCELLED // Cancelado
 }
 
 // ==========================================
@@ -161,17 +161,17 @@ model Lead {
   courseNames String[] // Cursos de interesse
 
   // Dados do curso (se disponível)
-  courseId    String?
-  courseName  String?
+  courseId        String?
+  courseName      String?
   institutionName String?
-  modalidade  String?
+  modalidade      String?
 
   // Status do lead
   status      LeadStatus @default(NEW)
-  convertedAt DateTime?  // Data de conversão (quando virou enrollment)
+  convertedAt DateTime? // Data de conversão (quando virou enrollment)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([cpf])
   @@index([email])
@@ -179,11 +179,11 @@ model Lead {
 }
 
 enum LeadStatus {
-  NEW           // Novo lead
-  CONTACTED     // Contactado
-  INTERESTED    // Interessado
-  CONVERTED     // Convertido (fez matrícula)
-  LOST          // Perdido
+  NEW // Novo lead
+  CONTACTED // Contactado
+  INTERESTED // Interessado
+  CONVERTED // Convertido (fez matrícula)
+  LOST // Perdido
 }
 
 // ==========================================
@@ -191,47 +191,47 @@ enum LeadStatus {
 // ==========================================
 
 model Transaction {
-  id                String            @id @default(uuid())
+  id String @id @default(uuid())
 
   // Dados do pagador
-  name              String
-  cpf               String
-  email             String
-  phone             String
+  name  String
+  cpf   String
+  email String
+  phone String
 
   // Referência ao Lead (se existir)
-  leadId            String?
+  leadId String?
 
   // Dados do curso
-  courseId          String?
-  courseName        String?
-  institutionName   String?
+  courseId        String?
+  courseName      String?
+  institutionName String?
 
   // Valores
-  amountInCents     Int               // Valor em centavos
+  amountInCents Int // Valor em centavos
 
   // IDs externos
-  externalTransactionId String?       @unique // ID da transação no Elysium/gateway
-  elysiumStudentId  String?           // ID do estudante no Elysium
+  externalTransactionId String? @unique // ID da transação no Elysium/gateway
+  elysiumStudentId      String? // ID do estudante no Elysium
 
   // PIX
-  pixBrCode         String?           @db.Text
-  pixQrCodeBase64   String?           @db.Text
+  pixBrCode       String? @db.Text
+  pixQrCodeBase64 String? @db.Text
 
   // Status
-  status            TransactionStatus @default(PENDING)
-  paymentMethod     String            @default("pix")
+  status        TransactionStatus @default(PENDING)
+  paymentMethod String            @default("pix")
 
   // Metadados
-  metadata          Json?
+  metadata Json?
 
   // Datas
-  paidAt            DateTime?
-  failedAt          DateTime?
-  cancelledAt       DateTime?
+  paidAt      DateTime?
+  failedAt    DateTime?
+  cancelledAt DateTime?
 
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([cpf])
   @@index([email])
@@ -240,13 +240,13 @@ model Transaction {
 }
 
 enum TransactionStatus {
-  PENDING           // Aguardando pagamento
-  PROCESSING        // Processando
-  PAID              // Pago
-  FAILED            // Falhou
-  CANCELLED         // Cancelado
-  EXPIRED           // Expirado
-  REFUNDED          // Reembolsado
+  PENDING // Aguardando pagamento
+  PROCESSING // Processando
+  PAID // Pago
+  FAILED // Falhou
+  CANCELLED // Cancelado
+  EXPIRED // Expirado
+  REFUNDED // Reembolsado
 }
 
 // ==========================================
@@ -254,23 +254,23 @@ enum TransactionStatus {
 // ==========================================
 
 model Coupon {
-  id              String       @id @default(uuid())
-  code            String       @unique  // Código do cupom (ex: SUMMER2024)
-  description     String?               // Descrição do cupom
-  discount        Float                 // Valor do desconto
-  type            CouponType            // PERCENT ou FIXED
-  maxUses         Int?                  // Máximo de usos (null = ilimitado)
-  usedCount       Int          @default(0)  // Quantas vezes foi usado
-  validFrom       DateTime     @default(now())  // Data de início da validade
-  validUntil      DateTime?             // Data de expiração (null = sem expiração)
-  isActive        Boolean      @default(true)
+  id          String     @id @default(uuid())
+  code        String     @unique // Código do cupom (ex: SUMMER2024)
+  description String? // Descrição do cupom
+  discount    Float // Valor do desconto
+  type        CouponType // PERCENT ou FIXED
+  maxUses     Int? // Máximo de usos (null = ilimitado)
+  usedCount   Int        @default(0) // Quantas vezes foi usado
+  validFrom   DateTime   @default(now()) // Data de início da validade
+  validUntil  DateTime? // Data de expiração (null = sem expiração)
+  isActive    Boolean    @default(true)
 
   // ID do cupom no Elysium (se sincronizado)
-  elysiumCouponId String?      @unique
+  elysiumCouponId String? @unique
 
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  createdBy       String?               // Admin que criou
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String? // Admin que criou
 
   @@index([code])
   @@index([isActive])
@@ -278,8 +278,8 @@ model Coupon {
 }
 
 enum CouponType {
-  PERCENT   // Desconto em porcentagem
-  FIXED     // Desconto em valor fixo (centavos)
+  PERCENT // Desconto em porcentagem
+  FIXED // Desconto em valor fixo (centavos)
 }
 
 // ==========================================
@@ -290,21 +290,21 @@ model AdminUser {
   id          String    @id @default(uuid())
   userId      String    @unique
   role        AdminRole @default(EDITOR)
-  permissions String[]  // Permissões: help_center, courses, users, dashboard, admin_management
+  permissions String[] // Permissões: help_center, courses, users, dashboard, admin_management
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  createdBy   String?   // ID do admin que criou
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String? // ID do admin que criou
 
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
 enum AdminRole {
-  SUPER_ADMIN   // Acesso total
-  ADMIN         // Todas funcionalidades exceto gerenciar admins
-  EDITOR        // Apenas gerenciamento de conteúdo
+  SUPER_ADMIN // Acesso total
+  ADMIN // Todas funcionalidades exceto gerenciar admins
+  EDITOR // Apenas gerenciamento de conteúdo
 }
 
 // ==========================================
@@ -312,46 +312,46 @@ enum AdminRole {
 // ==========================================
 
 model HelpCategory {
-  id          String        @id @default(uuid())
-  slug        String        @unique
+  id          String  @id @default(uuid())
+  slug        String  @unique
   title       String
   description String
-  icon        String        // Nome do ícone Lucide: "Info", "BookOpen", etc.
-  order       Int           @default(0)
-  isActive    Boolean       @default(true)
+  icon        String // Nome do ícone Lucide: "Info", "BookOpen", etc.
+  order       Int     @default(0)
+  isActive    Boolean @default(true)
 
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  articles    HelpArticle[]
+  articles HelpArticle[]
 
   @@index([slug])
   @@index([isActive])
 }
 
 model HelpArticle {
-  id              String       @id @default(uuid())
-  categoryId      String
-  slug            String
-  title           String
-  description     String       // Descrição curta para cards
-  content         String       @db.Text  // Conteúdo completo (HTML ou Markdown)
+  id          String @id @default(uuid())
+  categoryId  String
+  slug        String
+  title       String
+  description String // Descrição curta para cards
+  content     String @db.Text // Conteúdo completo (HTML ou Markdown)
 
   // SEO
   metaTitle       String?
   metaDescription String?
   keywords        String[]
 
-  order           Int          @default(0)
-  isActive        Boolean      @default(true)
-  publishedAt     DateTime?
+  order       Int       @default(0)
+  isActive    Boolean   @default(true)
+  publishedAt DateTime?
 
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  createdBy       String?      // Admin que criou
-  updatedBy       String?      // Último admin que atualizou
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String? // Admin que criou
+  updatedBy String? // Último admin que atualizou
 
-  category        HelpCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category HelpCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@unique([categoryId, slug])
   @@index([categoryId])
@@ -363,35 +363,35 @@ model HelpArticle {
 // ==========================================
 
 model FeaturedCourse {
-  id              String       @id @default(uuid())
-  slug            String       @unique
-  apiCourseName   String       // Nome usado na API
-  name            String       // Nome de exibição
-  fullName        String       // Nome completo com tipo
-  type            CourseType
-  nivel           CourseLevel
+  id            String      @id @default(uuid())
+  slug          String      @unique
+  apiCourseName String // Nome usado na API
+  name          String // Nome de exibição
+  fullName      String // Nome completo com tipo
+  type          CourseType
+  nivel         CourseLevel
 
   description     String
-  longDescription String       @db.Text
+  longDescription String @db.Text
   duration        String
 
-  areas           String[]     // Áreas de atuação
-  skills          String[]     // Habilidades desenvolvidas
-  careerPaths     String[]     // Carreiras possíveis
+  areas       String[] // Áreas de atuação
+  skills      String[] // Habilidades desenvolvidas
+  careerPaths String[] // Carreiras possíveis
 
-  averageSalary   String
-  marketDemand    MarketDemand
+  averageSalary String
+  marketDemand  MarketDemand
 
-  imageUrl        String       // URL da imagem no Firebase Storage
-  imageAlt        String?
+  imageUrl String // URL da imagem no Firebase Storage
+  imageAlt String?
 
-  keywords        String[]     // Palavras-chave para SEO
+  keywords String[] // Palavras-chave para SEO
 
-  order           Int          @default(0)
-  isActive        Boolean      @default(true)
+  order    Int     @default(0)
+  isActive Boolean @default(true)
 
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([slug])
   @@index([isActive])
@@ -423,8 +423,8 @@ model Banner {
   id        String   @id @default(uuid())
   title     String
   subtitle  String?
-  imageUrl  String   // URL da imagem no Tigris Storage
-  linkUrl   String?  // Link opcional ao clicar no banner
+  imageUrl  String // URL da imagem no Tigris Storage
+  linkUrl   String? // Link opcional ao clicar no banner
   order     Int      @default(0)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -438,14 +438,14 @@ model Banner {
 // ==========================================
 
 model ActivityLog {
-  id          String   @id @default(uuid())
+  id          String @id @default(uuid())
   adminUserId String
-  action      String   // CREATE, UPDATE, DELETE
-  entity      String   // HelpCategory, HelpArticle, FeaturedCourse
+  action      String // CREATE, UPDATE, DELETE
+  entity      String // HelpCategory, HelpArticle, FeaturedCourse
   entityId    String
-  details     Json?    // Campos alterados
+  details     Json? // Campos alterados
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([adminUserId])
   @@index([entity])
@@ -457,25 +457,25 @@ model ActivityLog {
 // ==========================================
 
 model SiteSettings {
-  id                String   @id @default("default")
+  id String @id @default("default")
 
   // Contato
-  whatsappNumber    String   @default("5511936200198")
-  contactEmail      String   @default("contato@bolsaclick.com.br")
-  contactPhone      String   @default("(11) 93620-0198")
+  whatsappNumber String @default("5511936200198")
+  contactEmail   String @default("contato@bolsaclick.com.br")
+  contactPhone   String @default("(11) 93620-0198")
 
   // Redes Sociais
-  facebookUrl       String   @default("https://facebook.com/bolsaclickbrasil")
-  instagramUrl      String   @default("https://instagram.com/bolsaclick")
-  linkedinUrl       String   @default("https://linkedin.com/company/bolsaclick")
+  facebookUrl  String @default("https://facebook.com/bolsaclickbrasil")
+  instagramUrl String @default("https://instagram.com/bolsaclick")
+  linkedinUrl  String @default("https://linkedin.com/company/bolsaclick")
 
   // SEO
-  siteName          String   @default("Bolsa Click")
-  siteDescription   String   @default("O maior marketplace de bolsas de estudo do Brasil")
-  logoUrl           String   @default("/assets/logo-bolsa-click-rosa.png")
+  siteName        String @default("Bolsa Click")
+  siteDescription String @default("O maior marketplace de bolsas de estudo do Brasil")
+  logoUrl         String @default("/assets/logo-bolsa-click-rosa.png")
 
-  updatedAt         DateTime @updatedAt
-  updatedBy         String?
+  updatedAt DateTime @updatedAt
+  updatedBy String?
 }
 
 // ==========================================
@@ -483,35 +483,38 @@ model SiteSettings {
 // ==========================================
 
 model Institution {
-  id                String            @id @default(uuid())
-  slug              String            @unique
-  name              String            // "Anhanguera"
-  shortName         String            // "ANHANGUERA"
-  fullName          String            // "Universidade Anhanguera"
+  id                String          @id @default(uuid())
+  slug              String          @unique
+  name              String // "Anhanguera"
+  shortName         String // "ANHANGUERA"
+  fullName          String // "Universidade Anhanguera"
   description       String
-  longDescription   String            @db.Text
+  longDescription   String          @db.Text
   founded           Int?
   type              InstitutionType
   campusCount       Int?
-  studentCount      String?           // "500.000+"
+  studentCount      String? // "500.000+"
   coursesOffered    Int?
   headquartersCity  String?
   headquartersState String?
-  mecRating         Int?              // 1-5
+  mecRating         Int? // 1-5
   emecLink          String?
-  modalities        String[]          // ["EAD", "PRESENCIAL", "SEMIPRESENCIAL"]
-  academicLevels    String[]          // ["GRADUACAO", "POS_GRADUACAO"]
-  highlights        String[]          // Diferenciais
+  modalities        String[] // ["EAD", "PRESENCIAL", "SEMIPRESENCIAL"]
+  academicLevels    String[] // ["GRADUACAO", "POS_GRADUACAO"]
+  highlights        String[] // Diferenciais
   logoUrl           String
   imageUrl          String
   imageAlt          String?
   keywords          String[]
   metaTitle         String?
   metaDescription   String?
-  isActive          Boolean           @default(true)
-  order             Int               @default(0)
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  isActive          Boolean         @default(true)
+  order             Int             @default(0)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  reviews         Review[]
+  responderEmails InstitutionResponderEmail[]
 
   @@index([slug])
   @@index([isActive])
@@ -524,52 +527,145 @@ enum InstitutionType {
 }
 
 // ==========================================
+// REVIEWS (avaliações de faculdades)
+// ==========================================
+
+model Review {
+  id            String      @id @default(uuid())
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  // Autor (público)
+  authorName      String
+  authorEmail     String
+  emailVerified   Boolean   @default(false)
+  emailVerifiedAt DateTime?
+
+  // Conteúdo
+  rating     Int // 1-5
+  recommends Boolean
+  body       String  @db.Text
+
+  // Moderação
+  status       ReviewStatus @default(PENDING)
+  moderatedAt  DateTime?
+  moderatedBy  String? // uid do admin
+  rejectReason String?
+
+  // Resposta da faculdade
+  response       String?   @db.Text
+  respondedAt    DateTime?
+  responderEmail String? // email do responsável que respondeu
+
+  // Anti-spam / auditoria
+  ip        String?
+  userAgent String?
+
+  verificationTokens ReviewVerificationToken[]
+  responseTokens     InstitutionResponseToken[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([institutionId, status])
+  @@index([authorEmail])
+  @@index([status, createdAt])
+}
+
+enum ReviewStatus {
+  PENDING // aguardando verificação de email ou moderação
+  APPROVED // visível
+  REJECTED // descartado pelo admin
+  SPAM // descartado como spam
+}
+
+model ReviewVerificationToken {
+  token     String    @id
+  reviewId  String
+  review    Review    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  email     String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([reviewId])
+  @@index([email])
+}
+
+model InstitutionResponderEmail {
+  id            String      @id @default(uuid())
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  email         String
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([institutionId, email])
+  @@index([email])
+}
+
+model InstitutionResponseToken {
+  token         String    @id
+  reviewId      String
+  review        Review    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  institutionId String
+  email         String
+  expiresAt     DateTime
+  usedAt        DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([reviewId])
+  @@index([email])
+}
+
+// ==========================================
 // BLOG (CONTENT HUB PARA SEO)
 // ==========================================
 
 model BlogCategory {
-  id              String     @id @default(uuid())
-  slug            String     @unique
+  id              String  @id @default(uuid())
+  slug            String  @unique
   title           String
   description     String
-  order           Int        @default(0)
-  isActive        Boolean    @default(true)
+  order           Int     @default(0)
+  isActive        Boolean @default(true)
   metaTitle       String?
   metaDescription String?
 
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  posts           BlogPost[] @relation("BlogPostCategories")
+  posts BlogPost[] @relation("BlogPostCategories")
 
   @@index([slug])
   @@index([isActive])
 }
 
 model BlogPost {
-  id              String        @id @default(uuid())
-  slug            String        @unique
+  id              String    @id @default(uuid())
+  slug            String    @unique
   title           String
   excerpt         String
-  content         String        @db.Text  // HTML content
+  content         String    @db.Text // HTML content
   metaTitle       String?
   metaDescription String?
   keywords        String[]
-  featuredImage   String?       // URL da imagem no Tigris Storage
+  featuredImage   String? // URL da imagem no Tigris Storage
   imageAlt        String?
-  author          String        @default("Equipe Bolsa Click")
-  readingTime     Int           @default(5) // minutos
+  author          String    @default("Equipe Bolsa Click")
+  readingTime     Int       @default(5) // minutos
   tags            String[]
-  isActive        Boolean       @default(true)
-  featured        Boolean       @default(false)
-  publishedAt     DateTime?     // null = rascunho
+  isActive        Boolean   @default(true)
+  featured        Boolean   @default(false)
+  publishedAt     DateTime? // null = rascunho
 
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  createdBy       String?
-  updatedBy       String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
 
-  categories      BlogCategory[] @relation("BlogPostCategories")
+  categories BlogCategory[] @relation("BlogPostCategories")
 
   @@index([slug])
   @@index([isActive])

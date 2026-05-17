@@ -4,7 +4,13 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/app/lib/prisma'
 import { getCurrentTheme } from '@/app/lib/themes'
 import { BRAZILIAN_CITIES } from '@/app/lib/constants/brazilian-cities'
+import {
+  getInstitutionReviewSummary,
+  buildAggregateRatingSchema,
+} from '@/app/lib/reviews'
 import FaculdadePageClient from './FaculdadePageClient'
+import { ReviewList } from './_components/ReviewList'
+import { ReviewForm } from './_components/ReviewForm'
 
 const theme = getCurrentTheme()
 
@@ -73,6 +79,9 @@ export default async function FaculdadeDetailPage({
     notFound()
   }
 
+  const reviewSummary = await getInstitutionReviewSummary(institution.id)
+  const aggregateRating = buildAggregateRatingSchema(reviewSummary)
+
   const educationalOrgSchema = {
     '@context': 'https://schema.org',
     '@type': 'EducationalOrganization',
@@ -92,6 +101,7 @@ export default async function FaculdadeDetailPage({
         addressCountry: 'BR',
       },
     }),
+    ...(aggregateRating && { aggregateRating }),
   }
 
   const faqSchema = {
@@ -194,7 +204,30 @@ export default async function FaculdadeDetailPage({
       />
       <FaculdadePageClient institution={institution} />
 
+      <section className="bg-white py-12 md:py-16 border-t border-hairline">
+        <div className="container mx-auto px-4 max-w-3xl">
+          <div className="flex items-baseline justify-between hairline-b pb-3 mb-6">
+            <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
+              Avaliações de alunos sobre a {institution.name}
+            </h2>
+            <span className="font-mono num-tabular text-[11px] text-ink-500">
+              ({String(reviewSummary.count).padStart(2, '0')})
+            </span>
+          </div>
+          <ReviewList institutionName={institution.name} summary={reviewSummary} />
+        </div>
+      </section>
+
       <section className="bg-paper py-12 md:py-16 border-t border-hairline">
+        <div className="container mx-auto px-4 max-w-3xl">
+          <ReviewForm
+            institutionSlug={institution.slug}
+            institutionName={institution.name}
+          />
+        </div>
+      </section>
+
+      <section className="bg-white py-12 md:py-16 border-t border-hairline">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-baseline justify-between hairline-b pb-3 mb-6">

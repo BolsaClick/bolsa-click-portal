@@ -1,0 +1,26 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    ignore:
+      # Cadeia transitiva @tootallnate/once <3.0.1 (GHSA-vpq2-c234-7xj6)
+      # CVSS 3.3 Low — exploit exige acesso local + user privilegiado, sem
+      # impacto em confidencialidade/integridade, só DoS leve. Não há fix
+      # upstream: @google-cloud/storage ainda usa teeny-request (deprecated
+      # em favor de gaxios, migration em progresso). Some quando firebase-admin
+      # bumpar @google-cloud/storage pra v8+.
+      - dependency-name: "@tootallnate/once"
+      - dependency-name: "http-proxy-agent"
+        versions: ["5.x"]
+      - dependency-name: "teeny-request"
+      - dependency-name: "retry-request"
+        versions: ["7.x"]
+      - dependency-name: "google-gax"
+        versions: ["4.x"]
+      - dependency-name: "@google-cloud/firestore"
+        versions: ["7.x"]
+      - dependency-name: "@google-cloud/storage"
+        versions: ["7.x"]

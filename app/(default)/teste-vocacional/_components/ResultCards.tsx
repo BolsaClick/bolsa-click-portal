@@ -3,6 +3,7 @@ import { Sparkles, ArrowRight, Award } from 'lucide-react'
 import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
 import type { Recommendation } from '@/app/lib/teste-vocacional/openai'
 import type { RiasecType, GardnerIntelligence } from '@/app/lib/teste-vocacional/methodology-profiles'
+import { ShareButton } from './ShareButton'
 
 function slugForType(code: RiasecType): string {
   const map: Record<RiasecType, string> = {
@@ -88,6 +89,13 @@ export function ResultCards({ profile }: ResultCardsProps) {
           Baseado em RIASEC (Holland, 1959) + Inteligências Múltiplas (Gardner, 1983).
         </p>
       </section>
+
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 -my-1">
+        <ShareButton profile={profile} />
+        <span className="font-mono text-[11px] text-ink-500 uppercase tracking-wider">
+          ou role pra ver seus 3 cursos
+        </span>
+      </div>
 
       {/* Header da seção de cursos */}
       <div className="text-center pt-2">

@@ -625,6 +625,21 @@ model InstitutionResponseToken {
 }
 
 // ==========================================
+// TESTE VOCACIONAL (resultado compartilhável)
+// ==========================================
+
+model VocationalTestResult {
+  id          String   @id @default(uuid())
+  shareToken  String   @unique // hex 16 chars pra URL pública
+  hollandCode String              // ex: "SIA"
+  profileData Json                // ProfileResult completo (perfil + cursos)
+  viewCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([shareToken])
+}
+
+// ==========================================
 // BLOG (CONTENT HUB PARA SEO)
 // ==========================================
 

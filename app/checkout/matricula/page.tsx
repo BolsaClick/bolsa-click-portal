@@ -700,7 +700,22 @@ const isFormValidForPayment =
 
       // PromoterId - pode vir de variável de ambiente ou ser fixo
       const promoterId = process.env.NEXT_PUBLIC_PROMOTER_ID || '6716698cb4d33b0008a18001'
-      
+
+      // Fail-fast: backend exige idDMH não-vazio (@IsNotEmpty). Se a oferta vier
+      // sem dmhId, evitar chamar a API com payload inválido.
+      if (!offerDetails.dmhId) {
+        console.error('Oferta sem dmhId — não é possível criar inscrição', {
+          courseId: offerDetails.courseId,
+          unitId: offerDetails.unitId,
+          brand: offerDetails.brand,
+          modality: offerDetails.modality,
+          dmhSource: offerDetails.dmhSource,
+          idDmhElastic: offerDetails.idDmhElastic,
+        })
+        toast.error('Essa oferta não está disponível para inscrição no momento. Tente outra unidade ou volte mais tarde.')
+        return
+      }
+
       console.log('📝 Criando inscrição no Tartarus...', inscriptionPayload)
       const response = await createInscription(inscriptionPayload, promoterId, 'DC')
       console.log('✅ Inscrição criada com sucesso', response)

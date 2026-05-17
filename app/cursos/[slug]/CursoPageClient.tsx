@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { FeaturedCourseData } from '../_data/types'
 import { useVisitedCourses } from '@/app/lib/personalization/hooks'
+import { getBrandLogo } from '@/app/lib/brand-logos'
 
 interface CursoPageClientProps {
   cursoMetadata: FeaturedCourseData
@@ -238,20 +239,34 @@ export default function CursoPageClient({
                 </p>
               </div>
             ) : (
-              <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 items-stretch">
+              <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 items-stretch stagger-rise">
                 {filteredOffers.map((offer, idx) => {
                   const hasPrice = offer.minPrice && offer.minPrice > 0
+                  const brandLogo = getBrandLogo(offer.brand)
                   return (
                     <li key={`${offer.id}-${idx}`} className="h-full">
                       <button
                         type="button"
                         onClick={() => handleVerOferta(offer)}
-                        className="group flex flex-col h-full w-full text-left bg-white border border-hairline rounded-2xl p-5 md:p-6 hover:shadow-[0_20px_50px_-25px_rgba(11,31,60,0.25)] hover:border-ink-300 transition-all duration-300"
+                        className="card-lift group flex flex-col h-full w-full text-left bg-white border border-hairline rounded-2xl p-5 md:p-6 hover:shadow-[0_20px_50px_-25px_rgba(11,31,60,0.25)] hover:border-ink-300"
                       >
                         <div className="flex items-start justify-between gap-3 mb-5">
-                          <span className="text-[14px] font-bold text-ink-900 line-clamp-2 leading-tight">
-                            {offer.brand || 'Faculdade Parceira'}
-                          </span>
+                          <div className="h-9 flex items-center min-w-0">
+                            {brandLogo ? (
+                              <Image
+                                src={brandLogo}
+                                alt={offer.brand || 'Faculdade Parceira'}
+                                width={120}
+                                height={36}
+                                className="h-9 w-auto object-contain"
+                                unoptimized
+                              />
+                            ) : (
+                              <span className="text-[14px] font-bold text-ink-900 line-clamp-2 leading-tight">
+                                {offer.brand || 'Faculdade Parceira'}
+                              </span>
+                            )}
+                          </div>
                           <span className="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-bolsa-primary/5 text-bolsa-primary text-[11px] font-bold tracking-wide uppercase">
                             {modalityLabel(offer.modality)}
                           </span>

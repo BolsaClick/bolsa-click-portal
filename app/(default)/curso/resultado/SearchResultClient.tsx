@@ -20,6 +20,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { normalizeAcademicLevel } from '@/app/lib/academic-level'
+import { titleCasePtBr } from '@/app/lib/utils/title-case'
 
 import CourseCardNew from '@/app/components/CourseCardNew';
 import FiltersPanel from './FiltersPanel';
@@ -193,18 +194,17 @@ export default function SearchResultClient() {
     router.push(`/curso/resultado?${params.toString()}`)
   }, [curso, cursoNomeCompleto, cidade, estado, modalidade, nivel, router])
 
-  // Montar nome do curso para exibição: curso limpo + sufixo do cn (se houver)
+  // Montar nome do curso para exibição: curso limpo + sufixo do cn (se houver),
+  // com title case PT-BR pra não exibir "eletricista" em minúsculo na H1.
   const courseDisplayName = useMemo(() => {
     if (!curso) return ''
-    
-    // O cn agora contém apenas o sufixo (Bacharelado, Licenciatura, Tecnólogo)
-    // Se tiver cn, juntar com o curso limpo
-    if (cursoNomeCompleto && cursoNomeCompleto.trim()) {
-      return `${curso} - ${cursoNomeCompleto}`
-    }
-    
-    // Caso contrário, retornar apenas o curso limpo
-    return curso
+
+    // O cn agora contém apenas o sufixo (Bacharelado, Licenciatura, Tecnólogo).
+    const raw = cursoNomeCompleto && cursoNomeCompleto.trim()
+      ? `${curso} - ${cursoNomeCompleto}`
+      : curso
+
+    return titleCasePtBr(raw)
   }, [curso, cursoNomeCompleto])
 
   const [locationDetected, setLocationDetected] = useState(false)
@@ -910,7 +910,7 @@ const onSubmit = (data: any) => {
                       </span>
                     </div>
                     <ul
-                      className={`grid ${
+                      className={`grid stagger-rise ${
                         viewMode === 'grid'
                           ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5 items-stretch'
                           : 'grid-cols-1 gap-4'
@@ -963,7 +963,8 @@ const onSubmit = (data: any) => {
               </div>
             ) : (
               <ul
-                className={`grid ${
+                key={`page-${currentPage}-${courseNameForAPI}-${cidade}-${modalidade}`}
+                className={`grid stagger-rise ${
                   viewMode === 'grid'
                     ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5 items-stretch'
                     : 'grid-cols-1 gap-4'

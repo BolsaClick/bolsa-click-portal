@@ -12,6 +12,7 @@ import {
   Monitor,
 } from 'lucide-react'
 import type { VitrineCourse } from '@/app/lib/api/get-vitrine'
+import { getBrandLogo } from '@/app/lib/brand-logos'
 
 const STATS = [
   { value: '50k+', label: 'Cursos de graduação' },
@@ -19,14 +20,6 @@ const STATS = [
   { value: 'até 80%', label: 'de desconto em bolsas' },
   { value: '100%', label: 'sem necessidade de ENEM' },
 ]
-
-const BRAND_LOGOS: Record<string, string> = {
-  ANHANGUERA: '/assets/logo-anhanguera-bolsa-click.svg',
-  UNOPAR: '/assets/logo-unopar.svg',
-  PITAGORAS: '/assets/logo-pitagoras.svg',
-  AMPLI: '/assets/ampli-logo.png',
-  UNIME: '/assets/logo-unime-p.png',
-}
 
 const TYPES = [
   {
@@ -227,10 +220,9 @@ export default function GraduacaoClient({ offers }: Props) {
               </Link>
             </div>
           ) : (
-            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 items-stretch">
+            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 items-stretch stagger-rise">
               {offers.map((o) => {
-                const brandKey = (o.brand || '').toUpperCase()
-                const logo = BRAND_LOGOS[brandKey]
+                const logo = getBrandLogo(o.brand)
                 const monthly = o.durationInMonths && o.durationInMonths > 0
                   ? o.minPrice / o.durationInMonths
                   : o.minPrice
@@ -241,7 +233,7 @@ export default function GraduacaoClient({ offers }: Props) {
                   <li key={`${o.id}-${o.searchTerm}-${o.modality}`} className="h-full">
                     <Link
                       href={buildOfferHref(o)}
-                      className="group flex flex-col h-full bg-white border border-hairline rounded-2xl p-5 md:p-6 hover:shadow-[0_20px_50px_-25px_rgba(11,31,60,0.25)] hover:border-ink-300 transition-all duration-300"
+                      className="card-lift group flex flex-col h-full bg-white border border-hairline rounded-2xl p-5 md:p-6 hover:shadow-[0_20px_50px_-25px_rgba(11,31,60,0.25)] hover:border-ink-300"
                     >
                       <div className="flex items-start justify-between gap-3 mb-5">
                         <div className="h-9 flex items-center">

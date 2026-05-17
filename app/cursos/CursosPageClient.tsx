@@ -418,16 +418,16 @@ export default function CursosPageClient({ courses }: CursosPageClientProps) {
 
           {/* COURSE GRID */}
           {filtered.length > 0 ? (
-            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-px bg-hairline border border-hairline">
+            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5 items-stretch stagger-rise">
               {filtered.map((curso) => {
                 const demand = demandChip(curso.marketDemand)
                 return (
                   <li
                     key={curso.slug}
-                    className="group relative h-full bg-white flex flex-col p-6 hover:bg-paper transition-colors"
+                    className="card-lift group relative h-full bg-white border border-hairline rounded-2xl flex flex-col p-5 md:p-6 hover:shadow-[0_20px_50px_-25px_rgba(11,31,60,0.25)] hover:border-ink-300"
                   >
                     {/* TOP META */}
-                    <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center justify-between mb-4">
                       <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-700">
                         {TYPE_LABEL[curso.type]}
                       </span>
@@ -443,19 +443,19 @@ export default function CursosPageClient({ courses }: CursosPageClientProps) {
                     <h3 className="font-display text-[22px] md:text-[24px] text-ink-900 leading-[1.15] mb-3 group-hover:text-bolsa-secondary transition-colors">
                       <Link
                         href={`/cursos/${curso.slug}`}
-                        className="before:absolute before:inset-0 before:content-[''] focus-visible:outline-none focus-visible:before:ring-2 focus-visible:before:ring-bolsa-secondary"
+                        className="before:absolute before:inset-0 before:content-[''] before:rounded-2xl focus-visible:outline-none focus-visible:before:ring-2 focus-visible:before:ring-bolsa-secondary"
                       >
                         {curso.name}
                       </Link>
                     </h3>
 
-                    <p className="text-[14px] text-ink-500 leading-relaxed line-clamp-2 mb-5">
+                    <p className="text-[14px] text-ink-500 leading-relaxed line-clamp-2 mb-4">
                       {curso.description}
                     </p>
 
                     {/* AREAS */}
                     {curso.areas.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mb-6">
+                      <div className="flex flex-wrap gap-1.5 mb-5">
                         {curso.areas.slice(0, 3).map((a) => (
                           <span
                             key={a}
@@ -468,7 +468,7 @@ export default function CursosPageClient({ courses }: CursosPageClientProps) {
                     )}
 
                     {/* META ROW */}
-                    <dl className="grid grid-cols-2 gap-3 mb-5">
+                    <dl className="grid grid-cols-2 gap-3 pt-4 pb-4 border-t border-hairline">
                       <div>
                         <dt className="font-mono text-[9px] tracking-[0.22em] uppercase text-ink-500 mb-1 inline-flex items-center gap-1">
                           <Clock size={10} />
@@ -491,7 +491,7 @@ export default function CursosPageClient({ courses }: CursosPageClientProps) {
 
                     {/* DEMAND CHIP */}
                     <span
-                      className={`inline-flex w-fit items-center px-2.5 py-1 rounded-full text-[11px] font-semibold mb-5 ${demand.tone}`}
+                      className={`inline-flex w-fit items-center px-2.5 py-1 rounded-full text-[11px] font-semibold mb-4 ${demand.tone}`}
                     >
                       {demand.label}
                     </span>

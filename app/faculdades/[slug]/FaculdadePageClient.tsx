@@ -14,9 +14,8 @@ import {
   CheckCircle2,
   BookOpen,
   ArrowRight,
+  ArrowLeft,
 } from 'lucide-react'
-import Container from '@/app/components/atoms/Container'
-import Breadcrumb from '@/app/components/atoms/Breadcrumb'
 import CourseCardNew from '@/app/components/CourseCardNew'
 import { Course } from '@/app/interface/course'
 import type { InstitutionData } from '../_data/types'
@@ -26,7 +25,13 @@ type Props = {
   initialCourses: Course[]
 }
 
-const modalityLabels: Record<string, string> = {
+const modalityShortLabel: Record<string, string> = {
+  EAD: 'EAD',
+  PRESENCIAL: 'Presencial',
+  SEMIPRESENCIAL: 'Semipresencial',
+}
+
+const modalityFullLabel: Record<string, string> = {
   EAD: 'EAD (Ensino a Distância)',
   PRESENCIAL: 'Presencial',
   SEMIPRESENCIAL: 'Semipresencial',
@@ -43,14 +48,33 @@ const typeLabels: Record<string, string> = {
   PUBLICA_ESTADUAL: 'Instituição Pública Estadual',
 }
 
+const modalityDetail: Record<string, { title: (n: string) => string; body: (n: string) => string }> = {
+  EAD: {
+    title: (n) => `Cursos EAD na ${n}`,
+    body: (n) =>
+      `Os cursos EAD da Faculdade ${n} oferecem flexibilidade total pra você estudar de qualquer lugar. Aulas online, material digital e suporte de tutores — diploma com a mesma validade do presencial.`,
+  },
+  PRESENCIAL: {
+    title: (n) => `Cursos Presenciais na ${n}`,
+    body: (n) =>
+      `Os cursos presenciais da Faculdade ${n} entregam experiência completa: infraestrutura moderna, laboratórios equipados e contato direto com professores e colegas.`,
+  },
+  SEMIPRESENCIAL: {
+    title: (n) => `Cursos Semipresenciais na ${n}`,
+    body: () =>
+      `Combinam o melhor dos dois mundos — a flexibilidade do EAD com encontros presenciais periódicos pra atividades práticas e avaliações.`,
+  },
+}
+
 export default function FaculdadePageClient({ institution, initialCourses }: Props) {
   const [selectedModality, setSelectedModality] = useState<string>('')
   const [visibleCount, setVisibleCount] = useState(6)
+  const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(0)
 
   const institutionCourses = useMemo(() => {
     if (!selectedModality) return initialCourses
     const target = selectedModality.toUpperCase()
-    return initialCourses.filter(c => {
+    return initialCourses.filter((c) => {
       const m = (c.modality ?? c.commercialModality ?? '').toUpperCase()
       return m === target
     })
@@ -58,203 +82,302 @@ export default function FaculdadePageClient({ institution, initialCourses }: Pro
 
   const visibleCourses = institutionCourses.slice(0, visibleCount)
 
+  const stats: Array<{ value: string; label: string }> = []
+  if (institution.mecRating) stats.push({ value: `${institution.mecRating}/5`, label: 'Nota MEC' })
+  if (institution.campusCount) stats.push({ value: `${institution.campusCount}+`, label: 'Polos / campus' })
+  if (institution.studentCount) stats.push({ value: institution.studentCount, label: 'Alunos' })
+  if (institution.coursesOffered) stats.push({ value: `${institution.coursesOffered}+`, label: 'Cursos' })
+
+  const yearsActive = institution.founded ? new Date().getFullYear() - institution.founded : null
+
+  const faqItems: Array<{ q: string; a: string }> = [
+    {
+      q: `Qual a nota da Faculdade ${institution.name} no MEC?`,
+      a: institution.mecRating
+        ? `A Faculdade ${institution.name} tem nota ${institution.mecRating} no MEC (escala 1 a 5), refletindo a qualidade do ensino.`
+        : `Você pode consultar a nota MEC da Faculdade ${institution.name} direto no portal e-MEC.`,
+    },
+    {
+      q: `Como conseguir bolsa de estudo na ${institution.name}?`,
+      a: `Pelo Bolsa Click: busca o curso, escolhe a melhor oferta e se inscreve grátis. As bolsas chegam a 95% de desconto.`,
+    },
+    {
+      q: `Quais cursos a Faculdade ${institution.name} oferece?`,
+      a: `${institution.academicLevels
+        .map((l) => (l === 'GRADUACAO' ? 'graduação' : 'pós-graduação'))
+        .join(' e ')} nas modalidades ${institution.modalities
+        .map((m) => (m === 'EAD' ? 'EAD' : m === 'PRESENCIAL' ? 'presencial' : 'semipresencial'))
+        .join(', ')}${institution.coursesOffered ? ` — mais de ${institution.coursesOffered} cursos disponíveis.` : '.'}`,
+    },
+    {
+      q: `A ${institution.name} é reconhecida pelo MEC?`,
+      a: `Sim. ${institution.mecRating ? `Nota institucional ${institution.mecRating}/5. ` : ''}${
+        institution.emecLink ? 'Você pode verificar a situação direto no portal e-MEC.' : ''
+      }`,
+    },
+    {
+      q: `Quanto custa estudar na ${institution.name}?`,
+      a: `Os valores variam por curso e modalidade. Pelo Bolsa Click, você encontra bolsas com até 80% de desconto na mensalidade.`,
+    },
+    {
+      q: `A ${institution.name} tem cursos EAD?`,
+      a: institution.modalities.includes('EAD')
+        ? `Sim. A Faculdade ${institution.name} oferece cursos EAD — estude de qualquer lugar com flexibilidade.`
+        : `Hoje a Faculdade ${institution.name} oferece cursos ${institution.modalities
+            .map((m) => (m === 'PRESENCIAL' ? 'presencial' : 'semipresencial'))
+            .join(' e ')}.`,
+    },
+  ]
+
   return (
-    <article className="bg-gray-50 min-h-screen">
-      {/* Hero */}
-      <div className="bg-gradient-to-r from-bolsa-primary to-pink-600 text-white py-10 md:py-14">
-        <Container>
-          <Breadcrumb
-            items={[
-              { label: 'Início', href: '/' },
-              { label: 'Faculdades', href: '/faculdades' },
-              { label: institution.name },
-            ]}
-          />
+    <div className="bg-paper">
+      {/* HERO */}
+      <section className="relative bg-bolsa-primary overflow-hidden">
+        <div
+          aria-hidden="true"
+          className="absolute -top-24 -right-32 w-[28rem] h-[28rem] rounded-full bg-bolsa-secondary/20 blur-3xl"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute -bottom-32 -left-24 w-[28rem] h-[28rem] rounded-full bg-blue-400/15 blur-3xl"
+        />
+        <div className="container mx-auto px-4 pt-16 pb-12 md:pt-24 md:pb-16 relative">
+          <div className="max-w-5xl">
+            {/* Breadcrumb mono */}
+            <nav
+              aria-label="Breadcrumb"
+              className="font-mono text-[10px] tracking-[0.22em] uppercase text-white/60 mb-8 inline-flex items-center gap-2"
+            >
+              <Link href="/" className="hover:text-white transition-colors">
+                Início
+              </Link>
+              <span className="text-white/30">/</span>
+              <Link href="/faculdades" className="hover:text-white transition-colors">
+                Faculdades
+              </Link>
+              <span className="text-white/30">/</span>
+              <span className="text-white">{institution.name}</span>
+            </nav>
 
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mt-6">
-            {/* Logo */}
-            <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl bg-white overflow-hidden flex-shrink-0 shadow-lg">
-              <Image
-                src={institution.logoUrl}
-                alt={institution.imageAlt || `Logo ${institution.name}`}
-                width={96}
-                height={96}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement
-                  target.style.display = 'none'
-                  if (target.parentElement) {
-                    target.parentElement.innerHTML = `<span class="text-3xl font-bold text-bolsa-primary flex items-center justify-center w-full h-full">${institution.shortName.charAt(0)}</span>`
-                  }
-                }}
-              />
+            {/* Logo + Title */}
+            <div className="flex flex-col md:flex-row md:items-end gap-6 md:gap-8 mb-6">
+              <div className="flex-shrink-0 w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-white p-3 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.5)]">
+                <Image
+                  src={institution.logoUrl}
+                  alt={institution.imageAlt || `Logo ${institution.name}`}
+                  width={96}
+                  height={96}
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement
+                    target.style.display = 'none'
+                    if (target.parentElement) {
+                      target.parentElement.innerHTML = `<span class="text-3xl font-display font-semibold text-bolsa-primary flex items-center justify-center w-full h-full">${institution.shortName.charAt(0)}</span>`
+                    }
+                  }}
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-white/60 inline-flex items-center gap-3 mb-3">
+                  <span className="h-px w-8 bg-white/30" />
+                  Faculdade parceira
+                </span>
+                <h1 className="font-display text-4xl md:text-5xl lg:text-[56px] font-semibold text-white leading-[1.05]">
+                  Faculdade <span className="italic text-white/85">{institution.name}</span>
+                </h1>
+                <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-white/60 mt-4">
+                  {typeLabels[institution.type]}
+                  {institution.founded ? ` · Desde ${institution.founded}` : ''}
+                  {yearsActive ? ` · ${yearsActive} anos` : ''}
+                </p>
+              </div>
             </div>
 
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold">Faculdade {institution.name}</h1>
-              <p className="text-white/80 mt-1 text-sm">
-                {institution.fullName} | {typeLabels[institution.type]} {institution.founded ? `| Fundada em ${institution.founded}` : ''}
-              </p>
-              <p className="text-white/90 mt-2 text-lg max-w-2xl">{institution.description}</p>
+            <p className="text-white/80 text-[15px] md:text-[17px] leading-relaxed max-w-3xl">
+              {institution.description}
+            </p>
+
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <a
+                href="#ofertas"
+                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-bolsa-secondary text-white font-semibold rounded-full hover:bg-bolsa-secondary/90 transition-colors text-[14px] shadow-lg shadow-bolsa-secondary/30"
+              >
+                Ver bolsas disponíveis
+                <ArrowRight size={16} />
+              </a>
+              <Link
+                href="/faculdades"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 border border-white/30 text-white font-medium rounded-full hover:bg-white/10 transition-colors text-[14px]"
+              >
+                <ArrowLeft size={14} />
+                Outras faculdades
+              </Link>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-            {institution.mecRating && (
-              <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 text-center">
-                <Star className="mx-auto mb-1" size={24} fill="currentColor" />
-                <p className="text-2xl font-bold">{institution.mecRating}/5</p>
-                <p className="text-white/80 text-sm">Nota MEC</p>
-              </div>
-            )}
-            {institution.campusCount && (
-              <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 text-center">
-                <Building2 className="mx-auto mb-1" size={24} />
-                <p className="text-2xl font-bold">{institution.campusCount}+</p>
-                <p className="text-white/80 text-sm">Polos/Campus</p>
-              </div>
-            )}
-            {institution.studentCount && (
-              <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 text-center">
-                <Users className="mx-auto mb-1" size={24} />
-                <p className="text-2xl font-bold">{institution.studentCount}</p>
-                <p className="text-white/80 text-sm">Alunos</p>
-              </div>
-            )}
-            {institution.coursesOffered && (
-              <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 text-center">
-                <BookOpen className="mx-auto mb-1" size={24} />
-                <p className="text-2xl font-bold">{institution.coursesOffered}+</p>
-                <p className="text-white/80 text-sm">Cursos</p>
-              </div>
-            )}
+      {/* STATS BAR */}
+      {stats.length > 0 && (
+        <section className="bg-white border-b border-hairline">
+          <div className="container mx-auto px-4">
+            <div
+              className={`grid grid-cols-2 ${
+                stats.length >= 4 ? 'md:grid-cols-4' : `md:grid-cols-${stats.length}`
+              } divide-x divide-hairline`}
+            >
+              {stats.map((s) => (
+                <div key={s.label} className="px-4 py-8 md:py-10 text-center">
+                  <div className="font-display num-tabular text-3xl md:text-4xl text-ink-900 leading-none">
+                    {s.value}
+                  </div>
+                  <div className="text-[12px] md:text-[13px] text-ink-500 mt-2 leading-snug">
+                    {s.label}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </Container>
-      </div>
+        </section>
+      )}
 
-      <Container>
-        <div className="py-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* About */}
-            <section className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 md:p-8">
-              <h2 className="text-2xl font-bold text-neutral-800 mb-4">
-                Sobre a {institution.name}
+      <section className="container mx-auto px-4 py-12 md:py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12">
+          {/* MAIN */}
+          <div className="lg:col-span-8 space-y-14 md:space-y-20">
+            {/* SOBRE */}
+            <section>
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 flex items-center gap-3 mb-4">
+                <span className="h-px w-8 bg-ink-300" />
+                Sobre a instituição
+              </span>
+              <h2 className="font-display text-3xl md:text-4xl text-ink-900 leading-tight mb-6">
+                O que é a <span className="italic text-ink-700">{institution.name}?</span>
               </h2>
-              <div className="prose prose-neutral max-w-none">
+              <div className="space-y-4 text-ink-700 text-[16px] leading-relaxed">
                 {institution.longDescription.split('\n\n').map((paragraph, i) => (
-                  <p key={i} className="text-neutral-600 leading-relaxed mb-4">
-                    {paragraph}
-                  </p>
+                  <p key={i}>{paragraph}</p>
                 ))}
               </div>
             </section>
 
-            {/* Why Study Here */}
-            <section className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 md:p-8">
-              <h2 className="text-2xl font-bold text-neutral-800 mb-4">
-                Por que estudar na Faculdade {institution.name}?
+            {/* POR QUE ESTUDAR */}
+            <section>
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 flex items-center gap-3 mb-4">
+                <span className="h-px w-8 bg-ink-300" />
+                Por que estudar aqui
+              </span>
+              <h2 className="font-display text-3xl md:text-4xl text-ink-900 leading-tight mb-6">
+                Tradição, alcance{' '}
+                <span className="italic text-ink-700">e bolsa garantida.</span>
               </h2>
-              <div className="prose prose-neutral max-w-none">
-                <p className="text-neutral-600 leading-relaxed mb-4">
+              <div className="space-y-4 text-ink-700 text-[16px] leading-relaxed mb-8">
+                <p>
                   A Faculdade {institution.name} é uma das principais instituições de ensino superior do Brasil
-                  {institution.founded ? `, com mais de ${new Date().getFullYear() - institution.founded} anos de tradição no mercado educacional` : ''}.
-                  {institution.studentCount ? ` Com mais de ${institution.studentCount} alunos,` : ''} a {institution.name} se destaca pela qualidade de ensino
-                  {institution.mecRating ? ` reconhecida pelo MEC com nota ${institution.mecRating}` : ''} e pela variedade de cursos oferecidos.
+                  {yearsActive ? `, com mais de ${yearsActive} anos de história` : ''}.
+                  {institution.studentCount ? ` Com mais de ${institution.studentCount} alunos,` : ''} se destaca pela qualidade de ensino
+                  {institution.mecRating ? ` reconhecida pelo MEC com nota ${institution.mecRating}` : ''} e variedade de cursos.
                 </p>
-                <p className="text-neutral-600 leading-relaxed mb-4">
-                  Estudar na Faculdade {institution.name} significa ter acesso a uma formação de qualidade com
-                  {' '}{institution.modalities.map(m => m === 'EAD' ? 'ensino a distância (EAD)' : m === 'PRESENCIAL' ? 'aulas presenciais' : 'formato semipresencial').join(', ')},
-                  permitindo que você escolha a modalidade que melhor se adapta à sua rotina.
-                  {institution.campusCount ? ` A instituição conta com ${institution.campusCount}+ polos e campus espalhados pelo Brasil, facilitando o acesso ao ensino superior de qualidade.` : ''}
+                <p>
+                  Estudar aqui significa acesso a{' '}
+                  {institution.modalities
+                    .map((m) =>
+                      m === 'EAD' ? 'EAD' : m === 'PRESENCIAL' ? 'aulas presenciais' : 'formato semipresencial',
+                    )
+                    .join(', ')}
+                  , escolhendo a modalidade que cabe na sua rotina.
+                  {institution.campusCount
+                    ? ` Mais de ${institution.campusCount} polos e campus espalhados pelo Brasil.`
+                    : ''}
                 </p>
-                <p className="text-neutral-600 leading-relaxed">
-                  Pelo Bolsa Click, você pode garantir bolsas de estudo na Faculdade {institution.name} com descontos de até 80% nas mensalidades.
-                  A inscrição é gratuita e você pode começar a estudar na próxima turma disponível.
+                <p>
+                  Pelo Bolsa Click você garante bolsa com até <strong>80% de desconto</strong> na {institution.name}.
+                  Cadastro grátis, sem ENEM, sem prova.
                 </p>
               </div>
-            </section>
 
-            {/* Highlights */}
-            {institution.highlights.length > 0 && (
-              <section className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 md:p-8">
-                <h2 className="text-2xl font-bold text-neutral-800 mb-4">
-                  Diferenciais da Faculdade {institution.name}
-                </h2>
-                <ul className="space-y-3">
+              {/* DIFERENCIAIS */}
+              {institution.highlights.length > 0 && (
+                <ul className="space-y-3 hairline-t pt-6">
                   {institution.highlights.map((highlight, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <CheckCircle2 className="text-green-500 mt-0.5 flex-shrink-0" size={20} />
-                      <span className="text-neutral-600">{highlight}</span>
+                      <span className="flex-shrink-0 mt-0.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-bolsa-secondary/10 text-bolsa-secondary">
+                        <CheckCircle2 size={12} strokeWidth={2.5} />
+                      </span>
+                      <span className="text-ink-700 text-[15px] leading-relaxed">{highlight}</span>
                     </li>
                   ))}
                 </ul>
+              )}
+            </section>
+
+            {/* MODALIDADES */}
+            {institution.modalities.length > 0 && (
+              <section>
+                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 flex items-center gap-3 mb-4">
+                  <span className="h-px w-8 bg-ink-300" />
+                  Modalidades disponíveis
+                </span>
+                <h2 className="font-display text-3xl md:text-4xl text-ink-900 leading-tight mb-8">
+                  Estude do jeito{' '}
+                  <span className="italic text-ink-700">que cabe em você.</span>
+                </h2>
+                <ol className="grid grid-cols-1 md:grid-cols-3 border-t border-hairline">
+                  {institution.modalities.map((mod, i) => {
+                    const detail = modalityDetail[mod]
+                    if (!detail) return null
+                    return (
+                      <li
+                        key={mod}
+                        className="px-2 md:px-6 py-8 md:py-10 border-b border-hairline md:border-r last:md:border-r-0"
+                      >
+                        <span className="font-mono num-tabular text-[11px] tracking-[0.22em] uppercase text-ink-700 mb-5 block">
+                          {String(i + 1).padStart(2, '0')}
+                        </span>
+                        <h3 className="font-display text-2xl md:text-[26px] text-ink-900 leading-tight mb-3">
+                          {modalityShortLabel[mod]}
+                        </h3>
+                        <p className="text-ink-500 leading-relaxed text-[14px]">
+                          {detail.body(institution.name)}
+                        </p>
+                      </li>
+                    )
+                  })}
+                </ol>
               </section>
             )}
 
-            {/* Modalities Detail */}
-            <section className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 md:p-8">
-              <h2 className="text-2xl font-bold text-neutral-800 mb-4">
-                Modalidades de Ensino na Faculdade {institution.name}
-              </h2>
-              <div className="space-y-4">
-                {institution.modalities.includes('EAD') && (
-                  <div className="border border-neutral-100 rounded-lg p-4">
-                    <h3 className="font-semibold text-neutral-800 mb-2 flex items-center gap-2">
-                      <GraduationCap size={18} className="text-bolsa-primary" />
-                      Cursos EAD na {institution.name}
-                    </h3>
-                    <p className="text-neutral-600 text-sm">
-                      Os cursos EAD da Faculdade {institution.name} oferecem flexibilidade total para você estudar de qualquer lugar.
-                      Com aulas online, material didático digital e suporte de tutores, você conquista seu diploma com a mesma qualidade do ensino presencial.
-                    </p>
-                  </div>
-                )}
-                {institution.modalities.includes('PRESENCIAL') && (
-                  <div className="border border-neutral-100 rounded-lg p-4">
-                    <h3 className="font-semibold text-neutral-800 mb-2 flex items-center gap-2">
-                      <GraduationCap size={18} className="text-bolsa-primary" />
-                      Cursos Presenciais na {institution.name}
-                    </h3>
-                    <p className="text-neutral-600 text-sm">
-                      Os cursos presenciais da Faculdade {institution.name} proporcionam uma experiência completa de ensino,
-                      com infraestrutura moderna, laboratórios equipados e contato direto com professores e colegas.
-                    </p>
-                  </div>
-                )}
-                {institution.modalities.includes('SEMIPRESENCIAL') && (
-                  <div className="border border-neutral-100 rounded-lg p-4">
-                    <h3 className="font-semibold text-neutral-800 mb-2 flex items-center gap-2">
-                      <GraduationCap size={18} className="text-bolsa-primary" />
-                      Cursos Semipresenciais na {institution.name}
-                    </h3>
-                    <p className="text-neutral-600 text-sm">
-                      Os cursos semipresenciais da Faculdade {institution.name} combinam o melhor dos dois mundos:
-                      a flexibilidade do EAD com encontros presenciais periódicos para atividades práticas e avaliações.
-                    </p>
-                  </div>
-                )}
+            {/* OFERTAS */}
+            <section id="ofertas" className="scroll-mt-24">
+              <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
+                <div>
+                  <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 flex items-center gap-3 mb-3">
+                    <span className="h-px w-8 bg-ink-300" />
+                    Bolsas na {institution.name}
+                  </span>
+                  <h2 className="font-display text-3xl md:text-[36px] font-semibold text-ink-900 leading-tight">
+                    Cursos com bolsa garantida
+                  </h2>
+                  <p className="text-ink-500 text-[15px] mt-1 max-w-2xl">
+                    {institutionCourses.length}{' '}
+                    {institutionCourses.length === 1 ? 'oferta' : 'ofertas'} encontradas. Inscrição
+                    grátis.
+                  </p>
+                </div>
               </div>
-            </section>
 
-            {/* Offers Section */}
-            <section id="ofertas">
-              <h2 className="text-2xl font-bold text-neutral-800 mb-4">
-                Bolsas de Estudo na {institution.name}
-              </h2>
-              <p className="text-neutral-600 mb-6">
-                Confira os cursos disponíveis com bolsa de estudo na {institution.name}. Inscrição gratuita!
-              </p>
-
-              {/* Modality Filter */}
-              <div className="flex flex-wrap gap-2 mb-6">
+              {/* Filtro de modalidade */}
+              <div className="flex flex-wrap gap-2 mb-8">
                 <button
-                  onClick={() => { setSelectedModality(''); setVisibleCount(6) }}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  type="button"
+                  onClick={() => {
+                    setSelectedModality('')
+                    setVisibleCount(6)
+                  }}
+                  className={`px-4 py-2 rounded-full text-[13px] font-semibold transition-colors ${
                     selectedModality === ''
-                      ? 'bg-bolsa-primary text-white'
-                      : 'bg-white border border-neutral-200 text-neutral-600 hover:border-bolsa-primary/50'
+                      ? 'bg-ink-900 text-white'
+                      : 'bg-white border border-hairline text-ink-700 hover:border-ink-300'
                   }`}
                 >
                   Todas
@@ -262,245 +385,293 @@ export default function FaculdadePageClient({ institution, initialCourses }: Pro
                 {institution.modalities.map((mod) => (
                   <button
                     key={mod}
-                    onClick={() => { setSelectedModality(mod); setVisibleCount(6) }}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    type="button"
+                    onClick={() => {
+                      setSelectedModality(mod)
+                      setVisibleCount(6)
+                    }}
+                    className={`px-4 py-2 rounded-full text-[13px] font-semibold transition-colors ${
                       selectedModality === mod
-                        ? 'bg-bolsa-primary text-white'
-                        : 'bg-white border border-neutral-200 text-neutral-600 hover:border-bolsa-primary/50'
+                        ? 'bg-ink-900 text-white'
+                        : 'bg-white border border-hairline text-ink-700 hover:border-ink-300'
                     }`}
                   >
-                    {modalityLabels[mod]?.replace(' (Ensino a Distância)', '') || mod}
+                    {modalityShortLabel[mod] || mod}
                   </button>
                 ))}
               </div>
 
-              {/* Course Cards */}
               {institutionCourses.length === 0 ? (
-                <div className="bg-white rounded-xl border border-neutral-200 p-8 text-center">
-                  <GraduationCap className="mx-auto text-neutral-300 mb-3" size={40} />
-                  <p className="text-neutral-500 mb-4">
-                    Nenhuma oferta encontrada{selectedModality ? ` na modalidade ${modalityLabels[selectedModality]?.replace(' (Ensino a Distância)', '') || selectedModality}` : ''}.
+                <div className="bg-white border border-hairline rounded-2xl p-10 md:p-12 text-center">
+                  <GraduationCap className="mx-auto text-ink-300 mb-4" size={36} />
+                  <p className="text-ink-700 text-[15px] mb-4">
+                    Nenhuma oferta encontrada
+                    {selectedModality
+                      ? ` em ${modalityShortLabel[selectedModality] || selectedModality}`
+                      : ''}{' '}
+                    pra essa instituição agora.
                   </p>
                   <Link
-                    href={`/curso/resultado?nivel=GRADUACAO`}
-                    className="text-bolsa-primary hover:underline font-medium text-sm"
+                    href="/curso/resultado?nivel=GRADUACAO"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-bolsa-secondary text-white font-semibold rounded-full text-[13px] hover:bg-bolsa-secondary/90 transition-colors"
                   >
-                    Ver todas as bolsas disponíveis
+                    Ver todas as bolsas
+                    <ArrowRight size={14} />
                   </Link>
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <ul
+                    key={`${selectedModality}-${visibleCount}`}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 items-stretch stagger-rise"
+                  >
                     {visibleCourses.map((course, index) => (
-                      <CourseCardNew
-                        key={`${course.id}-${index}`}
-                        courseName={course.name || ''}
-                        course={course}
-                        viewMode="grid"
-                      />
+                      <li key={`${course.id}-${index}`} className="h-full">
+                        <CourseCardNew
+                          courseName={course.name || ''}
+                          course={course}
+                          viewMode="grid"
+                        />
+                      </li>
                     ))}
-                  </div>
+                  </ul>
 
                   {institutionCourses.length > visibleCount && (
-                    <div className="text-center mt-6">
+                    <div className="text-center mt-8">
                       <button
+                        type="button"
                         onClick={() => setVisibleCount((prev) => prev + 6)}
-                        className="px-6 py-3 rounded-lg border-2 border-bolsa-primary text-bolsa-primary hover:bg-bolsa-primary/5 font-semibold transition-colors"
+                        className="inline-flex items-center gap-2 px-6 py-3 border border-hairline text-ink-900 font-semibold rounded-full text-[13px] hover:border-ink-300 hover:bg-white transition-colors"
                       >
-                        Ver mais cursos ({institutionCourses.length - visibleCount} restantes)
+                        Ver mais {institutionCourses.length - visibleCount}{' '}
+                        {institutionCourses.length - visibleCount === 1 ? 'curso' : 'cursos'}
+                        <ArrowRight size={14} />
                       </button>
                     </div>
                   )}
-
-                  <p className="text-sm text-neutral-400 mt-4 text-center">
-                    {institutionCourses.length} {institutionCourses.length === 1 ? 'curso encontrado' : 'cursos encontrados'} na {institution.name}
-                  </p>
                 </>
               )}
             </section>
 
-            {/* FAQ Section */}
-            <section className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 md:p-8">
-              <h2 className="text-2xl font-bold text-neutral-800 mb-4">
-                Perguntas Frequentes sobre a Faculdade {institution.name}
-              </h2>
-              <div className="space-y-4">
-                <div className="border-b border-neutral-100 pb-4">
-                  <h3 className="font-semibold text-neutral-800 mb-2">
-                    Qual a nota da Faculdade {institution.name} no MEC?
-                  </h3>
-                  <p className="text-neutral-600 text-sm">
-                    {institution.mecRating
-                      ? `A Faculdade ${institution.name} possui nota ${institution.mecRating} no MEC (em uma escala de 1 a 5), demonstrando a qualidade do ensino oferecido pela instituição.`
-                      : `A nota da Faculdade ${institution.name} no MEC pode ser consultada diretamente no portal e-MEC.`}
-                  </p>
+            {/* FAQ */}
+            <section>
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
+                <div className="md:col-span-5">
+                  <div className="md:sticky md:top-28">
+                    <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 flex items-center gap-3 mb-4">
+                      <span className="h-px w-8 bg-ink-300" />
+                      FAQ
+                    </span>
+                    <h2 className="font-display text-3xl md:text-4xl text-ink-900 leading-tight mb-4">
+                      Dúvidas sobre{' '}
+                      <span className="italic text-ink-700">a {institution.name}?</span>
+                    </h2>
+                    <p className="text-ink-500 text-[15px] leading-relaxed">
+                      Tira as principais aqui. Pra detalhes específicos, fala direto com a faculdade
+                      no momento da inscrição.
+                    </p>
+                  </div>
                 </div>
-                <div className="border-b border-neutral-100 pb-4">
-                  <h3 className="font-semibold text-neutral-800 mb-2">
-                    Como conseguir bolsa de estudo na Faculdade {institution.name}?
-                  </h3>
-                  <p className="text-neutral-600 text-sm">
-                    Para conseguir bolsa de estudo na Faculdade {institution.name}, basta acessar o Bolsa Click,
-                    buscar pelo curso desejado, escolher a melhor oferta e se inscrever gratuitamente.
-                    As bolsas podem chegar a até 95% de desconto.
-                  </p>
-                </div>
-                <div className="border-b border-neutral-100 pb-4">
-                  <h3 className="font-semibold text-neutral-800 mb-2">
-                    Quais cursos a Faculdade {institution.name} oferece?
-                  </h3>
-                  <p className="text-neutral-600 text-sm">
-                    A Faculdade {institution.name} oferece cursos de{' '}
-                    {institution.academicLevels.map(l => l === 'GRADUACAO' ? 'graduação' : 'pós-graduação').join(' e ')}{' '}
-                    nas modalidades{' '}
-                    {institution.modalities.map(m => m === 'EAD' ? 'EAD' : m === 'PRESENCIAL' ? 'presencial' : 'semipresencial').join(', ')}.
-                    {institution.coursesOffered ? ` São mais de ${institution.coursesOffered} cursos disponíveis.` : ''}
-                  </p>
-                </div>
-                <div className="border-b border-neutral-100 pb-4">
-                  <h3 className="font-semibold text-neutral-800 mb-2">
-                    A Faculdade {institution.name} é reconhecida pelo MEC?
-                  </h3>
-                  <p className="text-neutral-600 text-sm">
-                    Sim, a Faculdade {institution.name} é uma instituição de ensino superior reconhecida pelo Ministério da Educação (MEC).
-                    {institution.mecRating ? ` Sua nota institucional é ${institution.mecRating} em uma escala de 1 a 5.` : ''}
-                    {institution.emecLink ? ' Você pode verificar a situação da instituição diretamente no portal e-MEC.' : ''}
-                  </p>
-                </div>
-                <div className="border-b border-neutral-100 pb-4">
-                  <h3 className="font-semibold text-neutral-800 mb-2">
-                    Quanto custa estudar na Faculdade {institution.name}?
-                  </h3>
-                  <p className="text-neutral-600 text-sm">
-                    Os valores das mensalidades na Faculdade {institution.name} variam de acordo com o curso e a modalidade escolhida.
-                    Pelo Bolsa Click, você encontra bolsas de estudo com descontos de até 80% nas mensalidades, tornando o ensino superior muito mais acessível.
-                  </p>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-neutral-800 mb-2">
-                    A Faculdade {institution.name} tem cursos EAD?
-                  </h3>
-                  <p className="text-neutral-600 text-sm">
-                    {institution.modalities.includes('EAD')
-                      ? `Sim, a Faculdade ${institution.name} oferece cursos na modalidade EAD (Ensino a Distância), permitindo que você estude de qualquer lugar do Brasil com flexibilidade de horários.`
-                      : `Atualmente, a Faculdade ${institution.name} oferece cursos nas modalidades ${institution.modalities.map(m => m === 'PRESENCIAL' ? 'presencial' : 'semipresencial').join(' e ')}.`}
-                  </p>
+                <div className="md:col-span-7">
+                  <ul className="border-t border-hairline">
+                    {faqItems.map((faq, idx) => {
+                      const open = openFaqIdx === idx
+                      return (
+                        <li key={idx} className="border-b border-hairline">
+                          <button
+                            type="button"
+                            onClick={() => setOpenFaqIdx(open ? null : idx)}
+                            aria-expanded={open}
+                            className="w-full flex items-start justify-between gap-6 py-5 text-left"
+                          >
+                            <span className="flex items-baseline gap-4 min-w-0">
+                              <span className="font-mono num-tabular text-[11px] tracking-[0.2em] text-ink-500 pt-1">
+                                {String(idx + 1).padStart(2, '0')}
+                              </span>
+                              <span className="font-display text-lg md:text-xl text-ink-900 leading-snug">
+                                {faq.q}
+                              </span>
+                            </span>
+                            <span
+                              aria-hidden="true"
+                              className={`flex-shrink-0 w-7 h-7 rounded-full border border-hairline flex items-center justify-center text-ink-500 transition-all duration-200 ${
+                                open ? 'rotate-45 border-ink-900 text-ink-900' : ''
+                              }`}
+                            >
+                              +
+                            </span>
+                          </button>
+                          {open && (
+                            <div className="pb-5 pl-10 pr-12">
+                              <p className="text-ink-500 leading-relaxed text-[15px]">{faq.a}</p>
+                            </div>
+                          )}
+                        </li>
+                      )
+                    })}
+                  </ul>
                 </div>
               </div>
             </section>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* CTA */}
-            <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 sticky top-4">
-              <h3 className="font-bold text-lg text-neutral-800 mb-3">
-                Bolsas na {institution.name}
-              </h3>
-              <p className="text-neutral-600 text-sm mb-4">
-                Encontre bolsas de estudo com até 95% de desconto na {institution.name}.
-                Inscrição grátis!
-              </p>
-              <a
-                href="#ofertas"
-                className="flex items-center justify-center gap-2 w-full bg-bolsa-primary hover:bg-bolsa-primary/90 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
-              >
-                <GraduationCap size={18} />
-                Ver bolsas disponíveis
-              </a>
-              <Link
-                href={`/curso/resultado?nivel=GRADUACAO`}
-                className="flex items-center justify-center gap-2 w-full mt-3 border-2 border-bolsa-primary text-bolsa-primary hover:bg-bolsa-primary/5 font-semibold py-3 px-4 rounded-lg transition-colors"
-              >
-                <BookOpen size={18} />
-                Ver todos os cursos
-              </Link>
-            </div>
-
-            {/* Info Card */}
-            <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
-              <h3 className="font-bold text-lg text-neutral-800 mb-4">Informações</h3>
-              <ul className="space-y-3">
-                {institution.headquartersCity && institution.headquartersState && (
-                  <li className="flex items-center gap-3 text-sm text-neutral-600">
-                    <MapPin size={16} className="text-bolsa-primary flex-shrink-0" />
-                    <span>Sede: {institution.headquartersCity}/{institution.headquartersState}</span>
-                  </li>
-                )}
-                {institution.founded && (
-                  <li className="flex items-center gap-3 text-sm text-neutral-600">
-                    <Calendar size={16} className="text-bolsa-primary flex-shrink-0" />
-                    <span>Fundada em {institution.founded}</span>
-                  </li>
-                )}
-                {institution.mecRating && (
-                  <li className="flex items-center gap-3 text-sm text-neutral-600">
-                    <Star size={16} className="text-bolsa-primary flex-shrink-0" fill="currentColor" />
-                    <span>Nota MEC: {institution.mecRating}/5</span>
-                  </li>
-                )}
-                <li className="flex items-center gap-3 text-sm text-neutral-600">
-                  <Building2 size={16} className="text-bolsa-primary flex-shrink-0" />
-                  <span>{typeLabels[institution.type]}</span>
-                </li>
-              </ul>
-
-              {institution.emecLink && (
-                <a
-                  href={institution.emecLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-bolsa-primary hover:underline mt-4"
-                >
-                  <ExternalLink size={14} />
-                  Consultar no e-MEC
-                </a>
-              )}
-            </div>
-
-            {/* Modalities */}
-            <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
-              <h3 className="font-bold text-lg text-neutral-800 mb-4">Modalidades</h3>
-              <div className="space-y-2">
-                {institution.modalities.map((mod) => (
-                  <div
-                    key={mod}
-                    className="flex items-center gap-2 text-sm text-neutral-600 bg-neutral-50 rounded-lg px-3 py-2"
+          {/* SIDEBAR */}
+          <aside className="lg:col-span-4 space-y-6">
+            {/* CTA sticky */}
+            <div className="sticky top-24 space-y-6">
+              <div className="bg-bolsa-primary text-white rounded-2xl p-6 md:p-7 relative overflow-hidden">
+                <div
+                  aria-hidden="true"
+                  className="absolute -top-16 -right-16 w-40 h-40 rounded-full bg-bolsa-secondary/30 blur-3xl"
+                />
+                <div className="relative">
+                  <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-white/60 mb-3 inline-block">
+                    Pronto pra começar?
+                  </span>
+                  <h3 className="font-display text-2xl font-semibold mb-2 leading-tight">
+                    Bolsa na <span className="italic text-white/85">{institution.name}</span>
+                  </h3>
+                  <p className="text-white/70 text-[13px] mb-5 leading-relaxed">
+                    Encontre bolsas com até 95% de desconto. Cadastro grátis, sem ENEM.
+                  </p>
+                  <a
+                    href="#ofertas"
+                    className="inline-flex items-center justify-center gap-2 w-full px-5 py-3 bg-bolsa-secondary text-white font-semibold rounded-full text-[13px] hover:bg-bolsa-secondary/90 transition-colors"
                   >
-                    <GraduationCap size={14} className="text-bolsa-primary" />
-                    {modalityLabels[mod] || mod}
-                  </div>
-                ))}
+                    Ver bolsas disponíveis
+                    <ArrowRight size={14} />
+                  </a>
+                  <Link
+                    href="/curso/resultado?nivel=GRADUACAO"
+                    className="inline-flex items-center justify-center gap-2 w-full mt-2 px-5 py-3 border border-white/20 text-white font-semibold rounded-full text-[13px] hover:bg-white/10 transition-colors"
+                  >
+                    Buscar outros cursos
+                  </Link>
+                </div>
               </div>
 
-              <h3 className="font-bold text-lg text-neutral-800 mb-4 mt-6">Níveis de Ensino</h3>
-              <div className="space-y-2">
-                {institution.academicLevels.map((level) => (
-                  <div
-                    key={level}
-                    className="flex items-center gap-2 text-sm text-neutral-600 bg-neutral-50 rounded-lg px-3 py-2"
-                  >
-                    <BookOpen size={14} className="text-bolsa-primary" />
-                    {levelLabels[level] || level}
-                  </div>
-                ))}
-              </div>
-            </div>
+              {/* Info compacta */}
+              <div className="bg-white border border-hairline rounded-2xl p-5 md:p-6">
+                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 flex items-center gap-3 mb-4">
+                  <span className="h-px w-8 bg-ink-300" />
+                  Informações
+                </span>
+                <ul className="divide-y divide-hairline">
+                  {institution.headquartersCity && institution.headquartersState && (
+                    <li className="flex items-start gap-3 py-3 text-[13px] text-ink-700">
+                      <MapPin size={14} className="text-bolsa-secondary mt-0.5 flex-shrink-0" />
+                      <div>
+                        <span className="block text-[10px] font-mono uppercase tracking-wider text-ink-500">
+                          Sede
+                        </span>
+                        {institution.headquartersCity} / {institution.headquartersState}
+                      </div>
+                    </li>
+                  )}
+                  {institution.founded && (
+                    <li className="flex items-start gap-3 py-3 text-[13px] text-ink-700">
+                      <Calendar size={14} className="text-bolsa-secondary mt-0.5 flex-shrink-0" />
+                      <div>
+                        <span className="block text-[10px] font-mono uppercase tracking-wider text-ink-500">
+                          Fundada
+                        </span>
+                        {institution.founded}
+                        {yearsActive ? ` · ${yearsActive} anos` : ''}
+                      </div>
+                    </li>
+                  )}
+                  {institution.mecRating && (
+                    <li className="flex items-start gap-3 py-3 text-[13px] text-ink-700">
+                      <Star
+                        size={14}
+                        className="text-bolsa-secondary mt-0.5 flex-shrink-0"
+                        fill="currentColor"
+                      />
+                      <div>
+                        <span className="block text-[10px] font-mono uppercase tracking-wider text-ink-500">
+                          Nota MEC
+                        </span>
+                        {institution.mecRating} / 5
+                      </div>
+                    </li>
+                  )}
+                  <li className="flex items-start gap-3 py-3 text-[13px] text-ink-700">
+                    <Building2 size={14} className="text-bolsa-secondary mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="block text-[10px] font-mono uppercase tracking-wider text-ink-500">
+                        Tipo
+                      </span>
+                      {typeLabels[institution.type]}
+                    </div>
+                  </li>
+                  {institution.modalities.length > 0 && (
+                    <li className="flex items-start gap-3 py-3 text-[13px] text-ink-700">
+                      <GraduationCap
+                        size={14}
+                        className="text-bolsa-secondary mt-0.5 flex-shrink-0"
+                      />
+                      <div>
+                        <span className="block text-[10px] font-mono uppercase tracking-wider text-ink-500">
+                          Modalidades
+                        </span>
+                        {institution.modalities
+                          .map((m) => modalityFullLabel[m] || m)
+                          .join(' · ')}
+                      </div>
+                    </li>
+                  )}
+                  {institution.academicLevels.length > 0 && (
+                    <li className="flex items-start gap-3 py-3 text-[13px] text-ink-700">
+                      <BookOpen
+                        size={14}
+                        className="text-bolsa-secondary mt-0.5 flex-shrink-0"
+                      />
+                      <div>
+                        <span className="block text-[10px] font-mono uppercase tracking-wider text-ink-500">
+                          Níveis
+                        </span>
+                        {institution.academicLevels
+                          .map((l) => levelLabels[l] || l)
+                          .join(' · ')}
+                      </div>
+                    </li>
+                  )}
+                </ul>
 
-            {/* Other Institutions */}
-            <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
-              <h3 className="font-bold text-lg text-neutral-800 mb-4">Outras Faculdades</h3>
+                {institution.emecLink && (
+                  <a
+                    href={institution.emecLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 mt-5 text-[12px] font-mono tracking-wider uppercase text-bolsa-secondary hover:text-bolsa-secondary/80 transition-colors"
+                  >
+                    <ExternalLink size={12} />
+                    Consultar no e-MEC
+                  </a>
+                )}
+              </div>
+
+              {/* Faculdades */}
               <Link
                 href="/faculdades"
-                className="flex items-center gap-2 text-sm text-bolsa-primary hover:underline font-medium"
+                className="card-lift block bg-white border border-hairline rounded-2xl p-5 hover:border-ink-300"
               >
-                Ver todas as faculdades parceiras
-                <ArrowRight size={14} />
+                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 flex items-center gap-3 mb-2">
+                  <Users size={11} />
+                  Outras faculdades
+                </span>
+                <p className="font-display text-[17px] text-ink-900 leading-snug">
+                  Veja todas as <span className="italic text-ink-700">faculdades parceiras</span>
+                </p>
+                <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-bolsa-secondary mt-3">
+                  Explorar
+                  <ArrowRight size={12} />
+                </span>
               </Link>
             </div>
-          </div>
+          </aside>
         </div>
-      </Container>
-    </article>
+      </section>
+    </div>
   )
 }

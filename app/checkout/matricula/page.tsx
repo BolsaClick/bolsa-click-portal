@@ -34,7 +34,6 @@ import { validarCPF } from '@/utils/cpf-validate'
 import { formatCurrency } from '@/utils/fomartCurrency'
 import { toast } from 'sonner'
 // [CUPOM] import { validateCoupon } from '@/app/lib/api/get-coupon'
-import { validateCpf } from '@/app/lib/api/validate-cpf'
 import { createLead } from '@/app/lib/api/create-lead'
 import { createInscription, buildInscriptionPayload } from '@/app/lib/api/create-inscription'
 import { createMarketplaceInscription } from '@/app/lib/api/create-inscription-marketplace'
@@ -1417,64 +1416,23 @@ const isFormValidForPayment =
                                         setPendingCpfForRegistration(cleanCpf)
                                       }
 
-                                      // 2. Validar no Tartarus (verificar se pode fazer inscrição)
-                                      const offerSource = offerDetails?.dmhSource?.source || 'ATHENAS'
-                                      const academicLevel = offerDetails?.academicLevel || 'GRADUACAO'
+                                      setCpfValidationError(null)
+                                      setCpfValidationOk(true)
+                                      toast.success('CPF validado com sucesso!')
+                                      trackEvent('cpf_validated', {
+                                        cpf_valid: true,
+                                        inscription_allowed: true,
+                                        cpf_exists_in_db: dbCheckResult.exists,
+                                        course_id: offerDetails?.courseId,
+                                        course_name: offerDetails?.course,
+                                      })
 
-                                      const result = await validateCpf(
-                                        cleanCpf,
-                                        'DC',
-                                        offerSource,
-                                        academicLevel
-                                      )
-
-                                      // Lógica de validação:
-                                      // - Se inscriptionAllowed = true, pode cadastrar (mesmo que tenha outra inscrição)
-                                      // - Se haveAnotherInscriptionInCycle = true, não pode cadastrar (a menos que inscriptionAllowed = true)
-                                      if (result.inscriptionAllowed) {
-                                        // Pode cadastrar
-                                        setCpfValidationError(null)
-                                        setCpfValidationOk(true)
-                                        toast.success('CPF validado com sucesso!')
-                                        trackEvent('cpf_validated', {
-                                          cpf_valid: true,
-                                          inscription_allowed: true,
-                                          cpf_exists_in_db: dbCheckResult.exists,
-                                          course_id: offerDetails?.courseId,
-                                          course_name: offerDetails?.course,
-                                        })
-
-                                        // Facebook Pixel - AddPaymentInfo (dados pessoais preenchidos + CPF validado)
-                                        trackFbq('AddPaymentInfo', {
-                                          content_name: offerDetails?.course,
-                                          value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
-                                          currency: 'BRL',
-                                        })
-                                      } else if (result.haveAnotherInscriptionInCycle) {
-                                        // Tem outra inscrição no ciclo e não está permitido cadastrar
-                                        setCpfValidationError(result.message || 'Este CPF possui outra inscrição no ciclo e não pode ser cadastrado.')
-                                        toast.error(result.message || 'Este CPF possui outra inscrição no ciclo.')
-                                        trackEvent('cpf_validation_failed', {
-                                          cpf_valid: true,
-                                          inscription_allowed: false,
-                                          reason: 'another_inscription_in_cycle',
-                                          message: result.message,
-                                          course_id: offerDetails?.courseId,
-                                          course_name: offerDetails?.course,
-                                        })
-                                      } else {
-                                        // Não está permitido cadastrar por outro motivo
-                                        setCpfValidationError(result.message || 'Este CPF não pode ser cadastrado para este curso.')
-                                        toast.error(result.message || 'Este CPF não pode ser cadastrado.')
-                                        trackEvent('cpf_validation_failed', {
-                                          cpf_valid: true,
-                                          inscription_allowed: false,
-                                          reason: 'other',
-                                          message: result.message,
-                                          course_id: offerDetails?.courseId,
-                                          course_name: offerDetails?.course,
-                                        })
-                                      }
+                                      // Facebook Pixel - AddPaymentInfo (dados pessoais preenchidos + CPF validado)
+                                      trackFbq('AddPaymentInfo', {
+                                        content_name: offerDetails?.course,
+                                        value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
+                                        currency: 'BRL',
+                                      })
                                     } catch (error: unknown) {
                                       console.error('Erro ao validar CPF:', error)
                                       const axiosError = error as { response?: { data?: { message?: string } }; message?: string }

@@ -39,6 +39,58 @@ Bolsa Click é uma plataforma gratuita que negocia descontos com mais de 30.000 
 - [Unime](https://www.bolsaclick.com.br/faculdades/unime)
 - [Lista completa](https://www.bolsaclick.com.br/faculdades)
 
+## Teste vocacional com IA
+
+O Bolsa Click oferece um teste vocacional online gratuito baseado em metodologia validada cientificamente:
+
+- **Framework:** combina RIASEC (Holland, 1959) — 6 tipos vocacionais — com Inteligências Múltiplas (Gardner, 1983) — 8 inteligências cognitivas.
+- **Formato:** 20 perguntas Likert (escala 1-5) + 2-3 perguntas abertas com IA (gpt-4o-mini) pra refinamento personalizado.
+- **Duração:** ~5 minutos.
+- **Resultado:** Holland Code de 3 letras + 2-3 inteligências dominantes + 3 cursos com maior afinidade.
+- **Gratuito, sem CPF, sem cartão.** Algoritmo determinístico (reproduzível) com personalização IA do reasoning.
+
+URLs:
+
+- [Teste vocacional principal](https://www.bolsaclick.com.br/teste-vocacional)
+- [Metodologia completa (RIASEC + Gardner)](https://www.bolsaclick.com.br/teste-vocacional/metodologia)
+
+Páginas de perfil Holland (6 tipos):
+
+- [Perfil Realista (R)](https://www.bolsaclick.com.br/teste-vocacional/perfil/realista)
+- [Perfil Investigativo (I)](https://www.bolsaclick.com.br/teste-vocacional/perfil/investigativo)
+- [Perfil Artístico (A)](https://www.bolsaclick.com.br/teste-vocacional/perfil/artistico)
+- [Perfil Social (S)](https://www.bolsaclick.com.br/teste-vocacional/perfil/social)
+- [Perfil Empreendedor (E)](https://www.bolsaclick.com.br/teste-vocacional/perfil/empreendedor)
+- [Perfil Convencional (C)](https://www.bolsaclick.com.br/teste-vocacional/perfil/convencional)
+
+Páginas de teste vocacional por curso (20 cursos):
+
+- [Administração](https://www.bolsaclick.com.br/teste-vocacional/administracao)
+- [Direito](https://www.bolsaclick.com.br/teste-vocacional/direito)
+- [Medicina](https://www.bolsaclick.com.br/teste-vocacional/medicina)
+- [Psicologia](https://www.bolsaclick.com.br/teste-vocacional/psicologia)
+- [Enfermagem](https://www.bolsaclick.com.br/teste-vocacional/enfermagem)
+- [Pedagogia](https://www.bolsaclick.com.br/teste-vocacional/pedagogia)
+- [ADS](https://www.bolsaclick.com.br/teste-vocacional/analise-e-desenvolvimento-de-sistemas)
+- ... + 13 outros cursos listados no sitemap
+
+## Programas governamentais (guias)
+
+- [ENEM 2026](https://www.bolsaclick.com.br/enem): datas, inscrição, notas de corte, como usar
+- [PROUNI](https://www.bolsaclick.com.br/prouni): bolsas integrais/parciais, requisitos de renda, nota mínima
+- [SISU](https://www.bolsaclick.com.br/sisu): seleção pra universidades públicas via ENEM
+- [FIES](https://www.bolsaclick.com.br/fies): financiamento estudantil, juros, prazo
+- [ENCCEJA](https://www.bolsaclick.com.br/encceja): certificação ensino fundamental/médio
+
+## Hubs por cidade
+
+- [Bolsas de estudo por cidade (hub raiz)](https://www.bolsaclick.com.br/bolsas-de-estudo)
+- 100 páginas de cidades específicas em `/bolsas-de-estudo/[cidade]` (ver sitemap)
+
+## Comparações de faculdades
+
+- 15 páginas comparativas em `/comparar/[faculdade-a]-vs-[faculdade-b]` (ver sitemap)
+
 ## Suporte
 
 - [Central de ajuda](https://www.bolsaclick.com.br/central-de-ajuda)

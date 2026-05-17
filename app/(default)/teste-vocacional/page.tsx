@@ -105,6 +105,61 @@ const webAppSchema = {
     'Teste vocacional online gratuito com IA. Conversa adaptativa de 3 minutos que recomenda 3 cursos de graduação com base no seu perfil.',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'BRL' },
   inLanguage: 'pt-BR',
+  isBasedOn: [
+    {
+      '@type': 'CreativeWork',
+      name: 'Holland Occupational Themes (RIASEC)',
+      author: { '@type': 'Person', name: 'John L. Holland' },
+      datePublished: '1959',
+    },
+    {
+      '@type': 'Book',
+      name: 'Frames of Mind: The Theory of Multiple Intelligences',
+      author: { '@type': 'Person', name: 'Howard Gardner' },
+      datePublished: '1983',
+    },
+  ],
+}
+
+const articleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'Teste Vocacional Online Grátis com IA — Descubra Seu Curso Ideal',
+  description:
+    'Teste vocacional online gratuito que combina escala Likert (20 perguntas) com refinamento conversacional por IA, baseado em RIASEC (Holland, 1959) e Inteligências Múltiplas (Gardner, 1983).',
+  author: { '@type': 'Organization', name: 'Bolsa Click', url: SITE_URL },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Bolsa Click',
+    logo: { '@type': 'ImageObject', url: `${SITE_URL}/assets/logo-bolsa-click-rosa.png` },
+  },
+  datePublished: '2024-01-15',
+  dateModified: new Date().toISOString().slice(0, 10),
+  mainEntityOfPage: pageUrl,
+  inLanguage: 'pt-BR',
+  about: [
+    { '@type': 'Thing', name: 'RIASEC', sameAs: 'https://en.wikipedia.org/wiki/Holland_Codes' },
+    {
+      '@type': 'Thing',
+      name: 'Inteligências Múltiplas',
+      sameAs: 'https://pt.wikipedia.org/wiki/Teoria_das_intelig%C3%AAncias_m%C3%BAltiplas',
+    },
+    { '@type': 'Thing', name: 'Orientação vocacional' },
+  ],
+  citation: [
+    {
+      '@type': 'CreativeWork',
+      name: 'Holland Occupational Themes',
+      author: 'John L. Holland',
+      datePublished: '1959',
+    },
+    {
+      '@type': 'Book',
+      name: 'Frames of Mind',
+      author: 'Howard Gardner',
+      datePublished: '1983',
+    },
+  ],
 }
 
 const breadcrumbSchema = {
@@ -132,7 +187,7 @@ export default function TesteVocacionalPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify([webAppSchema, breadcrumbSchema, faqSchema]),
+          __html: JSON.stringify([webAppSchema, articleSchema, breadcrumbSchema, faqSchema]),
         }}
       />
 
@@ -150,8 +205,10 @@ export default function TesteVocacionalPage() {
             Teste Vocacional com IA
           </h1>
           <p className="text-base md:text-xl text-ink-700 max-w-2xl mb-5 md:mb-6 leading-relaxed">
-            Não sabe qual faculdade fazer? Uma conversa curta com nossa IA descobre os{' '}
-            <strong>3 cursos que mais combinam com você</strong>. Grátis, em 3 minutos.
+            Teste vocacional online gratuito que combina escala Likert (20 perguntas) com
+            refinamento conversacional por IA, baseado em metodologia <strong>RIASEC
+            (Holland, 1959) + Inteligências Múltiplas (Gardner, 1983)</strong>. Resultado em 5
+            minutos: Holland Code de 3 letras e 3 cursos com maior afinidade ao seu perfil.
           </p>
           <ul className="flex flex-wrap gap-x-3 gap-y-1.5 font-mono text-[10px] md:text-[12px] tracking-[0.14em] uppercase text-ink-500">
             <li className="inline-flex items-center gap-1.5">
@@ -172,6 +229,34 @@ export default function TesteVocacionalPage() {
           </ul>
         </div>
       </header>
+
+      <section className="bg-white py-8 md:py-10 border-b border-hairline">
+        <div className="container mx-auto px-4 max-w-3xl">
+          <aside
+            className="bg-paper border-l-4 border-bolsa-secondary rounded-r-md p-5 md:p-6"
+            aria-label="Resumo do teste"
+          >
+            <p className="font-mono text-[10px] tracking-[0.22em] uppercase text-bolsa-secondary mb-3">
+              O que você vai descobrir
+            </p>
+            <ul className="space-y-1.5 text-ink-900 text-sm md:text-base leading-relaxed">
+              <li>
+                <strong>Seu Holland Code</strong>: 3 letras de 6 tipos vocacionais (R, I, A, S, E, C).
+              </li>
+              <li>
+                <strong>2-3 inteligências dominantes</strong> segundo o modelo de Howard Gardner (1983).
+              </li>
+              <li>
+                <strong>3 cursos de graduação</strong> com maior afinidade ao seu perfil, com
+                justificativa personalizada por IA.
+              </li>
+            </ul>
+            <p className="font-mono text-[11px] text-ink-500 mt-4">
+              5 minutos · Grátis · Sem CPF · Algoritmo determinístico + IA personalização (gpt-4o-mini)
+            </p>
+          </aside>
+        </div>
+      </section>
 
       <section className="bg-white py-10 md:py-12 border-b border-hairline">
         <div className="container mx-auto px-4 max-w-3xl">

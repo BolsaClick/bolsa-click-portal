@@ -10,6 +10,7 @@ import { z } from 'zod'
 import { Eye, EyeOff, Mail, Lock, User, Loader2, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/app/contexts/AuthContext'
+import { trackTikTokDual } from '@/app/lib/analytics/ttq'
 
 const registerSchema = z.object({
   name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
@@ -81,6 +82,14 @@ function RegisterForm() {
     setIsSubmitting(true)
     try {
       await signUpWithEmail(data.email, data.password, data.name)
+
+      // TikTok Pixel + Events API - CompleteRegistration (cadastro de conta)
+      void trackTikTokDual(
+        'CompleteRegistration',
+        { content_name: 'account_signup' },
+        { email: data.email },
+      )
+
       toast.success('Conta criada com sucesso!')
       router.push(redirectUrl)
     } catch (error: unknown) {

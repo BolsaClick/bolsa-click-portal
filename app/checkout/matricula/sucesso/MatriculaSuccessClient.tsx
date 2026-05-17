@@ -7,6 +7,7 @@ import { CheckCircle2, ExternalLink } from 'lucide-react'
 import { formatCurrency } from '@/utils/fomartCurrency'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { trackFbq } from '@/app/lib/analytics/fbq'
+import { trackTikTokDual } from '@/app/lib/analytics/ttq'
 
 export default function MatriculaSuccessClient() {
   const searchParams = useSearchParams()
@@ -47,6 +48,14 @@ export default function MatriculaSuccessClient() {
       // Facebook Pixel - Lead (inscrição realizada, pagamento será na universidade)
       trackFbq('Lead', {
         content_name: course || undefined,
+        value: monthlyFee ?? 0,
+        currency: 'BRL',
+      })
+
+      // TikTok Pixel + Events API - SubmitForm (conversão final, inscrição confirmada)
+      void trackTikTokDual('SubmitForm', {
+        content_name: course || undefined,
+        content_type: 'product',
         value: monthlyFee ?? 0,
         currency: 'BRL',
       })

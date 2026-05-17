@@ -4,6 +4,7 @@ import { postSearch } from "@/app/lib/api/post-search"
 import { useFavorites } from "@/app/lib/hooks/useFavorites"
 import { usePostHogTracking } from "@/app/lib/hooks/usePostHogTracking"
 import { trackFbq } from "@/app/lib/analytics/fbq"
+import { trackTikTok } from "@/app/lib/analytics/ttq"
 import { getAcademicLevelLabel } from "@/app/lib/academic-level"
 import { Building2, Clock, Heart, MapPin, Star } from "lucide-react"
 import Image from "next/image"
@@ -126,6 +127,15 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
 
     // Facebook Pixel - ViewContent (curso selecionado)
     trackFbq('ViewContent', {
+      content_name: course.name,
+      content_type: 'product',
+      value: course.minPrice || 0,
+      currency: 'BRL',
+    })
+
+    // TikTok Pixel - ViewContent
+    trackTikTok('ViewContent', {
+      content_id: course.id,
       content_name: course.name,
       content_type: 'product',
       value: course.minPrice || 0,

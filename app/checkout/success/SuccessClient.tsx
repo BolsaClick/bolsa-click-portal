@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { formatCurrency } from '@/utils/fomartCurrency'
 import { trackFbq } from '@/app/lib/analytics/fbq'
+import { trackTikTokDual } from '@/app/lib/analytics/ttq'
 
 
 
@@ -39,6 +40,14 @@ useEffect(() => {
       value: payToday ? parseFloat(payToday) : 0,
       currency: 'BRL',
       content_name: course || undefined,
+    })
+
+    // TikTok Pixel + Events API - CompletePayment
+    void trackTikTokDual('CompletePayment', {
+      value: payToday ? parseFloat(payToday) : 0,
+      currency: 'BRL',
+      content_name: course || undefined,
+      content_type: 'product',
     })
   }
 }, [])

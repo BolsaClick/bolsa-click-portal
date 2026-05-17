@@ -41,6 +41,7 @@ import { validateVoucher, type ValidateVoucherResponse, type VoucherInstallment 
 import type { PosPaymentMethod, PosInstallment } from '@/app/lib/api/get-offer-details'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { trackFbq } from '@/app/lib/analytics/fbq'
+import { trackTikTok, trackTikTokDual } from '@/app/lib/analytics/ttq'
 import { formatPhone } from '@/utils/formatters'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { Loader2 } from 'lucide-react'
@@ -413,6 +414,15 @@ const isFormValidForPayment =
         value: offerDetails.subscriptionValue || offerDetails.montlyFeeTo || 0,
         currency: 'BRL',
       })
+
+      // TikTok Pixel - InitiateCheckout
+      trackTikTok('InitiateCheckout', {
+        content_id: offerDetails.courseId,
+        content_name: offerDetails.course,
+        content_type: 'product',
+        value: offerDetails.subscriptionValue || offerDetails.montlyFeeTo || 0,
+        currency: 'BRL',
+      })
     }
   }, [offerDetails, trackEvent])
 
@@ -509,6 +519,21 @@ const isFormValidForPayment =
         institutionName: offerDetails?.brand,
         modalidade: offerDetails?.modality,
       })
+
+      // TikTok Pixel + Events API - SubmitForm (lead capture)
+      void trackTikTokDual(
+        'SubmitForm',
+        {
+          content_id: offerDetails?.courseId,
+          content_name: offerDetails?.course,
+          content_type: 'product',
+        },
+        {
+          email: formValues.email,
+          phone: cleanPhone || undefined,
+          externalId: cleanCpf,
+        },
+      )
 
       setStudentCreated(true)
       console.log('✅ Lead cadastrado com sucesso')
@@ -948,6 +973,23 @@ const isFormValidForPayment =
       value: offerDetails.montlyFeeTo || 0,
       currency: 'BRL',
     })
+
+    // TikTok Pixel + Events API - CompleteRegistration (com Advanced Matching)
+    void trackTikTokDual(
+      'CompleteRegistration',
+      {
+        content_id: offerDetails.courseId,
+        content_name: offerDetails.course,
+        content_type: 'product',
+        value: offerDetails.montlyFeeTo || 0,
+        currency: 'BRL',
+      },
+      {
+        email: data.email,
+        phone: data.phone,
+        externalId: data.cpf.replace(/\D/g, ''),
+      },
+    )
 
     await createInscriptionAfterPayment(data)
   }
@@ -1430,6 +1472,15 @@ const isFormValidForPayment =
                                       // Facebook Pixel - AddPaymentInfo (dados pessoais preenchidos + CPF validado)
                                       trackFbq('AddPaymentInfo', {
                                         content_name: offerDetails?.course,
+                                        value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
+                                        currency: 'BRL',
+                                      })
+
+                                      // TikTok Pixel - AddPaymentInfo
+                                      trackTikTok('AddPaymentInfo', {
+                                        content_id: offerDetails?.courseId,
+                                        content_name: offerDetails?.course,
+                                        content_type: 'product',
                                         value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
                                         currency: 'BRL',
                                       })

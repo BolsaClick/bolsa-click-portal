@@ -7,7 +7,7 @@ import { AIChat } from './_components/AIChat'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.bolsaclick.com.br'
 
 export const metadata: Metadata = {
-  title: 'Teste Vocacional Online Grátis com IA — Descubra Seu Curso Ideal',
+  title: 'Teste Vocacional Grátis com IA - Descubra Seu Curso',
   description:
     'Não sabe qual faculdade fazer? Faça nosso teste vocacional com IA em 3 minutos: uma conversa adaptativa que descobre os 3 cursos que mais combinam com seu perfil. Grátis e sem CPF.',
   keywords: [
@@ -52,7 +52,7 @@ const faqItems = [
   },
   {
     question: 'O resultado é confiável?',
-    answer: 'O teste é uma orientação inicial baseada nos seus interesses. Não substitui acompanhamento profissional, mas ajuda a estreitar o leque de opções e descobrir áreas que você talvez não tinha considerado.',
+    answer: 'O teste é uma orientação inicial baseada nos seus interesses. Não substitui acompanhamento profissional (psicólogo ou orientador educacional), mas ajuda a estreitar o leque de opções e descobrir áreas que você talvez não tinha considerado.',
   },
   {
     question: 'Posso refazer o teste?',
@@ -61,6 +61,34 @@ const faqItems = [
   {
     question: 'Vou receber spam depois?',
     answer: 'Não. Usamos seu contato pra enviar sua trilha personalizada e avisar quando rolar bolsa nos cursos recomendados. Você pode descadastrar a qualquer momento.',
+  },
+  {
+    question: 'Qual a diferença entre teste vocacional e teste de aptidão?',
+    answer: 'Teste vocacional foca em interesses e perfil — o que combina com sua personalidade e estilo de vida. Teste de aptidão mede habilidades específicas (lógica, raciocínio espacial, verbal). Nosso teste é vocacional: foca no que você gosta e como pensa, não no que você já sabe.',
+  },
+  {
+    question: 'Posso fazer o teste sem ter feito o ENEM?',
+    answer: 'Claro. O teste é independente de qualquer prova. Ele serve pra qualquer pessoa que esteja em dúvida sobre qual curso fazer — quem ainda está no ensino médio, quem já terminou, quem quer trocar de área ou voltar a estudar.',
+  },
+  {
+    question: 'O teste cobra ou pede CPF?',
+    answer: 'Não cobra nada e não pede CPF. Coletamos apenas nome, email e WhatsApp ao final pra enviar a trilha personalizada. CPF só é pedido se você decidir se inscrever em algum curso depois.',
+  },
+  {
+    question: 'Como a IA decide quais cursos recomendar?',
+    answer: 'A IA analisa toda a conversa — seus interesses, valores, rotina ideal, áreas que você não gosta — e cruza com o perfil de cada um dos cursos disponíveis no nosso catálogo. Ela retorna os 3 cursos com maior afinidade e explica por que cada um faz sentido pra você, citando coisas que você mencionou.',
+  },
+  {
+    question: 'Posso usar o resultado pra mudar de curso na faculdade?',
+    answer: 'Sim. O teste é útil principalmente pra quem está em dúvida ou pensando em mudar de área. O resultado mostra cursos alternativos que combinam com seu perfil atual — pode te ajudar a confirmar uma intuição ou abrir possibilidades que você não tinha considerado.',
+  },
+  {
+    question: 'O teste funciona pra quem já tem mais de 30 anos?',
+    answer: 'Sim. A IA adapta as perguntas ao seu contexto. Se você menciona experiência profissional anterior, trajetória de carreira ou que está pensando em mudança de área, ela considera tudo isso na recomendação. Funciona bem pra primeira graduação, segunda graduação ou transição de carreira.',
+  },
+  {
+    question: 'Quais cursos podem aparecer no resultado?',
+    answer: 'Hoje a IA escolhe entre 22 cursos de graduação ativos no Bolsa Click — incluindo Administração, Direito, Enfermagem, Psicologia, ADS, Pedagogia, Engenharia Civil, Medicina, e mais. O catálogo cresce com o tempo. Veja a lista completa em /cursos.',
   },
 ]
 
@@ -108,37 +136,40 @@ export default function TesteVocacionalPage() {
         }}
       />
 
-      <header className="bg-paper border-b border-hairline py-12 md:py-20">
+      <header className="bg-paper border-b border-hairline py-8 md:py-20">
         <div className="container mx-auto px-4 max-w-4xl">
           <nav
-            className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink-500 mb-4"
+            className="font-mono text-[10px] md:text-[11px] tracking-[0.18em] uppercase text-ink-500 mb-3 md:mb-4"
             aria-label="Breadcrumb"
           >
             <Link href="/" className="hover:text-ink-900">Início</Link>
             <span className="mx-2">/</span>
             <span className="text-ink-700">Teste Vocacional</span>
           </nav>
-          <h1 className="font-display text-4xl md:text-6xl font-semibold text-ink-900 mb-4">
+          <h1 className="font-display text-[2rem] sm:text-4xl md:text-6xl font-semibold text-ink-900 leading-[1.05] mb-3 md:mb-4">
             Teste Vocacional com IA
           </h1>
-          <p className="text-lg md:text-xl text-ink-700 max-w-2xl mb-6">
+          <p className="text-base md:text-xl text-ink-700 max-w-2xl mb-5 md:mb-6 leading-relaxed">
             Não sabe qual faculdade fazer? Uma conversa curta com nossa IA descobre os{' '}
             <strong>3 cursos que mais combinam com você</strong>. Grátis, em 3 minutos.
           </p>
-          <div className="flex flex-wrap gap-4 font-mono text-[12px] tracking-[0.16em] uppercase text-ink-500">
-            <span className="inline-flex items-center gap-1.5">
-              <Clock size={14} /> 3 minutos
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <Sparkles size={14} /> Conversa adaptativa
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <Zap size={14} /> Grátis
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <Lock size={14} /> Sem CPF
-            </span>
-          </div>
+          <ul className="flex flex-wrap gap-x-3 gap-y-1.5 font-mono text-[10px] md:text-[12px] tracking-[0.14em] uppercase text-ink-500">
+            <li className="inline-flex items-center gap-1.5">
+              <Clock size={12} className="md:w-3.5 md:h-3.5" /> 3 minutos
+            </li>
+            <li aria-hidden="true" className="text-ink-300">·</li>
+            <li className="inline-flex items-center gap-1.5">
+              <Sparkles size={12} className="md:w-3.5 md:h-3.5" /> Conversa adaptativa
+            </li>
+            <li aria-hidden="true" className="text-ink-300">·</li>
+            <li className="inline-flex items-center gap-1.5">
+              <Zap size={12} className="md:w-3.5 md:h-3.5" /> Grátis
+            </li>
+            <li aria-hidden="true" className="text-ink-300">·</li>
+            <li className="inline-flex items-center gap-1.5">
+              <Lock size={12} className="md:w-3.5 md:h-3.5" /> Sem CPF
+            </li>
+          </ul>
         </div>
       </header>
 
@@ -160,14 +191,223 @@ export default function TesteVocacionalPage() {
           <p>
             Em 7 a 9 perguntas a IA captura o que importa: seus interesses, sua rotina
             ideal, o tipo de problema que te motiva a resolver, o que você definitivamente
-            não quer fazer profissionalmente. No final, ela cruza essas pistas com nosso
-            catálogo de cursos de graduação e devolve os 3 que mais fazem sentido pra você,
-            com uma justificativa pessoal pra cada um.
+            não quer fazer profissionalmente. No final, ela cruza essas pistas com nosso{' '}
+            <Link href="/cursos">catálogo de cursos de graduação</Link> e devolve os 3 que
+            mais fazem sentido pra você, com uma justificativa pessoal pra cada um.
           </p>
           <p>
             O teste é gratuito e leva uns 3 minutos. Você só precisa preencher nome, email
             e WhatsApp ao final pra ver o resultado — usamos esses dados pra enviar sua
-            trilha personalizada e te avisar quando aparecer bolsa exclusiva nos cursos
+            trilha personalizada e te avisar quando aparecer{' '}
+            <Link href="/bolsas-de-estudo">bolsa exclusiva</Link> nos cursos recomendados.
+          </p>
+        </div>
+      </section>
+
+      <section className="bg-white py-12 md:py-16 border-b border-hairline">
+        <div className="container mx-auto px-4 max-w-3xl prose prose-neutral prose-headings:font-display">
+          <h2>Áreas de conhecimento que o teste cobre</h2>
+          <p>
+            Nosso catálogo cobre as cinco grandes áreas da graduação no Brasil. O teste
+            consegue te direcionar pra qualquer uma delas dependendo do que aparece na
+            conversa. Aqui vai uma referência rápida pra você se situar antes de começar.
+          </p>
+
+          <h3>Ciências Humanas e Sociais</h3>
+          <p>
+            Pra quem se interessa por gente, comportamento, sociedade, ética e
+            comunicação. Cursos típicos:{' '}
+            <Link href="/cursos/direito">Direito</Link>,{' '}
+            <Link href="/cursos/psicologia">Psicologia</Link>,{' '}
+            <Link href="/cursos/pedagogia">Pedagogia</Link>. Costumam combinar com perfis
+            que gostam de ler, argumentar e entender motivações alheias.
+          </p>
+
+          <h3>Ciências Biológicas e da Saúde</h3>
+          <p>
+            Pra quem quer trabalhar com pessoas em contextos de cuidado, biologia ou
+            tecnologia médica. Cursos típicos:{' '}
+            <Link href="/cursos/enfermagem">Enfermagem</Link>,{' '}
+            <Link href="/cursos/fisioterapia">Fisioterapia</Link>,{' '}
+            <Link href="/cursos/nutricao">Nutrição</Link>,{' '}
+            <Link href="/cursos/biomedicina">Biomedicina</Link>,{' '}
+            <Link href="/cursos/odontologia">Odontologia</Link>,{' '}
+            <Link href="/cursos/farmacia">Farmácia</Link>. Combinam com quem tolera bem
+            rotina técnica e tem empatia genuína.
+          </p>
+
+          <h3>Engenharias e Exatas</h3>
+          <p>
+            Pra quem curte resolver problemas concretos, matemática aplicada e construir
+            coisas. Cursos típicos:{' '}
+            <Link href="/cursos/engenharia-civil">Engenharia Civil</Link>,{' '}
+            <Link href="/cursos/engenharia-de-producao">Engenharia de Produção</Link>,{' '}
+            <Link href="/cursos/arquitetura-e-urbanismo">Arquitetura e Urbanismo</Link>.
+            Perfil analítico e visual-espacial costuma se dar bem.
+          </p>
+
+          <h3>Tecnologia e Computação</h3>
+          <p>
+            Pra quem gosta de lógica, programação, dados e automação. Cursos típicos:{' '}
+            <Link href="/cursos/analise-e-desenvolvimento-de-sistemas">
+              Análise e Desenvolvimento de Sistemas
+            </Link>{' '}
+            e tecnólogos da área. Combina com quem aprende sozinho, mexe em coisas no
+            tempo livre e gosta de raciocínio abstrato.
+          </p>
+
+          <h3>Negócios e Sociais Aplicadas</h3>
+          <p>
+            Pra quem gosta de estratégia, gente, gestão e impacto comercial. Cursos
+            típicos: <Link href="/cursos/administracao">Administração</Link>,{' '}
+            <Link href="/cursos/marketing">Marketing</Link>,{' '}
+            <Link href="/cursos/ciencias-contabeis">Ciências Contábeis</Link>,{' '}
+            <Link href="/cursos/gestao-de-recursos-humanos">Gestão de Recursos Humanos</Link>,{' '}
+            <Link href="/cursos/gestao-comercial">Gestão Comercial</Link>. Perfil mais
+            generalista, comunicativo e orientado a resultado.
+          </p>
+        </div>
+      </section>
+
+      <section className="bg-paper py-12 md:py-16 border-b border-hairline">
+        <div className="container mx-auto px-4 max-w-3xl prose prose-neutral prose-headings:font-display">
+          <h2>Por que IA adaptativa funciona melhor que questionário fixo</h2>
+          <p>
+            Os testes vocacionais clássicos seguem um padrão: você responde 30 a 50
+            perguntas pré-definidas, a plataforma soma pontos por área e devolve um
+            ranking. Funciona razoavelmente bem pra perfis típicos, mas tropeça quando
+            sua história não cabe nas caixinhas que o questionário criou.
+          </p>
+          <p>
+            IA adaptativa muda a lógica. Cada pergunta é gerada com base no que você
+            acabou de responder — então a conversa investiga de verdade o que faz sentido
+            pra você, no seu contexto. Três ganhos práticos:
+          </p>
+          <ul>
+            <li>
+              <strong>Contexto preservado.</strong> Se você menciona que cuida de pessoas
+              idosas em casa, a próxima pergunta pode explorar afinidade com cuidado e
+              saúde — sem perder essa pista.
+            </li>
+            <li>
+              <strong>Sem viés de ordenação.</strong> Em questionário fixo, a sequência
+              das perguntas influencia o resultado. Aqui não tem ordem fixa pra burlar.
+            </li>
+            <li>
+              <strong>Menos friction.</strong> 7-9 perguntas em vez de 30+, com tempo
+              ativo de ~3 minutos. Você termina o teste em vez de abandonar no meio.
+            </li>
+            <li>
+              <strong>Justificativa pessoal.</strong> Cada um dos 3 cursos recomendados
+              vem com uma explicação citando coisas que você disse — não é um match
+              percentual seco.
+            </li>
+          </ul>
+          <p>
+            O lado prático: o resultado se conecta diretamente com nosso{' '}
+            <Link href="/bolsas-de-estudo">catálogo de bolsas</Link>, então depois de
+            descobrir os cursos ideais você já consegue ver as ofertas reais com até 80%
+            de desconto.
+          </p>
+        </div>
+      </section>
+
+      <section className="bg-white py-12 md:py-16 border-b border-hairline">
+        <div className="container mx-auto px-4 max-w-3xl prose prose-neutral prose-headings:font-display">
+          <h2>Como usar o resultado com responsabilidade</h2>
+          <p>
+            Importante: o teste é uma <strong>ferramenta de orientação inicial</strong>,
+            não um diagnóstico definitivo. Ele te ajuda a estreitar o leque de
+            possibilidades e a descobrir áreas que talvez não tinha considerado — mas a
+            escolha final é sua, e idealmente com apoio.
+          </p>
+          <p>O que recomendamos fazer depois do resultado:</p>
+          <ul>
+            <li>
+              <strong>Pesquise os cursos sugeridos a fundo.</strong> Veja a grade
+              curricular, áreas de atuação, mercado de trabalho e expectativa salarial.
+              Cada página de curso no Bolsa Click traz esses dados.
+            </li>
+            <li>
+              <strong>Converse com profissionais da área.</strong> Procure no LinkedIn ou
+              em comunidades pra entender o dia a dia de quem já trabalha nessa
+              profissão. A realidade costuma ser diferente do imaginário.
+            </li>
+            <li>
+              <strong>Visite faculdades quando possível.</strong> Conhecer o ambiente, os
+              professores e a infraestrutura ajuda a decidir. Veja nossas{' '}
+              <Link href="/faculdades">faculdades parceiras</Link> e procure visitas
+              abertas ou semanas de portas abertas.
+            </li>
+            <li>
+              <strong>Considere apoio profissional.</strong> Se a dúvida é grande ou tem
+              ansiedade envolvida, conversar com um psicólogo ou orientador educacional
+              vale o investimento. O teste é complementar, não substituto.
+            </li>
+          </ul>
+          <p>
+            E lembre: ninguém escolhe profissão pra vida inteira hoje em dia. Trocar de
+            área, fazer segunda graduação ou especialização depois é normal e cada vez
+            mais comum. A primeira escolha não é definitiva.
+          </p>
+        </div>
+      </section>
+
+      <section className="bg-paper py-12 md:py-16 border-b border-hairline">
+        <div className="container mx-auto px-4 max-w-3xl prose prose-neutral prose-headings:font-display">
+          <h2>Depois do teste: próximos passos</h2>
+          <p>
+            Com os 3 cursos recomendados em mãos, você tem caminhos práticos pra
+            transformar a recomendação em matrícula. Aqui vai um roteiro do que dá pra
+            fazer agora.
+          </p>
+
+          <h3>Comparar bolsas direto no Bolsa Click</h3>
+          <p>
+            Cada curso recomendado tem uma página com{' '}
+            <Link href="/bolsas-de-estudo">ofertas de bolsa</Link> em mais de 100
+            cidades. Você compara mensalidade, modalidade (EAD, presencial,
+            semipresencial) e desconto antes de decidir. Tudo grátis, sem precisar do
+            CPF pra olhar.
+          </p>
+
+          <h3>Conhecer as faculdades parceiras</h3>
+          <p>
+            Trabalhamos com instituições de presença nacional como Anhanguera, Unopar,
+            Unime, Estácio e IBMEC. Veja a lista completa em{' '}
+            <Link href="/faculdades">faculdades parceiras</Link> — cada uma tem página
+            com nota MEC, modalidades, cursos ofertados e polos por região.
+          </p>
+
+          <h3>Aproveitar programas do governo</h3>
+          <p>
+            Se você fez o ENEM, abre uma série de portas. Vale entender como cada
+            programa funciona pra escolher o que combina com sua situação:
+          </p>
+          <ul>
+            <li>
+              <Link href="/enem">ENEM</Link>: a nota abre portas pra PROUNI, SISU,
+              FIES e direto em muitas faculdades particulares.
+            </li>
+            <li>
+              <Link href="/prouni">PROUNI</Link>: bolsa integral ou parcial em
+              faculdades privadas, com critério de renda + nota mínima 450.
+            </li>
+            <li>
+              <Link href="/sisu">SISU</Link>: vagas em universidades públicas usando
+              só a nota do ENEM.
+            </li>
+            <li>
+              <Link href="/fies">FIES</Link>: financiamento estudantil — paga durante
+              o curso só simbólico, amortização começa depois de formado.
+            </li>
+          </ul>
+
+          <h3>Refazer o teste com outro foco</h3>
+          <p>
+            Se ficou em dúvida ou quer ver outras possibilidades, dá pra refazer
+            quantas vezes quiser. Cada conversa é independente. Tente responder de
+            forma um pouco diferente — às vezes uma nuance muda os 3 cursos
             recomendados.
           </p>
         </div>

@@ -224,7 +224,7 @@ const Filter = () => {
         return (
           <button
             key={level.levels}
-            className={`relative flex-1 py-5 px-4 text-center text-[13px] tracking-wide font-medium font-mono uppercase transition-colors
+            className={`relative flex-1 min-w-0 py-3.5 px-1.5 sm:py-5 sm:px-4 text-center text-[10px] sm:text-[13px] leading-tight tracking-[0.06em] sm:tracking-wide font-medium font-mono uppercase transition-colors whitespace-nowrap overflow-hidden text-ellipsis
               ${!isLast ? 'border-r border-hairline' : ''}
               ${isActive ? 'text-ink-900' : 'text-ink-500 hover:text-ink-900'}`}
             onClick={() => handleLevelChange(level.levels)}

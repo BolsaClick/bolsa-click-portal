@@ -15,9 +15,12 @@
   --accent: #f21d44;
 }
 
+html,
 body {
   background-color: var(--paper);
   color: var(--ink-900);
+  overflow-x: clip;
+  max-width: 100vw;
 }
 
 @layer utilities {

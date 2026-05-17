@@ -23,12 +23,12 @@ const Hero = async () => {
   const hasBanners = banners.length > 0
 
   return (
-    <section aria-label="Seção principal de destaque" className="relative bg-paper">
+    <section aria-label="Seção principal de destaque" className="relative bg-paper w-full overflow-x-clip">
       {/* SLIDE AREA — banner do CMS quando existir, senão um placeholder editorial */}
       {hasBanners ? (
         <HeroBannerSlider banners={banners} />
       ) : (
-        <div className="relative bg-gradient-to-br from-bolsa-primary via-bolsa-primary to-blue-900 overflow-hidden">
+        <div className="relative w-full bg-gradient-to-br from-bolsa-primary via-bolsa-primary to-blue-900 overflow-hidden">
           <div
             aria-hidden="true"
             className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-bolsa-secondary/20 blur-3xl"

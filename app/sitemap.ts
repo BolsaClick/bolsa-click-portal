@@ -65,6 +65,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
+  // Teste vocacional — páginas long-tail por curso (20 URLs)
+  const testeVocacionalCursoPages: MetadataRoute.Sitemap = courseSlugs.map(slug => ({
+    url: `${SITE_URL}/teste-vocacional/${slug}`,
+    lastModified: now,
+    changeFrequency: 'monthly' as const,
+    priority: 0.8,
+  }))
+
+  // Teste vocacional — páginas de perfil Holland (6 URLs)
+  const tipoSlugs = ['realista', 'investigativo', 'artistico', 'social', 'empreendedor', 'convencional']
+  const testeVocacionalPerfilPages: MetadataRoute.Sitemap = tipoSlugs.map(tipo => ({
+    url: `${SITE_URL}/teste-vocacional/perfil/${tipo}`,
+    lastModified: now,
+    changeFrequency: 'monthly' as const,
+    priority: 0.75,
+  }))
+
+  // Teste vocacional — página de metodologia
+  const testeVocacionalMetodologia: MetadataRoute.Sitemap = [{
+    url: `${SITE_URL}/teste-vocacional/metodologia`,
+    lastModified: now,
+    changeFrequency: 'monthly' as const,
+    priority: 0.8,
+  }]
+
   // Dados dinâmicos do banco
   let dynamicPages: MetadataRoute.Sitemap = []
 
@@ -144,6 +169,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...coursePages,
     ...courseCityPages,
     ...cityHubPages,
+    ...testeVocacionalCursoPages,
+    ...testeVocacionalPerfilPages,
+    ...testeVocacionalMetodologia,
     ...dynamicPages,
   ]
 }

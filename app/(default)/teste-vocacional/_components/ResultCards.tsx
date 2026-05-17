@@ -4,6 +4,14 @@ import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
 import type { Recommendation } from '@/app/lib/teste-vocacional/openai'
 import type { RiasecType, GardnerIntelligence } from '@/app/lib/teste-vocacional/methodology-profiles'
 
+function slugForType(code: RiasecType): string {
+  const map: Record<RiasecType, string> = {
+    R: 'realista', I: 'investigativo', A: 'artistico',
+    S: 'social', E: 'empreendedor', C: 'convencional',
+  }
+  return map[code]
+}
+
 export interface ProfileResult {
   hollandCode: string
   primary: { code: RiasecType; name: string; short: string; description: string }
@@ -60,7 +68,23 @@ export function ResultCards({ profile }: ResultCardsProps) {
           </div>
         )}
 
-        <p className="text-ink-500 text-[11px] mt-4 italic">
+        <div className="mt-4 pt-4 border-t border-hairline flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
+          <Link
+            href={`/teste-vocacional/perfil/${slugForType(profile.primary.code)}`}
+            className="font-mono uppercase tracking-wider text-bolsa-secondary hover:underline"
+          >
+            Saiba mais sobre perfil {profile.primary.name} →
+          </Link>
+          <span className="text-ink-300">·</span>
+          <Link
+            href="/teste-vocacional/metodologia"
+            className="font-mono uppercase tracking-wider text-ink-500 hover:text-ink-900"
+          >
+            Metodologia
+          </Link>
+        </div>
+
+        <p className="text-ink-500 text-[11px] mt-3 italic">
           Baseado em RIASEC (Holland, 1959) + Inteligências Múltiplas (Gardner, 1983).
         </p>
       </section>

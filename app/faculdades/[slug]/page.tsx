@@ -74,6 +74,14 @@ export default async function FaculdadeDetailPage({
 }) {
   const { slug } = await params
   const institution = await getInstitution(slug)
+  const otherInstitutions = institution
+    ? await prisma.institution.findMany({
+        where: { isActive: true, slug: { not: slug } },
+        select: { slug: true, name: true },
+        orderBy: { order: 'asc' },
+        take: 5,
+      })
+    : []
 
   if (!institution || !institution.isActive) {
     notFound()
@@ -258,6 +266,43 @@ export default async function FaculdadeDetailPage({
           </div>
         </div>
       </section>
+
+      {otherInstitutions.length > 0 && (
+        <section className="bg-white py-12 md:py-16 border-t border-hairline">
+          <div className="container mx-auto px-4">
+            <div className="max-w-6xl mx-auto">
+              <div className="flex items-baseline justify-between hairline-b pb-3 mb-6">
+                <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
+                  Compare {institution.name} com outras faculdades
+                </h2>
+                <span className="font-mono num-tabular text-[11px] text-ink-500">
+                  ({String(otherInstitutions.length).padStart(2, '0')})
+                </span>
+              </div>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-hairline">
+                {otherInstitutions.map(other => {
+                  const [a, b] = [institution.slug, other.slug].sort()
+                  return (
+                    <li key={other.slug} className="bg-white">
+                      <Link
+                        href={`/comparar/${a}-vs-${b}`}
+                        className="block px-5 py-4 transition-colors hover:bg-paper"
+                      >
+                        <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500">
+                          Comparar
+                        </span>
+                        <span className="block font-display text-base text-ink-900">
+                          {institution.name} vs {other.name}
+                        </span>
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          </div>
+        </section>
+      )}
     </>
   )
 }

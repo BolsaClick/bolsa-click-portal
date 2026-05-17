@@ -121,6 +121,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           priority: 0.75,
         }))
       ),
+      // Comparações faculdade × faculdade /comparar/[a]-vs-[b] (alfabético = canônico)
+      ...institutions.flatMap((instA: { slug: string; updatedAt: Date }, i: number) =>
+        institutions.slice(i + 1).map((instB: { slug: string; updatedAt: Date }) => {
+          const [a, b] = [instA.slug, instB.slug].sort()
+          return {
+            url: `${SITE_URL}/comparar/${a}-vs-${b}`,
+            lastModified: instA.updatedAt > instB.updatedAt ? instA.updatedAt : instB.updatedAt,
+            changeFrequency: 'weekly' as const,
+            priority: 0.8,
+          }
+        })
+      ),
     ]
   } catch (e) {
     console.error('Erro ao buscar dados dinâmicos para sitemap:', e)

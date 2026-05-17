@@ -3,7 +3,12 @@
 //   - streamChat: streaming pra UI do quiz (server-sent events parseados)
 //   - getStructuredRecommendations: call final com response_format JSON schema
 
-import { SYSTEM_PROMPT, RECOMMENDATIONS_SCHEMA, FINAL_RECOMMENDATIONS_PROMPT } from './system-prompt'
+import {
+  buildRefinementPrompt,
+  buildFinalRecommendationsPrompt,
+  RECOMMENDATIONS_SCHEMA,
+} from './system-prompt'
+import type { UserProfile } from './matching'
 
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions'
 const MODEL = 'gpt-4o-mini'
@@ -20,10 +25,10 @@ export type Recommendation = {
 }
 
 /**
- * Chama OpenAI em modo streaming. Retorna um ReadableStream<string> de chunks
- * de texto (já parseados de SSE), pronto pra repassar pro browser via Response.
+ * Chama OpenAI em modo streaming pro refinamento de 2-3 turnos.
+ * Recebe o perfil (já calculado deterministicamente) + histórico da conversa.
  */
-export function streamChat(messages: ChatMessage[]): ReadableStream<Uint8Array> {
+export function streamChat(profile: UserProfile, messages: ChatMessage[]): ReadableStream<Uint8Array> {
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
     throw new Error('OPENAI_API_KEY ausente')
@@ -34,7 +39,7 @@ export function streamChat(messages: ChatMessage[]): ReadableStream<Uint8Array> 
     stream: true,
     temperature: 0.7,
     messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: buildRefinementPrompt(profile) },
       ...messages,
     ],
   }
@@ -69,7 +74,6 @@ export function streamChat(messages: ChatMessage[]): ReadableStream<Uint8Array> 
           if (done) break
           buffer += decoder.decode(value, { stream: true })
 
-          // SSE events vêm em linhas "data: {...}\n\n"
           const lines = buffer.split('\n')
           buffer = lines.pop() ?? ''
 
@@ -88,7 +92,7 @@ export function streamChat(messages: ChatMessage[]): ReadableStream<Uint8Array> 
               const piece = json.choices?.[0]?.delta?.content
               if (piece) controller.enqueue(encoder.encode(piece))
             } catch {
-              // Ignora frames parciais ou mal-formados
+              // Ignora frames parciais
             }
           }
         }
@@ -103,11 +107,13 @@ export function streamChat(messages: ChatMessage[]): ReadableStream<Uint8Array> 
 }
 
 /**
- * Call final pra extrair top 3 cursos como JSON estruturado.
- * Usa response_format json_schema (garantido pelo OpenAI).
+ * Call final pra refinar matchPercent + reasoning dos top 3 cursos pré-selecionados.
+ * Recebe perfil, histórico da conversa e top 3 slugs do matching determinístico.
  */
 export async function getStructuredRecommendations(
-  messages: ChatMessage[]
+  profile: UserProfile,
+  messages: ChatMessage[],
+  topCourseSlugs: string[]
 ): Promise<Recommendation[]> {
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
@@ -125,9 +131,9 @@ export async function getStructuredRecommendations(
       temperature: 0.4,
       response_format: RECOMMENDATIONS_SCHEMA,
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'system', content: buildRefinementPrompt(profile) },
         ...messages,
-        { role: 'user', content: FINAL_RECOMMENDATIONS_PROMPT },
+        { role: 'user', content: buildFinalRecommendationsPrompt(profile, topCourseSlugs) },
       ],
     }),
   })

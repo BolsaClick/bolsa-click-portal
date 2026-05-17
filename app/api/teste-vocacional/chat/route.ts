@@ -1,11 +1,11 @@
 import { NextRequest } from 'next/server'
-import { streamChat, ChatMessage } from '@/app/lib/teste-vocacional/openai'
+import { streamChat, type ChatMessage } from '@/app/lib/teste-vocacional/openai'
+import { computeUserProfile, type LikertAnswers } from '@/app/lib/teste-vocacional/matching'
 
-// Rate limit simples em memória (1 instância serverless). Suficiente pra MVP
-// — não bloqueia bot determinado mas filtra abuso casual.
+// Rate limit em memória — 1 instância serverless.
 const recentByIp = new Map<string, { count: number; resetAt: number }>()
-const RATE_LIMIT_WINDOW_MS = 60_000 // 1 min
-const RATE_LIMIT_MAX = 10           // 10 msgs/min por IP
+const RATE_LIMIT_WINDOW_MS = 60_000
+const RATE_LIMIT_MAX = 10
 
 function checkRateLimit(ip: string): boolean {
   const now = Date.now()
@@ -20,10 +20,11 @@ function checkRateLimit(ip: string): boolean {
 }
 
 interface ChatBody {
+  likertAnswers: LikertAnswers
   messages: ChatMessage[]
 }
 
-const MAX_MESSAGES = 25
+const MAX_MESSAGES = 12
 const MAX_CONTENT_CHARS = 1000
 
 export async function POST(request: NextRequest) {
@@ -41,6 +42,13 @@ export async function POST(request: NextRequest) {
     body = (await request.json()) as ChatBody
   } catch {
     return new Response(JSON.stringify({ error: 'Body inválido' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
+  if (!body.likertAnswers || typeof body.likertAnswers !== 'object') {
+    return new Response(JSON.stringify({ error: 'likertAnswers obrigatório' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     })
@@ -82,7 +90,8 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const stream = streamChat(body.messages)
+    const profile = computeUserProfile(body.likertAnswers)
+    const stream = streamChat(profile, body.messages)
     return new Response(stream, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',

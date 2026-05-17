@@ -2,13 +2,23 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import {
   getStructuredRecommendations,
-  ChatMessage,
-  Recommendation,
+  type ChatMessage,
+  type Recommendation,
 } from '@/app/lib/teste-vocacional/openai'
 import { upsertNotealyContact } from '@/app/lib/api/notealy'
 import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
+import {
+  computeUserProfile,
+  matchCourses,
+  type LikertAnswers,
+} from '@/app/lib/teste-vocacional/matching'
+import {
+  RIASEC_DESCRIPTIONS,
+  GARDNER_DESCRIPTIONS,
+} from '@/app/lib/teste-vocacional/methodology-profiles'
 
 interface SubmitBody {
+  likertAnswers: LikertAnswers
   conversation: ChatMessage[]
   name: string
   email: string
@@ -19,7 +29,6 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
-// Rate limit: 5 submits/IP/dia
 const submitsByIp = new Map<string, { count: number; resetAt: number }>()
 const SUBMIT_WINDOW_MS = 24 * 60 * 60 * 1000
 const SUBMIT_MAX = 5
@@ -36,15 +45,16 @@ function checkSubmitLimit(ip: string): boolean {
   return true
 }
 
-// Valida e sanitiza as recomendações da AI: descarta slugs que não existem
-// no TOP_CURSOS, e completa se sobrar menos de 3 (fallback com top genéricos).
-function sanitizeRecommendations(raw: Recommendation[]): Recommendation[] {
-  const validSlugs = new Set(TOP_CURSOS.map(c => c.slug))
+function sanitizeRecommendations(
+  raw: Recommendation[],
+  expectedSlugs: string[]
+): Recommendation[] {
+  const expectedSet = new Set(expectedSlugs)
   const seen = new Set<string>()
   const valid: Recommendation[] = []
 
   for (const r of raw) {
-    if (!validSlugs.has(r.courseSlug) || seen.has(r.courseSlug)) continue
+    if (!expectedSet.has(r.courseSlug) || seen.has(r.courseSlug)) continue
     seen.add(r.courseSlug)
     valid.push({
       courseSlug: r.courseSlug,
@@ -54,15 +64,14 @@ function sanitizeRecommendations(raw: Recommendation[]): Recommendation[] {
     if (valid.length === 3) break
   }
 
-  // Fallback se AI alucinou ou retornou poucas opções
-  const fallbackSlugs = ['administracao', 'direito', 'analise-e-desenvolvimento-de-sistemas']
-  for (const slug of fallbackSlugs) {
+  // Fallback: se AI hallucinou ou retornou poucos, completa com os esperados
+  for (const slug of expectedSlugs) {
     if (valid.length >= 3) break
-    if (!seen.has(slug) && validSlugs.has(slug)) {
+    if (!seen.has(slug)) {
       valid.push({
         courseSlug: slug,
-        matchPercent: 60,
-        reasoning: 'Recomendação genérica baseada em popularidade — refaça o teste pra ter um match personalizado.',
+        matchPercent: 70,
+        reasoning: 'Curso compatível com seu perfil baseado no Holland Code e inteligências dominantes.',
       })
       seen.add(slug)
     }
@@ -88,13 +97,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Body inválido' }, { status: 400 })
   }
 
-  const { conversation, name, email, phone } = body
+  const { likertAnswers, conversation, name, email, phone } = body
 
-  if (!Array.isArray(conversation) || conversation.length < 4) {
-    return NextResponse.json(
-      { error: 'Conversa muito curta — termine o quiz antes de enviar.' },
-      { status: 400 }
-    )
+  if (!likertAnswers || typeof likertAnswers !== 'object') {
+    return NextResponse.json({ error: 'likertAnswers obrigatório' }, { status: 400 })
+  }
+  if (!Array.isArray(conversation)) {
+    return NextResponse.json({ error: 'conversation obrigatório' }, { status: 400 })
   }
   if (!name?.trim() || name.trim().length < 2) {
     return NextResponse.json({ error: 'Nome inválido' }, { status: 400 })
@@ -107,21 +116,51 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Telefone inválido' }, { status: 400 })
   }
 
-  // Chamar AI pra extrair top 3 estruturado
+  // 1) Calcula perfil determinístico a partir das respostas Likert
+  const profile = computeUserProfile(likertAnswers)
+
+  // 2) Top 3 cursos pré-selecionados pelo matching
+  const topMatches = matchCourses(profile).slice(0, 3)
+  const topSlugs = topMatches.map(m => m.slug)
+
+  // 3) AI personaliza reasoning + ajusta matchPercent
   let rawRecommendations: Recommendation[] = []
   try {
-    rawRecommendations = await getStructuredRecommendations(conversation)
+    rawRecommendations = await getStructuredRecommendations(
+      profile,
+      conversation,
+      topSlugs
+    )
   } catch (error) {
     console.error('Falha ao gerar recomendações:', error)
-    return NextResponse.json(
-      { error: 'Erro ao processar suas respostas. Tente em alguns instantes.' },
-      { status: 502 }
-    )
+    // Fallback: usa os matches determinísticos com reasoning genérico
+    rawRecommendations = topMatches.map(m => ({
+      courseSlug: m.slug,
+      matchPercent: m.score,
+      reasoning: 'Curso alinhado com seu perfil vocacional.',
+    }))
   }
 
-  const recommendations = sanitizeRecommendations(rawRecommendations)
+  const recommendations = sanitizeRecommendations(rawRecommendations, topSlugs)
 
-  // Salvar lead em Prisma
+  const primaryDesc = RIASEC_DESCRIPTIONS[profile.primary]
+  const secondaryDesc = RIASEC_DESCRIPTIONS[profile.secondary]
+  const tertiaryDesc = RIASEC_DESCRIPTIONS[profile.tertiary]
+
+  const profileResult = {
+    hollandCode: profile.hollandCode,
+    primary: { code: profile.primary, ...primaryDesc },
+    secondary: { code: profile.secondary, name: secondaryDesc.name, short: secondaryDesc.short },
+    tertiary: { code: profile.tertiary, name: tertiaryDesc.name, short: tertiaryDesc.short },
+    intelligences: profile.topIntelligences.map(i => ({
+      code: i,
+      name: GARDNER_DESCRIPTIONS[i].name,
+      short: GARDNER_DESCRIPTIONS[i].short,
+    })),
+    recommendations,
+  }
+
+  // 4) Persistir Lead em Prisma (best-effort)
   try {
     await prisma.lead.create({
       data: {
@@ -133,19 +172,19 @@ export async function POST(request: NextRequest) {
           return curso?.apiCourseName ?? r.courseSlug
         }),
         source: 'teste-vocacional',
-        extraData: {
+        extraData: JSON.parse(JSON.stringify({
+          likertAnswers,
           conversation,
-          suggestedCourses: recommendations,
-        },
+          profile: profileResult,
+        })),
         status: 'NEW',
       },
     })
   } catch (error) {
     console.error('Falha ao criar Lead:', error)
-    // Não bloqueia a resposta — usuário ainda vê o resultado
   }
 
-  // Sincronizar com Notealy (best-effort)
+  // 5) Notealy sync (best-effort)
   try {
     await upsertNotealyContact({
       name: name.trim(),
@@ -157,5 +196,5 @@ export async function POST(request: NextRequest) {
     console.error('⚠️ Falha ao sincronizar com Notealy:', error)
   }
 
-  return NextResponse.json({ recommendations })
+  return NextResponse.json(profileResult)
 }

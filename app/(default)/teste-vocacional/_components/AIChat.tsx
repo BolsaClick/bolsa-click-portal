@@ -2,22 +2,24 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Send, Sparkles, Loader2, RefreshCw } from 'lucide-react'
+import { LikertQuiz } from './LikertQuiz'
 import { LeadGate } from './LeadGate'
-import { ResultCards, type Recommendation } from './ResultCards'
+import { ResultCards, type ProfileResult } from './ResultCards'
+import type { LikertAnswers } from '@/app/lib/teste-vocacional/matching'
 
 type Message = { role: 'user' | 'assistant'; content: string }
-type Stage = 'intro' | 'chat' | 'gate' | 'loading' | 'result' | 'error'
+type Stage = 'intro' | 'likert' | 'chat' | 'gate' | 'loading' | 'result' | 'error'
 
-const MAX_TURNS = 12
-// Trigger pra mudar do chat → gate. AI é instruída a usar essa frase exata.
+const MAX_REFINE_TURNS = 4
 const END_SIGNAL = 'já tenho o suficiente'
 
 export function AIChat() {
   const [stage, setStage] = useState<Stage>('intro')
+  const [likertAnswers, setLikertAnswers] = useState<LikertAnswers>({})
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([])
+  const [profileResult, setProfileResult] = useState<ProfileResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -27,17 +29,27 @@ export function AIChat() {
     }
   }, [messages, streaming])
 
-  const startQuiz = async () => {
-    setStage('chat')
+  const startQuiz = () => {
+    setStage('likert')
+    setLikertAnswers({})
     setMessages([])
     setError(null)
-    // Inicia conversa com mensagem trigger do usuário (não exibida)
-    await sendMessage('Oi, quero descobrir qual curso combina comigo!', [])
   }
 
-  const sendMessage = async (userText: string, prior: Message[]) => {
+  const handleLikertComplete = async (answers: LikertAnswers) => {
+    setLikertAnswers(answers)
+    setStage('chat')
+    // Inicia conversa: AI faz primeira pergunta aberta personalizada baseada no perfil
+    await sendMessage('Pronto! Agora me faça uma pergunta aberta pra refinar.', [], answers)
+  }
+
+  const sendMessage = async (
+    userText: string,
+    prior: Message[],
+    answersOverride?: LikertAnswers
+  ) => {
+    const answers = answersOverride ?? likertAnswers
     const conversation = [...prior, { role: 'user' as const, content: userText }]
-    // Só adiciona ao estado se não for a mensagem trigger inicial (escondida)
     const isFirstTrigger = prior.length === 0
     if (!isFirstTrigger) {
       setMessages(conversation)
@@ -48,7 +60,7 @@ export function AIChat() {
       const res = await fetch('/api/teste-vocacional/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: conversation }),
+        body: JSON.stringify({ likertAnswers: answers, messages: conversation }),
       })
 
       if (!res.ok || !res.body) {
@@ -59,7 +71,6 @@ export function AIChat() {
       const decoder = new TextDecoder()
       let assistantText = ''
 
-      // Placeholder vazio que vai sendo preenchido
       const baseMessages = isFirstTrigger ? [] : conversation
       setMessages([...baseMessages, { role: 'assistant', content: '' }])
 
@@ -75,10 +86,9 @@ export function AIChat() {
       setMessages(final)
       setStreaming(false)
 
-      // Detectar fim
       const assistantTurns = final.filter(m => m.role === 'assistant').length
       const ended =
-        assistantText.toLowerCase().includes(END_SIGNAL) || assistantTurns >= MAX_TURNS
+        assistantText.toLowerCase().includes(END_SIGNAL) || assistantTurns >= MAX_REFINE_TURNS
       if (ended) {
         setStage('gate')
       }
@@ -105,14 +115,18 @@ export function AIChat() {
       const res = await fetch('/api/teste-vocacional/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversation: messages, ...data }),
+        body: JSON.stringify({
+          likertAnswers,
+          conversation: messages,
+          ...data,
+        }),
       })
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}))
         throw new Error(errData.error || 'Erro ao enviar')
       }
-      const json = (await res.json()) as { recommendations: Recommendation[] }
-      setRecommendations(json.recommendations)
+      const json = (await res.json()) as ProfileResult
+      setProfileResult(json)
       setStage('result')
     } catch (err) {
       console.error(err)
@@ -123,24 +137,25 @@ export function AIChat() {
 
   const restart = () => {
     setStage('intro')
+    setLikertAnswers({})
     setMessages([])
     setInput('')
-    setRecommendations([])
+    setProfileResult(null)
     setError(null)
   }
 
   if (stage === 'intro') {
     return (
-      <div className="bg-white border border-hairline rounded-lg p-8 md:p-12 text-center">
-        <Sparkles className="mx-auto text-bolsa-secondary mb-4" size={36} />
-        <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900 mb-3">
+      <div className="bg-white border border-hairline rounded-lg p-6 md:p-12 text-center">
+        <Sparkles className="mx-auto text-bolsa-secondary mb-3 md:mb-4 w-7 h-7 md:w-9 md:h-9" />
+        <h2 className="font-display text-xl md:text-3xl font-semibold text-ink-900 mb-2 md:mb-3 leading-tight">
           Pronto pra descobrir seu curso ideal?
         </h2>
-        <p className="text-ink-700 mb-2">
-          Vai ser uma conversa curta de uns 3 minutos. Sem certo ou errado.
+        <p className="text-ink-700 text-sm md:text-base mb-2">
+          São 20 perguntas rápidas + 2-3 perguntas abertas com nossa IA, em uns 5 minutos.
         </p>
-        <p className="text-ink-500 text-sm mb-6">
-          Ao final você recebe os 3 cursos que mais combinam com seu perfil.
+        <p className="text-ink-500 text-xs md:text-sm mb-5 md:mb-6">
+          Metodologia baseada em RIASEC (Holland) + Inteligências Múltiplas (Gardner).
         </p>
         <button
           onClick={startQuiz}
@@ -151,6 +166,10 @@ export function AIChat() {
         </button>
       </div>
     )
+  }
+
+  if (stage === 'likert') {
+    return <LikertQuiz onComplete={handleLikertComplete} />
   }
 
   if (stage === 'gate') {
@@ -172,10 +191,10 @@ export function AIChat() {
     )
   }
 
-  if (stage === 'result') {
+  if (stage === 'result' && profileResult) {
     return (
       <div className="space-y-6">
-        <ResultCards recommendations={recommendations} />
+        <ResultCards profile={profileResult} />
         <div className="text-center">
           <button
             onClick={restart}
@@ -205,6 +224,12 @@ export function AIChat() {
   // stage === 'chat'
   return (
     <div className="space-y-4">
+      <div className="bg-paper border border-hairline rounded-lg px-4 py-3 flex items-center gap-2">
+        <Sparkles size={14} className="text-bolsa-secondary shrink-0" />
+        <p className="text-xs text-ink-700">
+          Suas respostas estão sendo refinadas. Mais 2-3 perguntas e você vê o resultado.
+        </p>
+      </div>
       <ChatBubbles messages={messages} streaming={streaming} scrollRef={scrollRef} />
       <form
         onSubmit={handleSend}
@@ -244,12 +269,12 @@ function ChatBubbles({
   return (
     <div
       ref={scrollRef}
-      className="bg-white border border-hairline rounded-lg p-4 h-[400px] overflow-y-auto space-y-3"
+      className="bg-white border border-hairline rounded-lg p-4 min-h-[200px] max-h-[400px] overflow-y-auto space-y-3"
     >
       {messages.length === 0 && streaming && (
         <div className="flex items-center gap-2 text-ink-500 text-sm">
           <Loader2 size={14} className="animate-spin" />
-          Iniciando conversa...
+          A IA está analisando suas respostas...
         </div>
       )}
       {messages.map((m, i) => (

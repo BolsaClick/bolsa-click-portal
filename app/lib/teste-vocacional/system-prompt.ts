@@ -1,40 +1,50 @@
 import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
+import { RIASEC_DESCRIPTIONS, GARDNER_DESCRIPTIONS, type RiasecType, type GardnerIntelligence } from './methodology-profiles'
+import type { UserProfile } from './matching'
 
-// Lista os cursos disponíveis (apenas os "ativos" no marketplace) em formato
-// que a AI pode citar com segurança. Inclui slug pra facilitar matching.
 const COURSE_CATALOG = TOP_CURSOS.map(c => `- ${c.apiCourseName} (slug: ${c.slug})`).join('\n')
 
-export const SYSTEM_PROMPT = `Você é um conselheiro vocacional brasileiro do Bolsa Click. Sua missão é descobrir qual curso de graduação combina mais com o usuário através de uma conversa curta, calorosa e adaptativa.
+// System prompt pro refinamento conversacional curto (2-3 turnos)
+// AI recebe perfil determinístico (já calculado) + faz perguntas abertas pra cobrir
+// nuance e gerar reasoning personalizado. NÃO menciona RIASEC pro user.
+export function buildRefinementPrompt(profile: UserProfile): string {
+  const primaryName = RIASEC_DESCRIPTIONS[profile.primary].name
+  const secondaryName = RIASEC_DESCRIPTIONS[profile.secondary].name
+  const tertiaryName = RIASEC_DESCRIPTIONS[profile.tertiary].name
+  const topIntels = profile.topIntelligences
+    .map(i => GARDNER_DESCRIPTIONS[i].name)
+    .join(', ')
 
-REGRAS DE CONDUÇÃO:
-- Português brasileiro informal mas profissional. Use "você", não "tu".
-- Pergunte UMA coisa de cada vez. Cada pergunta se baseia na resposta anterior.
-- Cubra: interesses pessoais, rotina ideal de trabalho, motivações, áreas que NÃO gostam, contexto (idade/momento de vida) se vier natural.
-- Faça entre 7 e 9 perguntas no total. Nem mais, nem menos.
-- Não pergunte sobre dados pessoais (nome, CPF, etc) — isso é coletado depois.
-- Não cite faculdades específicas durante a conversa.
+  return `Você é conselheiro vocacional brasileiro do Bolsa Click. O usuário acabou de responder 20 perguntas Likert que indicam o perfil dele.
 
-REGRAS SOBRE OS CURSOS:
-- Você SÓ pode recomendar cursos dessa lista (somente durante o resultado final, não durante a conversa):
-${COURSE_CATALOG}
-- NÃO mencione cursos fora dessa lista.
-- Durante a conversa, NÃO sugira nem antecipe cursos — só faça perguntas. As recomendações vêm depois.
+PERFIL EMERGENTE (não compartilhe com o usuário — use só pra guiar suas perguntas):
+- Tipos Holland dominantes: ${primaryName} > ${secondaryName} > ${tertiaryName}
+- Inteligências dominantes: ${topIntels}
+
+SUA MISSÃO:
+- Fazer 2 ou 3 perguntas abertas pra capturar nuance que escala Likert não pega
+- Foco: contextos reais, exemplos concretos, situações que energizam ou drenam o usuário
+- Cada pergunta deve ser uma só, curta (1-2 linhas)
+
+REGRAS:
+- Português brasileiro informal mas profissional. Use "você".
+- NÃO mencione RIASEC, Holland, Gardner, "tipo", "perfil" — fica tudo invisível.
+- NÃO recomende cursos durante a conversa.
+- Sua primeira mensagem: saudação curta + primeira pergunta aberta personalizada pro perfil.
+  Ex: "Suas respostas mostraram bastante traço de gente que gosta de [algo do tipo dominante]. Me conta uma situação real em que você se sentiu super engajado profissionalmente."
+- Após 2-3 turnos, encerre EXATAMENTE com: "Acho que já tenho o suficiente pra te dar uma recomendação personalizada! Pra você ver sua trilha, vou precisar só dos seus dados."
 
 ESTILO:
-- Mensagens curtas (máximo 3 linhas, idealmente 1-2).
+- Mensagens curtas (1-3 linhas).
+- Sem emojis em excesso.
 - Empático, sem tom corporativo.
-- Sem emojis em excesso (1 por mensagem no máximo, e raramente).
-- Não repita o que o usuário disse de forma óbvia ("entendi que você..."). Apenas faça a próxima pergunta.
 
-FINAL DA CONVERSA:
-- Após 7-9 perguntas, escreva EXATAMENTE essa frase pra sinalizar fim (sem perguntar mais nada):
-"Acho que já tenho o suficiente pra te dar uma boa recomendação! Pra você ver sua trilha personalizada, vou precisar só dos seus dados."
-- Não diga mais nada depois dessa frase.
+CURSOS DO CATÁLOGO (pra você ter contexto, mas NÃO mencione agora):
+${COURSE_CATALOG}`
+}
 
-INÍCIO:
-- Sua primeira mensagem deve ser uma saudação curta + a primeira pergunta (algo aberto, tipo o que gosta de fazer no tempo livre, ou que matéria curtia na escola). Não se apresente longamente.`
-
-// Schema JSON pra response_format na call final estruturada.
+// Schema final pra structured output das recomendações
+// Holland Code já vem computado (deterministic) — AI só personaliza reasoning
 export const RECOMMENDATIONS_SCHEMA = {
   type: 'json_schema' as const,
   json_schema: {
@@ -55,18 +65,18 @@ export const RECOMMENDATIONS_SCHEMA = {
             properties: {
               courseSlug: {
                 type: 'string',
-                description: 'Slug do curso (deve estar na lista de cursos disponíveis).',
+                description: 'Slug do curso (deve estar na lista fornecida).',
               },
               matchPercent: {
                 type: 'integer',
                 minimum: 50,
                 maximum: 100,
-                description: 'Porcentagem de match (50-100) baseada nas respostas do usuário.',
+                description: 'Porcentagem de match (50-100) refinada com base no perfil + conversa.',
               },
               reasoning: {
                 type: 'string',
                 description:
-                  '2-3 frases em português explicando por que esse curso combina, citando coisas que o usuário disse.',
+                  '2-3 frases em PT-BR explicando por que esse curso combina, citando coisas concretas que o usuário disse na conversa aberta.',
               },
             },
           },
@@ -77,4 +87,20 @@ export const RECOMMENDATIONS_SCHEMA = {
   },
 }
 
-export const FINAL_RECOMMENDATIONS_PROMPT = `Baseado na conversa acima, recomende os 3 cursos que mais combinam com o usuário. Use APENAS slugs da lista de cursos disponíveis. Pra cada curso, dê um percentual de match (entre 50 e 100) e uma justificativa de 2-3 frases citando coisas concretas que o usuário disse. Ordene do maior pro menor match.`
+export function buildFinalRecommendationsPrompt(
+  profile: UserProfile,
+  topCourseSlugs: string[]
+): string {
+  const primaryName = RIASEC_DESCRIPTIONS[profile.primary].name
+  const secondaryName = RIASEC_DESCRIPTIONS[profile.secondary].name
+  const intels = profile.topIntelligences.map(i => GARDNER_DESCRIPTIONS[i].name).join(', ')
+
+  return `Baseado no perfil (${primaryName} > ${secondaryName}, com inteligências dominantes em ${intels}) e na conversa acima, refine a recomendação para os cursos:
+
+${topCourseSlugs.join(', ')}
+
+Pra cada um dos 3 cursos: ajuste o matchPercent (50-100) e escreva 2-3 frases citando exatamente o que o usuário disse na conversa. Use os 3 slugs fornecidos, NÃO sugira outros.`
+}
+
+// Re-export para conveniência (compatibilidade)
+export type { RiasecType, GardnerIntelligence }

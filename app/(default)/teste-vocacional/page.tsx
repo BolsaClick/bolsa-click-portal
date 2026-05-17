@@ -271,6 +271,71 @@ export default function TesteVocacionalPage() {
 
       <section className="bg-paper py-12 md:py-16 border-b border-hairline">
         <div className="container mx-auto px-4 max-w-3xl prose prose-neutral prose-headings:font-display">
+          <h2>Metodologia: RIASEC + Inteligências Múltiplas</h2>
+          <p>
+            Nosso teste combina duas teorias clássicas de orientação vocacional e psicologia
+            cognitiva. Em vez de inventar um algoritmo opaco de &ldquo;análise preditiva&rdquo;,
+            apoiamos a recomendação em frameworks com 40+ anos de pesquisa e uso clínico no
+            mundo todo.
+          </p>
+
+          <h3>RIASEC (Holland, 1959): o gold standard vocacional</h3>
+          <p>
+            John L. Holland propôs em 1959 que pessoas e ambientes profissionais podem ser
+            classificados em 6 tipos: <strong>Realista (R)</strong>, <strong>Investigativo
+            (I)</strong>, <strong>Artístico (A)</strong>, <strong>Social (S)</strong>,{' '}
+            <strong>Empreendedor (E)</strong> e <strong>Convencional (C)</strong>. Quando o
+            tipo da pessoa combina com o tipo do ambiente, a satisfação e o desempenho
+            profissional aumentam significativamente.
+          </p>
+          <p>
+            Cada pessoa não é só uma letra — é um <em>Holland Code</em> de 3 letras
+            representando os tipos dominantes em ordem. Alguém com perfil &ldquo;SIA&rdquo; combina
+            Social (foco em pessoas), Investigativo (curiosidade analítica) e Artístico
+            (expressividade) — provavelmente se realiza em áreas como psicologia, ensino ou
+            arquitetura social. O RIASEC é a base da maioria dos testes vocacionais sérios
+            no mundo, usado por universidades, agências de emprego e plataformas como o
+            ONet do Departamento do Trabalho dos EUA.
+          </p>
+
+          <h3>Inteligências Múltiplas (Gardner, 1983): como você processa</h3>
+          <p>
+            Howard Gardner, em <em>Frames of Mind</em>, propôs que a inteligência humana não
+            é uma capacidade única medida por QI, mas um conjunto de pelo menos 8 inteligências
+            relativamente independentes: <strong>Linguística</strong>, <strong>Lógico-matemática</strong>,{' '}
+            <strong>Espacial</strong>, <strong>Musical</strong>, <strong>Corporal-cinestésica</strong>,{' '}
+            <strong>Interpessoal</strong>, <strong>Intrapessoal</strong> e <strong>Naturalista</strong>.
+          </p>
+          <p>
+            Diferente do RIASEC (que olha pra <em>preferências</em>), Gardner foca em <em>como
+            você aprende e processa informação</em>. Combinar os dois traz uma leitura mais
+            rica: o RIASEC diz que tipo de ambiente combina com você; Gardner diz como você
+            vai prosperar nele. Alguém com perfil RIASEC dominantemente Social mas com forte
+            inteligência Lógico-matemática pode brilhar em psicologia clínica baseada em
+            dados, por exemplo.
+          </p>
+
+          <h3>Como a IA aplica essas teorias</h3>
+          <p>
+            As 20 perguntas Likert no início do teste cobrem sistematicamente as 6 dimensões
+            RIASEC e as 8 inteligências Gardner. Cada resposta soma pontos pras dimensões
+            correspondentes, e um algoritmo determinístico calcula seu Holland Code (3 letras
+            em ordem) e suas inteligências dominantes. Isso garante que o resultado é
+            <strong> reprodutível e auditável</strong> — não depende de &ldquo;achismo&rdquo;
+            de qualquer IA.
+          </p>
+          <p>
+            A IA entra depois pra refinar: faz 2-3 perguntas abertas adaptativas baseadas
+            no seu perfil emergente, captura nuance que a escala Likert não pega, e
+            personaliza a justificativa de cada curso recomendado citando coisas que você
+            disse. Você ganha estrutura científica + adaptação personalizada — não precisa
+            escolher entre as duas coisas.
+          </p>
+        </div>
+      </section>
+
+      <section className="bg-white py-12 md:py-16 border-b border-hairline">
+        <div className="container mx-auto px-4 max-w-3xl prose prose-neutral prose-headings:font-display">
           <h2>Por que IA adaptativa funciona melhor que questionário fixo</h2>
           <p>
             Os testes vocacionais clássicos seguem um padrão: você responde 30 a 50

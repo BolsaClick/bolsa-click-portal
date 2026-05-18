@@ -780,3 +780,60 @@ model FaculdadeCurso {
 
   @@unique([cursoId, unidadeId, modalidade, turno])
 }
+
+// ==========================================
+// SEO GAP ANALYSIS (Google Trends)
+// ==========================================
+
+model SeoTrendsSnapshot {
+  id        String       @id @default(uuid())
+  topic     String // Termo da watchlist OU nome de curso/instituição
+  source    TrendsSource
+  timeframe String // ex: "now 7-d", "today 30-d"
+  region    String       @default("BR")
+  rawData   Json // resposta completa do fetcher (debug/audit)
+  fetchedAt DateTime     @default(now())
+
+  entries SeoTrendsEntry[]
+
+  @@index([topic])
+  @@index([fetchedAt])
+}
+
+model SeoTrendsEntry {
+  id              String         @id @default(uuid())
+  snapshotId      String
+  query           String
+  normalizedQuery String
+  trendValue      Int // 0-100 do Trends
+  isRising        Boolean        @default(false)
+  risingPercent   Int?
+  matchStatus     GapMatchStatus
+  matchedEntities String[] // ex: ["featuredCourse:psicologia", "blogPost:slug-do-post"]
+  priorityScore   Float
+  dismissed       Boolean        @default(false)
+  dismissedAt     DateTime?
+  notes           String?        @db.Text
+
+  createdAt DateTime @default(now())
+
+  snapshot SeoTrendsSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+
+  @@index([snapshotId])
+  @@index([matchStatus])
+  @@index([priorityScore])
+  @@index([dismissed])
+  @@index([normalizedQuery])
+}
+
+enum TrendsSource {
+  CURATED
+  COURSE_CATALOG
+  INSTITUTION_CATALOG
+}
+
+enum GapMatchStatus {
+  GAP // 0 matches no catálogo
+  PARTIAL // match parcial (ex: keyword bate mas não tem página dedicada)
+  COVERED // match exato (slug ou title)
+}

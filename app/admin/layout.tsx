@@ -20,6 +20,7 @@ import {
   Building2,
   ImageIcon,
   FileText,
+  TrendingUp,
 } from 'lucide-react'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { AdminProvider, useAdmin } from '@/app/contexts/AdminAuthContext'
@@ -96,6 +97,12 @@ const navigation = [
     href: '/admin/blog',
     icon: FileText,
     permission: 'blog',
+  },
+  {
+    name: 'SEO',
+    href: '/admin/seo',
+    icon: TrendingUp,
+    permission: 'seo',
   },
 ]
 

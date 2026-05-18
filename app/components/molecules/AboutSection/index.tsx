@@ -49,41 +49,8 @@ const AboutSection: React.FC = () => {
     }
   ];
 
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "EducationalOrganization",
-    "name": "Bolsa Click",
-    "url": "https://www.bolsaclick.com.br",
-    "description": "O Bolsa Click é a maior plataforma de bolsas de estudo do Brasil, com descontos de até 95% para ensino superior. Encontre bolsas em mais de 30.000 faculdades parceiras com facilidade e suporte.",
-    "sameAs": [
-      "https://www.instagram.com/bolsaclick",
-      "https://www.facebook.com/bolsaclick"
-    ],
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "5",
-      "reviewCount": "3"
-    },
-    "review": testimonials.map((t) => ({
-      "@type": "Review",
-      "author": { "@type": "Person", "name": t.author },
-      "reviewBody": t.quote,
-      "reviewRating": {
-        "@type": "Rating",
-        "ratingValue": "5",
-        "bestRating": "5"
-      }
-    }))
-  };
-
   return (
     <section id="about" className="about-section py-16 bg-white relative">
-      {/* JSON-LD SEO */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-      />
-
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-2xl md:text-3xl font-bold mb-6 text-emerald-600">

@@ -145,7 +145,8 @@ export default function CursoPageClient({
         <div className="container mx-auto px-4 py-20 md:py-28 relative">
           <div className="max-w-4xl mx-auto text-center flex flex-col items-center">
             <h1 className="font-display text-4xl md:text-5xl lg:text-[64px] font-semibold text-white leading-[1.05] mb-5">
-              {cursoMetadata.fullName}
+              Bolsa de {cursoMetadata.name}{' '}
+              <span className="italic text-white/85">com até 80% de desconto</span>
             </h1>
             <p className="text-white/80 text-base md:text-lg max-w-2xl leading-relaxed mb-8">
               {cursoMetadata.description}

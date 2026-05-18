@@ -109,7 +109,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lowPrice } = await getCoursePriceRange(curso.apiCourseName, curso.nivel)
 
   const priceText = lowPrice > 0 ? ` a partir de R$ ${lowPrice.toFixed(0)}/mês` : ''
-  const title = `${curso.name} com Bolsa de até 80% - Duração, Salários e Faculdades`
+  const title = lowPrice > 0
+    ? `Bolsa de ${curso.name}${priceText} | Até 80% de desconto`
+    : `Bolsa de ${curso.name} | Até 80% de desconto em faculdades`
   const description = `Bolsas de estudo para ${curso.fullName}${priceText}. Até 80% de desconto em mais de 30.000 faculdades. ${curso.duration} de duração. Salário médio: ${curso.averageSalary}. Inscrição grátis!`
 
   // Construir URL da imagem
@@ -228,6 +230,8 @@ export default async function CursoPage({ params }: Props) {
   const lowPrice = prices.length > 0 ? Math.min(...prices) : 0
   const highPrice = maxPrices.length > 0 ? Math.max(...maxPrices) : 0
 
+  const faqItems = buildCourseFaqItems(cursoMetadata, lowPrice)
+
   const jsonLdSchemas = [
     {
       '@context': 'https://schema.org',
@@ -242,10 +246,39 @@ export default async function CursoPage({ params }: Props) {
       },
       educationalLevel: nivelLabel,
       educationalCredentialAwarded: cursoMetadata.type,
-      courseMode: ['Presencial', 'EAD', 'Semipresencial'],
       timeToComplete: cursoMetadata.duration,
       url: `https://www.bolsaclick.com.br/cursos/${slug}`,
       image: imageUrl,
+      hasCourseInstance: [
+        {
+          '@type': 'CourseInstance',
+          courseMode: 'Online',
+          courseWorkload: cursoMetadata.duration,
+          ...(lowPrice > 0 ? {
+            offers: {
+              '@type': 'Offer',
+              priceCurrency: 'BRL',
+              price: lowPrice.toFixed(2),
+              availability: 'https://schema.org/InStock',
+              url: `https://www.bolsaclick.com.br/cursos/${slug}`,
+            },
+          } : {}),
+        },
+        {
+          '@type': 'CourseInstance',
+          courseMode: 'Onsite',
+          courseWorkload: cursoMetadata.duration,
+          ...(lowPrice > 0 ? {
+            offers: {
+              '@type': 'Offer',
+              priceCurrency: 'BRL',
+              price: lowPrice.toFixed(2),
+              availability: 'https://schema.org/InStock',
+              url: `https://www.bolsaclick.com.br/cursos/${slug}`,
+            },
+          } : {}),
+        },
+      ],
       ...(lowPrice > 0 ? {
         offers: {
           '@type': 'AggregateOffer',
@@ -260,33 +293,11 @@ export default async function CursoPage({ params }: Props) {
     {
       '@context': 'https://schema.org',
       '@type': 'FAQPage',
-      mainEntity: [
-        {
-          '@type': 'Question',
-          name: `O que é o curso de ${cursoMetadata.name}?`,
-          acceptedAnswer: { '@type': 'Answer', text: cursoMetadata.longDescription },
-        },
-        {
-          '@type': 'Question',
-          name: `Quanto tempo dura o curso de ${cursoMetadata.name}?`,
-          acceptedAnswer: { '@type': 'Answer', text: `O curso de ${cursoMetadata.fullName} tem duração de ${cursoMetadata.duration}.` },
-        },
-        {
-          '@type': 'Question',
-          name: `Quanto custa o curso de ${cursoMetadata.name} com bolsa?`,
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: lowPrice > 0
-              ? `Com bolsa pelo Bolsa Click, o curso de ${cursoMetadata.name} pode ser encontrado a partir de R$ ${lowPrice.toFixed(2)} por mês, com descontos de até 80%.`
-              : `O Bolsa Click oferece bolsas de até 80% de desconto para o curso de ${cursoMetadata.name}. Cadastre-se grátis para ver as ofertas.`,
-          },
-        },
-        {
-          '@type': 'Question',
-          name: `Qual o salário médio de quem faz ${cursoMetadata.name}?`,
-          acceptedAnswer: { '@type': 'Answer', text: `O salário médio para profissionais formados em ${cursoMetadata.name} é de ${cursoMetadata.averageSalary}.` },
-        },
-      ],
+      mainEntity: faqItems.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: { '@type': 'Answer', text: item.answer },
+      })),
     },
     {
       '@context': 'https://schema.org',
@@ -298,8 +309,6 @@ export default async function CursoPage({ params }: Props) {
       ],
     },
   ]
-
-  const faqItems = buildCourseFaqItems(cursoMetadata, lowPrice)
 
   return (
     <>
@@ -337,6 +346,20 @@ export default async function CursoPage({ params }: Props) {
           >
             Ver carreira de {cursoMetadata.name} →
           </Link>
+        </div>
+      </section>
+      <section className="bg-paper py-6 border-t border-hairline">
+        <div className="container mx-auto px-4">
+          <p className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink-500 text-center">
+            Atualizado em{' '}
+            <time dateTime={cursoMetadata.updatedAt.toISOString()}>
+              {cursoMetadata.updatedAt.toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+              })}
+            </time>
+          </p>
         </div>
       </section>
       {relatedCourses.length > 0 && (

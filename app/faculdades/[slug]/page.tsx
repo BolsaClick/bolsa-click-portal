@@ -237,37 +237,39 @@ export default async function FaculdadeDetailPage({
         </div>
       </section>
 
-      <section className="bg-white py-12 md:py-16 border-t border-hairline">
-        <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-baseline justify-between hairline-b pb-3 mb-6">
-              <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
-                {institution.name} em outras cidades
-              </h2>
-              <span className="font-mono num-tabular text-[11px] text-ink-500">
-                ({String(Math.min(BRAZILIAN_CITIES.length, 20)).padStart(2, '0')})
-              </span>
+      {institution.hasCityPages && (
+        <section className="bg-white py-12 md:py-16 border-t border-hairline">
+          <div className="container mx-auto px-4">
+            <div className="max-w-6xl mx-auto">
+              <div className="flex items-baseline justify-between hairline-b pb-3 mb-6">
+                <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
+                  {institution.name} em outras cidades
+                </h2>
+                <span className="font-mono num-tabular text-[11px] text-ink-500">
+                  ({String(Math.min(BRAZILIAN_CITIES.length, 30)).padStart(2, '0')})
+                </span>
+              </div>
+              <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-px bg-hairline">
+                {BRAZILIAN_CITIES.slice(0, 30).map(city => (
+                  <li key={city.slug} className="bg-white">
+                    <Link
+                      href={`/faculdades/${institution.slug}/${city.slug}`}
+                      className="block px-4 py-3 transition-colors hover:bg-paper"
+                    >
+                      <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500">
+                        {city.state}
+                      </span>
+                      <span className="block font-display text-base text-ink-900">
+                        {city.name}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-px bg-hairline">
-              {BRAZILIAN_CITIES.slice(0, 20).map(city => (
-                <li key={city.slug} className="bg-white">
-                  <Link
-                    href={`/faculdades/${institution.slug}/em/${city.slug}`}
-                    className="block px-4 py-3 transition-colors hover:bg-paper"
-                  >
-                    <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500">
-                      {city.state}
-                    </span>
-                    <span className="block font-display text-base text-ink-900">
-                      {city.name}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {otherInstitutions.length > 0 && (
         <section className="bg-white py-12 md:py-16 border-t border-hairline">

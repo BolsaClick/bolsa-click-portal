@@ -525,6 +525,11 @@ model Institution {
   metaTitle         String?
   metaDescription   String?
   isActive          Boolean         @default(true)
+
+  // SEO programmatic: só emite /faculdades/[slug]/[city] pra instituições com
+  // ampla presença em múltiplas cidades (manual gate; default false).
+  hasCityPages      Boolean         @default(false)
+
   order             Int             @default(0)
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt

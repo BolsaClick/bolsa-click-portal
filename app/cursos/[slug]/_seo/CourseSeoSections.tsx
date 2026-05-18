@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Course } from '@/app/interface/course'
 import { FeaturedCourseData } from '../../_data/types'
 import { BRAZILIAN_CITIES } from '@/app/lib/constants/brazilian-cities'
+import { COURSE_FAQS } from '../../_data/course-faqs'
 
 interface OffersTableProps {
   offers: Course[]
@@ -201,6 +202,13 @@ export function CitiesGrid({ courseSlug, courseName, currentCitySlug }: CitiesGr
 }
 
 export function buildCourseFaqItems(curso: FeaturedCourseData, lowPrice: number): FaqItem[] {
+  // Se o curso tem FAQ específico curado, usar (top 10 cursos).
+  // Fallback pro template genérico nos restantes.
+  const custom = COURSE_FAQS[curso.slug]
+  if (custom && custom.length > 0) {
+    return custom
+  }
+
   return [
     {
       question: `O que é o curso de ${curso.name}?`,

@@ -12,6 +12,8 @@ import {
   CitiesGrid,
   buildCourseFaqItems,
 } from './_seo/CourseSeoSections'
+import CourseReviewsBlock from './_components/CourseReviewsBlock'
+import CoreSubjectsBlock from './_components/CoreSubjectsBlock'
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -319,6 +321,11 @@ export default async function CursoPage({ params }: Props) {
       <CursoPageClient
         cursoMetadata={cursoMetadata}
         courseOffers={courseOffers}
+      />
+      <CoreSubjectsBlock curso={cursoMetadata} />
+      <CourseReviewsBlock
+        courseName={cursoMetadata.name}
+        brands={Array.from(new Set((courseOffers || []).map((o: { brand?: string }) => o.brand || '').filter(Boolean)))}
       />
       <VisibleFaq
         items={faqItems}

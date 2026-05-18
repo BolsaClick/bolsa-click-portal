@@ -380,9 +380,10 @@ model FeaturedCourse {
   longDescription String @db.Text
   duration        String
 
-  areas       String[] // Áreas de atuação
-  skills      String[] // Habilidades desenvolvidas
-  careerPaths String[] // Carreiras possíveis
+  areas        String[] // Áreas de atuação
+  skills       String[] // Habilidades desenvolvidas
+  careerPaths  String[] // Carreiras possíveis
+  coreSubjects String[] // Disciplinas principais da grade curricular (8-12 itens)
 
   averageSalary String
   marketDemand  MarketDemand

@@ -13,6 +13,7 @@ export interface FeaturedCourseData {
   areas: string[]
   skills: string[]
   careerPaths: string[]
+  coreSubjects: string[]
   averageSalary: string
   marketDemand: 'ALTA' | 'MEDIA' | 'BAIXA'
   imageUrl: string

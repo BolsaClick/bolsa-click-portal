@@ -14,6 +14,7 @@ import {
 } from './_seo/CourseSeoSections'
 import CourseReviewsBlock from './_components/CourseReviewsBlock'
 import CoreSubjectsBlock from './_components/CoreSubjectsBlock'
+import RelatedPillarsBlock from './_components/RelatedPillarsBlock'
 import { getBrandMecRatings, mapToObject } from '@/app/lib/brand-mec-ratings'
 
 type Props = {
@@ -337,6 +338,7 @@ export default async function CursoPage({ params }: Props) {
       />
       <OffersComparisonTable offers={courseOffers || []} courseName={cursoMetadata.name} />
       <CitiesGrid courseSlug={slug} courseName={cursoMetadata.name} />
+      <RelatedPillarsBlock courseSlug={slug} courseName={cursoMetadata.name} />
       <section className="bg-paper py-12 md:py-16 border-t border-hairline">
         <div className="container mx-auto px-4 max-w-3xl">
           <div className="hairline-b pb-3 mb-6 flex items-baseline justify-between">

@@ -118,13 +118,16 @@ const jsonLd = [
     url: theme.siteUrl,
     potentialAction: {
       '@type': 'SearchAction',
-      target: `${theme.siteUrl}/curso/resultado?q={search_term_string}`,
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${theme.siteUrl}/curso/resultado?q={search_term_string}`,
+      },
       'query-input': 'required name=search_term_string',
     },
   },
   {
     '@context': 'https://schema.org',
-    '@type': 'Organization',
+    '@type': 'EducationalOrganization',
     '@id': `${theme.siteUrl}/#organization`,
     name: 'Bolsa Click',
     alternateName: ['BolsaClick', 'Bolsa Click Bolsas de Estudo'],

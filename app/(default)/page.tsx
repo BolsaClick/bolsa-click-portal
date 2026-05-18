@@ -108,18 +108,6 @@ export default async function HomePage() {
     publishedAt: p.publishedAt!.toISOString(),
   }))
 
-  const educationalOrgSchema = {
-    "@context": "https://schema.org",
-    "@type": "EducationalOrganization",
-    "name": "Bolsa Click",
-    "url": "https://www.bolsaclick.com.br",
-    "description": "O Bolsa Click é a maior plataforma de bolsas de estudo do Brasil, com descontos de até 95% para ensino superior. Encontre bolsas em mais de 30.000 faculdades parceiras com facilidade e suporte.",
-    "sameAs": [
-      "https://www.instagram.com/bolsaclick",
-      "https://www.facebook.com/bolsaclick"
-    ]
-  }
-
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -193,10 +181,6 @@ export default async function HomePage() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(educationalOrgSchema) }}
-      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}

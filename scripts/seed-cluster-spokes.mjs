@@ -590,6 +590,220 @@ const POST_ENFERMAGEM_ANHANGUERA = {
 <p>Todas oferecem Enfermagem com bolsa pelo Bolsa Click. Veja todas as <a href="/bolsas/saude">bolsas em faculdades de saúde</a> ou explore especificamente a <a href="/faculdades/anhanguera">página da Anhanguera no Bolsa Click</a>.</p>`,
 }
 
+const POST_ADM_EAD = {
+  slug: 'bolsa-de-administracao-ead',
+  title: 'Bolsa de Administração EAD: a partir de R$ 99/mês em 2026',
+  excerpt:
+    'Administração é a graduação EAD mais procurada do Brasil. Com bolsa pelo Bolsa Click, mensalidades começam em R$ 99/mês em Anhanguera, Unopar e outras. Guia completo.',
+  metaTitle: 'Bolsa de Administração EAD 2026: a partir de R$ 99 | Bolsa Click',
+  metaDescription:
+    'Administração EAD com bolsa Bolsa Click a partir de R$ 99/mês. Reconhecimento MEC pleno, 4 anos, diploma igual ao presencial. Sem ENEM, inscrição grátis.',
+  keywords: [
+    'bolsa de administracao ead',
+    'administracao ead',
+    'mensalidade administracao ead',
+    'faculdade de administracao ead',
+    'curso administracao distancia',
+  ],
+  tags: ['administracao', 'ead', 'bolsa-de-estudo'],
+  readingTime: 5,
+  author: 'Equipe Bolsa Click',
+  featured: false,
+  categories: ['ead', 'graduacao'],
+  content: `<p>Administração é a graduação mais matriculada no Brasil — e em modalidade EAD é uma das opções mais acessíveis em termos de preço. Com bolsa pelo Bolsa Click, mensalidades começam <strong>a partir de R$ 99/mês</strong> em faculdades parceiras como Anhanguera, Unopar, Ampli e Pitágoras.</p>
+
+<h2>Administração EAD vale a pena?</h2>
+
+<p>Sim, com critérios. Administração tem cobertura de mercado ampla (todas as empresas têm áreas administrativas) e o diploma EAD <strong>tem exatamente o mesmo valor legal e profissional do presencial</strong>. O CRA aceita registro de administradores formados em EAD reconhecido pelo MEC sem distinção.</p>
+
+<p>Empresas privadas raramente perguntam modalidade do curso na contratação — o que pesa é a faculdade (Anhanguera vs USP é diferença real), seu currículo, experiência e network.</p>
+
+<h2>Quanto custa Administração EAD com bolsa?</h2>
+
+<ul>
+<li><strong>Sem bolsa:</strong> mensalidade cheia R$ 350 a R$ 700/mês</li>
+<li><strong>Com bolsa Bolsa Click:</strong> a partir de R$ 99/mês (até 80% off)</li>
+</ul>
+
+<p>O curso dura 4 anos (8 semestres). Investimento total com bolsa: R$ 4.752 a R$ 12.000. Uma das graduações mais baratas do país em modalidade EAD.</p>
+
+<h2>O que você estuda em Administração EAD</h2>
+
+<p>Grade curricular típica inclui: Teoria Geral da Administração, Contabilidade, Economia, Matemática Financeira, Gestão de Pessoas, Marketing, Logística e Operações, Empreendedorismo, Planejamento Estratégico, e Gestão Financeira.</p>
+
+<p>O TCC final pode ser um plano de negócio, análise de empresa real ou pesquisa acadêmica — opção mais flexível que em cursos clássicos.</p>
+
+<h2>Mercado de trabalho de administrador</h2>
+
+<p>Segundo o CAGED 2024, o salário médio de administradores no Brasil é R$ 4.200. Trajetória típica:</p>
+
+<ul>
+<li>Recém-formado / trainee: R$ 2.500-R$ 3.500</li>
+<li>Pleno: R$ 5.000-R$ 8.000</li>
+<li>Sênior (com 5+ anos): R$ 9.000-R$ 14.000</li>
+<li>Gerência / diretoria em médio/grande porte: R$ 15.000-R$ 30.000+</li>
+</ul>
+
+<p>MBA e especializações em áreas como Finanças, Marketing Digital, RH ou Supply Chain aceleram crescimento. Inglês fluente também é diferencial.</p>
+
+<h2>Como conseguir</h2>
+
+<p>Pra ver as ofertas reais de Administração EAD com bolsa hoje, <a href="/cursos/administracao">acesse a página de Administração no Bolsa Click</a>. Veja também outras opções no nosso <a href="/faculdade-ead">hub de Faculdade EAD</a> e o <a href="/como-conseguir-bolsa-de-estudo">guia completo de bolsa de estudo</a>.</p>`,
+}
+
+const POST_FACULDADE_EAD_ANHANGUERA = {
+  slug: 'faculdade-ead-anhanguera',
+  title: 'Faculdade EAD Anhanguera 2026: cursos, mensalidade e polos próximos',
+  excerpt:
+    'A Anhanguera EAD tem mais de 1.500 polos e mensalidades a partir de R$ 99/mês com bolsa Bolsa Click. Guia completo dos cursos, processo e diferenciais da maior rede EAD do Brasil.',
+  metaTitle: 'Faculdade EAD Anhanguera 2026 | Mensalidade a partir de R$ 99',
+  metaDescription:
+    'Anhanguera EAD: 1.500+ polos, cursos reconhecidos MEC, bolsa de até 80% pelo Bolsa Click. Administração, Pedagogia, ADS, Engenharias e mais a partir de R$ 99/mês.',
+  keywords: [
+    'faculdade ead anhanguera',
+    'anhanguera ead',
+    'mensalidade anhanguera ead',
+    'cursos ead anhanguera',
+    'anhanguera distancia',
+  ],
+  tags: ['anhanguera', 'ead', 'graduacao'],
+  readingTime: 4,
+  author: 'Equipe Bolsa Click',
+  featured: false,
+  categories: ['anhanguera', 'ead'],
+  content: `<p>A Universidade Anhanguera é a maior rede de ensino superior privado em modalidade EAD no Brasil, com mais de <strong>1.500 polos presenciais</strong> em todos os 26 estados + DF. Combinada com bolsas do Bolsa Click, oferece graduações a partir de <strong>R$ 99/mês</strong>.</p>
+
+<h2>Por que escolher Anhanguera EAD</h2>
+
+<ul>
+<li><strong>Maior rede de polos do Brasil</strong> — você encontra polo presencial em quase qualquer cidade média</li>
+<li><strong>Mais de 100 cursos reconhecidos MEC</strong> em modalidade EAD ou semipresencial</li>
+<li><strong>Plataforma EAD madura</strong> (Aulas+ ou Sava) com aulas gravadas + tutoria 24/7</li>
+<li><strong>Diploma reconhecido</strong> idêntico ao presencial pra todas as finalidades</li>
+<li><strong>Bolsa Click negociada</strong> com descontos de até 80% sobre valor cheio</li>
+</ul>
+
+<h2>Cursos EAD na Anhanguera com bolsa Bolsa Click</h2>
+
+<p>Principais cursos disponíveis em modalidade EAD reconhecida:</p>
+
+<ul>
+<li><a href="/cursos/administracao">Administração</a> — bacharelado 4 anos, a partir de R$ 99/mês</li>
+<li><a href="/cursos/pedagogia">Pedagogia</a> — licenciatura 4 anos, a partir de R$ 99/mês</li>
+<li><a href="/cursos/analise-e-desenvolvimento-de-sistemas">ADS</a> — tecnólogo 2,5 anos, a partir de R$ 149/mês</li>
+<li><a href="/cursos/engenharia-civil">Engenharia Civil</a> — bacharelado 5 anos EAD (autorizada 2023), a partir de R$ 399/mês</li>
+<li><a href="/cursos/educacao-fisica">Educação Física Licenciatura</a> — 4 anos semipresencial, a partir de R$ 199/mês</li>
+<li><a href="/cursos/gestao-de-recursos-humanos">Gestão de RH</a> — tecnólogo 2 anos, a partir de R$ 119/mês</li>
+<li><a href="/cursos/marketing">Marketing</a> — tecnólogo 2 anos, a partir de R$ 149/mês</li>
+<li><a href="/cursos/ciencias-contabeis">Ciências Contábeis</a> — bacharelado 4 anos, a partir de R$ 149/mês</li>
+</ul>
+
+<h2>Como funciona Anhanguera EAD</h2>
+
+<ol>
+<li><strong>Aulas online gravadas</strong> — você assiste no horário que quiser na plataforma</li>
+<li><strong>Atividades semanais</strong> — fóruns, exercícios, leituras</li>
+<li><strong>Tutoria online</strong> — chat e e-mail com professores</li>
+<li><strong>Provas presenciais no polo</strong> — 1x por bimestre na unidade Anhanguera mais próxima</li>
+<li><strong>Estágios</strong> — em empresas conveniadas ou que você indicar (regulamentação MEC obrigatória pros cursos que exigem)</li>
+</ol>
+
+<h2>Onde tem polo Anhanguera</h2>
+
+<p>Mais de 1.500 polos em todo Brasil. Capitais têm múltiplos polos (SP tem 30+, RJ 15+, BH 10+). Cidades médias e interior costumam ter pelo menos 1 polo Anhanguera. Pra ver polo exato perto da sua cidade, <a href="/faculdades/anhanguera">acesse a página da Anhanguera no Bolsa Click</a>.</p>
+
+<h2>Próximo passo</h2>
+
+<p>Pra comparar cursos Anhanguera EAD com bolsa em tempo real, <a href="/faculdade-ead">acesse o hub Faculdade EAD do Bolsa Click</a>. Cadastro grátis, sem ENEM, sem CPF de parente.</p>`,
+}
+
+const POST_QUANTO_CUSTA = {
+  slug: 'quanto-custa-uma-faculdade-particular',
+  title: 'Quanto custa uma faculdade particular no Brasil? Valores 2026 por curso',
+  excerpt:
+    'Faculdade particular no Brasil custa de R$ 400 a R$ 6.500/mês conforme curso e cidade. Veja preços médios por área, modalidade e como economizar até 80% com bolsa.',
+  metaTitle: 'Quanto Custa uma Faculdade Particular em 2026 | Valores por Curso',
+  metaDescription:
+    'Mensalidade de faculdade particular no Brasil: R$ 400 (EAD) a R$ 6.500/mês (Medicina). Veja preços por curso, modalidade e cidade. Como reduzir até 80% com bolsa Bolsa Click.',
+  keywords: [
+    'quanto custa faculdade particular',
+    'valor mensalidade faculdade',
+    'preço faculdade particular',
+    'mensalidade faculdade brasil',
+    'quanto custa uma faculdade',
+  ],
+  tags: ['mensalidade', 'bolsa-de-estudo', 'graduacao'],
+  readingTime: 6,
+  author: 'Equipe Bolsa Click',
+  featured: false,
+  categories: ['bolsas-de-estudo', 'graduacao'],
+  content: `<p>A pergunta "quanto custa uma faculdade particular?" não tem uma resposta única. No Brasil, mensalidades variam de <strong>R$ 99/mês (EAD com bolsa)</strong> a mais de <strong>R$ 6.500/mês (Medicina sem bolsa)</strong>. Esse guia detalha valores reais por curso, modalidade e cidade em 2026.</p>
+
+<h2>Preço médio por área (mensalidade cheia, sem bolsa)</h2>
+
+<ul>
+<li><strong>Tecnólogos (2-2,5 anos):</strong> R$ 400 - R$ 1.200/mês</li>
+<li><strong>Bacharelados em humanas (Adm, Pedagogia, Letras, História):</strong> R$ 500 - R$ 1.500/mês</li>
+<li><strong>Bacharelados em exatas / TI (Eng Software, Ciência Computação):</strong> R$ 800 - R$ 2.500/mês</li>
+<li><strong>Engenharias clássicas (Civil, Mecânica, Elétrica):</strong> R$ 1.200 - R$ 2.800/mês</li>
+<li><strong>Direito:</strong> R$ 1.500 - R$ 3.500/mês</li>
+<li><strong>Saúde (Psicologia, Enfermagem, Fisio, Nutri):</strong> R$ 1.200 - R$ 2.500/mês</li>
+<li><strong>Odontologia:</strong> R$ 2.500 - R$ 5.000/mês</li>
+<li><strong>Medicina:</strong> R$ 4.500 - R$ 12.000/mês</li>
+</ul>
+
+<h2>Diferença EAD vs presencial</h2>
+
+<p>Cursos em modalidade EAD reconhecida pelo MEC costumam ser <strong>30-50% mais baratos</strong> que o equivalente presencial. Administração presencial pode sair R$ 800/mês; EAD na mesma faculdade fica R$ 350-500.</p>
+
+<p>Cursos da área de saúde, Direito, Medicina e Odontologia <strong>não podem ser 100% EAD</strong> por regulamentação — proibição de OAB, CFM, CFP, COFEN, etc. A modalidade semipresencial existe pra alguns (Psicologia, Enfermagem) com economia menor (~20%).</p>
+
+<h2>Diferença por cidade</h2>
+
+<p>Mesma faculdade, mesmo curso, cidade diferente — diferença de preço chega a 40%:</p>
+
+<ul>
+<li><strong>Capitais SP/RJ:</strong> mais caro (até 40% acima da média nacional)</li>
+<li><strong>Capitais médias (BH, POA, Curitiba, Salvador):</strong> média</li>
+<li><strong>Cidades de polo regional:</strong> mais barato (até 30% abaixo)</li>
+</ul>
+
+<h2>Como reduzir custos</h2>
+
+<h3>1. Bolsa Click — até 80% de desconto</h3>
+<p>Cadastro grátis, sem ENEM. Negocia descontos com Anhanguera, Unopar, Pitágoras, Unime, Ampli. Aplica-se a qualquer curso e cidade que essas redes ofertam.</p>
+
+<h3>2. ProUni — bolsa integral pra baixa renda</h3>
+<p>Famílias com renda per capita até 1,5 salário mínimo + ENEM ≥ 450 = mensalidade 0. Editais 2x por ano.</p>
+
+<h3>3. FIES — financiamento estudantil</h3>
+<p>Paga após formado, juros baixos. Requisitos similares ao ProUni.</p>
+
+<h3>4. Bolsa filantrópica em confessionais</h3>
+<p>PUC, Mackenzie, Metodista têm programas próprios pra baixa renda — 25% a 100% de desconto.</p>
+
+<h3>5. Modalidade EAD</h3>
+<p>Reduz 30-50% sobre o presencial. Combinado com Bolsa Click, mensalidade pode cair pra R$ 99 em alguns cursos.</p>
+
+<h2>Custos extras (sempre presentes)</h2>
+
+<p>Mensalidade não é o único gasto. Sempre considere:</p>
+
+<ul>
+<li><strong>Matrícula inicial</strong> — R$ 100-R$ 500 (uma vez)</li>
+<li><strong>Material didático</strong> — R$ 200-R$ 800/semestre</li>
+<li><strong>Taxa de estágio supervisionado</strong> (saúde, engenharias) — variável</li>
+<li><strong>TCC e colação de grau</strong> — R$ 200-R$ 1.000 no último ano</li>
+<li><strong>Atividades complementares</strong> — variável</li>
+</ul>
+
+<p>Pra um bacharelado de 4 anos, custos extras totalizam tipicamente R$ 5.000-R$ 15.000 ao longo do curso, além da mensalidade.</p>
+
+<h2>Compare valores reais hoje</h2>
+
+<p>Pra ver preços reais com bolsa em tempo real por curso e cidade, <a href="/cursos">acesse o catálogo do Bolsa Click</a>. Veja também nosso <a href="/como-conseguir-bolsa-de-estudo">guia completo de como conseguir bolsa</a> ou explore o <a href="/faculdade-ead">hub de Faculdade EAD</a> pras opções mais acessíveis.</p>`,
+}
+
 async function main() {
   await upsertPost(POST_SEM_PROUNI)
   await upsertPost(POST_MENSALIDADE_PSI)
@@ -598,6 +812,9 @@ async function main() {
   await upsertPost(POST_EAD_BARATA)
   await upsertPost(POST_PEDAGOGIA_EAD)
   await upsertPost(POST_ENFERMAGEM_ANHANGUERA)
+  await upsertPost(POST_ADM_EAD)
+  await upsertPost(POST_FACULDADE_EAD_ANHANGUERA)
+  await upsertPost(POST_QUANTO_CUSTA)
   await prisma.$disconnect()
 }
 

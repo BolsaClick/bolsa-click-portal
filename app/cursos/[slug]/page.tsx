@@ -17,6 +17,7 @@ import CourseReviewsBlock from './_components/CourseReviewsBlock'
 import CoreSubjectsBlock from './_components/CoreSubjectsBlock'
 import RelatedPillarsBlock from './_components/RelatedPillarsBlock'
 import { getBrandMecRatings, mapToObject } from '@/app/lib/brand-mec-ratings'
+import { getCourseReviewsAggregate } from '@/app/lib/get-course-reviews-aggregate'
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -242,6 +243,13 @@ export default async function CursoPage({ params }: Props) {
 
   const mecRatingsMap = mapToObject(await getBrandMecRatings())
 
+  // AggregateRating dinâmico — só emite no schema se houver ≥3 reviews APPROVED
+  // das instituições que ofertam esse curso. Reviews reais, sem penalty risk.
+  const courseBrands: string[] = Array.from(
+    new Set((courseOffers || []).map((o: { brand?: string }) => o.brand || '').filter(Boolean))
+  ) as string[]
+  const reviewsAggregate = await getCourseReviewsAggregate(courseBrands)
+
   const jsonLdSchemas = [
     {
       '@context': 'https://schema.org',
@@ -297,6 +305,15 @@ export default async function CursoPage({ params }: Props) {
           highPrice: highPrice.toFixed(2),
           offerCount: String(courseOffers?.length || 0),
           availability: 'https://schema.org/InStock',
+        },
+      } : {}),
+      ...(reviewsAggregate ? {
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: reviewsAggregate.ratingValue.toFixed(1),
+          reviewCount: String(reviewsAggregate.reviewCount),
+          bestRating: '5',
+          worstRating: '1',
         },
       } : {}),
     },

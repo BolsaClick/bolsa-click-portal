@@ -379,6 +379,10 @@ module.exports = {
       { loc: '/faculdades', priority: 0.85, changefreq: 'weekly' },
       { loc: '/carreiras', priority: 0.9, changefreq: 'weekly' },
       { loc: '/blog', priority: 0.9, changefreq: 'daily' },
+      // Pillars editoriais do cluster plan SEO (alto valor de link equity)
+      { loc: '/faculdade-ead', priority: 0.95, changefreq: 'weekly' },
+      { loc: '/bolsas/saude', priority: 0.9, changefreq: 'weekly' },
+      { loc: '/como-conseguir-bolsa-de-estudo', priority: 0.95, changefreq: 'weekly' },
     ]
     corePages.forEach((p) => paths.push({ ...p, lastmod: now }))
 

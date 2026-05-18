@@ -320,11 +320,11 @@ export default async function CursoPage({ params }: Props) {
         cursoMetadata={cursoMetadata}
         courseOffers={courseOffers}
       />
-      <OffersComparisonTable offers={courseOffers || []} courseName={cursoMetadata.name} />
       <VisibleFaq
         items={faqItems}
         heading={`Perguntas frequentes sobre ${cursoMetadata.name}`}
       />
+      <OffersComparisonTable offers={courseOffers || []} courseName={cursoMetadata.name} />
       <CitiesGrid courseSlug={slug} courseName={cursoMetadata.name} />
       <section className="bg-paper py-12 md:py-16 border-t border-hairline">
         <div className="container mx-auto px-4 max-w-3xl">

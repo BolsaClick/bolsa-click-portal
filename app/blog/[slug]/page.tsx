@@ -175,8 +175,11 @@ export default async function BlogPostPage({ params }: Props) {
   const textContent = post.content.replace(/<[^>]*>/g, '')
   const wordCount = textContent.split(/\s+/).filter(Boolean).length
 
-  const imageUrl = post.featuredImage || undefined
+  const imageUrl = post.featuredImage || 'https://www.bolsaclick.com.br/assets/og-image-bolsaclick.png'
   const firstCategory = post.categories[0]
+
+  // articleBody plain text (sem HTML) pra LLMs extraírem passagens citáveis
+  const articleBodyPlain = textContent.slice(0, 5000)
 
   const jsonLdSchemas = [
     {
@@ -184,7 +187,7 @@ export default async function BlogPostPage({ params }: Props) {
       '@type': 'BlogPosting',
       headline: post.title,
       description: post.excerpt,
-      ...(imageUrl ? { image: imageUrl } : {}),
+      image: [imageUrl],
       datePublished: post.publishedAt?.toISOString(),
       dateModified: post.updatedAt.toISOString(),
       author: {
@@ -204,7 +207,9 @@ export default async function BlogPostPage({ params }: Props) {
         '@type': 'WebPage',
         '@id': `https://www.bolsaclick.com.br/blog/${slug}`,
       },
+      url: `https://www.bolsaclick.com.br/blog/${slug}`,
       wordCount,
+      articleBody: articleBodyPlain,
       keywords: post.keywords.join(', '),
       articleSection: post.categories.map(c => c.title).join(', '),
       inLanguage: 'pt-BR',

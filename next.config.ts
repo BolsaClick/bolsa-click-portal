@@ -38,6 +38,45 @@ const nextConfig: NextConfig = {
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },
+      // Edge cache pras páginas ISR. s-maxage define cache CDN; swr serve
+      // versão antiga enquanto revalida em background. Páginas mais "frias"
+      // (blog/carreiras) ganham TTL maior; /faculdade-ead é estável (1h).
+      {
+        source: '/cursos/:slug*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' },
+        ],
+      },
+      {
+        source: '/faculdades/:slug*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' },
+        ],
+      },
+      {
+        source: '/bolsas-de-estudo/:slug*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' },
+        ],
+      },
+      {
+        source: '/carreiras/:slug*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, s-maxage=600, stale-while-revalidate=86400' },
+        ],
+      },
+      {
+        source: '/blog/:slug*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, s-maxage=600, stale-while-revalidate=86400' },
+        ],
+      },
+      {
+        source: '/faculdade-ead',
+        headers: [
+          { key: 'Cache-Control', value: 'public, s-maxage=3600, stale-while-revalidate=86400' },
+        ],
+      },
     ]
   },
   async rewrites() {

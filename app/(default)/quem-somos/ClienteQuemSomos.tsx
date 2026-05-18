@@ -7,7 +7,6 @@ import Mission from './Mission';
 import Stats from './Stats';
 import Timeline from './Timeline';
 import Values from './Values';
-// import Team from './Team';
 import CallToAction from './CallToAction';
 
 export default function QuemSomosCliente() {

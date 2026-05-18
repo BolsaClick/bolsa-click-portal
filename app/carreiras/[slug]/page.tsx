@@ -1,9 +1,10 @@
 import { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/app/lib/prisma'
 import CarreiraPageClient from './CarreiraPageClient'
 import { FeaturedCourseData } from '@/app/cursos/_data/types'
 import { courseTypeLabel } from '@/app/lib/courseTypeLabel'
+import { resolveCanonicalCourseSlug } from '@/app/lib/seo/slug-resolver'
 
 export const revalidate = 3600
 
@@ -120,6 +121,10 @@ export default async function CarreiraPage({ params }: Props) {
   const profissao = await getProfessionBySlug(slug)
 
   if (!profissao) {
+    // Tenta resolver slug curto (ex: "medicina-veterinaria") pra canônico
+    // ("medicina-veterinaria-bacharelado") — redirect 301 se achar.
+    const canonical = await resolveCanonicalCourseSlug(slug)
+    if (canonical) redirect(`/carreiras/${canonical}`)
     notFound()
   }
 

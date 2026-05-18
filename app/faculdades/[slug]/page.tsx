@@ -95,6 +95,7 @@ export default async function FaculdadeDetailPage({
   const educationalOrgSchema = {
     '@context': 'https://schema.org',
     '@type': 'EducationalOrganization',
+    '@id': `${theme.siteUrl}/faculdades/${institution.slug}#institution`,
     name: institution.fullName,
     alternateName: [institution.name, institution.shortName],
     description: institution.description,

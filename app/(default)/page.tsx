@@ -54,6 +54,9 @@ export const metadata: Metadata = {
     'bolsa click',
     theme.shortTitle.toLowerCase(),
   ],
+  alternates: {
+    canonical: theme.siteUrl,
+  },
   openGraph: {
     title: theme.title,
     description: theme.description,

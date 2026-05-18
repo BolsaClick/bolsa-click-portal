@@ -132,6 +132,7 @@ export default async function FaculdadeCidadePage({ params }: Props) {
         {
           '@context': 'https://schema.org',
           '@type': 'EducationalOrganization',
+          '@id': `${pageUrl}#institution`,
           name: `${inst.fullName} — ${cityData.name}`,
           alternateName: [inst.name, inst.shortName],
           description: `${inst.name} em ${cityData.name}-${cityData.state} com bolsa de estudo de até 80%. ${inst.description}`,
@@ -140,6 +141,7 @@ export default async function FaculdadeCidadePage({ params }: Props) {
           image: imageUrl,
           parentOrganization: {
             '@type': 'EducationalOrganization',
+            '@id': `${theme.siteUrl}/faculdades/${slug}#institution`,
             name: inst.fullName,
             url: `${theme.siteUrl}/faculdades/${slug}`,
           },

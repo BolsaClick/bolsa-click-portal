@@ -197,6 +197,10 @@ export default async function CursoCidadePage({ params }: Props) {
     .map((o: { minPrice?: number; prices?: { withDiscount?: number } }) => o.minPrice || o.prices?.withDiscount || 0)
     .filter((p: number) => p > 0)
   const lowPrice = prices.length > 0 ? Math.min(...prices) : 0
+  const maxPrices = (courseOffers || [])
+    .map((o: { maxPrice?: number; prices?: { withoutDiscount?: number } }) => o.maxPrice || o.prices?.withoutDiscount || 0)
+    .filter((p: number) => p > 0)
+  const highPrice = maxPrices.length > 0 ? Math.max(...maxPrices) : 0
 
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
@@ -232,6 +236,21 @@ export default async function CursoCidadePage({ params }: Props) {
             '@type': 'Place',
             address: { '@type': 'PostalAddress', addressLocality: cityData.name, addressRegion: cityData.state, addressCountry: 'BR' },
           },
+          ...(lowPrice > 0 && {
+            offers: {
+              '@type': 'AggregateOffer',
+              priceCurrency: 'BRL',
+              lowPrice: lowPrice.toFixed(2),
+              highPrice: highPrice > 0 ? highPrice.toFixed(2) : lowPrice.toFixed(2),
+              offerCount: String(courseOffers?.length || 0),
+              availability: 'https://schema.org/InStock',
+              areaServed: {
+                '@type': 'City',
+                name: cityData.name,
+                containedInPlace: { '@type': 'AdministrativeArea', name: cityData.state },
+              },
+            },
+          }),
         },
         {
           '@context': 'https://schema.org',

@@ -13,7 +13,26 @@ const PRIVATE_PATHS = [
 ]
 
 export default function robots(): MetadataRoute.Robots {
-  const aiCrawlers = ['GPTBot', 'ClaudeBot', 'anthropic-ai', 'PerplexityBot', 'Google-Extended', 'CCBot', 'Bytespider']
+  // OAI-SearchBot = ChatGPT browse/search (≠ GPTBot que é treinamento)
+  // Applebot-Extended = Apple Intelligence
+  // Meta-ExternalAgent = AI agents da Meta
+  // Bingbot incluído pra deixar explícito (já estava em '*' mas redundância protege)
+  const aiCrawlers = [
+    'GPTBot',
+    'OAI-SearchBot',
+    'ClaudeBot',
+    'anthropic-ai',
+    'PerplexityBot',
+    'Perplexity-User',
+    'Google-Extended',
+    'CCBot',
+    'Bytespider',
+    'Applebot-Extended',
+    'Meta-ExternalAgent',
+    'Meta-ExternalFetcher',
+    'cohere-ai',
+    'Diffbot',
+  ]
 
   return {
     rules: [

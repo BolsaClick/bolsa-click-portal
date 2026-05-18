@@ -1,10 +1,11 @@
 import { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/app/lib/prisma'
 import CursoPageClient from './CursoPageClient'
 import { courseTypeLabel } from '@/app/lib/courseTypeLabel'
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
+import { resolveCanonicalCourseSlug } from '@/app/lib/seo/slug-resolver'
 import { FeaturedCourseData } from '../_data/types'
 import {
   OffersComparisonTable,
@@ -190,6 +191,9 @@ export default async function CursoPage({ params }: Props) {
   const cursoMetadata = await getCourseBySlug(slug)
 
   if (!cursoMetadata) {
+    // Tenta resolver slug curto pra canônico com sufixo da API (-bacharelado/-tecnologo/etc)
+    const canonical = await resolveCanonicalCourseSlug(slug)
+    if (canonical) redirect(`/cursos/${canonical}`)
     notFound()
   }
 

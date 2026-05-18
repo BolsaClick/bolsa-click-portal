@@ -19,6 +19,7 @@ import { getBrandLogo } from '@/app/lib/brand-logos'
 interface CursoPageClientProps {
   cursoMetadata: FeaturedCourseData
   courseOffers: Course[]
+  mecRatings?: Record<string, number>
 }
 
 const PARTNERS = [
@@ -59,6 +60,7 @@ const demandLabel = (d: string) => {
 export default function CursoPageClient({
   cursoMetadata,
   courseOffers,
+  mecRatings,
 }: CursoPageClientProps) {
   const [activeTab, setActiveTab] = useState<'areas' | 'skills' | 'careers'>('areas')
   const [selectedModality, setSelectedModality] = useState<ModalityFilter>('TODAS')
@@ -244,6 +246,13 @@ export default function CursoPageClient({
                 {filteredOffers.map((offer, idx) => {
                   const hasPrice = offer.minPrice && offer.minPrice > 0
                   const brandLogo = getBrandLogo(offer.brand)
+                  const brandKey = (offer.brand || '')
+                    .normalize('NFD')
+                    .replace(/[̀-ͯ]/g, '')
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/(^-|-$)/g, '')
+                  const mecRating = mecRatings?.[brandKey]
                   return (
                     <li key={`${offer.id}-${idx}`} className="h-full">
                       <button
@@ -272,6 +281,30 @@ export default function CursoPageClient({
                             {modalityLabel(offer.modality)}
                           </span>
                         </div>
+
+                        {mecRating != null && (
+                          <div
+                            className="-mt-3 mb-4 inline-flex items-center gap-1.5"
+                            title={`Nota MEC: ${mecRating} de 5`}
+                          >
+                            <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-500">
+                              MEC
+                            </span>
+                            <span className="inline-flex items-center gap-0.5">
+                              {[1, 2, 3, 4, 5].map((i) => (
+                                <Star
+                                  key={i}
+                                  size={11}
+                                  className={
+                                    i <= mecRating
+                                      ? 'fill-bolsa-secondary text-bolsa-secondary'
+                                      : 'text-ink-300'
+                                  }
+                                />
+                              ))}
+                            </span>
+                          </div>
+                        )}
 
                         <h3 className="text-[17px] font-bold text-ink-900 leading-snug mb-3 group-hover:text-bolsa-secondary transition-colors line-clamp-2 min-h-[2.6em]">
                           {cursoMetadata.fullName}

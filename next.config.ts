@@ -2,6 +2,16 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Tree-shaking agressivo das libs mais usadas — reduz JS bundle final
+  // (lucide-react sozinha pode economizar 50-100KiB em pages que usam poucos ícones)
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      '@phosphor-icons/react',
+      'framer-motion',
+      'date-fns',
+    ],
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [

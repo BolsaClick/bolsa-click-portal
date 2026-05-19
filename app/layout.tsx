@@ -1,31 +1,47 @@
 import { Metadata } from 'next'
+import dynamic from 'next/dynamic'
 import { Fraunces, Montserrat } from 'next/font/google'
 import Script from 'next/script'
-import { Toaster } from 'sonner'
 import { AnalyticsScripts } from './components/organisms/AnalyticsScripts'
-import CookieConsent from './components/organisms/CookieConsent'
 import { ClientProviders } from './components/providers/ClientProviders'
 import { ConsentProvider } from './components/providers/ConsentProvider'
 import { GatedVercelAnalytics } from './components/providers/GatedVercelAnalytics'
-import { WatiWhatsappWidget } from './components/WatiWhatsappWidget'
-import { VocationalTab } from './components/VocationalTab'
 import './globals.css'
+
+// Widgets não-críticos pro first paint: dynamic gera chunks separados que
+// só baixam quando o user precisa, reduzindo JS de boot. Os componentes já
+// são 'use client' (não rodam SSR), então o ganho real é code splitting.
+const Toaster = dynamic(() => import('sonner').then((m) => m.Toaster))
+const CookieConsent = dynamic(() => import('./components/organisms/CookieConsent'))
+const WatiWhatsappWidget = dynamic(() =>
+  import('./components/WatiWhatsappWidget').then((m) => m.WatiWhatsappWidget),
+)
+const VocationalTab = dynamic(() =>
+  import('./components/VocationalTab').then((m) => m.VocationalTab),
+)
 import { business } from './lib/constants/business'
 import { getCurrentTheme } from './lib/themes'
 
+// font-display: optional reduz CLS — se a fonte web não carregar dentro de
+// ~100ms, fica com o fallback definitivamente (sem reflow tardio). Trade-off:
+// alguns usuários verão o fallback no primeiro paint, mas o CLS some.
+// adjustFontFallback (default true) já calcula métricas pra reduzir CLS quando
+// a fonte web aparece — combinação dos dois zera shift de fonte na prática.
 const montserrat = Montserrat({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
-  display: 'swap',
+  display: 'optional',
   variable: '--font-montserrat',
+  preload: true,
 })
 
 const fraunces = Fraunces({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   style: ['normal', 'italic'],
-  display: 'swap',
+  display: 'optional',
   variable: '--font-fraunces',
+  preload: true,
 })
 
 const theme = getCurrentTheme()

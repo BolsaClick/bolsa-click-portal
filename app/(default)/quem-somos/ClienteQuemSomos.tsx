@@ -22,7 +22,7 @@ export default function QuemSomosCliente() {
             "url": "https://www.bolsaclick.com.br",
             "logo": "https://www.bolsaclick.com.br/assets/logo.png",
             "description":
-              "Plataforma educacional que conecta estudantes a bolsas de estudo com até 85% de desconto em universidades de todo o Brasil.",
+              "Plataforma educacional que conecta estudantes a bolsas de estudo com até 80% de desconto em universidades de todo o Brasil.",
             "sameAs": [
               "https://www.instagram.com/bolsaclick",
               "https://www.facebook.com/bolsaclick"

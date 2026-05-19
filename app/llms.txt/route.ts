@@ -39,6 +39,8 @@ export async function GET() {
   lines.push('- [Catálogo de cursos](https://www.bolsaclick.com.br/cursos): lista de cursos de graduação com bolsa')
   lines.push('- [Catálogo de faculdades](https://www.bolsaclick.com.br/faculdades): instituições parceiras com perfis institucionais')
   lines.push('- [Carreiras e profissões](https://www.bolsaclick.com.br/carreiras): guia editorial de carreiras com salário médio, mercado, formação')
+  lines.push('- [Faculdade sem ENEM](https://www.bolsaclick.com.br/sem-enem): caminhos pra entrar em faculdade reconhecida pelo MEC sem ENEM (vestibular agendado, histórico do ensino médio, transferência)')
+  lines.push('- [Estudos publicados](https://www.bolsaclick.com.br/estudos): pesquisas próprias com dados do catálogo Bolsa Click (Panorama Bolsa 2026, etc)')
   lines.push('- [Blog](https://www.bolsaclick.com.br/blog): conteúdo educacional sobre vestibular, ENEM, escolha de carreira')
   lines.push('- [Bolsas de estudo](https://www.bolsaclick.com.br/bolsas-de-estudo): visão geral de programas de bolsa')
   lines.push('')

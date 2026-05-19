@@ -209,7 +209,7 @@ const Footer: React.FC = () => {
               className="brightness-0 invert"
             />
             <p className="text-neutral-400 text-sm leading-relaxed">
-              O maior marketplace de bolsas de estudo do Brasil. Encontre bolsas de até 95% de desconto em mais de 30.000 faculdades.
+              O maior marketplace de bolsas de estudo do Brasil. Encontre bolsas de até 80% de desconto em mais de 30.000 faculdades.
             </p>
             <div className="flex space-x-4 pt-2">
               <a

@@ -2,9 +2,9 @@ import { Metadata } from "next";
 import QuemSomosCliente from "./ClienteQuemSomos";
 
 export const metadata: Metadata = {
-  title: 'Quem Somos - Bolsas de Estudo com até 85% de Desconto',
+  title: 'Quem Somos - Bolsas de Estudo com até 80% de Desconto',
   description:
-    'Conheça o Bolsa Click, a plataforma que conecta alunos a bolsas de estudo de até 85%. Saiba mais sobre nossa missão, valores e como ajudamos milhares de brasileiros a acessarem o ensino superior com qualidade e economia.',
+    'Conheça o Bolsa Click, a plataforma que conecta alunos a bolsas de estudo de até 80%. Saiba mais sobre nossa missão, valores e como ajudamos milhares de brasileiros a acessarem o ensino superior com qualidade e economia.',
   keywords: [
     'quem somos',
     'sobre o bolsa click',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Quem Somos - Bolsa Click',
     description:
-      'A Bolsa Click é uma plataforma que ajuda estudantes a encontrarem bolsas de estudo com até 85% de desconto. Descubra nossa história, propósito e impacto na educação brasileira.',
+      'A Bolsa Click é uma plataforma que ajuda estudantes a encontrarem bolsas de estudo com até 80% de desconto. Descubra nossa história, propósito e impacto na educação brasileira.',
     url: 'https://www.bolsaclick.com.br/quem-somos',
     siteName: 'Bolsa Click',
     locale: 'pt_BR',
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     site: '@bolsaclick',
     title: 'Quem Somos - Bolsa Click',
     description:
-      'Conheça a história e missão do Bolsa Click. Facilitamos o acesso à educação com bolsas de até 85% de desconto.',
+      'Conheça a história e missão do Bolsa Click. Facilitamos o acesso à educação com bolsas de até 80% de desconto.',
     images: ['https://www.bolsaclick.com.br/assets/og-banner.jpg'],
   },
 }

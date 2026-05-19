@@ -19,10 +19,10 @@ const theme = getCurrentTheme()
 
 export const metadata: Metadata = {
   title: {
-    default: 'Bolsas de Estudo até 95% | 30.000+ Faculdades | 100.000+ Cursos',
+    default: 'Bolsas de Estudo até 80% | 30.000+ Faculdades | 100.000+ Cursos',
     template: `%s | ${theme.shortTitle}`,
   },
-  description: 'Encontre bolsa de estudo em mais de 30.000 faculdades com até 95% de desconto. Mais de 100.000 cursos disponíveis: graduação, pós-graduação, técnicos e EAD. Desconto em faculdade garantido. Cadastre-se grátis!',
+  description: 'Encontre bolsa de estudo em mais de 30.000 faculdades com até 80% de desconto. Mais de 100.000 cursos disponíveis: graduação, pós-graduação, técnicos e EAD. Desconto em faculdade garantido. Cadastre-se grátis!',
   keywords: [
     'bolsa de estudo',
     'bolsa de estudos',
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     'faculdades com desconto',
     'faculdade com desconto',
     'bolsa para faculdade',
-    'bolsa de estudo até 95%',
+    'bolsa de estudo até 80%',
     '30.000 faculdades',
     '100.000 cursos',
     'bolsa de estudo online',
@@ -120,7 +120,7 @@ export default async function HomePage() {
         "name": "Como funcionam as bolsas de estudo do Bolsa Click?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "O Bolsa Click conecta estudantes a bolsas de estudo de até 95% de desconto em mais de 30.000 escolas e faculdades em todo Brasil. Você pode buscar por curso, cidade e modalidade, comparar preços e se cadastrar gratuitamente para garantir sua bolsa."
+          "text": "O Bolsa Click conecta estudantes a bolsas de estudo de até 80% de desconto em mais de 30.000 escolas e faculdades em todo Brasil. Você pode buscar por curso, cidade e modalidade, comparar preços e se cadastrar gratuitamente para garantir sua bolsa."
         }
       },
       {

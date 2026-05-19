@@ -99,7 +99,7 @@ export default function FaculdadePageClient({ institution, initialCourses }: Pro
     },
     {
       q: `Como conseguir bolsa de estudo na ${institution.name}?`,
-      a: `Pelo Bolsa Click: busca o curso, escolhe a melhor oferta e se inscreve grátis. As bolsas chegam a 95% de desconto.`,
+      a: `Pelo Bolsa Click: busca o curso, escolhe a melhor oferta e se inscreve grátis. As bolsas chegam a 80% de desconto.`,
     },
     {
       q: `Quais cursos a Faculdade ${institution.name} oferece?`,
@@ -532,7 +532,7 @@ export default function FaculdadePageClient({ institution, initialCourses }: Pro
                     Bolsa na <span className="italic text-white/85">{institution.name}</span>
                   </h3>
                   <p className="text-white/70 text-[13px] mb-5 leading-relaxed">
-                    Encontre bolsas com até 95% de desconto. Cadastro grátis, sem ENEM.
+                    Encontre bolsas com até 80% de desconto. Cadastro grátis, sem ENEM.
                   </p>
                   <a
                     href="#ofertas"

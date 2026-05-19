@@ -43,7 +43,7 @@ export default function FaculdadesPageClient({ institutions }: Props) {
           </h1>
           <p className="text-white/90 mt-3 text-lg max-w-2xl">
             Conheça as instituições de ensino parceiras do Bolsa Click. Encontre bolsas de estudo
-            com até 95% de desconto em universidades reconhecidas pelo MEC.
+            com até 80% de desconto em universidades reconhecidas pelo MEC.
           </p>
 
           {/* Search */}

@@ -383,6 +383,10 @@ module.exports = {
       { loc: '/faculdade-ead', priority: 0.95, changefreq: 'weekly' },
       { loc: '/bolsas/saude', priority: 0.9, changefreq: 'weekly' },
       { loc: '/como-conseguir-bolsa-de-estudo', priority: 0.95, changefreq: 'weekly' },
+      // Novas landings GEO (sem-enem + hub de estudos próprios)
+      { loc: '/sem-enem', priority: 0.85, changefreq: 'weekly' },
+      { loc: '/estudos', priority: 0.85, changefreq: 'monthly' },
+      { loc: '/estudos/panorama-bolsa-2026', priority: 0.9, changefreq: 'monthly' },
     ]
     corePages.forEach((p) => paths.push({ ...p, lastmod: now }))
 

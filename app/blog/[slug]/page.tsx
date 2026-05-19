@@ -193,6 +193,22 @@ export default async function BlogPostPage({ params }: Props) {
       author: {
         '@type': 'Person',
         name: post.author,
+        url: 'https://www.bolsaclick.com.br/sobre/equipe-editorial',
+        worksFor: {
+          '@type': 'Organization',
+          name: 'Bolsa Click',
+          url: 'https://www.bolsaclick.com.br',
+        },
+        jobTitle: 'Equipe Editorial',
+        sameAs: [
+          'https://www.instagram.com/bolsaclick',
+          'https://www.linkedin.com/company/bolsaclick',
+        ],
+      },
+      reviewedBy: {
+        '@type': 'Organization',
+        name: 'Equipe Editorial Bolsa Click',
+        url: 'https://www.bolsaclick.com.br/sobre/equipe-editorial',
       },
       publisher: {
         '@type': 'Organization',

@@ -4,7 +4,7 @@ const faqs = [
   {
     question: 'Como funcionam as bolsas de estudo do Bolsa Click?',
     answer:
-      'O Bolsa Click conecta você a bolsas de estudo de até 95% de desconto. Basta buscar por curso, cidade e modalidade. Depois, compare os preços e se cadastre grátis para garantir sua bolsa em faculdade.',
+      'O Bolsa Click conecta você a bolsas de estudo de até 80% de desconto. Basta buscar por curso, cidade e modalidade. Depois, compare os preços e se cadastre grátis para garantir sua bolsa em faculdade.',
   },
   {
     question: 'As bolsas de estudo são gratuitas?',

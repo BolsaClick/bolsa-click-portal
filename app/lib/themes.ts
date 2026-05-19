@@ -1,9 +1,9 @@
 export const themes = {
   bolsaclick: {
     name: 'Bolsa Click',
-    title: 'Bolsa Click | Bolsas de Estudo com até 95% de Desconto',
+    title: 'Bolsa Click | Bolsas de Estudo com até 80% de Desconto',
     shortTitle: 'Bolsa Click',
-    description: 'Bolsa Click é a plataforma de bolsas de estudo com até 95% de desconto em mais de 30.000 faculdades. Graduação, pós-graduação, técnicos e EAD. Cadastre-se grátis!',
+    description: 'Bolsa Click é a plataforma de bolsas de estudo com até 80% de desconto em mais de 30.000 faculdades. Graduação, pós-graduação, técnicos e EAD. Cadastre-se grátis!',
     favicon: '/favicon.ico',
     ogImage: 'https://www.bolsaclick.com.br/assets/og-image-bolsaclick.png',
     siteUrl: 'https://www.bolsaclick.com.br',
@@ -13,7 +13,7 @@ export const themes = {
     name: 'Anhanguera - Bolsa Click',
     title: 'Anhanguera Bolsas de Estudo',
     shortTitle: 'Faculdade Anhanguera',
-    description: 'O Bolsa Click tem Bolsas de Estudo de até 85% em mais de 30.000 Escolas e Faculdades em todo Brasil. Graduação e pós, educação básica, técnicos, idiomas',
+    description: 'O Bolsa Click tem Bolsas de Estudo de até 80% em mais de 30.000 Escolas e Faculdades em todo Brasil. Graduação e pós, educação básica, técnicos, idiomas',
     favicon: '/favicon-anhanguera.png',
     ogImage: 'https://www.anhangueracursos.com.br/favicon-anhanguera.png',
     siteUrl: 'https://www.anhangueracursos.com.br',

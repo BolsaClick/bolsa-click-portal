@@ -38,7 +38,7 @@ export default function PartnersStrip() {
               <div className="text-[12px] text-ink-500 mt-1">alunos cadastrados</div>
             </div>
             <div>
-              <div className="font-display num-tabular text-3xl md:text-4xl text-bolsa-secondary">95%</div>
+              <div className="font-display num-tabular text-3xl md:text-4xl text-bolsa-secondary">80%</div>
               <div className="text-[12px] text-ink-500 mt-1">desconto em bolsas</div>
             </div>
           </div>

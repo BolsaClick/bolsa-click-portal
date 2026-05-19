@@ -73,7 +73,7 @@ export const metadata: Metadata = {
     'faculdades com desconto',
     'faculdade com desconto',
     'bolsa para faculdade',
-    'bolsa de estudo até 95%',
+    'bolsa de estudo até 80%',
     '30.000 faculdades',
     '100.000 cursos',
     'bolsa de estudo online',
@@ -121,7 +121,7 @@ export const metadata: Metadata = {
   category: 'education',
   other: {
     copyright: 'Bolsa Click',
-    abstract: 'Bolsa Click é uma plataforma de bolsas de estudo para faculdades e universidades com descontos de até 95%. Graduação, pós-graduação, cursos técnicos e EAD em todo o Brasil.',
+    abstract: 'Bolsa Click é uma plataforma de bolsas de estudo para faculdades e universidades com descontos de até 80%. Graduação, pós-graduação, cursos técnicos e EAD em todo o Brasil.',
   },
 }
 
@@ -149,14 +149,14 @@ const jsonLd = [
     alternateName: ['BolsaClick', 'Bolsa Click Bolsas de Estudo'],
     ...(business.legalName && { legalName: business.legalName }),
     ...(business.cnpj && { taxID: business.cnpj, vatID: business.cnpj }),
-    description: 'Plataforma brasileira de bolsas de estudo com até 95% de desconto em faculdades e universidades. Graduação, pós-graduação, cursos técnicos e EAD.',
+    description: 'Plataforma brasileira de bolsas de estudo com até 80% de desconto em faculdades e universidades. Graduação, pós-graduação, cursos técnicos e EAD.',
     url: theme.siteUrl,
     logo: `${theme.siteUrl}/logo-bolsa-click-rosa.png`,
     image: theme.ogImage,
     naics: '611710',
     industry: 'Educação Superior',
     knowsAbout: ['bolsas de estudo', 'educação superior', 'faculdades', 'graduação', 'pós-graduação', 'EAD'],
-    slogan: 'Bolsas de estudo com até 95% de desconto',
+    slogan: 'Bolsas de estudo com até 80% de desconto',
     sameAs: [
       'https://www.instagram.com/bolsaclick',
       'https://www.facebook.com/bolsaclickbrasil',
@@ -203,7 +203,7 @@ const jsonLd = [
   {
     '@context': 'https://schema.org',
     '@type': 'EducationalOccupationalProgram',
-    name: 'Bolsas de estudo com até 95% de desconto',
+    name: 'Bolsas de estudo com até 80% de desconto',
     educationalProgramMode: ['online', 'presencial', 'semipresencial'],
     occupationalCredentialAwarded: [
       'Graduação',
@@ -226,7 +226,7 @@ const jsonLd = [
         '@type': 'Country',
         name: 'Brasil',
       },
-      description: 'Inscreva-se gratuitamente para obter bolsas de estudo em universidades e escolas com até 95% de desconto.',
+      description: 'Inscreva-se gratuitamente para obter bolsas de estudo em universidades e escolas com até 80% de desconto.',
     },
   },
 ]

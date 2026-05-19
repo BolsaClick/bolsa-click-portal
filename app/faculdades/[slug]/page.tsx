@@ -48,7 +48,7 @@ export async function generateMetadata({
   const title = institution.metaTitle || `Faculdade ${institution.name} - Bolsas de Estudo com até 80% de Desconto`
   const description =
     institution.metaDescription ||
-    `Encontre bolsas de estudo na faculdade ${institution.name} com até 95% de desconto. ${institution.description}`
+    `Encontre bolsas de estudo na faculdade ${institution.name} com até 80% de desconto. ${institution.description}`
 
   return {
     title,
@@ -134,7 +134,7 @@ export default async function FaculdadeDetailPage({
         name: `Como conseguir bolsa de estudo na Faculdade ${institution.name}?`,
         acceptedAnswer: {
           '@type': 'Answer',
-          text: `Para conseguir bolsa de estudo na Faculdade ${institution.name}, basta acessar o Bolsa Click, buscar pelo curso desejado, escolher a melhor oferta e se inscrever gratuitamente. As bolsas podem chegar a até 95% de desconto.`,
+          text: `Para conseguir bolsa de estudo na Faculdade ${institution.name}, basta acessar o Bolsa Click, buscar pelo curso desejado, escolher a melhor oferta e se inscrever gratuitamente. As bolsas podem chegar a até 80% de desconto.`,
         },
       },
       {

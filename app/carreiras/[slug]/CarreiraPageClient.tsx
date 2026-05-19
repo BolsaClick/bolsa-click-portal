@@ -210,7 +210,7 @@ export default function CarreiraPageClient({ profissao, related }: Props) {
             {[
               {
                 q: `Quanto ganha um profissional de ${profissao.name}?`,
-                a: `O salário médio de um profissional formado em ${profissao.name} no Brasil é de ${profissao.averageSalary}. O valor varia conforme experiência, região e empresa.`,
+                a: `O salário médio de um profissional formado em ${profissao.name} no Brasil é de ${profissao.averageSalary}, segundo dados do CAGED (Cadastro Geral de Empregados e Desempregados do Ministério do Trabalho). O valor varia significativamente conforme três fatores principais: experiência (profissionais em início de carreira ficam na faixa inferior; sêniores com mais de 10 anos de mercado podem ultrapassar o teto), região (São Paulo, Rio de Janeiro e Distrito Federal pagam em média 25-35% acima da média nacional) e setor de atuação. ${profissao.careerPaths.slice(0, 3).join(', ')} são caminhos que costumam oferecer faixas salariais mais altas. Profissionais com pós-graduação ou especialização técnica ganham acima da média base. Concursos públicos federais e cargos em multinacionais costumam ficar nas faixas superiores.`,
               },
               {
                 q: `O que faz um profissional de ${profissao.name}?`,
@@ -218,11 +218,11 @@ export default function CarreiraPageClient({ profissao, related }: Props) {
               },
               {
                 q: `Como se tornar um profissional de ${profissao.name}?`,
-                a: `Para atuar como ${profissao.name}, é necessário cursar ${profissao.fullName}, com duração de ${profissao.duration}. Pelo Bolsa Click, você encontra bolsas de até 80% de desconto.`,
+                a: `Para atuar como ${profissao.name} no Brasil, o caminho principal é cursar a graduação em ${profissao.fullName}, com duração padrão de ${profissao.duration} conforme as Diretrizes Curriculares Nacionais (DCN) do MEC. O curso pode ser feito em modalidade presencial, EAD ou semipresencial — todas formam profissionais com diploma equivalente e mesma validade legal. As principais habilidades desenvolvidas durante a graduação são ${profissao.skills.slice(0, 3).join(', ')}. Pelo Bolsa Click, você encontra a graduação em mais de 30.000 faculdades parceiras com bolsa de até 80% sobre a mensalidade. A inscrição é gratuita e em algumas faculdades o ingresso é por vestibular agendado online (sem necessidade de ENEM), com resultado em até 48 horas e matrícula imediata após aprovação.`,
               },
               {
                 q: `Como está o mercado de trabalho para ${profissao.name}?`,
-                a: `O mercado está com demanda ${DEMAND_LABEL[profissao.marketDemand].toLowerCase()} no Brasil. Áreas de atuação incluem: ${profissao.areas.join(', ')}.`,
+                a: `O mercado de trabalho para ${profissao.name} no Brasil apresenta ${DEMAND_LABEL[profissao.marketDemand].toLowerCase()} demanda em 2026. As principais áreas de atuação incluem ${profissao.areas.join(', ')}. ${profissao.careerPaths.slice(0, 4).join(', ')} são os caminhos de carreira mais comuns pra quem se forma. A absorção pelo mercado depende da região (capitais e cidades médias têm mais vagas formais), do tipo de empregador (empresas privadas, órgãos públicos via concurso, prática autônoma ou consultoria) e da especialização (pós-graduação aumenta empregabilidade e teto salarial). Setores em crescimento que demandam profissionais formados em ${profissao.name} incluem agentes empregadores tradicionais e novos segmentos que vêm aumentando a demanda nos últimos anos. A profissão é regulamentada pelo conselho profissional correspondente quando exigido pela legislação brasileira.`,
               },
             ].map((item, i) => (
               <details key={i} className="group py-5">

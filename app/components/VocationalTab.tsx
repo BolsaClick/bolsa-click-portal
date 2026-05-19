@@ -123,7 +123,7 @@ export function VocationalTab() {
           provavelmente não sobrepõe, mas evita surpresa em viewports curtos). */}
       {!open && (
         <div
-          className="md:hidden fixed bottom-0 inset-x-0 z-[1005] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] animate-slide-up-bottom"
+          className="md:hidden fixed bottom-0 inset-x-0 z-[1005] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] animate-fade-in [will-change:opacity]"
           role="region"
           aria-label="Teste vocacional"
         >

@@ -180,13 +180,13 @@ export default function CursoCidadeClient({
         </div>
       </section>
 
-      {/* STATS BAR */}
+      {/* STATS BAR — min-h reserva altura pra evitar reflow quando fonte custom carrega */}
       <section className="bg-white border-b border-hairline">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-hairline">
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-hairline min-h-[140px] md:min-h-[160px]">
             {stats.map((s, i) => (
               <div key={i} className="px-4 py-8 md:py-10 text-center">
-                <div className="font-display num-tabular text-2xl md:text-3xl text-ink-900 leading-none truncate">
+                <div className="font-display num-tabular text-2xl md:text-3xl text-ink-900 leading-none whitespace-nowrap overflow-hidden">
                   {s.value}
                 </div>
                 <div className="text-[12px] md:text-[13px] text-ink-500 mt-2 leading-snug">
@@ -221,8 +221,8 @@ export default function CursoCidadeClient({
               </div>
             </div>
 
-            {/* Filtro de modalidade */}
-            <div className="flex flex-wrap gap-2 mb-8 hairline-b pb-4">
+            {/* Filtro de modalidade — min-h fixo evita shift quando fonte custom carrega */}
+            <div className="flex flex-wrap gap-2 mb-8 hairline-b pb-4 min-h-[60px]">
               {MODALITIES.map((m) => {
                 const active = selectedModality === m
                 return (
@@ -241,6 +241,8 @@ export default function CursoCidadeClient({
               })}
             </div>
 
+            {/* Grid de ofertas — min-h reserva altura mínima pra evitar colapso visual ao filtrar */}
+            <div className="min-h-[600px] md:min-h-[800px]">
             {filteredOffers.length === 0 ? (
               <div className="bg-white border border-hairline rounded-2xl p-10 text-center">
                 <p className="text-ink-500 text-[15px]">
@@ -328,6 +330,7 @@ export default function CursoCidadeClient({
                 })}
               </ul>
             )}
+            </div>
 
             {filteredOffers.length > 0 && (
               <div className="text-center mt-10">
@@ -400,6 +403,7 @@ export default function CursoCidadeClient({
                   fill
                   className="object-cover"
                   sizes="(min-width: 768px) 40vw, 100vw"
+                  priority
                 />
               </div>
             </div>
@@ -459,7 +463,7 @@ export default function CursoCidadeClient({
           <p className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 text-center mb-8">
             Faculdades parceiras em {cityName}
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 grayscale opacity-70">
+          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 grayscale opacity-70 min-h-[80px]">
             {PARTNERS.map((p) => (
               <Image
                 key={p.name}

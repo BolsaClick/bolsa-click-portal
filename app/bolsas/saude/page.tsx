@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { Heart, Stethoscope, GraduationCap, Sparkles, ArrowRight } from 'lucide-react'
+import { Heart, Stethoscope, Sparkles, ArrowRight } from 'lucide-react'
 import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
 
 export const revalidate = 3600

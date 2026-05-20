@@ -9,7 +9,15 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-const ARTICLES_PART4 = {
+export const ARTICLES_PART4: Record<string, Array<{
+  slug: string
+  title: string
+  description: string
+  metaTitle: string
+  metaDescription: string
+  content: string
+  order: number
+}>> = {
   'seguranca-dados-privacidade': [
     {
       slug: 'politica-de-privacidade',
@@ -430,11 +438,13 @@ async function main() {
   console.log('🎉 Migração completa da Central de Ajuda!')
 }
 
-main()
-  .catch((error) => {
-    console.error('❌ Erro na migração:', error)
-    process.exit(1)
-  })
-  .finally(async () => {
-    await prisma.$disconnect()
-  })
+if (require.main === module) {
+  main()
+    .catch((error) => {
+      console.error('❌ Erro na migração:', error)
+      process.exit(1)
+    })
+    .finally(async () => {
+      await prisma.$disconnect()
+    })
+}

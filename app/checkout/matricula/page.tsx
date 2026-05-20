@@ -551,6 +551,13 @@ const isFormValidForPayment =
   const offerSource = offerDetails?.dmhSource?.source
   const isAthenasSource = offerSource === 'ATHENAS'
 
+  // Níveis que usam seleção de método de pagamento + voucher via Tartarus.
+  // Graduação continua pagando direto na instituição (botão simples).
+  const hasPaymentPlans =
+    (offerDetails?.academicLevel === 'POS_GRADUACAO'
+      || offerDetails?.academicLevel === 'CURSO_PROFISSIONALIZANTE')
+    && (offerDetails?.paymentMethods?.length ?? 0) > 0
+
   // Auto-selecionar boleto 18x para pós-graduação
   useEffect(() => {
     if (!offerDetails || offerDetails.academicLevel !== 'POS_GRADUACAO') return
@@ -873,12 +880,15 @@ const isFormValidForPayment =
           params.set('course', offerDetails.course)
         }
         const level = offerDetails.academicLevel
-        if (level === 'GRADUACAO' || !level) {
-          // Graduação: mensalidade (pagamento à instituição)
+        const hasPlans =
+          (level === 'POS_GRADUACAO' || level === 'CURSO_PROFISSIONALIZANTE')
+          && (offerDetails.paymentMethods?.length ?? 0) > 0
+        if (!hasPlans) {
+          // Graduação (ou nível sem planos retornados): mensalidade direto à instituição
           params.set('monthlyFee', String(monthlyFee))
           params.set('installmentDescription', `Mensalidade ${formatCurrency(monthlyFee)}/mês`)
-        } else if (level === 'POS_GRADUACAO' && offerDetails.paymentMethods?.length) {
-          // Pós: opção de pagamento escolhida + valor da parcela como monthlyFee
+        } else {
+          // Pós e profissionalizante: opção de pagamento escolhida + valor da parcela como monthlyFee
           const methods = offerDetails.paymentMethods as PosPaymentMethod[]
           let paymentLabel = ''
           let installmentDescription = ''
@@ -930,9 +940,8 @@ const isFormValidForPayment =
       return
     }
 
-    // Pós-graduação: validar parcela selecionada e salvar no localStorage
-    const isPosGrad = offerDetails.academicLevel === 'POS_GRADUACAO' && (offerDetails.paymentMethods?.length ?? 0) > 0
-    if (isPosGrad) {
+    // Pós e Profissionalizante: validar parcela selecionada e salvar no localStorage
+    if (hasPaymentPlans) {
       if (!posInstallmentId) {
         toast.error('Selecione a quantidade de parcelas.')
         return
@@ -1863,8 +1872,8 @@ const isFormValidForPayment =
 
                 {expandedSections.pagamento && (
                   <div className="px-6 pb-6 space-y-4">
-                    {/* Sem checkout: pós mostra parcelas; graduação só botão */}
-                    {offerDetails.academicLevel === 'POS_GRADUACAO' && (offerDetails.paymentMethods?.length ?? 0) > 0 ? (
+                    {/* Sem checkout: pós e profissionalizante mostram parcelas; graduação só botão */}
+                    {hasPaymentPlans ? (
                         <>
                           <label className="block text-xs font-medium text-gray-700">Método de pagamento</label>
                           <div className="flex flex-wrap gap-2">
@@ -1928,7 +1937,7 @@ const isFormValidForPayment =
                                 })}
                               </div>
                               <p className="text-xs text-gray-600 mt-3">
-                                Vencimento: dia <strong>10</strong> de cada mês (fixo para pós-graduação).
+                                Vencimento: dia <strong>10</strong> de cada mês (definido pela instituição).
                               </p>
                             </>
                           )}

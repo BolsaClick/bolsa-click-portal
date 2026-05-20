@@ -10,7 +10,7 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 // Categorias da Central de Ajuda
-const CATEGORIES = [
+export const CATEGORIES = [
   {
     slug: 'sobre-o-bolsa-click',
     title: 'Sobre o Bolsa Click',
@@ -63,7 +63,7 @@ const CATEGORIES = [
 ]
 
 // Artigos organizados por categoria
-const ARTICLES: Record<string, Array<{
+export const ARTICLES: Record<string, Array<{
   slug: string
   title: string
   description: string
@@ -676,11 +676,13 @@ async function main() {
   console.log('========================================\n')
 }
 
-main()
-  .catch((error) => {
-    console.error('❌ Erro na migração:', error)
-    process.exit(1)
-  })
-  .finally(async () => {
-    await prisma.$disconnect()
-  })
+if (require.main === module) {
+  main()
+    .catch((error) => {
+      console.error('❌ Erro na migração:', error)
+      process.exit(1)
+    })
+    .finally(async () => {
+      await prisma.$disconnect()
+    })
+}

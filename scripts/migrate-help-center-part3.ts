@@ -9,7 +9,7 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-const ARTICLES_PART3: Record<string, Array<{
+export const ARTICLES_PART3: Record<string, Array<{
   slug: string
   title: string
   description: string
@@ -540,11 +540,13 @@ async function main() {
   console.log('========================================\n')
 }
 
-main()
-  .catch((error) => {
-    console.error('❌ Erro na migração:', error)
-    process.exit(1)
-  })
-  .finally(async () => {
-    await prisma.$disconnect()
-  })
+if (require.main === module) {
+  main()
+    .catch((error) => {
+      console.error('❌ Erro na migração:', error)
+      process.exit(1)
+    })
+    .finally(async () => {
+      await prisma.$disconnect()
+    })
+}

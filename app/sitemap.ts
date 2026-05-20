@@ -4,7 +4,9 @@ import { BRAZILIAN_CITIES } from '@/app/lib/constants/brazilian-cities'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 
-const courseSlugs = [
+// Fallback usado só se o DB falhar no build. Em condições normais, a lista de
+// slugs vem de prisma.featuredCourse.findMany abaixo.
+const FALLBACK_COURSE_SLUGS = [
   'administracao', 'direito', 'enfermagem', 'psicologia',
   'educacao-fisica', 'farmacia', 'medicina', 'engenharia-civil',
   'pedagogia', 'analise-e-desenvolvimento-de-sistemas',
@@ -39,37 +41,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/encceja`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
   ]
 
-  // Páginas individuais de curso /cursos/[slug]
-  const coursePages: MetadataRoute.Sitemap = courseSlugs.map(courseSlug => ({
-    url: `${SITE_URL}/cursos/${courseSlug}`,
-    lastModified: now,
-    changeFrequency: 'daily' as const,
-    priority: 0.9,
-  }))
-
-  // Landing pages /cursos/[slug]/[city] — 20 cursos × 100 cidades = 2000 URLs
-  const courseCityPages: MetadataRoute.Sitemap = courseSlugs.flatMap(courseSlug =>
-    BRAZILIAN_CITIES.map(city => ({
-      url: `${SITE_URL}/cursos/${courseSlug}/${city.slug}`,
-      lastModified: now,
-      changeFrequency: 'weekly' as const,
-      priority: 0.85,
-    }))
-  )
-
   // Hubs de cidade /bolsas-de-estudo/[city] — 100 URLs
   const cityHubPages: MetadataRoute.Sitemap = BRAZILIAN_CITIES.map(city => ({
     url: `${SITE_URL}/bolsas-de-estudo/${city.slug}`,
     lastModified: now,
     changeFrequency: 'weekly' as const,
-    priority: 0.8,
-  }))
-
-  // Teste vocacional — páginas long-tail por curso (20 URLs)
-  const testeVocacionalCursoPages: MetadataRoute.Sitemap = courseSlugs.map(slug => ({
-    url: `${SITE_URL}/teste-vocacional/${slug}`,
-    lastModified: now,
-    changeFrequency: 'monthly' as const,
     priority: 0.8,
   }))
 
@@ -92,9 +68,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Dados dinâmicos do banco
   let dynamicPages: MetadataRoute.Sitemap = []
+  let coursePages: MetadataRoute.Sitemap = []
+  let courseCityPages: MetadataRoute.Sitemap = []
+  let testeVocacionalCursoPages: MetadataRoute.Sitemap = []
 
   try {
-    const [blogPosts, blogCategories, institutions, helpArticles] = await Promise.all([
+    const [blogPosts, blogCategories, institutions, helpArticles, featuredCourses] = await Promise.all([
       prisma.blogPost.findMany({
         where: { isActive: true, publishedAt: { not: null } },
         select: { slug: true, updatedAt: true },
@@ -111,7 +90,41 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         where: { isActive: true },
         select: { slug: true, updatedAt: true, category: { select: { slug: true } } },
       }),
+      prisma.featuredCourse.findMany({
+        where: { isActive: true },
+        select: { slug: true, updatedAt: true, hasCityPages: true },
+      }),
     ])
+
+    // /cursos/[slug] — todos os cursos ativos
+    coursePages = featuredCourses.map(({ slug, updatedAt }) => ({
+      url: `${SITE_URL}/cursos/${slug}`,
+      lastModified: updatedAt,
+      changeFrequency: 'daily' as const,
+      priority: 0.9,
+    }))
+
+    // /cursos/[slug]/[city] — só cursos com hasCityPages=true × cidades brasileiras.
+    // A rota emite noindex+canonical quando Tartarus não devolve oferta local
+    // (app/cursos/[slug]/[city]/page.tsx), então listar tudo é seguro contra
+    // Helpful Content.
+    const cityEligible = featuredCourses.filter((c) => c.hasCityPages)
+    courseCityPages = cityEligible.flatMap(({ slug, updatedAt }) =>
+      BRAZILIAN_CITIES.map((city) => ({
+        url: `${SITE_URL}/cursos/${slug}/${city.slug}`,
+        lastModified: updatedAt,
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+      })),
+    )
+
+    // /teste-vocacional/[slug] — uma página long-tail por curso ativo
+    testeVocacionalCursoPages = featuredCourses.map(({ slug, updatedAt }) => ({
+      url: `${SITE_URL}/teste-vocacional/${slug}`,
+      lastModified: updatedAt,
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    }))
 
     dynamicPages = [
       ...blogPosts.map((post: { slug: string; updatedAt: Date }) => ({
@@ -162,6 +175,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ]
   } catch (e) {
     console.error('Erro ao buscar dados dinâmicos para sitemap:', e)
+    // Fallback: emite os 20 slugs hardcoded em /cursos/[slug] e suas city pages.
+    // Garante que o sitemap nunca volte vazio se o DB falhar no build.
+    coursePages = FALLBACK_COURSE_SLUGS.map((slug) => ({
+      url: `${SITE_URL}/cursos/${slug}`,
+      lastModified: now,
+      changeFrequency: 'daily' as const,
+      priority: 0.9,
+    }))
+    courseCityPages = FALLBACK_COURSE_SLUGS.flatMap((slug) =>
+      BRAZILIAN_CITIES.map((city) => ({
+        url: `${SITE_URL}/cursos/${slug}/${city.slug}`,
+        lastModified: now,
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+      })),
+    )
+    testeVocacionalCursoPages = FALLBACK_COURSE_SLUGS.map((slug) => ({
+      url: `${SITE_URL}/teste-vocacional/${slug}`,
+      lastModified: now,
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    }))
   }
 
   return [

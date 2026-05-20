@@ -319,14 +319,13 @@ const ALL_CITIES = [
 module.exports = {
   siteUrl: 'https://www.bolsaclick.com.br',
   generateRobotsTxt: true,
-  // sitemapSize: 1500 força next-sitemap a gerar sitemap index automático
-  // com sub-sitemaps (sitemap-0.xml, sitemap-1.xml, ...) quando passamos do
-  // limite. Com ~3k+ URLs (cursos × cidades expandido), isso garante 2-3
-  // arquivos menores em vez de 1 flat de 500KB+ — melhora crawl budget,
-  // facilita reindexação parcial e dá pro Google priorizar por sitemap.
-  // V2: split semântico (sitemap-cursos.xml, sitemap-cidades.xml) requer
-  // migrar pra App Router sitemap.ts em cada subdir.
-  sitemapSize: 1500,
+  // NOTA: hoje (2026-05-20) a fonte única do sitemap é `app/sitemap.ts`
+  // (Next 15 app-router native). Este arquivo só seria efetivo se alguém
+  // reativasse o postbuild `next-sitemap`. Mantemos por compatibilidade.
+  // sitemapSize divide o índice em sub-sitemaps; com ~250k URLs (cursos
+  // com hasCityPages × 283 cidades) precisamos de ~50 arquivos < 50k cada
+  // (limite Google).
+  sitemapSize: 5000,
   changefreq: 'weekly',
   priority: 0.7,
   exclude: [

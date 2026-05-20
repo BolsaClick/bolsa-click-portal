@@ -35,18 +35,7 @@
 import { PrismaClient } from '@prisma/client'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-
-const args = Object.fromEntries(
-  process.argv.slice(2).map((arg) => {
-    if (!arg.startsWith('--')) return [arg, true]
-    const eq = arg.indexOf('=')
-    return eq === -1 ? [arg.slice(2), true] : [arg.slice(2, eq), arg.slice(eq + 1)]
-  }),
-)
-
-const DRY_RUN = !!args['dry-run']
-const SINGLE_SLUG = args.slug
-const FILE = args.file || join(process.cwd(), 'scripts', 'enrichment-data.json')
+import { pathToFileURL } from 'node:url'
 
 const VALID_TYPES = ['BACHARELADO', 'LICENCIATURA', 'TECNOLOGO', 'ESPECIALIZACAO', 'MBA']
 const VALID_NIVEL = ['GRADUACAO', 'POS_GRADUACAO']
@@ -80,40 +69,44 @@ function validate(c, idx) {
   }
 }
 
-async function main() {
-  console.log(`=== enrich-from-json ===`)
-  console.log({ FILE, DRY_RUN, SINGLE_SLUG })
+/**
+ * Roda o enrich a partir do JSON. Pode receber um `prisma` externo (pra reuso
+ * no meta-script `seed.ts`) ou criar e fechar o seu próprio.
+ *
+ * @param {{ dryRun?: boolean, slug?: string, file?: string, prisma?: PrismaClient }} opts
+ * @returns {Promise<{ ok: number, fail: number, errors: Array<{slug:string, error:string}> }>}
+ */
+export async function enrichCoursesFromJson(opts = {}) {
+  const {
+    dryRun = false,
+    slug: singleSlug,
+    file = join(process.cwd(), 'scripts', 'enrichment-data.json'),
+  } = opts
 
-  const raw = readFileSync(FILE, 'utf-8')
-  let data
-  try {
-    data = JSON.parse(raw)
-  } catch (e) {
-    console.error('JSON inválido:', e.message)
-    process.exit(1)
-  }
-  if (!Array.isArray(data)) {
-    console.error('JSON precisa ser um array')
-    process.exit(1)
-  }
+  console.log(`=== enrich-from-json ===`)
+  console.log({ file, dryRun, singleSlug })
+
+  const raw = readFileSync(file, 'utf-8')
+  const data = JSON.parse(raw)
+  if (!Array.isArray(data)) throw new Error('JSON precisa ser um array')
 
   let pool = data
-  if (SINGLE_SLUG) pool = pool.filter((c) => c.slug === SINGLE_SLUG)
+  if (singleSlug) pool = pool.filter((c) => c.slug === singleSlug)
 
   console.log(`Cursos no JSON: ${data.length} | Processando: ${pool.length}`)
 
-  // Valida tudo antes de gravar — fail fast
   pool.forEach(validate)
   console.log('Validação OK pra todos os', pool.length, 'cursos')
 
-  if (DRY_RUN) {
+  if (dryRun) {
     pool.forEach((c, i) =>
       console.log(`[${i + 1}/${pool.length}] [DRY] ${c.slug} | ${c.name} | ${c.type} | ${c.nivel} | desc=${c.longDescription.length}c`),
     )
-    return
+    return { ok: 0, fail: 0, errors: [], dryRun: true, count: pool.length }
   }
 
-  const prisma = new PrismaClient()
+  const ownsPrisma = !opts.prisma
+  const prisma = opts.prisma ?? new PrismaClient()
   let ok = 0
   let fail = 0
   const errors = []
@@ -173,18 +166,38 @@ async function main() {
     }
   }
 
-  await prisma.$disconnect()
+  if (ownsPrisma) await prisma.$disconnect()
   console.log(`\n=== RESUMO ===`)
   console.log(`✓ Sucessos: ${ok}`)
   console.log(`✗ Falhas: ${fail}`)
-  if (errors.length) {
-    console.log('Erros:')
-    errors.forEach((e) => console.log(`  - ${e.slug}: ${e.error}`))
-    process.exit(1)
-  }
+  return { ok, fail, errors }
 }
 
-main().catch((e) => {
-  console.error('Fatal:', e)
-  process.exit(1)
-})
+// Execução direta via CLI
+const isMainModule = import.meta.url === pathToFileURL(process.argv[1] ?? '').href
+if (isMainModule) {
+  const args = Object.fromEntries(
+    process.argv.slice(2).map((arg) => {
+      if (!arg.startsWith('--')) return [arg, true]
+      const eq = arg.indexOf('=')
+      return eq === -1 ? [arg.slice(2), true] : [arg.slice(2, eq), arg.slice(eq + 1)]
+    }),
+  )
+
+  enrichCoursesFromJson({
+    dryRun: !!args['dry-run'],
+    slug: args.slug,
+    file: args.file,
+  })
+    .then((res) => {
+      if (res.errors?.length) {
+        console.log('Erros:')
+        res.errors.forEach((e) => console.log(`  - ${e.slug}: ${e.error}`))
+        process.exit(1)
+      }
+    })
+    .catch((e) => {
+      console.error('Fatal:', e)
+      process.exit(1)
+    })
+}

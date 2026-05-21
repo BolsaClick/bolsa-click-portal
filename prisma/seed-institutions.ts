@@ -37,9 +37,9 @@ Entre os principais diferenciais da Anhanguera estão: mensalidades acessíveis,
       'Metodologias de ensino inovadoras com laboratórios virtuais',
       'Diploma reconhecido pelo MEC em todo o Brasil',
     ],
-    logoUrl: '/assets/institutions/anhanguera-logo.png',
-    imageUrl: '/assets/institutions/anhanguera-campus.jpg',
-    imageAlt: 'Campus da Universidade Anhanguera',
+    logoUrl: '/assets/logo-anhanguera-bolsa-click.svg',
+    imageUrl: '',
+    imageAlt: 'Logo da Universidade Anhanguera',
     keywords: [
       'anhanguera', 'faculdade anhanguera', 'universidade anhanguera',
       'anhanguera ead', 'anhanguera cursos', 'anhanguera bolsa',
@@ -65,7 +65,7 @@ A Unopar oferece mais de 300 cursos de graduação nas modalidades presencial, s
 
 Reconhecida pelo MEC com nota institucional 3, a Unopar se destaca por sua metodologia de ensino que combina aulas ao vivo via satélite, material didático digital interativo e encontros presenciais nos polos de apoio. A instituição também oferece programas de estágio e empregabilidade para seus alunos.
 
-Os principais diferenciais da Unopar são: liderança em EAD no Brasil, 750+ polos presenciais para suporte ao aluno, mensalidades a partir de R$ 149/mês, tutoria personalizada, material didático digital incluso, e flexibilidade de horários para quem trabalha.`,
+Os principais diferenciais da Unopar são: liderança em EAD no Brasil, 750+ polos presenciais para suporte ao aluno, mensalidades acessíveis, tutoria personalizada, material didático digital incluso, e flexibilidade de horários para quem trabalha.`,
     founded: 1972,
     type: 'PRIVADA' as const,
     campusCount: 750,
@@ -80,14 +80,14 @@ Os principais diferenciais da Unopar são: liderança em EAD no Brasil, 750+ pol
     highlights: [
       'Maior rede de EAD do Brasil com 750+ polos presenciais',
       'Pioneira em educação a distância no país',
-      'Mensalidades a partir de R$ 149/mês',
+      'Mensalidades acessíveis com bolsas de até 80%',
       'Aulas ao vivo via satélite com interação em tempo real',
       'Tutoria personalizada e material didático digital incluso',
       'Flexibilidade de horários ideal para quem trabalha',
     ],
-    logoUrl: '/assets/institutions/unopar-logo.png',
-    imageUrl: '/assets/institutions/unopar-campus.jpg',
-    imageAlt: 'Campus da Universidade Unopar em Londrina',
+    logoUrl: '/assets/logo-unopar.svg',
+    imageUrl: '',
+    imageAlt: 'Logo da Universidade Unopar',
     keywords: [
       'unopar', 'faculdade unopar', 'universidade unopar',
       'unopar ead', 'unopar cursos', 'unopar bolsa',
@@ -98,6 +98,101 @@ Os principais diferenciais da Unopar são: liderança em EAD no Brasil, 750+ pol
     metaDescription: 'Encontre bolsas de estudo na Faculdade Unopar com descontos especiais. Maior rede de EAD do Brasil com 750+ polos. Graduação e pós-graduação. Inscreva-se grátis!',
     isActive: true,
     order: 2,
+  },
+  {
+    slug: 'pitagoras',
+    name: 'Pitágoras',
+    shortName: 'PITÁGORAS',
+    fullName: 'Faculdade Pitágoras',
+    description: 'A Pitágoras é uma tradicional instituição mineira de ensino superior, com origem em 1966 e forte presença em Minas Gerais e no Nordeste. Integra o grupo Cogna Educação e oferece graduação presencial, semipresencial e EAD em todo o Brasil, com bolsas de estudo e mensalidades acessíveis.',
+    longDescription: `A Pitágoras começou em 1966 em Belo Horizonte, originalmente como rede de colégios e cursinhos, e evoluiu nas décadas seguintes para se tornar uma das mais reconhecidas marcas de educação superior do Brasil. Hoje a Faculdade Pitágoras integra o grupo Cogna Educação (antiga Kroton), o maior conglomerado educacional privado da América Latina.
+
+A instituição tem forte presença em Minas Gerais — onde nasceu — e ampla atuação no Nordeste, com unidades em estados como Bahia, Maranhão, Pernambuco, Piauí e Ceará. Além das unidades próprias, a Pitágoras opera uma extensa rede de polos de educação a distância (EAD) que permite o acesso ao ensino superior em centenas de municípios brasileiros.
+
+O portfólio acadêmico da Pitágoras cobre as principais áreas do conhecimento, com destaque para Administração, Direito, Engenharias, Pedagogia, Análise e Desenvolvimento de Sistemas, e cursos da área de Saúde como Enfermagem, Fisioterapia e Educação Física. Há também programas de pós-graduação lato sensu (especializações e MBA) em diversas trilhas profissionais.
+
+Reconhecida pelo MEC, a Pitágoras adota uma metodologia que combina aulas presenciais, atividades online e laboratórios práticos, com material didático digital incluso e tutoria de apoio nos polos EAD. A instituição também investe em programas de estágio e empregabilidade através de parcerias com empresas em todo o país.
+
+Entre os diferenciais da Faculdade Pitágoras estão: tradição de mais de 50 anos em educação, ampla rede de unidades em Minas Gerais e no Nordeste, polos EAD em centenas de cidades, mensalidades acessíveis com bolsas de estudo de até 80% de desconto, e diploma reconhecido pelo MEC em todo o território nacional.`,
+    founded: 1966,
+    type: 'PRIVADA' as const,
+    campusCount: null,
+    studentCount: null,
+    coursesOffered: null,
+    headquartersCity: 'Belo Horizonte',
+    headquartersState: 'MG',
+    mecRating: null,
+    emecLink: 'https://emec.mec.gov.br/',
+    modalities: ['EAD', 'PRESENCIAL', 'SEMIPRESENCIAL'],
+    academicLevels: ['GRADUACAO', 'POS_GRADUACAO'],
+    highlights: [
+      'Mais de 50 anos de tradição em educação, com origem em Belo Horizonte',
+      'Pertence ao grupo Cogna, maior grupo educacional privado do Brasil',
+      'Forte presença em Minas Gerais e no Nordeste',
+      'Polos EAD em centenas de cidades brasileiras',
+      'Bolsas de estudo de até 80% de desconto',
+      'Diploma reconhecido pelo MEC em todo o Brasil',
+    ],
+    logoUrl: '/assets/logo-pitagoras.svg',
+    imageUrl: '',
+    imageAlt: 'Logo da Faculdade Pitágoras',
+    keywords: [
+      'pitagoras', 'faculdade pitagoras', 'pitagoras belo horizonte',
+      'pitagoras ead', 'pitagoras cursos', 'pitagoras bolsa',
+      'pitagoras graduação', 'pitagoras pós-graduação',
+      'pitagoras mensalidade', 'pitagoras minas gerais',
+    ],
+    metaTitle: 'Faculdade Pitágoras - Bolsas de Estudo com até 80% de Desconto | Bolsa Click',
+    metaDescription: 'Encontre bolsas de estudo na Faculdade Pitágoras com até 80% de desconto. Tradição de mais de 50 anos, polos em MG e no Nordeste. EAD e presencial. Inscreva-se grátis!',
+    isActive: true,
+    order: 3,
+  },
+  {
+    slug: 'ampli',
+    name: 'Ampli',
+    shortName: 'AMPLI',
+    fullName: 'Ampli',
+    description: 'A Ampli é a faculdade 100% digital do grupo Cogna Educação, criada para tornar o ensino superior mais acessível através de cursos totalmente online com mensalidades baixas e flexibilidade total. Oferece graduação reconhecida pelo MEC sem necessidade de comparecer a polos físicos.',
+    longDescription: `A Ampli é uma das mais recentes e inovadoras instituições de ensino superior do Brasil, criada pelo grupo Cogna Educação (antiga Kroton) com uma proposta clara: oferecer graduação 100% online, com mensalidades acessíveis e total flexibilidade para o aluno estudar de onde quiser.
+
+Diferente do EAD tradicional, na Ampli não é necessário comparecer a polos físicos. Todo o curso — aulas, materiais, avaliações e atividades — acontece no ambiente virtual da plataforma, permitindo que o estudante organize seu próprio tempo de estudo. Essa modalidade é ideal para quem precisa conciliar a faculdade com trabalho, família ou outras responsabilidades.
+
+O catálogo da Ampli foca em cursos de graduação com alta demanda no mercado de trabalho, como Administração, Análise e Desenvolvimento de Sistemas, Pedagogia, Recursos Humanos, Marketing, Gestão Financeira, Gestão Comercial, Logística e cursos tecnólogos em diversas áreas. Os cursos são reconhecidos pelo MEC, com a mesma validade do diploma de qualquer faculdade presencial.
+
+A metodologia da Ampli é baseada em aulas em vídeo gravadas e ao vivo, materiais didáticos digitais interativos, fóruns de discussão e tutoria online. A plataforma também conta com biblioteca virtual ampla e ferramentas de empregabilidade, conectando alunos a vagas em empresas parceiras do grupo Cogna.
+
+Entre os diferenciais da Ampli estão: graduação 100% online sem necessidade de polo presencial, mensalidades a partir de valores baixos e parceladas, flexibilidade total para estudar de qualquer lugar e horário, diploma reconhecido pelo MEC com a mesma validade de cursos presenciais, ferramentas de empregabilidade conectadas ao mercado, e suporte da estrutura do grupo Cogna, maior grupo educacional do Brasil.`,
+    founded: 2020,
+    type: 'PRIVADA' as const,
+    campusCount: null,
+    studentCount: null,
+    coursesOffered: null,
+    headquartersCity: null,
+    headquartersState: null,
+    mecRating: null,
+    emecLink: 'https://emec.mec.gov.br/',
+    modalities: ['EAD'],
+    academicLevels: ['GRADUACAO'],
+    highlights: [
+      'Faculdade 100% digital, sem necessidade de polo presencial',
+      'Mensalidades baixas e parceladas',
+      'Flexibilidade total para estudar de qualquer lugar e horário',
+      'Pertence ao grupo Cogna, maior grupo educacional do Brasil',
+      'Diploma reconhecido pelo MEC, equivalente a cursos presenciais',
+      'Plataforma com aulas em vídeo, tutoria online e biblioteca virtual',
+    ],
+    logoUrl: '/assets/ampli-logo.png',
+    imageUrl: '',
+    imageAlt: 'Logo da Ampli',
+    keywords: [
+      'ampli', 'faculdade ampli', 'ampli ead', 'ampli online',
+      'ampli cursos', 'ampli bolsa', 'ampli graduação',
+      'ampli mensalidade', 'ampli digital', 'ampli cogna',
+    ],
+    metaTitle: 'Faculdade Ampli - Graduação 100% Online com Mensalidades Baixas | Bolsa Click',
+    metaDescription: 'Encontre bolsas e descontos na Ampli, faculdade 100% online do grupo Cogna. Graduação reconhecida pelo MEC, mensalidades acessíveis. Estude de onde quiser. Inscreva-se!',
+    isActive: true,
+    order: 4,
   },
   {
     slug: 'unime',
@@ -133,9 +228,9 @@ Entre os principais diferenciais da Unime estão: nota 4 no MEC, infraestrutura 
       'Parcerias com hospitais e empresas para estágio',
       'Localização privilegiada na região metropolitana de Salvador',
     ],
-    logoUrl: '/assets/institutions/unime-logo.png',
-    imageUrl: '/assets/institutions/unime-campus.jpg',
-    imageAlt: 'Campus da Unime em Lauro de Freitas, Bahia',
+    logoUrl: '/assets/logo-unime-p.png',
+    imageUrl: '',
+    imageAlt: 'Logo da Unime',
     keywords: [
       'unime', 'faculdade unime', 'unime salvador',
       'unime lauro de freitas', 'unime cursos', 'unime bolsa',
@@ -145,7 +240,7 @@ Entre os principais diferenciais da Unime estão: nota 4 no MEC, infraestrutura 
     metaTitle: 'Faculdade Unime - Bolsas de Estudo na Bahia | Nota 4 no MEC | Bolsa Click',
     metaDescription: 'Encontre bolsas de estudo na Faculdade Unime com desconto especial. Nota 4 no MEC, referência em saúde. Campus em Salvador, Lauro de Freitas e Itabuna. Inscreva-se grátis!',
     isActive: true,
-    order: 3,
+    order: 5,
   },
   {
     slug: 'estacio',
@@ -181,9 +276,9 @@ Os principais diferenciais da Estácio incluem: mais de 50 anos de tradição em
       'Convênios com empresas para estágio e empregabilidade',
       'Biblioteca digital com acervo extenso e atualizado',
     ],
-    logoUrl: '/assets/institutions/estacio-logo.png',
-    imageUrl: '/assets/institutions/estacio-campus.jpg',
-    imageAlt: 'Campus da Universidade Estácio de Sá no Rio de Janeiro',
+    logoUrl: '',
+    imageUrl: '',
+    imageAlt: 'Logo da Universidade Estácio de Sá',
     keywords: [
       'estacio', 'faculdade estacio', 'universidade estacio',
       'estacio ead', 'estacio cursos', 'estacio bolsa',
@@ -192,8 +287,8 @@ Os principais diferenciais da Estácio incluem: mais de 50 anos de tradição em
     ],
     metaTitle: 'Faculdade Estácio - Bolsas de Estudo com até 70% de Desconto | Bolsa Click',
     metaDescription: 'Encontre bolsas de estudo na Faculdade Estácio com descontos exclusivos. Nota 4 no MEC, mais de 50 anos de tradição. 100+ campus pelo Brasil. Inscreva-se grátis!',
-    isActive: false,
-    order: 4,
+    isActive: true,
+    order: 6,
   },
   {
     slug: 'ibmec',
@@ -229,9 +324,9 @@ Os diferenciais do IBMEC incluem: nota 5 no MEC (nota máxima), corpo docente 10
       'Programas de intercâmbio com universidades internacionais',
       'Rede de ex-alunos influente no mercado financeiro e corporativo',
     ],
-    logoUrl: '/assets/institutions/ibmec-logo.png',
-    imageUrl: '/assets/institutions/ibmec-campus.jpg',
-    imageAlt: 'Campus do IBMEC',
+    logoUrl: '',
+    imageUrl: '',
+    imageAlt: 'Logo do IBMEC',
     keywords: [
       'ibmec', 'faculdade ibmec', 'ibmec cursos',
       'ibmec administração', 'ibmec direito', 'ibmec economia',
@@ -241,7 +336,7 @@ Os diferenciais do IBMEC incluem: nota 5 no MEC (nota máxima), corpo docente 10
     metaTitle: 'Faculdade IBMEC - Nota 5 no MEC | Bolsas de Estudo | Bolsa Click',
     metaDescription: 'Encontre bolsas de estudo na Faculdade IBMEC, instituição nota 5 no MEC. Referência em negócios, direito e engenharia. Campus em SP, RJ, BH e Brasília. Inscreva-se!',
     isActive: false,
-    order: 5,
+    order: 7,
   },
 ]
 

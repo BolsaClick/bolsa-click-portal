@@ -1,8 +1,9 @@
 import { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { cache } from 'react'
 import { prisma } from '@/app/lib/prisma'
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
+import { resolveCanonicalCourseSlug } from '@/app/lib/seo/slug-resolver'
 import { FeaturedCourseData } from '../../_data/types'
 import { BRAZILIAN_CITIES, getCityBySlug } from '@/app/lib/constants/brazilian-cities'
 import {
@@ -94,7 +95,13 @@ function priceRangeFromOffers(offers: unknown[]) {
 // Gerar metadata dinâmica (SEO) com cidade
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, city: citySlug } = await params
-  const curso = await getCourseBySlug(slug)
+  let curso = await getCourseBySlug(slug)
+  // Mesmo resolver da page principal — não emite redirect aqui, só usa o
+  // canonical para preencher metadata correta antes do redirect propagar.
+  if (!curso) {
+    const canonicalSlug = await resolveCanonicalCourseSlug(slug)
+    if (canonicalSlug) curso = await getCourseBySlug(canonicalSlug)
+  }
   const cityData = getCityBySlug(citySlug)
 
   if (!curso || !cityData) {
@@ -167,7 +174,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 // Server Component
 export default async function CursoCidadePage({ params }: Props) {
   const { slug, city: citySlug } = await params
-  const cursoMetadata = await getCourseBySlug(slug)
+
+  // Slug curto (ex: "direito") sem sufixo: tenta resolver pra canonical
+  // ("direito-bacharelado") e faz redirect 301 pra preservar URL canônica.
+  // Mantém retrocompatibilidade com sitemap antigo + links indexados.
+  let cursoMetadata = await getCourseBySlug(slug)
+  if (!cursoMetadata) {
+    const canonicalSlug = await resolveCanonicalCourseSlug(slug)
+    if (canonicalSlug) {
+      redirect(`/cursos/${canonicalSlug}/${citySlug}`)
+    }
+  }
+
   const cityData = getCityBySlug(citySlug)
 
   if (!cursoMetadata || !cityData) {

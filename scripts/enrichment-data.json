@@ -4503,5 +4503,945 @@
       "salário brand manager",
       "curso de publicidade com ênfase em marketing"
     ]
+  },
+  {
+    "slug": "direito-bacharelado",
+    "apiCourseName": "Direito",
+    "name": "Direito",
+    "fullName": "Direito - Bacharelado",
+    "type": "BACHARELADO",
+    "nivel": "GRADUACAO",
+    "description": "Forme-se em uma das carreiras mais tradicionais do Brasil. Advogados iniciam com salários em torno de R$ 3.500 e podem ultrapassar R$ 25.000 em escritórios de grande porte.",
+    "longDescription": "O curso de Direito é uma graduação em formato bacharelado com duração média de cinco anos, dividida em dez semestres, e segue as Diretrizes Curriculares Nacionais estabelecidas pelo MEC. Durante a formação, o estudante percorre disciplinas de Direito Constitucional, Civil, Penal, Tributário, Trabalhista, Empresarial, Administrativo, Processual e Internacional, além de fundamentos de Filosofia, Sociologia e Ética. A partir do quinto semestre, o aluno realiza estágio supervisionado obrigatório no Núcleo de Prática Jurídica, atuando em audiências simuladas, elaboração de peças e atendimento ao público. Para exercer a advocacia, é obrigatória a aprovação no Exame da Ordem dos Advogados do Brasil, aplicado pela OAB em três fases, com índice histórico de aprovação inferior a 25% no Brasil. O profissional formado também pode prestar concursos públicos para magistratura, Ministério Público, Defensoria, Procuradorias e cargos de analista em tribunais. Segundo dados do CAGED e da pesquisa anual da OAB Federal, advogados iniciantes recebem entre R$ 3.000 e R$ 5.000, enquanto profissionais com cinco anos de experiência alcançam R$ 8.000 a R$ 15.000 em escritórios médios. Cargos públicos de juiz substituto e promotor pagam salários iniciais superiores a R$ 28.000, considerando subsídio e benefícios. O Brasil é o terceiro país com mais advogados ativos no mundo, com mais de 1,4 milhão de profissionais registrados na OAB, o que torna a especialização em áreas como Direito Digital, LGPD, Tributário e Compliance uma vantagem competitiva relevante no mercado atual.",
+    "duration": "5 anos",
+    "areas": [
+      "Advocacia privada",
+      "Magistratura",
+      "Ministério Público",
+      "Defensoria Pública",
+      "Consultoria jurídica empresarial",
+      "Mediação e arbitragem"
+    ],
+    "skills": [
+      "Interpretação de leis e jurisprudência",
+      "Redação de peças processuais",
+      "Argumentação jurídica oral",
+      "Negociação e mediação de conflitos",
+      "Pesquisa doutrinária",
+      "Análise contratual"
+    ],
+    "careerPaths": [
+      "Advogado",
+      "Juiz",
+      "Promotor de Justiça",
+      "Defensor Público",
+      "Delegado de Polícia",
+      "Procurador"
+    ],
+    "averageSalary": "R$ 3.000 a R$ 28.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "faculdade de direito",
+      "graduação em direito ead",
+      "curso de direito a distância",
+      "bacharelado em direito",
+      "direito com bolsa de estudo",
+      "quanto ganha advogado no brasil",
+      "exame da oab",
+      "direito presencial"
+    ]
+  },
+  {
+    "slug": "enfermagem-bacharelado",
+    "apiCourseName": "Enfermagem",
+    "name": "Enfermagem",
+    "fullName": "Enfermagem - Bacharelado",
+    "type": "BACHARELADO",
+    "nivel": "GRADUACAO",
+    "description": "Bacharelado essencial para o SUS e rede privada, com piso nacional aprovado em 2022. Salários iniciais a partir de R$ 4.750 para enfermeiros, conforme Lei 14.434.",
+    "longDescription": "O curso de Enfermagem é um bacharelado de cinco anos, com mínimo de 4.000 horas exigidas pelas Diretrizes Curriculares Nacionais do MEC, sendo pelo menos 20% destinadas a estágio supervisionado em hospitais, unidades básicas de saúde e UTIs. A grade curricular contempla Anatomia, Fisiologia, Farmacologia, Microbiologia, Saúde Coletiva, Enfermagem Materno-Infantil, Saúde Mental, Urgência e Emergência, além de Administração e Gestão em Enfermagem. O exercício da profissão é regulamentado pela Lei 7.498/86 e fiscalizado pelo Conselho Federal de Enfermagem (Cofen) e seus conselhos regionais (Coren), com registro obrigatório após a colação de grau. Em agosto de 2022 foi sancionada a Lei 14.434, que instituiu o piso salarial nacional da enfermagem em R$ 4.750 para enfermeiros, R$ 3.325 para técnicos e R$ 2.375 para auxiliares e parteiras, com aplicação progressiva validada pelo STF. O mercado de trabalho para enfermeiros é amplo e sustentado: o CAGED registra a Enfermagem entre as cinco ocupações que mais contratam no setor de saúde, com déficit estrutural reconhecido pela Organização Mundial da Saúde para o Brasil até 2030. O profissional pode atuar em hospitais públicos e privados, atenção primária, home care, auditoria, docência, saúde do trabalhador e UTIs especializadas. Especializações como UTI, Obstetrícia, Centro Cirúrgico, Cardiologia e Nefrologia ampliam a remuneração para faixas entre R$ 7.000 e R$ 12.000, com concursos federais pagando até R$ 14.000 para enfermeiros de carreira.",
+    "duration": "5 anos",
+    "areas": [
+      "Hospitalar",
+      "Atenção básica e SUS",
+      "UTI e centro cirúrgico",
+      "Saúde do trabalhador",
+      "Home care",
+      "Auditoria em saúde"
+    ],
+    "skills": [
+      "Sistematização da assistência de enfermagem",
+      "Administração de medicamentos",
+      "Procedimentos de emergência",
+      "Liderança de equipe técnica",
+      "Educação em saúde",
+      "Controle de infecção hospitalar"
+    ],
+    "careerPaths": [
+      "Enfermeiro assistencial",
+      "Enfermeiro intensivista",
+      "Enfermeiro obstetra",
+      "Enfermeiro auditor",
+      "Enfermeiro do trabalho",
+      "Coordenador de enfermagem"
+    ],
+    "averageSalary": "R$ 4.750 a R$ 14.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "faculdade de enfermagem",
+      "curso de enfermagem com bolsa",
+      "enfermagem presencial",
+      "bacharelado em enfermagem",
+      "piso da enfermagem",
+      "quanto ganha enfermeiro",
+      "enfermagem reconhecida pelo mec",
+      "graduação em enfermagem"
+    ]
+  },
+  {
+    "slug": "psicologia-bacharelado",
+    "apiCourseName": "Psicologia",
+    "name": "Psicologia",
+    "fullName": "Psicologia - Bacharelado",
+    "type": "BACHARELADO",
+    "nivel": "GRADUACAO",
+    "description": "Curso humanista regulamentado pelo CFP, com atuação clínica, organizacional e escolar. Salários médios entre R$ 3.000 e R$ 12.000, com forte expansão pós-pandemia.",
+    "longDescription": "A graduação em Psicologia é um bacharelado de cinco anos que forma o profissional para atuar nos campos clínico, organizacional, escolar, hospitalar, social, jurídico e do esporte. O currículo é organizado pelas Diretrizes Curriculares Nacionais e contempla disciplinas como Psicologia do Desenvolvimento, Psicopatologia, Teorias Psicanalíticas, Cognitivo-Comportamental, Humanista, Neuropsicologia, Avaliação Psicológica, Psicologia Social e Estatística aplicada à pesquisa. A partir do sétimo semestre, o aluno realiza estágios supervisionados em clínicas-escola, hospitais, empresas e instituições socioeducativas, completando o mínimo de 4.000 horas exigido pelo MEC. O exercício profissional é regulamentado pela Lei 4.119/62 e fiscalizado pelo Conselho Federal de Psicologia (CFP) e Conselhos Regionais (CRP), sendo obrigatório o registro após a formação. Conforme dados do CAGED e da pesquisa Salário 2025 da Catho, o psicólogo iniciante recebe entre R$ 2.800 e R$ 4.500, podendo alcançar R$ 8.000 a R$ 12.000 com especialização e atendimento particular consolidado. A demanda cresceu de forma estrutural após a pandemia: o CFP registrou aumento de mais de 30% no número de psicólogos ativos entre 2019 e 2024, e o setor de saúde mental tornou-se prioridade nas políticas públicas do SUS e nas estratégias de RH corporativo. Especializações em Terapia Cognitivo-Comportamental, Neuropsicologia, Psicologia do Trânsito e Avaliação Psicológica são as mais buscadas atualmente, ampliando a empregabilidade tanto em consultório quanto em concursos públicos.",
+    "duration": "5 anos",
+    "areas": [
+      "Clínica",
+      "Organizacional e do trabalho",
+      "Escolar e educacional",
+      "Hospitalar",
+      "Jurídica e forense",
+      "Esporte e saúde"
+    ],
+    "skills": [
+      "Escuta clínica qualificada",
+      "Aplicação de testes psicológicos",
+      "Elaboração de laudos e pareceres",
+      "Manejo de grupos terapêuticos",
+      "Avaliação neuropsicológica",
+      "Diagnóstico psicopatológico"
+    ],
+    "careerPaths": [
+      "Psicólogo clínico",
+      "Psicólogo organizacional",
+      "Psicólogo escolar",
+      "Neuropsicólogo",
+      "Psicólogo do trânsito",
+      "Psicólogo hospitalar"
+    ],
+    "averageSalary": "R$ 2.800 a R$ 12.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "faculdade de psicologia",
+      "curso de psicologia com bolsa",
+      "graduação em psicologia ead",
+      "bacharelado em psicologia",
+      "psicologia reconhecida pelo mec",
+      "quanto ganha psicólogo no brasil",
+      "psicologia clínica",
+      "crp registro profissional"
+    ]
+  },
+  {
+    "slug": "medicina-bacharelado",
+    "apiCourseName": "Medicina",
+    "name": "Medicina",
+    "fullName": "Medicina - Bacharelado",
+    "type": "BACHARELADO",
+    "nivel": "GRADUACAO",
+    "description": "Curso de 6 anos com a maior remuneração média entre profissões brasileiras. Médicos generalistas iniciam em R$ 8.000 e especialistas ultrapassam R$ 30.000.",
+    "longDescription": "A graduação em Medicina é um bacharelado com duração mínima de seis anos e carga horária obrigatória de 7.200 horas, conforme Resolução CNE/CES 3/2014. Os dois últimos anos são integralmente dedicados ao internato, com rodízios em Clínica Médica, Cirurgia, Pediatria, Ginecologia e Obstetrícia, Saúde Coletiva e Urgência e Emergência. O currículo dos primeiros oito semestres abrange Anatomia, Histologia, Bioquímica, Fisiologia, Patologia, Farmacologia, Semiologia e disciplinas integradoras de saúde da família. Após a formação, o médico precisa obter o registro no Conselho Regional de Medicina (CRM), regulamentado pela Lei 12.842/2013, que define os atos privativos da profissão. A residência médica, embora não obrigatória, é praticamente indispensável para acesso às melhores oportunidades de mercado e dura de 2 a 5 anos, dependendo da especialidade. Conforme a Demografia Médica no Brasil 2023, publicada pela FMUSP em parceria com o CFM, o país conta com cerca de 562 mil médicos ativos, com proporção de 2,69 médicos por mil habitantes, ainda concentrada nas capitais. O salário inicial do médico generalista no SUS gira em torno de R$ 8.000 a R$ 14.000 para 20 horas semanais, enquanto especialistas em áreas como Radiologia, Anestesiologia, Cirurgia Plástica e Ortopedia ultrapassam R$ 30.000 mensais somando plantões, consultórios e hospitais. O programa Mais Médicos e os concursos municipais mantêm contratação estável de profissionais recém-formados, e o crescimento da telemedicina pós-2020 ampliou ainda mais o leque de atuação.",
+    "duration": "6 anos",
+    "areas": [
+      "Clínica médica",
+      "Cirurgia",
+      "Pediatria",
+      "Ginecologia e obstetrícia",
+      "Saúde coletiva e SUS",
+      "Urgência e emergência"
+    ],
+    "skills": [
+      "Anamnese e exame físico",
+      "Diagnóstico diferencial",
+      "Prescrição farmacológica",
+      "Procedimentos invasivos básicos",
+      "Interpretação de exames complementares",
+      "Tomada de decisão clínica"
+    ],
+    "careerPaths": [
+      "Médico generalista",
+      "Cirurgião",
+      "Pediatra",
+      "Ginecologista",
+      "Anestesiologista",
+      "Médico do trabalho"
+    ],
+    "averageSalary": "R$ 8.000 a R$ 35.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "faculdade de medicina",
+      "curso de medicina com bolsa",
+      "graduação em medicina",
+      "bacharelado em medicina",
+      "quanto ganha médico no brasil",
+      "medicina reconhecida pelo mec",
+      "residência médica",
+      "crm registro profissional"
+    ]
+  },
+  {
+    "slug": "engenharia-civil-bacharelado",
+    "apiCourseName": "Engenharia Civil",
+    "name": "Engenharia Civil",
+    "fullName": "Engenharia Civil - Bacharelado",
+    "type": "BACHARELADO",
+    "nivel": "GRADUACAO",
+    "description": "Bacharelado tradicional regulamentado pelo CREA, com atuação em obras, projetos e infraestrutura. Salários iniciam em R$ 6.500 e ultrapassam R$ 18.000 para sêniores.",
+    "longDescription": "O curso de Engenharia Civil é um bacharelado de cinco anos com carga horária mínima de 3.600 horas estabelecida pela Resolução CNE/CES 2/2019. A grade curricular contempla um ciclo básico de Cálculo, Física, Química, Geometria Analítica, Álgebra Linear, Resistência dos Materiais e Mecânica dos Sólidos, seguido por disciplinas específicas como Estruturas de Concreto Armado, Aço e Madeira, Hidráulica, Saneamento, Geotecnia, Transportes, Topografia, Materiais de Construção e Gerenciamento de Obras. O exercício profissional é regulamentado pela Lei 5.194/66 e fiscalizado pelo Conselho Federal de Engenharia e Agronomia (Confea) e seus conselhos regionais (CREA), com Anotação de Responsabilidade Técnica (ART) obrigatória para cada projeto ou obra. Segundo dados do CAGED e do Sindicato dos Engenheiros, a Engenharia Civil mantém-se entre as engenharias com maior contratação líquida no Brasil, especialmente impulsionada por programas habitacionais como o Minha Casa Minha Vida e por investimentos em infraestrutura urbana, rodoviária e de saneamento. O piso salarial nacional, definido pela Lei 4.950-A/66, é de 8,5 salários-mínimos para jornada de 8 horas, o que em 2025 representa cerca de R$ 12.000 como referência legal. Profissionais iniciantes em construtoras médias recebem entre R$ 6.500 e R$ 9.000, enquanto engenheiros calculistas, gerentes de obra e especialistas em BIM ou sustentabilidade alcançam R$ 15.000 a R$ 22.000. Concursos para órgãos como DNIT, Petrobras e prefeituras seguem entre os mais disputados pela carreira.",
+    "duration": "5 anos",
+    "areas": [
+      "Construção de edificações",
+      "Estruturas",
+      "Infraestrutura e transportes",
+      "Saneamento e hidráulica",
+      "Geotecnia",
+      "Gerenciamento de obras"
+    ],
+    "skills": [
+      "Dimensionamento estrutural",
+      "Leitura e elaboração de projetos",
+      "Orçamento e cronograma de obra",
+      "Domínio de softwares CAD e BIM",
+      "Cálculo de fundações",
+      "Controle tecnológico de materiais"
+    ],
+    "careerPaths": [
+      "Engenheiro de obras",
+      "Engenheiro calculista",
+      "Engenheiro de planejamento",
+      "Engenheiro de infraestrutura",
+      "Perito judicial",
+      "Engenheiro de saneamento"
+    ],
+    "averageSalary": "R$ 6.500 a R$ 22.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "faculdade de engenharia civil",
+      "curso de engenharia civil com bolsa",
+      "engenharia civil ead",
+      "bacharelado em engenharia civil",
+      "quanto ganha engenheiro civil",
+      "crea registro engenheiro",
+      "graduação em engenharia civil",
+      "engenharia civil presencial"
+    ]
+  },
+  {
+    "slug": "pedagogia-licenciatura",
+    "apiCourseName": "Pedagogia",
+    "name": "Pedagogia",
+    "fullName": "Pedagogia - Licenciatura",
+    "type": "LICENCIATURA",
+    "nivel": "GRADUACAO",
+    "description": "Licenciatura que habilita para Educação Infantil, séries iniciais e gestão escolar. Piso nacional do magistério em 2025 ultrapassa R$ 4.800 para 40 horas.",
+    "longDescription": "O curso de Pedagogia é uma licenciatura plena com duração de quatro anos e carga horária mínima de 3.200 horas, conforme Resolução CNE/CP 2/2019 e Diretrizes Curriculares Nacionais de 2006. A formação habilita o profissional para atuar na Educação Infantil, nos anos iniciais do Ensino Fundamental, na Educação de Jovens e Adultos, em cursos de formação de docentes em nível médio e em funções de gestão pedagógica, coordenação e supervisão escolar. O currículo contempla Didática, Psicologia da Educação, Sociologia da Educação, Alfabetização e Letramento, Metodologias do Ensino, Educação Inclusiva, Libras, Avaliação da Aprendizagem e estágios supervisionados obrigatórios de no mínimo 400 horas distribuídas entre creche, pré-escola e séries iniciais. A profissão de professor é regulamentada pela Lei 9.394/96 (LDB) e pela Lei do Piso Nacional do Magistério (11.738/2008), que em 2025 fixou o vencimento inicial em R$ 4.867,77 para jornada de 40 horas semanais na rede pública. O magistério é a maior categoria profissional do Brasil, com mais de 2,2 milhões de docentes da educação básica conforme o Censo Escolar do Inep. Além das redes municipais e estaduais, o pedagogo encontra espaço em escolas privadas, ONGs, empresas (educação corporativa), editoras, consultorias pedagógicas e na elaboração de materiais didáticos. Especializações em Psicopedagogia, Neuroeducação, Educação Especial e Gestão Escolar são bastante valorizadas e permitem progressão para coordenação e direção, com salários entre R$ 6.000 e R$ 11.000 em redes privadas de médio e grande porte.",
+    "duration": "4 anos",
+    "areas": [
+      "Educação Infantil",
+      "Anos iniciais do Ensino Fundamental",
+      "Gestão escolar",
+      "Coordenação pedagógica",
+      "Educação especial e inclusiva",
+      "Educação corporativa"
+    ],
+    "skills": [
+      "Planejamento de aulas e sequências didáticas",
+      "Alfabetização e letramento",
+      "Avaliação da aprendizagem",
+      "Mediação de conflitos em sala",
+      "Elaboração de projetos pedagógicos",
+      "Uso de tecnologias educacionais"
+    ],
+    "careerPaths": [
+      "Professor da Educação Infantil",
+      "Professor dos anos iniciais",
+      "Coordenador pedagógico",
+      "Diretor escolar",
+      "Psicopedagogo",
+      "Orientador educacional"
+    ],
+    "averageSalary": "R$ 2.800 a R$ 11.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "faculdade de pedagogia",
+      "pedagogia ead com bolsa",
+      "licenciatura em pedagogia",
+      "graduação em pedagogia",
+      "quanto ganha pedagogo",
+      "piso do magistério",
+      "pedagogia reconhecida pelo mec",
+      "curso de pedagogia a distância"
+    ]
+  },
+  {
+    "slug": "educacao-fisica-bacharelado",
+    "apiCourseName": "Educação Física",
+    "name": "Educação Física",
+    "fullName": "Educação Física - Bacharelado",
+    "type": "BACHARELADO",
+    "nivel": "GRADUACAO",
+    "description": "Bacharelado para atuação em academias, clubes, esporte e saúde. Profissionais registrados no CREF iniciam com R$ 2.500 e chegam a R$ 9.000 com especialização.",
+    "longDescription": "O bacharelado em Educação Física forma o profissional para atuar em todos os contextos não escolares de exercício físico, esporte, saúde e qualidade de vida, sendo o curso de quatro anos com carga horária mínima de 3.200 horas exigida pela Resolução CNE/CES 6/2018. A grade curricular inclui Anatomia, Cinesiologia, Biomecânica, Fisiologia do Exercício, Treinamento Esportivo, Avaliação Física, Nutrição Aplicada, Primeiros Socorros, Musculação, Esportes Coletivos e Individuais, Atividade Física para Grupos Especiais e Gestão de Espaços Esportivos. A profissão é regulamentada pela Lei 9.696/98, que criou o Conselho Federal de Educação Física (Confef) e os conselhos regionais (CREF), onde o registro é obrigatório para atuação. É importante diferenciar do tipo licenciatura, que habilita exclusivamente para a docência na educação básica, enquanto o bacharelado é voltado para academias, clubes, centros de treinamento, personal training, reabilitação cardíaca, esporte de alto rendimento, condomínios e atendimento domiciliar. Conforme dados do CAGED e da Acad Brasil, o setor de fitness emprega mais de 250 mil profissionais e tem o Brasil como o segundo maior mercado mundial em número de academias. Salários iniciais como instrutor de academia ficam entre R$ 2.500 e R$ 3.500, enquanto personal trainers consolidados, preparadores físicos esportivos e gestores de academia alcançam R$ 6.000 a R$ 12.000. Especializações em Treinamento Funcional, Pilates, Reabilitação Cardiopulmonar, Performance Esportiva e Atividade Física para Idosos são as mais procuradas e ampliam significativamente o leque de oportunidades.",
+    "duration": "4 anos",
+    "areas": [
+      "Academias e estúdios",
+      "Personal training",
+      "Treinamento esportivo",
+      "Reabilitação e saúde",
+      "Atividade física para grupos especiais",
+      "Gestão esportiva"
+    ],
+    "skills": [
+      "Avaliação física e prescrição de exercícios",
+      "Periodização de treinamento",
+      "Análise biomecânica do movimento",
+      "Primeiros socorros aplicados ao esporte",
+      "Treinamento funcional",
+      "Atendimento a populações especiais"
+    ],
+    "careerPaths": [
+      "Personal trainer",
+      "Instrutor de academia",
+      "Preparador físico esportivo",
+      "Gestor de academia",
+      "Profissional de Pilates",
+      "Treinador de modalidade esportiva"
+    ],
+    "averageSalary": "R$ 2.500 a R$ 9.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "faculdade de educação física",
+      "curso de educação física com bolsa",
+      "bacharelado em educação física",
+      "graduação em educação física",
+      "quanto ganha personal trainer",
+      "cref registro profissional",
+      "educação física ead",
+      "educação física presencial"
+    ]
+  },
+  {
+    "slug": "farmacia-bacharelado",
+    "apiCourseName": "Farmácia",
+    "name": "Farmácia",
+    "fullName": "Farmácia - Bacharelado",
+    "type": "BACHARELADO",
+    "nivel": "GRADUACAO",
+    "description": "Bacharelado generalista para drogarias, indústria, análises clínicas e magistral. Farmacêuticos iniciam com R$ 4.000 e ultrapassam R$ 12.000 na indústria.",
+    "longDescription": "A graduação em Farmácia é um bacharelado generalista de cinco anos, com carga horária mínima de 4.000 horas e estágio obrigatório, conforme a Resolução CNE/CES 6/2017, que define o perfil generalista do farmacêutico apto a atuar em todas as áreas de saúde relacionadas a medicamentos. O currículo abrange Química Orgânica, Bioquímica, Microbiologia, Imunologia, Hematologia, Toxicologia, Farmacologia, Farmacotécnica, Tecnologia Farmacêutica, Farmácia Hospitalar, Análises Clínicas, Farmácia Clínica, Atenção Farmacêutica e Saúde Pública. O exercício profissional é regulamentado pela Lei 13.021/2014 (que define a farmácia como estabelecimento de saúde) e pela Lei 3.820/60, sendo fiscalizado pelo Conselho Federal de Farmácia (CFF) e Conselhos Regionais (CRF). A presença do farmacêutico responsável técnico é obrigatória em farmácias e drogarias durante todo o horário de funcionamento. O CFF registra mais de 270 mil farmacêuticos ativos no Brasil, com o setor magistral e o varejo farmacêutico crescendo de forma consistente segundo dados do CAGED e da Abrafarma. Salários iniciais em drogarias de rede ficam entre R$ 4.000 e R$ 5.500, enquanto farmacêuticos hospitalares e bioquímicos chegam a R$ 7.000 a R$ 10.000. Na indústria farmacêutica, áreas como Assuntos Regulatórios, Garantia da Qualidade, Pesquisa Clínica e Produção pagam entre R$ 9.000 e R$ 18.000 para profissionais com experiência e especialização. As habilitações pós-graduadas mais procuradas são Farmácia Clínica, Manipulação, Oncologia, Análises Clínicas e Farmacovigilância.",
+    "duration": "5 anos",
+    "areas": [
+      "Farmácia comunitária e drogaria",
+      "Indústria farmacêutica",
+      "Análises clínicas",
+      "Farmácia hospitalar",
+      "Farmácia magistral",
+      "Vigilância sanitária"
+    ],
+    "skills": [
+      "Dispensação farmacêutica",
+      "Manipulação de medicamentos",
+      "Análise físico-química de fármacos",
+      "Realização de exames laboratoriais",
+      "Farmacovigilância",
+      "Atenção farmacêutica"
+    ],
+    "careerPaths": [
+      "Farmacêutico de drogaria",
+      "Farmacêutico hospitalar",
+      "Bioquímico clínico",
+      "Farmacêutico industrial",
+      "Responsável técnico",
+      "Analista regulatório"
+    ],
+    "averageSalary": "R$ 4.000 a R$ 18.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "faculdade de farmácia",
+      "curso de farmácia com bolsa",
+      "bacharelado em farmácia",
+      "graduação em farmácia ead",
+      "quanto ganha farmacêutico",
+      "crf registro profissional",
+      "farmácia reconhecida pelo mec",
+      "farmácia presencial"
+    ]
+  },
+  {
+    "slug": "nutricao-bacharelado",
+    "apiCourseName": "Nutrição",
+    "name": "Nutrição",
+    "fullName": "Nutrição - Bacharelado",
+    "type": "BACHARELADO",
+    "nivel": "GRADUACAO",
+    "description": "Bacharelado regulamentado pelo CRN com atuação clínica, esportiva e em UAN. Nutricionistas iniciam com R$ 3.000 e alcançam R$ 10.000 com consultório.",
+    "longDescription": "O bacharelado em Nutrição é uma graduação de quatro anos com carga horária mínima de 3.200 horas e formação generalista, conforme as Diretrizes Curriculares Nacionais (Resolução CNE/CES 5/2001). O currículo integra disciplinas das ciências biológicas (Anatomia, Fisiologia, Bioquímica, Microbiologia), das ciências sociais e humanas (Antropologia da Alimentação, Saúde Coletiva), das ciências da nutrição (Avaliação Nutricional, Dietoterapia, Nutrição em Saúde Pública, Nutrição Esportiva, Nutrição Materno-Infantil) e da gestão de Unidades de Alimentação e Nutrição (UAN), incluindo Bromatologia, Técnica Dietética, Higiene de Alimentos e Gestão de Serviços. A profissão é regulamentada pela Lei 8.234/91 e fiscalizada pelo Conselho Federal de Nutricionistas (CFN) e conselhos regionais (CRN), com registro obrigatório e responsabilidade técnica em estabelecimentos do setor de alimentação coletiva. Segundo o CFN, o Brasil já ultrapassou 200 mil nutricionistas ativos, e o CAGED mostra crescimento sustentado no setor de alimentação fora do lar e de saúde preventiva. O nutricionista pode atuar em consultórios, hospitais, ambulatórios do SUS, escolas, restaurantes industriais, indústrias de alimentos, marketing nutricional, esporte de alto rendimento e estética. Salários iniciais em UANs e hospitais ficam entre R$ 3.000 e R$ 4.500, evoluindo para R$ 6.000 a R$ 10.000 em cargos de coordenação ou consultório próprio consolidado. Especializações em Nutrição Esportiva, Nutrição Clínica Funcional, Nutrição Materno-Infantil e Comportamental são as áreas com maior crescimento de demanda e melhor retorno financeiro.",
+    "duration": "4 anos",
+    "areas": [
+      "Nutrição clínica",
+      "Nutrição esportiva",
+      "Saúde coletiva",
+      "Alimentação escolar",
+      "Unidades de Alimentação e Nutrição",
+      "Indústria de alimentos"
+    ],
+    "skills": [
+      "Avaliação nutricional",
+      "Prescrição dietética individualizada",
+      "Cálculo de cardápios",
+      "Educação alimentar e nutricional",
+      "Controle higiênico-sanitário",
+      "Suplementação esportiva"
+    ],
+    "careerPaths": [
+      "Nutricionista clínico",
+      "Nutricionista esportivo",
+      "Nutricionista de UAN",
+      "Nutricionista escolar",
+      "Consultor em indústria de alimentos",
+      "Nutricionista materno-infantil"
+    ],
+    "averageSalary": "R$ 3.000 a R$ 10.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "faculdade de nutrição",
+      "curso de nutrição com bolsa",
+      "bacharelado em nutrição",
+      "graduação em nutrição ead",
+      "quanto ganha nutricionista",
+      "crn registro profissional",
+      "nutrição reconhecida pelo mec",
+      "nutrição esportiva curso"
+    ]
+  },
+  {
+    "slug": "odontologia-bacharelado",
+    "apiCourseName": "Odontologia",
+    "name": "Odontologia",
+    "fullName": "Odontologia - Bacharelado",
+    "type": "BACHARELADO",
+    "nivel": "GRADUACAO",
+    "description": "Bacharelado de 5 anos para atuação clínica e cirúrgica. Cirurgiões-dentistas iniciam com R$ 4.500 e ultrapassam R$ 20.000 com especialização e consultório.",
+    "longDescription": "A graduação em Odontologia é um bacharelado de cinco anos com carga horária mínima de 4.000 horas, conforme as Diretrizes Curriculares Nacionais (Resolução CNE/CES 3/2021). O currículo é fortemente prático e contempla Anatomia da Cabeça e Pescoço, Histologia, Microbiologia, Patologia Bucal, Materiais Dentários, Dentística, Endodontia, Periodontia, Prótese, Cirurgia Bucomaxilofacial, Odontopediatria, Ortodontia, Estomatologia, Imaginologia e Saúde Coletiva. A partir do quinto semestre, o aluno passa a atender pacientes nas clínicas-escola sob supervisão docente, completando milhares de procedimentos antes da formatura. O exercício profissional é regulamentado pela Lei 5.081/66, fiscalizado pelo Conselho Federal de Odontologia (CFO) e Conselhos Regionais (CRO), com inscrição obrigatória após a colação de grau. O Brasil é o país com mais cirurgiões-dentistas do mundo: o CFO contabiliza mais de 380 mil profissionais ativos, e a Pesquisa Nacional de Saúde Bucal aponta o setor como o segundo maior empregador da área de saúde no país, atrás apenas da enfermagem. Salários iniciais em clínicas populares e franquias ficam entre R$ 4.500 e R$ 6.500, enquanto especialistas em Implantodontia, Ortodontia, Endodontia e Cirurgia alcançam faturamentos mensais de R$ 15.000 a R$ 30.000 em consultórios próprios. Concursos para Cirurgião-Dentista do SUS pagam entre R$ 5.000 e R$ 12.000, e a Odontologia hospitalar e a Odontogeriatria são frentes em expansão no setor público e privado.",
+    "duration": "5 anos",
+    "areas": [
+      "Clínica geral",
+      "Ortodontia",
+      "Endodontia",
+      "Implantodontia",
+      "Odontopediatria",
+      "Cirurgia bucomaxilofacial"
+    ],
+    "skills": [
+      "Diagnóstico clínico bucal",
+      "Restaurações e procedimentos restauradores",
+      "Tratamento endodôntico",
+      "Procedimentos cirúrgicos básicos",
+      "Radiologia odontológica",
+      "Planejamento protético e estético"
+    ],
+    "careerPaths": [
+      "Cirurgião-dentista clínico geral",
+      "Ortodontista",
+      "Endodontista",
+      "Implantodontista",
+      "Odontopediatra",
+      "Cirurgião bucomaxilofacial"
+    ],
+    "averageSalary": "R$ 4.500 a R$ 25.000",
+    "marketDemand": "MEDIA",
+    "keywords": [
+      "faculdade de odontologia",
+      "curso de odontologia com bolsa",
+      "bacharelado em odontologia",
+      "graduação em odontologia",
+      "quanto ganha dentista",
+      "cro registro profissional",
+      "odontologia reconhecida pelo mec",
+      "odontologia presencial"
+    ]
+  },
+  {
+    "slug": "fisioterapia-bacharelado",
+    "apiCourseName": "Fisioterapia",
+    "name": "Fisioterapia",
+    "fullName": "Fisioterapia - Bacharelado",
+    "type": "BACHARELADO",
+    "nivel": "GRADUACAO",
+    "description": "Bacharelado regulamentado pelo COFFITO com forte demanda no SUS e clínicas. Fisioterapeutas iniciam com R$ 3.500 e ultrapassam R$ 10.000 com especialização.",
+    "longDescription": "O bacharelado em Fisioterapia tem duração de cinco anos e carga horária mínima de 4.000 horas, conforme as Diretrizes Curriculares Nacionais (Resolução CNE/CES 4/2002), em revisão para nova resolução. A grade integra Anatomia, Fisiologia, Cinesiologia, Biomecânica, Patologia, Fisioterapia Traumato-Ortopédica, Neurofuncional, Cardiorrespiratória, Pediátrica, Geriátrica, Uroginecológica, Esportiva, Dermatofuncional, Saúde Coletiva e estágios supervisionados obrigatórios em hospitais, clínicas e unidades básicas de saúde. A profissão é regulamentada pelo Decreto-Lei 938/69, que reconheceu a Fisioterapia como profissão de nível superior, e fiscalizada pelo Conselho Federal de Fisioterapia e Terapia Ocupacional (COFFITO) e Conselhos Regionais (CREFITO). O exercício é privativo do profissional inscrito, que tem autonomia plena para diagnóstico cinético-funcional, conforme decisões judiciais reiteradas. Segundo o COFFITO, há mais de 300 mil fisioterapeutas ativos no Brasil, e o setor cresce de forma estrutural com o envelhecimento populacional, a maior cobertura de planos de saúde e a inclusão da fisioterapia em programas como o NASF e a Atenção Domiciliar do SUS. Salários iniciais em clínicas e hospitais ficam entre R$ 3.500 e R$ 5.000, enquanto especialistas em UTI, Pilates clínico, Osteopatia, Fisioterapia Esportiva e Neurofuncional alcançam R$ 7.000 a R$ 12.000. A lei do piso da Fisioterapia (PL 5.180/2020) segue em tramitação no Congresso, com proposta de 8 salários-mínimos para 30 horas semanais.",
+    "duration": "5 anos",
+    "areas": [
+      "Traumato-ortopédica",
+      "Neurofuncional",
+      "Cardiorrespiratória e UTI",
+      "Pediátrica e geriátrica",
+      "Uroginecológica",
+      "Esportiva"
+    ],
+    "skills": [
+      "Diagnóstico cinético-funcional",
+      "Aplicação de recursos eletrotermofototerapêuticos",
+      "Cinesioterapia e reabilitação",
+      "Terapia manual e mobilização articular",
+      "Reabilitação cardiopulmonar",
+      "Pilates clínico e métodos integrativos"
+    ],
+    "careerPaths": [
+      "Fisioterapeuta clínico",
+      "Fisioterapeuta intensivista",
+      "Fisioterapeuta esportivo",
+      "Fisioterapeuta neurofuncional",
+      "Fisioterapeuta do trabalho",
+      "Fisioterapeuta uroginecológico"
+    ],
+    "averageSalary": "R$ 3.500 a R$ 12.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "faculdade de fisioterapia",
+      "curso de fisioterapia com bolsa",
+      "bacharelado em fisioterapia",
+      "graduação em fisioterapia",
+      "quanto ganha fisioterapeuta",
+      "crefito registro profissional",
+      "fisioterapia reconhecida pelo mec",
+      "fisioterapia presencial"
+    ]
+  },
+  {
+    "slug": "biomedicina-bacharelado",
+    "apiCourseName": "Biomedicina",
+    "name": "Biomedicina",
+    "fullName": "Biomedicina - Bacharelado",
+    "type": "BACHARELADO",
+    "nivel": "GRADUACAO",
+    "description": "Bacharelado com mais de 35 habilitações pelo CFBM, de análises clínicas a estética. Biomédicos iniciam com R$ 3.500 e alcançam R$ 12.000 com especialização.",
+    "longDescription": "O bacharelado em Biomedicina é uma graduação de quatro anos com carga horária mínima de 3.200 horas, conforme as Diretrizes Curriculares Nacionais (Resolução CNE/CES 2/2003). O currículo contempla Anatomia, Histologia, Embriologia, Bioquímica, Microbiologia, Parasitologia, Imunologia, Hematologia, Patologia, Genética, Biologia Molecular, Citopatologia, Bromatologia, Toxicologia, Saúde Pública e Análises Clínicas. A profissão foi criada pela Lei 6.684/79 e regulamentada pelo Decreto 88.439/83, sendo fiscalizada pelo Conselho Federal de Biomedicina (CFBM) e Conselhos Regionais (CRBM). O biomédico atualmente possui 36 habilitações reconhecidas pelo CFBM, entre elas Análises Clínicas, Banco de Sangue, Biologia Molecular, Citopatologia, Reprodução Humana Assistida, Imagenologia, Biomedicina Estética, Sanitarista, Toxicologia, Acupuntura e Genética. Segundo o CFBM, o Brasil conta com mais de 200 mil biomédicos registrados, e a área teve crescimento expressivo após a pandemia, especialmente nas frentes de testagem molecular, biologia diagnóstica e biomedicina estética, esta última com expansão acelerada conforme dados da Abihpec e do setor de medicina estética. Salários iniciais em laboratórios de análises clínicas ficam entre R$ 3.500 e R$ 5.000, profissionais responsáveis técnicos alcançam R$ 6.000 a R$ 9.000 e a Biomedicina Estética permite faturamentos mensais entre R$ 10.000 e R$ 18.000 em consultório próprio consolidado. Concursos na área da saúde e pesquisa em institutos como Fiocruz e Butantan completam o leque de oportunidades.",
+    "duration": "4 anos",
+    "areas": [
+      "Análises clínicas",
+      "Biologia molecular e genética",
+      "Biomedicina estética",
+      "Imagenologia",
+      "Reprodução humana assistida",
+      "Pesquisa científica"
+    ],
+    "skills": [
+      "Execução e interpretação de exames laboratoriais",
+      "Técnicas de biologia molecular",
+      "Citopatologia e histopatologia",
+      "Procedimentos estéticos não invasivos",
+      "Manipulação de material biológico",
+      "Controle de qualidade laboratorial"
+    ],
+    "careerPaths": [
+      "Biomédico de análises clínicas",
+      "Biomédico esteta",
+      "Biomédico geneticista",
+      "Citopatologista",
+      "Pesquisador em saúde",
+      "Responsável técnico de laboratório"
+    ],
+    "averageSalary": "R$ 3.500 a R$ 12.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "faculdade de biomedicina",
+      "curso de biomedicina com bolsa",
+      "bacharelado em biomedicina",
+      "graduação em biomedicina ead",
+      "quanto ganha biomédico",
+      "crbm registro profissional",
+      "biomedicina estética",
+      "biomedicina reconhecida pelo mec"
+    ]
+  },
+  {
+    "slug": "ciencias-contabeis-bacharelado",
+    "apiCourseName": "Ciências Contábeis",
+    "name": "Ciências Contábeis",
+    "fullName": "Ciências Contábeis - Bacharelado",
+    "type": "BACHARELADO",
+    "nivel": "GRADUACAO",
+    "description": "Bacharelado regulamentado pelo CFC com Exame de Suficiência obrigatório. Contadores iniciam com R$ 3.500 e ultrapassam R$ 15.000 em auditoria e controladoria.",
+    "longDescription": "O bacharelado em Ciências Contábeis tem duração de quatro anos e carga horária mínima de 3.000 horas, conforme as Diretrizes Curriculares Nacionais (Resolução CNE/CES 10/2004). O currículo contempla Contabilidade Geral, Contabilidade Societária, Contabilidade de Custos, Contabilidade Gerencial, Análise das Demonstrações Financeiras, Auditoria, Perícia Contábil, Controladoria, Contabilidade Tributária, Direito Empresarial, Matemática Financeira, Estatística, Mercado de Capitais e Sistemas de Informações Contábeis. A profissão é regulamentada pelo Decreto-Lei 9.295/46, atualizado pela Lei 12.249/2010, que tornou obrigatório o Exame de Suficiência aplicado pelo Conselho Federal de Contabilidade (CFC) para obtenção do registro profissional. O Conselho Regional de Contabilidade (CRC) é responsável pela fiscalização do exercício. Segundo o CFC, há mais de 540 mil profissionais ativos no Brasil entre contadores e técnicos em contabilidade, e o CAGED mantém o profissional contábil entre os 20 cargos com maior contratação líquida no setor de serviços. As convergências às normas internacionais (IFRS) e a digitalização dos processos via SPED, eSocial e NF-e ampliaram a complexidade técnica da carreira. Salários iniciais em escritórios contábeis e departamentos contábeis de empresas ficam entre R$ 3.500 e R$ 5.000, evoluindo para R$ 8.000 a R$ 15.000 em cargos de auditor, controller, gerente contábil e consultor tributário. Big Four de auditoria (KPMG, PwC, EY, Deloitte) e concursos para Auditor da Receita Federal, com salários acima de R$ 21.000, são destinos comuns dos profissionais.",
+    "duration": "4 anos",
+    "areas": [
+      "Contabilidade societária",
+      "Contabilidade tributária",
+      "Auditoria",
+      "Controladoria",
+      "Perícia contábil",
+      "Consultoria empresarial"
+    ],
+    "skills": [
+      "Elaboração de demonstrações financeiras",
+      "Apuração de tributos federais, estaduais e municipais",
+      "Análise de balanços e indicadores",
+      "Domínio de SPED, eSocial e NF-e",
+      "Auditoria de contas e processos",
+      "Planejamento tributário"
+    ],
+    "careerPaths": [
+      "Contador",
+      "Auditor independente",
+      "Controller",
+      "Perito contábil",
+      "Analista fiscal e tributário",
+      "Auditor da Receita"
+    ],
+    "averageSalary": "R$ 3.500 a R$ 21.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "faculdade de ciências contábeis",
+      "curso de contabilidade com bolsa",
+      "bacharelado em ciências contábeis",
+      "graduação em contabilidade ead",
+      "quanto ganha contador",
+      "exame de suficiência cfc",
+      "contabilidade reconhecida pelo mec",
+      "crc registro profissional"
+    ]
+  },
+  {
+    "slug": "arquitetura-e-urbanismo-bacharelado",
+    "apiCourseName": "Arquitetura e Urbanismo",
+    "name": "Arquitetura e Urbanismo",
+    "fullName": "Arquitetura e Urbanismo - Bacharelado",
+    "type": "BACHARELADO",
+    "nivel": "GRADUACAO",
+    "description": "Bacharelado de 5 anos regulamentado pelo CAU. Arquitetos iniciam com R$ 4.500 e ultrapassam R$ 14.000 com escritório consolidado ou cargos públicos.",
+    "longDescription": "O curso de Arquitetura e Urbanismo é um bacharelado de cinco anos com carga horária mínima de 3.600 horas, conforme a Resolução CNE/CES 2/2010. O currículo contempla um ciclo de fundamentação em Desenho Arquitetônico, História da Arquitetura, Teoria da Arquitetura, Materiais e Técnicas Construtivas, Conforto Ambiental, Topografia, Estruturas, Instalações Prediais, seguido por Projeto Arquitetônico em escala crescente, Urbanismo, Paisagismo, Restauro, Patrimônio Histórico e Planejamento Urbano e Regional. O Trabalho Final de Graduação (TFG) é obrigatório no último ano. A profissão é regulamentada pela Lei 12.378/2010, que criou o Conselho de Arquitetura e Urbanismo do Brasil (CAU/BR), responsável pelo registro e fiscalização. Cada projeto ou serviço técnico exige Registro de Responsabilidade Técnica (RRT) emitido pelo CAU. Segundo o CAU/BR, há mais de 220 mil arquitetos e urbanistas registrados no país, com a profissão entre as mais femininas do setor de engenharias e arquitetura, com participação feminina superior a 60%. O piso salarial nacional dos arquitetos, definido pela Lei 4.950-A/66, é o mesmo das engenharias, equivalente a 8,5 salários-mínimos para jornada de 8 horas, cerca de R$ 12.000 em 2025 como referência. Salários iniciais em escritórios e construtoras ficam entre R$ 4.500 e R$ 6.500, evoluindo para R$ 9.000 a R$ 14.000 em cargos de coordenação e até mais para arquitetos com escritório próprio em obras residenciais de alto padrão. Concursos para prefeituras e órgãos como Iphan, Caixa e DNIT são alternativas estáveis na carreira.",
+    "duration": "5 anos",
+    "areas": [
+      "Projeto arquitetônico residencial",
+      "Projeto comercial e corporativo",
+      "Urbanismo e planejamento urbano",
+      "Paisagismo",
+      "Restauro e patrimônio histórico",
+      "Arquitetura de interiores"
+    ],
+    "skills": [
+      "Concepção e detalhamento de projetos",
+      "Domínio de AutoCAD, Revit e softwares BIM",
+      "Renderização e maquete eletrônica",
+      "Compatibilização de projetos complementares",
+      "Conforto ambiental e sustentabilidade",
+      "Aprovação de projetos em prefeituras"
+    ],
+    "careerPaths": [
+      "Arquiteto projetista",
+      "Arquiteto de interiores",
+      "Urbanista",
+      "Paisagista",
+      "Arquiteto de obras",
+      "Arquiteto restaurador"
+    ],
+    "averageSalary": "R$ 4.500 a R$ 14.000",
+    "marketDemand": "MEDIA",
+    "keywords": [
+      "faculdade de arquitetura",
+      "curso de arquitetura com bolsa",
+      "bacharelado em arquitetura e urbanismo",
+      "graduação em arquitetura",
+      "quanto ganha arquiteto",
+      "cau registro profissional",
+      "arquitetura reconhecida pelo mec",
+      "arquitetura presencial"
+    ]
+  },
+  {
+    "slug": "engenharia-de-producao-bacharelado",
+    "apiCourseName": "Engenharia de Produção",
+    "name": "Engenharia de Produção",
+    "fullName": "Engenharia de Produção - Bacharelado",
+    "type": "BACHARELADO",
+    "nivel": "GRADUACAO",
+    "description": "Engenharia generalista entre as mais valorizadas pelo mercado corporativo. Salários iniciais a partir de R$ 6.500, chegando a R$ 20.000 em supply chain e consultoria.",
+    "longDescription": "A Engenharia de Produção é um bacharelado de cinco anos, com carga horária mínima de 3.600 horas, conforme as Diretrizes Curriculares Nacionais das Engenharias (Resolução CNE/CES 2/2019). Diferencia-se das demais engenharias por unir a base técnica de Cálculo, Física, Estatística, Resistência dos Materiais, Eletrotécnica e Processos de Fabricação ao núcleo gerencial composto por Gestão da Produção, Pesquisa Operacional, Logística e Cadeia de Suprimentos, Gestão da Qualidade, Engenharia Econômica, Engenharia do Trabalho, Ergonomia, Gestão de Projetos e Sistemas de Informação. A profissão é regulamentada pela Lei 5.194/66 e fiscalizada pelo CREA, com Anotação de Responsabilidade Técnica (ART) obrigatória para os serviços de engenharia executados. Conforme dados do CAGED, da Abenge e da pesquisa Salário 2025 da Catho, a Engenharia de Produção é consistentemente apontada como a engenharia com maior empregabilidade no Brasil, pela versatilidade na atuação em indústria, varejo, bancos, consultorias, logística, tecnologia e energia. O piso salarial profissional segue a Lei 4.950-A/66, com referência próxima a R$ 12.000 para jornada de 8 horas em 2025. Salários iniciais em programas de trainee de grandes empresas ficam entre R$ 6.500 e R$ 9.000, e profissionais com cinco a oito anos de experiência alcançam R$ 14.000 a R$ 22.000 em cargos como gerente de operações, supply chain manager, consultor em Lean Six Sigma ou Black Belt. As especializações em Lean Manufacturing, Six Sigma, Indústria 4.0 e Logística Internacional são as mais valorizadas atualmente.",
+    "duration": "5 anos",
+    "areas": [
+      "Gestão da produção industrial",
+      "Logística e supply chain",
+      "Qualidade e melhoria contínua",
+      "Engenharia econômica",
+      "Consultoria empresarial",
+      "Pesquisa operacional"
+    ],
+    "skills": [
+      "Modelagem de processos produtivos",
+      "Aplicação de Lean Manufacturing e Six Sigma",
+      "Análise de viabilidade econômica",
+      "Gestão de projetos (PMBOK)",
+      "Mapeamento de cadeia de suprimentos",
+      "Estatística aplicada e análise de dados"
+    ],
+    "careerPaths": [
+      "Engenheiro de produção",
+      "Analista de processos",
+      "Supply chain analyst",
+      "Consultor Lean Six Sigma",
+      "Gerente de operações",
+      "Engenheiro da qualidade"
+    ],
+    "averageSalary": "R$ 6.500 a R$ 22.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "faculdade de engenharia de produção",
+      "curso de engenharia de produção com bolsa",
+      "bacharelado em engenharia de produção",
+      "graduação em engenharia de produção",
+      "quanto ganha engenheiro de produção",
+      "crea registro engenheiro",
+      "engenharia de produção ead",
+      "engenharia de produção presencial"
+    ]
+  },
+  {
+    "slug": "administracao-bacharelado",
+    "apiCourseName": "Administração",
+    "name": "Administração",
+    "fullName": "Administração - Bacharelado",
+    "type": "BACHARELADO",
+    "nivel": "GRADUACAO",
+    "description": "Bacharelado generalista regulamentado pelo CFA, base para gestão em qualquer setor. Administradores iniciam com R$ 3.500 e alcançam R$ 18.000 em cargos executivos.",
+    "longDescription": "O bacharelado em Administração tem duração de quatro anos, com carga horária mínima de 3.000 horas conforme as Diretrizes Curriculares Nacionais (Resolução CNE/CES 4/2005). O currículo é generalista e integra Teoria Geral da Administração, Economia, Direito Empresarial, Contabilidade, Matemática Financeira, Estatística, Marketing, Recursos Humanos, Logística, Finanças Corporativas, Estratégia, Empreendedorismo e Sistemas de Informação Gerencial. A profissão é regulamentada pela Lei 4.769/65 e fiscalizada pelo Conselho Federal de Administração (CFA) e Conselhos Regionais (CRA), com registro obrigatório para o exercício técnico de atribuições privativas, como pareceres, perícias e laudos administrativos. O Brasil conta com mais de 500 mil profissionais registrados no Sistema CFA/CRA, e a Administração permanece, segundo o Censo do Ensino Superior do Inep, entre os cursos com maior número de matrículas e formados no país. Dados do CAGED apontam ocupações administrativas e gerenciais entre as cinco que mais contratam no setor de serviços. Pela amplitude de atuação, o profissional pode seguir carreiras em finanças, recursos humanos, marketing, vendas, logística, operações, planejamento estratégico, controladoria, consultoria e empreendedorismo. Salários iniciais como analista júnior em grandes empresas ficam entre R$ 3.500 e R$ 5.000, evoluindo para R$ 9.000 a R$ 18.000 em cargos de gerência e R$ 25.000 ou mais em diretoria. Concursos públicos para Analista Administrativo de tribunais, Banco Central e Receita Federal pagam salários iniciais entre R$ 11.000 e R$ 20.000, sendo também destinos comuns de formados na área.",
+    "duration": "4 anos",
+    "areas": [
+      "Gestão financeira",
+      "Marketing e vendas",
+      "Recursos humanos",
+      "Logística e operações",
+      "Planejamento estratégico",
+      "Consultoria empresarial"
+    ],
+    "skills": [
+      "Elaboração de planejamento estratégico",
+      "Análise financeira e de investimentos",
+      "Gestão de pessoas e liderança de equipes",
+      "Gestão de projetos",
+      "Análise de mercado e marketing",
+      "Tomada de decisão baseada em dados"
+    ],
+    "careerPaths": [
+      "Analista administrativo",
+      "Gerente de operações",
+      "Gerente financeiro",
+      "Gerente de RH",
+      "Consultor empresarial",
+      "Empreendedor"
+    ],
+    "averageSalary": "R$ 3.500 a R$ 20.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "faculdade de administração",
+      "curso de administração com bolsa",
+      "bacharelado em administração",
+      "graduação em administração ead",
+      "quanto ganha administrador",
+      "cra registro profissional",
+      "administração reconhecida pelo mec",
+      "administração presencial"
+    ]
+  },
+  {
+    "slug": "analise-e-desenvolvimento-de-sistemas-tecnologo",
+    "apiCourseName": "Análise e Desenvolvimento de Sistemas",
+    "name": "Análise e Desenvolvimento de Sistemas",
+    "fullName": "Análise e Desenvolvimento de Sistemas - Tecnólogo",
+    "type": "TECNOLOGO",
+    "nivel": "GRADUACAO",
+    "description": "Tecnólogo em alta demanda no setor de TI, com 2,5 anos de duração. Desenvolvedores iniciam com R$ 4.000 e ultrapassam R$ 15.000 com especialização full stack.",
+    "longDescription": "O curso superior de tecnologia em Análise e Desenvolvimento de Sistemas é uma graduação de dois anos e meio, com carga horária mínima de 2.000 horas conforme o Catálogo Nacional de Cursos Superiores de Tecnologia (CNCST) do MEC, e está inserido no eixo de Informação e Comunicação. O currículo é direto e prático, com disciplinas como Lógica de Programação, Estrutura de Dados, Algoritmos, Banco de Dados Relacional e NoSQL, Engenharia de Software, Desenvolvimento Web Front-end e Back-end, Programação Orientada a Objetos, Linguagens como Java, Python, JavaScript e C#, Cloud Computing, DevOps, Metodologias Ágeis (Scrum, Kanban), Testes de Software e Segurança da Informação. Embora a profissão de desenvolvedor não exija registro em conselho de classe, a área é uma das mais aquecidas do Brasil: a Brasscom estima déficit anual superior a 100 mil profissionais de TI até 2030, e o CAGED registra a área de Tecnologia da Informação como a maior geradora líquida de empregos do setor de serviços. Salários iniciais como desenvolvedor júnior em São Paulo, Florianópolis e Recife começam em R$ 4.000 a R$ 6.500, evoluindo rapidamente para R$ 9.000 a R$ 14.000 em nível pleno em até três anos. Desenvolvedores sêniores, full stack, especialistas em cloud (AWS, GCP, Azure), DevOps, Data Engineer e tech leads alcançam R$ 16.000 a R$ 28.000, com forte componente de contratação remota e trabalho para empresas internacionais em dólar e euro, ampliando ainda mais o teto salarial efetivo da carreira.",
+    "duration": "2 anos e meio",
+    "areas": [
+      "Desenvolvimento web",
+      "Desenvolvimento mobile",
+      "Banco de dados",
+      "Cloud computing",
+      "DevOps",
+      "Qualidade de software"
+    ],
+    "skills": [
+      "Programação em múltiplas linguagens",
+      "Modelagem de banco de dados",
+      "Versionamento com Git",
+      "Metodologias ágeis (Scrum, Kanban)",
+      "Desenvolvimento de APIs REST",
+      "Testes automatizados e CI/CD"
+    ],
+    "careerPaths": [
+      "Desenvolvedor web",
+      "Desenvolvedor mobile",
+      "Analista de sistemas",
+      "Engenheiro de software",
+      "DBA",
+      "DevOps engineer"
+    ],
+    "averageSalary": "R$ 4.000 a R$ 18.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "faculdade de ads",
+      "curso de análise e desenvolvimento de sistemas",
+      "tecnólogo em ads com bolsa",
+      "ads ead",
+      "quanto ganha programador no brasil",
+      "ads reconhecido pelo mec",
+      "graduação tecnológica em ti",
+      "curso de programação superior"
+    ]
+  },
+  {
+    "slug": "gestao-de-recursos-humanos-tecnologo",
+    "apiCourseName": "Gestão de Recursos Humanos",
+    "name": "Gestão de Recursos Humanos",
+    "fullName": "Gestão de Recursos Humanos - Tecnólogo",
+    "type": "TECNOLOGO",
+    "nivel": "GRADUACAO",
+    "description": "Tecnólogo de 2 anos com saída rápida para departamento pessoal e RH. Analistas iniciam com R$ 2.800 e alcançam R$ 9.000 em business partner e cargos seniores.",
+    "longDescription": "O curso superior de tecnologia em Gestão de Recursos Humanos tem duração de dois anos e carga horária mínima de 1.600 horas, conforme o Catálogo Nacional de Cursos Superiores de Tecnologia do MEC, no eixo de Gestão e Negócios. O currículo é objetivo e orientado para o mercado, com disciplinas como Comportamento Organizacional, Recrutamento e Seleção, Treinamento e Desenvolvimento, Departamento Pessoal, Folha de Pagamento, Legislação Trabalhista e Previdenciária, Cargos e Salários, Avaliação de Desempenho, Gestão por Competências, Saúde e Segurança do Trabalho, Cultura Organizacional, Diversidade e Inclusão, Educação Corporativa e People Analytics. O exercício da profissão de analista e gestor de RH não exige registro em conselho de classe, mas demanda domínio rigoroso da CLT, do eSocial e das normas do Ministério do Trabalho. A área de Gestão de Pessoas figura entre as cinco que mais contratam no CAGED no setor de serviços, e a transformação digital do RH (people analytics, employee experience, plataformas de gestão como TOTVS, Senior e Gupy) ampliou ainda mais a demanda por profissionais qualificados. Salários iniciais como assistente e analista júnior ficam entre R$ 2.800 e R$ 4.500, evoluindo para R$ 6.000 a R$ 9.000 em cargos de analista pleno, sênior e business partner. Coordenadores e gerentes de RH em empresas de médio e grande porte alcançam R$ 11.000 a R$ 18.000, com forte demanda em consultorias, indústria, varejo e tech. Especializações em Coaching, Psicologia Organizacional, Direito do Trabalho e People Analytics aumentam significativamente a empregabilidade.",
+    "duration": "2 anos",
+    "areas": [
+      "Recrutamento e seleção",
+      "Treinamento e desenvolvimento",
+      "Departamento pessoal",
+      "Cargos e salários",
+      "Cultura organizacional",
+      "People analytics"
+    ],
+    "skills": [
+      "Condução de processos seletivos",
+      "Aplicação da CLT e do eSocial",
+      "Cálculos de folha e encargos",
+      "Avaliação de desempenho",
+      "Estruturação de planos de carreira",
+      "Mediação de conflitos no ambiente de trabalho"
+    ],
+    "careerPaths": [
+      "Analista de RH",
+      "Analista de departamento pessoal",
+      "Recrutador",
+      "Business partner",
+      "Coordenador de RH",
+      "Consultor em gestão de pessoas"
+    ],
+    "averageSalary": "R$ 2.800 a R$ 11.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "faculdade de recursos humanos",
+      "curso de gestão de rh com bolsa",
+      "tecnólogo em rh ead",
+      "graduação em recursos humanos",
+      "quanto ganha analista de rh",
+      "rh reconhecido pelo mec",
+      "tecnólogo em gestão de pessoas",
+      "curso superior de rh"
+    ]
+  },
+  {
+    "slug": "gestao-comercial-tecnologo",
+    "apiCourseName": "Gestão Comercial",
+    "name": "Gestão Comercial",
+    "fullName": "Gestão Comercial - Tecnólogo",
+    "type": "TECNOLOGO",
+    "nivel": "GRADUACAO",
+    "description": "Tecnólogo de 2 anos voltado para vendas, varejo e negociação. Profissionais iniciam com R$ 2.800 fixos e alcançam R$ 12.000 somando comissões e bônus.",
+    "longDescription": "O curso superior de tecnologia em Gestão Comercial é uma graduação de dois anos com carga horária mínima de 1.600 horas, conforme o Catálogo Nacional de Cursos Superiores de Tecnologia do MEC, dentro do eixo de Gestão e Negócios. O currículo é prático e orientado a resultados, com disciplinas como Técnicas de Vendas, Negociação, Comportamento do Consumidor, Marketing, Inteligência Competitiva, Gestão de Equipes Comerciais, CRM (Customer Relationship Management), Gestão do Varejo, Trade Marketing, Logística e Cadeia de Suprimentos, Matemática Financeira e Direito do Consumidor. O foco está em preparar o profissional para liderar áreas comerciais, gerenciar equipes de vendas, planejar metas, estruturar funis de captação e fidelizar clientes em B2B e B2C. A profissão de gestor comercial não exige registro em conselho de classe, mas é uma das mais valorizadas no mercado em razão do impacto direto no faturamento das empresas. Segundo o CAGED e pesquisas do Sebrae, o varejo é o maior empregador do setor de serviços no Brasil, com mais de 10 milhões de postos formais, e os cargos comerciais figuram consistentemente entre as 20 ocupações com maior contratação líquida. Salários fixos iniciais ficam entre R$ 2.800 e R$ 4.500, mas a remuneração total com comissões, bônus de meta e premiações comumente alcança R$ 6.000 a R$ 12.000 em representação comercial, key account e vendas corporativas. Gerentes comerciais e diretores de vendas em médias e grandes empresas atingem R$ 14.000 a R$ 25.000 com componente variável agressivo, especialmente nos setores de tecnologia, indústria e serviços B2B.",
+    "duration": "2 anos",
+    "areas": [
+      "Vendas B2B e B2C",
+      "Varejo",
+      "Trade marketing",
+      "Gestão de equipes comerciais",
+      "Representação comercial",
+      "Customer success"
+    ],
+    "skills": [
+      "Técnicas avançadas de negociação",
+      "Prospecção e qualificação de leads",
+      "Gestão de funil de vendas e CRM",
+      "Definição e acompanhamento de metas",
+      "Análise da concorrência",
+      "Liderança de equipe comercial"
+    ],
+    "careerPaths": [
+      "Vendedor consultivo",
+      "Representante comercial",
+      "Key account manager",
+      "Gerente comercial",
+      "Supervisor de vendas",
+      "Trade marketing analyst"
+    ],
+    "averageSalary": "R$ 2.800 a R$ 14.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "faculdade de gestão comercial",
+      "curso de gestão comercial com bolsa",
+      "tecnólogo em gestão comercial",
+      "graduação em vendas",
+      "quanto ganha gerente comercial",
+      "gestão comercial ead",
+      "curso superior de vendas",
+      "gestão comercial reconhecida pelo mec"
+    ]
+  },
+  {
+    "slug": "marketing-tecnologo",
+    "apiCourseName": "Marketing",
+    "name": "Marketing",
+    "fullName": "Marketing - Tecnólogo",
+    "type": "TECNOLOGO",
+    "nivel": "GRADUACAO",
+    "description": "Tecnólogo de 2 anos com foco em marketing digital, performance e branding. Analistas iniciam com R$ 3.000 e alcançam R$ 14.000 em performance e growth.",
+    "longDescription": "O curso superior de tecnologia em Marketing tem duração de dois anos e carga horária mínima de 1.600 horas, conforme o Catálogo Nacional de Cursos Superiores de Tecnologia do MEC, dentro do eixo de Gestão e Negócios. O currículo é fortemente conectado às práticas do mercado digital, com disciplinas como Fundamentos de Marketing, Comportamento do Consumidor, Branding e Gestão de Marca, Pesquisa de Mercado, Marketing Digital, SEO (Search Engine Optimization), Mídia Paga (Google Ads, Meta Ads), Inbound Marketing, E-mail Marketing, Marketing de Conteúdo, Redes Sociais, Métricas e Web Analytics, CRM e Marketing de Relacionamento, além de Comunicação Integrada e Direito do Consumidor. A profissão não exige registro em conselho de classe, mas a área passou por transformação radical na última década, com a migração definitiva dos investimentos para mídia digital — o IAB Brasil e a Kantar Ibope Media já indicam o digital ultrapassando a TV aberta em participação no bolo publicitário brasileiro. Conforme dados do CAGED e pesquisas da ABComm, o setor de marketing digital, e-commerce e tecnologia segue como um dos maiores motores de criação líquida de empregos qualificados. Salários iniciais como analista de marketing júnior em agências e empresas ficam entre R$ 3.000 e R$ 4.500, evoluindo para R$ 7.000 a R$ 11.000 em nível pleno e sênior em até três anos. Especialistas em Performance, Growth, SEO Técnico, Mídia Paga e Branding alcançam R$ 12.000 a R$ 18.000, e coordenadores de marketing em médias e grandes empresas chegam a R$ 16.000 a R$ 22.000, com forte abertura também para trabalho remoto para clientes internacionais.",
+    "duration": "2 anos",
+    "areas": [
+      "Marketing digital",
+      "Performance e mídia paga",
+      "Branding e gestão de marca",
+      "SEO e marketing de conteúdo",
+      "Redes sociais",
+      "Pesquisa de mercado"
+    ],
+    "skills": [
+      "Planejamento de campanhas digitais",
+      "Gestão de Google Ads e Meta Ads",
+      "Análise de métricas e Web Analytics",
+      "Produção de conteúdo estratégico",
+      "Otimização para mecanismos de busca",
+      "Construção de estratégia de marca"
+    ],
+    "careerPaths": [
+      "Analista de marketing",
+      "Analista de performance",
+      "Especialista em SEO",
+      "Social media manager",
+      "Gestor de tráfego pago",
+      "Coordenador de marketing"
+    ],
+    "averageSalary": "R$ 3.000 a R$ 18.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "faculdade de marketing",
+      "curso de marketing com bolsa",
+      "tecnólogo em marketing ead",
+      "graduação em marketing digital",
+      "quanto ganha analista de marketing",
+      "marketing reconhecido pelo mec",
+      "curso superior de marketing",
+      "marketing digital faculdade"
+    ]
   }
 ]

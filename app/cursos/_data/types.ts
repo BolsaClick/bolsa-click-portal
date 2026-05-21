@@ -5,8 +5,8 @@ export interface FeaturedCourseData {
   apiCourseName: string
   name: string
   fullName: string
-  type: 'BACHARELADO' | 'LICENCIATURA' | 'TECNOLOGO' | 'ESPECIALIZACAO' | 'MBA'
-  nivel: 'GRADUACAO' | 'POS_GRADUACAO'
+  type: 'BACHARELADO' | 'LICENCIATURA' | 'TECNOLOGO' | 'ESPECIALIZACAO' | 'MBA' | 'PROFISSIONALIZANTE'
+  nivel: 'GRADUACAO' | 'POS_GRADUACAO' | 'CURSO_PROFISSIONALIZANTE'
   description: string
   longDescription: string
   duration: string
@@ -39,8 +39,8 @@ export interface FeaturedCourseListItem {
   name: string
   fullName: string
   apiCourseName: string
-  type: 'BACHARELADO' | 'LICENCIATURA' | 'TECNOLOGO' | 'ESPECIALIZACAO' | 'MBA'
-  nivel: 'GRADUACAO' | 'POS_GRADUACAO'
+  type: 'BACHARELADO' | 'LICENCIATURA' | 'TECNOLOGO' | 'ESPECIALIZACAO' | 'MBA' | 'PROFISSIONALIZANTE'
+  nivel: 'GRADUACAO' | 'POS_GRADUACAO' | 'CURSO_PROFISSIONALIZANTE'
   description: string
   duration: string
   averageSalary: string

@@ -26,7 +26,7 @@ export default function CityContextBlock({
   const ctx = buildCityContext(curso, cityName, cityState)
 
   return (
-    <section className="bg-white py-14 md:py-20 border-b border-hairline">
+    <section className="bg-white py-14 md:py-20 border-b border-hairline" data-speakable="city-context">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-12 max-w-6xl mx-auto">
           <div className="md:col-span-7">

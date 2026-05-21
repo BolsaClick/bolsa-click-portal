@@ -103,11 +103,18 @@ async function getCoursePriceRange(apiCourseName: string, nivel: string) {
 // Gerar metadata dinâmica (SEO)
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const curso = await getCourseBySlug(slug)
+  let curso = await getCourseBySlug(slug)
+  // Slug curto sem sufixo: tenta resolver para canonical antes de marcar 404
+  if (!curso) {
+    const canonical = await resolveCanonicalCourseSlug(slug)
+    if (canonical) curso = await getCourseBySlug(canonical)
+  }
 
   if (!curso) {
     return {
-      title: 'Curso não encontrado',
+      title: 'Curso não encontrado | Bolsa Click',
+      robots: 'noindex, follow',
+      alternates: { canonical: 'https://www.bolsaclick.com.br/cursos' },
     }
   }
 
@@ -265,6 +272,13 @@ export default async function CursoPage({ params }: Props) {
       educationalLevel: nivelLabel,
       educationalCredentialAwarded: cursoMetadata.type,
       timeToComplete: cursoMetadata.duration,
+      datePublished: cursoMetadata.createdAt instanceof Date
+        ? cursoMetadata.createdAt.toISOString()
+        : new Date(cursoMetadata.createdAt as string | number).toISOString(),
+      dateModified: cursoMetadata.updatedAt instanceof Date
+        ? cursoMetadata.updatedAt.toISOString()
+        : new Date(cursoMetadata.updatedAt as string | number).toISOString(),
+      inLanguage: 'pt-BR',
       url: `https://www.bolsaclick.com.br/cursos/${slug}`,
       image: imageUrl,
       hasCourseInstance: [

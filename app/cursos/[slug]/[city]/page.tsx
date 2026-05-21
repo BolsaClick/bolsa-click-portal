@@ -279,11 +279,24 @@ export default async function CursoCidadePage({ params }: Props) {
     teaches: cursoMetadata.skills?.slice(0, 8) ?? [],
     about: cursoMetadata.areas ?? [],
     occupationalCategory: cursoMetadata.careerPaths?.slice(0, 5) ?? [],
+    datePublished: cursoMetadata.createdAt instanceof Date
+      ? cursoMetadata.createdAt.toISOString()
+      : new Date(cursoMetadata.createdAt as string | number).toISOString(),
+    dateModified: cursoMetadata.updatedAt instanceof Date
+      ? cursoMetadata.updatedAt.toISOString()
+      : new Date(cursoMetadata.updatedAt as string | number).toISOString(),
+    inLanguage: 'pt-BR',
     url: pageUrl,
     image: imageUrl,
     locationCreated: {
       '@type': 'Place',
       address: { '@type': 'PostalAddress', addressLocality: cityData.name, addressRegion: cityData.state, addressCountry: 'BR' },
+    },
+    // Direciona AI crawlers (Google AIO especialmente) para os blocos com
+    // dados quantitativos auto-contidos e FAQ — eleva chance de citação.
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: ['h1', '[data-speakable="city-context"]', '[data-speakable="faq"]'],
     },
   }
 

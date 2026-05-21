@@ -69,8 +69,9 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
               fill
               className="object-cover object-center md:object-top"
               priority={index === 0}
-              loading={index === 0 ? undefined : 'lazy'}
-              sizes="(min-width: 1024px) 100vw, 100vw"
+              fetchPriority={index === 0 ? 'high' : 'auto'}
+              loading={index === 0 ? 'eager' : 'lazy'}
+              sizes="100vw"
               quality={75}
             />
           </div>

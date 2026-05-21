@@ -32,16 +32,18 @@ function cityTier(citySlug: string): 1 | 2 | 3 {
   return 3
 }
 
-// Calcula priority [0.3, 1.0] pra URL /cursos/[slug]/[city] com base em
-// trendScore (0-100) e tier da cidade. URLs prioritárias são ordenadas
-// primeiro no sitemap pra orientar o crawler do Google.
+// Calcula priority [0.3, 0.80] pra URL /cursos/[slug]/[city] com base em
+// trendScore (0-100) e tier da cidade. priority=1.0 fica reservado APENAS
+// pra home; pillar pages (graduacao, pos, cursos, blog) ficam em 0.9-0.95.
+// City pages, mesmo a top performer (tier 1 + trend 100), capam em 0.80
+// pra preservar diferenciação relativa pro crawler do Google e Bing.
 function cityCoursePriority(trendScore: number, citySlug: string): number {
   const tier = cityTier(citySlug)
   const trendNorm = Math.max(0, Math.min(100, trendScore)) / 100   // 0-1
-  // base 0.4 + até 0.4 por trend + bônus por tier
-  const tierBonus = tier === 1 ? 0.2 : tier === 2 ? 0.1 : 0
-  const priority = 0.4 + (trendNorm * 0.4) + tierBonus
-  return Math.round(priority * 100) / 100
+  // base 0.30 + até 0.35 por trend + bônus por tier (max 0.15)
+  const tierBonus = tier === 1 ? 0.15 : tier === 2 ? 0.08 : 0
+  const priority = 0.30 + (trendNorm * 0.35) + tierBonus
+  return Math.round(priority * 100) / 100   // cap natural em 0.80
 }
 
 // Emite no sitemap só se a URL for "vale a pena indexar". Tier 3 (cidade
@@ -135,12 +137,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ])
 
     // /cursos/[slug] — todos os cursos ativos. Priority graduada por trendScore.
-    // Curso top (score 100) = 0.95; médio (score 50) = 0.75; baixo (score 0) = 0.55.
+    // Curso top (score 100) = 0.85; médio (score 50) = 0.675; baixo (score 0) = 0.50.
+    // Cap em 0.85 pra deixar 0.9+ reservado pra pillar pages e 1.0 só pra home.
     coursePages = featuredCourses.map(({ slug, updatedAt, trendScore }) => ({
       url: `${SITE_URL}/cursos/${slug}`,
       lastModified: updatedAt,
       changeFrequency: 'daily' as const,
-      priority: Math.round((0.55 + (trendScore ?? 0) / 100 * 0.4) * 100) / 100,
+      priority: Math.round((0.50 + (trendScore ?? 0) / 100 * 0.35) * 100) / 100,
     }))
 
     // /cursos/[slug]/[city] — cursos com hasCityPages=true × cidades.

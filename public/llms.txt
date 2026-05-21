@@ -11,19 +11,69 @@ Bolsa Click é uma plataforma gratuita que negocia descontos com mais de 30.000 
 3. Estudante se cadastra grátis, garante a bolsa e segue para matrícula direto com a faculdade parceira.
 4. Atendimento humano via WhatsApp em menos de 5 minutos no horário comercial.
 
-## Cursos mais procurados
+## Cursos mais procurados (top 30 por demanda no Google Trends Brasil)
 
-- [Administração](https://www.bolsaclick.com.br/cursos/administracao)
-- [Direito](https://www.bolsaclick.com.br/cursos/direito)
-- [Pedagogia](https://www.bolsaclick.com.br/cursos/pedagogia)
-- [Psicologia](https://www.bolsaclick.com.br/cursos/psicologia)
-- [Enfermagem](https://www.bolsaclick.com.br/cursos/enfermagem)
-- [Análise e Desenvolvimento de Sistemas](https://www.bolsaclick.com.br/cursos/analise-e-desenvolvimento-de-sistemas)
-- [Educação Física](https://www.bolsaclick.com.br/cursos/educacao-fisica)
-- [Ciências Contábeis](https://www.bolsaclick.com.br/cursos/ciencias-contabeis)
-- [Arquitetura e Urbanismo](https://www.bolsaclick.com.br/cursos/arquitetura-e-urbanismo)
-- [Nutrição](https://www.bolsaclick.com.br/cursos/nutricao)
-- [Fisioterapia](https://www.bolsaclick.com.br/cursos/fisioterapia)
+URLs canônicas, ordenadas por volume de busca (refresh semanal automatizado):
+
+### Graduação tradicional
+- [Direito](https://www.bolsaclick.com.br/cursos/direito-bacharelado)
+- [Enfermagem](https://www.bolsaclick.com.br/cursos/enfermagem-bacharelado)
+- [Psicologia](https://www.bolsaclick.com.br/cursos/psicologia-bacharelado)
+- [Pedagogia](https://www.bolsaclick.com.br/cursos/pedagogia-licenciatura)
+- [Administração](https://www.bolsaclick.com.br/cursos/administracao-bacharelado)
+- [Fisioterapia](https://www.bolsaclick.com.br/cursos/fisioterapia-bacharelado)
+- [Biomedicina](https://www.bolsaclick.com.br/cursos/biomedicina-bacharelado)
+- [Fonoaudiologia](https://www.bolsaclick.com.br/cursos/fonoaudiologia-bacharelado)
+- [Ciências Contábeis](https://www.bolsaclick.com.br/cursos/ciencias-contabeis-bacharelado)
+- [Ciência da Computação](https://www.bolsaclick.com.br/cursos/ciencia-da-computacao-bacharelado)
+- [Ciências Econômicas](https://www.bolsaclick.com.br/cursos/ciencias-economicas-bacharelado)
+- [Design](https://www.bolsaclick.com.br/cursos/design-bacharelado)
+- [Filosofia](https://www.bolsaclick.com.br/cursos/filosofia-licenciatura)
+- [Agronomia](https://www.bolsaclick.com.br/cursos/agronomia-bacharelado)
+
+### Tecnólogos de alta demanda
+- [Análise e Desenvolvimento de Sistemas](https://www.bolsaclick.com.br/cursos/analise-e-desenvolvimento-de-sistemas-tecnologo)
+- [Ciência de Dados](https://www.bolsaclick.com.br/cursos/ciencia-de-dados-tecnologo)
+- [Cibersegurança](https://www.bolsaclick.com.br/cursos/ciberseguranca-tecnologo)
+- [DevOps](https://www.bolsaclick.com.br/cursos/devops-tecnologo)
+- [Marketing](https://www.bolsaclick.com.br/cursos/marketing-tecnologo)
+- [Gastronomia](https://www.bolsaclick.com.br/cursos/gastronomia-tecnologo)
+- [Fotografia](https://www.bolsaclick.com.br/cursos/fotografia-tecnologo)
+- [Eventos](https://www.bolsaclick.com.br/cursos/eventos-tecnologo)
+- [Empreendedorismo](https://www.bolsaclick.com.br/cursos/empreendedorismo-tecnologo)
+- [Automação Industrial](https://www.bolsaclick.com.br/cursos/automacao-industrial-tecnologo)
+- [Agronegócios](https://www.bolsaclick.com.br/cursos/agronegocios-tecnologo)
+- [Computação em Nuvem](https://www.bolsaclick.com.br/cursos/computacao-em-nuvem-tecnologo)
+- [Desenvolvimento Web](https://www.bolsaclick.com.br/cursos/desenvolvimento-web-tecnologo)
+- [Desenvolvimento Mobile](https://www.bolsaclick.com.br/cursos/desenvolvimento-mobile-tecnologo)
+- [Arquitetura de Dados](https://www.bolsaclick.com.br/cursos/arquitetura-de-dados-tecnologo)
+- [Design Gráfico](https://www.bolsaclick.com.br/cursos/design-grafico-tecnologo)
+
+### Pós-graduação mais procurada (MBA + Especialização)
+- [MBA em Gestão de Negócios](https://www.bolsaclick.com.br/cursos/mba-gestao-de-negocios)
+- [MBA em Marketing Digital](https://www.bolsaclick.com.br/cursos/mba-marketing-digital)
+- [MBA em Finanças](https://www.bolsaclick.com.br/cursos/mba-financas)
+- [MBA em Gestão de Projetos](https://www.bolsaclick.com.br/cursos/mba-gestao-de-projetos)
+- [MBA em Data Science e Analytics](https://www.bolsaclick.com.br/cursos/mba-data-science-e-analytics)
+- [MBA em IA Aplicada aos Negócios](https://www.bolsaclick.com.br/cursos/mba-inteligencia-artificial-aplicada-aos-negocios)
+- [Especialização em Psicologia Clínica](https://www.bolsaclick.com.br/cursos/especializacao-psicologia-clinica)
+- [Especialização em UTI - Enfermagem](https://www.bolsaclick.com.br/cursos/especializacao-uti-enfermagem)
+- [Especialização em Direito Tributário](https://www.bolsaclick.com.br/cursos/especializacao-direito-tributario)
+- [Especialização em Engenharia de Segurança do Trabalho](https://www.bolsaclick.com.br/cursos/especializacao-engenharia-de-seguranca-do-trabalho)
+
+### Profissionalizantes (alta empregabilidade, 3 a 12 meses)
+- [Eletricista Industrial](https://www.bolsaclick.com.br/cursos/eletricista-industrial-profissionalizante)
+- [Auxiliar de Enfermagem](https://www.bolsaclick.com.br/cursos/auxiliar-de-enfermagem-profissionalizante)
+- [Cuidador de Idosos](https://www.bolsaclick.com.br/cursos/cuidador-de-idosos-profissionalizante)
+- [Mecânico de Automóveis](https://www.bolsaclick.com.br/cursos/mecanico-de-automoveis-profissionalizante)
+- [Operador de Empilhadeira (NR-11)](https://www.bolsaclick.com.br/cursos/operador-de-empilhadeira-profissionalizante)
+- [Soldador](https://www.bolsaclick.com.br/cursos/soldador-profissionalizante)
+- [Auxiliar Administrativo](https://www.bolsaclick.com.br/cursos/auxiliar-administrativo-profissionalizante)
+- [Cabeleireiro](https://www.bolsaclick.com.br/cursos/cabeleireiro-profissionalizante)
+- [Confeitaria](https://www.bolsaclick.com.br/cursos/confeitaria-profissionalizante)
+- [Bartender](https://www.bolsaclick.com.br/cursos/bartender-profissionalizante)
+
+Cobertura total: 177 cursos enriquecidos (117 graduação + 30 pós + 30 profissionalizantes), cada um com page nacional + city pages em até 284 cidades.
 
 ## Por nível de ensino
 

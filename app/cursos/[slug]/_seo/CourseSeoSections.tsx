@@ -117,7 +117,7 @@ interface VisibleFaqProps {
 export function VisibleFaq({ items, heading }: VisibleFaqProps) {
   if (!items || items.length === 0) return null
   return (
-    <section className="bg-paper py-12 md:py-16 border-t border-hairline">
+    <section className="bg-paper py-12 md:py-16 border-t border-hairline" data-speakable="faq">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
           <h2 className="font-display text-3xl md:text-4xl font-semibold text-ink-900 mb-8">

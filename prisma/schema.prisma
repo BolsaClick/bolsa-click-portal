@@ -104,6 +104,20 @@ model Enrollment {
   externalId String? // ID no sistema externo
   paymentId  String? // ID do pagamento
 
+  // Tracking (UTMify / atribuição de marketing)
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmContent  String?
+  utmTerm     String?
+  src         String? // custom UTMify "src"
+  sck         String? // custom UTMify "sck"
+  ipAddress   String?
+
+  // Idempotência dos disparos pra UTMify (evita reenviar no mesmo status)
+  utmifyWaitingSentAt DateTime?
+  utmifyPaidSentAt    DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

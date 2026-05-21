@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { adminAuth } from '@/app/lib/firebase/admin'
+import { sendUtmifyOrder, paymentMethodToUtmify } from '@/app/lib/api/utmify'
+
+function getClientIp(request: NextRequest): string | null {
+  const forwarded = request.headers.get('x-forwarded-for')
+  if (forwarded) return forwarded.split(',')[0].trim()
+  return request.headers.get('x-real-ip') || null
+}
 
 async function verifyToken(request: NextRequest) {
   if (!adminAuth) {
@@ -141,7 +148,17 @@ export async function POST(request: NextRequest) {
       discount,
       externalId,
       paymentId,
+      // Tracking UTMify (capturados no client a partir do localStorage da UTMify)
+      utmSource,
+      utmMedium,
+      utmCampaign,
+      utmContent,
+      utmTerm,
+      src,
+      sck,
     } = body
+
+    const ipAddress = getClientIp(request)
 
     if (!courseId || !courseName || !institutionName) {
       return NextResponse.json(
@@ -170,9 +187,20 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    const trackingFields = {
+      utmSource: utmSource ? String(utmSource) : null,
+      utmMedium: utmMedium ? String(utmMedium) : null,
+      utmCampaign: utmCampaign ? String(utmCampaign) : null,
+      utmContent: utmContent ? String(utmContent) : null,
+      utmTerm: utmTerm ? String(utmTerm) : null,
+      src: src ? String(src) : null,
+      sck: sck ? String(sck) : null,
+      ipAddress,
+    }
+
+    let enrollment
     if (existingEnrollment) {
-      // Atualizar inscrição existente
-      const updatedEnrollment = await prisma.enrollment.update({
+      enrollment = await prisma.enrollment.update({
         where: { id: existingEnrollment.id },
         data: {
           status: 'IN_PROGRESS',
@@ -181,36 +209,43 @@ export async function POST(request: NextRequest) {
           paymentId: paymentId ? String(paymentId) : null,
           enrollmentDate: new Date(),
           updatedAt: new Date(),
+          ...trackingFields,
         },
       })
-
-      return NextResponse.json({
-        enrollment: updatedEnrollment,
-        message: 'Enrollment updated',
+    } else {
+      enrollment = await prisma.enrollment.create({
+        data: {
+          userId: user.id,
+          courseId,
+          courseName,
+          institutionName,
+          modalidade: modalidade || 'EAD',
+          turno: turno || 'VIRTUAL',
+          originalPrice: originalPrice ? parseFloat(String(originalPrice)) : null,
+          finalPrice: finalPrice ? parseFloat(String(finalPrice)) : null,
+          discount: discount ? parseFloat(String(discount)) : null,
+          status: 'IN_PROGRESS',
+          paymentStatus: paymentId ? 'PROCESSING' : 'PENDING',
+          externalId: externalId ? String(externalId) : null,
+          paymentId: paymentId ? String(paymentId) : null,
+          enrollmentDate: new Date(),
+          ...trackingFields,
+        },
       })
     }
 
-    // Criar nova inscrição
-    const enrollment = await prisma.enrollment.create({
-      data: {
-        userId: user.id,
-        courseId,
-        courseName,
-        institutionName,
-        modalidade: modalidade || 'EAD',
-        turno: turno || 'VIRTUAL',
-        originalPrice: originalPrice ? parseFloat(String(originalPrice)) : null,
-        finalPrice: finalPrice ? parseFloat(String(finalPrice)) : null,
-        discount: discount ? parseFloat(String(discount)) : null,
-        status: 'IN_PROGRESS',
-        paymentStatus: paymentId ? 'PROCESSING' : 'PENDING',
-        externalId: externalId ? String(externalId) : null,
-        paymentId: paymentId ? String(paymentId) : null,
-        enrollmentDate: new Date(),
-      },
-    })
+    // UTMify webhook (fire-and-forget — não bloqueia a resposta da API).
+    // Matrícula sem paymentId = inscrição gratuita do ponto de vista UTMify
+    // (sem cobrança no nosso checkout — Cogna cobra mensalidades depois).
+    // Status: waiting_payment se houver pagamento em aberto, paid se gratuita.
+    const hasPayment = Boolean(paymentId)
+    const utmifyStatus: 'waiting_payment' | 'paid' = hasPayment ? 'waiting_payment' : 'paid'
+    void dispatchUtmifyForEnrollment(enrollment, user, utmifyStatus, hasPayment ? 'pix' : 'free_price')
 
-    return NextResponse.json({ enrollment }, { status: 201 })
+    return NextResponse.json(
+      { enrollment, message: existingEnrollment ? 'Enrollment updated' : undefined },
+      { status: existingEnrollment ? 200 : 201 }
+    )
   } catch (error) {
     console.error('Error creating enrollment:', error)
     return NextResponse.json(
@@ -280,6 +315,16 @@ export async function PATCH(request: NextRequest) {
       },
     })
 
+    // Transição PENDING/PROCESSING → PAID dispara o evento "paid" pra UTMify.
+    // Idempotente: utmifyPaidSentAt evita reenvio.
+    if (
+      paymentStatus === 'PAID' &&
+      enrollment.paymentStatus !== 'PAID' &&
+      !enrollment.utmifyPaidSentAt
+    ) {
+      void dispatchUtmifyForEnrollment(updatedEnrollment, user, 'paid', 'pix')
+    }
+
     return NextResponse.json({ enrollment: updatedEnrollment })
   } catch (error) {
     console.error('Error updating enrollment:', error)
@@ -287,5 +332,100 @@ export async function PATCH(request: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     )
+  }
+}
+
+// Helper de disparo do webhook UTMify, com persistência dos timestamps de envio
+// (utmifyWaitingSentAt / utmifyPaidSentAt) pra garantir idempotência.
+type EnrollmentForUtmify = {
+  id: string
+  courseId: string
+  courseName: string
+  institutionName: string
+  originalPrice: number | null
+  finalPrice: number | null
+  createdAt: Date
+  utmSource: string | null
+  utmMedium: string | null
+  utmCampaign: string | null
+  utmContent: string | null
+  utmTerm: string | null
+  src: string | null
+  sck: string | null
+  ipAddress: string | null
+  utmifyWaitingSentAt: Date | null
+  utmifyPaidSentAt: Date | null
+}
+
+type UserForUtmify = {
+  name: string | null
+  email: string
+  phone: string | null
+  cpf: string | null
+}
+
+async function dispatchUtmifyForEnrollment(
+  enrollment: EnrollmentForUtmify,
+  user: UserForUtmify,
+  status: 'waiting_payment' | 'paid',
+  paymentMethod: string
+): Promise<void> {
+  try {
+    if (!user.cpf) return // UTMify exige document — sem CPF não dá pra enviar
+
+    // Idempotência: já enviamos esse status pra esse enrollment? skip.
+    if (status === 'waiting_payment' && enrollment.utmifyWaitingSentAt) return
+    if (status === 'paid' && enrollment.utmifyPaidSentAt) return
+
+    // Preço em centavos (UTMify trabalha em centavos). Free price = 0.
+    const priceFloat = enrollment.finalPrice ?? enrollment.originalPrice ?? 0
+    const priceInCents = Math.round(priceFloat * 100)
+
+    const ok = await sendUtmifyOrder({
+      orderId: enrollment.id,
+      paymentMethod: paymentMethodToUtmify(paymentMethod),
+      status,
+      createdAt: enrollment.createdAt,
+      approvedDate: status === 'paid' ? new Date() : null,
+      customer: {
+        name: user.name || '',
+        email: user.email,
+        phone: user.phone,
+        document: user.cpf,
+        ip: enrollment.ipAddress,
+      },
+      products: [
+        {
+          id: enrollment.courseId,
+          name: `${enrollment.courseName} — ${enrollment.institutionName}`,
+          quantity: 1,
+          priceInCents,
+        },
+      ],
+      trackingParameters: {
+        src: enrollment.src,
+        sck: enrollment.sck,
+        utm_source: enrollment.utmSource,
+        utm_campaign: enrollment.utmCampaign,
+        utm_medium: enrollment.utmMedium,
+        utm_content: enrollment.utmContent,
+        utm_term: enrollment.utmTerm,
+      },
+      commission: {
+        totalPriceInCents: priceInCents,
+      },
+    })
+
+    if (ok) {
+      await prisma.enrollment.update({
+        where: { id: enrollment.id },
+        data:
+          status === 'paid'
+            ? { utmifyPaidSentAt: new Date() }
+            : { utmifyWaitingSentAt: new Date() },
+      })
+    }
+  } catch (error) {
+    console.error('Erro ao despachar UTMify:', error)
   }
 }

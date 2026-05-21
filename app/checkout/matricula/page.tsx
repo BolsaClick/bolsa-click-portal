@@ -42,6 +42,7 @@ import type { PosPaymentMethod, PosInstallment } from '@/app/lib/api/get-offer-d
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { trackFbq } from '@/app/lib/analytics/fbq'
 import { trackTikTok, trackTikTokDual } from '@/app/lib/analytics/ttq'
+import { readUtmifyParams } from '@/app/lib/analytics/utmify-client'
 import { formatPhone } from '@/utils/formatters'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { Loader2 } from 'lucide-react'
@@ -815,6 +816,7 @@ const isFormValidForPayment =
                 unitId: offerDetails.unitId,
                 unitCity: offerDetails.unitCity,
                 unitState: offerDetails.unitState,
+                ...readUtmifyParams(),
               }),
             })
             console.log('✅ Inscrição salva no banco de dados')

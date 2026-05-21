@@ -13,6 +13,7 @@ import {
   buildCityFaqItems,
 } from '../_seo/CourseSeoSections'
 import CursoCidadeClient from './CursoCidadeClient'
+import CityContextBlock from './_seo/CityContextBlock'
 
 type Props = {
   params: Promise<{ slug: string; city: string }>
@@ -210,6 +211,11 @@ export default async function CursoCidadePage({ params }: Props) {
     cursoMetadata.nivel,
   )
 
+  // Mesma lógica de indexação inteligente do generateMetadata. Repete aqui
+  // porque o Schema Course/FAQ não deve ser emitido em URLs noindex.
+  const trendScore = cursoMetadata.trendScore ?? 0
+  const shouldIndex = !fromFallback || trendScore >= 50
+
   // Outras cidades para internal linking (exclui a cidade atual)
   const otherCities = BRAZILIAN_CITIES
     .filter(c => c.slug !== citySlug)
@@ -242,30 +248,51 @@ export default async function CursoCidadePage({ params }: Props) {
     ],
   }
 
-  // Quando caímos no fallback nacional, não emitir Course/FAQPage com claims
-  // específicos da cidade (seria informação enganosa). Mantemos só o breadcrumb.
-  const jsonLdSchemas = fromFallback
+  // Schema base — sempre emitido quando indexável.
+  // Quando caímos no fallback nacional E não vale indexar (shouldIndex=false),
+  // só emite Breadcrumb. Caso shouldIndex=true (trendScore alto), emite
+  // Course evergreen sem claims específicas de preço local.
+  const placeSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'City',
+    name: cityData.name,
+    containedInPlace: {
+      '@type': 'AdministrativeArea',
+      name: cityData.state,
+      containedInPlace: { '@type': 'Country', name: 'Brasil' },
+    },
+  }
+
+  const baseCourseSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Course',
+    name: cursoMetadata.fullName,
+    description: `${cursoMetadata.longDescription} Disponível em ${cityData.name}-${cityData.state} com bolsa de estudo.`,
+    provider: {
+      '@type': 'Organization',
+      name: 'Bolsa Click',
+      url: 'https://www.bolsaclick.com.br',
+    },
+    educationalLevel: nivelLabel,
+    courseMode: ['Presencial', 'EAD', 'Semipresencial'],
+    timeRequired: `P${parseInt(cursoMetadata.duration, 10) || 4}Y`,
+    teaches: cursoMetadata.skills?.slice(0, 8) ?? [],
+    about: cursoMetadata.areas ?? [],
+    occupationalCategory: cursoMetadata.careerPaths?.slice(0, 5) ?? [],
+    url: pageUrl,
+    image: imageUrl,
+    locationCreated: {
+      '@type': 'Place',
+      address: { '@type': 'PostalAddress', addressLocality: cityData.name, addressRegion: cityData.state, addressCountry: 'BR' },
+    },
+  }
+
+  const jsonLdSchemas = !shouldIndex
     ? [breadcrumbSchema]
     : [
         {
-          '@context': 'https://schema.org',
-          '@type': 'Course',
-          name: cursoMetadata.fullName,
-          description: `${cursoMetadata.longDescription} Disponível em ${cityData.name}-${cityData.state} com bolsa de estudo.`,
-          provider: {
-            '@type': 'Organization',
-            name: 'Bolsa Click',
-            url: 'https://www.bolsaclick.com.br',
-          },
-          educationalLevel: nivelLabel,
-          courseMode: ['Presencial', 'EAD', 'Semipresencial'],
-          url: pageUrl,
-          image: imageUrl,
-          locationCreated: {
-            '@type': 'Place',
-            address: { '@type': 'PostalAddress', addressLocality: cityData.name, addressRegion: cityData.state, addressCountry: 'BR' },
-          },
-          ...(lowPrice > 0 && {
+          ...baseCourseSchema,
+          ...(lowPrice > 0 && !fromFallback && {
             offers: {
               '@type': 'AggregateOffer',
               priceCurrency: 'BRL',
@@ -303,9 +330,26 @@ export default async function CursoCidadePage({ params }: Props) {
                 text: `Temos diversas faculdades parceiras que oferecem ${cursoMetadata.name} em ${cityData.name} e região. Compare preços e encontre a melhor bolsa.`,
               },
             },
+            {
+              '@type': 'Question',
+              name: `${cursoMetadata.name} em ${cityData.name} tem opção EAD?`,
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: `Sim. As faculdades parceiras do Bolsa Click oferecem ${cursoMetadata.name} em ${cityData.name} nas modalidades presencial, semipresencial e EAD (a distância), com diploma reconhecido pelo MEC.`,
+              },
+            },
+            {
+              '@type': 'Question',
+              name: `Quanto tempo dura ${cursoMetadata.name}?`,
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: `${cursoMetadata.fullName} tem duração de ${cursoMetadata.duration}, conforme as Diretrizes Curriculares Nacionais do MEC.`,
+              },
+            },
           ],
         },
         breadcrumbSchema,
+        placeSchema,
       ]
 
   const faqItems = buildCityFaqItems(cursoMetadata, cityData.name, cityData.state, lowPrice)
@@ -330,6 +374,12 @@ export default async function CursoCidadePage({ params }: Props) {
           courseName={`${cursoMetadata.name} em ${cityData.name}`}
         />
       )}
+      <CityContextBlock
+        curso={cursoMetadata}
+        cityName={cityData.name}
+        cityState={cityData.state}
+        offerCount={fromFallback ? 0 : (courseOffers?.length || 0)}
+      />
       <VisibleFaq
         items={faqItems}
         heading={`Perguntas frequentes sobre ${cursoMetadata.name} em ${cityData.name}`}

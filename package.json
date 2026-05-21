@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "bolsaclick": "env-cmd -f .env.bolsaclick next dev",
-    "anhanguera": "env-cmd -f .env.anhanguera next dev"
+    "anhanguera": "env-cmd -f .env.anhanguera next dev",
+    "seed:institutions": "tsx prisma/seed-institutions.ts"
   },
   "prisma": {
     "seed": "tsx scripts/seed.ts"

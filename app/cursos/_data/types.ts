@@ -24,6 +24,10 @@ export interface FeaturedCourseData {
   hasCityPages?: boolean
   enrichedAt?: Date | null
   enrichmentNote?: string | null
+  /** Score 0-100 do Google Trends (volume de busca relativo). Usado para
+   *  priorizar sitemap e decidir indexação de city pages sem oferta local. */
+  trendScore?: number
+  trendScoreFetched?: Date | null
   createdAt: Date
   updatedAt: Date
 }

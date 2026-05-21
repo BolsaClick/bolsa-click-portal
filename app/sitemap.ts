@@ -16,6 +16,43 @@ const FALLBACK_COURSE_SLUGS = [
   'engenharia-de-producao', 'gestao-comercial',
 ]
 
+// Ranking das cidades por relevância (índice 0-283).
+// Top 27 = capitais + grandes municípios. Cidades < 100 são consideradas
+// "tier 1" e ganham boost de priority. Cidades > 200 viram tier 3 (priority
+// menor) — mantemos no sitemap só se o curso for de alta demanda (trendScore >= 70).
+const CITY_TIER_1_CUTOFF = 60   // top 60 cidades: capital + região metropolitana
+const CITY_TIER_2_CUTOFF = 160  // top 160: cidades médias
+
+const cityRankBySlug = new Map(BRAZILIAN_CITIES.map((c, idx) => [c.slug, idx]))
+
+function cityTier(citySlug: string): 1 | 2 | 3 {
+  const rank = cityRankBySlug.get(citySlug) ?? 999
+  if (rank < CITY_TIER_1_CUTOFF) return 1
+  if (rank < CITY_TIER_2_CUTOFF) return 2
+  return 3
+}
+
+// Calcula priority [0.3, 1.0] pra URL /cursos/[slug]/[city] com base em
+// trendScore (0-100) e tier da cidade. URLs prioritárias são ordenadas
+// primeiro no sitemap pra orientar o crawler do Google.
+function cityCoursePriority(trendScore: number, citySlug: string): number {
+  const tier = cityTier(citySlug)
+  const trendNorm = Math.max(0, Math.min(100, trendScore)) / 100   // 0-1
+  // base 0.4 + até 0.4 por trend + bônus por tier
+  const tierBonus = tier === 1 ? 0.2 : tier === 2 ? 0.1 : 0
+  const priority = 0.4 + (trendNorm * 0.4) + tierBonus
+  return Math.round(priority * 100) / 100
+}
+
+// Emite no sitemap só se a URL for "vale a pena indexar". Tier 3 (cidade
+// long tail) só entra pra cursos com alta demanda real.
+function shouldEmitCityUrl(trendScore: number, citySlug: string): boolean {
+  const tier = cityTier(citySlug)
+  if (tier === 1) return true
+  if (tier === 2) return trendScore >= 30
+  return trendScore >= 60
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
 
@@ -92,38 +129,46 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }),
       prisma.featuredCourse.findMany({
         where: { isActive: true },
-        select: { slug: true, updatedAt: true, hasCityPages: true },
+        select: { slug: true, updatedAt: true, hasCityPages: true, trendScore: true },
+        orderBy: { trendScore: 'desc' },
       }),
     ])
 
-    // /cursos/[slug] — todos os cursos ativos
-    coursePages = featuredCourses.map(({ slug, updatedAt }) => ({
+    // /cursos/[slug] — todos os cursos ativos. Priority graduada por trendScore.
+    // Curso top (score 100) = 0.95; médio (score 50) = 0.75; baixo (score 0) = 0.55.
+    coursePages = featuredCourses.map(({ slug, updatedAt, trendScore }) => ({
       url: `${SITE_URL}/cursos/${slug}`,
       lastModified: updatedAt,
       changeFrequency: 'daily' as const,
-      priority: 0.9,
+      priority: Math.round((0.55 + (trendScore ?? 0) / 100 * 0.4) * 100) / 100,
     }))
 
-    // /cursos/[slug]/[city] — só cursos com hasCityPages=true × cidades brasileiras.
-    // A rota emite noindex+canonical quando Tartarus não devolve oferta local
-    // (app/cursos/[slug]/[city]/page.tsx), então listar tudo é seguro contra
-    // Helpful Content.
+    // /cursos/[slug]/[city] — cursos com hasCityPages=true × cidades.
+    // Filtro de tier: cidades tier 1 (top 60) entram sempre; tier 2 só com
+    // trendScore >= 30; tier 3 só com trendScore >= 60. Reduz volume de
+    // ~33k → ~12k URLs, focando crawl budget no que rankeia.
+    // A rota emite noindex+canonical quando Tartarus não devolve oferta local.
     const cityEligible = featuredCourses.filter((c) => c.hasCityPages)
-    courseCityPages = cityEligible.flatMap(({ slug, updatedAt }) =>
-      BRAZILIAN_CITIES.map((city) => ({
-        url: `${SITE_URL}/cursos/${slug}/${city.slug}`,
-        lastModified: updatedAt,
-        changeFrequency: 'weekly' as const,
-        priority: 0.7,
-      })),
-    )
+    courseCityPages = cityEligible
+      .flatMap(({ slug, updatedAt, trendScore }) =>
+        BRAZILIAN_CITIES
+          .filter((city) => shouldEmitCityUrl(trendScore ?? 0, city.slug))
+          .map((city) => ({
+            url: `${SITE_URL}/cursos/${slug}/${city.slug}`,
+            lastModified: updatedAt,
+            changeFrequency: 'weekly' as const,
+            priority: cityCoursePriority(trendScore ?? 0, city.slug),
+          })),
+      )
+      // Ordena por priority desc — Google honra primeiras URLs do sitemap
+      .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0))
 
     // /teste-vocacional/[slug] — uma página long-tail por curso ativo
-    testeVocacionalCursoPages = featuredCourses.map(({ slug, updatedAt }) => ({
+    testeVocacionalCursoPages = featuredCourses.map(({ slug, updatedAt, trendScore }) => ({
       url: `${SITE_URL}/teste-vocacional/${slug}`,
       lastModified: updatedAt,
       changeFrequency: 'monthly' as const,
-      priority: 0.8,
+      priority: Math.round((0.55 + (trendScore ?? 0) / 100 * 0.3) * 100) / 100,
     }))
 
     dynamicPages = [

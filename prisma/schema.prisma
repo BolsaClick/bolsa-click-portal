@@ -404,6 +404,13 @@ model FeaturedCourse {
   enrichedAt     DateTime?
   enrichmentNote String?   @db.Text
 
+  // Score 0-100 do Google Trends (volume de busca relativo no Brasil).
+  // Usado para priorizar sitemap, decidir indexação de city pages sem oferta
+  // local e ordenar grids de cursos relacionados. Atualizado via
+  // scripts/refresh-course-trends.ts (cron semanal recomendado).
+  trendScore        Int       @default(0)
+  trendScoreFetched DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -411,6 +418,7 @@ model FeaturedCourse {
   @@index([isActive])
   @@index([order])
   @@index([hasCityPages])
+  @@index([trendScore])
 }
 
 enum CourseType {

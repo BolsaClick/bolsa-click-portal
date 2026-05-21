@@ -119,6 +119,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const pageUrl = `https://www.bolsaclick.com.br/cursos/${slug}/${citySlug}`
   const nationalUrl = `https://www.bolsaclick.com.br/cursos/${slug}`
 
+  // Indexação inteligente: cidade sem oferta local mas com alta demanda real
+  // (Google Trends) AINDA vale ser indexada — conteúdo do curso + breadcrumb +
+  // FAQ atende a busca informacional. Só protegemos contra thin content quando
+  // não há oferta E demanda é baixa.
+  const trendScore = curso.trendScore ?? 0
+  const shouldIndex = !fromFallback || trendScore >= 50
+  const canonical = shouldIndex ? pageUrl : nationalUrl
+
   const imageUrl = curso.imageUrl.startsWith('http')
     ? curso.imageUrl
     : `https://www.bolsaclick.com.br${curso.imageUrl}`
@@ -139,11 +147,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       `bolsa de estudo ${cityData.name}`,
       'bolsa click',
     ],
-    // Quando não há estoque local e caímos no fallback nacional, marcar
-    // noindex + canonical pra página nacional pra evitar thin/duplicate content.
-    robots: fromFallback ? 'noindex, follow' : 'index, follow',
+    // Indexação inteligente:
+    //  - tem oferta local → index sempre
+    //  - sem oferta local + curso com alta demanda (trendScore ≥ 50) → index
+    //    (vale rankear pela busca; canonical próprio)
+    //  - sem oferta local + baixa demanda → noindex,follow + canonical para nacional
+    robots: shouldIndex ? 'index, follow' : 'noindex, follow',
     alternates: {
-      canonical: fromFallback ? nationalUrl : pageUrl,
+      canonical,
     },
     openGraph: {
       title,
@@ -178,7 +189,7 @@ export default async function CursoCidadePage({ params }: Props) {
   // Slug curto (ex: "direito") sem sufixo: tenta resolver pra canonical
   // ("direito-bacharelado") e faz redirect 301 pra preservar URL canônica.
   // Mantém retrocompatibilidade com sitemap antigo + links indexados.
-  let cursoMetadata = await getCourseBySlug(slug)
+  const cursoMetadata = await getCourseBySlug(slug)
   if (!cursoMetadata) {
     const canonicalSlug = await resolveCanonicalCourseSlug(slug)
     if (canonicalSlug) {

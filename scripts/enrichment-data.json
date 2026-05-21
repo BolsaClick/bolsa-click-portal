@@ -5443,5 +5443,2825 @@
       "curso superior de marketing",
       "marketing digital faculdade"
     ]
+  },
+  {
+    "slug": "mba-gestao-de-negocios",
+    "apiCourseName": "MBA em Gestão de Negócios",
+    "name": "Gestão de Negócios",
+    "fullName": "Gestão de Negócios - MBA",
+    "type": "MBA",
+    "nivel": "POS_GRADUACAO",
+    "description": "MBA em Gestão de Negócios EAD com foco em estratégia, finanças e liderança para profissionais que buscam cargos de gerência e diretoria.",
+    "longDescription": "O MBA em Gestão de Negócios é uma das pós-graduações mais procuradas por profissionais que já atuam no mercado e querem dar o salto para posições de gerência, diretoria ou empreender com base sólida. O programa cobre estratégia corporativa, finanças empresariais, marketing, gestão de pessoas, operações e tomada de decisão baseada em dados, formando um repertório completo para liderar áreas inteiras ou unidades de negócio. A grade é estruturada para profissionais com experiência, com estudos de caso reais de empresas brasileiras e internacionais. Na modalidade EAD, o aluno organiza os estudos conforme a rotina, com aulas gravadas, lives com professores convidados do mercado e atividades aplicadas ao próprio contexto profissional, o que costuma acelerar o retorno do investimento. O perfil do egresso é o de um gestor generalista, capaz de transitar entre áreas e dialogar com finanças, marketing, RH e operações de forma integrada. Empresas brasileiras valorizam fortemente o MBA na composição salarial e nos processos de promoção a cargos de gestão, especialmente quando combinado com experiência consolidada. Reconhecido pelo MEC quando ofertado por instituição credenciada, o título tem boa aceitação em processos seletivos internos e em concursos que exigem pós lato sensu.",
+    "duration": "18 meses",
+    "areas": [
+      "Estratégia Corporativa",
+      "Finanças Empresariais",
+      "Marketing",
+      "Gestão de Pessoas",
+      "Operações",
+      "Inovação"
+    ],
+    "skills": [
+      "Visão estratégica",
+      "Análise financeira",
+      "Liderança",
+      "Tomada de decisão",
+      "Gestão de equipes",
+      "Negociação"
+    ],
+    "careerPaths": [
+      "Gerente Geral",
+      "Diretor de Operações",
+      "Head de Unidade",
+      "Consultor de Negócios",
+      "Empreendedor",
+      "Country Manager"
+    ],
+    "averageSalary": "R$ 9.000 a R$ 28.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "mba gestão de negócios ead",
+      "pós-graduação gestão empresarial",
+      "mba executivo a distância",
+      "mba negócios anhanguera",
+      "mba gestão online",
+      "melhor mba para gestor",
+      "mba reconhecido mec",
+      "bolsa mba gestão de negócios"
+    ]
+  },
+  {
+    "slug": "mba-gestao-de-projetos",
+    "apiCourseName": "MBA em Gestão de Projetos",
+    "name": "Gestão de Projetos",
+    "fullName": "Gestão de Projetos - MBA",
+    "type": "MBA",
+    "nivel": "POS_GRADUACAO",
+    "description": "MBA em Gestão de Projetos alinhado ao PMBOK e a métodos ágeis, preparando o profissional para certificações como PMP e Scrum e atuação em PMOs.",
+    "longDescription": "O MBA em Gestão de Projetos é voltado para profissionais que conduzem entregas complexas em empresas privadas, órgãos públicos ou consultorias e precisam dominar tanto o modelo tradicional preditivo, baseado em referências como o PMBOK do PMI, quanto frameworks ágeis como Scrum, Kanban e SAFe. A grade aborda o ciclo completo de um projeto, da concepção e business case ao planejamento de escopo, cronograma, custos, riscos, qualidade, aquisições e stakeholders, com forte ênfase em ferramentas práticas, indicadores e governança em PMOs. Em ambiente EAD, o aluno aplica o conteúdo em projetos reais do próprio trabalho, o que acelera o ROI e reduz a curva de adoção de boas práticas. O programa também prepara o profissional para exames como PMP, CAPM e PSM, reconhecidos internacionalmente e que costumam destravar promoções e mudanças de empresa. A demanda por gestores de projetos no Brasil é estrutural em TI, engenharia, infraestrutura, saúde, varejo e setor público, e o título de MBA reconhecido pelo MEC funciona como diferencial em processos seletivos e progressão de carreira em organizações que adotam matriz por projetos.",
+    "duration": "18 meses",
+    "areas": [
+      "PMBOK e PMI",
+      "Métodos Ágeis",
+      "Gestão de Riscos",
+      "PMO",
+      "Liderança de Equipes",
+      "Indicadores de Performance"
+    ],
+    "skills": [
+      "Planejamento de projetos",
+      "Gestão de stakeholders",
+      "Análise de riscos",
+      "Liderança ágil",
+      "Gestão de cronogramas",
+      "Negociação"
+    ],
+    "careerPaths": [
+      "Gerente de Projetos",
+      "Scrum Master",
+      "Product Owner",
+      "PMO",
+      "Coordenador de Programas",
+      "Consultor PMO"
+    ],
+    "averageSalary": "R$ 8.000 a R$ 22.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "mba gestão de projetos ead",
+      "pós-graduação pmbok scrum",
+      "mba pmp preparatório",
+      "mba gestão projetos anhanguera",
+      "mba ágil online",
+      "pós gestão projetos a distância",
+      "mba projetos mec",
+      "bolsa mba gestão de projetos"
+    ]
+  },
+  {
+    "slug": "mba-marketing-digital",
+    "apiCourseName": "MBA em Marketing Digital",
+    "name": "Marketing Digital",
+    "fullName": "Marketing Digital - MBA",
+    "type": "MBA",
+    "nivel": "POS_GRADUACAO",
+    "description": "MBA em Marketing Digital com performance, SEO, mídia paga, CRM e branding para profissionais que querem liderar áreas de marketing e growth.",
+    "longDescription": "O MBA em Marketing Digital forma profissionais capazes de planejar e executar estratégias completas de aquisição, engajamento e retenção de clientes em ambiente online. A grade combina branding e posicionamento com disciplinas práticas de SEO, mídia paga em Google Ads e Meta Ads, e-mail marketing, automação, CRM, social commerce, marketing de conteúdo e analytics, com forte ênfase em métricas como CAC, LTV, ROAS e funil de conversão. O aluno aprende a desenhar planos integrados, escolher canais conforme o estágio do funil e ler dados em ferramentas como Google Analytics, Looker Studio e plataformas de automação. Em formato EAD de 12 meses, o curso é especialmente atrativo para profissionais que já atuam em agências, marcas, startups ou e-commerces e querem assumir posições de coordenação, gerência ou CMO. O mercado brasileiro de marketing digital cresce em ritmo acelerado, com investimento publicitário migrando do off-line para o online, o que sustenta uma demanda consistente por profissionais com visão estratégica e domínio das principais plataformas. Reconhecido pelo MEC quando ofertado por instituição credenciada, o título reforça o perfil sênior do candidato em processos seletivos.",
+    "duration": "12 meses",
+    "areas": [
+      "SEO e Inbound",
+      "Mídia Paga",
+      "Branding",
+      "Analytics",
+      "CRM e Automação",
+      "E-commerce"
+    ],
+    "skills": [
+      "Planejamento estratégico",
+      "Análise de métricas",
+      "Gestão de campanhas",
+      "Copywriting",
+      "Otimização de funil",
+      "Tomada de decisão data-driven"
+    ],
+    "careerPaths": [
+      "Gerente de Marketing",
+      "Head de Growth",
+      "Coordenador Digital",
+      "CMO",
+      "Consultor de Marketing",
+      "Especialista em Performance"
+    ],
+    "averageSalary": "R$ 7.000 a R$ 22.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "mba marketing digital ead",
+      "pós marketing digital online",
+      "mba performance ads",
+      "mba growth marketing",
+      "mba marketing digital anhanguera",
+      "pós digital reconhecida mec",
+      "mba seo e mídia paga",
+      "bolsa mba marketing digital"
+    ]
+  },
+  {
+    "slug": "mba-financas",
+    "apiCourseName": "MBA em Finanças",
+    "name": "Finanças",
+    "fullName": "Finanças - MBA",
+    "type": "MBA",
+    "nivel": "POS_GRADUACAO",
+    "description": "MBA em Finanças com foco em valuation, mercado de capitais, controladoria e gestão financeira para cargos de CFO, controller e analista sênior.",
+    "longDescription": "O MBA em Finanças é uma das pós-graduações com maior retorno salarial no Brasil e prepara o profissional para assumir posições estratégicas em controladoria, planejamento financeiro, tesouraria, mercado de capitais e gestão de riscos. A grade aborda contabilidade gerencial, matemática financeira aplicada, análise de demonstrações, valuation por fluxo de caixa descontado e múltiplos, estrutura de capital, finanças corporativas, derivativos e fundamentos de investimentos, além de tópicos de ESG e governança que se tornaram critério em empresas listadas. O aluno desenvolve a leitura crítica de balanços, modelagem em planilhas e domínio dos principais indicadores que sustentam decisões de investimento, fusões, aquisições e expansão. Em modalidade EAD, o conteúdo é distribuído ao longo de 18 meses com estudos de caso de empresas brasileiras, simulações e atividades aplicadas ao contexto do aluno. O programa serve tanto a profissionais de contabilidade, administração e economia que buscam evoluir para cargos de CFO e controller quanto a quem deseja migrar para áreas de banking, asset management ou private equity, em complemento a certificações como CPA, CGA, CNPI e CFA. Reconhecido pelo MEC quando ofertado por instituição credenciada.",
+    "duration": "18 meses",
+    "areas": [
+      "Finanças Corporativas",
+      "Valuation",
+      "Controladoria",
+      "Mercado de Capitais",
+      "Gestão de Riscos",
+      "Planejamento Financeiro"
+    ],
+    "skills": [
+      "Análise de balanços",
+      "Modelagem financeira",
+      "Avaliação de empresas",
+      "Gestão de fluxo de caixa",
+      "Análise de investimentos",
+      "Visão estratégica"
+    ],
+    "careerPaths": [
+      "CFO",
+      "Controller",
+      "Analista Financeiro Sênior",
+      "Gerente Financeiro",
+      "Analista de Investimentos",
+      "Consultor Financeiro"
+    ],
+    "averageSalary": "R$ 8.000 a R$ 30.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "mba finanças ead",
+      "pós-graduação finanças corporativas",
+      "mba valuation e investimentos",
+      "mba controladoria financeira",
+      "mba finanças anhanguera",
+      "pós finanças reconhecida mec",
+      "mba finanças preparatório cfa",
+      "bolsa mba finanças"
+    ]
+  },
+  {
+    "slug": "mba-recursos-humanos",
+    "apiCourseName": "MBA em Recursos Humanos",
+    "name": "Recursos Humanos",
+    "fullName": "Recursos Humanos - MBA",
+    "type": "MBA",
+    "nivel": "POS_GRADUACAO",
+    "description": "MBA em Recursos Humanos estratégico, com gestão por competências, people analytics, cultura e R&S para liderar áreas de RH e business partner.",
+    "longDescription": "O MBA em Recursos Humanos forma profissionais para atuar de forma estratégica na gestão de pessoas, indo além das rotinas operacionais de departamento pessoal para conectar talentos aos resultados do negócio. A grade aborda recrutamento e seleção por competências, treinamento e desenvolvimento, gestão de desempenho, cargos e salários, remuneração estratégica, employer branding, cultura organizacional, diversidade e inclusão, além de people analytics e indicadores de RH como turnover, ENPS e custo por contratação. O aluno é preparado para atuar como business partner, traduzindo objetivos estratégicos da empresa em planos de pessoas, e para responder a temas críticos da agenda atual, como saúde mental, modelos híbridos de trabalho e legislação trabalhista. No formato EAD de 18 meses, o curso oferece flexibilidade para profissionais que já atuam em RH, DP, consultorias e áreas correlatas e querem evoluir para coordenação, gerência ou diretoria. O mercado brasileiro tem demanda consistente por gestores de RH com visão estratégica, especialmente em empresas em crescimento, multinacionais e organizações que passam por transformação cultural. O título de MBA reconhecido pelo MEC reforça o perfil sênior do candidato em processos seletivos internos e externos.",
+    "duration": "18 meses",
+    "areas": [
+      "Gestão Estratégica de Pessoas",
+      "Recrutamento e Seleção",
+      "Cultura Organizacional",
+      "People Analytics",
+      "Remuneração",
+      "Desenvolvimento de Talentos"
+    ],
+    "skills": [
+      "Gestão por competências",
+      "Análise de indicadores de RH",
+      "Liderança",
+      "Comunicação interpessoal",
+      "Mediação de conflitos",
+      "Visão estratégica"
+    ],
+    "careerPaths": [
+      "Gerente de RH",
+      "Business Partner",
+      "Coordenador de Talentos",
+      "Head de People",
+      "Consultor de RH",
+      "Diretor de Pessoas"
+    ],
+    "averageSalary": "R$ 7.000 a R$ 22.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "mba recursos humanos ead",
+      "pós gestão de pessoas online",
+      "mba rh estratégico",
+      "mba business partner",
+      "mba rh anhanguera",
+      "pós rh reconhecida mec",
+      "mba people analytics",
+      "bolsa mba recursos humanos"
+    ]
+  },
+  {
+    "slug": "mba-logistica-e-supply-chain",
+    "apiCourseName": "MBA em Logística e Supply Chain",
+    "name": "Logística e Supply Chain",
+    "fullName": "Logística e Supply Chain - MBA",
+    "type": "MBA",
+    "nivel": "POS_GRADUACAO",
+    "description": "MBA em Logística e Supply Chain com gestão de estoques, transporte, S&OP e digitalização da cadeia para indústria, varejo e operadores logísticos.",
+    "longDescription": "O MBA em Logística e Supply Chain prepara profissionais para coordenar cadeias de suprimentos cada vez mais complexas, globais e digitalizadas, com foco em redução de custos, nível de serviço e sustentabilidade. A grade cobre planejamento estratégico de operações, gestão de estoques, armazenagem, transporte multimodal, distribuição, S&OP, compras estratégicas, contratos com fornecedores, last mile, indicadores logísticos e uso de tecnologias como WMS, TMS, RFID e analytics aplicado à cadeia. O aluno desenvolve visão integrada do fluxo de materiais, informações e recursos, capaz de equilibrar custo, capital de giro e experiência do cliente. Em modalidade EAD, o curso é especialmente atrativo para profissionais de indústria, varejo, e-commerce, agronegócio e operadores logísticos que querem evoluir para coordenação, gerência ou direção de operações. A demanda por gestores de supply chain no Brasil é estrutural, impulsionada pelo crescimento do e-commerce, pela reorganização das cadeias globais e pela pressão por entregas rápidas e eficientes. Reconhecido pelo MEC quando ofertado por instituição credenciada, o título é valorizado em processos seletivos de empresas que adotam matriz por processos e governança logística profissional.",
+    "duration": "18 meses",
+    "areas": [
+      "Gestão de Estoques",
+      "Transporte e Distribuição",
+      "Compras Estratégicas",
+      "S&OP",
+      "Tecnologia em Logística",
+      "Sustentabilidade na Cadeia"
+    ],
+    "skills": [
+      "Planejamento logístico",
+      "Negociação com fornecedores",
+      "Análise de indicadores",
+      "Gestão de operações",
+      "Otimização de rotas",
+      "Visão sistêmica"
+    ],
+    "careerPaths": [
+      "Gerente de Logística",
+      "Coordenador de Supply Chain",
+      "Diretor de Operações",
+      "Analista S&OP",
+      "Gerente de Compras",
+      "Consultor Logístico"
+    ],
+    "averageSalary": "R$ 7.000 a R$ 22.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "mba logística ead",
+      "pós supply chain online",
+      "mba logística e operações",
+      "mba s&op a distância",
+      "mba logística anhanguera",
+      "pós supply chain mec",
+      "mba cadeia de suprimentos",
+      "bolsa mba logística"
+    ]
+  },
+  {
+    "slug": "mba-lideranca-e-gestao-de-pessoas",
+    "apiCourseName": "MBA em Liderança e Gestão de Pessoas",
+    "name": "Liderança e Gestão de Pessoas",
+    "fullName": "Liderança e Gestão de Pessoas - MBA",
+    "type": "MBA",
+    "nivel": "POS_GRADUACAO",
+    "description": "MBA em Liderança e Gestão de Pessoas com foco em desenvolvimento de líderes, gestão de equipes de alta performance e cultura organizacional.",
+    "longDescription": "O MBA em Liderança e Gestão de Pessoas é direcionado a profissionais que já assumem ou pretendem assumir a responsabilidade de liderar equipes e que precisam desenvolver competências humanas e técnicas de gestão. A grade combina fundamentos de comportamento organizacional, neurociência aplicada, inteligência emocional, comunicação não violenta, feedback e gestão de conflitos com temas mais estruturais, como definição de OKRs, gestão de desempenho, formação de equipes de alta performance, cultura, diversidade, liderança remota e híbrida e desenvolvimento de sucessores. O aluno trabalha o autoconhecimento como ferramenta de liderança e aprende a alinhar o estilo de gestão à estratégia da empresa. Em modalidade EAD de 12 meses, o curso é atrativo para profissionais de áreas técnicas que foram promovidos a coordenadores e gerentes e precisam fortalecer a base humana da liderança, bem como para líderes experientes que querem atualizar seu repertório. A demanda por bons líderes é transversal a todos os setores e o título de MBA reconhecido pelo MEC funciona como diferencial em processos seletivos internos para coordenação, gerência e direção, além de fortalecer a marca pessoal do profissional no mercado.",
+    "duration": "12 meses",
+    "areas": [
+      "Liderança Comportamental",
+      "Gestão de Equipes",
+      "Cultura Organizacional",
+      "Comunicação",
+      "Coaching e Mentoring",
+      "Diversidade e Inclusão"
+    ],
+    "skills": [
+      "Inteligência emocional",
+      "Feedback construtivo",
+      "Gestão de conflitos",
+      "Comunicação assertiva",
+      "Mentoria de equipes",
+      "Liderança situacional"
+    ],
+    "careerPaths": [
+      "Gerente de Equipes",
+      "Coordenador",
+      "Head de Área",
+      "Diretor",
+      "Consultor de Liderança",
+      "Mentor Executivo"
+    ],
+    "averageSalary": "R$ 8.000 a R$ 25.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "mba liderança ead",
+      "pós gestão de pessoas online",
+      "mba liderança e equipes",
+      "mba liderança anhanguera",
+      "mba liderança reconhecida mec",
+      "pós liderança a distância",
+      "mba líderes de alta performance",
+      "bolsa mba liderança"
+    ]
+  },
+  {
+    "slug": "mba-inteligencia-artificial-aplicada-aos-negocios",
+    "apiCourseName": "MBA em Inteligência Artificial Aplicada aos Negócios",
+    "name": "IA Aplicada aos Negócios",
+    "fullName": "Inteligência Artificial Aplicada aos Negócios - MBA",
+    "type": "MBA",
+    "nivel": "POS_GRADUACAO",
+    "description": "MBA em IA Aplicada aos Negócios com machine learning, IA generativa, automação e ética para liderar projetos de transformação digital nas empresas.",
+    "longDescription": "O MBA em Inteligência Artificial Aplicada aos Negócios prepara executivos, gestores e profissionais de tecnologia para liderar a adoção de IA em diferentes áreas da empresa, traduzindo capacidades técnicas em valor de negócio. A grade aborda fundamentos de ciência de dados e machine learning, IA generativa e modelos de linguagem, automação inteligente, visão computacional, processamento de linguagem natural, MLOps, governança de dados, ética, LGPD e regulação, além de frameworks para identificar casos de uso de alto impacto em marketing, vendas, atendimento, operações, finanças e RH. O aluno aprende a estruturar projetos de IA, dimensionar equipes, escolher entre construir e contratar soluções e calcular ROI de iniciativas. Em formato EAD de 12 meses, o curso é especialmente atrativo para quem quer se posicionar como líder em transformação digital, head de dados, gerente de produtos de IA ou consultor especializado. A demanda no mercado brasileiro cresce rapidamente em setores como finanças, varejo, saúde, indústria e setor público, com escassez de profissionais que combinam visão de negócio e fluência em IA. O título de MBA reconhecido pelo MEC reforça a credibilidade do candidato em processos seletivos e em board de inovação.",
+    "duration": "12 meses",
+    "areas": [
+      "Machine Learning",
+      "IA Generativa",
+      "Estratégia de Dados",
+      "Automação",
+      "Ética e LGPD",
+      "Inovação Digital"
+    ],
+    "skills": [
+      "Análise de casos de uso",
+      "Liderança em projetos de IA",
+      "Pensamento crítico",
+      "Avaliação de modelos",
+      "Governança de dados",
+      "Comunicação executiva"
+    ],
+    "careerPaths": [
+      "Head de IA",
+      "Gerente de Transformação Digital",
+      "Diretor de Inovação",
+      "Consultor em IA",
+      "Product Manager de IA",
+      "Líder de Analytics"
+    ],
+    "averageSalary": "R$ 10.000 a R$ 35.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "mba inteligência artificial ead",
+      "mba ia para negócios",
+      "pós ia aplicada online",
+      "mba machine learning gestão",
+      "mba ia anhanguera",
+      "mba ia reconhecida mec",
+      "mba transformação digital ia",
+      "bolsa mba inteligência artificial"
+    ]
+  },
+  {
+    "slug": "mba-data-science-e-analytics",
+    "apiCourseName": "MBA em Data Science e Analytics",
+    "name": "Data Science e Analytics",
+    "fullName": "Data Science e Analytics - MBA",
+    "type": "MBA",
+    "nivel": "POS_GRADUACAO",
+    "description": "MBA em Data Science e Analytics com Python, SQL, estatística, machine learning e storytelling para atuar como analista, cientista de dados e líder.",
+    "longDescription": "O MBA em Data Science e Analytics forma profissionais capazes de transformar grandes volumes de dados em decisões de negócio, atuando em todo o ciclo analítico, da coleta e tratamento à modelagem e visualização. A grade combina estatística aplicada, Python, SQL, manipulação de dados em Pandas, machine learning supervisionado e não supervisionado, deep learning introdutório, engenharia de dados, governança, LGPD e ferramentas de BI como Power BI e Looker Studio. O programa enfatiza storytelling com dados, traduzindo análises complexas em recomendações claras para áreas de negócio. O aluno trabalha em projetos aplicados a temas como churn, segmentação de clientes, previsão de demanda, detecção de fraudes e otimização operacional. Em modalidade EAD de 18 meses, o curso é uma porta de entrada acessível para quem quer migrar para a área de dados ou se consolidar como cientista de dados sênior, lead analyst ou gestor de analytics. A demanda no Brasil é alta em finanças, varejo, saúde, telecom, agronegócio e startups, com salários competitivos para profissionais que combinam habilidade técnica e visão de negócio. Reconhecido pelo MEC quando ofertado por instituição credenciada, o título reforça o perfil quantitativo do candidato.",
+    "duration": "18 meses",
+    "areas": [
+      "Estatística e Probabilidade",
+      "Python e SQL",
+      "Machine Learning",
+      "Engenharia de Dados",
+      "Business Intelligence",
+      "Governança de Dados"
+    ],
+    "skills": [
+      "Análise estatística",
+      "Modelagem preditiva",
+      "Programação em Python",
+      "Visualização de dados",
+      "Storytelling com dados",
+      "Resolução de problemas"
+    ],
+    "careerPaths": [
+      "Cientista de Dados",
+      "Analista de Dados Sênior",
+      "Engenheiro de Dados",
+      "Gerente de Analytics",
+      "BI Specialist",
+      "Consultor em Dados"
+    ],
+    "averageSalary": "R$ 8.000 a R$ 28.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "mba data science ead",
+      "pós ciência de dados online",
+      "mba analytics anhanguera",
+      "pós dados reconhecida mec",
+      "mba python e machine learning",
+      "mba bi e analytics",
+      "mba data science a distância",
+      "bolsa mba data science"
+    ]
+  },
+  {
+    "slug": "mba-controladoria-e-auditoria",
+    "apiCourseName": "MBA em Controladoria e Auditoria",
+    "name": "Controladoria e Auditoria",
+    "fullName": "Controladoria e Auditoria - MBA",
+    "type": "MBA",
+    "nivel": "POS_GRADUACAO",
+    "description": "MBA em Controladoria e Auditoria com contabilidade societária, IFRS, auditoria interna e externa e compliance para controllers e auditores.",
+    "longDescription": "O MBA em Controladoria e Auditoria é direcionado a contadores, administradores, economistas e profissionais de finanças que querem consolidar carreira em áreas de controladoria, auditoria interna, auditoria externa, compliance e governança corporativa. A grade cobre contabilidade societária e tributária avançada, IFRS, controladoria estratégica, planejamento orçamentário, custos e formação de preços, controles internos, COSO, auditoria baseada em riscos, prevenção a fraudes, lei anticorrupção e LGPD. O aluno desenvolve a capacidade de desenhar e revisar processos, avaliar riscos, emitir pareceres e dialogar com comitês de auditoria e conselho de administração. Em formato EAD de 18 meses, o curso é especialmente atrativo para quem busca posições sêniores em grandes empresas, escritórios de auditoria das big four e órgãos reguladores, ou está em preparação para concursos públicos da área fiscal e de controle. A demanda por controllers e auditores qualificados é estrutural em empresas de capital aberto, multinacionais e organizações em processo de profissionalização. Reconhecido pelo MEC quando ofertado por instituição credenciada, o título de MBA fortalece o perfil técnico do candidato e pode complementar registros e certificações da área, como CRC, CIA e CFC.",
+    "duration": "18 meses",
+    "areas": [
+      "Controladoria",
+      "Auditoria Interna e Externa",
+      "IFRS e Contabilidade Societária",
+      "Compliance",
+      "Tributário",
+      "Governança Corporativa"
+    ],
+    "skills": [
+      "Análise de demonstrações",
+      "Avaliação de riscos",
+      "Desenho de controles internos",
+      "Interpretação normativa",
+      "Visão crítica",
+      "Comunicação técnica"
+    ],
+    "careerPaths": [
+      "Controller",
+      "Auditor Interno",
+      "Auditor Externo",
+      "Gerente de Compliance",
+      "Analista Fiscal Sênior",
+      "Consultor Contábil"
+    ],
+    "averageSalary": "R$ 8.000 a R$ 25.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "mba controladoria ead",
+      "pós auditoria online",
+      "mba controladoria e auditoria anhanguera",
+      "mba compliance e auditoria",
+      "pós controladoria mec",
+      "mba ifrs e contabilidade",
+      "mba auditoria a distância",
+      "bolsa mba controladoria"
+    ]
+  },
+  {
+    "slug": "especializacao-psicologia-clinica",
+    "apiCourseName": "Especialização em Psicologia Clínica",
+    "name": "Psicologia Clínica",
+    "fullName": "Psicologia Clínica - Especialização",
+    "type": "ESPECIALIZACAO",
+    "nivel": "POS_GRADUACAO",
+    "description": "Especialização em Psicologia Clínica para psicólogos, com abordagens integrativas, psicopatologia e prática clínica, atendendo às diretrizes do CFP.",
+    "longDescription": "A especialização em Psicologia Clínica é voltada para psicólogos graduados e devidamente inscritos no Conselho Regional de Psicologia que desejam aprofundar a prática clínica e fortalecer o currículo de acordo com as diretrizes do Conselho Federal de Psicologia, o CFP. A grade contempla psicopatologia, avaliação psicológica, diagnóstico diferencial, principais abordagens teóricas, como psicanálise, comportamental, cognitiva, sistêmica e humanista, além de temas atuais como saúde mental no trabalho, atendimento online, luto, dependência química e crises psiquiátricas. O programa enfatiza a integração entre teoria e prática clínica, com discussão de casos, estudos supervisionados e desenvolvimento de raciocínio clínico baseado em evidências. Em modalidade EAD, o conteúdo é distribuído ao longo de 24 meses, com encontros, atividades aplicadas e materiais que respeitam as exigências de carga horária mínima para reconhecimento de pós-graduação lato sensu pelo MEC. A especialização não confere o título de psicólogo especialista junto ao CFP, que depende de avaliação específica do conselho, mas constitui formação acadêmica complementar relevante para consultórios particulares, clínicas, hospitais e serviços públicos, contribuindo para o aumento do valor da hora clínica e do reconhecimento profissional.",
+    "duration": "24 meses",
+    "areas": [
+      "Psicopatologia",
+      "Avaliação Psicológica",
+      "Psicoterapia",
+      "Saúde Mental",
+      "Ética Profissional",
+      "Atendimento Clínico"
+    ],
+    "skills": [
+      "Escuta clínica",
+      "Diagnóstico diferencial",
+      "Manejo terapêutico",
+      "Raciocínio clínico",
+      "Postura ética",
+      "Comunicação empática"
+    ],
+    "careerPaths": [
+      "Psicólogo Clínico",
+      "Psicoterapeuta",
+      "Psicólogo Hospitalar",
+      "Psicólogo em Saúde Mental",
+      "Supervisor Clínico",
+      "Consultor em Saúde Mental"
+    ],
+    "averageSalary": "R$ 4.000 a R$ 15.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "especialização psicologia clínica ead",
+      "pós psicologia clínica online",
+      "pós psicologia clínica cfp",
+      "especialização psicoterapia anhanguera",
+      "pós psicologia reconhecida mec",
+      "especialização clínica para psicólogos",
+      "pós psicologia a distância",
+      "bolsa psicologia clínica"
+    ]
+  },
+  {
+    "slug": "especializacao-terapia-cognitivo-comportamental",
+    "apiCourseName": "Especialização em Terapia Cognitivo-Comportamental",
+    "name": "Terapia Cognitivo-Comportamental",
+    "fullName": "Terapia Cognitivo-Comportamental - Especialização",
+    "type": "ESPECIALIZACAO",
+    "nivel": "POS_GRADUACAO",
+    "description": "Especialização em TCC para psicólogos, com modelo cognitivo, protocolos baseados em evidências e atendimento de transtornos de ansiedade e humor.",
+    "longDescription": "A especialização em Terapia Cognitivo-Comportamental é destinada a psicólogos que querem se aprofundar em uma das abordagens com maior volume de evidências científicas para o tratamento de transtornos mentais como depressão, ansiedade, fobias, transtorno obsessivo-compulsivo, estresse pós-traumático e transtornos alimentares. A grade aborda o modelo cognitivo de Beck, conceituação de caso, técnicas cognitivas e comportamentais, terapias contextuais como ACT, DBT e mindfulness, TCC para crianças e adolescentes, casais e famílias, intervenções breves, atendimento online e aplicação em contexto hospitalar e organizacional. O aluno é treinado para estruturar sessões, planejar tratamentos, definir metas com o paciente, aplicar protocolos baseados em evidências e mensurar resultados. Em formato EAD de 18 meses, o curso integra teoria, vídeos de sessões, role plays e supervisão de casos, dialogando com as diretrizes éticas do Conselho Federal de Psicologia. A formação amplia significativamente o leque de atuação do psicólogo, agrega valor à hora clínica e fortalece o currículo para concursos, clínicas particulares, planos de saúde, hospitais e empresas que oferecem programas de saúde mental para colaboradores.",
+    "duration": "18 meses",
+    "areas": [
+      "Modelo Cognitivo",
+      "Transtornos de Ansiedade",
+      "Transtornos de Humor",
+      "Terapias Contextuais",
+      "TCC Infantojuvenil",
+      "Atendimento Online"
+    ],
+    "skills": [
+      "Conceituação de caso",
+      "Aplicação de protocolos",
+      "Reestruturação cognitiva",
+      "Avaliação de resultados",
+      "Empatia clínica",
+      "Planejamento terapêutico"
+    ],
+    "careerPaths": [
+      "Psicólogo Clínico TCC",
+      "Terapeuta Cognitivo-Comportamental",
+      "Psicólogo Hospitalar",
+      "Supervisor em TCC",
+      "Psicólogo Organizacional",
+      "Consultor em Saúde Mental"
+    ],
+    "averageSalary": "R$ 4.000 a R$ 16.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "especialização tcc ead",
+      "pós terapia cognitivo comportamental online",
+      "tcc para psicólogos",
+      "especialização tcc anhanguera",
+      "pós tcc reconhecida mec",
+      "pós tcc baseada em evidências",
+      "especialização tcc a distância",
+      "bolsa tcc"
+    ]
+  },
+  {
+    "slug": "especializacao-uti-enfermagem",
+    "apiCourseName": "Especialização em UTI - Enfermagem",
+    "name": "UTI - Enfermagem",
+    "fullName": "UTI - Enfermagem - Especialização",
+    "type": "ESPECIALIZACAO",
+    "nivel": "POS_GRADUACAO",
+    "description": "Especialização em Enfermagem em UTI com terapia intensiva adulto, pediátrica e neonatal, alinhada às exigências do Cofen para o cuidado crítico.",
+    "longDescription": "A especialização em Enfermagem em Terapia Intensiva forma enfermeiros para atuar com segurança em unidades de terapia intensiva adulto, pediátrica e neonatal, ambientes que concentram alta complexidade clínica e exigência técnica. A grade aborda fisiopatologia dos sistemas, monitorização hemodinâmica, ventilação mecânica, sedação, suporte avançado de vida, controle de infecções relacionadas à assistência, prevenção de eventos adversos, cuidados paliativos em UTI, humanização e gestão de equipes de enfermagem intensivista. O aluno aprofunda o raciocínio clínico para identificar precocemente sinais de deterioração, atuar em parada cardiorrespiratória, manejar dispositivos como cateteres, drenos e bombas e participar de protocolos institucionais com base nas diretrizes do Cofen e das principais sociedades médicas. Em modalidade EAD de 18 meses, o curso flexibiliza o estudo para o profissional que já está em escala em hospitais, públicos ou privados, e busca crescer na carreira como enfermeiro intensivista, líder de plantão, coordenador de UTI ou docente. A demanda por enfermeiros especialistas em UTI segue elevada, com salários superiores aos da clínica geral, e a pós-graduação reconhecida pelo MEC contribui para concursos, planos de cargos e progressão funcional.",
+    "duration": "18 meses",
+    "areas": [
+      "Terapia Intensiva Adulto",
+      "UTI Pediátrica",
+      "UTI Neonatal",
+      "Ventilação Mecânica",
+      "Controle de Infecção",
+      "Humanização do Cuidado"
+    ],
+    "skills": [
+      "Monitorização hemodinâmica",
+      "Suporte avançado de vida",
+      "Manejo de ventilação",
+      "Raciocínio clínico",
+      "Trabalho em equipe",
+      "Tomada de decisão crítica"
+    ],
+    "careerPaths": [
+      "Enfermeiro Intensivista",
+      "Coordenador de UTI",
+      "Enfermeiro Plantonista UTI",
+      "Docente em Enfermagem",
+      "Auditor de Enfermagem",
+      "Consultor Hospitalar"
+    ],
+    "averageSalary": "R$ 4.500 a R$ 12.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "especialização uti enfermagem ead",
+      "pós enfermagem em terapia intensiva",
+      "pós uti adulto e neonatal",
+      "especialização uti anhanguera",
+      "pós uti reconhecida mec",
+      "especialização uti cofen",
+      "pós enfermagem intensivista",
+      "bolsa uti enfermagem"
+    ]
+  },
+  {
+    "slug": "especializacao-obstetricia-enfermagem",
+    "apiCourseName": "Especialização em Obstetrícia - Enfermagem",
+    "name": "Obstetrícia - Enfermagem",
+    "fullName": "Obstetrícia - Enfermagem - Especialização",
+    "type": "ESPECIALIZACAO",
+    "nivel": "POS_GRADUACAO",
+    "description": "Especialização em Enfermagem Obstétrica com pré-natal, parto humanizado, puerpério e cuidado ao recém-nascido em maternidades e centros de parto.",
+    "longDescription": "A especialização em Enfermagem Obstétrica forma enfermeiros para atuar de forma qualificada em todo o ciclo gravídico-puerperal, em maternidades, centros de parto normal, unidades básicas e domicílio. A grade aborda anatomia e fisiologia da gestação, pré-natal de risco habitual, identificação e manejo de gestações de alto risco, mecanismo do parto, monitoramento do trabalho de parto, parto humanizado, intervenções baseadas em evidências, puerpério, aleitamento materno, atenção ao recém-nascido e direitos da mulher na assistência ao parto, em diálogo com diretrizes do Ministério da Saúde, da Organização Mundial da Saúde e do Cofen. O aluno é preparado para conduzir o parto normal de risco habitual, atuar em equipes multiprofissionais e liderar políticas de humanização da assistência. Em formato EAD de 18 meses, o curso é compatível com a rotina de plantões e oferece atividades práticas aplicadas ao serviço em que o aluno atua. A demanda por enfermeiros obstetras cresce em razão da ampliação dos centros de parto normal e das políticas públicas de redução da mortalidade materna e neonatal. A especialização reconhecida pelo MEC é critério em concursos públicos e em planos de carreira.",
+    "duration": "18 meses",
+    "areas": [
+      "Pré-natal",
+      "Trabalho de Parto",
+      "Parto Humanizado",
+      "Puerpério",
+      "Saúde do Recém-Nascido",
+      "Aleitamento Materno"
+    ],
+    "skills": [
+      "Assistência ao parto normal",
+      "Avaliação de risco gestacional",
+      "Educação em saúde",
+      "Trabalho em equipe",
+      "Acolhimento",
+      "Tomada de decisão clínica"
+    ],
+    "careerPaths": [
+      "Enfermeiro Obstetra",
+      "Enfermeiro em Maternidade",
+      "Coordenador de Maternidade",
+      "Enfermeiro em Centro de Parto Normal",
+      "Consultor em Amamentação",
+      "Docente em Enfermagem"
+    ],
+    "averageSalary": "R$ 4.500 a R$ 11.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "especialização obstetrícia enfermagem ead",
+      "pós enfermagem obstétrica online",
+      "pós parto humanizado",
+      "especialização obstetrícia anhanguera",
+      "pós obstetrícia reconhecida mec",
+      "enfermeiro obstetra cofen",
+      "pós obstétrica a distância",
+      "bolsa obstetrícia enfermagem"
+    ]
+  },
+  {
+    "slug": "especializacao-saude-do-trabalho-enfermagem",
+    "apiCourseName": "Especialização em Saúde do Trabalho - Enfermagem",
+    "name": "Saúde do Trabalho - Enfermagem",
+    "fullName": "Saúde do Trabalho - Enfermagem - Especialização",
+    "type": "ESPECIALIZACAO",
+    "nivel": "POS_GRADUACAO",
+    "description": "Especialização em Enfermagem do Trabalho com ergonomia, riscos ocupacionais, eSocial, PCMSO e PGR para atuar em empresas e SESMTs.",
+    "longDescription": "A especialização em Enfermagem do Trabalho prepara enfermeiros para atuar em Serviços Especializados em Engenharia de Segurança e Medicina do Trabalho, os SESMTs, em empresas, indústrias, hospitais, mineradoras, hospitais e órgãos públicos. A grade cobre legislação trabalhista e previdenciária, normas regulamentadoras, NRs essenciais, riscos ocupacionais físicos, químicos, biológicos e ergonômicos, programas como PGR e PCMSO, exames ocupacionais, eSocial, comunicação de acidente de trabalho, primeiros socorros, doenças profissionais e do trabalho, saúde mental no trabalho e promoção da saúde do trabalhador. O aluno é capacitado a participar da implantação e monitoramento de programas de saúde ocupacional, conduzir campanhas de prevenção, atuar em emergências e cooperar com a Comissão Interna de Prevenção de Acidentes. Em modalidade EAD de 12 meses, o curso é especialmente atrativo para enfermeiros que querem migrar da assistência hospitalar para a área corporativa, com melhor previsibilidade de horários. A demanda por enfermeiros do trabalho é estrutural em empresas que precisam cumprir exigências legais e do Ministério do Trabalho e em concursos públicos. Pós reconhecida pelo MEC e alinhada às diretrizes do Cofen.",
+    "duration": "12 meses",
+    "areas": [
+      "Legislação Trabalhista",
+      "Riscos Ocupacionais",
+      "Ergonomia",
+      "PCMSO e PGR",
+      "Saúde Mental no Trabalho",
+      "Primeiros Socorros"
+    ],
+    "skills": [
+      "Avaliação de riscos",
+      "Educação em saúde",
+      "Gestão de programas ocupacionais",
+      "Comunicação com gestores",
+      "Análise de indicadores",
+      "Postura ética"
+    ],
+    "careerPaths": [
+      "Enfermeiro do Trabalho",
+      "Coordenador de SESMT",
+      "Analista de Saúde Ocupacional",
+      "Consultor em Saúde do Trabalho",
+      "Enfermeiro Corporativo",
+      "Auditor em Saúde Ocupacional"
+    ],
+    "averageSalary": "R$ 4.500 a R$ 12.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "especialização enfermagem do trabalho ead",
+      "pós saúde do trabalhador",
+      "pós enfermagem do trabalho anhanguera",
+      "pós saúde ocupacional online",
+      "pós enfermagem do trabalho mec",
+      "especialização sesmt",
+      "enfermeiro do trabalho cofen",
+      "bolsa enfermagem do trabalho"
+    ]
+  },
+  {
+    "slug": "especializacao-fisioterapia-esportiva",
+    "apiCourseName": "Especialização em Fisioterapia Esportiva",
+    "name": "Fisioterapia Esportiva",
+    "fullName": "Fisioterapia Esportiva - Especialização",
+    "type": "ESPECIALIZACAO",
+    "nivel": "POS_GRADUACAO",
+    "description": "Especialização em Fisioterapia Esportiva com prevenção de lesões, reabilitação e performance, em consonância com as diretrizes do COFFITO.",
+    "longDescription": "A especialização em Fisioterapia Esportiva é direcionada a fisioterapeutas que desejam atuar com atletas amadores, profissionais e praticantes regulares de atividade física, em clubes, academias, centros de treinamento, consultórios e equipes multidisciplinares. A grade aborda biomecânica do esporte, fisiologia do exercício, avaliação funcional, principais lesões musculoesqueléticas em membros inferiores, superiores e coluna, lesões específicas por modalidade, prevenção de lesões, retorno ao esporte, recursos terapêuticos, terapias manuais, exercícios terapêuticos, treinamento neuromuscular e periodização. O programa também trabalha temas atuais como uso de tecnologia, dados de performance, nutrição esportiva como apoio, saúde mental do atleta e cuidados específicos em mulheres e idosos ativos. Em formato EAD de 18 meses, o curso flexibiliza o estudo para o profissional que já atende em clínica ou clube e dialoga com as diretrizes do Conselho Federal de Fisioterapia e Terapia Ocupacional, o COFFITO, fortalecendo o currículo para crescimento na carreira. A demanda por fisioterapeutas esportivos cresce com a expansão de academias, corridas de rua, modalidades de força e estética, esportes de alto rendimento e equipes profissionais.",
+    "duration": "18 meses",
+    "areas": [
+      "Biomecânica do Esporte",
+      "Lesões Musculoesqueléticas",
+      "Reabilitação Esportiva",
+      "Prevenção de Lesões",
+      "Treinamento Neuromuscular",
+      "Avaliação Funcional"
+    ],
+    "skills": [
+      "Avaliação biomecânica",
+      "Planejamento de reabilitação",
+      "Aplicação de terapias manuais",
+      "Prescrição de exercícios",
+      "Trabalho em equipe multidisciplinar",
+      "Raciocínio clínico"
+    ],
+    "careerPaths": [
+      "Fisioterapeuta Esportivo",
+      "Fisioterapeuta de Clube",
+      "Fisioterapeuta em Academia",
+      "Consultor em Performance",
+      "Docente em Fisioterapia",
+      "Profissional Autônomo"
+    ],
+    "averageSalary": "R$ 4.000 a R$ 14.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "especialização fisioterapia esportiva ead",
+      "pós fisioterapia do esporte",
+      "pós fisioterapia esportiva anhanguera",
+      "pós fisioterapia esportiva coffito",
+      "pós fisioterapia esportiva mec",
+      "especialização reabilitação esportiva",
+      "fisioterapeuta esportivo formação",
+      "bolsa fisioterapia esportiva"
+    ]
+  },
+  {
+    "slug": "especializacao-nutricao-clinica-funcional",
+    "apiCourseName": "Especialização em Nutrição Clínica Funcional",
+    "name": "Nutrição Clínica Funcional",
+    "fullName": "Nutrição Clínica Funcional - Especialização",
+    "type": "ESPECIALIZACAO",
+    "nivel": "POS_GRADUACAO",
+    "description": "Especialização em Nutrição Clínica Funcional para nutricionistas, com avaliação metabólica, suplementação e individualização, alinhada ao CFN.",
+    "longDescription": "A especialização em Nutrição Clínica Funcional é voltada para nutricionistas regularmente inscritos no Conselho Regional de Nutricionistas que desejam aprofundar a prática clínica em um modelo individualizado, integrado e baseado em evidências. A grade aborda fundamentos da nutrição funcional, fisiologia da digestão e absorção, microbiota intestinal, inflamação crônica de baixo grau, estresse oxidativo, sinalização hormonal, modulação intestinal, alergias e intolerâncias alimentares, suplementação nutricional, fitoterápicos, nutrigenômica e aplicação em condições clínicas como obesidade, síndrome metabólica, doenças autoimunes, saúde da mulher, performance esportiva e envelhecimento. O aluno aprende a integrar exames laboratoriais, sinais clínicos, anamnese ampliada e protocolos terapêuticos personalizados, sempre respeitando as competências previstas no Código de Ética do Conselho Federal de Nutricionistas, o CFN, e as resoluções aplicáveis. Em modalidade EAD de 18 meses, o curso é compatível com a rotina de atendimento em consultório, clínicas e hospitais. A nutrição funcional é uma das frentes de maior crescimento de público no Brasil e a formação reconhecida pelo MEC tende a impactar diretamente no valor da consulta e no posicionamento profissional.",
+    "duration": "18 meses",
+    "areas": [
+      "Nutrição Funcional",
+      "Microbiota Intestinal",
+      "Suplementação",
+      "Doenças Metabólicas",
+      "Saúde da Mulher",
+      "Nutrigenômica"
+    ],
+    "skills": [
+      "Avaliação clínica integrada",
+      "Interpretação de exames",
+      "Planejamento alimentar individualizado",
+      "Prescrição responsável",
+      "Educação alimentar",
+      "Comunicação com pacientes"
+    ],
+    "careerPaths": [
+      "Nutricionista Clínico Funcional",
+      "Nutricionista de Consultório",
+      "Consultor em Nutrição",
+      "Nutricionista Hospitalar",
+      "Docente em Nutrição",
+      "Autor de Conteúdo em Saúde"
+    ],
+    "averageSalary": "R$ 4.500 a R$ 16.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "especialização nutrição funcional ead",
+      "pós nutrição clínica funcional online",
+      "pós nutrição funcional anhanguera",
+      "pós nutrição funcional cfn",
+      "pós nutrição funcional mec",
+      "especialização nutricionista funcional",
+      "pós nutrição funcional a distância",
+      "bolsa nutrição funcional"
+    ]
+  },
+  {
+    "slug": "especializacao-nutricao-esportiva",
+    "apiCourseName": "Especialização em Nutrição Esportiva",
+    "name": "Nutrição Esportiva",
+    "fullName": "Nutrição Esportiva - Especialização",
+    "type": "ESPECIALIZACAO",
+    "nivel": "POS_GRADUACAO",
+    "description": "Especialização em Nutrição Esportiva para nutricionistas, com periodização alimentar, suplementação e atendimento a atletas e praticantes ativos.",
+    "longDescription": "A especialização em Nutrição Esportiva forma nutricionistas para atender atletas profissionais, amadores e praticantes regulares de atividade física, em modalidades de força, resistência, esportes coletivos, lutas e endurance. A grade aborda bioenergética do exercício, periodização nutricional, hidratação, recursos ergogênicos, suplementação baseada em evidências, recomposição corporal, perda de gordura, ganho de massa magra, nutrição para esportes de combate, esportes de longa duração, atletas vegetarianos e veganos, atendimento ao público feminino, gestantes ativas e idosos. O aluno é treinado para integrar exames, avaliação corporal, demanda energética e plano alimentar à rotina de treinos do paciente, em diálogo com educadores físicos, médicos e fisioterapeutas, sempre respeitando as competências previstas pelo Conselho Federal de Nutricionistas, o CFN. Em formato EAD de 12 meses, o curso é especialmente atrativo para nutricionistas que querem se posicionar em academias, boxes de crossfit, equipes esportivas, clubes e atendimento online. A demanda cresce com o aumento da prática regular de exercícios no Brasil, e a especialização reconhecida pelo MEC tende a elevar o valor médio da consulta e a credibilidade profissional.",
+    "duration": "12 meses",
+    "areas": [
+      "Bioenergética",
+      "Suplementação Esportiva",
+      "Periodização Alimentar",
+      "Recomposição Corporal",
+      "Nutrição em Esportes Coletivos",
+      "Atendimento a Atletas"
+    ],
+    "skills": [
+      "Avaliação de demandas energéticas",
+      "Planejamento alimentar esportivo",
+      "Interpretação de composição corporal",
+      "Educação nutricional",
+      "Atendimento individualizado",
+      "Trabalho multidisciplinar"
+    ],
+    "careerPaths": [
+      "Nutricionista Esportivo",
+      "Nutricionista de Clube",
+      "Consultor em Suplementação",
+      "Nutricionista em Academias",
+      "Profissional Autônomo",
+      "Docente em Nutrição"
+    ],
+    "averageSalary": "R$ 4.500 a R$ 15.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "especialização nutrição esportiva ead",
+      "pós nutrição esportiva online",
+      "pós nutrição esportiva anhanguera",
+      "pós nutrição esportiva cfn",
+      "pós nutrição esportiva mec",
+      "especialização nutricionista esportivo",
+      "pós nutrição esportiva a distância",
+      "bolsa nutrição esportiva"
+    ]
+  },
+  {
+    "slug": "especializacao-implantodontia",
+    "apiCourseName": "Especialização em Implantodontia",
+    "name": "Implantodontia",
+    "fullName": "Implantodontia - Especialização",
+    "type": "ESPECIALIZACAO",
+    "nivel": "POS_GRADUACAO",
+    "description": "Especialização em Implantodontia para cirurgiões-dentistas, com cirurgia, reabilitação protética e planejamento digital, alinhada às normas do CFO.",
+    "longDescription": "A especialização em Implantodontia é direcionada a cirurgiões-dentistas que desejam atuar de forma habilitada em uma das áreas mais demandadas e bem remuneradas da Odontologia. A grade aborda anatomia aplicada, planejamento cirúrgico e protético, exames de imagem como tomografia, biomateriais, técnicas de instalação de implantes, regeneração óssea, levantamento de seio maxilar, carga imediata, próteses sobre implantes, oclusão, estética e planejamento digital com guias cirúrgicos e fluxos CAD CAM. O aluno também estuda farmacologia aplicada, manejo de complicações, peri-implantite, biossegurança e prontuário, em diálogo permanente com as normas e diretrizes do Conselho Federal de Odontologia, o CFO. Em modalidade EAD com encontros práticos presenciais quando exigidos pela legislação, o curso é distribuído ao longo de 24 meses e é estruturado para profissionais que já atendem em clínica, oferecendo conteúdo aprofundado, evidências clínicas e estudo de casos complexos. A formação amplia significativamente o ticket médio de procedimentos, o que costuma proporcionar ROI rápido ao investimento. A especialização reconhecida pelo MEC fortalece o currículo, mas o registro oficial de especialista junto ao CFO depende de cumprimento dos critérios próprios do conselho.",
+    "duration": "24 meses",
+    "areas": [
+      "Cirurgia em Implantodontia",
+      "Prótese sobre Implantes",
+      "Planejamento Digital",
+      "Regeneração Óssea",
+      "Estética em Implantes",
+      "Manejo de Complicações"
+    ],
+    "skills": [
+      "Planejamento cirúrgico",
+      "Leitura de tomografias",
+      "Execução de procedimentos cirúrgicos",
+      "Reabilitação protética",
+      "Tomada de decisão clínica",
+      "Comunicação com pacientes"
+    ],
+    "careerPaths": [
+      "Implantodontista",
+      "Cirurgião-Dentista Especialista",
+      "Clínico Especializado em Reabilitação",
+      "Consultor em Implantes",
+      "Docente em Odontologia",
+      "Proprietário de Clínica"
+    ],
+    "averageSalary": "R$ 8.000 a R$ 30.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "especialização implantodontia ead",
+      "pós implantodontia online",
+      "pós implantodontia anhanguera",
+      "pós implantodontia cfo",
+      "pós implantodontia mec",
+      "especialização implantes dentários",
+      "pós odontologia implantes",
+      "bolsa implantodontia"
+    ]
+  },
+  {
+    "slug": "especializacao-saude-publica",
+    "apiCourseName": "Especialização em Saúde Pública",
+    "name": "Saúde Pública",
+    "fullName": "Saúde Pública - Especialização",
+    "type": "ESPECIALIZACAO",
+    "nivel": "POS_GRADUACAO",
+    "description": "Especialização em Saúde Pública com SUS, epidemiologia, vigilância e gestão para profissionais de saúde e candidatos a concursos da área.",
+    "longDescription": "A especialização em Saúde Pública é voltada para profissionais de saúde, gestores e candidatos a concursos públicos que desejam atuar no Sistema Único de Saúde, em secretarias municipais e estaduais, em órgãos federais, ONGs e operadoras. A grade aborda fundamentos do SUS, princípios e diretrizes, política nacional de atenção básica, redes de atenção, epidemiologia, indicadores em saúde, vigilância epidemiológica, sanitária e ambiental, gestão de serviços de saúde, planejamento e financiamento, controle social, judicialização, atenção primária, saúde da família, saúde mental, saúde da mulher, da criança e do idoso, além de temas atuais como pandemias, determinantes sociais, telemedicina e equidade. O aluno desenvolve visão sistêmica do sistema de saúde brasileiro e aprende a desenhar e avaliar políticas e programas. Em modalidade EAD de 18 meses, o curso é especialmente atrativo para enfermeiros, médicos, fisioterapeutas, nutricionistas, psicólogos, assistentes sociais e administradores que atuam ou querem atuar no setor público. Reconhecida pelo MEC, a especialização é frequentemente exigida em editais de concursos e usada para evolução em planos de cargos e carreiras no SUS.",
+    "duration": "18 meses",
+    "areas": [
+      "SUS",
+      "Epidemiologia",
+      "Vigilância em Saúde",
+      "Atenção Primária",
+      "Gestão em Saúde",
+      "Políticas Públicas"
+    ],
+    "skills": [
+      "Análise epidemiológica",
+      "Planejamento em saúde",
+      "Avaliação de programas",
+      "Trabalho intersetorial",
+      "Leitura de indicadores",
+      "Comunicação institucional"
+    ],
+    "careerPaths": [
+      "Sanitarista",
+      "Gestor de Saúde",
+      "Coordenador de Atenção Básica",
+      "Analista em Vigilância em Saúde",
+      "Servidor Público em Saúde",
+      "Consultor em Políticas Públicas"
+    ],
+    "averageSalary": "R$ 4.500 a R$ 14.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "especialização saúde pública ead",
+      "pós sus online",
+      "pós saúde pública anhanguera",
+      "pós saúde pública mec",
+      "especialização gestão em saúde",
+      "pós saúde pública concurso",
+      "pós epidemiologia a distância",
+      "bolsa saúde pública"
+    ]
+  },
+  {
+    "slug": "especializacao-direito-tributario",
+    "apiCourseName": "Especialização em Direito Tributário",
+    "name": "Direito Tributário",
+    "fullName": "Direito Tributário - Especialização",
+    "type": "ESPECIALIZACAO",
+    "nivel": "POS_GRADUACAO",
+    "description": "Especialização em Direito Tributário com CTN, tributos federais, planejamento fiscal e contencioso para advogados, contadores e concursandos.",
+    "longDescription": "A especialização em Direito Tributário é voltada para advogados, contadores e profissionais de áreas correlatas que desejam atuar de forma técnica em planejamento tributário, contencioso administrativo e judicial e consultoria fiscal. A grade aborda Sistema Tributário Nacional, Código Tributário Nacional, princípios constitucionais, tributos federais, estaduais e municipais, ICMS, ISS, IPI, PIS, COFINS, IRPJ, CSLL, contribuições previdenciárias, processo administrativo fiscal, execução fiscal, recursos no CARF, planejamento tributário lícito, elisão e evasão, reforma tributária e tributação internacional. O aluno também estuda jurisprudência consolidada dos tribunais superiores e desenvolve a capacidade de elaborar pareceres, defesas e estratégias de redução de carga tributária dentro da lei. Em modalidade EAD de 18 meses, o curso é compatível com a rotina de escritórios e departamentos fiscais. Para advogados, a especialização reforça o posicionamento como tributarista e dialoga com a atuação prevista pela OAB; para contadores, complementa o registro no CRC e amplia a oferta de serviços de consultoria. Reconhecida pelo MEC, a pós-graduação é frequentemente exigida ou pontuada em concursos públicos das áreas fiscal, fazendária e do controle.",
+    "duration": "18 meses",
+    "areas": [
+      "Sistema Tributário Nacional",
+      "Tributos Federais",
+      "Tributos Estaduais e Municipais",
+      "Planejamento Tributário",
+      "Contencioso Tributário",
+      "Processo Administrativo Fiscal"
+    ],
+    "skills": [
+      "Análise normativa",
+      "Interpretação de jurisprudência",
+      "Elaboração de defesas",
+      "Planejamento fiscal",
+      "Argumentação jurídica",
+      "Atenção a prazos"
+    ],
+    "careerPaths": [
+      "Advogado Tributarista",
+      "Consultor Tributário",
+      "Auditor Fiscal",
+      "Analista Tributário",
+      "Procurador da Fazenda",
+      "Contador Tributarista"
+    ],
+    "averageSalary": "R$ 6.000 a R$ 25.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "especialização direito tributário ead",
+      "pós direito tributário online",
+      "pós direito tributário anhanguera",
+      "pós direito tributário mec",
+      "especialização tributarista oab",
+      "pós tributário para concursos",
+      "pós direito fiscal a distância",
+      "bolsa direito tributário"
+    ]
+  },
+  {
+    "slug": "especializacao-direito-penal-e-processo-penal",
+    "apiCourseName": "Especialização em Direito Penal e Processo Penal",
+    "name": "Direito Penal e Processo Penal",
+    "fullName": "Direito Penal e Processo Penal - Especialização",
+    "type": "ESPECIALIZACAO",
+    "nivel": "POS_GRADUACAO",
+    "description": "Especialização em Direito Penal e Processo Penal com teoria do crime, processo, execução e jurisprudência para advogados criminalistas e concursandos.",
+    "longDescription": "A especialização em Direito Penal e Processo Penal é direcionada a advogados criminalistas, defensores públicos, promotores, juízes, delegados, peritos e candidatos a concursos das carreiras jurídicas que desejam aprofundar o estudo da área criminal. A grade aborda teoria geral do crime, tipicidade, antijuridicidade, culpabilidade, crimes em espécie, crimes contra a pessoa, contra o patrimônio, contra a administração pública, crimes hediondos, lei de drogas, crimes empresariais e cibernéticos, lavagem de dinheiro, processo penal, inquérito policial, ação penal, provas, medidas cautelares, prisões, recursos, execução penal, sistema prisional e direitos humanos. O aluno também estuda jurisprudência atualizada do STF e STJ e tendências como justiça restaurativa e acordos de não persecução penal. Em modalidade EAD de 18 meses, o curso é compatível com a rotina de escritórios e serviços públicos. Para advogados, a formação dialoga com a atuação ética prevista pelo Estatuto da OAB e fortalece o posicionamento como criminalista. Reconhecida pelo MEC, a especialização é critério usual em concursos das carreiras jurídicas e em editais para professores de Direito.",
+    "duration": "18 meses",
+    "areas": [
+      "Direito Penal Geral",
+      "Crimes em Espécie",
+      "Processo Penal",
+      "Execução Penal",
+      "Crimes Empresariais",
+      "Direitos Humanos"
+    ],
+    "skills": [
+      "Análise de fatos e tipificações",
+      "Elaboração de peças",
+      "Interpretação jurisprudencial",
+      "Argumentação oral e escrita",
+      "Postura ética",
+      "Raciocínio jurídico"
+    ],
+    "careerPaths": [
+      "Advogado Criminalista",
+      "Defensor Público",
+      "Promotor de Justiça",
+      "Juiz Criminal",
+      "Delegado de Polícia",
+      "Consultor em Compliance Penal"
+    ],
+    "averageSalary": "R$ 6.000 a R$ 30.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "especialização direito penal ead",
+      "pós processo penal online",
+      "pós direito penal anhanguera",
+      "pós direito penal mec",
+      "pós criminalista oab",
+      "pós direito penal para concursos",
+      "pós direito penal a distância",
+      "bolsa direito penal"
+    ]
+  },
+  {
+    "slug": "especializacao-direito-de-familia-e-sucessoes",
+    "apiCourseName": "Especialização em Direito de Família e Sucessões",
+    "name": "Direito de Família e Sucessões",
+    "fullName": "Direito de Família e Sucessões - Especialização",
+    "type": "ESPECIALIZACAO",
+    "nivel": "POS_GRADUACAO",
+    "description": "Especialização em Direito de Família e Sucessões com divórcio, guarda, alimentos, inventário e planejamento sucessório para advogados de família.",
+    "longDescription": "A especialização em Direito de Família e Sucessões é voltada para advogados que desejam atuar em uma das áreas com maior volume de demanda judicial e extrajudicial no Brasil. A grade aborda casamento, união estável, regimes de bens, divórcio judicial e extrajudicial, guarda, alimentos, alienação parental, multiparentalidade, filiação socioafetiva, reprodução assistida, direitos da criança e do adolescente, idoso, pessoa com deficiência, mediação familiar, sucessões, inventário judicial e extrajudicial, testamentos, planejamento sucessório, holding familiar, partilha em entidades empresariais familiares e jurisprudência consolidada do STJ. O aluno aprende a conduzir negociações sensíveis, conciliar interesses patrimoniais e afetivos e oferecer assessoria preventiva. Em modalidade EAD de 18 meses, o curso é compatível com a rotina de escritórios e dialoga com a atuação ética prevista pela OAB. A formação amplia significativamente o leque de serviços oferecidos pelo advogado, fortalece o posicionamento em uma área de relação contínua com clientes e abre espaço para áreas correlatas, como direito notarial, mediação e planejamento patrimonial. Reconhecida pelo MEC, a especialização é frequentemente requisitada em escritórios especializados em família e sucessões.",
+    "duration": "18 meses",
+    "areas": [
+      "Direito de Família",
+      "Sucessões e Inventário",
+      "Planejamento Sucessório",
+      "Mediação Familiar",
+      "Direitos da Criança e do Adolescente",
+      "Holding Familiar"
+    ],
+    "skills": [
+      "Análise de casos familiares",
+      "Elaboração de petições",
+      "Negociação",
+      "Mediação de conflitos",
+      "Planejamento patrimonial",
+      "Comunicação empática"
+    ],
+    "careerPaths": [
+      "Advogado de Família",
+      "Advogado de Sucessões",
+      "Mediador Familiar",
+      "Consultor em Planejamento Sucessório",
+      "Assessor em Holding Familiar",
+      "Docente em Direito"
+    ],
+    "averageSalary": "R$ 5.000 a R$ 22.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "especialização direito de família ead",
+      "pós sucessões online",
+      "pós família e sucessões anhanguera",
+      "pós direito de família mec",
+      "pós família oab",
+      "pós planejamento sucessório",
+      "pós direito de família a distância",
+      "bolsa direito de família"
+    ]
+  },
+  {
+    "slug": "especializacao-educacao-especial-e-inclusiva",
+    "apiCourseName": "Especialização em Educação Especial e Inclusiva",
+    "name": "Educação Especial e Inclusiva",
+    "fullName": "Educação Especial e Inclusiva - Especialização",
+    "type": "ESPECIALIZACAO",
+    "nivel": "POS_GRADUACAO",
+    "description": "Especialização em Educação Especial e Inclusiva para professores, com TEA, deficiências, AEE e legislação educacional para escolas e redes públicas.",
+    "longDescription": "A especialização em Educação Especial e Inclusiva é direcionada a professores, pedagogos, psicopedagogos e profissionais de áreas afins que desejam atuar com estudantes público-alvo da Educação Especial, em escolas regulares, salas de recursos multifuncionais e instituições especializadas. A grade aborda fundamentos da Educação Inclusiva, legislação como LDB, Lei Brasileira de Inclusão e diretrizes do MEC, deficiência intelectual, física, visual, auditiva, surdocegueira, altas habilidades, transtorno do espectro autista, TDAH, transtornos específicos de aprendizagem, Atendimento Educacional Especializado, plano de desenvolvimento individual, tecnologia assistiva, comunicação alternativa, Libras introdutório, Braille e adaptações curriculares. O aluno desenvolve a capacidade de planejar, executar e avaliar práticas pedagógicas inclusivas, colaborar com famílias e equipes multidisciplinares e atuar como referência técnica em escolas e redes de ensino. Em modalidade EAD de 12 meses, o curso é especialmente atrativo para professores da rede pública e privada que buscam crescimento na carreira, atuação no AEE e pontuação em concursos e progressões. Reconhecida pelo MEC, a especialização fortalece o currículo em editais de educação básica.",
+    "duration": "12 meses",
+    "areas": [
+      "Educação Inclusiva",
+      "Transtorno do Espectro Autista",
+      "Deficiências",
+      "AEE",
+      "Tecnologia Assistiva",
+      "Legislação Educacional"
+    ],
+    "skills": [
+      "Adaptação curricular",
+      "Elaboração de PDI",
+      "Mediação pedagógica",
+      "Trabalho com famílias",
+      "Postura ética",
+      "Avaliação de aprendizagem"
+    ],
+    "careerPaths": [
+      "Professor de AEE",
+      "Coordenador de Educação Inclusiva",
+      "Consultor Pedagógico",
+      "Especialista em Inclusão Escolar",
+      "Docente em Cursos Livres",
+      "Profissional em ONGs"
+    ],
+    "averageSalary": "R$ 3.500 a R$ 10.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "especialização educação especial ead",
+      "pós educação inclusiva online",
+      "pós aee anhanguera",
+      "pós educação inclusiva mec",
+      "pós tea para professores",
+      "pós educação especial a distância",
+      "pós inclusão escolar",
+      "bolsa educação especial"
+    ]
+  },
+  {
+    "slug": "especializacao-psicopedagogia",
+    "apiCourseName": "Especialização em Psicopedagogia",
+    "name": "Psicopedagogia",
+    "fullName": "Psicopedagogia - Especialização",
+    "type": "ESPECIALIZACAO",
+    "nivel": "POS_GRADUACAO",
+    "description": "Especialização em Psicopedagogia institucional e clínica, com diagnóstico, intervenção e dificuldades de aprendizagem para escolas e consultórios.",
+    "longDescription": "A especialização em Psicopedagogia forma profissionais para atuar nas dimensões institucional e clínica, com foco em compreender e intervir nos processos de aprendizagem e em suas dificuldades. A grade aborda fundamentos da Psicopedagogia, neurociência aplicada à aprendizagem, desenvolvimento cognitivo, afetivo e motor, transtornos específicos de aprendizagem como dislexia, discalculia, disgrafia, TDAH, transtorno do espectro autista, dificuldades emocionais que impactam o desempenho escolar, diagnóstico psicopedagógico, anamnese, sessões lúdicas, provas operatórias e projetivas, intervenção psicopedagógica, trabalho com famílias e escolas e atuação em ambientes corporativos. O aluno é capacitado a planejar processos diagnósticos, montar plano de intervenção, articular ações com professores, psicólogos, fonoaudiólogos e médicos e atuar de forma ética e fundamentada. Em modalidade EAD de 18 meses, o curso é especialmente atrativo para professores, pedagogos, psicólogos, fonoaudiólogos e profissionais de saúde que desejam ampliar a atuação para clínicas, consultórios, escolas e empresas. Reconhecida pelo MEC, a especialização fortalece o currículo em concursos da área de educação e em planos de carreira de redes de ensino.",
+    "duration": "18 meses",
+    "areas": [
+      "Psicopedagogia Institucional",
+      "Psicopedagogia Clínica",
+      "Diagnóstico Psicopedagógico",
+      "Transtornos de Aprendizagem",
+      "Neurociência Aplicada",
+      "Intervenção Educacional"
+    ],
+    "skills": [
+      "Diagnóstico psicopedagógico",
+      "Planejamento de intervenção",
+      "Observação clínica",
+      "Trabalho em equipe multidisciplinar",
+      "Comunicação com famílias",
+      "Postura ética"
+    ],
+    "careerPaths": [
+      "Psicopedagogo Clínico",
+      "Psicopedagogo Institucional",
+      "Consultor Educacional",
+      "Coordenador Pedagógico",
+      "Professor de AEE",
+      "Profissional em Consultório"
+    ],
+    "averageSalary": "R$ 3.500 a R$ 11.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "especialização psicopedagogia ead",
+      "pós psicopedagogia online",
+      "pós psicopedagogia anhanguera",
+      "pós psicopedagogia mec",
+      "psicopedagogia clínica e institucional",
+      "pós psicopedagogia a distância",
+      "pós dificuldades de aprendizagem",
+      "bolsa psicopedagogia"
+    ]
+  },
+  {
+    "slug": "especializacao-engenharia-de-seguranca-do-trabalho",
+    "apiCourseName": "Especialização em Engenharia de Segurança do Trabalho",
+    "name": "Engenharia de Segurança do Trabalho",
+    "fullName": "Engenharia de Segurança do Trabalho - Especialização",
+    "type": "ESPECIALIZACAO",
+    "nivel": "POS_GRADUACAO",
+    "description": "Especialização em Engenharia de Segurança do Trabalho para engenheiros e arquitetos, com NRs, PGR e laudos, registrável no CREA conforme legislação.",
+    "longDescription": "A especialização em Engenharia de Segurança do Trabalho é destinada a engenheiros e arquitetos que desejam atuar legalmente como profissionais de segurança do trabalho, com registro habilitado no Conselho Regional de Engenharia e Agronomia, o CREA, ou no CAU, conforme legislação aplicável. A grade segue o conteúdo mínimo exigido pela Portaria do Ministério do Trabalho e aborda introdução à engenharia de segurança, gerência de riscos, higiene ocupacional, ergonomia, prevenção e controle de perdas, proteção contra incêndios e explosões, gestão aplicada à segurança, normas regulamentadoras, principalmente as NRs aplicáveis à indústria, construção civil, mineração, energia e serviços, PGR, PCMSO, laudos técnicos como LTCAT e PPP, perícias judiciais, eSocial e responsabilidade técnica. O aluno é preparado para elaborar laudos, atuar em SESMTs, em consultorias, em órgãos públicos e como perito judicial em ações trabalhistas e previdenciárias. Em modalidade EAD de 18 meses, o curso é compatível com a rotina de engenheiros já em atividade. Reconhecida pelo MEC e habilitando o registro no conselho, a especialização tem alto ROI por permitir atuação técnica reservada por lei.",
+    "duration": "18 meses",
+    "areas": [
+      "Gerência de Riscos",
+      "Higiene Ocupacional",
+      "Ergonomia",
+      "Normas Regulamentadoras",
+      "Perícia em Segurança",
+      "Gestão em SST"
+    ],
+    "skills": [
+      "Elaboração de laudos técnicos",
+      "Avaliação de riscos",
+      "Aplicação de NRs",
+      "Trabalho com equipes multidisciplinares",
+      "Responsabilidade técnica",
+      "Comunicação institucional"
+    ],
+    "careerPaths": [
+      "Engenheiro de Segurança do Trabalho",
+      "Coordenador de SST",
+      "Perito Judicial",
+      "Consultor em Segurança do Trabalho",
+      "Engenheiro de SESMT",
+      "Servidor em Órgãos de Fiscalização"
+    ],
+    "averageSalary": "R$ 7.000 a R$ 22.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "especialização engenharia de segurança do trabalho ead",
+      "pós engenharia de segurança online",
+      "pós segurança do trabalho anhanguera",
+      "pós engenharia segurança mec",
+      "pós segurança crea",
+      "pós perito de segurança do trabalho",
+      "pós engenharia de segurança a distância",
+      "bolsa engenharia de segurança do trabalho"
+    ]
+  },
+  {
+    "slug": "especializacao-gestao-publica-municipal",
+    "apiCourseName": "Especialização em Gestão Pública Municipal",
+    "name": "Gestão Pública Municipal",
+    "fullName": "Gestão Pública Municipal - Especialização",
+    "type": "ESPECIALIZACAO",
+    "nivel": "POS_GRADUACAO",
+    "description": "Especialização em Gestão Pública Municipal com orçamento, licitações, políticas públicas e controle externo para servidores e candidatos a concursos.",
+    "longDescription": "A especialização em Gestão Pública Municipal forma profissionais para atuar de forma técnica e ética em prefeituras, câmaras de vereadores, autarquias, consórcios intermunicipais e órgãos de controle. A grade aborda fundamentos da administração pública, princípios constitucionais, federalismo, organização do município, planejamento e orçamento público, ciclo PPA, LDO e LOA, contabilidade pública, licitações e contratos com base na nova Lei 14.133, parcerias com o terceiro setor, políticas públicas setoriais em saúde, educação e assistência social, controle interno e externo, atuação dos Tribunais de Contas, transparência, Lei de Acesso à Informação, LGPD aplicada ao setor público, governo digital e indicadores de desempenho. O aluno é capacitado a participar do desenho, execução e avaliação de políticas públicas e a operar nos principais sistemas administrativos municipais. Em modalidade EAD de 18 meses, o curso é especialmente atrativo para servidores municipais que buscam progressão funcional, candidatos a concursos das três esferas e profissionais que prestam serviços ao setor público. Reconhecida pelo MEC, a especialização é critério recorrente em editais e contribui para o fortalecimento da gestão municipal.",
+    "duration": "18 meses",
+    "areas": [
+      "Orçamento Público",
+      "Licitações e Contratos",
+      "Políticas Públicas",
+      "Controle Externo",
+      "Gestão Municipal",
+      "Governo Digital"
+    ],
+    "skills": [
+      "Análise de políticas públicas",
+      "Leitura de leis orçamentárias",
+      "Gestão de contratos públicos",
+      "Trabalho com indicadores",
+      "Postura ética",
+      "Comunicação institucional"
+    ],
+    "careerPaths": [
+      "Gestor Público",
+      "Servidor Municipal",
+      "Analista em Administração Pública",
+      "Assessor Legislativo",
+      "Auditor de Controle Interno",
+      "Consultor em Gestão Pública"
+    ],
+    "averageSalary": "R$ 4.500 a R$ 14.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "especialização gestão pública municipal ead",
+      "pós gestão pública online",
+      "pós gestão pública anhanguera",
+      "pós gestão pública mec",
+      "pós administração pública municipal",
+      "pós gestão municipal para concursos",
+      "pós gestão pública a distância",
+      "bolsa gestão pública municipal"
+    ]
+  },
+  {
+    "slug": "especializacao-administracao-hospitalar",
+    "apiCourseName": "Especialização em Administração Hospitalar",
+    "name": "Administração Hospitalar",
+    "fullName": "Administração Hospitalar - Especialização",
+    "type": "ESPECIALIZACAO",
+    "nivel": "POS_GRADUACAO",
+    "description": "Especialização em Administração Hospitalar com gestão de leitos, custos, acreditação e qualidade para hospitais, clínicas e operadoras de saúde.",
+    "longDescription": "A especialização em Administração Hospitalar prepara profissionais para gerenciar hospitais, clínicas, operadoras de saúde, serviços de diagnóstico e redes de atenção, atuando na interseção entre cuidado assistencial e gestão. A grade aborda fundamentos de gestão em saúde, organização hospitalar, gestão de leitos, fluxo de pacientes, indicadores assistenciais, gestão de custos e faturamento, contas médicas, glosas, relacionamento com operadoras, suprimentos e farmácia hospitalar, gestão de pessoas, segurança do paciente, qualidade, acreditação, ONA, Joint Commission, gestão de riscos, prontuário eletrônico, telessaúde e LGPD aplicada à saúde. O aluno aprende a ler indicadores como taxa de ocupação, média de permanência e custo por paciente e a propor planos de melhoria contínua. Em modalidade EAD de 18 meses, o curso é especialmente atrativo para enfermeiros, médicos, administradores, contadores, fisioterapeutas e farmacêuticos que desejam migrar para áreas de gestão hospitalar ou consolidar carreira em diretoria e coordenação. Reconhecida pelo MEC, a especialização é frequentemente exigida em hospitais privados e públicos para cargos de coordenação, gerência e direção.",
+    "duration": "18 meses",
+    "areas": [
+      "Gestão Hospitalar",
+      "Qualidade e Acreditação",
+      "Custos em Saúde",
+      "Gestão de Leitos",
+      "Faturamento Hospitalar",
+      "Segurança do Paciente"
+    ],
+    "skills": [
+      "Análise de indicadores",
+      "Gestão de processos",
+      "Liderança de equipes assistenciais",
+      "Negociação com operadoras",
+      "Gestão de custos",
+      "Visão sistêmica"
+    ],
+    "careerPaths": [
+      "Administrador Hospitalar",
+      "Gerente de Hospital",
+      "Coordenador Assistencial",
+      "Diretor Técnico",
+      "Analista de Qualidade em Saúde",
+      "Consultor em Gestão Hospitalar"
+    ],
+    "averageSalary": "R$ 7.000 a R$ 22.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "especialização administração hospitalar ead",
+      "pós gestão hospitalar online",
+      "pós administração hospitalar anhanguera",
+      "pós gestão hospitalar mec",
+      "pós gestão em saúde",
+      "pós qualidade e acreditação hospitalar",
+      "pós administração hospitalar a distância",
+      "bolsa administração hospitalar"
+    ]
+  },
+  {
+    "slug": "especializacao-coaching-e-mentoring",
+    "apiCourseName": "Especialização em Coaching e Mentoring",
+    "name": "Coaching e Mentoring",
+    "fullName": "Coaching e Mentoring - Especialização",
+    "type": "ESPECIALIZACAO",
+    "nivel": "POS_GRADUACAO",
+    "description": "Especialização em Coaching e Mentoring com base científica, modelos de sessão e atuação ética para profissionais que conduzem desenvolvimento.",
+    "longDescription": "A especialização em Coaching e Mentoring é voltada para profissionais que conduzem ou desejam conduzir processos de desenvolvimento humano, executivo, de carreira e de equipes, com base em evidências e postura ética. A grade aborda fundamentos da psicologia positiva, ciência do comportamento, neurociência aplicada, modelos de sessão como GROW e Solution Focused, técnicas de questionamento, escuta ativa, feedback, planos de desenvolvimento individual, métricas de evolução, mentoring corporativo, mentoria de carreira, mentoria de negócios para empreendedores e diferenças entre coaching, mentoring, terapia e consultoria. O programa também trabalha temas como contratos, ética profissional, limites de atuação, integração com áreas de RH e diálogo com normas brasileiras quando aplicáveis. O aluno é treinado para estruturar processos com objetivos claros, indicadores e ciclos de revisão, evitando promessas indevidas e respeitando o campo de atuação de outras profissões regulamentadas. Em modalidade EAD de 12 meses, o curso é especialmente atrativo para profissionais de RH, líderes, consultores, professores e empreendedores. Reconhecida pelo MEC, a especialização fortalece o currículo e o posicionamento como profissional de desenvolvimento humano.",
+    "duration": "12 meses",
+    "areas": [
+      "Coaching",
+      "Mentoring",
+      "Psicologia Positiva",
+      "Desenvolvimento de Carreira",
+      "Liderança",
+      "Ética Profissional"
+    ],
+    "skills": [
+      "Escuta ativa",
+      "Questionamento poderoso",
+      "Estruturação de sessões",
+      "Feedback construtivo",
+      "Planejamento de desenvolvimento",
+      "Postura ética"
+    ],
+    "careerPaths": [
+      "Coach Executivo",
+      "Mentor de Carreira",
+      "Mentor de Negócios",
+      "Consultor de Desenvolvimento",
+      "Líder em RH",
+      "Facilitador de Equipes"
+    ],
+    "averageSalary": "R$ 5.000 a R$ 20.000",
+    "marketDemand": "MEDIA",
+    "keywords": [
+      "especialização coaching ead",
+      "pós mentoring online",
+      "pós coaching e mentoring anhanguera",
+      "pós coaching mec",
+      "pós coaching baseado em evidências",
+      "pós mentoring de carreira",
+      "pós coaching a distância",
+      "bolsa coaching e mentoring"
+    ]
+  },
+  {
+    "slug": "especializacao-pericia-criminal-e-ciencias-forenses",
+    "apiCourseName": "Especialização em Perícia Criminal e Ciências Forenses",
+    "name": "Perícia Criminal e Ciências Forenses",
+    "fullName": "Perícia Criminal e Ciências Forenses - Especialização",
+    "type": "ESPECIALIZACAO",
+    "nivel": "POS_GRADUACAO",
+    "description": "Especialização em Perícia Criminal e Ciências Forenses com local de crime, balística, documentoscopia e forense digital para concursandos e peritos.",
+    "longDescription": "A especialização em Perícia Criminal e Ciências Forenses é voltada para profissionais de áreas variadas, como direito, biologia, química, farmácia, biomedicina, odontologia, computação e engenharia, que desejam se preparar para concursos de perito criminal e ampliar a atuação técnica em laudos e perícias judiciais. A grade aborda fundamentos das ciências forenses, criminalística, local de crime, cadeia de custódia, balística forense, documentoscopia, papiloscopia, genética forense, toxicologia, entomologia, odontologia legal, medicina legal introdutória, perícia em crimes contra a pessoa e contra o patrimônio, crimes ambientais, perícia em acidentes de trânsito e forense digital, com técnicas de análise de dispositivos, redes e nuvem. O aluno desenvolve a capacidade de aplicar métodos científicos à elucidação de crimes, elaborar laudos técnicos e atuar em assistência técnica e perícia judicial. Em modalidade EAD de 18 meses, o curso é especialmente atrativo para concursandos de polícias técnico-científicas, profissionais de TI interessados em forense digital e advogados que querem atuar como assistentes técnicos. Reconhecida pelo MEC, a especialização fortalece o currículo para concursos e atuação profissional.",
+    "duration": "18 meses",
+    "areas": [
+      "Criminalística",
+      "Balística e Documentoscopia",
+      "Genética e Toxicologia Forense",
+      "Forense Digital",
+      "Medicina Legal",
+      "Cadeia de Custódia"
+    ],
+    "skills": [
+      "Análise de evidências",
+      "Elaboração de laudos técnicos",
+      "Aplicação de métodos científicos",
+      "Raciocínio investigativo",
+      "Postura ética",
+      "Comunicação técnica"
+    ],
+    "careerPaths": [
+      "Perito Criminal",
+      "Assistente Técnico",
+      "Perito em Forense Digital",
+      "Consultor em Ciências Forenses",
+      "Servidor em Polícia Científica",
+      "Docente em Ciências Forenses"
+    ],
+    "averageSalary": "R$ 6.000 a R$ 22.000",
+    "marketDemand": "MEDIA",
+    "keywords": [
+      "especialização perícia criminal ead",
+      "pós ciências forenses online",
+      "pós perícia criminal anhanguera",
+      "pós perícia criminal mec",
+      "pós forense digital",
+      "pós perícia para concursos",
+      "pós ciências forenses a distância",
+      "bolsa perícia criminal"
+    ]
+  },
+  {
+    "slug": "eletricista-industrial-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Eletricista Industrial",
+    "name": "Eletricista Industrial",
+    "fullName": "Eletricista Industrial - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Eletricista Industrial com 6 meses de duração, foco em NR-10, comandos elétricos, CLP e manutenção de painéis em ambientes fabris.",
+    "longDescription": "O curso profissionalizante de Eletricista Industrial prepara o aluno para instalar, operar e manter sistemas elétricos de baixa e média tensão em fábricas, galpões e plantas de processo. Em seis meses, o currículo cobre fundamentos de eletricidade, leitura de diagramas unifilares, dimensionamento de condutores, instalação de quadros de comando, motores trifásicos, partidas direta e estrela-triângulo, soft-starters e inversores de frequência. A formação dedica carga horária específica para a NR-10, exigida por lei para profissionais que atuam com Serviços em Eletricidade, e aborda APR, análise de risco e uso correto de EPI e EPC. Há ainda módulos de CLP, automação industrial e introdução à NR-12 para máquinas e equipamentos. Segundo o CAGED, o setor industrial brasileiro mantém demanda consistente por eletricistas qualificados, e o CBO 7156-10 reconhece a ocupação com salários acima da média do mercado operacional. O egresso atua em manutenção preventiva e corretiva, montagem de painéis, instalação de máquinas e leitura de projetos elétricos, tornando-se elegível para vagas em indústrias de alimentos, automotiva, química e mineração em todo o Brasil.",
+    "duration": "6 meses",
+    "areas": [
+      "Eletrotécnica",
+      "Automação Industrial",
+      "Manutenção Elétrica",
+      "Segurança do Trabalho",
+      "Comandos Elétricos",
+      "Instalações Industriais"
+    ],
+    "skills": [
+      "Leitura de diagramas elétricos",
+      "Instalação de painéis de comando",
+      "Aplicação da NR-10",
+      "Programação básica de CLP",
+      "Manutenção de motores trifásicos",
+      "Operação de inversores de frequência"
+    ],
+    "careerPaths": [
+      "Eletricista industrial",
+      "Eletricista de manutenção",
+      "Montador de painéis",
+      "Técnico em comandos elétricos",
+      "Auxiliar de automação",
+      "Eletricista de instalações"
+    ],
+    "averageSalary": "R$ 2.800 a R$ 5.500",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso eletricista industrial",
+      "profissionalizante eletricista NR-10",
+      "curso eletricista de manutenção",
+      "formação eletricista de fábrica",
+      "curso comandos elétricos",
+      "como ser eletricista industrial",
+      "curso CLP iniciante",
+      "eletricista industrial salário"
+    ]
+  },
+  {
+    "slug": "eletricista-residencial-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Eletricista Residencial",
+    "name": "Eletricista Residencial",
+    "fullName": "Eletricista Residencial - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Eletricista Residencial com 4 meses, ABNT NBR 5410, NR-10 básica e foco em instalações de baixa tensão para residências e pequenos comércios.",
+    "longDescription": "O curso profissionalizante de Eletricista Residencial forma profissionais aptos a executar instalações elétricas seguras em casas, apartamentos e estabelecimentos comerciais de pequeno porte. Em quatro meses, o aluno aprende fundamentos de eletricidade, lei de Ohm aplicada, leitura de plantas baixas, dimensionamento de circuitos terminais, escolha de disjuntores, DR, DPS e aterramento conforme a norma ABNT NBR 5410. A carga horária inclui também conteúdo de NR-10 básica, exigida pelo Ministério do Trabalho para qualquer atividade em serviços de eletricidade, abordando uso de EPI, distâncias de segurança e procedimentos de bloqueio e etiquetagem. Há módulos práticos de instalação de tomadas, interruptores paralelos, dimmer, luminárias LED, chuveiros, ventiladores de teto, sensores de presença e quadros de distribuição. Conforme dados do CAGED, eletricistas residenciais figuram entre as ocupações mais contratadas no setor de construção civil, e o CBO 7156-05 reconhece a função. Ao final, o egresso pode atuar como autônomo, prestador de serviço para construtoras ou em empresas de manutenção predial, com possibilidade de evolução para a área industrial.",
+    "duration": "4 meses",
+    "areas": [
+      "Instalações Elétricas Residenciais",
+      "Eletrotécnica",
+      "Construção Civil",
+      "Manutenção Predial",
+      "Segurança do Trabalho",
+      "Iluminação"
+    ],
+    "skills": [
+      "Aplicação da NBR 5410",
+      "Leitura de plantas elétricas",
+      "Instalação de quadros de distribuição",
+      "Dimensionamento de disjuntores e DR",
+      "Aterramento residencial",
+      "Diagnóstico de falhas elétricas"
+    ],
+    "careerPaths": [
+      "Eletricista residencial",
+      "Eletricista predial",
+      "Eletricista autônomo",
+      "Auxiliar de eletricista",
+      "Eletricista de obras",
+      "Mantenedor predial"
+    ],
+    "averageSalary": "R$ 1.800 a R$ 3.800",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso eletricista residencial",
+      "profissionalizante eletricista predial",
+      "curso NBR 5410 prático",
+      "como ser eletricista",
+      "curso instalação elétrica residencial",
+      "curso eletricista para iniciantes",
+      "eletricista residencial salário",
+      "curso eletricista NR-10 básica"
+    ]
+  },
+  {
+    "slug": "soldador-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Soldador",
+    "name": "Soldador",
+    "fullName": "Soldador - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Soldador em 6 meses, com processos eletrodo revestido, MIG/MAG e TIG, aplicáveis em indústria, naval e construção civil.",
+    "longDescription": "O curso profissionalizante de Soldador qualifica o aluno para executar uniões metálicas em estruturas, tubulações e equipamentos industriais por meio dos processos mais demandados pelo mercado brasileiro. Ao longo de seis meses, o currículo aborda metalurgia básica, simbologia AWS e ABNT, leitura e interpretação de desenho técnico, preparação de juntas, escolha de consumíveis e parâmetros elétricos. As práticas envolvem soldagem por eletrodo revestido (SMAW), MIG/MAG (GMAW), TIG (GTAW) e arame tubular, com posições plana, horizontal, vertical e sobrecabeça. A formação trata de segurança do trabalho aplicada à soldagem, incluindo NR-18 na construção civil, NR-33 em espaços confinados e NR-34 em estaleiros, além de cuidados com fumos metálicos e raios UV. O egresso é treinado para passar em testes de qualificação previstos pela norma ASME IX e pela Petrobras N-133, fundamentais para vagas em empresas do setor de óleo e gás, naval, metalmecânico e construção civil pesada. O CBO 7243-15 enquadra a ocupação e, segundo o CAGED, soldadores qualificados estão entre os profissionais com maior empregabilidade no Sudeste e Nordeste brasileiro.",
+    "duration": "6 meses",
+    "areas": [
+      "Soldagem",
+      "Metalurgia",
+      "Construção Mecânica",
+      "Caldeiraria",
+      "Segurança do Trabalho",
+      "Leitura de Desenho Técnico"
+    ],
+    "skills": [
+      "Soldagem por eletrodo revestido",
+      "Soldagem MIG/MAG",
+      "Soldagem TIG",
+      "Interpretação de simbologia AWS",
+      "Preparação de juntas soldadas",
+      "Aplicação de NR-18 e NR-34"
+    ],
+    "careerPaths": [
+      "Soldador",
+      "Soldador montador",
+      "Soldador de tubulações",
+      "Caldeireiro soldador",
+      "Soldador naval",
+      "Inspetor de solda visual"
+    ],
+    "averageSalary": "R$ 2.500 a R$ 5.200",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso soldador profissional",
+      "curso soldagem MIG MAG TIG",
+      "profissionalizante soldador eletrodo revestido",
+      "como ser soldador qualificado",
+      "curso soldador naval",
+      "curso soldagem ASME IX",
+      "soldador salário",
+      "curso soldagem para iniciantes"
+    ]
+  },
+  {
+    "slug": "mecanico-de-automoveis-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Mecânico de Automóveis",
+    "name": "Mecânico de Automóveis",
+    "fullName": "Mecânico de Automóveis - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Mecânico de Automóveis em 12 meses, com diagnóstico eletrônico, motor, suspensão, freios e injeção eletrônica para veículos leves.",
+    "longDescription": "O curso profissionalizante de Mecânico de Automóveis oferece formação completa para atuar em oficinas independentes, concessionárias e centros automotivos especializados em veículos leves. Em doze meses, o currículo cobre fundamentos de motores ciclo Otto e Diesel, sistemas de arrefecimento, lubrificação, alimentação, ignição, transmissão manual e automática, direção, suspensão, freios ABS e sistemas de carga. Há ênfase em injeção eletrônica multiponto e direta, com uso de scanner automotivo, leitura de códigos OBD-II, multímetro e osciloscópio para diagnóstico preciso de falhas. O aluno é treinado também em sistemas modernos como start-stop, híbridos leves e veículos flex, além de noções de eletrônica embarcada e CAN bus. A formação contempla segurança do trabalho em oficinas, atendimento ao cliente, orçamento e gestão de tempo de serviço. O CBO 9144-05 reconhece a ocupação e, segundo o CAGED, mecânicos automotivos figuram entre os profissionais técnicos mais contratados pelo setor de serviços. O egresso pode atuar como mecânico geral, especialista em injeção eletrônica, chefe de oficina ou empreender com sua própria autopeça e oficina, especialmente em centros urbanos com alta frota circulante.",
+    "duration": "12 meses",
+    "areas": [
+      "Mecânica Automotiva",
+      "Injeção Eletrônica",
+      "Diagnóstico Automotivo",
+      "Sistemas de Freios",
+      "Suspensão e Direção",
+      "Eletrônica Embarcada"
+    ],
+    "skills": [
+      "Diagnóstico com scanner OBD-II",
+      "Manutenção de motores flex",
+      "Reparo de injeção eletrônica",
+      "Revisão de freios ABS",
+      "Alinhamento e balanceamento",
+      "Análise de falhas com osciloscópio"
+    ],
+    "careerPaths": [
+      "Mecânico de automóveis",
+      "Mecânico de injeção eletrônica",
+      "Chefe de oficina",
+      "Mecânico de concessionária",
+      "Auxiliar de mecânico",
+      "Empreendedor de oficina"
+    ],
+    "averageSalary": "R$ 2.200 a R$ 5.500",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso mecânico de automóveis",
+      "profissionalizante mecânica automotiva",
+      "curso injeção eletrônica",
+      "como ser mecânico de carro",
+      "curso scanner automotivo",
+      "curso mecânico para iniciantes",
+      "mecânico automotivo salário",
+      "curso mecânica de veículos leves"
+    ]
+  },
+  {
+    "slug": "mecanico-diesel-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Mecânico Diesel",
+    "name": "Mecânico Diesel",
+    "fullName": "Mecânico Diesel - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Mecânico Diesel em 12 meses, com foco em motores pesados, common rail, caminhões, ônibus e máquinas agrícolas e de construção.",
+    "longDescription": "O curso profissionalizante de Mecânico Diesel forma o aluno para diagnosticar e reparar motores de combustão por compressão utilizados em caminhões, ônibus, tratores, escavadeiras, geradores e embarcações. Em doze meses, o currículo aborda termodinâmica aplicada, ciclo Diesel, bombas injetoras rotativas e em linha, sistemas common rail Bosch e Delphi, turbocompressores, intercoolers e sistemas de pós-tratamento como SCR, ARLA 32, DPF e EGR conforme a normativa Proconve P-7 e P-8. As práticas incluem desmontagem e remontagem de motores pesados, regulagem de válvulas, análise de pressão de compressão, diagnóstico eletrônico com scanner específico para linha pesada e teste de bicos injetores em bancada. O aluno também estuda transmissões manuais e automatizadas para veículos pesados, sistemas pneumáticos de freio, suspensão a ar e direção hidráulica. Há módulos de segurança em oficina e leitura de manuais técnicos em inglês básico. O CBO 9144-15 reconhece a ocupação e, segundo o CAGED, mecânicos de veículos pesados estão entre os profissionais mais demandados pelo agronegócio, transporte de cargas e construção pesada, com vagas concentradas em polos logísticos e regiões agrícolas do Centro-Oeste e Sul.",
+    "duration": "12 meses",
+    "areas": [
+      "Mecânica Pesada",
+      "Motores Diesel",
+      "Sistemas Common Rail",
+      "Manutenção de Caminhões",
+      "Linha Agrícola",
+      "Sistemas Pneumáticos"
+    ],
+    "skills": [
+      "Reparo de motores Diesel pesados",
+      "Diagnóstico de common rail",
+      "Manutenção de turbocompressores",
+      "Regulagem de bombas injetoras",
+      "Sistemas SCR e ARLA 32",
+      "Manutenção de linha agrícola"
+    ],
+    "careerPaths": [
+      "Mecânico Diesel",
+      "Mecânico de caminhão",
+      "Mecânico de ônibus",
+      "Mecânico agrícola",
+      "Mecânico de máquinas pesadas",
+      "Chefe de oficina pesada"
+    ],
+    "averageSalary": "R$ 2.800 a R$ 6.500",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso mecânico diesel",
+      "profissionalizante mecânica de caminhão",
+      "curso common rail",
+      "curso mecânico de ônibus",
+      "curso mecânica agrícola",
+      "como ser mecânico diesel",
+      "mecânico diesel salário",
+      "curso máquinas pesadas"
+    ]
+  },
+  {
+    "slug": "mecanico-de-motos-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Mecânico de Motos",
+    "name": "Mecânico de Motos",
+    "fullName": "Mecânico de Motos - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Mecânico de Motos em 6 meses, cobrindo motores 2 e 4 tempos, injeção eletrônica, freios CBS/ABS e diagnóstico de motocicletas nacionais.",
+    "longDescription": "O curso profissionalizante de Mecânico de Motos prepara o aluno para atuar em oficinas autorizadas, concessionárias e oficinas independentes, atendendo a crescente frota brasileira de motocicletas urbanas, naked, scooters e motos de trilha. Em seis meses, o currículo cobre os fundamentos de motores 2 e 4 tempos, sistemas de alimentação por carburador e injeção eletrônica, ignição CDI, sistemas elétricos 12V, partida elétrica e a pedal, embreagens, transmissões por corrente e correia, suspensões dianteira e traseira, freios a tambor e a disco com tecnologias CBS e ABS exigidas pelo Contran. O aluno aprende a interpretar manuais técnicos das principais montadoras, utilizar scanner automotivo para motocicletas, executar revisões preventivas e diagnósticos de falhas em modelos populares como CG, Biz, Fan, Factor, XRE e PCX. Há módulos de atendimento ao cliente, gestão de oficina e empreendedorismo para quem deseja abrir seu próprio negócio. Segundo o CAGED, a indústria de duas rodas mantém demanda consistente por mecânicos qualificados, especialmente em capitais e cidades médias com alta presença de entregadores por aplicativo. O CBO 9144-10 reconhece a ocupação, com bons índices de empregabilidade em todo o território nacional.",
+    "duration": "6 meses",
+    "areas": [
+      "Mecânica de Motocicletas",
+      "Injeção Eletrônica",
+      "Elétrica de Motos",
+      "Sistemas de Freios",
+      "Manutenção Preventiva",
+      "Empreendedorismo"
+    ],
+    "skills": [
+      "Manutenção de motores 2 e 4 tempos",
+      "Diagnóstico de injeção eletrônica de motos",
+      "Revisão de freios CBS e ABS",
+      "Regulagem de carburadores",
+      "Reparo elétrico de motocicletas",
+      "Atendimento ao cliente em oficina"
+    ],
+    "careerPaths": [
+      "Mecânico de motos",
+      "Mecânico de concessionária",
+      "Auxiliar de oficina",
+      "Mecânico autônomo",
+      "Especialista em injeção de motos",
+      "Empreendedor de oficina de motos"
+    ],
+    "averageSalary": "R$ 1.800 a R$ 4.200",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso mecânico de motos",
+      "profissionalizante mecânica de motocicletas",
+      "curso injeção eletrônica de motos",
+      "como ser mecânico de motos",
+      "curso mecânico para iniciantes",
+      "curso scanner de motos",
+      "mecânico de motos salário",
+      "curso oficina de motos"
+    ]
+  },
+  {
+    "slug": "operador-de-empilhadeira-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Operador de Empilhadeira",
+    "name": "Operador de Empilhadeira",
+    "fullName": "Operador de Empilhadeira - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Operador de Empilhadeira em 2 meses, com NR-11, operação de elétricas, GLP e a combustão, voltado a centros logísticos e fábricas.",
+    "longDescription": "O curso profissionalizante de Operador de Empilhadeira capacita o aluno para conduzir com segurança equipamentos de movimentação de cargas em armazéns, centros de distribuição, portos secos, fábricas e supermercados atacadistas. Em dois meses de formação, o currículo abrange os requisitos legais da NR-11, que regulamenta o transporte, movimentação, armazenagem e manuseio de materiais, além da NR-12 aplicada a máquinas e equipamentos. O aluno aprende a identificar os diferentes tipos de empilhadeira, incluindo contrabalançada elétrica, contrabalançada a GLP, a diesel, retrátil, paleteira elétrica e patolada, e os limites operacionais de cada modelo conforme o gráfico de carga do fabricante. As aulas práticas envolvem inspeção pré-operacional, partida segura, manobras com paletes, empilhamento em porta-paletes, descarga de caminhões e operação em corredores estreitos. Há conteúdo dedicado à segurança do trabalho, prevenção de tombamentos, ergonomia e direção defensiva em ambientes industriais. Segundo o CAGED, operadores de empilhadeira figuram entre as ocupações de logística com maior volume de admissões, e o CBO 7822-20 reconhece a função. A certificação NR-11 emitida ao final do curso tem validade nacional e é exigida por praticamente todas as empresas do setor.",
+    "duration": "2 meses",
+    "areas": [
+      "Logística",
+      "Movimentação de Cargas",
+      "Segurança do Trabalho",
+      "Armazenagem",
+      "Operação de Equipamentos",
+      "Direção Defensiva Industrial"
+    ],
+    "skills": [
+      "Operação segura de empilhadeira",
+      "Aplicação da NR-11",
+      "Inspeção pré-operacional",
+      "Leitura de gráfico de carga",
+      "Empilhamento em porta-paletes",
+      "Manobras em corredores estreitos"
+    ],
+    "careerPaths": [
+      "Operador de empilhadeira",
+      "Operador de paleteira elétrica",
+      "Auxiliar de logística",
+      "Conferente de armazém",
+      "Operador de centro de distribuição",
+      "Movimentador de cargas"
+    ],
+    "averageSalary": "R$ 1.800 a R$ 3.500",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso operador de empilhadeira",
+      "profissionalizante NR-11",
+      "curso empilhadeira elétrica e GLP",
+      "como tirar certificado de empilhadeira",
+      "curso operador de empilhadeira rápido",
+      "curso NR-11 prático",
+      "operador de empilhadeira salário",
+      "curso logística e movimentação"
+    ]
+  },
+  {
+    "slug": "almoxarife-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Almoxarife",
+    "name": "Almoxarife",
+    "fullName": "Almoxarife - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Almoxarife em 4 meses, com gestão de estoque, recebimento, inventário, curva ABC e sistemas WMS para indústria e comércio.",
+    "longDescription": "O curso profissionalizante de Almoxarife prepara o aluno para gerir estoques físicos e digitais em empresas industriais, comerciais e prestadoras de serviços. Ao longo de quatro meses, o currículo aborda os processos completos do almoxarifado, incluindo recebimento de mercadorias, conferência de notas fiscais eletrônicas, endereçamento, armazenagem por curva ABC e PEPS, controle de validade, separação de pedidos, expedição e inventário rotativo e geral. O aluno é familiarizado com sistemas WMS, ERPs como SAP, TOTVS Protheus e Bling, leitura de código de barras, etiquetagem e uso de coletores de dados. A formação também inclui matemática financeira aplicada, indicadores de desempenho como giro de estoque, cobertura e acuracidade, além de noções de logística reversa e gestão de perdas. Há módulos de segurança do trabalho, NR-11 básica para movimentação interna e procedimentos para materiais perigosos conforme NR-20. O CBO 4141-05 reconhece a ocupação de almoxarife, e segundo o CAGED, profissionais com domínio de sistemas WMS são amplamente requisitados por centros de distribuição, indústrias e operadores logísticos. O egresso pode atuar como almoxarife, líder de estoque ou progredir para funções de supervisão de logística.",
+    "duration": "4 meses",
+    "areas": [
+      "Logística",
+      "Gestão de Estoque",
+      "Almoxarifado",
+      "Sistemas ERP",
+      "Inventário",
+      "Movimentação de Materiais"
+    ],
+    "skills": [
+      "Controle de estoque por curva ABC",
+      "Operação de sistemas WMS e ERP",
+      "Inventário físico e rotativo",
+      "Conferência de notas fiscais",
+      "Endereçamento e armazenagem",
+      "Indicadores de desempenho logístico"
+    ],
+    "careerPaths": [
+      "Almoxarife",
+      "Auxiliar de almoxarifado",
+      "Líder de estoque",
+      "Conferente",
+      "Auxiliar de logística",
+      "Analista de inventário"
+    ],
+    "averageSalary": "R$ 1.700 a R$ 3.500",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso almoxarife",
+      "profissionalizante gestão de estoque",
+      "curso WMS prático",
+      "como ser almoxarife",
+      "curso almoxarifado iniciante",
+      "curso logística e estoque",
+      "almoxarife salário",
+      "curso ERP TOTVS SAP estoque"
+    ]
+  },
+  {
+    "slug": "pintor-predial-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Pintor Predial",
+    "name": "Pintor Predial",
+    "fullName": "Pintor Predial - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Pintor Predial em 3 meses, com técnicas de pintura interna e externa, texturas, grafiato, NR-35 e acabamento de alto padrão.",
+    "longDescription": "O curso profissionalizante de Pintor Predial qualifica o aluno para executar serviços de pintura em residências, edifícios comerciais e obras civis, com domínio das técnicas e produtos mais utilizados no mercado brasileiro. Em três meses, o currículo cobre preparação de superfícies, lixamento, emassamento com massa corrida e massa acrílica, aplicação de selador, fundo preparador e tintas látex PVA, acrílica fosca, acetinada, semibrilho e esmalte sintético. O aluno aprende também a executar texturas, grafiato, efeito cimento queimado, marmorato e técnicas decorativas que valorizam o serviço final. Há módulos práticos sobre uso de rolo, trincha, pincel chato e pistolas airless, além de cuidados específicos para superfícies como gesso, drywall, alvenaria, madeira e metal. A formação inclui carga horária dedicada à NR-35, que regulamenta trabalho em altura, com uso de cinto paraquedista, trava-quedas e andaimes, fundamental para pintura externa em prédios. O aluno aprende ainda a orçar serviços, calcular metragem, rendimento de tinta e gestão de cliente. Segundo o CAGED, pintores de obras estão entre os profissionais mais contratados pela construção civil, e o CBO 7166-10 reconhece a ocupação, com forte atuação autônoma e oportunidade de empreender com equipe própria.",
+    "duration": "3 meses",
+    "areas": [
+      "Construção Civil",
+      "Pintura Predial",
+      "Texturas e Revestimentos",
+      "Trabalho em Altura",
+      "Acabamento de Obras",
+      "Gestão de Serviços"
+    ],
+    "skills": [
+      "Preparação de superfícies",
+      "Aplicação de tintas látex e acrílicas",
+      "Execução de texturas e grafiato",
+      "Pintura em altura conforme NR-35",
+      "Uso de pistola airless",
+      "Orçamento de serviços de pintura"
+    ],
+    "careerPaths": [
+      "Pintor predial",
+      "Pintor de obras",
+      "Pintor autônomo",
+      "Pintor decorativo",
+      "Líder de equipe de pintura",
+      "Empreendedor de pintura"
+    ],
+    "averageSalary": "R$ 1.600 a R$ 3.800",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso pintor predial",
+      "profissionalizante pintura de obras",
+      "curso textura e grafiato",
+      "como ser pintor profissional",
+      "curso pintor NR-35",
+      "curso pintura decorativa",
+      "pintor predial salário",
+      "curso pintor para iniciantes"
+    ]
+  },
+  {
+    "slug": "pedreiro-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Pedreiro",
+    "name": "Pedreiro",
+    "fullName": "Pedreiro - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Pedreiro em 6 meses, com alvenaria, revestimento, contrapiso, leitura de projeto e NR-18 para obras residenciais e comerciais.",
+    "longDescription": "O curso profissionalizante de Pedreiro prepara o aluno para executar todos os serviços essenciais de uma obra civil, desde a fundação até o acabamento, atendendo construtoras, autônomos e empresas de reforma. Em seis meses, o currículo aborda leitura e interpretação de projeto arquitetônico e estrutural, traçagem de obra, locação de fundações, execução de baldrame, alvenaria de vedação com blocos cerâmicos e de concreto, alvenaria estrutural, contrapiso, contramarcos, vergas e contravergas. O aluno aprende a preparar argamassas de assentamento, emboço, reboco e chapisco, com domínio de traços usuais segundo a ABNT NBR 13281, e a aplicar revestimentos cerâmicos em pisos e paredes conforme NBR 13753 e NBR 13754. Há módulos de impermeabilização básica, instalação de pré-moldados, escadas e platibandas. A formação inclui carga horária integral em NR-18, norma de segurança em construção civil, abordando uso de EPI, montagem de andaimes, escoramento e prevenção de quedas. Segundo o CAGED, pedreiros figuram historicamente entre as ocupações mais admitidas pela construção civil, com o CBO 7152-10 reconhecendo a função. O egresso pode atuar em obras residenciais, comerciais, industriais ou montar sua própria equipe de empreitada.",
+    "duration": "6 meses",
+    "areas": [
+      "Construção Civil",
+      "Alvenaria",
+      "Revestimentos",
+      "Leitura de Projetos",
+      "Segurança em Obra",
+      "Acabamento"
+    ],
+    "skills": [
+      "Execução de alvenaria de vedação",
+      "Aplicação de revestimentos cerâmicos",
+      "Preparação de argamassas",
+      "Leitura de projetos arquitetônicos",
+      "Aplicação da NR-18",
+      "Execução de contrapiso"
+    ],
+    "careerPaths": [
+      "Pedreiro",
+      "Pedreiro de acabamento",
+      "Pedreiro de alvenaria estrutural",
+      "Mestre de obras assistente",
+      "Pedreiro autônomo",
+      "Empreiteiro de obras"
+    ],
+    "averageSalary": "R$ 1.800 a R$ 4.200",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso pedreiro profissional",
+      "profissionalizante construção civil",
+      "curso alvenaria e revestimento",
+      "como ser pedreiro",
+      "curso pedreiro NR-18",
+      "curso construção residencial",
+      "pedreiro salário",
+      "curso pedreiro iniciante"
+    ]
+  },
+  {
+    "slug": "cuidador-de-idosos-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Cuidador de Idosos",
+    "name": "Cuidador de Idosos",
+    "fullName": "Cuidador de Idosos - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Cuidador de Idosos em 6 meses, com gerontologia, primeiros socorros, RDC Anvisa nº 502/2021 e cuidados em ILPI e atendimento domiciliar.",
+    "longDescription": "O curso profissionalizante de Cuidador de Idosos forma profissionais aptos a oferecer assistência integral à pessoa idosa em domicílio, instituições de longa permanência e hospitais. Em seis meses, o currículo aborda fundamentos de gerontologia, processo de envelhecimento, fisiopatologia das doenças crônicas mais prevalentes como Alzheimer, Parkinson, demências, AVC e diabetes, além de cuidados paliativos e bem-estar emocional. O aluno estuda a Lei nº 10.741/2003, o Estatuto do Idoso, e a RDC Anvisa nº 502/2021, que regulamenta o funcionamento das instituições de longa permanência para idosos no Brasil. As aulas práticas incluem higiene pessoal, banho no leito, mudança de decúbito para prevenção de lesões por pressão, alimentação assistida, administração de medicamentos por via oral conforme prescrição, sinais vitais, primeiros socorros e mobilidade segura com uso de bengalas, andadores e cadeiras de rodas. A formação inclui módulos de psicologia do envelhecimento, comunicação não violenta e suporte às famílias enlutadas. O CBO 5162-10 reconhece a ocupação de cuidador. Segundo o CAGED e dados do IBGE, o envelhecimento populacional brasileiro mantém demanda crescente por cuidadores qualificados, com excelentes perspectivas de empregabilidade.",
+    "duration": "6 meses",
+    "areas": [
+      "Gerontologia",
+      "Cuidados em Saúde",
+      "Primeiros Socorros",
+      "Atendimento Domiciliar",
+      "Psicologia do Envelhecimento",
+      "Legislação do Idoso"
+    ],
+    "skills": [
+      "Cuidados de higiene e mobilidade",
+      "Administração de medicamentos prescritos",
+      "Identificação de sinais vitais",
+      "Aplicação do Estatuto do Idoso",
+      "Prevenção de lesões por pressão",
+      "Atendimento humanizado a idosos"
+    ],
+    "careerPaths": [
+      "Cuidador de idosos domiciliar",
+      "Cuidador em ILPI",
+      "Acompanhante de idosos",
+      "Cuidador hospitalar",
+      "Atendente em casa de repouso",
+      "Cuidador particular"
+    ],
+    "averageSalary": "R$ 1.600 a R$ 3.500",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso cuidador de idosos",
+      "profissionalizante cuidador domiciliar",
+      "curso gerontologia prática",
+      "como ser cuidador de idosos",
+      "curso cuidador ILPI",
+      "curso cuidador RDC Anvisa",
+      "cuidador de idosos salário",
+      "curso cuidador Estatuto do Idoso"
+    ]
+  },
+  {
+    "slug": "auxiliar-de-enfermagem-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Auxiliar de Enfermagem",
+    "name": "Auxiliar de Enfermagem",
+    "fullName": "Auxiliar de Enfermagem - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Auxiliar de Enfermagem em 12 meses, com Cofen, Lei 7.498/86, semiologia, farmacologia e estágio supervisionado em hospitais e UBS.",
+    "longDescription": "O curso profissionalizante de Auxiliar de Enfermagem habilita o aluno a atuar sob supervisão do enfermeiro em hospitais, unidades básicas de saúde, clínicas, home care e instituições de longa permanência. Em doze meses, o currículo cobre anatomia e fisiologia humana, microbiologia, parasitologia, semiologia, farmacologia aplicada, biossegurança conforme NR-32, processamento de materiais e controle de infecção hospitalar segundo diretrizes da Anvisa. O aluno aprende técnicas fundamentais como verificação de sinais vitais, administração de medicamentos por vias oral, subcutânea, intramuscular e endovenosa conforme prescrição, curativos, oxigenoterapia, aspiração de vias aéreas, sondagens, glicemia capilar e cuidados pré e pós-operatórios. A formação é pautada pela Lei nº 7.498/1986, que regulamenta o exercício profissional da enfermagem, e pelo Decreto nº 94.406/1987, com supervisão obrigatória do Conselho Regional de Enfermagem (Coren) e registro junto ao Cofen ao final do curso. O estágio supervisionado em campo de prática real é parte essencial da formação. O CBO 3222-30 reconhece a ocupação, e segundo o CAGED, auxiliares de enfermagem estão entre as ocupações de saúde com maior demanda no país, especialmente em hospitais públicos e privados.",
+    "duration": "12 meses",
+    "areas": [
+      "Enfermagem",
+      "Saúde Pública",
+      "Farmacologia",
+      "Biossegurança",
+      "Atenção Hospitalar",
+      "Atenção Básica"
+    ],
+    "skills": [
+      "Administração de medicamentos",
+      "Verificação de sinais vitais",
+      "Aplicação da NR-32",
+      "Realização de curativos",
+      "Coleta de exames laboratoriais",
+      "Atendimento humanizado em saúde"
+    ],
+    "careerPaths": [
+      "Auxiliar de enfermagem hospitalar",
+      "Auxiliar de enfermagem em UBS",
+      "Auxiliar em home care",
+      "Auxiliar em clínicas",
+      "Atendente de enfermagem em ILPI",
+      "Auxiliar em centro cirúrgico"
+    ],
+    "averageSalary": "R$ 1.800 a R$ 3.800",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso auxiliar de enfermagem",
+      "profissionalizante enfermagem Cofen",
+      "curso auxiliar enfermagem com estágio",
+      "como ser auxiliar de enfermagem",
+      "curso enfermagem Coren",
+      "curso auxiliar enfermagem hospital",
+      "auxiliar de enfermagem salário",
+      "curso enfermagem Lei 7498"
+    ]
+  },
+  {
+    "slug": "auxiliar-de-saude-bucal-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Auxiliar de Saúde Bucal",
+    "name": "Auxiliar de Saúde Bucal",
+    "fullName": "Auxiliar de Saúde Bucal - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Auxiliar de Saúde Bucal em 6 meses, com Lei 11.889/2008, biossegurança, RDC Anvisa nº 15/2012 e atuação em consultório odontológico.",
+    "longDescription": "O curso profissionalizante de Auxiliar de Saúde Bucal forma o ASB para atuar junto ao cirurgião-dentista em clínicas odontológicas privadas, unidades básicas de saúde e equipes de Saúde da Família. Em seis meses, o currículo aborda anatomia bucal, dentição decídua e permanente, instrumental odontológico, técnicas de trabalho a quatro mãos, organização do consultório e atendimento humanizado ao paciente, incluindo crianças, gestantes e idosos. O aluno é treinado em biossegurança conforme NR-32 e RDC Anvisa nº 15/2012, que dispõe sobre o processamento de produtos para saúde, abrangendo lavagem, desinfecção, esterilização em autoclave, monitoramento biológico e descarte de resíduos segundo a RDC 222/2018. Há módulos de manipulação de materiais restauradores, revelação de radiografias, orientações de higiene bucal, escovação supervisionada, aplicação tópica de flúor sob supervisão do dentista e noções de prevenção em saúde coletiva. A formação respeita a Lei nº 11.889/2008, que regulamenta o exercício das profissões de Técnico em Saúde Bucal e Auxiliar em Saúde Bucal, com necessidade de registro no Conselho Regional de Odontologia. O CBO 3224-05 reconhece a ocupação, e segundo o CAGED a demanda permanece estável em todo o território nacional.",
+    "duration": "6 meses",
+    "areas": [
+      "Odontologia",
+      "Saúde Bucal Coletiva",
+      "Biossegurança",
+      "Atendimento Odontológico",
+      "Esterilização",
+      "Prevenção em Saúde"
+    ],
+    "skills": [
+      "Trabalho a quatro mãos",
+      "Esterilização conforme RDC 15/2012",
+      "Aplicação da NR-32",
+      "Organização de consultório odontológico",
+      "Orientação de higiene bucal",
+      "Manipulação de materiais odontológicos"
+    ],
+    "careerPaths": [
+      "Auxiliar de saúde bucal em clínica",
+      "ASB em UBS",
+      "ASB em Saúde da Família",
+      "Auxiliar em ortodontia",
+      "Recepcionista odontológica",
+      "ASB autônomo"
+    ],
+    "averageSalary": "R$ 1.500 a R$ 3.000",
+    "marketDemand": "MEDIA",
+    "keywords": [
+      "curso auxiliar de saúde bucal",
+      "profissionalizante ASB odontologia",
+      "curso ASB com registro CRO",
+      "como ser auxiliar de dentista",
+      "curso ASB biossegurança",
+      "curso ASB Lei 11.889",
+      "auxiliar saúde bucal salário",
+      "curso ASB iniciante"
+    ]
+  },
+  {
+    "slug": "auxiliar-de-farmacia-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Auxiliar de Farmácia",
+    "name": "Auxiliar de Farmácia",
+    "fullName": "Auxiliar de Farmácia - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Auxiliar de Farmácia em 6 meses, com farmacologia básica, RDC Anvisa nº 44/2009, controlados (Portaria 344/98) e atendimento ao cliente.",
+    "longDescription": "O curso profissionalizante de Auxiliar de Farmácia prepara o aluno para atuar em drogarias, farmácias com manipulação, hospitais e distribuidoras, sob supervisão do farmacêutico responsável. Em seis meses, o currículo aborda anatomia e fisiologia humana, noções de farmacologia, classes terapêuticas principais como anti-hipertensivos, antibióticos, anti-inflamatórios, antidiabéticos e psicotrópicos, formas farmacêuticas, vias de administração e cálculos farmacêuticos básicos. O aluno estuda a RDC Anvisa nº 44/2009, que regulamenta as Boas Práticas Farmacêuticas, a Portaria SVS/MS nº 344/1998 sobre medicamentos sujeitos a controle especial e a RDC nº 20/2011 sobre dispensação de antimicrobianos, com forte ênfase em rastreabilidade, escrituração no SNGPC e atenção à venda responsável. Há módulos de atendimento ao cliente, atenção farmacêutica básica, gestão de estoque com controle de validade, recebimento de medicamentos termolábeis e organização de gôndolas conforme classificação farmacológica. A formação inclui ainda noções de cosméticos, dermocosméticos, produtos para saúde e perfumaria. O CBO 5242-25 reconhece a ocupação. Segundo o CAGED, o setor de farmácias e drogarias mantém alta demanda por auxiliares qualificados em todas as regiões do Brasil.",
+    "duration": "6 meses",
+    "areas": [
+      "Farmácia",
+      "Farmacologia Básica",
+      "Atendimento ao Cliente",
+      "Gestão de Estoque Farmacêutico",
+      "Legislação Sanitária",
+      "Cosmetologia"
+    ],
+    "skills": [
+      "Dispensação de medicamentos sob supervisão",
+      "Aplicação da Portaria 344/98",
+      "Controle de estoque farmacêutico",
+      "Atendimento humanizado em farmácia",
+      "Escrituração no SNGPC",
+      "Conhecimento de classes terapêuticas"
+    ],
+    "careerPaths": [
+      "Auxiliar de farmácia",
+      "Auxiliar de drogaria",
+      "Atendente farmacêutico",
+      "Auxiliar em farmácia hospitalar",
+      "Repositor de farmácia",
+      "Auxiliar em distribuidora"
+    ],
+    "averageSalary": "R$ 1.500 a R$ 3.200",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso auxiliar de farmácia",
+      "profissionalizante atendente farmacêutico",
+      "curso farmácia RDC 44",
+      "como ser auxiliar de farmácia",
+      "curso farmácia Portaria 344",
+      "curso atendimento em drogaria",
+      "auxiliar de farmácia salário",
+      "curso auxiliar farmácia iniciante"
+    ]
+  },
+  {
+    "slug": "auxiliar-de-veterinaria-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Auxiliar de Veterinária",
+    "name": "Auxiliar de Veterinária",
+    "fullName": "Auxiliar de Veterinária - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Auxiliar de Veterinária em 6 meses, com contenção animal, primeiros socorros pet, bem-estar e atuação em clínicas, pet shops e hospitais.",
+    "longDescription": "O curso profissionalizante de Auxiliar de Veterinária forma o aluno para apoiar o médico-veterinário em clínicas, hospitais, pet shops, canis, gatis e centros de zoonoses. Em seis meses, o currículo aborda anatomia e fisiologia básica de cães, gatos, aves e pequenos roedores, etologia, comportamento animal, manejo nutricional, primeiros socorros, contenção física segura conforme diretrizes de bem-estar animal e identificação de sinais clínicos de doenças comuns como cinomose, parvovirose, FIV, FeLV e leishmaniose. O aluno aprende a auxiliar em consultas e procedimentos como vacinação sob supervisão, coleta de sangue, fluidoterapia, internação, banho terapêutico, curativos pós-operatórios e higienização de ambulatórios conforme protocolos de biossegurança. Há módulos de atendimento ao tutor, recepção, agendamento e gestão de prontuário eletrônico, além de noções de legislação como a Lei nº 14.064/2020, que aumenta penas por maus-tratos, e resoluções do Conselho Federal de Medicina Veterinária. A formação inclui ainda conteúdo de banho e tosa básica, alimentação de filhotes órfãos e cuidados com animais geriátricos. O CBO 5193-15 reconhece a ocupação, e segundo o CAGED o setor pet brasileiro segue em crescimento, com alta demanda em capitais e cidades médias.",
+    "duration": "6 meses",
+    "areas": [
+      "Medicina Veterinária",
+      "Bem-Estar Animal",
+      "Primeiros Socorros Pet",
+      "Atendimento em Pet Shop",
+      "Biossegurança",
+      "Comportamento Animal"
+    ],
+    "skills": [
+      "Contenção segura de animais",
+      "Primeiros socorros veterinários",
+      "Auxílio em procedimentos clínicos",
+      "Higienização de ambulatório",
+      "Atendimento humanizado ao tutor",
+      "Identificação de sinais clínicos"
+    ],
+    "careerPaths": [
+      "Auxiliar de veterinária",
+      "Atendente em pet shop",
+      "Auxiliar em clínica veterinária",
+      "Auxiliar em hospital veterinário",
+      "Auxiliar de banho e tosa",
+      "Atendente em centro de zoonoses"
+    ],
+    "averageSalary": "R$ 1.500 a R$ 3.200",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso auxiliar de veterinária",
+      "profissionalizante auxiliar pet",
+      "curso clínica veterinária",
+      "como ser auxiliar de veterinário",
+      "curso primeiros socorros pet",
+      "curso atendente de pet shop",
+      "auxiliar veterinária salário",
+      "curso bem-estar animal"
+    ]
+  },
+  {
+    "slug": "massoterapia-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Massoterapia",
+    "name": "Massoterapia",
+    "fullName": "Massoterapia - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Massoterapia em 6 meses, com massagem relaxante, modeladora, shiatsu, drenagem linfática manual e técnicas terapêuticas integradas.",
+    "longDescription": "O curso profissionalizante de Massoterapia capacita o aluno a aplicar diversas técnicas manuais terapêuticas e estéticas em spas, clínicas integradas, hotéis, consultórios particulares e atendimento domiciliar. Em seis meses, o currículo aborda anatomia palpatória, fisiologia da pele e do sistema musculoesquelético, neurofisiologia da dor, contraindicações e indicações de cada técnica. O aluno aprende protocolos completos de massagem relaxante sueca, massagem modeladora, drenagem linfática manual pelo método Leduc e Vodder, quick massage, pedras quentes, massagem desportiva, shiatsu japonês, reflexologia podal e ventosaterapia. Há ênfase em ergonomia do massoterapeuta, biomecânica das manobras, prevenção de lesões por esforço repetitivo no próprio profissional e biossegurança no atendimento. A formação inclui módulos de atendimento humanizado, anamnese, ficha de avaliação, gestão de agenda, marketing pessoal para profissional autônomo e ética profissional. A massoterapia é regulamentada pela Resolução COFFITO em determinados estados e o profissional pode obter registro junto a associações reconhecidas como SINTE e ABRATTH. O CBO 3221-15 reconhece a ocupação. Segundo o CAGED e dados do Sebrae, o setor de bem-estar é um dos que mais cresce no Brasil, com forte atuação autônoma e bom potencial de renda.",
+    "duration": "6 meses",
+    "areas": [
+      "Massoterapia",
+      "Terapias Integrativas",
+      "Anatomia Aplicada",
+      "Drenagem Linfática",
+      "Bem-Estar",
+      "Estética Corporal"
+    ],
+    "skills": [
+      "Massagem relaxante e modeladora",
+      "Drenagem linfática manual",
+      "Aplicação de shiatsu",
+      "Reflexologia podal",
+      "Anamnese e avaliação",
+      "Atendimento personalizado em spa"
+    ],
+    "careerPaths": [
+      "Massoterapeuta",
+      "Massoterapeuta em spa",
+      "Profissional autônomo de massagem",
+      "Atendente em clínica estética",
+      "Quick massage corporativo",
+      "Drenagem linfática pós-cirúrgica"
+    ],
+    "averageSalary": "R$ 1.800 a R$ 5.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso massoterapia",
+      "profissionalizante massagem terapêutica",
+      "curso drenagem linfática",
+      "como ser massoterapeuta",
+      "curso massagem modeladora",
+      "curso shiatsu e reflexologia",
+      "massoterapeuta salário",
+      "curso massagem relaxante"
+    ]
+  },
+  {
+    "slug": "socorrista-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Socorrista",
+    "name": "Socorrista",
+    "fullName": "Socorrista - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Socorrista em 3 meses, com APH, suporte básico de vida, RCP, DEA, eventos, indústria e atendimento conforme Portaria 2.048 do Ministério da Saúde.",
+    "longDescription": "O curso profissionalizante de Socorrista forma o aluno para prestar Atendimento Pré-Hospitalar (APH) em eventos esportivos, shows, indústrias, condomínios, parques aquáticos, brigadas voluntárias e empresas de remoção. Em três meses, o currículo cobre os fundamentos do suporte básico de vida (BLS), avaliação primária pelo método XABCDE, ressuscitação cardiopulmonar conforme protocolo da American Heart Association atualizado, uso do desfibrilador externo automático (DEA), manobra de Heimlich em adultos, crianças e bebês, e estabilização inicial em emergências clínicas e traumáticas. As aulas práticas envolvem imobilização com colar cervical, prancha rígida, KED e talas, controle de hemorragias, queimaduras, intoxicações exógenas, partos emergenciais e atendimento a vítimas politraumatizadas. A formação observa a Portaria GM/MS nº 2.048/2002, que dispõe sobre os serviços de urgência e emergência no Brasil, além das diretrizes do SAMU e do Corpo de Bombeiros. Há módulos de psicologia das emergências, comunicação com a regulação médica, biossegurança e direção defensiva para condutores de ambulância. O CBO 5151-40 reconhece a ocupação de socorrista, com oportunidades em concessionárias de rodovia, indústrias, eventos e plantões de remoção privada.",
+    "duration": "3 meses",
+    "areas": [
+      "Atendimento Pré-Hospitalar",
+      "Suporte Básico de Vida",
+      "Emergências Médicas",
+      "Resgate e Trauma",
+      "Biossegurança",
+      "Eventos e Indústria"
+    ],
+    "skills": [
+      "RCP e uso do DEA",
+      "Imobilização e remoção segura",
+      "Avaliação XABCDE",
+      "Controle de hemorragias",
+      "Atendimento a politraumas",
+      "Aplicação da Portaria 2048/MS"
+    ],
+    "careerPaths": [
+      "Socorrista em eventos",
+      "Socorrista em indústria",
+      "Socorrista de rodovia",
+      "Auxiliar de ambulância",
+      "Brigadista emergencista",
+      "Socorrista em parques"
+    ],
+    "averageSalary": "R$ 1.700 a R$ 4.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso socorrista APH",
+      "profissionalizante atendimento pré-hospitalar",
+      "curso suporte básico de vida",
+      "como ser socorrista",
+      "curso socorrista em eventos",
+      "curso socorrista rodovia",
+      "socorrista salário",
+      "curso emergências médicas"
+    ]
+  },
+  {
+    "slug": "cuidador-infantil-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Cuidador Infantil",
+    "name": "Cuidador Infantil",
+    "fullName": "Cuidador Infantil - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Cuidador Infantil em 4 meses, com desenvolvimento infantil, primeiros socorros pediátricos, ECA e atuação em creches e atendimento domiciliar.",
+    "longDescription": "O curso profissionalizante de Cuidador Infantil prepara o aluno para atuar com bebês e crianças em domicílios, creches particulares, escolas de educação infantil, festas, clínicas e instituições de acolhimento. Em quatro meses, o currículo aborda desenvolvimento infantil de 0 a 12 anos segundo as fases de Piaget e Wallon, marcos motores e cognitivos, nutrição infantil, introdução alimentar conforme o Guia Alimentar para Crianças Brasileiras menores de 2 anos do Ministério da Saúde, sono seguro e prevenção da morte súbita do lactente. O aluno aprende noções de pediatria básica como febre, diarreia, dermatites, parasitoses e cuidados com prematuros. Há módulos completos de primeiros socorros pediátricos, incluindo manobra de Heimlich em bebês, RCP infantil, conduta em convulsão febril e acidentes domésticos. A formação observa o Estatuto da Criança e do Adolescente (Lei nº 8.069/1990), a notificação obrigatória de suspeita de violência conforme Lei nº 13.431/2017 e princípios da Base Nacional Comum Curricular para a Educação Infantil. O aluno é treinado em atividades lúdicas, leitura de histórias, musicalização e psicomotricidade. O CBO 5162-10 inclui a função, e segundo o CAGED a demanda por babás profissionalizadas e auxiliares de creche cresce em todas as capitais brasileiras.",
+    "duration": "4 meses",
+    "areas": [
+      "Desenvolvimento Infantil",
+      "Cuidados Pediátricos",
+      "Primeiros Socorros",
+      "Educação Infantil",
+      "Nutrição Infantil",
+      "Psicomotricidade"
+    ],
+    "skills": [
+      "Primeiros socorros pediátricos",
+      "Estimulação do desenvolvimento",
+      "Aplicação do ECA",
+      "Cuidados com bebês",
+      "Atividades lúdicas e pedagógicas",
+      "Atendimento humanizado à criança"
+    ],
+    "careerPaths": [
+      "Babá profissional",
+      "Cuidador infantil domiciliar",
+      "Auxiliar de creche",
+      "Recreador infantil",
+      "Acompanhante de crianças",
+      "Cuidador de filhos de executivos"
+    ],
+    "averageSalary": "R$ 1.600 a R$ 3.500",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso cuidador infantil",
+      "profissionalizante babá",
+      "curso babá com primeiros socorros",
+      "como ser babá profissional",
+      "curso cuidador de crianças",
+      "curso ECA e desenvolvimento infantil",
+      "babá profissional salário",
+      "curso auxiliar de creche"
+    ]
+  },
+  {
+    "slug": "acompanhante-hospitalar-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Acompanhante Hospitalar",
+    "name": "Acompanhante Hospitalar",
+    "fullName": "Acompanhante Hospitalar - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Acompanhante Hospitalar em 3 meses, com biossegurança hospitalar, NR-32, comunicação com equipe e suporte humanizado ao paciente.",
+    "longDescription": "O curso profissionalizante de Acompanhante Hospitalar forma o aluno para acompanhar pacientes adultos, idosos e crianças durante internações em hospitais, clínicas, home care e em períodos pós-cirúrgicos domiciliares. Em três meses, o currículo aborda anatomia básica, sinais vitais, observação clínica, comunicação efetiva com a equipe multiprofissional, ética hospitalar, sigilo conforme a Lei Geral de Proteção de Dados aplicada à saúde e direitos do paciente como humanização e dignidade. O aluno aprende biossegurança hospitalar segundo a NR-32, paramentação, higienização de mãos pela técnica dos cinco momentos da Organização Mundial da Saúde, prevenção de infecções relacionadas à assistência à saúde e uso correto de EPI. As práticas incluem auxílio na alimentação assistida, hidratação, conforto no leito, mudança de decúbito, ajuda na deambulação, observação de queixas e relato à equipe. Importante destacar que o acompanhante não administra medicamentos nem realiza procedimentos privativos da enfermagem, mas oferece suporte emocional, comunicação com a família e presença qualificada nas 24 horas do dia. O CBO 5162-10 abriga a ocupação, e o serviço é fortemente demandado por pacientes oncológicos, em recuperação ortopédica e gestantes em internação prolongada.",
+    "duration": "3 meses",
+    "areas": [
+      "Acompanhamento Hospitalar",
+      "Humanização em Saúde",
+      "Biossegurança",
+      "Comunicação em Saúde",
+      "Suporte Emocional",
+      "Direitos do Paciente"
+    ],
+    "skills": [
+      "Suporte humanizado a pacientes",
+      "Aplicação da NR-32",
+      "Comunicação com equipe de saúde",
+      "Observação de sinais clínicos",
+      "Auxílio em alimentação e mobilidade",
+      "Conhecimento dos direitos do paciente"
+    ],
+    "careerPaths": [
+      "Acompanhante hospitalar",
+      "Acompanhante de internação",
+      "Acompanhante de home care",
+      "Acompanhante pós-cirúrgico",
+      "Acompanhante oncológico",
+      "Acompanhante autônomo"
+    ],
+    "averageSalary": "R$ 1.500 a R$ 3.200",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso acompanhante hospitalar",
+      "profissionalizante acompanhante de internação",
+      "curso humanização hospitalar",
+      "como ser acompanhante hospitalar",
+      "curso acompanhante home care",
+      "curso acompanhante NR-32",
+      "acompanhante hospitalar salário",
+      "curso acompanhante de pacientes"
+    ]
+  },
+  {
+    "slug": "auxiliar-de-saude-mental-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Auxiliar de Saúde Mental",
+    "name": "Auxiliar de Saúde Mental",
+    "fullName": "Auxiliar de Saúde Mental - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Auxiliar de Saúde Mental em 6 meses, com Lei 10.216/2001, RAPS, comunicação terapêutica e atuação em CAPS, comunidades terapêuticas e clínicas.",
+    "longDescription": "O curso profissionalizante de Auxiliar de Saúde Mental prepara o aluno para atuar como apoio à equipe multiprofissional em Centros de Atenção Psicossocial (CAPS), comunidades terapêuticas, clínicas de reabilitação, hospitais-dia, residências terapêuticas e atendimento domiciliar. Em seis meses, o currículo aborda fundamentos de psicopatologia, principais transtornos mentais como depressão, ansiedade, transtorno bipolar, esquizofrenia, transtornos por uso de substâncias e transtornos do espectro autista. O aluno estuda a Lei nº 10.216/2001, conhecida como Lei da Reforma Psiquiátrica, que redireciona o modelo assistencial em saúde mental no Brasil, e a Política Nacional de Saúde Mental, incluindo a Rede de Atenção Psicossocial (RAPS). Há módulos de comunicação terapêutica não violenta, manejo de crises sem contenção mecânica abusiva, prevenção do suicídio segundo a estratégia Setembro Amarelo, redução de danos no uso de álcool e outras drogas e atendimento humanizado em conformidade com os princípios da Reforma Psiquiátrica. A formação inclui também noções de reabilitação psicossocial, atividades terapêuticas, oficinas e suporte à família. O profissional não realiza atos privativos de psicólogos, médicos ou enfermeiros, mas atua como apoio essencial à equipe, com forte campo de trabalho em CAPS de todas as regiões do país.",
+    "duration": "6 meses",
+    "areas": [
+      "Saúde Mental",
+      "Atenção Psicossocial",
+      "Reforma Psiquiátrica",
+      "Comunicação Terapêutica",
+      "Redução de Danos",
+      "Reabilitação Psicossocial"
+    ],
+    "skills": [
+      "Aplicação da Lei 10.216/2001",
+      "Manejo humanizado de crises",
+      "Comunicação terapêutica",
+      "Apoio em oficinas terapêuticas",
+      "Identificação de sinais de risco",
+      "Atuação em equipe multiprofissional"
+    ],
+    "careerPaths": [
+      "Auxiliar de saúde mental em CAPS",
+      "Monitor em comunidade terapêutica",
+      "Auxiliar em clínica psiquiátrica",
+      "Acompanhante terapêutico",
+      "Auxiliar em hospital-dia",
+      "Apoio em residência terapêutica"
+    ],
+    "averageSalary": "R$ 1.700 a R$ 3.500",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso auxiliar saúde mental",
+      "profissionalizante CAPS RAPS",
+      "curso comunidade terapêutica",
+      "como ser auxiliar saúde mental",
+      "curso saúde mental Lei 10216",
+      "curso atendimento psicossocial",
+      "auxiliar saúde mental salário",
+      "curso saúde mental humanizada"
+    ]
+  },
+  {
+    "slug": "auxiliar-administrativo-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Auxiliar Administrativo",
+    "name": "Auxiliar Administrativo",
+    "fullName": "Auxiliar Administrativo - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Auxiliar Administrativo em 6 meses, com rotinas de RH, financeiro, fiscal, Excel, ERP TOTVS/SAP e atendimento corporativo.",
+    "longDescription": "O curso profissionalizante de Auxiliar Administrativo forma o aluno para atuar em departamentos administrativos de empresas de todos os portes, incluindo indústria, comércio, serviços, escritórios contábeis e órgãos públicos. Em seis meses, o currículo aborda fundamentos da administração, comunicação empresarial, redação oficial, organização de documentos físicos e digitais, gestão da rotina, técnicas de arquivo e protocolo. O aluno aprende rotinas das principais áreas de apoio, como Recursos Humanos com admissão, integração, folha de ponto e desligamento, departamento financeiro com contas a pagar e a receber, conciliação bancária, fluxo de caixa e emissão de boletos, e área fiscal básica com emissão de nota fiscal eletrônica, conhecimento do Simples Nacional e principais tributos. Há ênfase em informática aplicada, com domínio intermediário de Excel para tabelas dinâmicas, PROCV, gráficos e dashboards, Word, PowerPoint, Google Workspace e principais ERPs do mercado brasileiro como TOTVS Protheus, SAP B1 e Senior. A formação inclui módulos de atendimento ao cliente, postura profissional, ética corporativa e Lei Geral de Proteção de Dados aplicada ao escritório. O CBO 4110-10 reconhece a ocupação, e segundo o CAGED auxiliares administrativos figuram entre as ocupações mais admitidas no Brasil.",
+    "duration": "6 meses",
+    "areas": [
+      "Administração",
+      "Departamento Pessoal",
+      "Financeiro",
+      "Rotinas Fiscais",
+      "Informática Aplicada",
+      "Atendimento Corporativo"
+    ],
+    "skills": [
+      "Rotinas administrativas",
+      "Excel intermediário com PROCV",
+      "Emissão de NF-e",
+      "Conciliação bancária",
+      "Operação de ERP TOTVS e SAP",
+      "Aplicação da LGPD em rotinas"
+    ],
+    "careerPaths": [
+      "Auxiliar administrativo",
+      "Assistente administrativo",
+      "Auxiliar de departamento pessoal",
+      "Auxiliar financeiro",
+      "Assistente de escritório",
+      "Auxiliar de back office"
+    ],
+    "averageSalary": "R$ 1.700 a R$ 3.500",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso auxiliar administrativo",
+      "profissionalizante rotinas administrativas",
+      "curso Excel para escritório",
+      "como ser auxiliar administrativo",
+      "curso ERP TOTVS prático",
+      "curso administração para iniciantes",
+      "auxiliar administrativo salário",
+      "curso departamento pessoal básico"
+    ]
+  },
+  {
+    "slug": "recepcionista-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Recepcionista",
+    "name": "Recepcionista",
+    "fullName": "Recepcionista - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Recepcionista em 3 meses, com atendimento, telefonia, agenda, postura profissional e atuação em clínicas, hotéis e escritórios.",
+    "longDescription": "O curso profissionalizante de Recepcionista forma o aluno para atuar como primeiro ponto de contato em hotéis, clínicas, hospitais, escritórios de advocacia, consultórios, salões de beleza, academias e empresas em geral. Em três meses, o currículo cobre técnicas de atendimento humanizado presencial, telefônico e digital via WhatsApp Business, postura profissional, etiqueta empresarial, gestão de agenda, controle de visitantes, organização de salas de reunião e protocolo de documentos. O aluno aprende a operar centrais telefônicas, sistemas de check-in hoteleiro como CMNet e Desbravador, sistemas de agendamento médico e odontológico, além de ferramentas básicas como Excel, Word e Google Calendar. Há módulos específicos de comunicação assertiva, redação de e-mails corporativos, idioma inglês básico para atendimento a estrangeiros em hotéis e clínicas internacionais, resolução de conflitos com clientes, gestão de filas e priorização de demandas simultâneas. A formação aborda também noções de Lei Geral de Proteção de Dados aplicada ao cadastro de clientes, sigilo profissional em recepções de saúde e jurídicas, ética e apresentação pessoal. O CBO 4221-05 reconhece a ocupação, e segundo o CAGED recepcionistas estão entre as ocupações de serviços com maior número de admissões mensais no país.",
+    "duration": "3 meses",
+    "areas": [
+      "Atendimento ao Cliente",
+      "Recepção e Hospitalidade",
+      "Comunicação Empresarial",
+      "Telefonia e Agenda",
+      "Postura Profissional",
+      "Informática Básica"
+    ],
+    "skills": [
+      "Atendimento presencial e telefônico",
+      "Gestão de agenda corporativa",
+      "Operação de PABX e WhatsApp Business",
+      "Aplicação da LGPD",
+      "Comunicação assertiva",
+      "Inglês básico de recepção"
+    ],
+    "careerPaths": [
+      "Recepcionista em clínica",
+      "Recepcionista hoteleira",
+      "Recepcionista de escritório",
+      "Recepcionista em academia",
+      "Atendente de consultório",
+      "Recepcionista corporativa"
+    ],
+    "averageSalary": "R$ 1.500 a R$ 3.200",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso recepcionista",
+      "profissionalizante atendimento recepção",
+      "curso recepcionista de clínica",
+      "como ser recepcionista",
+      "curso recepcionista hotel",
+      "curso atendimento ao cliente",
+      "recepcionista salário",
+      "curso recepcionista para iniciantes"
+    ]
+  },
+  {
+    "slug": "secretariado-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Secretariado",
+    "name": "Secretariado",
+    "fullName": "Secretariado - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Secretariado em 6 meses, com gestão de agenda executiva, redação corporativa, eventos, viagens e suporte a diretoria.",
+    "longDescription": "O curso profissionalizante de Secretariado prepara o aluno para atuar como suporte estratégico a executivos, diretores e gestores em empresas privadas, multinacionais, escritórios profissionais e órgãos públicos. Em seis meses, o currículo aborda gestão de agenda executiva com múltiplos fusos horários, organização de viagens nacionais e internacionais com emissão de passagens, reservas hoteleiras e adiantamentos de despesas, planejamento de reuniões com elaboração de pauta, atas e follow-up, organização de eventos corporativos, convenções e workshops. O aluno aprende redação corporativa avançada para e-mails, ofícios, memorandos, comunicados internos e apresentações executivas em PowerPoint e Canva. Há módulos de inglês instrumental e espanhol básico para atendimento e correspondência em ambiente internacional, técnicas de cerimonial, etiqueta corporativa e gestão de relacionamento com stakeholders. A formação cobre informática avançada com Excel intermediário, Outlook, Google Workspace, OneDrive, SharePoint e ferramentas de produtividade como Trello e Notion. Aborda também princípios da Lei nº 7.377/1985, regulamentadora da profissão de Secretário no Brasil, ética profissional, sigilo executivo e LGPD. O CBO 2523-05 reconhece a ocupação, com forte demanda em capitais e centros financeiros, especialmente para secretárias bilíngues.",
+    "duration": "6 meses",
+    "areas": [
+      "Secretariado Executivo",
+      "Gestão de Agenda",
+      "Redação Corporativa",
+      "Eventos Corporativos",
+      "Idiomas Aplicados",
+      "Suporte à Diretoria"
+    ],
+    "skills": [
+      "Gestão de agenda executiva",
+      "Redação corporativa avançada",
+      "Organização de viagens corporativas",
+      "Inglês instrumental",
+      "Planejamento de eventos",
+      "Aplicação da Lei 7.377/85 e LGPD"
+    ],
+    "careerPaths": [
+      "Secretária executiva",
+      "Secretária bilíngue",
+      "Assistente de diretoria",
+      "Secretária administrativa",
+      "Office manager",
+      "Secretária remota"
+    ],
+    "averageSalary": "R$ 2.500 a R$ 6.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso secretariado",
+      "profissionalizante secretária executiva",
+      "curso secretariado bilíngue",
+      "como ser secretária executiva",
+      "curso secretariado iniciante",
+      "curso secretariado Lei 7377",
+      "secretária executiva salário",
+      "curso assistente de diretoria"
+    ]
+  },
+  {
+    "slug": "vendedor-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Vendedor",
+    "name": "Vendedor",
+    "fullName": "Vendedor - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Vendedor em 3 meses, com técnicas de vendas consultivas, negociação SPIN, atendimento, CRM e fechamento em varejo e B2B.",
+    "longDescription": "O curso profissionalizante de Vendedor capacita o aluno para atuar em pontos de venda físicos, e-commerce, atendimento por WhatsApp, prospecção telefônica e vendas externas em diversos segmentos como moda, calçados, eletrodomésticos, automóveis, planos de saúde, planos odontológicos e seguros. Em três meses, o currículo cobre os fundamentos da venda consultiva, perfis comportamentais do consumidor brasileiro, técnicas de abordagem em loja, atendimento humanizado, identificação de necessidades, demonstração de produtos, contorno de objeções, negociação de prazos e formas de pagamento e fechamento consultivo. O aluno aprende metodologias modernas como SPIN Selling, neurovendas, gatilhos mentais éticos, técnica BANT para qualificação de leads e funil de vendas. Há ênfase no uso de CRMs populares como RD Station, HubSpot, Pipedrive e Bitrix24, além de WhatsApp Business com etiquetas, catálogos e mensagens automáticas. A formação inclui módulos de cálculo de margem, comissão, metas, indicadores como ticket médio, taxa de conversão e churn, além de pós-venda, fidelização e geração de indicações. O aluno estuda o Código de Defesa do Consumidor (Lei nº 8.078/1990) aplicado à rotina. O CBO 5211-10 reconhece a ocupação, e segundo o CAGED o varejo brasileiro segue como maior empregador de vendedores no país.",
+    "duration": "3 meses",
+    "areas": [
+      "Vendas",
+      "Varejo",
+      "Atendimento ao Cliente",
+      "Negociação",
+      "CRM",
+      "Pós-Venda"
+    ],
+    "skills": [
+      "Venda consultiva e SPIN Selling",
+      "Negociação e fechamento",
+      "Operação de CRM",
+      "Atendimento via WhatsApp Business",
+      "Aplicação do CDC em vendas",
+      "Gestão de funil de vendas"
+    ],
+    "careerPaths": [
+      "Vendedor de loja",
+      "Vendedor externo",
+      "Consultor de vendas",
+      "Vendedor B2B",
+      "Vendedor de e-commerce",
+      "SDR e pré-vendas"
+    ],
+    "averageSalary": "R$ 1.800 a R$ 5.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso vendedor profissional",
+      "profissionalizante técnicas de vendas",
+      "curso vendedor SPIN Selling",
+      "como ser vendedor de loja",
+      "curso vendas consultivas",
+      "curso CRM para vendas",
+      "vendedor salário",
+      "curso vendedor para iniciantes"
+    ]
+  },
+  {
+    "slug": "cabeleireiro-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Cabeleireiro",
+    "name": "Cabeleireiro",
+    "fullName": "Cabeleireiro - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Cabeleireiro em 6 meses, com cortes femininos e masculinos, coloração, mechas, química e atendimento em salão de alto padrão.",
+    "longDescription": "O curso profissionalizante de Cabeleireiro forma o aluno para atuar em salões de beleza, barbearias, atendimento domiciliar e equipes de produção para televisão, casamentos e moda. Em seis meses, o currículo aborda visagismo, identificação de formato de rosto, tipos de fio e fórmula capilar, anamnese capilar, química do cabelo e do couro cabeludo. O aluno aprende cortes femininos clássicos e modernos como repicado, long bob, pixie cut, em camadas e degradê, além de cortes masculinos com tesoura, navalha e máquina, incluindo fade, undercut e disfarçado. Há módulos práticos de coloração, descoloração responsável, mechas, balayage, ombré hair, correção de cor, escova progressiva, relaxamento e permanente, com domínio das principais marcas profissionais do mercado brasileiro. A formação inclui tricologia básica, identificação de problemas como alopecia, dermatite seborreica e quebra capilar, biossegurança em salões conforme orientações da Anvisa, esterilização de ferramentas e descarte de resíduos perfurocortantes. O aluno também estuda atendimento ao cliente, precificação de serviços, marketing pessoal nas redes sociais e gestão financeira para profissional autônomo. O CBO 5161-10 reconhece a ocupação, e segundo o CAGED e Sebrae o setor de beleza é um dos que mais cresce no Brasil, com alto potencial de empreendedorismo.",
+    "duration": "6 meses",
+    "areas": [
+      "Beleza Capilar",
+      "Visagismo",
+      "Coloração",
+      "Química Capilar",
+      "Atendimento em Salão",
+      "Empreendedorismo"
+    ],
+    "skills": [
+      "Cortes femininos e masculinos",
+      "Aplicação de coloração e mechas",
+      "Química capilar",
+      "Visagismo personalizado",
+      "Biossegurança em salão",
+      "Marketing para profissional autônomo"
+    ],
+    "careerPaths": [
+      "Cabeleireiro",
+      "Colorista",
+      "Cabeleireiro de noivas",
+      "Hairstylist em produções",
+      "Cabeleireiro autônomo",
+      "Empreendedor de salão"
+    ],
+    "averageSalary": "R$ 1.800 a R$ 5.500",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso cabeleireiro profissional",
+      "profissionalizante corte e coloração",
+      "curso cabeleireiro feminino e masculino",
+      "como ser cabeleireiro",
+      "curso visagismo prático",
+      "curso mechas e balayage",
+      "cabeleireiro salário",
+      "curso cabeleireiro iniciante"
+    ]
+  },
+  {
+    "slug": "manicure-e-pedicure-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Manicure e Pedicure",
+    "name": "Manicure e Pedicure",
+    "fullName": "Manicure e Pedicure - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Manicure e Pedicure em 3 meses, com esmaltação tradicional, em gel, alongamentos, spa dos pés e RDC Anvisa nº 50/2018.",
+    "longDescription": "O curso profissionalizante de Manicure e Pedicure forma o aluno para atuar em salões de beleza, estúdios especializados, atendimento domiciliar e cabines em shoppings, com domínio das técnicas mais demandadas pelo mercado brasileiro. Em três meses, o currículo aborda anatomia das unhas, alterações ungueais comuns como onicomicose, onicocriptose e estrias, contraindicações e diferencial estético versus tratamento médico. O aluno aprende técnicas completas de manicure e pedicure clássicas, esmaltação tradicional francesinha e arte em unhas, esmaltação em gel, esmalte de longa duração, blindagem, banho de gel, alongamento em fibra de vidro, gel, acrigel e técnica russa de cutícula. Há módulos práticos de spa dos pés, escalda-pés, esfoliação, hidratação e tratamento de calos. A formação dedica carga horária integral à biossegurança conforme RDC Anvisa nº 50/2018 sobre boas práticas em estabelecimentos de embelezamento e a Lei nº 13.643/2018, que regulamenta as profissões de Esteticista e Manicure. O aluno é treinado em esterilização em autoclave, descontaminação química, manejo de alicates e espátulas, descarte de resíduos e prevenção de hepatites e outras infecções transmissíveis. O CBO 5161-25 reconhece a ocupação, com forte campo autônomo e potencial de empreender com cabine própria.",
+    "duration": "3 meses",
+    "areas": [
+      "Estética de Mãos e Pés",
+      "Alongamento de Unhas",
+      "Esmaltação em Gel",
+      "Biossegurança",
+      "Nail Art",
+      "Empreendedorismo"
+    ],
+    "skills": [
+      "Esmaltação em gel e tradicional",
+      "Alongamento em fibra e acrigel",
+      "Técnica russa de cutícula",
+      "Aplicação da RDC Anvisa 50/2018",
+      "Identificação de alterações ungueais",
+      "Esterilização de instrumentais"
+    ],
+    "careerPaths": [
+      "Manicure",
+      "Pedicure",
+      "Nail designer",
+      "Manicure domiciliar",
+      "Manicure em cabine própria",
+      "Especialista em alongamento de unhas"
+    ],
+    "averageSalary": "R$ 1.500 a R$ 4.500",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso manicure e pedicure",
+      "profissionalizante nail designer",
+      "curso alongamento de unhas",
+      "como ser manicure profissional",
+      "curso esmaltação em gel",
+      "curso manicure biossegurança",
+      "manicure salário",
+      "curso manicure iniciante"
+    ]
+  },
+  {
+    "slug": "maquiagem-profissional-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Maquiagem Profissional",
+    "name": "Maquiagem Profissional",
+    "fullName": "Maquiagem Profissional - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Maquiagem Profissional em 3 meses, com noivas, social, editorial, automaquiagem, visagismo e atuação em produções e salões.",
+    "longDescription": "O curso profissionalizante de Maquiagem Profissional forma o aluno para atuar como maquiador autônomo, em salões de beleza, equipes de noivas, produções fotográficas, televisão, teatro, debutantes e ensaios editoriais. Em três meses, o currículo aborda visagismo, identificação de formato de rosto, subtom de pele, harmonização cromática, anatomia facial e teoria das cores aplicada à beleza. O aluno aprende a executar preparação de pele com skincare, cobertura com primer, base, corretivo, pó translúcido, contorno, iluminador e blush, esfumado tradicional, esfumado cut crease, olho gatinho, olho esfumado preto fume, técnicas para pálpebras maduras e expressivas, sobrancelha desenhada e fio a fio, batom matte e gloss. Há módulos específicos de maquiagem social para festas e formaturas, maquiagem para noivas com pesquisa de referência e harmonização com véu, maquiagem para fotografia com correção de luz, maquiagem editorial e fantasia, automaquiagem para clientes e influenciadoras. A formação inclui higienização de pincéis e produtos conforme orientações da Anvisa, ergonomia, montagem de kit profissional e empreendedorismo nas redes sociais com Instagram e TikTok. O CBO 5163-25 reconhece a ocupação, e o setor de beleza segue como um dos mais aquecidos para empreendedores em todo o Brasil.",
+    "duration": "3 meses",
+    "areas": [
+      "Maquiagem",
+      "Visagismo",
+      "Estética Facial",
+      "Produção Artística",
+      "Beleza para Noivas",
+      "Empreendedorismo Digital"
+    ],
+    "skills": [
+      "Visagismo aplicado à make",
+      "Maquiagem para noivas e social",
+      "Preparação de pele e cobertura",
+      "Técnicas de esfumado",
+      "Maquiagem para fotografia",
+      "Marketing nas redes sociais"
+    ],
+    "careerPaths": [
+      "Maquiadora autônoma",
+      "Maquiadora de noivas",
+      "Maquiadora de produção",
+      "Maquiadora em salão",
+      "Influenciadora de beleza",
+      "Maquiadora em estúdio fotográfico"
+    ],
+    "averageSalary": "R$ 1.800 a R$ 5.500",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso maquiagem profissional",
+      "profissionalizante maquiadora de noivas",
+      "curso visagismo facial",
+      "como ser maquiadora",
+      "curso make para noivas",
+      "curso maquiagem editorial",
+      "maquiadora salário",
+      "curso maquiagem iniciante"
+    ]
+  },
+  {
+    "slug": "confeitaria-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Confeitaria",
+    "name": "Confeitaria",
+    "fullName": "Confeitaria - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Confeitaria em 4 meses, com bolos, doces, sobremesas, RDC 216/2004, MEI doceiro e produção para festas e confeitarias.",
+    "longDescription": "O curso profissionalizante de Confeitaria forma o aluno para produzir bolos, doces, sobremesas e produtos de pâtisserie em confeitarias, padarias, hotéis, restaurantes e como empreendedor doceiro autônomo. Em quatro meses, o currículo aborda fundamentos da confeitaria francesa e brasileira, equipamentos e utensílios, técnicas de pesagem precisa, conversão de unidades, balanceamento de massas e cremes. O aluno aprende a executar bolos clássicos como pão de ló, bolo amanteigado, génoise e bolo de chocolate fofo, recheios como brigadeiro gourmet, ganaches branca, ao leite e meio amargo, mousses, curd de frutas, doce de leite cremoso e cremes pâtisserie. Há módulos práticos de bolo decorado com pasta americana, chantininho, drip cake, bem casados, brownies, cookies, macarons, tortas geladas e clássicos como cheesecake, banoffee e red velvet. A formação dedica carga horária à manipulação higiênica de alimentos conforme a RDC Anvisa nº 216/2004, que estabelece as Boas Práticas para Serviços de Alimentação, abordando controle de temperatura, validade, contaminação cruzada e POPs. Inclui também precificação com Ficha Técnica e CMV, cadastro como MEI doceiro, marketing digital para festas, encomendas e venda em marketplaces. O CBO 8483-10 reconhece a ocupação. O Sebrae aponta confeitaria como um dos negócios mais procurados no Brasil.",
+    "duration": "4 meses",
+    "areas": [
+      "Confeitaria",
+      "Patisserie",
+      "Doces para Festas",
+      "Manipulação de Alimentos",
+      "Empreendedorismo Doceiro",
+      "Decoração de Bolos"
+    ],
+    "skills": [
+      "Produção de bolos e tortas",
+      "Aplicação da RDC 216/2004",
+      "Decoração com chantininho e pasta americana",
+      "Brigadeiro gourmet e ganaches",
+      "Precificação de produtos",
+      "Cadastro e gestão MEI"
+    ],
+    "careerPaths": [
+      "Confeiteiro",
+      "Doceiro autônomo",
+      "Bolista",
+      "Confeiteiro em padaria",
+      "Chef de partida em confeitaria",
+      "Empreendedor doceiro"
+    ],
+    "averageSalary": "R$ 1.800 a R$ 5.500",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso confeitaria profissional",
+      "profissionalizante doces e bolos",
+      "curso confeitaria gourmet",
+      "como ser confeiteiro",
+      "curso bolo decorado",
+      "curso confeitaria RDC 216",
+      "confeiteiro salário",
+      "curso confeitaria para MEI"
+    ]
+  },
+  {
+    "slug": "padeiro-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Padeiro",
+    "name": "Padeiro",
+    "fullName": "Padeiro - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Padeiro em 4 meses, com pães franceses, doces, fermentação natural, RDC 216/2004 e produção para padarias e cafeterias.",
+    "longDescription": "O curso profissionalizante de Padeiro forma o aluno para atuar em padarias artesanais, padarias industriais, hotéis, supermercados, cafeterias e pequenas produções domésticas regularizadas. Em quatro meses, o currículo aborda fundamentos da panificação, química da farinha de trigo brasileira, força e proteína, hidratação, fermentação biológica e fermentação natural com levain, autólise, ponto de véu, modelagem manual e cilindragem. O aluno aprende a produzir o clássico pão francês brasileiro, pão de forma, pão de hambúrguer, pão de hot dog, ciabatta, focaccia, baguete, broa de milho e pão de leite. Há módulos dedicados a pães doces como brioche, panetone artesanal, colomba pascal, sonho, pão de mel, rosca húngara e cuca. A formação inclui ainda salgados de padaria como esfiha, empada, coxinha, kibe e pastel de forno, com domínio das massas folhada, podre e semifolhada. O aluno estuda a RDC Anvisa nº 216/2004, que estabelece as Boas Práticas para Serviços de Alimentação, com foco em controle higiênico, cadeia do frio, contaminação cruzada, manejo de pragas e POPs. Há conteúdo de gestão de produção, ficha técnica, CMV e turnos noturnos típicos da padaria. O CBO 8483-05 reconhece a ocupação, e segundo o CAGED o setor de panificação mantém demanda contínua por padeiros qualificados em todo o Brasil.",
+    "duration": "4 meses",
+    "areas": [
+      "Panificação",
+      "Fermentação Natural",
+      "Salgados de Padaria",
+      "Pães Doces",
+      "Boas Práticas de Alimentos",
+      "Produção em Padaria"
+    ],
+    "skills": [
+      "Produção de pão francês e pães artesanais",
+      "Fermentação natural com levain",
+      "Aplicação da RDC 216/2004",
+      "Modelagem manual de pães",
+      "Produção de salgados de padaria",
+      "Gestão de turno em panificação"
+    ],
+    "careerPaths": [
+      "Padeiro",
+      "Padeiro artesanal",
+      "Padeiro de hotel",
+      "Auxiliar de panificação",
+      "Empreendedor de padaria",
+      "Padeiro de café especial"
+    ],
+    "averageSalary": "R$ 1.800 a R$ 4.500",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso padeiro profissional",
+      "profissionalizante panificação",
+      "curso pão artesanal e levain",
+      "como ser padeiro",
+      "curso padaria RDC 216",
+      "curso pães doces e salgados",
+      "padeiro salário",
+      "curso padeiro iniciante"
+    ]
+  },
+  {
+    "slug": "bartender-profissionalizante",
+    "apiCourseName": "Curso Profissionalizante de Bartender",
+    "name": "Bartender",
+    "fullName": "Bartender - Curso Profissionalizante",
+    "type": "PROFISSIONALIZANTE",
+    "nivel": "CURSO_PROFISSIONALIZANTE",
+    "description": "Curso profissionalizante de Bartender em 2 meses, com coquetelaria clássica IBA, autoral, flair, mixology e atuação em bares, hotéis e eventos.",
+    "longDescription": "O curso profissionalizante de Bartender forma o aluno para atuar em bares, restaurantes, hotéis, casas noturnas, eventos corporativos e casamentos, com domínio das técnicas modernas e clássicas da coquetelaria internacional. Em dois meses, o currículo aborda história da coquetelaria, principais destilados como cachaça, rum, whisky, vodka, gin, tequila e mezcal, fermentados como vinho, espumante e cerveja, licores, vermutes, bitters e xaropes. O aluno aprende as técnicas profissionais de build, stir, shake, throw, muddle, layering, flambar e infusão a frio, com domínio dos utensílios shaker boston e cobbler, jigger, bar spoon, mixing glass e peneira hawthorne. Há módulos práticos de receitas clássicas da International Bartenders Association como caipirinha, mojito, dry martini, negroni, manhattan, old fashioned, daiquiri, margarita, espresso martini, gin tônica autoral e drinks brasileiros contemporâneos. A formação aborda também mixology autoral, harmonização com gastronomia, mocktails sem álcool, cervejas artesanais, vinhos básicos, montagem de carta, controle de estoque, custos do bar e atendimento ao cliente. Inclui conteúdo sobre Lei Seca, responsabilidade na venda de bebidas alcoólicas e Lei nº 9.294/96. O CBO 5134-30 reconhece a ocupação, com forte demanda em capitais turísticas, gastronomia premium e eventos sociais.",
+    "duration": "2 meses",
+    "areas": [
+      "Coquetelaria",
+      "Mixology",
+      "Destilados e Fermentados",
+      "Atendimento em Bar",
+      "Eventos",
+      "Gestão de Bar"
+    ],
+    "skills": [
+      "Preparo de drinks clássicos IBA",
+      "Coquetelaria autoral e mixology",
+      "Atendimento em bar e eventos",
+      "Montagem de carta de drinks",
+      "Conhecimento de destilados",
+      "Controle de estoque de bar"
+    ],
+    "careerPaths": [
+      "Bartender",
+      "Mixologista",
+      "Bartender de eventos",
+      "Bartender de hotel",
+      "Head bartender",
+      "Empreendedor de bar"
+    ],
+    "averageSalary": "R$ 1.800 a R$ 5.000",
+    "marketDemand": "ALTA",
+    "keywords": [
+      "curso bartender profissional",
+      "profissionalizante coquetelaria",
+      "curso mixology autoral",
+      "como ser bartender",
+      "curso drinks clássicos IBA",
+      "curso bartender para eventos",
+      "bartender salário",
+      "curso bartender iniciante"
+    ]
   }
 ]

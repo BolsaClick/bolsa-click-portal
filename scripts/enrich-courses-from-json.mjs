@@ -37,8 +37,8 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-const VALID_TYPES = ['BACHARELADO', 'LICENCIATURA', 'TECNOLOGO', 'ESPECIALIZACAO', 'MBA']
-const VALID_NIVEL = ['GRADUACAO', 'POS_GRADUACAO']
+const VALID_TYPES = ['BACHARELADO', 'LICENCIATURA', 'TECNOLOGO', 'ESPECIALIZACAO', 'MBA', 'PROFISSIONALIZANTE']
+const VALID_NIVEL = ['GRADUACAO', 'POS_GRADUACAO', 'CURSO_PROFISSIONALIZANTE']
 const VALID_DEMAND = ['ALTA', 'MEDIA', 'BAIXA']
 const DEFAULT_IMAGE = '/assets/og-image-bolsaclick.png'
 
@@ -66,6 +66,9 @@ function validate(c, idx) {
   }
   if (c.nivel === 'POS_GRADUACAO' && !['ESPECIALIZACAO', 'MBA'].includes(c.type)) {
     throw new Error(`[${idx}] ${c.slug}: type ${c.type} incompatível com POS_GRADUACAO`)
+  }
+  if (c.nivel === 'CURSO_PROFISSIONALIZANTE' && c.type !== 'PROFISSIONALIZANTE') {
+    throw new Error(`[${idx}] ${c.slug}: type ${c.type} incompatível com CURSO_PROFISSIONALIZANTE`)
   }
 }
 

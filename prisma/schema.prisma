@@ -427,11 +427,13 @@ enum CourseType {
   TECNOLOGO
   ESPECIALIZACAO
   MBA
+  PROFISSIONALIZANTE
 }
 
 enum CourseLevel {
   GRADUACAO
   POS_GRADUACAO
+  CURSO_PROFISSIONALIZANTE
 }
 
 enum MarketDemand {

@@ -19,7 +19,7 @@ export interface CursoMetadata {
 
 export const TOP_CURSOS: CursoMetadata[] = [
   {
-    slug: 'administracao',
+    slug: 'administracao-bacharelado',
     apiCourseName: 'Administração',
     name: 'Administração',
     fullName: 'Administração - Bacharelado',
@@ -66,7 +66,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ]
   },
   {
-    slug: 'direito',
+    slug: 'direito-bacharelado',
     apiCourseName: 'Direito',
     name: 'Direito',
     fullName: 'Direito - Bacharelado',
@@ -112,7 +112,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ]
   },
   {
-    slug: 'enfermagem',
+    slug: 'enfermagem-bacharelado',
     apiCourseName: 'Enfermagem',
     name: 'Enfermagem',
     fullName: 'Enfermagem - Bacharelado',
@@ -158,7 +158,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ]
   },
   {
-    slug: 'psicologia',
+    slug: 'psicologia-bacharelado',
     apiCourseName: 'Psicologia',
     name: 'Psicologia',
     fullName: 'Psicologia - Bacharelado',
@@ -204,7 +204,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ]
   },
   {
-    slug: 'educacao-fisica',
+    slug: 'educacao-fisica-bacharelado',
     apiCourseName: 'Educação Física',
     name: 'Educação Física',
     fullName: 'Educação Física - Bacharelado',
@@ -250,7 +250,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ]
   },
   {
-    slug: 'pedagogia',
+    slug: 'pedagogia-licenciatura',
     apiCourseName: 'Pedagogia',
     name: 'Pedagogia',
     fullName: 'Pedagogia - Licenciatura',
@@ -296,7 +296,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ]
   },
   {
-    slug: 'analise-e-desenvolvimento-de-sistemas',
+    slug: 'analise-e-desenvolvimento-de-sistemas-tecnologo',
     apiCourseName: 'Análise e Desenvolvimento de Sistemas',
     name: 'Análise e Desenvolvimento de Sistemas',
     fullName: 'Análise e Desenvolvimento de Sistemas - Tecnólogo',
@@ -343,7 +343,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ]
   },
   {
-    slug: 'gestao-de-recursos-humanos',
+    slug: 'gestao-de-recursos-humanos-tecnologo',
     apiCourseName: 'Gestão de Recursos Humanos',
     name: 'Gestão de Recursos Humanos',
     fullName: 'Gestão de Recursos Humanos - Tecnólogo',
@@ -389,7 +389,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ]
   },
   {
-    slug: 'marketing',
+    slug: 'marketing-tecnologo',
     apiCourseName: 'Marketing',
     name: 'Marketing',
     fullName: 'Marketing - Tecnólogo',
@@ -435,7 +435,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ]
   },
   {
-    slug: 'ciencias-contabeis',
+    slug: 'ciencias-contabeis-bacharelado',
     apiCourseName: 'Ciências Contábeis',
     name: 'Ciências Contábeis',
     fullName: 'Ciências Contábeis - Bacharelado',
@@ -481,7 +481,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ]
   },
   {
-    slug: 'arquitetura-e-urbanismo',
+    slug: 'arquitetura-e-urbanismo-bacharelado',
     apiCourseName: 'Arquitetura e Urbanismo',
     name: 'Arquitetura e Urbanismo',
     fullName: 'Arquitetura e Urbanismo - Bacharelado',
@@ -527,7 +527,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ]
   },
   {
-    slug: 'nutricao',
+    slug: 'nutricao-bacharelado',
     apiCourseName: 'Nutrição',
     name: 'Nutrição',
     fullName: 'Nutrição - Bacharelado',
@@ -573,7 +573,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ]
   },
   {
-    slug: 'fisioterapia',
+    slug: 'fisioterapia-bacharelado',
     apiCourseName: 'Fisioterapia',
     name: 'Fisioterapia',
     fullName: 'Fisioterapia - Bacharelado',
@@ -619,7 +619,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ]
   },
   {
-    slug: 'engenharia-civil',
+    slug: 'engenharia-civil-bacharelado',
     apiCourseName: 'Engenharia Civil',
     name: 'Engenharia Civil',
     fullName: 'Engenharia Civil - Bacharelado',
@@ -665,7 +665,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ]
   },
   {
-    slug: 'engenharia-de-producao',
+    slug: 'engenharia-de-producao-bacharelado',
     apiCourseName: 'Engenharia de Produção',
     name: 'Engenharia de Produção',
     fullName: 'Engenharia de Produção - Bacharelado',
@@ -711,7 +711,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ]
   },
   {
-    slug: 'biomedicina',
+    slug: 'biomedicina-bacharelado',
     apiCourseName: 'Biomedicina',
     name: 'Biomedicina',
     fullName: 'Biomedicina - Bacharelado',
@@ -757,7 +757,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ]
   },
   {
-    slug: 'odontologia',
+    slug: 'odontologia-bacharelado',
     apiCourseName: 'Odontologia',
     name: 'Odontologia',
     fullName: 'Odontologia - Bacharelado',
@@ -803,7 +803,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ]
   },
   {
-    slug: 'gestao-comercial',
+    slug: 'gestao-comercial-tecnologo',
     apiCourseName: 'Gestão Comercial',
     name: 'Gestão Comercial',
     fullName: 'Gestão Comercial - Tecnólogo',
@@ -849,7 +849,7 @@ export const TOP_CURSOS: CursoMetadata[] = [
     ]
   },
   {
-    slug: 'farmacia',
+    slug: 'farmacia-bacharelado',
     apiCourseName: 'Farmácia',
     name: 'Farmácia',
     fullName: 'Farmácia - Bacharelado',

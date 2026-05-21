@@ -160,7 +160,7 @@ const jsonLd = [
     sameAs: [
       'https://www.instagram.com/bolsaclick',
       'https://www.facebook.com/bolsaclickbrasil',
-      'https://www.linkedin.com/company/bolsaclick',
+      'https://www.linkedin.com/company/bolsa-click',
     ],
     areaServed: {
       '@type': 'Country',

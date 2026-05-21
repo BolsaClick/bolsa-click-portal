@@ -251,7 +251,7 @@ export default function AdminConfiguracoesPage() {
                 type="url"
                 value={formData.linkedinUrl}
                 onChange={(e) => handleChange('linkedinUrl', e.target.value)}
-                placeholder="https://linkedin.com/company/bolsaclick"
+                placeholder="https://www.linkedin.com/company/bolsa-click"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bolsa-primary focus:border-transparent"
               />
             </div>

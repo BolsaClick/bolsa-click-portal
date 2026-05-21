@@ -202,7 +202,7 @@ export default async function BlogPostPage({ params }: Props) {
         jobTitle: 'Equipe Editorial',
         sameAs: [
           'https://www.instagram.com/bolsaclick',
-          'https://www.linkedin.com/company/bolsaclick',
+          'https://www.linkedin.com/company/bolsa-click',
         ],
       },
       reviewedBy: {

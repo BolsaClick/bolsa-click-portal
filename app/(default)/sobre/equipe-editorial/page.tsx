@@ -45,7 +45,7 @@ const orgSchema = {
   ],
   sameAs: [
     'https://www.instagram.com/bolsaclick',
-    'https://www.linkedin.com/company/bolsaclick',
+    'https://www.linkedin.com/company/bolsa-click',
     'https://www.facebook.com/bolsaclickbrasil',
   ],
 }

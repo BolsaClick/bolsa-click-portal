@@ -4,6 +4,7 @@ import { cache } from 'react'
 import { prisma } from '@/app/lib/prisma'
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { resolveCanonicalCourseSlug } from '@/app/lib/seo/slug-resolver'
+import { shouldIndexCityPage } from '@/app/lib/seo/city-page-gate'
 import { FeaturedCourseData } from '../../_data/types'
 import { BRAZILIAN_CITIES, getCityBySlug } from '@/app/lib/constants/brazilian-cities'
 import {
@@ -120,12 +121,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const pageUrl = `https://www.bolsaclick.com.br/cursos/${slug}/${citySlug}`
   const nationalUrl = `https://www.bolsaclick.com.br/cursos/${slug}`
 
-  // Indexação inteligente: cidade sem oferta local mas com alta demanda real
-  // (Google Trends) AINDA vale ser indexada — conteúdo do curso + breadcrumb +
-  // FAQ atende a busca informacional. Só protegemos contra thin content quando
-  // não há oferta E demanda é baixa.
+  // Indexação inteligente via gate compartilhado (app/lib/seo/city-page-gate.ts):
+  // exige MIN_OFFERS_TO_INDEX=2 ofertas locais, ou trendScore ≥ 60 pra páginas
+  // sem oferta suficiente. Páginas com 0 ou 1 oferta são thin content em escala
+  // e viram noindex,follow + canonical pra versão nacional.
   const trendScore = curso.trendScore ?? 0
-  const shouldIndex = !fromFallback || trendScore >= 50
+  const localOfferCount = fromFallback ? 0 : offers.length
+  const shouldIndex = shouldIndexCityPage(localOfferCount, trendScore)
   const canonical = shouldIndex ? pageUrl : nationalUrl
 
   const imageUrl = curso.imageUrl.startsWith('http')
@@ -211,10 +213,12 @@ export default async function CursoCidadePage({ params }: Props) {
     cursoMetadata.nivel,
   )
 
-  // Mesma lógica de indexação inteligente do generateMetadata. Repete aqui
-  // porque o Schema Course/FAQ não deve ser emitido em URLs noindex.
+  // Mesma lógica de indexação inteligente do generateMetadata (via gate
+  // compartilhado). Repete aqui porque Schema Course/FAQ não deve ser emitido
+  // em URLs noindex.
   const trendScore = cursoMetadata.trendScore ?? 0
-  const shouldIndex = !fromFallback || trendScore >= 50
+  const localOfferCount = fromFallback ? 0 : (courseOffers?.length ?? 0)
+  const shouldIndex = shouldIndexCityPage(localOfferCount, trendScore)
 
   // Outras cidades para internal linking (exclui a cidade atual)
   const otherCities = BRAZILIAN_CITIES

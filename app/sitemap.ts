@@ -4,6 +4,29 @@ import { BRAZILIAN_CITIES } from '@/app/lib/constants/brazilian-cities'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 
+// Força runtime dinâmico — sem isso o Next 15 tenta pré-renderizar em build
+// time, onde o DB pode não estar disponível, e o resultado fica cacheado vazio
+// (causa raiz do incidente do sitemap retornando <urlset/> vazio em produção).
+export const dynamic = 'force-dynamic'
+// Cache de 1h entre requests — Googlebot não bate na DB a cada hit.
+export const revalidate = 3600
+
+// Hard cap defensivo na quantidade de URLs por sub-sitemap. Limite oficial do
+// protocolo é 50k; usamos 45k pra ter folga.
+const MAX_URLS_PER_SITEMAP = 45_000
+// Hard cap pra páginas de comparação (crescem em N²). 1k já é o suficiente
+// pra cobrir top-vs-top sem inflar thin content.
+const MAX_COMPARE_URLS = 1_000
+
+// Helper de timeout pra promises Prisma — se DB demorar > 8s, abandona e usa
+// fallback. Vercel Edge tem timeout default de 10s; deixamos 2s de margem.
+async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error(`[sitemap] timeout ${label} após ${ms}ms`)), ms)
+  )
+  return Promise.race([promise, timeout])
+}
+
 /**
  * Sitemap dividido em sub-sitemaps por categoria.
  *
@@ -76,6 +99,7 @@ function shouldEmitCityUrl(trendScore: number, citySlug: string): boolean {
 // ─────────────────────────────────────────────────────────────────────────
 
 function buildStaticSitemap(): MetadataRoute.Sitemap {
+  console.log('[sitemap:static] building (sync)')
   const now = new Date()
   return [
     { url: SITE_URL, lastModified: now, changeFrequency: 'daily', priority: 1.0 },
@@ -125,12 +149,18 @@ function buildStaticSitemap(): MetadataRoute.Sitemap {
 
 async function buildCoursesSitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
+  console.log('[sitemap:courses] iniciando query Prisma...')
   try {
-    const courses = await prisma.featuredCourse.findMany({
-      where: { isActive: true },
-      select: { slug: true, updatedAt: true, trendScore: true },
-      orderBy: { trendScore: 'desc' },
-    })
+    const courses = await withTimeout(
+      prisma.featuredCourse.findMany({
+        where: { isActive: true },
+        select: { slug: true, updatedAt: true, trendScore: true },
+        orderBy: { trendScore: 'desc' },
+      }),
+      8_000,
+      'courses'
+    )
+    console.log(`[sitemap:courses] ${courses.length} cursos encontrados`)
     return courses.map(({ slug, updatedAt, trendScore }) => ({
       url: `${SITE_URL}/cursos/${slug}`,
       lastModified: updatedAt,
@@ -138,7 +168,7 @@ async function buildCoursesSitemap(): Promise<MetadataRoute.Sitemap> {
       priority: Math.round((0.50 + (trendScore ?? 0) / 100 * 0.35) * 100) / 100,
     }))
   } catch (e) {
-    console.error('[sitemap:courses] erro:', e)
+    console.error('[sitemap:courses] erro, usando fallback:', e)
     return FALLBACK_COURSE_SLUGS.map((slug) => ({
       url: `${SITE_URL}/cursos/${slug}`,
       lastModified: now,
@@ -153,13 +183,19 @@ async function buildCoursesSitemap(): Promise<MetadataRoute.Sitemap> {
 // ─────────────────────────────────────────────────────────────────────────
 
 async function buildCourseCitiesSitemap(): Promise<MetadataRoute.Sitemap> {
+  console.log('[sitemap:course-cities] iniciando query Prisma...')
   try {
-    const courses = await prisma.featuredCourse.findMany({
-      where: { isActive: true, hasCityPages: true },
-      select: { slug: true, updatedAt: true, trendScore: true },
-      orderBy: { trendScore: 'desc' },
-    })
-    return courses
+    const courses = await withTimeout(
+      prisma.featuredCourse.findMany({
+        where: { isActive: true, hasCityPages: true },
+        select: { slug: true, updatedAt: true, trendScore: true },
+        orderBy: { trendScore: 'desc' },
+      }),
+      8_000,
+      'course-cities'
+    )
+    console.log(`[sitemap:course-cities] ${courses.length} cursos com hasCityPages=true`)
+    const urls = courses
       .flatMap(({ slug, updatedAt, trendScore }) =>
         BRAZILIAN_CITIES
           .filter((city) => shouldEmitCityUrl(trendScore ?? 0, city.slug))
@@ -171,8 +207,11 @@ async function buildCourseCitiesSitemap(): Promise<MetadataRoute.Sitemap> {
           })),
       )
       .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0))
+      .slice(0, MAX_URLS_PER_SITEMAP)
+    console.log(`[sitemap:course-cities] emitindo ${urls.length} URLs`)
+    return urls
   } catch (e) {
-    console.error('[sitemap:course-cities] erro:', e)
+    console.error('[sitemap:course-cities] erro, usando fallback:', e)
     const now = new Date()
     return FALLBACK_COURSE_SLUGS.flatMap((slug) =>
       BRAZILIAN_CITIES.slice(0, CITY_TIER_1_CUTOFF).map((city) => ({
@@ -190,12 +229,44 @@ async function buildCourseCitiesSitemap(): Promise<MetadataRoute.Sitemap> {
 // ─────────────────────────────────────────────────────────────────────────
 
 async function buildInstitutionsSitemap(): Promise<MetadataRoute.Sitemap> {
+  console.log('[sitemap:institutions] iniciando query Prisma...')
   try {
-    const institutions = await prisma.institution.findMany({
-      where: { isActive: true },
-      select: { slug: true, updatedAt: true },
-    })
-    return [
+    const institutions = await withTimeout(
+      prisma.institution.findMany({
+        where: { isActive: true },
+        select: { slug: true, updatedAt: true },
+      }),
+      8_000,
+      'institutions'
+    )
+    console.log(`[sitemap:institutions] ${institutions.length} instituições ativas`)
+
+    // /comparar/[a]-vs-[b] cresce em N². Pra evitar explosão de URLs thin
+    // quando catálogo escala (200 instituições = ~20k pares), limitamos a
+    // MAX_COMPARE_URLS priorizando os pares mais recentes (proxy de relevância
+    // até termos trendScore por instituição).
+    const sortedByRecency = [...institutions].sort(
+      (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()
+    )
+    const compareUrls: MetadataRoute.Sitemap = []
+    outer: for (let i = 0; i < sortedByRecency.length; i++) {
+      for (let j = i + 1; j < sortedByRecency.length; j++) {
+        const instA = sortedByRecency[i]
+        const instB = sortedByRecency[j]
+        const [a, b] = [instA.slug, instB.slug].sort()
+        compareUrls.push({
+          url: `${SITE_URL}/comparar/${a}-vs-${b}`,
+          lastModified:
+            instA.updatedAt > instB.updatedAt ? instA.updatedAt : instB.updatedAt,
+          changeFrequency: 'weekly' as const,
+          priority: 0.75,
+        })
+        if (compareUrls.length >= MAX_COMPARE_URLS) break outer
+      }
+    }
+    console.log(`[sitemap:institutions] emitindo ${compareUrls.length} URLs de comparação`)
+
+    const urls = [
       // /faculdades/[slug]
       ...institutions.map(({ slug, updatedAt }) => ({
         url: `${SITE_URL}/faculdades/${slug}`,
@@ -212,21 +283,11 @@ async function buildInstitutionsSitemap(): Promise<MetadataRoute.Sitemap> {
           priority: 0.65,
         })),
       ),
-      // /comparar/[a]-vs-[b]
-      ...institutions.flatMap((instA, i) =>
-        institutions.slice(i + 1).map((instB) => {
-          const [a, b] = [instA.slug, instB.slug].sort()
-          return {
-            url: `${SITE_URL}/comparar/${a}-vs-${b}`,
-            lastModified: instA.updatedAt > instB.updatedAt ? instA.updatedAt : instB.updatedAt,
-            changeFrequency: 'weekly' as const,
-            priority: 0.75,
-          }
-        }),
-      ),
-    ]
+      ...compareUrls,
+    ].slice(0, MAX_URLS_PER_SITEMAP)
+    return urls
   } catch (e) {
-    console.error('[sitemap:institutions] erro:', e)
+    console.error('[sitemap:institutions] erro, retornando vazio:', e)
     return []
   }
 }
@@ -236,26 +297,34 @@ async function buildInstitutionsSitemap(): Promise<MetadataRoute.Sitemap> {
 // ─────────────────────────────────────────────────────────────────────────
 
 async function buildEditorialSitemap(): Promise<MetadataRoute.Sitemap> {
+  console.log('[sitemap:editorial] iniciando queries Prisma...')
   try {
-    const [blogPosts, blogCategories, helpArticles, vocacionalCourses] = await Promise.all([
-      prisma.blogPost.findMany({
-        where: { isActive: true, publishedAt: { not: null } },
-        select: { slug: true, updatedAt: true },
-      }),
-      prisma.blogCategory.findMany({
-        where: { isActive: true },
-        select: { slug: true, updatedAt: true },
-      }),
-      prisma.helpArticle.findMany({
-        where: { isActive: true },
-        select: { slug: true, updatedAt: true, category: { select: { slug: true } } },
-      }),
-      prisma.featuredCourse.findMany({
-        where: { isActive: true },
-        select: { slug: true, updatedAt: true, trendScore: true },
-        orderBy: { trendScore: 'desc' },
-      }),
-    ])
+    const [blogPosts, blogCategories, helpArticles, vocacionalCourses] = await withTimeout(
+      Promise.all([
+        prisma.blogPost.findMany({
+          where: { isActive: true, publishedAt: { not: null } },
+          select: { slug: true, updatedAt: true },
+        }),
+        prisma.blogCategory.findMany({
+          where: { isActive: true },
+          select: { slug: true, updatedAt: true },
+        }),
+        prisma.helpArticle.findMany({
+          where: { isActive: true },
+          select: { slug: true, updatedAt: true, category: { select: { slug: true } } },
+        }),
+        prisma.featuredCourse.findMany({
+          where: { isActive: true },
+          select: { slug: true, updatedAt: true, trendScore: true },
+          orderBy: { trendScore: 'desc' },
+        }),
+      ]),
+      8_000,
+      'editorial'
+    )
+    console.log(
+      `[sitemap:editorial] ${blogPosts.length} posts, ${blogCategories.length} cats, ${helpArticles.length} ajuda, ${vocacionalCourses.length} vocacional`
+    )
     return [
       ...blogPosts.map(({ slug, updatedAt }) => ({
         url: `${SITE_URL}/blog/${slug}`,
@@ -284,7 +353,7 @@ async function buildEditorialSitemap(): Promise<MetadataRoute.Sitemap> {
       })),
     ]
   } catch (e) {
-    console.error('[sitemap:editorial] erro:', e)
+    console.error('[sitemap:editorial] erro, retornando vazio:', e)
     return []
   }
 }
@@ -298,18 +367,23 @@ export default async function sitemap({
 }: {
   id: number
 }): Promise<MetadataRoute.Sitemap> {
-  switch (id) {
-    case 0:
-      return buildStaticSitemap()
-    case 1:
-      return buildCoursesSitemap()
-    case 2:
-      return buildCourseCitiesSitemap()
-    case 3:
-      return buildInstitutionsSitemap()
-    case 4:
-      return buildEditorialSitemap()
-    default:
-      return []
-  }
+  console.log(`[sitemap] dispatch id=${id}`)
+  const result = await (async () => {
+    switch (id) {
+      case 0:
+        return buildStaticSitemap()
+      case 1:
+        return buildCoursesSitemap()
+      case 2:
+        return buildCourseCitiesSitemap()
+      case 3:
+        return buildInstitutionsSitemap()
+      case 4:
+        return buildEditorialSitemap()
+      default:
+        return []
+    }
+  })()
+  console.log(`[sitemap] dispatch id=${id} concluído com ${result.length} URLs`)
+  return result
 }

@@ -9,6 +9,7 @@ import { BRAZILIAN_CITIES, getCityBySlug } from '@/app/lib/constants/brazilian-c
 import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
 import { Course } from '@/app/interface/course'
 import { VisibleFaq } from '@/app/cursos/[slug]/_seo/CourseSeoSections'
+import { shouldIndexCityPage } from '@/app/lib/seo/city-page-gate'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 
@@ -80,6 +81,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const allOffers = await getCityOffers(cityData.name, cityData.state)
   const offers = filterByInstitution(allOffers, institution.name, institution.shortName)
   const hasOffers = offers.length > 0
+  // Gate de qualidade: exige MIN_OFFERS_TO_INDEX (2) — 1 oferta é thin content.
+  const shouldIndex = shouldIndexCityPage(offers.length)
 
   const pageUrl = `${SITE_URL}/faculdades/${slug}/em/${citySlug}`
   const fallbackUrl = `${SITE_URL}/faculdades/${slug}`
@@ -102,9 +105,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       `${institution.shortName} ${cityData.name}`,
       'bolsa click',
     ],
-    robots: hasOffers ? 'index, follow' : 'noindex, follow',
+    robots: shouldIndex ? 'index, follow' : 'noindex, follow',
     alternates: {
-      canonical: hasOffers ? pageUrl : fallbackUrl,
+      canonical: shouldIndex ? pageUrl : fallbackUrl,
     },
     openGraph: {
       title,

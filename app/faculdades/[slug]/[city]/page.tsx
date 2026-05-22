@@ -5,6 +5,7 @@ import { prisma } from '@/app/lib/prisma'
 import { getCurrentTheme } from '@/app/lib/themes'
 import { BRAZILIAN_CITIES, getCityBySlug } from '@/app/lib/constants/brazilian-cities'
 import { getInstitutionCoursesByCity } from '@/app/lib/api/get-institution-courses-by-city'
+import { shouldIndexCityPage } from '@/app/lib/seo/city-page-gate'
 import FaculdadeCidadeClient from './FaculdadeCidadeClient'
 
 const theme = getCurrentTheme()
@@ -33,6 +34,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const offers = await getInstitutionCoursesByCity(inst.name, cityData.name, cityData.state)
   const fromFallback = offers.length === 0
+  // Gate de qualidade: exige MIN_OFFERS_TO_INDEX (2). 1 oferta vira thin content.
+  const shouldIndex = shouldIndexCityPage(offers.length)
   const pageUrl = `${theme.siteUrl}/faculdades/${slug}/${citySlug}`
   const nationalUrl = `${theme.siteUrl}/faculdades/${slug}`
 
@@ -55,9 +58,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       `${inst.name} presencial ${cityData.name}`,
       ...(inst.keywords || []),
     ],
-    robots: fromFallback ? 'noindex, follow' : 'index, follow',
+    robots: shouldIndex ? 'index, follow' : 'noindex, follow',
     alternates: {
-      canonical: fromFallback ? nationalUrl : pageUrl,
+      canonical: shouldIndex ? pageUrl : nationalUrl,
     },
     openGraph: {
       title,

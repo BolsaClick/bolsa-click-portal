@@ -4,11 +4,10 @@ import { BRAZILIAN_CITIES } from '@/app/lib/constants/brazilian-cities'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 
-// Força runtime dinâmico — sem isso o Next 15 tenta pré-renderizar em build
-// time, onde o DB pode não estar disponível, e o resultado fica cacheado vazio
-// (causa raiz do incidente do sitemap retornando <urlset/> vazio em produção).
-export const dynamic = 'force-dynamic'
-// Cache de 1h entre requests — Googlebot não bate na DB a cada hit.
+// IMPORTANTE: NÃO usar `dynamic = 'force-dynamic'` aqui — quebra a auto-geração
+// do /sitemap.xml index do generateSitemaps() no Next 15 (rota some, 404).
+// Estratégia: ISR com revalidate de 1h. Se o DB não estiver disponível no
+// build, cada builder cai no fallback estático (não silencioso — log explícito).
 export const revalidate = 3600
 
 // Hard cap defensivo na quantidade de URLs por sub-sitemap. Limite oficial do

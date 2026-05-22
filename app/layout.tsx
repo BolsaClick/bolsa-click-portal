@@ -204,7 +204,8 @@ const jsonLd = [
     '@context': 'https://schema.org',
     '@type': 'EducationalOccupationalProgram',
     name: 'Bolsas de estudo com até 80% de desconto',
-    educationalProgramMode: ['online', 'presencial', 'semipresencial'],
+    // Schema.org: aceita "online" | "onsite" | "blended" (NOT "presencial"/"semipresencial").
+    educationalProgramMode: ['online', 'onsite', 'blended'],
     occupationalCredentialAwarded: [
       'Graduação',
       'Pós-graduação',

@@ -4,6 +4,10 @@ import Link from 'next/link'
 import { prisma } from '@/app/lib/prisma'
 import CursoPageClient from './CursoPageClient'
 import { courseTypeLabel } from '@/app/lib/courseTypeLabel'
+import {
+  educationalCredentialAwarded,
+  durationToIso8601,
+} from '@/app/lib/seo/schema-helpers'
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { resolveCanonicalCourseSlug } from '@/app/lib/seo/slug-resolver'
 import { FeaturedCourseData } from '../_data/types'
@@ -270,8 +274,8 @@ export default async function CursoPage({ params }: Props) {
         logo: 'https://www.bolsaclick.com.br/assets/logo-bolsa-click-rosa.png',
       },
       educationalLevel: nivelLabel,
-      educationalCredentialAwarded: cursoMetadata.type,
-      timeToComplete: cursoMetadata.duration,
+      educationalCredentialAwarded: educationalCredentialAwarded(cursoMetadata.name, cursoMetadata.type),
+      timeToComplete: durationToIso8601(cursoMetadata.duration),
       datePublished: cursoMetadata.createdAt instanceof Date
         ? cursoMetadata.createdAt.toISOString()
         : new Date(cursoMetadata.createdAt as string | number).toISOString(),
@@ -285,7 +289,7 @@ export default async function CursoPage({ params }: Props) {
         {
           '@type': 'CourseInstance',
           courseMode: 'Online',
-          courseWorkload: cursoMetadata.duration,
+          courseWorkload: durationToIso8601(cursoMetadata.duration),
           ...(lowPrice > 0 ? {
             offers: {
               '@type': 'Offer',
@@ -299,7 +303,7 @@ export default async function CursoPage({ params }: Props) {
         {
           '@type': 'CourseInstance',
           courseMode: 'Onsite',
-          courseWorkload: cursoMetadata.duration,
+          courseWorkload: durationToIso8601(cursoMetadata.duration),
           ...(lowPrice > 0 ? {
             offers: {
               '@type': 'Offer',

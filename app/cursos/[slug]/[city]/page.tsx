@@ -5,6 +5,7 @@ import { prisma } from '@/app/lib/prisma'
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { resolveCanonicalCourseSlug } from '@/app/lib/seo/slug-resolver'
 import { shouldIndexCityPage } from '@/app/lib/seo/city-page-gate'
+import { durationToIso8601 } from '@/app/lib/seo/schema-helpers'
 import { FeaturedCourseData } from '../../_data/types'
 import { BRAZILIAN_CITIES, getCityBySlug } from '@/app/lib/constants/brazilian-cities'
 import {
@@ -278,8 +279,9 @@ export default async function CursoCidadePage({ params }: Props) {
       url: 'https://www.bolsaclick.com.br',
     },
     educationalLevel: nivelLabel,
-    courseMode: ['Presencial', 'EAD', 'Semipresencial'],
-    timeRequired: `P${parseInt(cursoMetadata.duration, 10) || 4}Y`,
+    // Schema.org aceita "online" | "onsite" | "blended" (não pt-BR).
+    courseMode: ['onsite', 'online', 'blended'],
+    timeRequired: durationToIso8601(cursoMetadata.duration),
     teaches: cursoMetadata.skills?.slice(0, 8) ?? [],
     about: cursoMetadata.areas ?? [],
     occupationalCategory: cursoMetadata.careerPaths?.slice(0, 5) ?? [],

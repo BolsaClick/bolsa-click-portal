@@ -11,6 +11,7 @@ import LatestBlogPosts from '../components/organisms/LatestBlogPosts'
 import PartnersStrip from '../components/organisms/PartnersStrip'
 import BestOffersSection from '../components/organisms/BestOffersSection'
 import PersonalizationStrip from '../components/organisms/PersonalizationStrip'
+import PersonaReturnBanner from '../components/organisms/PersonaReturnBanner'
 import { prisma } from '../lib/prisma'
 
 export const revalidate = 3600
@@ -192,6 +193,7 @@ export default async function HomePage() {
       <PersonalizationStrip />
       <BestOffersSection />
       <PartnersStrip />
+      <PersonaReturnBanner />
       <Cta />
       <ScholarshipCarousel />
       <PopularCoursesSection />

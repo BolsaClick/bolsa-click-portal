@@ -1,14 +1,30 @@
 "use client"
 
-import posthog from "posthog-js"
 import { PostHogProvider as PHProvider, usePostHog } from "posthog-js/react"
-import { Suspense, useEffect, useRef } from "react"
+import { Suspense, useEffect, useRef, useState } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
+import type { PostHog } from "posthog-js"
 import { useConsent } from "./ConsentProvider"
+
+// Defere init pra reduzir INP: PostHog é carregado dinamicamente e
+// inicializado em requestIdleCallback (não compete com hidratação no
+// main thread). Reduz INP > 200ms reportado em 96 URLs no GSC.
+function whenIdle(cb: () => void): void {
+  if (typeof window === "undefined") return
+  const win = window as typeof window & {
+    requestIdleCallback?: (cb: () => void, opts?: { timeout?: number }) => number
+  }
+  if (typeof win.requestIdleCallback === "function") {
+    win.requestIdleCallback(cb, { timeout: 5000 })
+  } else {
+    setTimeout(cb, 1)
+  }
+}
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   const { hydrated, isCategoryEnabled } = useConsent()
   const initializedRef = useRef(false)
+  const [posthogClient, setPosthogClient] = useState<PostHog | null>(null)
   const analyticsAllowed = hydrated && isCategoryEnabled("analytics")
 
   useEffect(() => {
@@ -24,7 +40,11 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
 
     initializedRef.current = true
 
-    posthog.init(posthogKey, {
+    // Dynamic import tira o posthog-js (~50KB) do bundle inicial.
+    // Combinado com whenIdle, garante que init não compita com hydration.
+    whenIdle(async () => {
+      const { default: posthog } = await import("posthog-js")
+      posthog.init(posthogKey, {
       api_host: posthogHost,
       ui_host: posthogHost,
       capture_pageview: false, // We capture pageviews manually
@@ -48,21 +68,22 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         return properties
       },
       loaded: () => {
-        // Garantir que feature flags sejam carregadas
-        if (process.env.NODE_ENV === "development") {
-          console.log("✅ PostHog loaded with feature flags enabled", {
-            api_host: posthogHost,
-            ui_host: posthogHost,
-          })
-        }
-      },
+          if (process.env.NODE_ENV === "development") {
+            console.log("✅ PostHog loaded with feature flags enabled", {
+              api_host: posthogHost,
+              ui_host: posthogHost,
+            })
+          }
+        },
+      })
+      setPosthogClient(posthog)
     })
   }, [analyticsAllowed])
 
-  if (!analyticsAllowed) return <>{children}</>
+  if (!analyticsAllowed || !posthogClient) return <>{children}</>
 
   return (
-    <PHProvider client={posthog}>
+    <PHProvider client={posthogClient}>
       <SuspendedPostHogPageView />
       {children}
     </PHProvider>

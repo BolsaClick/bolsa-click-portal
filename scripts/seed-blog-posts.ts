@@ -426,7 +426,16 @@ REGRAS INEGOCIÁVEIS:
    - Sempre encerrar com CTA suave: "Compare ofertas de bolsa no Bolsa Click" ou similar
    - Tom: prático, direto, sem clichê ("descubra agora", "venha conhecer", "garanta sua vaga" são proibidos)
 
-7. FORMATO DE SAÍDA — você DEVE chamar a tool "submit_blog_post" com os argumentos no schema definido. Não responda com texto livre.`
+7. ABERTURA — RESPOSTA DIRETA (crítico para AI search / Perplexity / ChatGPT):
+   O primeiro parágrafo do "content" DEVE responder a query principal do post nos primeiros 40-60 palavras, sem contextualização prévia. LLMs extraem o primeiro bloco semântico como snippet de citação; contexto antes da resposta faz o conteúdo perder visibilidade em AI Overviews.
+
+   PADRÃO ERRADO (contextualiza primeiro):
+   "Antes de sair se inscrevendo em qualquer bolsa, é importante entender..."
+
+   PADRÃO CORRETO (resposta direta + contexto depois):
+   "Pra conseguir bolsa de 50% ou mais, o caminho mais rápido é candidatar-se ao Prouni via ENEM ou buscar bolsas próprias de faculdades EAD parceiras, onde os descontos chegam a 85% sem nota de corte. Veja como cada opção funciona..."
+
+8. FORMATO DE SAÍDA — você DEVE chamar a tool "submit_blog_post" com os argumentos no schema definido. Não responda com texto livre.`
 
 // ============================================================
 // DATA BLOCK

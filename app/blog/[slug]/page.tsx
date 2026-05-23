@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/app/lib/prisma'
 import BlogPostClient from './BlogPostClient'
 import Breadcrumb from '@/app/components/atoms/Breadcrumb'
+import { extractFaqFromHtml } from '@/app/lib/seo/extract-faq'
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -181,6 +182,10 @@ export default async function BlogPostPage({ params }: Props) {
   // articleBody plain text (sem HTML) pra LLMs extraírem passagens citáveis
   const articleBodyPlain = textContent.slice(0, 5000)
 
+  // Extrai pares pergunta/resposta da seção "Perguntas frequentes" pra emitir
+  // FAQPage schema condicional. Posts sem FAQ não emitem o segundo schema.
+  const faqItems = extractFaqFromHtml(processedContent)
+
   const jsonLdSchemas = [
     {
       '@context': 'https://schema.org',
@@ -240,6 +245,27 @@ export default async function BlogPostPage({ params }: Props) {
         { '@type': 'ListItem', position: firstCategory ? 4 : 3, name: post.title, item: `https://www.bolsaclick.com.br/blog/${slug}` },
       ],
     },
+    // FAQPage emitido condicionalmente quando o post tem seção de Perguntas
+    // frequentes detectada. AI Overviews / ChatGPT / Perplexity priorizam
+    // citações de FAQPage pra responder queries diretas. Google restringiu
+    // rich results de FAQPage a gov/healthcare desde Ago 2023, então não
+    // ganhamos snippet visual, mas mantemos forte sinal pra LLMs.
+    ...(faqItems.length > 0
+      ? [
+          {
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: faqItems.map((item) => ({
+              '@type': 'Question',
+              name: item.question,
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: item.answer,
+              },
+            })),
+          },
+        ]
+      : []),
   ]
 
   const serializedPost = JSON.parse(JSON.stringify({

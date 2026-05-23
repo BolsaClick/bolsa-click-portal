@@ -1,5 +1,44 @@
 import type { NextConfig } from "next";
 
+// Content-Security-Policy em modo Report-Only.
+// Estratégia: coletar violações em /api/csp-report por 1-2 semanas pra
+// completar a whitelist, depois trocar a chave do header pra
+// "Content-Security-Policy" (enforce). Em Report-Only nada é bloqueado.
+//
+// Whitelist construída a partir dos integrações conhecidas do projeto:
+//   - Stripe (checkout cartão)            - PostHog (analytics)
+//   - GTM / Google Analytics              - Meta Pixel
+//   - TikTok Pixel + Events API           - UTMify (pixel + Orders API)
+//   - Firebase Auth + Firestore           - Tigris Storage (imagens)
+//   - Notealy (server-side, não importa pro CSP do browser)
+const CSP_REPORT_ONLY = [
+  "default-src 'self'",
+  // Inline scripts são usados pelo Next (hydration tokens) e pelos pixels;
+  // 'unsafe-inline' é necessário até migrarmos pra nonces.
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://cdn.utmify.com.br https://analytics.tiktok.com https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://us-assets.i.posthog.com https://apis.google.com https://www.gstatic.com https://va.vercel-scripts.com",
+  // Styles: Tailwind injeta inline; Google Fonts CSS é externo.
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  // Imagens: data: pra QR Codes PIX, blob: pra previews, https: pra CDN/remotePatterns.
+  "img-src 'self' data: blob: https:",
+  "media-src 'self' blob:",
+  // Fetch / XHR / WebSocket — todas as APIs first-party + integrações.
+  "connect-src 'self' https://api.stripe.com https://us.i.posthog.com https://us-assets.i.posthog.com https://api.utmify.com.br https://analytics.tiktok.com https://www.google-analytics.com https://www.googletagmanager.com https://stats.g.doubleclick.net https://*.facebook.com https://thanos.notealy.com https://tartarus-api.inovitdigital.com.br https://elysium-api.inovitdigital.com.br https://t3.storageapi.dev https://bolsa-click.fly.storage.tigris.dev https://*.firebaseio.com https://*.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com",
+  // iframes: Stripe Elements, GTM noscript pixel.
+  "frame-src 'self' https://js.stripe.com https://www.googletagmanager.com https://www.facebook.com",
+  // Frame ancestors — quem pode embedar o site (Clickjacking).
+  "frame-ancestors 'self'",
+  // Form actions — pra onde formulários podem submeter.
+  "form-action 'self' https://api.stripe.com",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "upgrade-insecure-requests",
+  // Onde mandar os relatórios. Mantemos report-uri (legacy) + report-to
+  // (Reporting API moderna) — cobertura cross-browser.
+  "report-uri /api/csp-report",
+  "report-to csp-endpoint",
+].join('; ')
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Tree-shaking agressivo das libs mais usadas — reduz JS bundle final
@@ -34,6 +73,20 @@ const nextConfig: NextConfig = {
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
           { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
           { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
+          // CSP em Report-Only: nada é bloqueado, mas violações são enviadas
+          // pra /api/csp-report. Depois de 1-2 semanas auditando, trocar a
+          // chave pra "Content-Security-Policy" (enforce).
+          { key: 'Content-Security-Policy-Report-Only', value: CSP_REPORT_ONLY },
+          // Reporting API (browsers modernos) — endpoint chamado "csp-endpoint"
+          // é referenciado pelo "report-to" dentro da CSP.
+          {
+            key: 'Report-To',
+            value: JSON.stringify({
+              group: 'csp-endpoint',
+              max_age: 10886400,
+              endpoints: [{ url: '/api/csp-report' }],
+            }),
+          },
         ],
       },
       {

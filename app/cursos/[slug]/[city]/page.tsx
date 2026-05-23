@@ -268,16 +268,15 @@ export default async function CursoCidadePage({ params }: Props) {
     },
   }
 
+  // Course-level: omit `provider` since multiple institutions offer this course.
+  // Per Google's Course rich result spec, `provider` must be the educational
+  // institution. Bolsa Click is the aggregator and is captured via
+  // `offers.offeredBy` on the AggregateOffer below.
   const baseCourseSchema = {
     '@context': 'https://schema.org',
     '@type': 'Course',
     name: cursoMetadata.fullName,
     description: `${cursoMetadata.longDescription} Disponível em ${cityData.name}-${cityData.state} com bolsa de estudo.`,
-    provider: {
-      '@type': 'Organization',
-      name: 'Bolsa Click',
-      url: 'https://www.bolsaclick.com.br',
-    },
     educationalLevel: nivelLabel,
     // Schema.org aceita "online" | "onsite" | "blended" (não pt-BR).
     courseMode: ['onsite', 'online', 'blended'],
@@ -323,6 +322,10 @@ export default async function CursoCidadePage({ params }: Props) {
                 '@type': 'City',
                 name: cityData.name,
                 containedInPlace: { '@type': 'AdministrativeArea', name: cityData.state },
+              },
+              offeredBy: {
+                '@type': 'Organization',
+                '@id': 'https://www.bolsaclick.com.br/#organization',
               },
             },
           }),

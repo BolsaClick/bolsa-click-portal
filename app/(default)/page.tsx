@@ -45,8 +45,6 @@ export const metadata: Metadata = {
     'bolsa de estudo EAD',
     'bolsa de estudo presencial',
     'melhor bolsa de estudo',
-    'quero bolsa alternativa',
-    'melhor que quero bolsa',
     'graduação EAD',
     'educação superior',
     'bolsas ead',

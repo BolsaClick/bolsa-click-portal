@@ -111,7 +111,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const firstCategory = post.categories[0]
   const title = post.metaTitle || `${post.title} | Blog`
   const description = post.metaDescription || post.excerpt
-  const imageUrl = post.featuredImage || 'https://www.bolsaclick.com.br/assets/logo-bolsa-click-rosa.png'
+  const rawMetaImage = post.featuredImage || 'https://www.bolsaclick.com.br/assets/logo-bolsa-click-rosa.png'
+  const imageUrl = rawMetaImage.startsWith('http')
+    ? rawMetaImage
+    : `https://www.bolsaclick.com.br${rawMetaImage.startsWith('/') ? '' : '/'}${rawMetaImage}`
 
   return {
     title,
@@ -176,7 +179,10 @@ export default async function BlogPostPage({ params }: Props) {
   const textContent = post.content.replace(/<[^>]*>/g, '')
   const wordCount = textContent.split(/\s+/).filter(Boolean).length
 
-  const imageUrl = post.featuredImage || 'https://www.bolsaclick.com.br/assets/og-image-bolsaclick.png'
+  const rawImage = post.featuredImage || 'https://www.bolsaclick.com.br/assets/og-image-bolsaclick.png'
+  const imageUrl = rawImage.startsWith('http')
+    ? rawImage
+    : `https://www.bolsaclick.com.br${rawImage.startsWith('/') ? '' : '/'}${rawImage}`
   const firstCategory = post.categories[0]
 
   // articleBody plain text (sem HTML) pra LLMs extraírem passagens citáveis

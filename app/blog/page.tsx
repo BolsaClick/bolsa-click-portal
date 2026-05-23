@@ -112,18 +112,25 @@ export default async function BlogPage() {
           url: 'https://www.bolsaclick.com.br/assets/logo-bolsa-click-rosa.png',
         },
       },
-      blogPost: posts.slice(0, 10).map(post => ({
-        '@type': 'BlogPosting',
-        headline: post.title,
-        description: post.excerpt,
-        url: `https://www.bolsaclick.com.br/blog/${post.slug}`,
-        datePublished: post.publishedAt,
-        author: {
-          '@type': 'Person',
-          name: post.author,
-        },
-        ...(post.featuredImage ? { image: post.featuredImage } : {}),
-      })),
+      blogPost: posts.slice(0, 10).map(post => {
+        const absImage = post.featuredImage
+          ? post.featuredImage.startsWith('http')
+            ? post.featuredImage
+            : `https://www.bolsaclick.com.br${post.featuredImage.startsWith('/') ? '' : '/'}${post.featuredImage}`
+          : null
+        return {
+          '@type': 'BlogPosting',
+          headline: post.title,
+          description: post.excerpt,
+          url: `https://www.bolsaclick.com.br/blog/${post.slug}`,
+          datePublished: post.publishedAt,
+          author: {
+            '@type': 'Person',
+            name: post.author,
+          },
+          ...(absImage ? { image: absImage } : {}),
+        }
+      }),
     },
     {
       '@context': 'https://schema.org',

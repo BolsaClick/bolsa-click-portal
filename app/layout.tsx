@@ -151,7 +151,7 @@ const jsonLd = [
     ...(business.cnpj && { taxID: business.cnpj, vatID: business.cnpj }),
     description: 'Plataforma brasileira de bolsas de estudo com até 80% de desconto em faculdades e universidades. Graduação, pós-graduação, cursos técnicos e EAD.',
     url: theme.siteUrl,
-    logo: `${theme.siteUrl}/logo-bolsa-click-rosa.png`,
+    logo: `${theme.siteUrl}/assets/logo-bolsa-click-rosa.png`,
     image: theme.ogImage,
     naics: '611710',
     industry: 'Educação Superior',

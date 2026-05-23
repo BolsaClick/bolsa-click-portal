@@ -261,18 +261,76 @@ export default async function CursoPage({ params }: Props) {
   ) as string[]
   const reviewsAggregate = await getCourseReviewsAggregate(courseBrands)
 
+  // Per-institution CourseInstance entries — Google's Course rich result requires
+  // the educational institution as `provider`, not the marketplace. Aggregator role
+  // is captured via offers.offeredBy on the AggregateOffer.
+  const offersByBrand = new Map<string, typeof courseOffers>()
+  for (const offer of (courseOffers || [])) {
+    const brand = (offer as { brand?: string }).brand
+    if (!brand) continue
+    if (!offersByBrand.has(brand)) offersByBrand.set(brand, [])
+    offersByBrand.get(brand)!.push(offer)
+  }
+
+  const courseInstances = offersByBrand.size > 0
+    ? Array.from(offersByBrand.entries()).map(([brand, brandOffers]) => {
+        const typedOffers = brandOffers as Array<{ minPrice?: number; prices?: { withDiscount?: number }; modality?: string }>
+        const brandPrices = typedOffers
+          .map((o) => o.minPrice || o.prices?.withDiscount || 0)
+          .filter((p: number) => p > 0)
+        const brandLowPrice = brandPrices.length > 0 ? Math.min(...brandPrices) : 0
+        const modalities = Array.from(new Set(
+          typedOffers.map((o) => o.modality).filter(Boolean)
+        )) as string[]
+        const courseMode = modalities.includes('EAD') || modalities.includes('Online')
+          ? 'Online'
+          : 'Onsite'
+        return {
+          '@type': 'CourseInstance' as const,
+          courseMode,
+          courseWorkload: durationToIso8601(cursoMetadata.duration),
+          provider: {
+            '@type': 'CollegeOrUniversity' as const,
+            name: brand,
+          },
+          ...(brandLowPrice > 0 ? {
+            offers: {
+              '@type': 'Offer' as const,
+              priceCurrency: 'BRL',
+              price: brandLowPrice.toFixed(2),
+              availability: 'https://schema.org/InStock',
+              url: `https://www.bolsaclick.com.br/cursos/${slug}`,
+              seller: {
+                '@type': 'Organization' as const,
+                '@id': 'https://www.bolsaclick.com.br/#organization',
+              },
+            },
+          } : {}),
+        }
+      })
+    : [
+        {
+          '@type': 'CourseInstance' as const,
+          courseMode: 'Online',
+          courseWorkload: durationToIso8601(cursoMetadata.duration),
+          ...(lowPrice > 0 ? {
+            offers: {
+              '@type': 'Offer' as const,
+              priceCurrency: 'BRL',
+              price: lowPrice.toFixed(2),
+              availability: 'https://schema.org/InStock',
+              url: `https://www.bolsaclick.com.br/cursos/${slug}`,
+            },
+          } : {}),
+        },
+      ]
+
   const jsonLdSchemas = [
     {
       '@context': 'https://schema.org',
       '@type': 'Course',
       name: cursoMetadata.fullName,
       description: cursoMetadata.longDescription,
-      provider: {
-        '@type': 'Organization',
-        name: 'Bolsa Click',
-        url: 'https://www.bolsaclick.com.br',
-        logo: 'https://www.bolsaclick.com.br/assets/logo-bolsa-click-rosa.png',
-      },
       educationalLevel: nivelLabel,
       educationalCredentialAwarded: educationalCredentialAwarded(cursoMetadata.name, cursoMetadata.type),
       timeToComplete: durationToIso8601(cursoMetadata.duration),
@@ -285,36 +343,7 @@ export default async function CursoPage({ params }: Props) {
       inLanguage: 'pt-BR',
       url: `https://www.bolsaclick.com.br/cursos/${slug}`,
       image: imageUrl,
-      hasCourseInstance: [
-        {
-          '@type': 'CourseInstance',
-          courseMode: 'Online',
-          courseWorkload: durationToIso8601(cursoMetadata.duration),
-          ...(lowPrice > 0 ? {
-            offers: {
-              '@type': 'Offer',
-              priceCurrency: 'BRL',
-              price: lowPrice.toFixed(2),
-              availability: 'https://schema.org/InStock',
-              url: `https://www.bolsaclick.com.br/cursos/${slug}`,
-            },
-          } : {}),
-        },
-        {
-          '@type': 'CourseInstance',
-          courseMode: 'Onsite',
-          courseWorkload: durationToIso8601(cursoMetadata.duration),
-          ...(lowPrice > 0 ? {
-            offers: {
-              '@type': 'Offer',
-              priceCurrency: 'BRL',
-              price: lowPrice.toFixed(2),
-              availability: 'https://schema.org/InStock',
-              url: `https://www.bolsaclick.com.br/cursos/${slug}`,
-            },
-          } : {}),
-        },
-      ],
+      hasCourseInstance: courseInstances,
       ...(lowPrice > 0 ? {
         offers: {
           '@type': 'AggregateOffer',
@@ -323,6 +352,10 @@ export default async function CursoPage({ params }: Props) {
           highPrice: highPrice.toFixed(2),
           offerCount: String(courseOffers?.length || 0),
           availability: 'https://schema.org/InStock',
+          offeredBy: {
+            '@type': 'Organization',
+            '@id': 'https://www.bolsaclick.com.br/#organization',
+          },
         },
       } : {}),
       ...(reviewsAggregate ? {

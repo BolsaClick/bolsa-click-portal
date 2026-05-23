@@ -45,11 +45,11 @@ const PROGRAMAS = [
     onde: 'PUC, Mackenzie, Metodista e outras instituições religiosas',
   },
   {
-    nome: 'Educa Mais Brasil / Quero Bolsa (marketplaces concorrentes)',
+    nome: 'Outros marketplaces de bolsa',
     desconto: 'Até 70%',
     requisito: 'Sem ENEM obrigatório; cadastro gratuito',
     quando: 'Ano inteiro',
-    onde: 'Faculdades particulares conveniadas (catálogo varia)',
+    onde: 'Faculdades particulares conveniadas (catálogo varia por plataforma)',
   },
   {
     nome: 'Bolsa Atleta / Bolsa Cultura',
@@ -64,7 +64,7 @@ const FAQ_ITEMS = [
   {
     question: 'Como conseguir bolsa de estudo sem ENEM?',
     answer:
-      'Sim, é possível. Pelo Bolsa Click você consegue bolsa de até 80% em faculdades particulares parceiras da Cogna (Anhanguera, Unopar, Pitágoras, Unime, Ampli) sem precisar de nota do ENEM. Educa Mais Brasil e Quero Bolsa também oferecem opções sem ENEM. ProUni e FIES exigem ENEM ≥ 450, mas são gratuitos e cobrem até 100% da mensalidade pra famílias de baixa renda.',
+      'Sim, é possível. Pelo Bolsa Click você consegue bolsa de até 80% em faculdades particulares parceiras da Cogna (Anhanguera, Unopar, Pitágoras, Unime, Ampli) sem precisar de nota do ENEM. Outros marketplaces de bolsa também oferecem opções sem ENEM. ProUni e FIES exigem ENEM ≥ 450, mas são gratuitos e cobrem até 100% da mensalidade pra famílias de baixa renda.',
   },
   {
     question: 'Quem tem direito a bolsa de estudo integral 100%?',
@@ -74,7 +74,7 @@ const FAQ_ITEMS = [
   {
     question: 'Como conseguir bolsa de estudo sem ProUni?',
     answer:
-      'O Bolsa Click é a alternativa mais direta: descontos de até 80% em faculdades particulares sem precisar do ENEM ou comprovar renda. Outras opções: FIES (financiamento), bolsas filantrópicas de confessionais, programas próprios de faculdades (Anhanguera tem bolsa direta), Educa Mais Brasil, Quero Bolsa, e bolsas-atleta/cultura pra quem se enquadra.',
+      'O Bolsa Click é a alternativa mais direta: descontos de até 80% em faculdades particulares sem precisar do ENEM ou comprovar renda. Outras opções: FIES (financiamento), bolsas filantrópicas de confessionais, programas próprios de faculdades (Anhanguera tem bolsa direta), outros marketplaces de bolsa, e bolsas-atleta/cultura pra quem se enquadra.',
   },
   {
     question: 'É possível conseguir bolsa estando matriculado?',
@@ -89,7 +89,7 @@ const FAQ_ITEMS = [
   {
     question: 'Posso usar duas bolsas ao mesmo tempo?',
     answer:
-      'Não, em regra. ProUni e FIES não podem ser acumulados com outras bolsas particulares na mesma matrícula. Bolsas privadas (Bolsa Click, Educa Mais Brasil) também não combinam entre si — você escolhe uma. Mas pode trocar de programa em rematrículas anuais se outra opção for melhor.',
+      'Não, em regra. ProUni e FIES não podem ser acumulados com outras bolsas particulares na mesma matrícula. Bolsas privadas de marketplaces também não combinam entre si — você escolhe uma. Mas pode trocar de programa em rematrículas anuais se outra opção for melhor.',
   },
   {
     question: 'O que acontece se eu perder a bolsa?',
@@ -364,7 +364,7 @@ export default function ComoConseguirBolsaPage() {
                 ok: false,
                 claim: 'Bolsa de estudo é só pra quem é pobre.',
                 truth:
-                  'Falso. ProUni e bolsas filantrópicas exigem renda baixa, mas Bolsa Click, Educa Mais Brasil e Quero Bolsa não pedem comprovação de renda — qualquer pessoa pode se cadastrar.',
+                  'Falso. ProUni e bolsas filantrópicas exigem renda baixa, mas Bolsa Click e outros marketplaces de bolsa não pedem comprovação de renda — qualquer pessoa pode se cadastrar.',
               },
               {
                 ok: false,

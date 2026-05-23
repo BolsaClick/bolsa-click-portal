@@ -45,7 +45,9 @@ export default function PersonalizationStrip() {
   return (
     <section
       aria-labelledby="personalization-title"
-      className="bg-paper-warm border-y border-hairline py-10 md:py-12"
+      // `content-visibility: auto` reduz custo de paint quando fora da viewport
+      // e a hint de tamanho intrínseco evita CLS quando o browser pula renderização.
+      className="bg-paper-warm border-y border-hairline py-10 md:py-12 [content-visibility:auto] [contain-intrinsic-size:0_280px]"
     >
       <Container>
         <h2 id="personalization-title" className="sr-only">

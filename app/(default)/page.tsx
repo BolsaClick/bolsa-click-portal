@@ -190,13 +190,18 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
       <HeroSection />
-      <PersonalizationStrip />
+      {/* PersonalizationStrip movido pra below-the-fold (após PopularCoursesSection).
+          Motivo: o componente é client-only e decide se renderiza só APÓS ler
+          localStorage no useEffect — quando estava em posição 2 (above the fold)
+          causava CLS catastrófico (≥0.25) em mobile pra usuários retornantes.
+          Below-the-fold o shift não conta pro CLS visível inicial. */}
       <BestOffersSection />
       <PartnersStrip />
       <PersonaReturnBanner />
       <Cta />
       <ScholarshipCarousel />
       <PopularCoursesSection />
+      <PersonalizationStrip />
       <ScholarshipInfoSection />
       <LatestBlogPosts posts={blogPosts} />
       <HowWork />

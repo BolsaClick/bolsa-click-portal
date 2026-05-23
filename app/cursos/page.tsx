@@ -78,17 +78,19 @@ async function getCourses() {
   }
 }
 
-const jsonLdSchema = {
+const SITE_URL = 'https://www.bolsaclick.com.br'
+
+const collectionPageSchema = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
   name: 'Cursos com Bolsa de Estudo',
   description: 'Descubra os cursos mais procurados com bolsas de estudo de até 80% de desconto em diversas áreas do conhecimento.',
-  url: 'https://www.bolsaclick.com.br/cursos',
+  url: `${SITE_URL}/cursos`,
   provider: {
     '@type': 'Organization',
     name: 'Bolsa Click',
-    url: 'https://www.bolsaclick.com.br',
-    logo: 'https://www.bolsaclick.com.br/assets/logo-bolsa-click-rosa.png',
+    url: SITE_URL,
+    logo: `${SITE_URL}/assets/logo-bolsa-click-rosa.png`,
     sameAs: [
       'https://www.instagram.com/bolsaclick',
       'https://www.facebook.com/bolsaclickbrasil',
@@ -98,18 +100,8 @@ const jsonLdSchema = {
   breadcrumb: {
     '@type': 'BreadcrumbList',
     itemListElement: [
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: 'Home',
-        item: 'https://www.bolsaclick.com.br',
-      },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'Cursos',
-        item: 'https://www.bolsaclick.com.br/cursos',
-      },
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Cursos', item: `${SITE_URL}/cursos` },
     ],
   },
 }
@@ -117,11 +109,31 @@ const jsonLdSchema = {
 export default async function CursosPage() {
   const courses = await getCourses()
 
+  // ItemList habilita o rich result de carrossel de cursos no Google.
+  // Estrutura "summary list": cada ListItem só com name + url, indicando
+  // que detalhes (preço, oferta, instituição) estão na página própria do
+  // curso. Limita a 100 itens — limite recomendado pra carrossel.
+  const itemListSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Cursos com bolsa de estudo',
+    description: 'Catálogo de cursos disponíveis com bolsa no Bolsa Click.',
+    numberOfItems: courses.length,
+    itemListElement: courses.slice(0, 100).map((course, idx) => ({
+      '@type': 'ListItem',
+      position: idx + 1,
+      url: `${SITE_URL}/cursos/${course.slug}`,
+      name: course.fullName || course.name,
+    })),
+  }
+
+  const jsonLdSchemas = [collectionPageSchema, itemListSchema]
+
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchemas) }}
       />
       <CursosPageClient courses={courses} />
     </>

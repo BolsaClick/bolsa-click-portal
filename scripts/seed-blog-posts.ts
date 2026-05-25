@@ -370,6 +370,165 @@ const ARCHETYPES: Archetype[] = [
     categorySlugs: ['ead', 'bolsas-de-estudo'],
     briefing: 'Preços reais 2026 por curso EAD. Usar dados do DATA_BLOCK (faixas de mensalidade por curso). Sem inventar números.',
   },
+
+  // ===========================================================
+  // CLUSTER "BOLSAS DE ESTUDO" — head term em 6m (decisão 2026-05-22)
+  // Pillar /bolsas-de-estudo cobre Prouni/Fies/tipos/passo-a-passo.
+  // Estes archetypes atacam variantes long-tail identificadas na SERP.
+  // Todo post DEVE linkar pra /bolsas-de-estudo no primeiro terço.
+  // ===========================================================
+
+  // ---- Programas federais (6 posts) ----
+  {
+    slug: 'prouni-2026-como-funciona-passo-a-passo',
+    title: 'ProUni 2026: como funciona, requisitos e passo-a-passo',
+    kind: 'guia',
+    categorySlugs: ['bolsas-de-estudo', 'guias-mec'],
+    featured: true,
+    briefing: 'Guia completo do ProUni 2026: o que é, quem pode se inscrever (ENEM 450+, renda até 3 SM, escola pública), bolsa 50 vs 100%, datas das duas edições anuais, documentação, lista de espera. Citar fontes .gov.br (MEC). Linkar pra /bolsas-de-estudo no primeiro terço com anchor "guia completo de bolsas de estudo".',
+  },
+  {
+    slug: 'fies-2026-financiamento-estudantil-completo',
+    title: 'FIES 2026: financiamento estudantil federal explicado',
+    kind: 'guia',
+    categorySlugs: ['bolsas-de-estudo', 'guias-mec'],
+    featured: true,
+    briefing: 'Guia do FIES 2026: como funciona o financiamento, juros baixos, requisitos (ENEM 450+, renda até 3 SM), prazo de pagamento após formado, P-FIES vs FIES. Diferença pro ProUni. Linkar pra /bolsas-de-estudo.',
+  },
+  {
+    slug: 'prouni-ou-fies-qual-vale-mais-a-pena',
+    title: 'ProUni ou FIES: qual programa vale mais a pena em 2026?',
+    kind: 'ranking',
+    categorySlugs: ['bolsas-de-estudo', 'guias-mec'],
+    briefing: 'Comparativo direto ProUni vs FIES com tabela: tipo de benefício (bolsa vs financiamento), pagamento, juros, prazo, perfis ideais. Quando combinar os dois (ProUni 50% + FIES 50%). Linkar pra /bolsas-de-estudo, /prouni, /fies.',
+  },
+  {
+    slug: 'nota-minima-enem-prouni-quanto-precisa',
+    title: 'Nota mínima do ENEM pra ProUni: 450 pontos e o que mais conta',
+    kind: 'guia',
+    categorySlugs: ['bolsas-de-estudo', 'guias-mec'],
+    briefing: 'Nota mínima formal é 450 + redação acima de zero, mas a nota de corte real por curso/faculdade varia. Explicar como funciona o ranking de seleção (maior nota leva). Exemplos de cursos populares e suas notas históricas. Linkar pra /bolsas-de-estudo e /prouni.',
+  },
+  {
+    slug: 'sisu-prouni-fies-diferencas-programas-federais',
+    title: 'SISU, ProUni e FIES: 3 programas federais para a faculdade',
+    kind: 'guia',
+    categorySlugs: ['bolsas-de-estudo', 'guias-mec'],
+    briefing: 'Trilha de decisão entre os 3 programas federais. SISU = vaga em pública. ProUni = bolsa em particular. FIES = financiamento em particular. Quando cada um faz sentido. Linkar pra /bolsas-de-estudo, /sisu, /prouni, /fies.',
+  },
+  {
+    slug: 'bolsa-permanencia-mec-auxilio-mensal',
+    title: 'Bolsa de permanência MEC: auxílio mensal para bolsistas ProUni',
+    kind: 'guia',
+    categorySlugs: ['bolsas-de-estudo', 'guias-mec'],
+    briefing: 'O que é Bolsa de Permanência (BP-MEC), quem tem direito (bolsista ProUni 100% + renda até 1,5 SM + curso com carga horária mínima), valor mensal e como solicitar. Bolsa específica indígenas/quilombolas. Linkar pra /bolsas-de-estudo seção bolsa-permanencia.',
+  },
+
+  // ---- Por perfil de estudante (5 posts) ----
+  {
+    slug: 'bolsa-de-estudo-sem-enem-como-conseguir',
+    title: 'Bolsa de estudo sem ENEM: como conseguir sem fazer a prova',
+    kind: 'guia',
+    categorySlugs: ['bolsas-de-estudo'],
+    featured: true,
+    briefing: 'Pra quem não fez ou não quer fazer ENEM: bolsas próprias de faculdades parceiras aceitam processo seletivo próprio (redação online). Listar caminhos. Não citar concorrentes. Linkar pra /bolsas-de-estudo e /sem-enem.',
+  },
+  {
+    slug: 'bolsa-de-estudo-baixa-renda-prouni-permanencia',
+    title: 'Bolsa de estudo para baixa renda: ProUni, FIES e auxílio do MEC',
+    kind: 'guia',
+    categorySlugs: ['bolsas-de-estudo'],
+    briefing: 'Conjunto de benefícios pra estudantes de baixa renda: ProUni 100%, Bolsa Permanência, FIES, transporte e alimentação. Como combinar e maximizar. Linkar pra /bolsas-de-estudo.',
+  },
+  {
+    slug: 'bolsa-de-estudo-primeira-graduacao-familia',
+    title: 'Bolsa de estudo para quem é primeira graduação na família',
+    kind: 'guia',
+    categorySlugs: ['bolsas-de-estudo', 'carreira-e-mercado'],
+    briefing: 'Caminho pra "primeira geração universitária": cuidados extra na escolha, programas que priorizam esse perfil (cota PROUNI escola pública), apoio acadêmico. Linkar pra /bolsas-de-estudo.',
+  },
+  {
+    slug: 'bolsa-de-estudo-segunda-graduacao-pode',
+    title: 'Posso conseguir bolsa de estudo pra segunda graduação?',
+    kind: 'guia',
+    categorySlugs: ['bolsas-de-estudo'],
+    briefing: 'ProUni e FIES proíbem segunda graduação (precisa não ter diploma). Mas bolsa própria via faculdade parceira permite. Explicar regras e caminho. Linkar pra /bolsas-de-estudo.',
+  },
+  {
+    slug: 'bolsa-de-estudo-pos-graduacao-mba-especializacao',
+    title: 'Bolsa de estudo para pós-graduação: MBA e especialização',
+    kind: 'guia',
+    categorySlugs: ['bolsas-de-estudo'],
+    briefing: 'Pós lato sensu (MBA, especialização) tem bolsa via faculdades parceiras (30-70%). Mestrado/doutorado = CAPES/CNPq. Trilha por nível. Linkar pra /bolsas-de-estudo e /pos-graduacao.',
+  },
+
+  // ---- Por tipo/modalidade de bolsa (5 posts) ----
+  {
+    slug: 'bolsa-integral-100-como-conseguir-2026',
+    title: 'Bolsa de estudo de 100%: como conseguir bolsa integral em 2026',
+    kind: 'guia',
+    categorySlugs: ['bolsas-de-estudo'],
+    featured: true,
+    briefing: 'Bolsa integral cobre 100% da mensalidade. Caminhos: ProUni 100% (ENEM + renda baixa) ou bolsa própria 100% em vagas específicas de faculdades parceiras. Linkar pra /bolsas-de-estudo seção tipos.',
+  },
+  {
+    slug: 'bolsa-50-vs-100-qual-vale-mais',
+    title: 'Bolsa de 50% ou 100%: qual vale mais a pena?',
+    kind: 'ranking',
+    categorySlugs: ['bolsas-de-estudo'],
+    briefing: 'Comparativo de bolsa integral vs parcial. Bolsa 100% rende mais mas tem critério mais apertado (renda 1,5 SM). Bolsa 50% (renda até 3 SM) ainda dá grande economia. NÃO INVENTAR PREÇOS — use APENAS valores presentes no DATA_BLOCK.allowedPrices, ou fale em percentuais e faixas genéricas ("metade da mensalidade", "economia de até 50% do custo total") sem citar reais específicos. Linkar pra /bolsas-de-estudo.',
+  },
+  {
+    slug: 'bolsa-ead-vs-bolsa-presencial-diferenca',
+    title: 'Bolsa de estudo EAD ou presencial: onde o desconto é maior',
+    kind: 'ranking',
+    categorySlugs: ['bolsas-de-estudo', 'ead'],
+    briefing: 'Comparativo: EAD chega a 85% via bolsa própria (mensalidade base já menor), presencial fica em 30-70% típico. Casos onde presencial compensa (curso prático). Linkar pra /bolsas-de-estudo e /faculdade-ead.',
+  },
+  {
+    slug: 'bolsa-cursos-profissionalizantes-tecnico',
+    title: 'Bolsa de estudo para cursos profissionalizantes e técnicos',
+    kind: 'guia',
+    categorySlugs: ['bolsas-de-estudo'],
+    briefing: 'Bolsas pra cursos técnicos e profissionalizantes: programas estaduais (ex: Pronatec), bolsa própria de escolas técnicas, FIES Técnico. Diferente da bolsa de graduação. Linkar pra /bolsas-de-estudo e /cursos-profissionalizantes.',
+  },
+  {
+    slug: 'simulador-bolsa-de-estudo-quanto-economizo',
+    title: 'Quanto economizo com bolsa de estudo? Simulação por curso',
+    kind: 'guia',
+    categorySlugs: ['bolsas-de-estudo'],
+    briefing: 'Cálculos de economia ao longo de um curso (4-5 anos) com diferentes percentuais de bolsa. REGRA INEGOCIÁVEL: cite APENAS valores que estão em DATA_BLOCK.allowedPrices ou DATA_BLOCK.offers. NÃO INVENTE preços. Para cálculos genéricos use percentuais ("economia de 50% do total", "três quartos da mensalidade", "metade dos 4-5 anos pagando zero"). Pra exemplos com R$, use SOMENTE valores que aparecem literalmente no DATA_BLOCK. Linkar pra /bolsas-de-estudo.',
+  },
+
+  // ---- Cuidados e validação (4 posts) ----
+  {
+    slug: 'bolsa-de-estudo-golpe-como-evitar',
+    title: 'Bolsa de estudo golpe: como identificar antes de pagar',
+    kind: 'guia',
+    categorySlugs: ['bolsas-de-estudo', 'guias-mec'],
+    briefing: 'Sinais de golpe em bolsa: cobrança antecipada, faculdade não cadastrada no e-MEC, promessa de desconto excepcional. Como validar com 3 passos. Linkar pra /bolsas-de-estudo seção cuidados.',
+  },
+  {
+    slug: 'como-verificar-faculdade-emec-passo-a-passo',
+    title: 'Como verificar faculdade no e-MEC: tutorial em 5 passos',
+    kind: 'guia',
+    categorySlugs: ['guias-mec', 'bolsas-de-estudo'],
+    briefing: 'Tutorial prático do portal e-mec.mec.gov.br: buscar instituição, conferir credenciamento, nota CPC, nota ENADE, IGC. Captura de tela textual. Citar mec.gov.br. Linkar pra /bolsas-de-estudo.',
+  },
+  {
+    slug: 'posso-perder-bolsa-de-estudo-motivos',
+    title: 'Posso perder a bolsa de estudo durante o curso? 7 motivos',
+    kind: 'guia',
+    categorySlugs: ['bolsas-de-estudo'],
+    briefing: 'Lista de motivos de perda de bolsa (ProUni e bolsa própria): reprovação, trancamento, atraso, mudança de renda. Como evitar cada um. Linkar pra /bolsas-de-estudo.',
+  },
+  {
+    slug: 'documentos-bolsa-de-estudo-prouni-fies',
+    title: 'Documentos para bolsa de estudo: o que levar pro ProUni e FIES',
+    kind: 'guia',
+    categorySlugs: ['bolsas-de-estudo', 'guias-mec'],
+    briefing: 'Checklist: RG, CPF, comprovante de residência, comprovante de renda (CT, holerite, IR), boletim ENEM, histórico escolar. Diferença bolsa integral vs parcial. Linkar pra /bolsas-de-estudo.',
+  },
 ]
 
 // ============================================================
@@ -806,6 +965,36 @@ function validatePost(post: GeneratedPost, _arch: Archetype, dataBlock: DataBloc
   if (wordCount < 900) return { ok: false, reason: `content curto (${wordCount} palavras; mín 900)` }
   if (wordCount > 3000) return { ok: false, reason: `content longo demais (${wordCount} palavras; máx 3000)` }
 
+  // Direct-answer opening (regra editorial GEO): primeiro parágrafo precisa
+  // responder a query, não contextualizar. AI Overviews / ChatGPT / Perplexity
+  // extraem o primeiro bloco semântico — contextualização antes da resposta
+  // perde citações.
+  const firstParagraphMatch = content.match(/<p[^>]*>([\s\S]*?)<\/p>/i)
+  if (firstParagraphMatch) {
+    const firstParaText = firstParagraphMatch[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+    const opening = firstParaText.split(' ').slice(0, 12).join(' ').toLowerCase()
+    const contextualizingLeads = [
+      /^antes de/,
+      /^é importante/,
+      /^é fundamental/,
+      /^é essencial/,
+      /^para quem/,
+      /^quando se trata/,
+      /^vale (lembrar|ressaltar|destacar)/,
+      /^muit[ao]s (estudantes|pessoas|brasileiros)/,
+      /^se você (está|quer|pensa|deseja|busca)/,
+      /^atualmente/,
+      /^nos últimos anos/,
+      /^cada vez mais/,
+      /^o ensino (a distância|superior) (consolidou|tem se tornado|vem ganhando)/,
+    ]
+    for (const rx of contextualizingLeads) {
+      if (rx.test(opening)) {
+        return { ok: false, reason: `abertura contextualizadora (viola regra GEO de resposta direta): "${opening}..."` }
+      }
+    }
+  }
+
   return { ok: true }
 }
 
@@ -845,7 +1034,11 @@ async function seedCategories() {
 // UPSERT POST
 // ============================================================
 
-async function upsertPost(arch: Archetype, post: GeneratedPost) {
+async function upsertPost(
+  arch: Archetype,
+  post: GeneratedPost,
+  existing: { publishedAt: Date | null } | null,
+) {
   const readingTime = recalcReadingTime(post.content)
   const baseData = {
     title: post.title.slice(0, 200),
@@ -867,12 +1060,6 @@ async function upsertPost(arch: Archetype, post: GeneratedPost) {
       ...baseData,
       content: baseData.content.slice(0, 200) + '… [' + readingTime + 'min, ' + baseData.content.length + ' chars]',
     }, null, 2))
-    return
-  }
-
-  const existing = await prisma.blogPost.findUnique({ where: { slug: arch.slug } })
-  if (existing && !FORCE) {
-    console.log(`  ⏭  ${arch.slug} já existe (use --force pra sobrescrever)`)
     return
   }
 
@@ -900,6 +1087,18 @@ async function upsertPost(arch: Archetype, post: GeneratedPost) {
 async function runOne(arch: Archetype, mecMap: Record<string, number>, idx: number, total: number): Promise<{ ok: boolean; slug: string; reason?: string }> {
   const label = `[${idx + 1}/${total}] ${arch.slug}`
   try {
+    // Early-exit: economiza tokens da Claude + tempo de buildDataBlock quando
+    // o post já existe e não há --force. Sem isso o script gastava ~$0.08 e
+    // ~90s por skip antes do upsert detectar a duplicação.
+    const existing = await prisma.blogPost.findUnique({
+      where: { slug: arch.slug },
+      select: { id: true, publishedAt: true },
+    })
+    if (existing && !FORCE && !DRY_RUN) {
+      console.log(`${label} ⏭  já existe (use --force pra sobrescrever)`)
+      return { ok: true, slug: arch.slug }
+    }
+
     console.log(`${label} — build data block…`)
     const dataBlock = await buildDataBlock(arch, mecMap)
     if (dataBlock.noOffers && (arch.kind === 'curso_cidade' || arch.kind === 'curso')) {
@@ -923,7 +1122,7 @@ async function runOne(arch: Archetype, mecMap: Record<string, number>, idx: numb
       }
     }
 
-    await upsertPost(arch, post)
+    await upsertPost(arch, post, existing)
     console.log(`${label} ✓ ($${totalCostUsd.toFixed(3)} acumulado)`)
     return { ok: true, slug: arch.slug }
   } catch (err) {

@@ -18,12 +18,15 @@ export const revalidate = 3600
 
 const theme = getCurrentTheme()
 
+// Title brand-led pra evitar canibalização com /bolsas-de-estudo (a pillar
+// targeta a head term "Bolsas de Estudo"). Home consolida marca e top-funnel
+// navegacional ("bolsa click", "marketplace de bolsas", "bolsa anhanguera").
 export const metadata: Metadata = {
   title: {
-    default: 'Bolsas de Estudo até 80% | 30.000+ Faculdades | 100.000+ Cursos',
+    default: 'Bolsa Click — Marketplace de Bolsas em 30.000+ Faculdades',
     template: `%s | ${theme.shortTitle}`,
   },
-  description: 'Encontre bolsa de estudo em mais de 30.000 faculdades com até 80% de desconto. Mais de 100.000 cursos disponíveis: graduação, pós-graduação, técnicos e EAD. Desconto em faculdade garantido. Cadastre-se grátis!',
+  description: 'Bolsa Click é o marketplace brasileiro pra comparar e garantir bolsa de estudo de até 80% em 100.000+ cursos. Anhanguera, Unopar, Pitágoras e outras faculdades parceiras reconhecidas pelo MEC. Inscrição grátis, EAD ou presencial.',
   keywords: [
     'bolsa de estudo',
     'bolsa de estudos',

@@ -84,7 +84,7 @@ function buildStaticSitemap(): SitemapEntry[] {
     { loc: `${SITE_URL}/pos-graduacao`, lastmod: now, changefreq: 'daily', priority: 0.95 },
     { loc: `${SITE_URL}/cursos-profissionalizantes`, lastmod: now, changefreq: 'daily', priority: 0.95 },
     { loc: `${SITE_URL}/faculdades`, lastmod: now, changefreq: 'weekly', priority: 0.85 },
-    { loc: `${SITE_URL}/bolsas-de-estudo`, lastmod: now, changefreq: 'weekly', priority: 0.9 },
+    { loc: `${SITE_URL}/bolsas-de-estudo`, lastmod: now, changefreq: 'daily', priority: 1.0 },
     { loc: `${SITE_URL}/blog`, lastmod: now, changefreq: 'daily', priority: 0.9 },
     { loc: `${SITE_URL}/quem-somos`, lastmod: now, changefreq: 'weekly', priority: 0.7 },
     { loc: `${SITE_URL}/contato`, lastmod: now, changefreq: 'weekly', priority: 0.7 },

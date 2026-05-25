@@ -45,13 +45,17 @@ export async function generateMetadata({
     }
   }
 
-  const title = institution.metaTitle || `Faculdade ${institution.name} - Bolsas de Estudo com até 80% de Desconto`
+  // Strip any trailing "| Bolsa Click" baked into DB metaTitle so the root
+  // metadata template (`%s | Bolsa Click`) doesn't double the suffix.
+  const rawTitle = institution.metaTitle || `Faculdade ${institution.name} - Bolsas de Estudo com até 80% de Desconto`
+  const cleanTitle = rawTitle.replace(/\s*\|\s*Bolsa Click\s*$/i, '').trim()
+  const title = `${cleanTitle} | ${theme.shortTitle}`
   const description =
     institution.metaDescription ||
     `Encontre bolsas de estudo na faculdade ${institution.name} com até 80% de desconto. ${institution.description}`
 
   return {
-    title,
+    title: { absolute: title },
     description,
     keywords: institution.keywords,
     alternates: {

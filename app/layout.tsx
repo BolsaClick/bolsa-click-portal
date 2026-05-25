@@ -136,7 +136,7 @@ const jsonLd = [
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: `${theme.siteUrl}/curso/resultado?q={search_term_string}`,
+        urlTemplate: `${theme.siteUrl}/cursos?q={search_term_string}`,
       },
       'query-input': 'required name=search_term_string',
     },

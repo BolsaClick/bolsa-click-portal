@@ -21,6 +21,15 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(correctedUrl, 301);
   }
 
+  // Sitelink Search Box: /cursos?q=... → /curso/resultado?q=...
+  // O SearchAction do schema.org aponta pra /cursos?q={search_term_string}
+  // (rota indexável) e redireciona pro motor de busca real.
+  if (pathname === "/cursos" && request.nextUrl.searchParams.has("q")) {
+    const target = new URL("/curso/resultado", request.url);
+    target.searchParams.set("q", request.nextUrl.searchParams.get("q") || "");
+    return NextResponse.redirect(target, 301);
+  }
+
   return NextResponse.next();
 }
 

@@ -264,6 +264,11 @@ const Footer: React.FC = () => {
                   </Link>
                 </li>
                 <li>
+                  <Link href="/faq" className={linkClass}>
+                    Perguntas Frequentes
+                  </Link>
+                </li>
+                <li>
                   <Link href="/contato" className={linkClass}>
                     Fale Conosco
                   </Link>

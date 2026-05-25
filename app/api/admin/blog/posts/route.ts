@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { withAdminAuth, isAuthError } from '@/app/lib/middleware/admin-auth'
+import { pingIndexNow, INDEXNOW_HOST } from '@/app/lib/seo/indexnow'
 
 /**
  * GET /api/admin/blog/posts
@@ -138,6 +139,11 @@ export async function POST(request: NextRequest) {
         categories: { select: { id: true, title: true, slug: true } },
       },
     })
+
+    // Ping IndexNow se já foi publicado: notifica Bing/Yandex em segundos.
+    if (post.publishedAt && post.isActive) {
+      void pingIndexNow([`https://${INDEXNOW_HOST}/blog/${post.slug}`]).catch(() => {})
+    }
 
     return NextResponse.json({ post }, { status: 201 })
   } catch (error) {

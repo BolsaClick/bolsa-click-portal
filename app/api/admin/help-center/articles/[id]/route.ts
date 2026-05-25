@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { withAdminAuth, isAuthError } from '@/app/lib/middleware/admin-auth'
+import { pingIndexNow, INDEXNOW_HOST } from '@/app/lib/seo/indexnow'
 
 /**
  * GET /api/admin/help-center/articles/[id]
@@ -139,6 +140,12 @@ export async function PATCH(
         },
       },
     })
+
+    if (article.publishedAt && article.isActive) {
+      void pingIndexNow([
+        `https://${INDEXNOW_HOST}/central-de-ajuda/${article.category.slug}/${article.slug}`,
+      ]).catch(() => {})
+    }
 
     return NextResponse.json({ article })
   } catch (error) {

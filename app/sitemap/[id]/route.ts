@@ -89,6 +89,7 @@ function buildStaticSitemap(): SitemapEntry[] {
     { loc: `${SITE_URL}/quem-somos`, lastmod: now, changefreq: 'weekly', priority: 0.7 },
     { loc: `${SITE_URL}/contato`, lastmod: now, changefreq: 'weekly', priority: 0.7 },
     { loc: `${SITE_URL}/central-de-ajuda`, lastmod: now, changefreq: 'weekly', priority: 0.7 },
+    { loc: `${SITE_URL}/faq`, lastmod: now, changefreq: 'weekly', priority: 0.8 },
     { loc: `${SITE_URL}/teste-vocacional`, lastmod: now, changefreq: 'monthly', priority: 0.85 },
     { loc: `${SITE_URL}/enem`, lastmod: now, changefreq: 'monthly', priority: 0.85 },
     { loc: `${SITE_URL}/prouni`, lastmod: now, changefreq: 'monthly', priority: 0.85 },

@@ -58,9 +58,17 @@ export function ProgramHub({
     '@type': 'Article',
     headline: h1,
     description: articleSummary,
-    author: { '@type': 'Organization', name: 'Bolsa Click', url: SITE_URL },
+    inLanguage: 'pt-BR',
+    isAccessibleForFree: true,
+    author: {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#organization`,
+      name: 'Equipe Editorial Bolsa Click',
+      url: SITE_URL,
+    },
     publisher: {
       '@type': 'Organization',
+      '@id': `${SITE_URL}/#organization`,
       name: 'Bolsa Click',
       logo: {
         '@type': 'ImageObject',
@@ -71,6 +79,10 @@ export function ProgramHub({
     dateModified,
     mainEntityOfPage: pageUrl,
     url: pageUrl,
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: ['[data-speakable]', 'h1', 'h2'],
+    },
   }
 
   return (

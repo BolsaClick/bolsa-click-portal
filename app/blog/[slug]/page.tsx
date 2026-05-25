@@ -240,6 +240,14 @@ export default async function BlogPostPage({ params }: Props) {
       keywords: post.keywords.join(', '),
       articleSection: post.categories.map(c => c.title).join(', '),
       inLanguage: 'pt-BR',
+      isAccessibleForFree: true,
+      // Speakable spec aponta pros elementos que LLMs/voice assistants devem
+      // priorizar quando citar este post. Foca no primeiro parágrafo (resposta
+      // direta GEO) + headings.
+      speakable: {
+        '@type': 'SpeakableSpecification',
+        cssSelector: ['[data-speakable]', 'article > p:first-of-type', 'h1', 'h2'],
+      },
     },
     {
       '@context': 'https://schema.org',

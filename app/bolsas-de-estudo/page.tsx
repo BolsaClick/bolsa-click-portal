@@ -9,6 +9,12 @@ import BestOffersSection from '@/app/components/organisms/BestOffersSection'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 
+// Datas de freshness pra Article schema + UI. Atualizar manualmente quando
+// fizer revisão editorial significativa do pillar (regra do roadmap M3/M5).
+const DATE_PUBLISHED = '2025-08-12'
+const DATE_MODIFIED = '2026-05-25'
+const DATE_MODIFIED_LABEL = '25 de maio de 2026'
+
 export const revalidate = 86400 // 24h — conteúdo institucional muda devagar
 
 export const metadata: Metadata = {
@@ -55,19 +61,19 @@ const TIPOS_BOLSA = [
   {
     titulo: 'Bolsa integral (100%)',
     resumo:
-      'Cobre 100% da mensalidade durante todo o curso. Oferecida pelo ProUni (programa federal) e por faculdades particulares parceiras em vagas específicas. Quem recebe não paga nada além de taxas administrativas eventuais.',
+      'Bolsa integral é o tipo de bolsa de estudo que cobre 100% da mensalidade da faculdade durante todo o curso. É oferecida pelo ProUni (programa do Governo Federal) e por faculdades particulares parceiras em vagas específicas. Quem recebe não paga nada além de taxas administrativas eventuais.',
     requisito: 'ENEM 450+ e renda familiar de até 1,5 salário mínimo por pessoa (ProUni) ou negociação direta com faculdade parceira.',
   },
   {
     titulo: 'Bolsa parcial (25% a 75%)',
     resumo:
-      'Cobre parte da mensalidade — geralmente 50% pelo ProUni ou de 25% a 75% por bolsas próprias de faculdades. Ideal pra quem não fecha o critério de renda da bolsa integral mas ainda quer reduzir o custo significativamente.',
+      'Bolsa parcial é a bolsa de estudo que cobre parte da mensalidade — geralmente 50% pelo ProUni ou de 25% a 75% por bolsas próprias de faculdades particulares. Ideal pra quem não fecha o critério de renda da bolsa integral mas ainda quer reduzir o custo da faculdade significativamente.',
     requisito: 'ENEM 450+ e renda familiar de até 3 salários mínimos por pessoa (ProUni 50%) ou inscrição direta nas faculdades parceiras.',
   },
   {
     titulo: 'Bolsa de permanência',
     resumo:
-      'Auxílio mensal em dinheiro para cobrir custos além da mensalidade (transporte, alimentação, material). Concedida pelo MEC a estudantes de bolsa integral em situação de vulnerabilidade socioeconômica.',
+      'Bolsa de permanência é um auxílio mensal em dinheiro pago pelo MEC pra cobrir custos do dia-a-dia além da mensalidade (transporte, alimentação, material didático). É concedida a estudantes de bolsa integral do ProUni em situação de vulnerabilidade socioeconômica, complementando a bolsa de estudo.',
     requisito: 'Ser bolsista integral do ProUni com renda per capita de até 1,5 salário mínimo e estar matriculado em curso com carga horária diária mínima.',
   },
 ]
@@ -312,12 +318,58 @@ export default async function BolsasDeEstudoHubPage() {
     })),
   }
 
+  // Article schema pra GEO: dateModified visível + author = sinal forte de
+  // freshness e autoridade pra AI Overviews / ChatGPT / Perplexity. Mesmo
+  // sendo hub page, o pillar tem conteúdo editorial autêntico (12 seções).
+  const articleSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: 'Bolsas de Estudo no Brasil: ProUni, FIES, bolsa própria e EAD',
+    description:
+      'Guia completo de bolsas de estudo no Brasil em 2026: tipos (integral, parcial, permanência), ProUni vs FIES vs bolsa própria, passo-a-passo e FAQ.',
+    datePublished: DATE_PUBLISHED,
+    dateModified: DATE_MODIFIED,
+    inLanguage: 'pt-BR',
+    isAccessibleForFree: true,
+    author: {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#organization`,
+      name: 'Equipe Editorial Bolsa Click',
+      url: SITE_URL,
+    },
+    publisher: {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#organization`,
+      name: 'Bolsa Click',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/assets/logo-bolsa-click-rosa.png`,
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': pageUrl,
+    },
+    about: [
+      { '@type': 'Thing', name: 'ProUni' },
+      { '@type': 'Thing', name: 'FIES' },
+      { '@type': 'Thing', name: 'Bolsa de estudo' },
+      { '@type': 'Thing', name: 'ENEM' },
+      { '@type': 'Thing', name: 'Educação superior no Brasil' },
+    ],
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: ['[data-speakable]'],
+    },
+  }
+
   const jsonLd = [
     breadcrumbSchema,
     itemListSchema,
     websiteSchema,
     faqSchema,
     howToSchema,
+    articleSchema,
   ]
 
   return (
@@ -344,6 +396,14 @@ export default async function BolsasDeEstudoHubPage() {
             Encontre cursos de graduação e pós com até <strong>80% de desconto</strong> em
             {' '}{institutions.length} faculdades parceiras, em {BRAZILIAN_CITIES.length}
             {' '}cidades. Compare ProUni, FIES e bolsas próprias e finalize a inscrição grátis pelo Bolsa Click.
+          </p>
+          <p className="mt-6 font-mono text-[11px] tracking-[0.18em] uppercase text-ink-500">
+            Por <span className="text-ink-700">Equipe Editorial Bolsa Click</span>
+            <span className="mx-2">·</span>
+            Atualizado em{' '}
+            <time dateTime={DATE_MODIFIED} className="text-ink-700">
+              {DATE_MODIFIED_LABEL}
+            </time>
           </p>
           <div className="mt-8 flex flex-wrap gap-6 font-mono text-[12px] tracking-[0.16em] uppercase text-ink-500">
             <span><strong className="text-ink-900 num-tabular">{TOP_CURSOS.length}+</strong> cursos</span>
@@ -406,7 +466,7 @@ export default async function BolsasDeEstudoHubPage() {
         </div>
       </section>
 
-      <section id="tipos-de-bolsa" className="bg-white py-12 md:py-16 border-b border-hairline">
+      <section id="tipos-de-bolsa" className="bg-white py-12 md:py-16 border-b border-hairline" data-speakable="tipos">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="flex items-baseline justify-between hairline-b pb-3 mb-8">
             <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900">
@@ -436,7 +496,7 @@ export default async function BolsasDeEstudoHubPage() {
         </div>
       </section>
 
-      <section id="comparativo-programas" className="bg-paper py-12 md:py-16 border-b border-hairline">
+      <section id="comparativo-programas" className="bg-paper py-12 md:py-16 border-b border-hairline" data-speakable="comparativo">
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="flex items-baseline justify-between hairline-b pb-3 mb-8">
             <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900">
@@ -494,16 +554,17 @@ export default async function BolsasDeEstudoHubPage() {
         </div>
       </section>
 
-      <section id="prouni" className="bg-white py-12 md:py-16 border-b border-hairline">
+      <section id="prouni" className="bg-white py-12 md:py-16 border-b border-hairline" data-speakable="prouni">
         <div className="container mx-auto px-4 max-w-3xl prose prose-neutral">
           <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900 mb-4">
             ProUni — bolsa integral ou parcial do governo federal
           </h2>
           <p className="text-ink-700 leading-relaxed">
             O <strong>Programa Universidade para Todos (ProUni)</strong> é o maior programa de
-            bolsas de estudo do Brasil. Criado pelo MEC em 2005, oferece bolsas integrais (100%) e
-            parciais (50%) em faculdades particulares aderentes ao programa, em troca de isenções
-            fiscais às instituições.
+            bolsas de estudo do Brasil. Criado pelo MEC (Lei nº 11.096/2005), oferece bolsas
+            integrais (100%) e parciais (50%) em faculdades particulares aderentes ao programa,
+            em troca de isenções fiscais às instituições. Informações oficiais e edital atualizado
+            em <a href="https://acessounico.mec.gov.br/prouni" rel="nofollow noopener" target="_blank" className="underline decoration-1 underline-offset-4">acessounico.mec.gov.br/prouni</a>.
           </p>
           <h3 className="font-display text-xl text-ink-900 mt-6 mb-3">Quem pode se inscrever</h3>
           <p className="text-ink-700 leading-relaxed">
@@ -531,16 +592,18 @@ export default async function BolsasDeEstudoHubPage() {
         </div>
       </section>
 
-      <section id="fies" className="bg-paper py-12 md:py-16 border-b border-hairline">
+      <section id="fies" className="bg-paper py-12 md:py-16 border-b border-hairline" data-speakable="fies">
         <div className="container mx-auto px-4 max-w-3xl prose prose-neutral">
           <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900 mb-4">
             FIES — financiamento estudantil federal
           </h2>
           <p className="text-ink-700 leading-relaxed">
-            O <strong>Fundo de Financiamento Estudantil (FIES)</strong> não é uma bolsa de estudo
-            no sentido estrito, mas funciona como uma — você paga uma mensalidade reduzida durante
-            o curso e quita o restante após formado, com juros baixos. Cobre de 50% a 100% da
-            mensalidade dependendo da modalidade.
+            O <strong>Fundo de Financiamento Estudantil (FIES)</strong> é um programa do MEC,
+            operado pelo Fundo Nacional de Desenvolvimento da Educação (FNDE), que financia cursos
+            de graduação em faculdades particulares. Diferente da bolsa de estudo, no FIES o
+            estudante paga uma mensalidade reduzida durante o curso e quita o restante após
+            formado, com juros subsidiados. Edital e inscrição em{' '}
+            <a href="https://acessounico.mec.gov.br/fies" rel="nofollow noopener" target="_blank" className="underline decoration-1 underline-offset-4">acessounico.mec.gov.br/fies</a>.
           </p>
           <h3 className="font-display text-xl text-ink-900 mt-6 mb-3">Quem pode se inscrever</h3>
           <p className="text-ink-700 leading-relaxed">
@@ -714,7 +777,7 @@ export default async function BolsasDeEstudoHubPage() {
         </div>
       </section>
 
-      <section id="passo-a-passo" className="bg-white py-12 md:py-16 border-b border-hairline">
+      <section id="passo-a-passo" className="bg-white py-12 md:py-16 border-b border-hairline" data-speakable="howto">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="flex items-baseline justify-between hairline-b pb-3 mb-8">
             <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900">
@@ -850,6 +913,111 @@ export default async function BolsasDeEstudoHubPage() {
         items={FAQ_ITEMS}
         heading="Perguntas frequentes sobre bolsas de estudo"
       />
+
+      <section
+        id="fontes"
+        aria-label="Fontes consultadas"
+        className="bg-paper py-10 md:py-12 border-t border-hairline"
+      >
+        <div className="container mx-auto px-4 max-w-3xl">
+          <div className="flex items-baseline justify-between hairline-b pb-3 mb-6">
+            <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
+              Fontes consultadas
+            </h2>
+            <span className="font-mono num-tabular text-[11px] text-ink-500">(06)</span>
+          </div>
+          <p className="text-ink-700 leading-relaxed mb-6 text-sm">
+            Este guia se baseia em fontes oficiais do Governo Federal, dados
+            first-party do catálogo Bolsa Click e legislação vigente. Última
+            revisão editorial em{' '}
+            <time dateTime={DATE_MODIFIED} className="text-ink-900 font-medium">
+              {DATE_MODIFIED_LABEL}
+            </time>
+            .
+          </p>
+          <ul className="space-y-3 text-sm text-ink-700">
+            <li>
+              <strong className="text-ink-900">MEC</strong> — Ministério da
+              Educação. Programas ProUni e FIES, política nacional de educação
+              superior.{' '}
+              <a
+                href="https://www.gov.br/mec"
+                rel="nofollow noopener"
+                target="_blank"
+                className="underline decoration-1 underline-offset-4"
+              >
+                gov.br/mec
+              </a>
+            </li>
+            <li>
+              <strong className="text-ink-900">Acesso Único MEC</strong> —
+              portal oficial de inscrição ProUni/FIES/SISU.{' '}
+              <a
+                href="https://acessounico.mec.gov.br"
+                rel="nofollow noopener"
+                target="_blank"
+                className="underline decoration-1 underline-offset-4"
+              >
+                acessounico.mec.gov.br
+              </a>
+            </li>
+            <li>
+              <strong className="text-ink-900">e-MEC</strong> — cadastro
+              nacional de instituições e cursos reconhecidos.{' '}
+              <a
+                href="https://emec.mec.gov.br"
+                rel="nofollow noopener"
+                target="_blank"
+                className="underline decoration-1 underline-offset-4"
+              >
+                emec.mec.gov.br
+              </a>
+            </li>
+            <li>
+              <strong className="text-ink-900">INEP</strong> — Instituto
+              Nacional de Estudos e Pesquisas Educacionais. ENEM e indicadores.{' '}
+              <a
+                href="https://www.gov.br/inep"
+                rel="nofollow noopener"
+                target="_blank"
+                className="underline decoration-1 underline-offset-4"
+              >
+                gov.br/inep
+              </a>
+            </li>
+            <li>
+              <strong className="text-ink-900">FNDE</strong> — Fundo Nacional
+              de Desenvolvimento da Educação. Operação financeira do FIES.{' '}
+              <a
+                href="https://www.gov.br/fnde"
+                rel="nofollow noopener"
+                target="_blank"
+                className="underline decoration-1 underline-offset-4"
+              >
+                gov.br/fnde
+              </a>
+            </li>
+            <li>
+              <strong className="text-ink-900">Lei nº 11.096/2005</strong> —
+              marco legal do ProUni.{' '}
+              <a
+                href="https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2005/lei/l11096.htm"
+                rel="nofollow noopener"
+                target="_blank"
+                className="underline decoration-1 underline-offset-4"
+              >
+                planalto.gov.br
+              </a>
+            </li>
+          </ul>
+          <p className="text-ink-500 text-xs leading-relaxed mt-6">
+            Catálogo de preços, modalidades, faculdades parceiras e cidades
+            cobertas: dados first-party do Bolsa Click, atualizados em tempo
+            real via API do catálogo. Mensalidades exibidas refletem ofertas
+            reais vigentes na data da consulta.
+          </p>
+        </div>
+      </section>
     </>
   )
 }

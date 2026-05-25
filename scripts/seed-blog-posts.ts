@@ -1084,7 +1084,11 @@ async function upsertPost(
 // PIPELINE POR ARQUÉTIPO
 // ============================================================
 
-async function runOne(arch: Archetype, mecMap: Record<string, number>, idx: number, total: number): Promise<{ ok: boolean; slug: string; reason?: string }> {
+type RunResult =
+  | { ok: true; slug: string; reason?: string; indexNowUrl?: string }
+  | { ok: false; slug: string; reason?: string }
+
+async function runOne(arch: Archetype, mecMap: Record<string, number>, idx: number, total: number): Promise<RunResult> {
   const label = `[${idx + 1}/${total}] ${arch.slug}`
   try {
     // Early-exit: economiza tokens da Claude + tempo de buildDataBlock quando
@@ -1124,7 +1128,7 @@ async function runOne(arch: Archetype, mecMap: Record<string, number>, idx: numb
 
     await upsertPost(arch, post, existing)
     console.log(`${label} ✓ ($${totalCostUsd.toFixed(3)} acumulado)`)
-    return { ok: true, slug: arch.slug }
+    return { ok: true, slug: arch.slug, indexNowUrl: `https://www.bolsaclick.com.br/blog/${arch.slug}` }
   } catch (err) {
     const msg = (err as Error).message
     console.error(`${label} ✗ ${msg}`)
@@ -1210,6 +1214,25 @@ async function main() {
   if (fail > 0) {
     console.log('\nFalhas:')
     results.filter((r) => !r.ok).forEach((r) => console.log(`  - ${r.slug}: ${r.reason}`))
+  }
+
+  // Ping IndexNow pros URLs que foram realmente persistidos (não skip nem fail).
+  // Dispara reindex instantâneo em Bing/Yandex/Seznam + alimenta AI Overviews
+  // crawlers + ChatGPT Search. Sem custo, sem rate-limit pra volumes < 10k/dia.
+  const indexNowUrls = results
+    .filter((r): r is { ok: true; slug: string; indexNowUrl: string } =>
+      r.ok && 'indexNowUrl' in r && typeof r.indexNowUrl === 'string',
+    )
+    .map((r) => r.indexNowUrl)
+  if (indexNowUrls.length > 0 && !DRY_RUN) {
+    console.log(`\n🔔 Ping IndexNow (${indexNowUrls.length} URLs)…`)
+    const { pingIndexNow } = await import('../app/lib/seo/indexnow')
+    const indexResult = await pingIndexNow(indexNowUrls)
+    if (indexResult.ok) {
+      console.log(`  ✓ IndexNow aceito (HTTP ${indexResult.status}, ${indexResult.urls} URLs)`)
+    } else {
+      console.warn(`  ⚠️  IndexNow falhou (HTTP ${indexResult.status}, ${indexResult.reason ?? 'sem detalhe'})`)
+    }
   }
 
   await prisma.$disconnect()

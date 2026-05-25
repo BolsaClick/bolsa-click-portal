@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  RSL 1.0 (Really Simple Licensing) — padrão emergente dez/2025
+  backed by Reddit, Yahoo, Medium, Cloudflare, Akamai, Creative Commons.
+  Sinaliza condições de uso pra crawlers de IA. Cobertura ainda baixa
+  em produção (não bloqueia/desbloqueia nada hoje), mas estamos preparados.
+
+  Spec: https://rslstandard.org/
+-->
+<rsl xmlns="https://rslstandard.org/rsl">
+  <content url="https://www.bolsaclick.com.br/">
+    <license>
+      <permits type="search">yes</permits>
+      <permits type="ai-summarize">yes</permits>
+      <permits type="ai-cite">yes</permits>
+      <permits type="ai-train">no</permits>
+      <attribution required="yes">
+        <name>Bolsa Click</name>
+        <url>https://www.bolsaclick.com.br</url>
+      </attribution>
+      <copyright>© 2026 Bolsa Click. Todos os direitos reservados.</copyright>
+    </license>
+  </content>
+</rsl>

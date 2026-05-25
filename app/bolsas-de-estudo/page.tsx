@@ -6,6 +6,10 @@ import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
 import { VisibleFaq } from '@/app/cursos/[slug]/_seo/CourseSeoSections'
 import Filter from '@/app/components/molecules/Filter'
 import BestOffersSection from '@/app/components/organisms/BestOffersSection'
+import CalendarioBolsas2026 from './_components/CalendarioBolsas2026'
+import ProUniAlternativasSection from './_components/ProUniAlternativasSection'
+import TrustBadges from './_components/TrustBadges'
+import { CALENDARIO_2026, classifyEvents } from './_data/calendario-2026'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 
@@ -261,7 +265,8 @@ export default async function BolsasDeEstudoHubPage() {
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Início', item: SITE_URL },
-      { '@type': 'ListItem', position: 2, name: 'Bolsas de Estudo', item: pageUrl },
+      { '@type': 'ListItem', position: 2, name: 'Programas de Estudo', item: `${SITE_URL}/programas` },
+      { '@type': 'ListItem', position: 3, name: 'Bolsas de Estudo', item: pageUrl },
     ],
   }
 
@@ -363,6 +368,113 @@ export default async function BolsasDeEstudoHubPage() {
     },
   }
 
+  // Dataset schema descrevendo o catálogo first-party — sinal forte de
+  // autoridade pra AI Overviews / ChatGPT / Perplexity. Shape reusada de
+  // /estudos/panorama-bolsa-2026 (já validada no Rich Results Test).
+  const datasetSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Dataset',
+    '@id': `${pageUrl}#bolsa-catalog`,
+    name: 'Catálogo Bolsa Click — Bolsas de Estudo no Brasil 2026',
+    description: `Catálogo first-party de bolsas de estudo no Brasil em 2026: ${TOP_CURSOS.length}+ cursos de graduação, pós e tecnólogos cobertos em ${institutions.length} faculdades parceiras reconhecidas pelo MEC, com ofertas em ${BRAZILIAN_CITIES.length} cidades brasileiras. Dados atualizados em tempo real via API do catálogo, refletindo mensalidades, percentuais de bolsa, modalidades (EAD, presencial, semipresencial) e cobertura geográfica reais.`,
+    url: pageUrl,
+    license: 'https://creativecommons.org/licenses/by/4.0/',
+    creator: {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#organization`,
+      name: 'Bolsa Click',
+      url: SITE_URL,
+    },
+    publisher: {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#organization`,
+      name: 'Bolsa Click',
+      url: SITE_URL,
+    },
+    datePublished: DATE_PUBLISHED,
+    dateModified: DATE_MODIFIED,
+    spatialCoverage: { '@type': 'Country', name: 'Brasil' },
+    temporalCoverage: '2026',
+    keywords: [
+      'bolsa de estudo',
+      'bolsas de estudo',
+      'graduação',
+      'pós-graduação',
+      'EAD',
+      'mensalidade faculdade',
+      'desconto faculdade',
+    ],
+    inLanguage: 'pt-BR',
+    isAccessibleForFree: true,
+    variableMeasured: [
+      'Mensalidade com bolsa',
+      'Percentual de desconto',
+      'Modalidade do curso',
+      'Cobertura geográfica',
+      'Nota MEC da instituição',
+      'Disponibilidade da oferta',
+    ],
+    distribution: {
+      '@type': 'DataDownload',
+      encodingFormat: 'text/html',
+      contentUrl: pageUrl,
+    },
+  }
+
+  // Event[] schema dos próximos eventos do calendário sazonal (próximos 90 dias +
+  // janelas ativas). Sinal de freshness pro Article + entrada potencial em rich
+  // results de "eventos". Filtramos só eventos futuros/ativos pra evitar marcar
+  // datas passadas como Event ativo.
+  const upcomingEvents = classifyEvents(CALENDARIO_2026).filter(
+    ev => ev.bucket === 'ABERTAS' || ev.bucket === 'PROXIMAS_90_DIAS',
+  )
+  const eventSchemas = upcomingEvents.map(ev => ({
+    '@context': 'https://schema.org',
+    '@type': 'Event',
+    '@id': `${pageUrl}#event-${ev.id}`,
+    name: `${ev.programa} — ${ev.faseLabel}`,
+    description: ev.notes ?? `Janela de ${ev.faseLabel.toLowerCase()} do programa ${ev.programa} em 2026.`,
+    startDate: ev.startDate,
+    endDate: ev.endDate,
+    eventStatus:
+      ev.status === 'CONFIRMADO'
+        ? 'https://schema.org/EventScheduled'
+        : 'https://schema.org/EventScheduled',
+    eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
+    location: {
+      '@type': 'VirtualLocation',
+      url: ev.sourceUrl,
+    },
+    organizer: {
+      '@type': 'Organization',
+      name: ev.organizer,
+      url: ev.sourceUrl,
+    },
+    isAccessibleForFree: true,
+    inLanguage: 'pt-BR',
+  }))
+
+  // EducationalOrganization por parceiro — sinal de relacionamento institucional
+  // pra Knowledge Graph. Pega top 6 instituições ativas; campos vêm do DB
+  // (Institution.founded, studentCount, mecRating) — nunca inventados.
+  const educationalOrgSchemas = institutions.slice(0, 6).map(inst => ({
+    '@context': 'https://schema.org',
+    '@type': 'EducationalOrganization',
+    '@id': `${SITE_URL}/faculdades/${inst.slug}#org`,
+    name: inst.fullName ?? inst.name,
+    alternateName: inst.shortName ?? undefined,
+    url: `${SITE_URL}/faculdades/${inst.slug}`,
+    ...(inst.mecRating && { hasCredential: `Nota MEC ${inst.mecRating}` }),
+    ...(inst.campusCount && {
+      department: {
+        '@type': 'QuantitativeValue',
+        name: 'Polos',
+        value: inst.campusCount,
+      },
+    }),
+    sameAs: [`https://emec.mec.gov.br/emec/consulta-cadastro/detalhamento/${inst.slug}`],
+  }))
+
   const jsonLd = [
     breadcrumbSchema,
     itemListSchema,
@@ -370,6 +482,9 @@ export default async function BolsasDeEstudoHubPage() {
     faqSchema,
     howToSchema,
     articleSchema,
+    datasetSchema,
+    ...educationalOrgSchemas,
+    ...eventSchemas,
   ]
 
   return (
@@ -386,6 +501,8 @@ export default async function BolsasDeEstudoHubPage() {
             aria-label="Breadcrumb"
           >
             <Link href="/" className="hover:text-ink-900">Início</Link>
+            <span className="mx-2">/</span>
+            <Link href="/programas" className="hover:text-ink-900">Programas de Estudo</Link>
             <span className="mx-2">/</span>
             <span className="text-ink-700">Bolsas de Estudo</span>
           </nav>
@@ -414,6 +531,11 @@ export default async function BolsasDeEstudoHubPage() {
         </div>
       </header>
 
+      {/* Trust badges — alta visibilidade, suporta personas "Maria" (mãe) e
+          "Tatiane" (trabalhadora) que precisam de confiança visível antes
+          de prosseguir. Dados só de fontes oficiais (CLAUDE.md). */}
+      <TrustBadges />
+
       {/* GEO direct-answer snippet — primeiros 40-60 palavras respondem a query principal */}
       <section className="bg-white py-10 md:py-12 border-b border-hairline" data-speakable="answer">
         <div className="container mx-auto px-4 max-w-3xl">
@@ -422,6 +544,10 @@ export default async function BolsasDeEstudoHubPage() {
           </p>
         </div>
       </section>
+
+      {/* Calendário sazonal — sinal de freshness pro Article + atende persona
+          Renata (ProUni-Frustrada). Posicionado alto pra captura mobile-first. */}
+      <CalendarioBolsas2026 />
 
       {/* Camada funcional marketplace — search widget + offer cards.
           Match com intent transacional dominante na SERP de "bolsas de estudo"
@@ -444,6 +570,10 @@ export default async function BolsasDeEstudoHubPage() {
       </section>
 
       <BestOffersSection />
+
+      {/* Alternativas pra quem não passou no ProUni — atende persona Renata
+          (score 36/100, persona crítica). Sazonal: 594K candidatos ProUni 2026. */}
+      <ProUniAlternativasSection />
 
       <section id="como-funcionam" className="bg-paper py-12 md:py-16 border-b border-hairline">
         <div className="container mx-auto px-4 max-w-3xl prose prose-neutral">

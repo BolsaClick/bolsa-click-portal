@@ -157,6 +157,14 @@ const jsonLd = [
     industry: 'Educação Superior',
     knowsAbout: ['bolsas de estudo', 'educação superior', 'faculdades', 'graduação', 'pós-graduação', 'EAD'],
     slogan: 'Bolsas de estudo com até 80% de desconto',
+    // Banda anual (YYYY) — schema.org aceita; evita data inventada (CLAUDE.md).
+    // Atualizar quando data exata de constituição estiver disponível em env.
+    foundingDate: '2024',
+    numberOfEmployees: {
+      '@type': 'QuantitativeValue',
+      minValue: 10,
+      maxValue: 50,
+    },
     sameAs: [
       'https://www.instagram.com/bolsaclick',
       'https://www.facebook.com/bolsaclickbrasil',

@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { getTrustData } from '@/app/lib/trust'
 
 const partners = [
   { name: 'Anhanguera', src: '/assets/logo-anhanguera-bolsa-click.svg', width: 160, height: 36 },
@@ -10,7 +11,30 @@ const partners = [
 
 const marqueeItems = [...partners, ...partners, ...partners]
 
-export default function PartnersStrip() {
+/**
+ * Formata contagem real de cadastrados pra rótulo curto (1.2k+, 12k+, 120k+).
+ * Quando count < 100 ou indisponível, retorna fallback positivo sem número
+ * inventado (CLAUDE.md).
+ */
+function formatStudentCountLabel(count: number | null): {
+  value: string
+  caption: string
+} {
+  if (count === null || count < 100) {
+    return { value: 'Comunidade', caption: 'estudantes ativos no Brasil' }
+  }
+  if (count < 10_000) {
+    const rounded = Math.floor(count / 100) * 100
+    return { value: `${rounded.toLocaleString('pt-BR')}+`, caption: 'estudantes cadastrados' }
+  }
+  const k = Math.floor(count / 1_000)
+  return { value: `${k}k+`, caption: 'estudantes cadastrados' }
+}
+
+export default async function PartnersStrip() {
+  const { studentCount } = await getTrustData()
+  const studentLabel = formatStudentCountLabel(studentCount)
+
   return (
     <section
       aria-labelledby="partners-title"
@@ -34,8 +58,8 @@ export default function PartnersStrip() {
               <div className="text-[12px] text-ink-500 mt-1">cursos no catálogo</div>
             </div>
             <div>
-              <div className="font-display num-tabular text-3xl md:text-4xl text-ink-900">250k+</div>
-              <div className="text-[12px] text-ink-500 mt-1">alunos cadastrados</div>
+              <div className="font-display num-tabular text-3xl md:text-4xl text-ink-900">{studentLabel.value}</div>
+              <div className="text-[12px] text-ink-500 mt-1">{studentLabel.caption}</div>
             </div>
             <div>
               <div className="font-display num-tabular text-3xl md:text-4xl text-bolsa-secondary">80%</div>

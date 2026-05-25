@@ -7,6 +7,8 @@ import { VisibleFaq } from '@/app/cursos/[slug]/_seo/CourseSeoSections'
 import Filter from '@/app/components/molecules/Filter'
 import BestOffersSection from '@/app/components/organisms/BestOffersSection'
 import CalendarioBolsas2026 from './_components/CalendarioBolsas2026'
+import ComparadorCursos from './_components/ComparadorCursos'
+import DepoimentosSection from './_components/DepoimentosSection'
 import ProUniAlternativasSection from './_components/ProUniAlternativasSection'
 import TrustBadges from './_components/TrustBadges'
 import { CALENDARIO_2026, classifyEvents } from './_data/calendario-2026'
@@ -571,6 +573,10 @@ export default async function BolsasDeEstudoHubPage() {
 
       <BestOffersSection />
 
+      {/* Depoimentos reais agregados (status APPROVED) — trust signal pra
+          personas Maria + Tatiane. Renderiza null se DB tem 0 reviews. */}
+      <DepoimentosSection limit={6} />
+
       {/* Alternativas pra quem não passou no ProUni — atende persona Renata
           (score 36/100, persona crítica). Sazonal: 594K candidatos ProUni 2026. */}
       <ProUniAlternativasSection />
@@ -683,6 +689,11 @@ export default async function BolsasDeEstudoHubPage() {
           </div>
         </div>
       </section>
+
+      {/* Comparador inline de cursos populares — mostra preço real do BFF
+          Tartarus. Atende persona "Cláudio — Pai Comparador" (45/100).
+          ISR 24h via revalidate do pillar. Degrada silenciosamente se API offline. */}
+      <ComparadorCursos />
 
       <section id="prouni" className="bg-white py-12 md:py-16 border-b border-hairline" data-speakable="prouni">
         <div className="container mx-auto px-4 max-w-3xl prose prose-neutral">

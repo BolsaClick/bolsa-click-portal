@@ -1,3 +1,6 @@
+// CLAUDE.md: nunca inventar números. Fallback estático usado por components
+// CLIENT-ONLY (Stats.tsx — Framer Motion). Servers DEVEM usar
+// `getTrustData()` de @/app/lib/trust pra contagem real via Prisma.
 export const stats = {
   bolsaclick: {
     maxDiscount: 95,

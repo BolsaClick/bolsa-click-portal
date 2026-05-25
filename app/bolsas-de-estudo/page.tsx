@@ -751,10 +751,10 @@ export default async function BolsasDeEstudoHubPage() {
           <h3 className="font-display text-xl text-ink-900 mt-6 mb-3">2. Bolsa não cobra antecipado</h3>
           <p className="text-ink-700 leading-relaxed">
             Bolsa de estudo legítima — seja ProUni, FIES ou bolsa própria via Bolsa Click — nunca
-            cobra do aluno valor antecipado pra "garantir a vaga", "agilizar a inscrição" ou
-            "destravar o desconto". O ProUni e FIES são 100% gratuitos no portal do MEC. A bolsa
+            cobra do aluno valor antecipado pra &quot;garantir a vaga&quot;, &quot;agilizar a inscrição&quot; ou
+            &quot;destravar o desconto&quot;. O ProUni e FIES são 100% gratuitos no portal do MEC. A bolsa
             própria via Bolsa Click é grátis — você só paga a mensalidade já com desconto direto
-            pra faculdade, depois de matriculado. Cobrança antecipada de "taxa de bolsa" é golpe.
+            pra faculdade, depois de matriculado. Cobrança antecipada de &quot;taxa de bolsa&quot; é golpe.
           </p>
           <h3 className="font-display text-xl text-ink-900 mt-6 mb-3">3. Compare antes de fechar</h3>
           <p className="text-ink-700 leading-relaxed">

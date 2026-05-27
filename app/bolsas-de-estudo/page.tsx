@@ -328,6 +328,9 @@ export default async function BolsasDeEstudoHubPage() {
   // Article schema pra GEO: dateModified visível + author = sinal forte de
   // freshness e autoridade pra AI Overviews / ChatGPT / Perplexity. Mesmo
   // sendo hub page, o pillar tem conteúdo editorial autêntico (12 seções).
+  // author é Organization (Equipe Editorial), com url pra página de
+  // autoridade — não fabricamos Person fake (penalty risk + desonesto).
+  // citation[] aponta pras fontes primárias seguidas por AI crawlers.
   const articleSchema = {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -340,9 +343,15 @@ export default async function BolsasDeEstudoHubPage() {
     isAccessibleForFree: true,
     author: {
       '@type': 'Organization',
-      '@id': `${SITE_URL}/#organization`,
+      '@id': `${SITE_URL}/sobre/equipe-editorial#editorial-team`,
       name: 'Equipe Editorial Bolsa Click',
-      url: SITE_URL,
+      url: `${SITE_URL}/sobre/equipe-editorial`,
+    },
+    reviewedBy: {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/sobre/equipe-editorial#editorial-team`,
+      name: 'Equipe Editorial Bolsa Click',
+      url: `${SITE_URL}/sobre/equipe-editorial`,
     },
     publisher: {
       '@type': 'Organization',
@@ -364,6 +373,36 @@ export default async function BolsasDeEstudoHubPage() {
       { '@type': 'Thing', name: 'ENEM' },
       { '@type': 'Thing', name: 'Educação superior no Brasil' },
     ],
+    citation: [
+      {
+        '@type': 'CreativeWork',
+        name: 'ProUni — Programa Universidade para Todos',
+        publisher: { '@type': 'GovernmentOrganization', name: 'MEC' },
+        url: 'https://acessounico.mec.gov.br/prouni',
+      },
+      {
+        '@type': 'CreativeWork',
+        name: 'FIES — Fundo de Financiamento Estudantil',
+        publisher: { '@type': 'GovernmentOrganization', name: 'FNDE/MEC' },
+        url: 'https://acessounico.mec.gov.br/fies',
+      },
+      {
+        '@type': 'CreativeWork',
+        name: 'e-MEC — Cadastro de Instituições e Cursos',
+        publisher: { '@type': 'GovernmentOrganization', name: 'MEC' },
+        url: 'https://emec.mec.gov.br',
+      },
+      {
+        '@type': 'CreativeWork',
+        name: 'INEP — Indicadores Educacionais',
+        publisher: { '@type': 'GovernmentOrganization', name: 'INEP' },
+        url: 'https://www.gov.br/inep',
+      },
+    ],
+    isBasedOn: {
+      '@type': 'Dataset',
+      '@id': `${pageUrl}#bolsa-catalog`,
+    },
     speakable: {
       '@type': 'SpeakableSpecification',
       cssSelector: ['[data-speakable]'],

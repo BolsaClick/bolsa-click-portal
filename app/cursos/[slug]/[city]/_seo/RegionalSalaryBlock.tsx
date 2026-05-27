@@ -57,11 +57,47 @@ export default function RegionalSalaryBlock({
       ? `abaixo da média nacional, refletindo o custo de vida regional`
       : `próximo da média nacional`
 
+  // Schema.org Occupation + MonetaryAmountDistribution. Captura SERPs
+  // "salário [profissão] [cidade]" e enriquece resposta de AI Overviews
+  // (que peso estimatedSalary com source explícito). percentile10/median/
+  // percentile90 são derivados da faixa CAGED ajustada pelo multiplier
+  // regional — honestos como estimativa, e o texto da copy já explica.
+  const medianRegional = Math.round((lowRegional + highRegional) / 2)
+  const occupationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Occupation',
+    name: `${curso.name} em ${cityName}, ${cityState}`,
+    occupationLocation: {
+      '@type': 'City',
+      name: cityName,
+      containedInPlace: {
+        '@type': 'AdministrativeArea',
+        name: cityState,
+        containedInPlace: { '@type': 'Country', name: 'Brasil' },
+      },
+    },
+    estimatedSalary: [
+      {
+        '@type': 'MonetaryAmountDistribution',
+        name: `Faixa salarial estimada — ${curso.name} (${cityState})`,
+        currency: 'BRL',
+        duration: 'P1M',
+        percentile10: lowRegional,
+        median: medianRegional,
+        percentile90: highRegional,
+      },
+    ],
+  }
+
   return (
     <section
       className="bg-white py-12 md:py-16 border-t border-hairline"
       data-speakable="regional-salary"
     >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(occupationSchema) }}
+      />
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-baseline justify-between hairline-b pb-3 mb-6">

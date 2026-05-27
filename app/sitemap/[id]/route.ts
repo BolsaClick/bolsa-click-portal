@@ -148,28 +148,69 @@ async function buildCoursesSitemap(): Promise<SitemapEntry[]> {
 }
 
 async function buildCourseCitiesSitemap(): Promise<SitemapEntry[]> {
+  // Threshold mínimo de cache populado por curso pra considerá-lo "auditado".
+  // Abaixo disso, caímos no filtro só por tier+trendScore (mesmo do passado).
+  const CACHE_AUDITED_THRESHOLD = 20
+
   try {
-    const courses = await withTimeout(
-      prisma.featuredCourse.findMany({
-        where: { isActive: true, hasCityPages: true },
-        select: { slug: true, updatedAt: true, trendScore: true },
-        orderBy: { trendScore: 'desc' },
-      }),
-      8_000,
-      'course-cities'
+    const [courses, cacheRows] = await withTimeout(
+      Promise.all([
+        prisma.featuredCourse.findMany({
+          where: { isActive: true, hasCityPages: true },
+          select: { id: true, slug: true, updatedAt: true, trendScore: true },
+          orderBy: { trendScore: 'desc' },
+        }),
+        prisma.cityCourseOfferCache.findMany({
+          select: { featuredCourseId: true, citySlug: true, offerCount: true },
+        }),
+      ]),
+      10_000,
+      'course-cities',
     )
-    console.log(`[sitemap:course-cities] ${courses.length} cursos com hasCityPages`)
+    console.log(
+      `[sitemap:course-cities] ${courses.length} cursos com hasCityPages, ${cacheRows.length} linhas de cache`,
+    )
+
+    // Indexa cache por curso → mapa { citySlug → offerCount }
+    const cacheByCourse = new Map<string, Map<string, number>>()
+    for (const row of cacheRows) {
+      let inner = cacheByCourse.get(row.featuredCourseId)
+      if (!inner) {
+        inner = new Map()
+        cacheByCourse.set(row.featuredCourseId, inner)
+      }
+      inner.set(row.citySlug, row.offerCount)
+    }
+
     return courses
-      .flatMap(({ slug, updatedAt, trendScore }) =>
-        BRAZILIAN_CITIES
-          .filter((city) => shouldEmitCityUrl(trendScore ?? 0, city.slug))
+      .flatMap(({ id, slug, updatedAt, trendScore }) => {
+        const courseCache = cacheByCourse.get(id)
+        const isAudited =
+          courseCache !== undefined && courseCache.size >= CACHE_AUDITED_THRESHOLD
+        const score = trendScore ?? 0
+
+        return BRAZILIAN_CITIES
+          .filter((city) => {
+            // Sem cache auditado pro curso → mantém comportamento legado.
+            if (!isAudited) return shouldEmitCityUrl(score, city.slug)
+
+            // Com cache auditado: aplica o mesmo critério do
+            // shouldIndexCityPage (gate runtime) — emitir só se vale indexar.
+            //   offerCount ≥ 2 → emit
+            //   offerCount 0-1 + trendScore ≥ 60 → emit (ranking informacional)
+            //   caso contrário → skip (não polui sitemap com URL noindex).
+            const offers = courseCache!.get(city.slug) ?? 0
+            if (offers >= 2) return true
+            if (score >= 60) return true
+            return false
+          })
           .map((city) => ({
             loc: `${SITE_URL}/cursos/${slug}/${city.slug}`,
             lastmod: updatedAt.toISOString(),
             changefreq: 'weekly' as const,
-            priority: cityCoursePriority(trendScore ?? 0, city.slug),
-          })),
-      )
+            priority: cityCoursePriority(score, city.slug),
+          }))
+      })
       .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0))
       .slice(0, MAX_URLS_PER_SITEMAP)
   } catch (e) {

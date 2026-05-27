@@ -16,6 +16,9 @@ import {
 } from '../_seo/CourseSeoSections'
 import CursoCidadeClient from './CursoCidadeClient'
 import CityContextBlock from './_seo/CityContextBlock'
+import LocalDemandBlock from './_seo/LocalDemandBlock'
+import NearbyInstitutionsBlock from './_seo/NearbyInstitutionsBlock'
+import RegionalSalaryBlock from './_seo/RegionalSalaryBlock'
 
 type Props = {
   params: Promise<{ slug: string; city: string }>
@@ -401,6 +404,26 @@ export default async function CursoCidadePage({ params }: Props) {
         cityName={cityData.name}
         cityState={cityData.state}
         offerCount={fromFallback ? 0 : (courseOffers?.length || 0)}
+      />
+      <LocalDemandBlock
+        featuredCourseId={cursoMetadata.id}
+        courseName={cursoMetadata.name}
+        cityName={cityData.name}
+        cityState={cityData.state}
+        localOfferCount={fromFallback ? 0 : (courseOffers?.length || 0)}
+        localMinPrice={lowPrice > 0 ? lowPrice : null}
+      />
+      <NearbyInstitutionsBlock
+        cityName={cityData.name}
+        cityState={cityData.state}
+        courseName={cursoMetadata.name}
+        offers={courseOffers || []}
+        fromFallback={fromFallback}
+      />
+      <RegionalSalaryBlock
+        curso={cursoMetadata}
+        cityName={cityData.name}
+        cityState={cityData.state}
       />
       <VisibleFaq
         items={faqItems}

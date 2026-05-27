@@ -425,6 +425,11 @@ model FeaturedCourse {
   trendScore        Int       @default(0)
   trendScoreFetched DateTime?
 
+  // Mapa { "SP": 78, "RJ": 65, ... } por sigla de estado. Best-effort: nem todo
+  // curso tem dado regional disponível (Google Trends limita rate). Usado pelo
+  // <LocalDemandBlock /> pra diferenciar city pages.
+  regionalTrends Json?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -433,6 +438,24 @@ model FeaturedCourse {
   @@index([order])
   @@index([hasCityPages])
   @@index([trendScore])
+}
+
+// Cache de offerCount por (FeaturedCourse × city). Alimentado por
+// scripts/precompute-city-offers.ts (cron diário/semanal). Substitui a chamada
+// live ao Tartarus no momento de gerar sitemap pra (a) reduzir latência,
+// (b) permitir filtro mais agressivo (só URLs com offerCount real ≥1 entram).
+model CityCourseOfferCache {
+  id               String   @id @default(cuid())
+  featuredCourseId String
+  citySlug         String
+  offerCount       Int      @default(0)
+  minPrice         Float?
+  fetchedAt        DateTime @default(now())
+
+  @@unique([featuredCourseId, citySlug])
+  @@index([citySlug])
+  @@index([featuredCourseId])
+  @@index([offerCount])
 }
 
 enum CourseType {

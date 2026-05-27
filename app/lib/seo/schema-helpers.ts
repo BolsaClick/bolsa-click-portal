@@ -74,16 +74,24 @@ export function parseSalary(value: string | number | null | undefined): number |
   if (typeof value === 'number' && !Number.isNaN(value) && value > 0) return value
   if (typeof value !== 'string') return undefined
 
-  // Remove tudo que não é dígito, vírgula ou ponto. Mantém o sinal de decimal.
   const cleaned = value.replace(/[^\d.,]/g, '').trim()
   if (!cleaned) return undefined
 
-  // Heurística pt-BR: se há vírgula, ela é o separador decimal; pontos viram
-  // separador de milhar e são removidos. Caso contrário, mantém o ponto como
-  // decimal (formato US também aparece em alguns campos).
   let normalized: string
   if (cleaned.includes(',')) {
+    // Tem vírgula → formato pt-BR. Vírgula = decimal, pontos = milhar (removidos).
     normalized = cleaned.replace(/\./g, '').replace(',', '.')
+  } else if (cleaned.includes('.')) {
+    // Só ponto, sem vírgula. Decide se é decimal ou milhar:
+    //   - "3.000", "12.500", "3.000.000": último grupo tem 3 dígitos → milhar
+    //   - "12.50", "3.5": último grupo tem 1-2 dígitos → decimal (formato US)
+    const parts = cleaned.split('.')
+    const last = parts[parts.length - 1]
+    if (parts.length >= 2 && last.length === 3 && parts.slice(0, -1).every((p) => p.length > 0)) {
+      normalized = parts.join('')
+    } else {
+      normalized = cleaned
+    }
   } else {
     normalized = cleaned
   }

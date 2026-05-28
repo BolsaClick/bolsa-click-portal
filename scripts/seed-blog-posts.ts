@@ -486,6 +486,14 @@ const ARCHETYPES: Archetype[] = [
     briefing: 'Comparativo: EAD chega a 85% via bolsa própria (mensalidade base já menor), presencial fica em 30-70% típico. Casos onde presencial compensa (curso prático). Linkar pra /bolsas-de-estudo e /faculdade-ead.',
   },
   {
+    slug: 'faculdade-ead-mais-barata',
+    title: 'Faculdade EAD mais barata: como achar mensalidade baixa em 2026',
+    kind: 'guia',
+    categorySlugs: ['ead', 'bolsas-de-estudo'],
+    featured: true,
+    briefing: 'Responder direto qual o caminho pra conseguir a faculdade EAD mais barata: a mensalidade EAD já parte de um valor menor que o presencial e a bolsa própria de faculdades parceiras derruba ainda mais o preço (descontos chegam a 85% sem nota de corte). REGRA INEGOCIÁVEL DE PREÇO: cite APENAS valores presentes em DATA_BLOCK.allowedPrices — NÃO invente mensalidades, médias nem faixas em reais que não estejam ali; quando não houver preço, fale qualitativamente ("mensalidades a partir de valores acessíveis", "economia de até X% com bolsa") sem citar R$ específico. Cobrir: quais cursos EAD costumam ter a mensalidade mais baixa (Pedagogia, ADS, Administração, Gestão), como a bolsa própria reduz o valor mês a mês, comparativo de custo EAD x presencial, e um alerta editorial forte: barato não pode significar não reconhecido — sempre conferir o reconhecimento no e-MEC mesmo quando o preço chama atenção. Incluir tabela comparando cursos/faixas e a seção Perguntas frequentes. Linkar pra /bolsas-de-estudo com anchor "guia completo de bolsas de estudo" e pra /faculdade-ead no primeiro terço.',
+  },
+  {
     slug: 'bolsa-cursos-profissionalizantes-tecnico',
     title: 'Bolsa de estudo para cursos profissionalizantes e técnicos',
     kind: 'guia',

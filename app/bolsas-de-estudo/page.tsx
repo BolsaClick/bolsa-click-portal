@@ -24,7 +24,7 @@ const DATE_MODIFIED_LABEL = '25 de maio de 2026'
 export const revalidate = 86400 // 24h — conteúdo institucional muda devagar
 
 export const metadata: Metadata = {
-  title: 'Bolsas de Estudo até 80% — Compare Faculdades e Preços | Bolsa Click',
+  title: 'Bolsas de Estudo até 80%: Compare Faculdades, Preços e Notas MEC | Bolsa Click',
   description: `Compare bolsas de estudo de até 80% em 100.000+ cursos de graduação, pós e tecnólogos. ${BRAZILIAN_CITIES.length} cidades, faculdades reconhecidas pelo MEC, EAD e presencial. ProUni, FIES e bolsa própria.`,
   keywords: [
     'bolsa de estudo',
@@ -620,7 +620,7 @@ export default async function BolsasDeEstudoHubPage() {
           (score 36/100, persona crítica). Sazonal: 594K candidatos ProUni 2026. */}
       <ProUniAlternativasSection />
 
-      <section id="como-funcionam" className="bg-paper py-12 md:py-16 border-b border-hairline">
+      <section id="como-funcionam" className="bg-paper py-12 md:py-16 border-b border-hairline" data-speakable="como-funcionam">
         <div className="container mx-auto px-4 max-w-3xl prose prose-neutral">
           <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900 mb-4">
             Como funcionam as bolsas pelo Bolsa Click

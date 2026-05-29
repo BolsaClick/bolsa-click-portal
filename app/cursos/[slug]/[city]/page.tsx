@@ -84,6 +84,28 @@ const getCityCourseOffers = cache(async (
   }
 })
 
+// Lê a contagem de ofertas PRECOMPUTADA (CityCourseOfferCache) — mesma fonte que
+// o sitemap usa pra decidir quais URLs emitir. A página passa a decidir
+// index/noindex por essa fonte ESTÁVEL, em vez de depender da API ao vivo a cada
+// revalidação. Antes, um fallback transitório da API (lentidão/vazio/erro) zerava
+// a contagem e jogava páginas boas pra noindex — causando oscilação e conflito
+// com o sitemap (URL no sitemap mas página noindex → "Excluída pela tag noindex").
+// Cache miss → retorna null e o caller cai no comportamento legado (sem regressão).
+const getCachedOfferCount = cache(async (
+  featuredCourseId: string,
+  citySlug: string,
+): Promise<number | null> => {
+  try {
+    const row = await prisma.cityCourseOfferCache.findUnique({
+      where: { featuredCourseId_citySlug: { featuredCourseId, citySlug } },
+      select: { offerCount: true },
+    })
+    return row?.offerCount ?? null
+  } catch {
+    return null
+  }
+})
+
 function priceRangeFromOffers(offers: unknown[]) {
   const prices = (offers as { minPrice?: number; prices?: { withDiscount?: number } }[])
     .map(o => o.minPrice || o.prices?.withDiscount || 0)
@@ -130,8 +152,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // sem oferta suficiente. Páginas com 0 ou 1 oferta são thin content em escala
   // e viram noindex,follow + canonical pra versão nacional.
   const trendScore = curso.trendScore ?? 0
-  const localOfferCount = fromFallback ? 0 : offers.length
-  const shouldIndex = shouldIndexCityPage(localOfferCount, trendScore)
+  // Prioriza o cache precomputado (estável, mesma fonte do sitemap). Só usa a
+  // contagem ao vivo quando não há linha no cache ainda (sem regressão).
+  const liveOfferCount = fromFallback ? 0 : offers.length
+  const cachedOfferCount = await getCachedOfferCount(curso.id, citySlug)
+  const offerCountForGate = cachedOfferCount ?? liveOfferCount
+  const shouldIndex = shouldIndexCityPage(offerCountForGate, trendScore)
   const canonical = shouldIndex ? pageUrl : nationalUrl
 
   const imageUrl = curso.imageUrl.startsWith('http')
@@ -221,8 +247,11 @@ export default async function CursoCidadePage({ params }: Props) {
   // compartilhado). Repete aqui porque Schema Course/FAQ não deve ser emitido
   // em URLs noindex.
   const trendScore = cursoMetadata.trendScore ?? 0
-  const localOfferCount = fromFallback ? 0 : (courseOffers?.length ?? 0)
-  const shouldIndex = shouldIndexCityPage(localOfferCount, trendScore)
+  // Mesma fonte de verdade do generateMetadata e do sitemap: cache precomputado,
+  // com fallback à contagem ao vivo só em cache miss.
+  const liveOfferCount = fromFallback ? 0 : (courseOffers?.length ?? 0)
+  const cachedOfferCount = await getCachedOfferCount(cursoMetadata.id, citySlug)
+  const shouldIndex = shouldIndexCityPage(cachedOfferCount ?? liveOfferCount, trendScore)
 
   // Outras cidades para internal linking (exclui a cidade atual)
   const otherCities = BRAZILIAN_CITIES

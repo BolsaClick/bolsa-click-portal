@@ -87,6 +87,7 @@ function buildStaticSitemap(): SitemapEntry[] {
     { loc: `${SITE_URL}/bolsas-de-estudo`, lastmod: now, changefreq: 'daily', priority: 1.0 },
     { loc: `${SITE_URL}/blog`, lastmod: now, changefreq: 'daily', priority: 0.9 },
     { loc: `${SITE_URL}/quem-somos`, lastmod: now, changefreq: 'weekly', priority: 0.7 },
+    { loc: `${SITE_URL}/bolsa-click-e-confiavel`, lastmod: now, changefreq: 'monthly', priority: 0.8 },
     { loc: `${SITE_URL}/contato`, lastmod: now, changefreq: 'weekly', priority: 0.7 },
     { loc: `${SITE_URL}/central-de-ajuda`, lastmod: now, changefreq: 'weekly', priority: 0.7 },
     { loc: `${SITE_URL}/faq`, lastmod: now, changefreq: 'weekly', priority: 0.8 },

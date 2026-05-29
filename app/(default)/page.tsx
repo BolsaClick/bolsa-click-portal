@@ -18,15 +18,21 @@ export const revalidate = 3600
 
 const theme = getCurrentTheme()
 
-// Title brand-led pra evitar canibalização com /bolsas-de-estudo (a pillar
-// targeta a head term "Bolsas de Estudo"). Home consolida marca e top-funnel
-// navegacional ("bolsa click", "marketplace de bolsas", "bolsa anhanguera").
+// Title lidera com o head-term "bolsas de estudo" — a home é a página de maior
+// autoridade do domínio e deve carregar o termo que queremos rankear.
+// NÃO reverter pra title só de marca por medo de canibalizar /bolsas-de-estudo:
+// canibalização exige mesma INTENÇÃO + conteúdo, não só overlap de keyword. A
+// home é hub de marca (navegacional/institucional) e a pillar é ferramenta de
+// comparação (transacional) — intenções distintas, ambas podem citar o termo.
+// Diferenciação garantida por canonical próprio + link interno home → pillar.
+// "marketplace" fica no corpo/FAQ/llms.txt (diferencial + classificação por IA),
+// não no início do title (zero volume de busca).
 export const metadata: Metadata = {
   title: {
-    default: 'Bolsa Click — Marketplace de Bolsas em 30.000+ Faculdades',
+    default: 'Bolsas de Estudo de até 80% em 30.000+ Faculdades | Bolsa Click',
     template: `%s | ${theme.shortTitle}`,
   },
-  description: 'Bolsa Click é o marketplace brasileiro pra comparar e garantir bolsa de estudo de até 80% em 100.000+ cursos. Anhanguera, Unopar, Pitágoras e outras faculdades parceiras reconhecidas pelo MEC. Inscrição grátis, EAD ou presencial.',
+  description: 'Compare e garanta bolsa de estudo de até 80% em 100.000+ cursos de faculdades parceiras reconhecidas pelo MEC — Anhanguera, Unopar, Pitágoras e outras. Marketplace independente, inscrição grátis, EAD ou presencial.',
   keywords: [
     'bolsa de estudo',
     'bolsa de estudos',

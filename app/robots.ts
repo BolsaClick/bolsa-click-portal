@@ -20,6 +20,7 @@ export default function robots(): MetadataRoute.Robots {
   const aiCrawlers = [
     'GPTBot',
     'OAI-SearchBot',
+    'ChatGPT-User', // ChatGPT quando o usuário pede pra abrir/citar uma URL
     'ClaudeBot',
     'anthropic-ai',
     'PerplexityBot',

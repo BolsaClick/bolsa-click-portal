@@ -24,7 +24,7 @@ const DATE_MODIFIED_LABEL = '25 de maio de 2026'
 export const revalidate = 86400 // 24h — conteúdo institucional muda devagar
 
 export const metadata: Metadata = {
-  title: 'Bolsas de Estudo até 80% — Compare Faculdades e Preços | Bolsa Click',
+  title: 'Bolsas de Estudo até 80%: Compare Faculdades, Preços e Notas MEC | Bolsa Click',
   description: `Compare bolsas de estudo de até 80% em 100.000+ cursos de graduação, pós e tecnólogos. ${BRAZILIAN_CITIES.length} cidades, faculdades reconhecidas pelo MEC, EAD e presencial. ProUni, FIES e bolsa própria.`,
   keywords: [
     'bolsa de estudo',
@@ -328,6 +328,9 @@ export default async function BolsasDeEstudoHubPage() {
   // Article schema pra GEO: dateModified visível + author = sinal forte de
   // freshness e autoridade pra AI Overviews / ChatGPT / Perplexity. Mesmo
   // sendo hub page, o pillar tem conteúdo editorial autêntico (12 seções).
+  // author é Organization (Equipe Editorial), com url pra página de
+  // autoridade — não fabricamos Person fake (penalty risk + desonesto).
+  // citation[] aponta pras fontes primárias seguidas por AI crawlers.
   const articleSchema = {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -340,9 +343,15 @@ export default async function BolsasDeEstudoHubPage() {
     isAccessibleForFree: true,
     author: {
       '@type': 'Organization',
-      '@id': `${SITE_URL}/#organization`,
+      '@id': `${SITE_URL}/sobre/equipe-editorial#editorial-team`,
       name: 'Equipe Editorial Bolsa Click',
-      url: SITE_URL,
+      url: `${SITE_URL}/sobre/equipe-editorial`,
+    },
+    reviewedBy: {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/sobre/equipe-editorial#editorial-team`,
+      name: 'Equipe Editorial Bolsa Click',
+      url: `${SITE_URL}/sobre/equipe-editorial`,
     },
     publisher: {
       '@type': 'Organization',
@@ -364,6 +373,36 @@ export default async function BolsasDeEstudoHubPage() {
       { '@type': 'Thing', name: 'ENEM' },
       { '@type': 'Thing', name: 'Educação superior no Brasil' },
     ],
+    citation: [
+      {
+        '@type': 'CreativeWork',
+        name: 'ProUni — Programa Universidade para Todos',
+        publisher: { '@type': 'GovernmentOrganization', name: 'MEC' },
+        url: 'https://acessounico.mec.gov.br/prouni',
+      },
+      {
+        '@type': 'CreativeWork',
+        name: 'FIES — Fundo de Financiamento Estudantil',
+        publisher: { '@type': 'GovernmentOrganization', name: 'FNDE/MEC' },
+        url: 'https://acessounico.mec.gov.br/fies',
+      },
+      {
+        '@type': 'CreativeWork',
+        name: 'e-MEC — Cadastro de Instituições e Cursos',
+        publisher: { '@type': 'GovernmentOrganization', name: 'MEC' },
+        url: 'https://emec.mec.gov.br',
+      },
+      {
+        '@type': 'CreativeWork',
+        name: 'INEP — Indicadores Educacionais',
+        publisher: { '@type': 'GovernmentOrganization', name: 'INEP' },
+        url: 'https://www.gov.br/inep',
+      },
+    ],
+    isBasedOn: {
+      '@type': 'Dataset',
+      '@id': `${pageUrl}#bolsa-catalog`,
+    },
     speakable: {
       '@type': 'SpeakableSpecification',
       cssSelector: ['[data-speakable]'],
@@ -581,7 +620,7 @@ export default async function BolsasDeEstudoHubPage() {
           (score 36/100, persona crítica). Sazonal: 594K candidatos ProUni 2026. */}
       <ProUniAlternativasSection />
 
-      <section id="como-funcionam" className="bg-paper py-12 md:py-16 border-b border-hairline">
+      <section id="como-funcionam" className="bg-paper py-12 md:py-16 border-b border-hairline" data-speakable="como-funcionam">
         <div className="container mx-auto px-4 max-w-3xl prose prose-neutral">
           <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900 mb-4">
             Como funcionam as bolsas pelo Bolsa Click

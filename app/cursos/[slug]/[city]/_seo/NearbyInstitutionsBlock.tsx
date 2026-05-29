@@ -30,6 +30,9 @@ interface CampusEntry {
   unitName: string
   brand: string
   address: string
+  streetAddress?: string
+  district?: string
+  postalCode?: string
 }
 
 function extractCampuses(offers: Course[]): CampusEntry[] {
@@ -40,16 +43,26 @@ function extractCampuses(offers: Course[]): CampusEntry[] {
     const brand = (o.brand || '').trim()
     if (!unitName) continue
 
-    const addrParts = [
+    const streetParts = [
       o.unitAddress,
       o.unitNumber && `nº ${o.unitNumber}`,
-      o.unitDistrict,
     ].filter((x): x is string => Boolean(x && String(x).trim()))
-    const address = addrParts.join(', ')
+    const streetAddress = streetParts.join(', ')
+    const district = o.unitDistrict?.trim() || undefined
+    const postalCode = o.unitPostalCode?.trim() || undefined
 
+    const address = [streetAddress, district].filter(Boolean).join(', ')
     const key = o.unitId || `${brand}|${unitName}|${address}`
     if (!seen.has(key)) {
-      seen.set(key, { unitId: o.unitId, unitName, brand, address })
+      seen.set(key, {
+        unitId: o.unitId,
+        unitName,
+        brand,
+        address,
+        streetAddress: streetAddress || undefined,
+        district,
+        postalCode,
+      })
     }
   }
   return Array.from(seen.values()).slice(0, 12)
@@ -68,11 +81,49 @@ export default function NearbyInstitutionsBlock({
   const campuses = extractCampuses(offers)
   if (campuses.length === 0) return null
 
+  // Schema.org ItemList de EducationalOrganization (sub-orgs das brands
+  // parceiras). Permite que Google AIO/AI Overviews liguem cada polo ao
+  // brand parent (Anhanguera/Unopar/etc) e à cidade. Sem schema, a lista
+  // ranqueia só como texto. Posição é a ordem visual exibida.
+  const itemListSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: `Polos físicos com ${courseName} em ${cityName}-${cityState}`,
+    numberOfItems: campuses.length,
+    itemListElement: campuses.map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': 'EducationalOrganization',
+        name: c.unitName,
+        ...(c.brand && {
+          parentOrganization: {
+            '@type': 'EducationalOrganization',
+            name: brandLabel(c.brand),
+          },
+        }),
+        address: {
+          '@type': 'PostalAddress',
+          ...(c.streetAddress && { streetAddress: c.streetAddress }),
+          ...(c.district && { addressLocality: `${c.district}, ${cityName}` }),
+          ...(!c.district && { addressLocality: cityName }),
+          addressRegion: cityState,
+          ...(c.postalCode && { postalCode: c.postalCode }),
+          addressCountry: 'BR',
+        },
+      },
+    })),
+  }
+
   return (
     <section
       className="bg-paper py-12 md:py-16 border-t border-hairline"
       data-speakable="nearby-institutions"
     >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
+      />
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-baseline justify-between hairline-b pb-3 mb-6">

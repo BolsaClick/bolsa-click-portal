@@ -84,6 +84,28 @@ const getCityCourseOffers = cache(async (
   }
 })
 
+// Lê a contagem de ofertas PRECOMPUTADA (CityCourseOfferCache) — mesma fonte que
+// o sitemap usa pra decidir quais URLs emitir. A página passa a decidir
+// index/noindex por essa fonte ESTÁVEL, em vez de depender da API ao vivo a cada
+// revalidação. Antes, um fallback transitório da API (lentidão/vazio/erro) zerava
+// a contagem e jogava páginas boas pra noindex — causando oscilação e conflito
+// com o sitemap (URL no sitemap mas página noindex → "Excluída pela tag noindex").
+// Cache miss → retorna null e o caller cai no comportamento legado (sem regressão).
+const getCachedOfferCount = cache(async (
+  featuredCourseId: string,
+  citySlug: string,
+): Promise<number | null> => {
+  try {
+    const row = await prisma.cityCourseOfferCache.findUnique({
+      where: { featuredCourseId_citySlug: { featuredCourseId, citySlug } },
+      select: { offerCount: true },
+    })
+    return row?.offerCount ?? null
+  } catch {
+    return null
+  }
+})
+
 function priceRangeFromOffers(offers: unknown[]) {
   const prices = (offers as { minPrice?: number; prices?: { withDiscount?: number } }[])
     .map(o => o.minPrice || o.prices?.withDiscount || 0)
@@ -130,8 +152,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // sem oferta suficiente. Páginas com 0 ou 1 oferta são thin content em escala
   // e viram noindex,follow + canonical pra versão nacional.
   const trendScore = curso.trendScore ?? 0
-  const localOfferCount = fromFallback ? 0 : offers.length
-  const shouldIndex = shouldIndexCityPage(localOfferCount, trendScore)
+  // Prioriza o cache precomputado (estável, mesma fonte do sitemap). Só usa a
+  // contagem ao vivo quando não há linha no cache ainda (sem regressão).
+  const liveOfferCount = fromFallback ? 0 : offers.length
+  const cachedOfferCount = await getCachedOfferCount(curso.id, citySlug)
+  const offerCountForGate = cachedOfferCount ?? liveOfferCount
+  const shouldIndex = shouldIndexCityPage(offerCountForGate, trendScore)
   const canonical = shouldIndex ? pageUrl : nationalUrl
 
   const imageUrl = curso.imageUrl.startsWith('http')
@@ -221,8 +247,11 @@ export default async function CursoCidadePage({ params }: Props) {
   // compartilhado). Repete aqui porque Schema Course/FAQ não deve ser emitido
   // em URLs noindex.
   const trendScore = cursoMetadata.trendScore ?? 0
-  const localOfferCount = fromFallback ? 0 : (courseOffers?.length ?? 0)
-  const shouldIndex = shouldIndexCityPage(localOfferCount, trendScore)
+  // Mesma fonte de verdade do generateMetadata e do sitemap: cache precomputado,
+  // com fallback à contagem ao vivo só em cache miss.
+  const liveOfferCount = fromFallback ? 0 : (courseOffers?.length ?? 0)
+  const cachedOfferCount = await getCachedOfferCount(cursoMetadata.id, citySlug)
+  const shouldIndex = shouldIndexCityPage(cachedOfferCount ?? liveOfferCount, trendScore)
 
   // Outras cidades para internal linking (exclui a cidade atual)
   const otherCities = BRAZILIAN_CITIES
@@ -308,9 +337,91 @@ export default async function CursoCidadePage({ params }: Props) {
     },
   }
 
+  // Article schema envelope — dá citation-readiness pra cada city page
+  // (~5-10k URLs). datePublished do curso enriquecido + dateModified ao
+  // ser atualizado. author = Equipe Editorial (mesmo pattern do pillar);
+  // citation aponta pra MEC/INEP/e-MEC pra reforçar autoridade em queries
+  // long-tail tipo "bolsa [curso] em [cidade]".
+  const dateModifiedIso =
+    cursoMetadata.updatedAt instanceof Date
+      ? cursoMetadata.updatedAt.toISOString()
+      : new Date(cursoMetadata.updatedAt as string | number).toISOString()
+  const datePublishedIso =
+    cursoMetadata.createdAt instanceof Date
+      ? cursoMetadata.createdAt.toISOString()
+      : new Date(cursoMetadata.createdAt as string | number).toISOString()
+
+  const articleSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: `${cursoMetadata.name} em ${cityData.name}-${cityData.state}: bolsa, faculdades parceiras e mensalidade`,
+    description: `Como conseguir bolsa de estudo em ${cursoMetadata.name} na cidade de ${cityData.name}-${cityData.state}: ofertas, faculdades parceiras, faixa de mensalidade e salário regional estimado.`,
+    datePublished: datePublishedIso,
+    dateModified: dateModifiedIso,
+    inLanguage: 'pt-BR',
+    isAccessibleForFree: true,
+    author: {
+      '@type': 'Organization',
+      '@id': 'https://www.bolsaclick.com.br/sobre/equipe-editorial#editorial-team',
+      name: 'Equipe Editorial Bolsa Click',
+      url: 'https://www.bolsaclick.com.br/sobre/equipe-editorial',
+    },
+    reviewedBy: {
+      '@type': 'Organization',
+      '@id': 'https://www.bolsaclick.com.br/sobre/equipe-editorial#editorial-team',
+      name: 'Equipe Editorial Bolsa Click',
+      url: 'https://www.bolsaclick.com.br/sobre/equipe-editorial',
+    },
+    publisher: {
+      '@type': 'Organization',
+      '@id': 'https://www.bolsaclick.com.br/#organization',
+      name: 'Bolsa Click',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://www.bolsaclick.com.br/assets/logo-bolsa-click-rosa.png',
+      },
+    },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': pageUrl },
+    about: [
+      { '@type': 'Thing', name: cursoMetadata.name },
+      { '@type': 'Thing', name: `Bolsa de estudo em ${cityData.name}` },
+      { '@type': 'Thing', name: 'ProUni' },
+      { '@type': 'Thing', name: 'FIES' },
+      { '@type': 'Thing', name: 'Educação superior no Brasil' },
+    ],
+    spatialCoverage: {
+      '@type': 'City',
+      name: cityData.name,
+      containedInPlace: {
+        '@type': 'AdministrativeArea',
+        name: cityData.state,
+        containedInPlace: { '@type': 'Country', name: 'Brasil' },
+      },
+    },
+    citation: [
+      {
+        '@type': 'CreativeWork',
+        name: 'e-MEC — Cadastro de Instituições e Cursos',
+        publisher: { '@type': 'GovernmentOrganization', name: 'MEC' },
+        url: 'https://emec.mec.gov.br',
+      },
+      {
+        '@type': 'CreativeWork',
+        name: 'CAGED — Cadastro Geral de Empregados e Desempregados',
+        publisher: { '@type': 'GovernmentOrganization', name: 'Ministério do Trabalho' },
+        url: 'https://www.gov.br/trabalho-e-emprego',
+      },
+    ],
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: ['h1', '[data-speakable]'],
+    },
+  }
+
   const jsonLdSchemas = !shouldIndex
     ? [breadcrumbSchema]
     : [
+        articleSchema,
         {
           ...baseCourseSchema,
           ...(lowPrice > 0 && !fromFallback && {

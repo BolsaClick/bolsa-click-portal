@@ -61,3 +61,63 @@ _Análise em 2026-05-25 | Foco: pillar `/bolsas-de-estudo` + cluster de 19 posts
 ## Conclusão
 
 A pillar está em **boa forma estrutural** mas falta polish editorial pra maximizar passage extraction. Os 5 quick wins abaixo já elevam o score pra ~85/100. Wikipedia/Reddit/YouTube ficam pra trilha de brand-building paralela ao roadmap principal de 6 meses.
+
+---
+---
+
+# UPDATE 2026-05-28 — Análise site-wide (objetivo: ser fonte #1 nas IAs)
+
+> A análise de 25/mai acima continua válida **para o on-site da pillar**. Esta atualização amplia o
+> escopo pro site inteiro + presença off-site, com dados coletados ao vivo. **Correção de rumo
+> importante:** o que a análise anterior tratou como "trilha de brand-building paralela" (Wikipedia/
+> Reddit/YouTube) **não é paralelo — é o gargalo** pra meta de "top 1". Documento interno; não publicar;
+> conteúdo derivado segue a regra de não citar concorrentes (CLAUDE.md).
+
+## GEO Readiness Score (site-wide): 66/100
+
+O on-site é dos melhores que existem (técnica resolvida). O score cai porque, **pra ser citado como #1
+numa query comercial competitiva, a IA precisa de fontes de terceiros que confirmem a entidade — e
+hoje há zero.** Você não "ganha o argumento" sozinho contra plataformas com 14 anos de rastro.
+
+| Critério (peso) | Score | Leitura |
+|---|---|---|
+| Citability (25%) | 70 | Resposta direta + FAQ ajudam; faltam blocos auto-contidos de 134-167 palavras (já mapeado em 25/mai). |
+| Estrutura (20%) | 80 | H1→H2→H3, headings-pergunta, FAQ, comparador. |
+| Multi-modal (15%) | 60 | Imagens + comparador; faltam tabelas de dados citáveis e vídeo. |
+| **Autoridade & marca (20%)** | **25** | **Gargalo.** Zero Wikipedia/Reddit/YouTube/imprensa/Reclame Aqui. |
+| Acessibilidade técnica (20%) | 95 | SSR, todos os AI crawlers liberados, llms.txt dinâmico. |
+
+### Por plataforma (revisado pra baixo vs 25/mai, pondo peso no off-site)
+- **Google AIO 60** (era 85): on-site forte, mas **travado pela indexação fraca no Google** (ver `plans/...` roadmap 2M, Frente A). Sem indexar, não entra em AIO.
+- **ChatGPT 45** (era 75): já traz tráfego, mas trava sem Wikipedia (47,9% das citações) / Reddit (11,3%).
+- **Perplexity 35** (era 72): Perplexity cita Reddit ~46,7% — presença zero = quase invisível.
+
+## Evidência ao vivo (2026-05-28)
+- "Bolsa Click é confiável / vale a pena / como funciona" → **só retorna o próprio site**. Nenhuma fonte de terceiros.
+- "Bolsa Click wikipedia/youtube/linkedin" e marca + Reddit/Reclame Aqui → **nada**.
+- Concorrentes estabelecidos têm página "é confiável" ranqueada, prêmio Reclame Aqui, matéria patrocinada em portal regional, narrativa de histórico. **É isso que a IA lê e cita.**
+- Base: Ahrefs (dez/2025, 75k marcas) — menções de marca correlacionam **~3× mais** com visibilidade em IA do que backlinks.
+
+## Inconsistência factual (corrigir já)
+Home diz **"até 80%"**; central de ajuda (`/central-de-ajuda/primeiros-passos/bolsa-parcial-integral`) diz **"até 95%"**. Fontes que se contradizem perdem confiança das IAs. Padronizar o número-âncora em todo o site.
+
+## Top 5 de maior impacto (delta vs 25/mai)
+1. **Corpus "é confiável / como funciona / é seguro"** — páginas próprias respondendo de frente as queries de confiança (que as IAs respondem), com `Organization` schema + dados verificáveis. (ALTÍSSIMO)
+2. **Earned media / presença de terceiros** — em ordem de viabilidade: Reclame Aqui (reivindicar) → YouTube (correlação mais forte) → imprensa via dado proprietário → LinkedIn → Reddit (genuíno, não spam) → Wikipedia/Wikidata (só após notabilidade). (ALTÍSSIMO, fora do código)
+3. **Blocos citáveis de 134-167 palavras** — aplicar no `seed-blog-posts.ts` e revisão das pillars (já mapeado em 25/mai, executar). (ALTO)
+4. **Pesquisa original** — expandir `/estudos/panorama-bolsa-2026` com dado proprietário (catálogo 908 cursos × preço × cidade × MEC). Citation magnet + alimenta imprensa. (ALTO)
+5. **Padronizar fatos-âncora + autoria real** (`Person` schema, não "Equipe Bolsa Click") + `Organization.sameAs` apontando pros perfis novos. (MÉDIO)
+
+## Nota de schema
+A pillar usa **HowTo** (linha 20 acima). HowTo foi **deprecado como rich result do Google (set/2023)** — não prejudica, mas não gera mais resultado rico; mantê-lo só vale pelo benefício de leitura por IA, não por Google.
+
+## Quick wins (semana)
+1. Padronizar desconto-âncora (80% vs 95%) site-wide.
+2. `ChatGPT-User` explícito no `app/robots.ts`.
+3. Reivindicar Reclame Aqui + página LinkedIn da empresa.
+4. `Organization.sameAs` com os perfis assim que criados.
+
+## Verificação
+- Perguntar a ChatGPT/Perplexity "qual site pra bolsa sem ENEM?" e checar se Bolsa Click aparece (baseline: não).
+- PostHog: `$pageview` por `$referring_domain` filtrando `chatgpt.com`/`perplexity.ai`/`gemini.google.com`, mensal.
+- Brand SERP "Bolsa Click é confiável" passar a ter resultados próprios + terceiros.

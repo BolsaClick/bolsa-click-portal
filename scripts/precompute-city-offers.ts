@@ -39,8 +39,10 @@ const args = Object.fromEntries(
 const DRY_RUN = !!args['dry-run']
 const SINGLE_SLUG = typeof args.slug === 'string' ? args.slug : undefined
 const CITY_LIMIT = Number(args['city-limit']) || 100
-const CONCURRENCY = Math.max(1, Number(args.concurrency) || 4)
+const CONCURRENCY = Math.max(1, Number(args.concurrency) || 2)
 const COURSE_LIMIT = Number(args['course-limit']) || 0
+const MAX_RETRIES = 3
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const TARTARUS_API = process.env.NEXT_PUBLIC_TARTARUS_API
 if (!TARTARUS_API) {
@@ -72,40 +74,45 @@ async function fetchOffers(
   state: string,
   nivel: string,
 ): Promise<FetchResult> {
-  try {
-    const res = await tartarus.get('cogna/courses/search', {
-      params: {
-        courseName,
-        city,
-        state,
-        size: 50,
-        page: 1,
-        academicLevel: [nivel],
-      },
-      paramsSerializer: (params: Record<string, unknown>) => {
-        const sp = new URLSearchParams()
-        for (const [k, v] of Object.entries(params)) {
-          if (Array.isArray(v)) v.forEach((x) => sp.append(k, String(x)))
-          else if (v != null) sp.append(k, String(v))
-        }
-        return sp.toString()
-      },
-    })
-    const data: TartarusOffer[] = res.data?.data ?? []
-    const prices = data
-      .map((o) => o.minPrice ?? o.prices?.withDiscount ?? 0)
-      .filter((p) => p > 0)
-    return {
-      offerCount: data.length,
-      minPrice: prices.length ? Math.min(...prices) : null,
-    }
-  } catch (err) {
-    return {
-      offerCount: 0,
-      minPrice: null,
-      error: err instanceof Error ? err.message : String(err),
+  let lastErr = 'unknown'
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const res = await tartarus.get('cogna/courses/search', {
+        params: {
+          courseName,
+          city,
+          state,
+          size: 50,
+          page: 1,
+          academicLevel: [nivel],
+        },
+        paramsSerializer: (params: Record<string, unknown>) => {
+          const sp = new URLSearchParams()
+          for (const [k, v] of Object.entries(params)) {
+            if (Array.isArray(v)) v.forEach((x) => sp.append(k, String(x)))
+            else if (v != null) sp.append(k, String(v))
+          }
+          return sp.toString()
+        },
+      })
+      const data: TartarusOffer[] = res.data?.data ?? []
+      const prices = data
+        .map((o) => o.minPrice ?? o.prices?.withDiscount ?? 0)
+        .filter((p) => p > 0)
+      return {
+        offerCount: data.length,
+        minPrice: prices.length ? Math.min(...prices) : null,
+      }
+    } catch (err) {
+      lastErr = err instanceof Error ? err.message : String(err)
+      // Backoff exponencial + jitter antes de retentar — suaviza rate-limit (429)
+      // e timeouts que derrubaram ~66% das chamadas a concorrência alta.
+      if (attempt < MAX_RETRIES) {
+        await sleep(500 * 2 ** (attempt - 1) + Math.floor(Math.random() * 300))
+      }
     }
   }
+  return { offerCount: 0, minPrice: null, error: lastErr }
 }
 
 async function pMap<T, R>(
@@ -159,6 +166,7 @@ async function main() {
   let withOffers = 0
   let errors = 0
   let upserts = 0
+  let skipped = 0
 
   for (const [ci, course] of courses.entries()) {
     const courseStarted = Date.now()
@@ -179,7 +187,10 @@ async function main() {
         if (r.error) errors++
         if (r.offerCount > 0) withOffers++
 
-        if (!DRY_RUN) {
+        // Só grava em SUCESSO. Em erro de fetch (rate-limit/timeout) NÃO gravar:
+        // gravar 0 criaria falso zero, jogando uma página com oferta pra noindex.
+        // Pular preserva o valor anterior do cache (se houver).
+        if (!DRY_RUN && !r.error) {
           try {
             await prisma.cityCourseOfferCache.upsert({
               where: {
@@ -209,6 +220,8 @@ async function main() {
               }`,
             )
           }
+        } else if (r.error) {
+          skipped++
         }
         return r
       },
@@ -224,7 +237,7 @@ async function main() {
 
   const elapsed = Math.round((Date.now() - startedAt) / 1000)
   console.log('\n═══════════════════════════════════════════════')
-  console.log(`  ✓ processados ${processed}  upserts ${upserts}`)
+  console.log(`  ✓ processados ${processed}  upserts ${upserts}  pulados(erro) ${skipped}`)
   console.log(`  c/oferta ${withOffers}  erros ${errors}  ${elapsed}s`)
   console.log('═══════════════════════════════════════════════\n')
 }

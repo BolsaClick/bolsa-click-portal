@@ -96,6 +96,14 @@ export default async function FaculdadeDetailPage({
   const aggregateRating = buildAggregateRatingSchema(reviewSummary)
   const institutionCourses = await getInstitutionCourses(institution.name)
 
+  // Faixa de preço REAL das ofertas (anti-hallucination: só preços vindos da API,
+  // nunca inventado). Alimenta AggregateOffer pra rich result + citabilidade em IA.
+  const offerPrices = institutionCourses
+    .map((c) => c.minPrice ?? 0)
+    .filter((p) => p > 0)
+  const lowPrice = offerPrices.length ? Math.min(...offerPrices) : null
+  const highPrice = offerPrices.length ? Math.max(...offerPrices) : null
+
   const educationalOrgSchema = {
     '@context': 'https://schema.org',
     '@type': 'EducationalOrganization',
@@ -117,6 +125,18 @@ export default async function FaculdadeDetailPage({
       },
     }),
     ...(aggregateRating && { aggregateRating }),
+    ...(lowPrice && {
+      makesOffer: {
+        '@type': 'AggregateOffer',
+        priceCurrency: 'BRL',
+        lowPrice,
+        ...(highPrice && highPrice !== lowPrice && { highPrice }),
+        offerCount: institutionCourses.length,
+        category: 'Bolsa de estudo',
+        availability: 'https://schema.org/InStock',
+        description: `Mensalidades com bolsa de estudo na ${institution.name} a partir de R$ ${lowPrice.toFixed(0)}/mês.`,
+      },
+    }),
   }
 
   const faqSchema = {

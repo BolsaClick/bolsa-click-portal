@@ -52,8 +52,24 @@ const Filter = () => {
     profissionalizante: ACADEMIC_LEVEL.CURSO_PROFISSIONALIZANTE,
   }
 
+  // Adia o prefetch da lista de cursos pra DEPOIS da hidratação (idle), pra a
+  // chamada à API não competir com o boot JS no main thread em mobile. Se o
+  // usuário interagir antes do idle, dispara na hora (handleLevelChange).
+  const [coursesReady, setCoursesReady] = useState(false)
+  useEffect(() => {
+    const win = window as typeof window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout?: number }) => number
+    }
+    if (typeof win.requestIdleCallback === 'function') {
+      win.requestIdleCallback(() => setCoursesReady(true), { timeout: 2500 })
+    } else {
+      const t = setTimeout(() => setCoursesReady(true), 1500)
+      return () => clearTimeout(t)
+    }
+  }, [])
 
   const handleLevelChange = (level: FormValues['levels']) => {
+    setCoursesReady(true)
     setActiveTab(level)
     localStorage.setItem('selectedLevel', level)
     setValue('levels', level)
@@ -79,19 +95,19 @@ const Filter = () => {
   const { data: graduationCourses } = useQuery({
     queryFn: () => getShowCourses(academicLevelMap.graduacao),
     queryKey: ['courses', 'graduacao'],
-    enabled: activeTab === 'graduacao',
+    enabled: coursesReady && activeTab === 'graduacao',
   })
 
   const { data: postCourses } = useQuery({
     queryFn: () => getShowCourses(academicLevelMap.pos),
     queryKey: ['courses', 'pos'],
-    enabled: activeTab === 'pos',
+    enabled: coursesReady && activeTab === 'pos',
   })
 
   const { data: profissionalizanteCourses } = useQuery({
     queryFn: () => getShowCourses(academicLevelMap.profissionalizante),
     queryKey: ['courses', 'profissionalizante'],
-    enabled: activeTab === 'profissionalizante',
+    enabled: coursesReady && activeTab === 'profissionalizante',
   })
 
   const { data: responseCity } = useQuery({

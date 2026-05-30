@@ -68,11 +68,16 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
               alt={banner.title}
               fill
               className="object-cover object-center md:object-top"
-              priority={index === 0}
-              fetchPriority={index === 0 ? 'high' : 'auto'}
-              loading={index === 0 ? 'eager' : 'lazy'}
-              sizes="100vw"
-              quality={75}
+              // O slider é `hidden md:block` (desktop-only). `priority` injetava
+              // um <link rel=preload as=image fetchpriority=high> no <head> sem
+              // media query, fazendo o MOBILE baixar o banner desktop grande em
+              // alta prioridade — roubando banda do LCP real. `loading="lazy"`
+              // ainda carrega na hora no desktop (imagem está no topo da
+              // viewport), mas pula o download no mobile, onde fica oculta.
+              loading="lazy"
+              fetchPriority="auto"
+              sizes="(max-width: 768px) 1px, 100vw"
+              quality={70}
             />
           </div>
         ))}

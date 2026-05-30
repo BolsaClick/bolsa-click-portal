@@ -1,24 +1,12 @@
 import { Metadata } from 'next'
-import dynamic from 'next/dynamic'
 import { Fraunces, Montserrat } from 'next/font/google'
 import Script from 'next/script'
 import { AnalyticsScripts } from './components/organisms/AnalyticsScripts'
 import { ClientProviders } from './components/providers/ClientProviders'
 import { ConsentProvider } from './components/providers/ConsentProvider'
+import { DeferredWidgets } from './components/providers/DeferredWidgets'
 import { GatedVercelAnalytics } from './components/providers/GatedVercelAnalytics'
 import './globals.css'
-
-// Widgets não-críticos pro first paint: dynamic gera chunks separados que
-// só baixam quando o user precisa, reduzindo JS de boot. Os componentes já
-// são 'use client' (não rodam SSR), então o ganho real é code splitting.
-const Toaster = dynamic(() => import('sonner').then((m) => m.Toaster))
-const CookieConsent = dynamic(() => import('./components/organisms/CookieConsent'))
-const WatiWhatsappWidget = dynamic(() =>
-  import('./components/WatiWhatsappWidget').then((m) => m.WatiWhatsappWidget),
-)
-const VocationalTab = dynamic(() =>
-  import('./components/VocationalTab').then((m) => m.VocationalTab),
-)
 import { business } from './lib/constants/business'
 import { getCurrentTheme } from './lib/themes'
 
@@ -35,13 +23,17 @@ const montserrat = Montserrat({
   preload: true,
 })
 
+// Fraunces é a fonte de DISPLAY (títulos). Com display:optional ela nunca
+// pinta no primeiro paint (usa o fallback Georgia e só troca em navegações
+// futuras), então fazer preload só competiria banda com o LCP. preload:false
+// deixa o LCP respirar. adjustFontFallback mantém o CLS perto de zero.
 const fraunces = Fraunces({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   style: ['normal', 'italic'],
   display: 'optional',
   variable: '--font-fraunces',
-  preload: true,
+  preload: false,
 })
 
 const theme = getCurrentTheme()
@@ -284,10 +276,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ConsentProvider>
           <AnalyticsScripts gtmId={gtmId} ga4Id={ga4Id} facebookPixelIds={facebookPixelIds} tiktokPixelId={tiktokPixelId} />
 
-          <WatiWhatsappWidget />
-          <VocationalTab />
-
-          <Toaster richColors position="top-right" />
           <GatedVercelAnalytics />
           <ClientProviders>
             <div className="flex min-h-screen flex-col">
@@ -295,7 +283,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </ClientProviders>
 
-          <CookieConsent />
+          {/* Toaster, CookieConsent, WhatsApp e VocationalTab montam só após o
+              browser ficar idle — fora do caminho crítico de hidratação. */}
+          <DeferredWidgets />
         </ConsentProvider>
       </body>
     </html>

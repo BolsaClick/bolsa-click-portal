@@ -879,6 +879,47 @@ export default async function BolsasDeEstudoHubPage() {
         </div>
       </section>
 
+      {/* Link interno com âncora de marca pras landings de instituição — distribui
+          autoridade da pillar (head-term) pras páginas que targetam "bolsa [marca]". */}
+      {institutions.length > 0 && (
+        <section id="faculdades-parceiras" className="bg-white py-12 md:py-16 border-b border-hairline" data-speakable="faculdades">
+          <div className="container mx-auto px-4 max-w-5xl">
+            <div className="flex items-baseline justify-between hairline-b pb-3 mb-6">
+              <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900">
+                Bolsas de estudo por faculdade parceira
+              </h2>
+              <span className="font-mono num-tabular text-[11px] text-ink-500">
+                ({String(institutions.length).padStart(2, '0')})
+              </span>
+            </div>
+            <p className="text-ink-700 leading-relaxed mb-8 max-w-3xl">
+              Veja as bolsas disponíveis em cada faculdade parceira reconhecida pelo MEC. Cada
+              página mostra os cursos, as modalidades e como conseguir o desconto na instituição.
+            </p>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-hairline">
+              {institutions.map((inst) => (
+                <li key={inst.slug} className="bg-white">
+                  <Link
+                    href={`/faculdades/${inst.slug}`}
+                    className="block px-5 py-4 transition-colors hover:bg-paper"
+                  >
+                    <span className="block font-display text-base text-ink-900">
+                      Bolsas de estudo na {inst.name}
+                    </span>
+                    <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-500">
+                      {inst.mecRating ? `MEC ${inst.mecRating}/5 · ` : ''}
+                      {inst.modalities
+                        .map((m) => (m === 'EAD' ? 'EAD' : m === 'PRESENCIAL' ? 'Presencial' : 'Semipresencial'))
+                        .join(' · ')}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
       <section id="bolsa-permanencia" className="bg-white py-12 md:py-16 border-b border-hairline">
         <div className="container mx-auto px-4 max-w-3xl prose prose-neutral">
           <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900 mb-4">

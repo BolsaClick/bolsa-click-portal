@@ -388,6 +388,28 @@ export default async function CursoPage({ params }: Props) {
     },
   ]
 
+  // Link interno contextual pras landings de marca: só as instituições que
+  // REALMENTE ofertam este curso (via brand das ofertas) → âncora "Bolsa de
+  // {curso} na {marca}". Reforça as páginas que targetam "bolsa [marca]".
+  const offerBrandKeys = new Set(
+    (courseOffers || [])
+      .map((o: { brand?: string }) => (o.brand || '').toLowerCase().trim())
+      .filter(Boolean),
+  )
+  const partnerInstitutions = offerBrandKeys.size
+    ? (
+        await prisma.institution.findMany({
+          where: { isActive: true },
+          select: { slug: true, name: true },
+          orderBy: { order: 'asc' },
+        })
+      ).filter(
+        (i) =>
+          offerBrandKeys.has(i.slug.toLowerCase()) ||
+          offerBrandKeys.has(i.name.toLowerCase()),
+      )
+    : []
+
   return (
     <>
       <script
@@ -411,6 +433,37 @@ export default async function CursoPage({ params }: Props) {
       <OffersComparisonTable offers={courseOffers || []} courseName={cursoMetadata.name} />
       <CitiesGrid courseSlug={slug} courseName={cursoMetadata.name} />
       <RelatedPillarsBlock courseSlug={slug} courseName={cursoMetadata.name} />
+      {partnerInstitutions.length > 0 && (
+        <section className="bg-white py-12 md:py-16 border-t border-hairline">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <div className="hairline-b pb-3 mb-6 flex items-baseline justify-between">
+              <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
+                Faculdades com bolsa em {cursoMetadata.name}
+              </h2>
+              <span className="font-mono num-tabular text-[11px] text-ink-500">
+                ({String(partnerInstitutions.length).padStart(2, '0')})
+              </span>
+            </div>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-hairline">
+              {partnerInstitutions.map((inst) => (
+                <li key={inst.slug} className="bg-white">
+                  <Link
+                    href={`/faculdades/${inst.slug}`}
+                    className="block px-5 py-4 transition-colors hover:bg-paper"
+                  >
+                    <span className="block font-display text-base text-ink-900">
+                      Bolsa de {cursoMetadata.name} na {inst.name}
+                    </span>
+                    <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-500">
+                      Ver bolsas de estudo na {inst.name}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
       <section className="bg-paper py-12 md:py-16 border-t border-hairline">
         <div className="container mx-auto px-4 max-w-3xl">
           <div className="hairline-b pb-3 mb-6 flex items-baseline justify-between">

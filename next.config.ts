@@ -6,8 +6,8 @@ import type { NextConfig } from "next";
 // "Content-Security-Policy" (enforce). Em Report-Only nada é bloqueado.
 //
 // Whitelist construída a partir dos integrações conhecidas do projeto:
-//   - Stripe (checkout cartão)            - PostHog (analytics)
-//   - GTM / Google Analytics              - Meta Pixel
+//   - PostHog (analytics)                 - Meta Pixel
+//   - GTM / Google Analytics
 //   - TikTok Pixel + Events API           - UTMify (pixel + Orders API)
 //   - Firebase Auth + Firestore           - Tigris Storage (imagens)
 //   - Notealy (server-side, não importa pro CSP do browser)
@@ -15,7 +15,7 @@ const CSP_REPORT_ONLY = [
   "default-src 'self'",
   // Inline scripts são usados pelo Next (hydration tokens) e pelos pixels;
   // 'unsafe-inline' é necessário até migrarmos pra nonces.
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://cdn.utmify.com.br https://analytics.tiktok.com https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://us-assets.i.posthog.com https://apis.google.com https://www.gstatic.com https://va.vercel-scripts.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.utmify.com.br https://analytics.tiktok.com https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://us-assets.i.posthog.com https://apis.google.com https://www.gstatic.com https://va.vercel-scripts.com",
   // Styles: Tailwind injeta inline; Google Fonts CSS é externo.
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
@@ -23,13 +23,13 @@ const CSP_REPORT_ONLY = [
   "img-src 'self' data: blob: https:",
   "media-src 'self' blob:",
   // Fetch / XHR / WebSocket — todas as APIs first-party + integrações.
-  "connect-src 'self' https://api.stripe.com https://us.i.posthog.com https://us-assets.i.posthog.com https://api.utmify.com.br https://analytics.tiktok.com https://www.google-analytics.com https://www.googletagmanager.com https://stats.g.doubleclick.net https://*.facebook.com https://thanos.notealy.com https://tartarus-api.inovitdigital.com.br https://elysium-api.inovitdigital.com.br https://t3.storageapi.dev https://bolsa-click.fly.storage.tigris.dev https://*.firebaseio.com https://*.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com",
-  // iframes: Stripe Elements, GTM noscript pixel.
-  "frame-src 'self' https://js.stripe.com https://www.googletagmanager.com https://www.facebook.com",
+  "connect-src 'self' https://us.i.posthog.com https://us-assets.i.posthog.com https://api.utmify.com.br https://analytics.tiktok.com https://www.google-analytics.com https://www.googletagmanager.com https://stats.g.doubleclick.net https://*.facebook.com https://thanos.notealy.com https://tartarus-api.inovitdigital.com.br https://elysium-api.inovitdigital.com.br https://t3.storageapi.dev https://bolsa-click.fly.storage.tigris.dev https://*.firebaseio.com https://*.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com",
+  // iframes: GTM noscript pixel.
+  "frame-src 'self' https://www.googletagmanager.com https://www.facebook.com",
   // Frame ancestors — quem pode embedar o site (Clickjacking).
   "frame-ancestors 'self'",
   // Form actions — pra onde formulários podem submeter.
-  "form-action 'self' https://api.stripe.com",
+  "form-action 'self'",
   "object-src 'none'",
   "base-uri 'self'",
   "upgrade-insecure-requests",

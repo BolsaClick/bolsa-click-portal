@@ -7,8 +7,8 @@ export interface CreateCheckoutRequest {
   phone: string
   amountInCents: number
   description: string
-  /** Método de pagamento no Elysium: 'pix' ou 'card' (Stripe) */
-  paymentMethod?: 'pix' | 'card'
+  /** Método de pagamento no Elysium */
+  paymentMethod?: 'pix'
   couponCode?: string
   brand?: string
   channel?: string
@@ -32,9 +32,6 @@ export interface CreateCheckoutResponse {
     updatedAt: string
     expiresAt: string
   }
-  /** Presente quando paymentMethod === 'card' (Stripe) */
-  clientSecret?: string
-  paymentIntentId?: string
   amount: number
   originalAmount?: number
   discountApplied?: number

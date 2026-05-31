@@ -183,17 +183,26 @@ export default function FaculdadePageClient({ institution, initialCourses }: Pro
                   Faculdade parceira
                 </span>
                 <h1 className="font-display text-4xl md:text-5xl lg:text-[56px] font-semibold text-white leading-[1.05]">
-                  Faculdade <span className="italic text-white/85">{institution.name}</span>
+                  Bolsas de Estudo na <span className="italic text-white/85">{institution.name}</span>
                 </h1>
                 <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-white/60 mt-4">
-                  {typeLabels[institution.type]}
+                  Faculdade {typeLabels[institution.type]}
                   {institution.founded ? ` · Desde ${institution.founded}` : ''}
                   {yearsActive ? ` · ${yearsActive} anos` : ''}
                 </p>
               </div>
             </div>
 
-            <p className="text-white/80 text-[15px] md:text-[17px] leading-relaxed max-w-3xl">
+            {/* Resposta direta GEO (40-60 palavras): responde "como conseguir bolsa
+                na {marca}" no topo, pra extração por AI Overviews/ChatGPT/Perplexity. */}
+            <p data-speakable="answer" className="text-white text-[16px] md:text-[18px] leading-relaxed max-w-3xl font-medium">
+              Para conseguir bolsa de estudo na {institution.name}, busque o curso aqui no
+              Bolsa Click, compare as ofertas e inscreva-se grátis — os descontos chegam a
+              até 80% nas mensalidades, em cursos {institution.modalities.includes('EAD') ? 'EAD e presenciais' : 'presenciais'} reconhecidos
+              pelo MEC.
+            </p>
+
+            <p className="text-white/80 text-[15px] md:text-[17px] leading-relaxed max-w-3xl mt-4">
               {institution.description}
             </p>
 

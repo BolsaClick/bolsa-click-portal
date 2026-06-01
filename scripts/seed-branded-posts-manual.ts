@@ -192,6 +192,159 @@ const POSTS: Post[] = [
 <p>Para cursos teóricos e pra quem precisa de flexibilidade, sim — o EAD reconhecido pelo MEC tem a mesma validade do presencial e costuma ter o maior desconto.</p>
 `.trim(),
   },
+
+  // ---- UNOPAR (parceira whitelist, oferta real no catálogo: forte em EAD/saúde) ----
+  {
+    slug: 'unopar-ead-como-conseguir-bolsa',
+    title: 'Unopar EAD: como conseguir bolsa de estudo em 2026',
+    metaTitle: 'Unopar EAD: como conseguir bolsa de estudo em 2026',
+    metaDescription:
+      'Como conseguir bolsa de estudo na Unopar EAD: busque o curso, compare as ofertas e inscreva-se grátis. Descontos de até 80% sem nota de corte, em cursos reconhecidos pelo MEC.',
+    excerpt:
+      'O passo a passo pra garantir bolsa de até 80% na Unopar EAD em 2026 — sem nota de corte, inscrição gratuita e diploma reconhecido pelo MEC.',
+    keywords: [
+      'unopar ead', 'bolsa unopar', 'bolsa de estudo unopar', 'unopar ead bolsa',
+      'unopar ead como funciona', 'faculdade unopar ead', 'unopar desconto', 'unopar mensalidade',
+    ],
+    tags: ['Unopar', 'EAD', 'Bolsa de estudo'],
+    imageAlt: 'Estudante assistindo aula online de um curso EAD da Unopar com bolsa de estudo',
+    categorySlugs: ['ead', 'bolsas-de-estudo'],
+    featured: true,
+    content: `
+<p>Para conseguir bolsa de estudo na <strong>Unopar EAD</strong>, o caminho mais rápido é buscar o curso aqui no Bolsa Click, comparar as ofertas dos polos e se inscrever gratuitamente — os descontos chegam a <strong>até 80%</strong> na mensalidade, sem nota de corte, em cursos reconhecidos pelo MEC. <a href="/faculdades/unopar">Veja as bolsas de estudo na Unopar</a> e garanta a sua.</p>
+
+<h2>Como funciona a bolsa na Unopar EAD</h2>
+<p>A Unopar é uma das maiores redes de ensino a distância do Brasil, com ampla cobertura de polos pelo país. As bolsas oferecidas via Bolsa Click são <strong>bolsas próprias da faculdade</strong> — diferentes do ProUni e do FIES, que são programas federais. Isso traz três vantagens claras:</p>
+<ul>
+  <li><strong>Sem nota de corte:</strong> você não disputa vaga por pontuação de ENEM.</li>
+  <li><strong>Sem critério de renda:</strong> a bolsa não depende de comprovação de renda familiar.</li>
+  <li><strong>Inscrição o ano todo:</strong> sem janela fechada como nas edições do ProUni.</li>
+</ul>
+<p>O desconto entra já na primeira mensalidade e vale durante todo o curso, enquanto a matrícula estiver ativa e você mantiver a aprovação acadêmica.</p>
+
+<h2>Passo a passo pra garantir sua bolsa</h2>
+<ol>
+  <li><strong>Busque o curso</strong> (a Unopar é forte em áreas como Enfermagem, Direito, Pedagogia, Administração e Gestão).</li>
+  <li><strong>Compare as ofertas</strong> dos polos da Unopar e veja o percentual de desconto antes de decidir.</li>
+  <li><strong>Inscreva-se grátis</strong> e conclua a matrícula direto com a instituição.</li>
+  <li><strong>Pague a mensalidade já com a bolsa</strong> — o pagamento é feito à faculdade, nunca ao Bolsa Click.</li>
+</ol>
+<p>Quer ver todas as formas de desconto antes? Confira o <a href="/bolsas-de-estudo">guia completo de bolsas de estudo</a>.</p>
+
+<h2>Quais cursos da Unopar têm bolsa em EAD</h2>
+<p>A Unopar tem presença forte em saúde e licenciaturas no EAD/semipresencial. Cursos como Enfermagem (semipresencial, com práticas e estágios em polo), Pedagogia, Administração, Ciências Contábeis e Gestão de Recursos Humanos estão entre os mais buscados. Cursos com carga prática seguem o modelo semipresencial, com encontros presenciais em polos credenciados, conforme a regra do MEC.</p>
+
+<h2>EAD da Unopar é reconhecido pelo MEC?</h2>
+<p>Sim. A Unopar é reconhecida pelo Ministério da Educação, e o diploma de um curso EAD tem a mesma validade do presencial. Mesmo assim, confirme o reconhecimento do <strong>curso específico</strong> e a nota da instituição no portal oficial <a href="https://emec.mec.gov.br" rel="nofollow noopener" target="_blank">e-MEC</a> antes de matricular.</p>
+
+<h2>Perguntas frequentes</h2>
+<h3>Preciso de ENEM pra conseguir bolsa na Unopar EAD?</h3>
+<p>Não. A bolsa própria da Unopar via Bolsa Click aceita o processo seletivo da própria faculdade (geralmente uma redação online), sem exigir ENEM.</p>
+<h3>De quanto é o desconto?</h3>
+<p>Os descontos chegam a até 80%, variando por curso, modalidade e polo. Veja o valor real de cada oferta na <a href="/faculdades/unopar">página da Unopar</a>.</p>
+<h3>A bolsa vale durante todo o curso?</h3>
+<p>Sim. O desconto acompanha você do primeiro ao último semestre, enquanto a matrícula estiver ativa e você mantiver a aprovação.</p>
+<h3>O diploma EAD da Unopar vale o mesmo que o presencial?</h3>
+<p>Sim. Para o MEC, o diploma de um curso a distância reconhecido tem a mesma validade do presencial.</p>
+`.trim(),
+  },
+  {
+    slug: 'como-conseguir-bolsa-unopar-sem-enem',
+    title: 'Como conseguir bolsa na Unopar sem ENEM',
+    metaTitle: 'Como conseguir bolsa na Unopar sem ENEM',
+    metaDescription:
+      'Dá pra conseguir bolsa na Unopar sem nota do ENEM: use o processo seletivo próprio da faculdade (redação online), sem critério de renda. Veja o passo a passo.',
+    excerpt:
+      'Não fez ou não quer usar o ENEM? Veja como garantir bolsa de estudo na Unopar pelo processo seletivo próprio — sem nota de corte e com inscrição o ano todo.',
+    keywords: [
+      'bolsa unopar sem enem', 'unopar sem enem', 'como entrar na unopar sem enem',
+      'bolsa de estudo unopar', 'unopar processo seletivo', 'unopar vestibular online', 'bolsa unopar',
+    ],
+    tags: ['Unopar', 'Sem ENEM', 'Bolsa de estudo'],
+    imageAlt: 'Pessoa fazendo redação online no processo seletivo da Unopar para conseguir bolsa sem ENEM',
+    categorySlugs: ['bolsas-de-estudo', 'ead'],
+    content: `
+<p>Sim, dá pra conseguir bolsa na <strong>Unopar sem ENEM</strong>. As bolsas próprias da faculdade — disponíveis via Bolsa Click — aceitam o <strong>processo seletivo da própria instituição</strong>, normalmente uma redação online, sem exigir nota do ENEM e sem critério de renda. <a href="/faculdades/unopar">Veja as bolsas de estudo na Unopar</a> e inscreva-se gratuitamente.</p>
+
+<h2>Por que não precisa de ENEM</h2>
+<p>O ENEM só é obrigatório nos programas <strong>federais</strong>: ProUni (bolsa) e FIES (financiamento). A bolsa própria de uma faculdade particular como a Unopar é negociada diretamente entre a instituição e o estudante — por isso ela pode usar o próprio vestibular como porta de entrada, sem nota de corte. Veja também o guia de <a href="/sem-enem">faculdade sem ENEM</a>.</p>
+
+<h2>Como funciona o processo seletivo próprio</h2>
+<ul>
+  <li><strong>Redação online:</strong> a forma mais comum — você escreve um texto sobre um tema proposto, de casa.</li>
+  <li><strong>Sem nota mínima de corte:</strong> avalia a escrita, não ranqueia por pontuação.</li>
+  <li><strong>Resultado rápido:</strong> a aprovação costuma sair em pouco tempo, agilizando a matrícula.</li>
+</ul>
+<p>Quem já fez o ENEM em qualquer edição pode usar a nota como atalho — mas é opção, não exigência.</p>
+
+<h2>Passo a passo pra garantir a bolsa sem ENEM</h2>
+<ol>
+  <li>Busque o curso e veja as <a href="/bolsas-de-estudo">bolsas de estudo</a> disponíveis.</li>
+  <li>Escolha a oferta da Unopar com o melhor desconto pra você.</li>
+  <li>Faça o processo seletivo próprio (a redação online) e a inscrição gratuita.</li>
+  <li>Conclua a matrícula e pague a mensalidade já com a bolsa aplicada.</li>
+</ol>
+
+<h2>Sem ENEM e sem comprovar renda?</h2>
+<p>Exato. Diferente do ProUni, a bolsa própria não exige comprovação de renda familiar. É a alternativa pra quem não atinge os critérios do programa federal, não fez o ENEM, ou não quer esperar as janelas de inscrição que abrem duas vezes por ano. Antes de fechar, confira o reconhecimento do curso no <a href="https://emec.mec.gov.br" rel="nofollow noopener" target="_blank">e-MEC</a>.</p>
+
+<h2>Perguntas frequentes</h2>
+<h3>É verdade que consigo bolsa na Unopar sem ENEM?</h3>
+<p>Sim. A bolsa própria usa o processo seletivo da faculdade (normalmente uma redação online), sem exigir ENEM.</p>
+<h3>Preciso comprovar renda?</h3>
+<p>Não. Diferente do ProUni, a bolsa própria da Unopar não tem critério de renda.</p>
+<h3>Quando posso me inscrever?</h3>
+<p>O ano todo. Não há janela fechada como nas edições do ProUni e do FIES.</p>
+<h3>Quanto desconto eu consigo?</h3>
+<p>Os descontos chegam a até 80% na mensalidade, conforme o curso e o polo. Confira cada oferta na <a href="/faculdades/unopar">página da Unopar</a>.</p>
+`.trim(),
+  },
+  {
+    slug: 'unopar-vale-a-pena-mec-bolsas',
+    title: 'A Unopar vale a pena? Nota MEC, bolsas e o que esperar',
+    metaTitle: 'A Unopar vale a pena? Nota MEC, bolsas e o que esperar',
+    metaDescription:
+      'A Unopar vale a pena? Veja prós, pontos de atenção, como conferir a nota no MEC e as bolsas de até 80% — um panorama honesto pra decidir.',
+    excerpt:
+      'Um panorama honesto da Unopar: forte em EAD e saúde, ampla rede de polos, diploma reconhecido pelo MEC e bolsas de até 80%. Veja os prós, os cuidados e pra quem faz sentido.',
+    keywords: [
+      'unopar vale a pena', 'unopar é boa', 'unopar nota mec', 'faculdade unopar',
+      'bolsa de estudo unopar', 'unopar é reconhecida pelo mec', 'unopar ead vale a pena',
+    ],
+    tags: ['Unopar', 'MEC', 'Bolsa de estudo'],
+    imageAlt: 'Estudante avaliando se a faculdade Unopar vale a pena, com nota do MEC e bolsa de estudo',
+    categorySlugs: ['guias-mec', 'bolsas-de-estudo'],
+    content: `
+<p>A <strong>Unopar</strong> vale a pena pra quem busca uma faculdade acessível e flexível, com ampla rede de polos, presença forte em EAD (especialmente na área da saúde e licenciaturas), diploma reconhecido pelo MEC e bolsas de até 80% na mensalidade. Como em toda rede grande, o que mais pesa é o <strong>curso específico</strong> e a nota atual no MEC — que dá pra conferir em minutos. <a href="/faculdades/unopar">Veja as bolsas de estudo na Unopar</a> e compare antes de decidir.</p>
+
+<h2>Os pontos fortes</h2>
+<ul>
+  <li><strong>Acessibilidade:</strong> bolsas próprias de até 80%, sem nota de corte e sem critério de renda, via Bolsa Click.</li>
+  <li><strong>Tradição em EAD:</strong> uma das pioneiras e maiores em ensino a distância no Brasil, com ampla rede de polos.</li>
+  <li><strong>Forte em saúde e licenciaturas:</strong> boa oferta em cursos como Enfermagem (semipresencial) e Pedagogia.</li>
+  <li><strong>Reconhecimento:</strong> instituição reconhecida pelo MEC, com diploma de validade nacional.</li>
+</ul>
+
+<h2>Os pontos de atenção</h2>
+<p>Em redes grandes, a qualidade pode variar entre cursos e polos — por isso vale olhar o <strong>curso que você quer</strong>, e não só a instituição como um todo. Verifique a estrutura do polo mais próximo (laboratórios, biblioteca, suporte), a grade curricular e, em cursos com prática (saúde, por exemplo), como funcionam os encontros presenciais e os estágios.</p>
+
+<h2>Qual a nota da Unopar no MEC?</h2>
+<p>A avaliação institucional e a nota de cada curso são públicas e mudam a cada ciclo de avaliação. Em vez de confiar num número solto, consulte a informação <strong>atualizada</strong> na fonte oficial: o portal <a href="https://emec.mec.gov.br" rel="nofollow noopener" target="_blank">e-MEC</a> mostra o credenciamento da instituição e o reconhecimento do curso específico. É o passo que separa uma boa escolha de uma decisão no escuro.</p>
+
+<h2>Pra quem a Unopar faz sentido</h2>
+<p>Faz sentido pra quem prioriza custo-benefício e flexibilidade: estudantes que trabalham, que moram longe de grandes centros (e aproveitam o EAD/semipresencial), que não fizeram o ENEM ou não fecham os critérios do ProUni — em especial quem mira cursos da área da saúde e licenciaturas. Combinada com a bolsa própria, vira uma das rotas mais econômicas pro diploma. Compare as opções no <a href="/bolsas-de-estudo">guia completo de bolsas de estudo</a>.</p>
+
+<h2>Perguntas frequentes</h2>
+<h3>A Unopar é reconhecida pelo MEC?</h3>
+<p>Sim, é uma instituição de ensino superior reconhecida pelo Ministério da Educação. Confirme o reconhecimento do seu curso específico no e-MEC.</p>
+<h3>O diploma da Unopar tem validade?</h3>
+<p>Sim. O diploma de um curso reconhecido tem validade nacional, seja presencial ou EAD.</p>
+<h3>Dá pra estudar na Unopar com bolsa?</h3>
+<p>Dá. Há bolsas próprias de até 80% via Bolsa Click, sem nota de corte. Veja as ofertas na <a href="/faculdades/unopar">página da Unopar</a>.</p>
+<h3>EAD da Unopar vale a pena?</h3>
+<p>Para cursos teóricos e da área da saúde (no formato semipresencial), e pra quem precisa de flexibilidade, sim — o EAD reconhecido pelo MEC tem a mesma validade do presencial.</p>
+`.trim(),
+  },
 ]
 
 async function main() {

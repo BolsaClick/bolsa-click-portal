@@ -537,6 +537,37 @@ const ARCHETYPES: Archetype[] = [
     categorySlugs: ['bolsas-de-estudo', 'guias-mec'],
     briefing: 'Checklist: RG, CPF, comprovante de residência, comprovante de renda (CT, holerite, IR), boletim ENEM, histórico escolar. Diferença bolsa integral vs parcial. Linkar pra /bolsas-de-estudo.',
   },
+
+  // ===========================================================
+  // CLUSTER "MARCA DE PARCEIRO" — capturar busca de marca ("bolsa anhanguera")
+  // Anhanguera/Unopar/Pitágoras/Estácio são PARCEIROS (whitelist do CLAUDE.md):
+  // pode citar por nome. Alvo: o modificador comercial ("anhanguera bolsa/ead").
+  // REGRA: sem preço em R$ específico (DATA_BLOCK de guia não traz preço de marca)
+  // — falar em percentuais e LINKAR pra /faculdades/anhanguera pros valores reais.
+  // Replicável depois pros outros parceiros trocando o nome.
+  // ===========================================================
+  {
+    slug: 'anhanguera-ead-como-conseguir-bolsa',
+    title: 'Anhanguera EAD: como conseguir bolsa de estudo em 2026',
+    kind: 'guia',
+    categorySlugs: ['ead', 'bolsas-de-estudo'],
+    featured: true,
+    briefing: 'Responder direto (primeiras 40-60 palavras) como conseguir bolsa de estudo na Faculdade Anhanguera EAD: buscar o curso no Bolsa Click, comparar as ofertas das unidades/polos e se inscrever grátis — desconto chega a 80% sem nota de corte. Cobrir: modalidade EAD da Anhanguera (polos, diploma reconhecido pelo MEC), quais cursos têm bolsa, passo-a-passo da inscrição, e como conferir o reconhecimento no e-MEC. NÃO citar preço em R$ específico — fale em PERCENTUAIS de desconto. LINKAR no primeiro terço pra /faculdades/anhanguera com anchor "bolsas de estudo na Anhanguera" e pra /bolsas-de-estudo. Anhanguera é parceira (pode citar). Não citar concorrentes agregadores. Incluir seção Perguntas frequentes.',
+  },
+  {
+    slug: 'como-conseguir-bolsa-anhanguera-sem-enem',
+    title: 'Como conseguir bolsa na Anhanguera sem ENEM',
+    kind: 'guia',
+    categorySlugs: ['bolsas-de-estudo', 'ead'],
+    briefing: 'Responder direto: dá pra conseguir bolsa na Anhanguera SEM nota do ENEM, usando o processo seletivo próprio da faculdade (geralmente uma redação online) via Bolsa Click — sem critério de renda, inscrição o ano todo. Explicar a diferença pra ProUni/FIES (que exigem ENEM). Passo-a-passo. NÃO citar preço em R$; falar em percentuais. LINKAR no primeiro terço pra /faculdades/anhanguera ("bolsas de estudo na Anhanguera"), /sem-enem e /bolsas-de-estudo. Anhanguera é parceira. Seção Perguntas frequentes.',
+  },
+  {
+    slug: 'anhanguera-vale-a-pena-mec-bolsas',
+    title: 'A Anhanguera vale a pena? Nota MEC, bolsas e o que esperar',
+    kind: 'guia',
+    categorySlugs: ['guias-mec', 'bolsas-de-estudo'],
+    briefing: 'Responder de forma equilibrada e honesta se a Anhanguera vale a pena: instituição privada do grupo Cogna, ampla rede de polos, diploma reconhecido pelo MEC, forte em EAD, bolsas de até 80% via Bolsa Click. Orientar o leitor a CONFERIR a nota institucional atual no e-MEC e na página da faculdade (NÃO afirmar um número de nota MEC específico — direcionar pra verificação). Cobrir prós (acessibilidade, flexibilidade, alcance), pontos de atenção (conferir reconhecimento do curso específico) e pra quem faz sentido. NÃO citar preço em R$. LINKAR pra /faculdades/anhanguera e /bolsas-de-estudo. Anhanguera é parceira. Seção Perguntas frequentes.',
+  },
 ]
 
 // ============================================================

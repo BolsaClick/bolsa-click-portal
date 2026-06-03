@@ -21,6 +21,7 @@ import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { normalizeAcademicLevel } from '@/app/lib/academic-level'
 import { titleCasePtBr } from '@/app/lib/utils/title-case'
+import { normalizeBrand } from '@/app/lib/utils/brand'
 
 import CourseCardNew from '@/app/components/CourseCardNew';
 import FiltersPanel from './FiltersPanel';
@@ -100,6 +101,9 @@ export default function SearchResultClient() {
   const { handleSubmit, setValue } = useForm()
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
+
+  // Filtro de instituição (marcas selecionadas na lateral)
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([])
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -453,14 +457,32 @@ export default function SearchResultClient() {
     })
   }, [filteredByModality, curso, cursoNomeCompleto])
 
+  // Marcas presentes no resultado atual (para o filtro de instituição na lateral).
+  const availableBrands = useMemo(() => {
+    const set = new Set<string>()
+    for (const course of deduplicatedCourses as Course[]) {
+      const b = normalizeBrand(course.brand)
+      if (b) set.add(b)
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'))
+  }, [deduplicatedCourses])
+
+  // Aplicar filtro de instituição (se houver marcas selecionadas).
+  const filteredByBrand = useMemo(() => {
+    if (selectedBrands.length === 0) return deduplicatedCourses
+    return deduplicatedCourses.filter((course: Course) =>
+      selectedBrands.includes(normalizeBrand(course.brand)),
+    )
+  }, [deduplicatedCourses, selectedBrands])
+
   const filteredByPrice = useMemo(() => {
-    return deduplicatedCourses.filter((course: { minPrice?: number; montlyFeeToMin?: number; monthlyFee?: number; price?: number }) => {
+    return filteredByBrand.filter((course: { minPrice?: number; montlyFeeToMin?: number; monthlyFee?: number; price?: number }) => {
       // Filtrar por preço se o campo existir
       const price = course.minPrice || course.montlyFeeToMin || course.monthlyFee || course.price || 0;
       return price >= filters.montlyFeeToMin[0] &&
         price <= filters.montlyFeeToMin[1];
     });
-  }, [deduplicatedCourses, filters.montlyFeeToMin]);
+  }, [filteredByBrand, filters.montlyFeeToMin]);
 
   const paginatedCourses = filteredByPrice.slice(
     (currentPage - 1) * itemsPerPage,
@@ -531,6 +553,25 @@ const onSubmit = (data: any) => {
     trackEvent('course_filter_price_changed', {
       price_min: val[0],
       price_max: val[1],
+      course_name: courseNameForAPI,
+      city: cidade,
+      state: estado,
+    })
+  }, [trackEvent, courseNameForAPI, cidade, estado])
+
+  // Resetar marcas selecionadas quando a busca muda (curso/cidade/modalidade/nível).
+  useEffect(() => {
+    setSelectedBrands([])
+  }, [courseNameForAPI, cidade, estado, modalidade, normalizedNivel])
+
+  // Handler para alternar instituição no filtro
+  const handleBrandToggle = useCallback((brand: string) => {
+    setCurrentPage(1)
+    setSelectedBrands((prev) =>
+      prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand],
+    )
+    trackEvent('course_filter_brand_changed', {
+      brand,
       course_name: courseNameForAPI,
       city: cidade,
       state: estado,
@@ -747,6 +788,9 @@ const onSubmit = (data: any) => {
                 onPriceChange={handlePriceChange}
                 onCourseSelect={handleCourseSelect}
                 onClose={() => setShowMobileFilters(false)}
+                availableBrands={availableBrands}
+                selectedBrands={selectedBrands}
+                onBrandToggle={handleBrandToggle}
               />
             </div>
           </aside>
@@ -794,6 +838,9 @@ const onSubmit = (data: any) => {
                     onPriceChange={handlePriceChange}
                     onCourseSelect={handleCourseSelect}
                     onClose={() => setShowMobileFilters(false)}
+                    availableBrands={availableBrands}
+                    selectedBrands={selectedBrands}
+                    onBrandToggle={handleBrandToggle}
                   />
                 </div>
               </div>

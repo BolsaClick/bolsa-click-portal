@@ -57,3 +57,12 @@ export const elysium = axios.create({
     'Content-Type': 'application/json',
   },
 })
+
+// Athena — nova fonte de ofertas (roteia YDUQS/Estácio).
+// Rota pública (sem auth); base URL server-side (chamada via route handler).
+export const athena = axios.create({
+  baseURL: process.env.ATHENA_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+})

@@ -22,6 +22,12 @@ interface FiltersPanelProps {
   onPriceChange: (range: [number, number]) => void
   onCourseSelect: (courseNameClean: string, courseNameFull: string) => void
   onClose?: () => void
+  /** Marcas presentes no resultado atual (já normalizadas: "Anhanguera", "Estácio"…). */
+  availableBrands?: string[]
+  /** Marcas selecionadas no filtro. */
+  selectedBrands?: string[]
+  /** Alterna a seleção de uma marca. */
+  onBrandToggle?: (brand: string) => void
 }
 
 const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
@@ -38,6 +44,9 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
   onPriceChange,
   onCourseSelect,
   onClose,
+  availableBrands,
+  selectedBrands,
+  onBrandToggle,
 }) => {
   const [searchCourse, setSearchCourse] = useState('')
   const [isCourseDropdownOpen, setIsCourseDropdownOpen] = useState(false)
@@ -528,6 +537,48 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
                       )}
                     </span>
                     {label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Instituição — só aparece quando há marcas no resultado */}
+        {availableBrands && availableBrands.length > 0 && onBrandToggle && (
+          <div className="hairline-t pt-6">
+            <label className={labelMono}>
+              <Building2 size={11} />
+              Instituição
+            </label>
+            <div className="space-y-1">
+              {availableBrands.map((brand) => {
+                const isChecked = !!selectedBrands?.includes(brand)
+                return (
+                  <button
+                    key={brand}
+                    type="button"
+                    onClick={() => onBrandToggle(brand)}
+                    aria-pressed={isChecked}
+                    className={`w-full text-left px-3 py-2.5 rounded-xl text-[14px] flex items-center gap-3 transition-all ${
+                      isChecked
+                        ? 'bg-paper-warm text-ink-900 font-medium'
+                        : 'text-ink-700 hover:bg-paper-warm/60'
+                    }`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`w-3.5 h-3.5 rounded-[4px] border-2 flex items-center justify-center transition-colors ${
+                        isChecked ? 'border-bolsa-secondary bg-bolsa-secondary' : 'border-ink-300'
+                      }`}
+                    >
+                      {isChecked && (
+                        <svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                          <path d="M2.5 6.5L5 9L9.5 3.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </span>
+                    {brand}
                   </button>
                 )
               })}

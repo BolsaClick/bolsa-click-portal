@@ -1,6 +1,7 @@
 import { tartarus } from "./axios"
 import { getMostSearchedCourses } from "./get-most-searched-courses"
 import { normalizeAcademicLevel } from "../academic-level"
+import { normalizeBrand } from "../utils/brand"
 
 interface Course {
   modality?: string
@@ -22,6 +23,12 @@ interface CourseWithPrices {
   [key: string]: unknown
 }
 
+/**
+ * Busca curso+cidade pública: mescla a fonte Tartarus (Cogna) com as ofertas
+ * Estácio (via Athena), na mesma lista. As ofertas Athena entram apenas na
+ * página 1 (a paginação client-side roda sobre o array combinado); falha da
+ * Athena não derruba a busca Tartarus (Promise.allSettled).
+ */
 export async function getShowFiltersCourses(
   courseName?: string,
   city?: string,
@@ -31,8 +38,134 @@ export async function getShowFiltersCourses(
   page: number = 1,
   size: number = 10
 ) {
-  // Normalizar para o enum oficial do BFF (aceita aliases legados como CURSOS_PROFISSIONALIZANTES)
   const academicLevel = normalizeAcademicLevel(academicLevelInput)
+
+  const [tartarusResult, athenaResult] = await Promise.allSettled([
+    getTartarusFilteredCourses(courseName, city, state, modality, academicLevel, page, size),
+    // Athena só na primeira página, pra não repetir as mesmas ofertas em páginas seguintes.
+    page === 1
+      ? fetchAthenaOffers({ courseName, city, state, modality, academicLevel })
+      : Promise.resolve([] as CourseWithPrices[]),
+  ])
+
+  const tartarus =
+    tartarusResult.status === 'fulfilled'
+      ? tartarusResult.value
+      : { data: [] as CourseWithPrices[], totalItems: 0, totalPages: 0 }
+  let athenaOffers =
+    athenaResult.status === 'fulfilled' ? athenaResult.value : []
+
+  if (athenaResult.status === 'rejected') {
+    console.error('Erro ao mesclar ofertas Athena:', athenaResult.reason)
+  }
+
+  // Modo descoberta (sem curso): deduplicar ofertas Athena por nome de curso —
+  // evita dezenas de polos do mesmo curso ("PEDAGOGIA" repetido) na vitrine.
+  // Com curso específico, mantemos todas as unidades.
+  const hasCourseName = !!(courseName && courseName.trim())
+  if (!hasCourseName && athenaOffers.length > 0) {
+    const seenNames = new Set<string>()
+    athenaOffers = athenaOffers.filter((o) => {
+      const key = String((o as { name?: string }).name ?? '').trim().toUpperCase()
+      if (!key) return true
+      if (seenNames.has(key)) return false
+      seenNames.add(key)
+      return true
+    })
+  }
+
+  const tartarusData: CourseWithPrices[] = Array.isArray(tartarus?.data)
+    ? tartarus.data
+    : Array.isArray(tartarus)
+      ? (tartarus as CourseWithPrices[])
+      : []
+
+  if (athenaOffers.length === 0) {
+    return tartarus
+  }
+
+  // Round-robin POR MARCA: 1 oferta de cada instituição por vez (Anhanguera,
+  // Pitágoras, Estácio, Unopar, …) pra máxima variedade na 1ª página, em vez de
+  // uma marca dominar. Agrupa Cogna + Estácio por marca normalizada e rotaciona.
+  const buckets = new Map<string, CourseWithPrices[]>()
+  const brandOrder: string[] = []
+  for (const offer of [...tartarusData, ...athenaOffers]) {
+    const key = normalizeBrand((offer as { brand?: string }).brand) || '—'
+    if (!buckets.has(key)) {
+      buckets.set(key, [])
+      brandOrder.push(key)
+    }
+    buckets.get(key)!.push(offer)
+  }
+  const merged: CourseWithPrices[] = []
+  let pushedSomething = true
+  while (pushedSomething) {
+    pushedSomething = false
+    for (const key of brandOrder) {
+      const arr = buckets.get(key)!
+      if (arr.length > 0) {
+        merged.push(arr.shift()!)
+        pushedSomething = true
+      }
+    }
+  }
+
+  const baseTotalItems =
+    typeof (tartarus as { totalItems?: number })?.totalItems === 'number'
+      ? (tartarus as { totalItems: number }).totalItems
+      : tartarusData.length
+  const totalItems = baseTotalItems + athenaOffers.length
+
+  return {
+    ...(typeof tartarus === 'object' && !Array.isArray(tartarus) ? tartarus : {}),
+    data: merged,
+    totalItems,
+    totalPages: Math.ceil(totalItems / Math.max(size, 1)),
+  }
+}
+
+/**
+ * Busca as ofertas Estácio no nosso route handler (/api/athena-offers), que
+ * server-side chama a Athena. Retorna já normalizado como `Course` (source YDUQS).
+ * Degradação graciosa: qualquer falha → [].
+ */
+async function fetchAthenaOffers(params: {
+  courseName?: string
+  city?: string
+  state?: string
+  modality?: string
+  academicLevel?: string
+}): Promise<CourseWithPrices[]> {
+  // Só roda no browser (fetch relativo). Em SSR/prefetch, pular.
+  if (typeof window === 'undefined') return []
+
+  try {
+    const qs = new URLSearchParams()
+    if (params.courseName?.trim()) qs.set('courseName', params.courseName.trim())
+    if (params.city?.trim()) qs.set('city', params.city.trim())
+    if (params.state?.trim()) qs.set('state', params.state.trim())
+    if (params.modality?.trim()) qs.set('modality', params.modality.trim())
+    if (params.academicLevel?.trim()) qs.set('academicLevel', params.academicLevel.trim())
+
+    const res = await fetch(`/api/athena-offers?${qs.toString()}`)
+    if (!res.ok) return []
+    const json = await res.json()
+    return Array.isArray(json?.data) ? (json.data as CourseWithPrices[]) : []
+  } catch (error) {
+    console.error('Erro ao buscar ofertas Athena no portal:', error)
+    return []
+  }
+}
+
+async function getTartarusFilteredCourses(
+  courseName: string | undefined,
+  city: string | undefined,
+  state: string | undefined,
+  modality: string | undefined,
+  academicLevel: string,
+  page: number = 1,
+  size: number = 10
+) {
 
   // Se NÃO houver courseName (undefined, null, string vazia ou só espaços), usar a API de cursos mais buscados
   // Exceto para pós-graduação: o endpoint /offers/most-searched pode não retornar POS; usar sempre cogna/courses/search

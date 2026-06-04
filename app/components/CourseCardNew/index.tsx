@@ -77,6 +77,38 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
       return
     }
 
+    // Trilho YDUQS (Estácio via Athena): checkout por inscrição (não passa pelo /checkout/matricula).
+    if (course.source === 'YDUQS') {
+      trackEvent('course_selected', {
+        course_id: course.id,
+        course_name: course.name,
+        course_brand: course.brand,
+        academic_level: course.academicLevel,
+        modality: courseModality,
+        price: course.minPrice,
+        city: course.city,
+        state: course.uf || course.unitState,
+        source: 'YDUQS',
+        view_mode: viewMode,
+      })
+
+      const params = new URLSearchParams()
+      if (course.offerId) params.set('offerId', course.offerId)
+      if (course.name) params.set('courseName', course.name)
+      if (course.brand) params.set('brand', course.brand)
+      const athenaModality = courseModality || course.modality || course.commercialModality || ''
+      if (athenaModality) params.set('modality', athenaModality)
+      if (course.minPrice) params.set('price', String(course.minPrice))
+      if (course.city) params.set('city', course.city)
+      const athenaState = course.uf || course.unitState || ''
+      if (athenaState) params.set('state', athenaState)
+      if (course.academicLevel) params.set('academicLevel', course.academicLevel)
+
+      localStorage.setItem('selectedCourse', JSON.stringify(course))
+      window.location.href = `/checkout/estacio?${params.toString()}`
+      return
+    }
+
     // Enviar dados para o endpoint de search antes de redirecionar
     if (course.id && course.unitId) {
       try {
@@ -204,20 +236,16 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
   };
 
   const renderUniversityImage = (universityName: string) => {
-    switch (universityName.toLowerCase()) {
-      case 'anhanguera':
-        return '/assets/logo-anhanguera-bolsa-click.svg'
-
-      case 'unopar':
-        return '/assets/logo-unopar.svg'
-      case 'ampli':
-        return '/assets/ampli-logo.png'
-      case 'pitagoras':
-        return '/assets/logo-pitagoras.svg'
-
-      default:
-        return '/assets/logo-bolsa-click-rosa.png'
-    }
+    // Match por substring: marcas YDUQS vêm como nome completo (ex.: "UNIVERSIDADE ESTÁCIO DE SÁ").
+    const n = (universityName || '').toLowerCase()
+    if (n.includes('anhanguera')) return '/assets/logo-anhanguera-bolsa-click.svg'
+    if (n.includes('unopar')) return '/assets/logo-unopar.svg'
+    if (n.includes('ampli')) return '/assets/ampli-logo.png'
+    if (n.includes('pitagoras') || n.includes('pitágoras')) return '/assets/logo-pitagoras.svg'
+    if (n.includes('unime')) return '/assets/logo-unime-p.png'
+    if (n.includes('estacio') || n.includes('estácio')) return '/estacio-logo.png'
+    if (n.includes('wyden')) return '/assets/wyden.svg'
+    return '/assets/logo-bolsa-click-rosa.png'
   }
 
   // Schema.org JSON-LD para SEO

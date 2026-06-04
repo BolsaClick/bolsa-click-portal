@@ -38,4 +38,12 @@ export interface Course {
   totalInstallment?: number
   /** Pós-graduação: valor da parcela mínima */
   minInstallmentValue?: number
+  /**
+   * Fonte da oferta (discriminador de checkout). Ausente = Tartarus (fluxo atual).
+   * 'YDUQS' = oferta Estácio via API Athena (checkout por inscrição).
+   * Obs.: NÃO confundir com `dmhSource.source === 'ATHENAS'` da Cogna (outra coisa).
+   */
+  source?: 'TARTARUS' | 'YDUQS'
+  /** uuid do Offer no catálogo da Athena. Usado só no trilho 'YDUQS'. */
+  offerId?: string
 }

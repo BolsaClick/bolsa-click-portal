@@ -32,10 +32,12 @@ export interface AthenaOffer {
   course?: { name?: string; slug?: string; academicLevel?: string }
   institution?: { name?: string; slug?: string; logo?: string | null }
   unit?: { name?: string; city?: string; state?: string }
-  /** Metadados YDUQS — usados p/ inscrevibilidade (codCurso == codCursoPai). */
+  /** Metadados YDUQS — inscrevibilidade (codCurso==codCursoPai) + duração textual. */
   metadata?: {
     codCurso?: number
     codCursoPai?: number
+    /** Duração textual da oferta, ex.: "4 anos", "18 meses", "8 semestres". */
+    duracao?: string
     [key: string]: unknown
   }
   [key: string]: unknown
@@ -142,6 +144,23 @@ function num(v: number | null | undefined): number {
 }
 
 /**
+ * Converte a duração textual da Athena ("4 anos", "18 meses", "8 semestres")
+ * para meses — pra alimentar o bloco "Período" do card (consistência visual com
+ * os cards Cogna, que sempre trazem duração).
+ */
+function parseDuracaoToMonths(d?: string): number | undefined {
+  if (!d) return undefined
+  const s = d.toLowerCase()
+  const anos = s.match(/(\d+(?:[.,]\d+)?)\s*ano/)
+  if (anos) return Math.round(parseFloat(anos[1].replace(',', '.')) * 12)
+  const sem = s.match(/(\d+)\s*semestre/)
+  if (sem) return parseInt(sem[1], 10) * 6
+  const meses = s.match(/(\d+)\s*m[eê]s/)
+  if (meses) return parseInt(meses[1], 10)
+  return undefined
+}
+
+/**
  * O portal monta o courseName como "Curso - Sufixo" (ex.: "Pedagogia - Licenciatura"),
  * mas a Athena indexa pelo nome limpo ("PEDAGOGIA"). Removemos o sufixo de grau
  * para não zerar a busca. Pega o trecho antes do primeiro " - " (o sufixo é o
@@ -185,7 +204,9 @@ export function normalizeAthenaOffer(raw: AthenaOffer): Course {
     unitState: raw.unit?.state,
     unitId: raw.unitId,
     unitName: raw.unit?.name,
-    durationInMonths: raw.durationMonths ?? undefined,
+    // Duração: usa durationMonths se vier; senão deriva de metadata.duracao
+    // ("4 anos" → 48) pra renderizar o bloco "Período" igual aos cards Cogna.
+    durationInMonths: raw.durationMonths ?? parseDuracaoToMonths(raw.metadata?.duracao),
     shiftOptions: shift ? [shift] : undefined,
   }
 }

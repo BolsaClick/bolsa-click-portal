@@ -167,6 +167,7 @@ const Footer: React.FC = () => {
             <nav aria-label="Faculdades parceiras">
               <ul className="space-y-2.5">
                 <li><Link href="/faculdades/anhanguera" className={linkClass}>Anhanguera</Link></li>
+                <li><Link href="/faculdades/estacio" className={linkClass}>Estácio</Link></li>
                 <li><Link href="/faculdades/unopar" className={linkClass}>Unopar</Link></li>
                 <li><Link href="/faculdades/unime" className={linkClass}>Unime</Link></li>
                 <li><Link href="/faculdades" className={linkClass}>Ver todas as faculdades</Link></li>

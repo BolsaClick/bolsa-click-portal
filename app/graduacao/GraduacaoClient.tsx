@@ -62,6 +62,7 @@ const MODALITIES = [
 
 const PARTNERS = [
   { name: 'Anhanguera', src: '/assets/logo-anhanguera-bolsa-click.svg' },
+  { name: 'Estácio', src: '/estacio-logo.png' },
   { name: 'Unopar', src: '/assets/logo-unopar.svg' },
   { name: 'Pitágoras', src: '/assets/logo-pitagoras.svg' },
   { name: 'Ampli', src: '/assets/ampli-logo.png' },

@@ -8,7 +8,7 @@ export interface CreateCheckoutRequest {
   amountInCents: number
   description: string
   /** Método de pagamento no Elysium */
-  paymentMethod?: 'pix'
+  paymentMethod?: 'pix' | 'card' | 'boleto'
   couponCode?: string
   brand?: string
   channel?: string
@@ -32,6 +32,11 @@ export interface CreateCheckoutResponse {
     updatedAt: string
     expiresAt: string
   }
+  /** Presente quando paymentMethod === 'card' (Asaas, síncrono) */
+  status?: string
+  paid?: boolean
+  asaasPaymentId?: string
+  installmentCount?: number
   amount: number
   originalAmount?: number
   discountApplied?: number

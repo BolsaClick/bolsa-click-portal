@@ -1,8 +1,9 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { getShowcaseOffers } from '../lib/api/get-showcase-offers'
 import {
   ArrowRight,
   GraduationCap,
@@ -29,6 +30,7 @@ const TYPE_LABEL: Record<Exclude<TypeKey, 'TODOS'>, string> = {
 
 const PARTNERS = [
   { name: 'Anhanguera', src: '/assets/logo-anhanguera-bolsa-click.svg' },
+  { name: 'Estácio', src: '/estacio-logo.png' },
   { name: 'Unopar', src: '/assets/logo-unopar.svg' },
   { name: 'Pitágoras', src: '/assets/logo-pitagoras.svg' },
   { name: 'Ampli', src: '/assets/ampli-logo.png' },
@@ -107,6 +109,24 @@ export default function CursosPageClient({ courses }: CursosPageClientProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedType, setSelectedType] = useState<TypeKey>('TODOS')
   const catalogRef = useRef<HTMLElement>(null)
+
+  // Vitrine "Ofertas em destaque": mescla Cogna + Estácio (Athena) dinamicamente.
+  // FEATURED_OFFERS é o fallback inicial (mantém algo renderizado no 1º paint / em falha).
+  const [featuredOffers, setFeaturedOffers] = useState<Offer[]>(FEATURED_OFFERS)
+
+  useEffect(() => {
+    let active = true
+    getShowcaseOffers(6)
+      .then((offers) => {
+        if (active && offers.length > 0) setFeaturedOffers(offers)
+      })
+      .catch(() => {
+        /* mantém o fallback */
+      })
+    return () => {
+      active = false
+    }
+  }, [])
 
   const counts = useMemo(
     () => ({
@@ -271,7 +291,7 @@ export default function CursosPageClient({ courses }: CursosPageClientProps) {
           </div>
 
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 items-stretch">
-            {FEATURED_OFFERS.map((o) => (
+            {featuredOffers.map((o) => (
               <li key={`${o.course}-${o.institution}-${o.city}`} className="h-full">
                 <Link
                   href={o.href}

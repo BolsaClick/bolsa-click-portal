@@ -224,12 +224,10 @@ export default function GraduacaoClient({ offers }: Props) {
             <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 items-stretch stagger-rise">
               {offers.map((o) => {
                 const logo = getBrandLogo(o.brand)
-                const monthly = o.durationInMonths && o.durationInMonths > 0
-                  ? o.minPrice / o.durationInMonths
-                  : o.minPrice
-                const monthlyFull = o.durationInMonths && o.durationInMonths > 0
-                  ? o.maxPrice / o.durationInMonths
-                  : o.maxPrice
+                // Graduação: minPrice/maxPrice JÁ são a mensalidade (ex.: R$108,39),
+                // não o total do curso — não dividir por duração (isso gerava R$3,61/mês).
+                const monthly = o.minPrice
+                const monthlyFull = o.maxPrice
                 return (
                   <li key={`${o.id}-${o.searchTerm}-${o.modality}`} className="h-full">
                     <Link

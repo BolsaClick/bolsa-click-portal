@@ -288,274 +288,267 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(courseSchema) }}
       />
       <article
-        className={`bg-white rounded-xl shadow-card hover:shadow-hover transition-all duration-300 flex flex-col h-full animate-fade-in ${viewMode === "list" ? "p-6" : ""
+        className={`group bg-white rounded-xl shadow-card hover:shadow-hover hover:-translate-y-0.5 transition-all duration-300 flex flex-col h-full animate-fade-in ${viewMode === "list" ? "p-6" : ""
           }`}
         itemScope
         itemType="https://schema.org/Course"
       >
-        <div className="relative p-6 flex flex-col flex-1">
-          <div className="space-y-4 flex flex-col flex-1">
-            {/* Dados principais */}
-            <header>
-              <div className="w-full flex justify-between items-center">
-                <div className="w-full justify-start flex">
-                  <Image
-                    src={renderUniversityImage(course.brand || '')}
-                    alt={`Logo da faculdade ${course.brand}`}
-                    width={70}
-                    height={30}
-                    title={`Faculdade ${course.brand}`}
-                    className="hover:opacity-55 transition-all duration-150"
-                  />
-                </div>
-                <div className="w-full justify-end flex">
-                  <button
-                    title="Favoritar curso"
-                    aria-label="Favoritar curso"
-                    onClick={() => {
-                      const wasFavorite = isFavorite(course)
-                      toggleFavorite(course)
-                      trackEvent(wasFavorite ? 'course_unfavorited' : 'course_favorited', {
-                        course_id: course.id,
-                        course_name: course.name,
-                        course_brand: course.brand,
-                        academic_level: course.academicLevel,
-                        modality: courseModality,
-                        price: course.minPrice,
-                        city: course.city,
-                        view_mode: viewMode,
-                      })
-                    }}
-                    className="p-2 rounded-full bg-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300"
-                  >
-                    <Heart
-                      size={20}
-                      className={
-                        isFavorite(course)
-                          ? "text-red-500 fill-red-500"
-                          : "text-neutral-400"
-                      }
-                    />
-                  </button>
-                </div>
-              </div>
-
-              <h3 className="font-bold text-lg text-neutral-900" itemProp="name">
-                {courseParsed.name || course.name}
-              </h3>
-              <div className="flex flex-wrap gap-2 items-center">
-                {course.academicDegree && (
-                  <p className="text-neutral-600 text-sm" itemProp="educationalCredentialAwarded">
-                    {course.academicDegree === 'BACHARELADO' ? 'Bacharelado' :
-                      course.academicDegree === 'LICENCIATURA' ? 'Licenciatura' :
-                        course.academicDegree === 'TECNOLOGO' ? 'Tecnólogo' :
-                          course.academicDegree === 'ESPECIALISTA' ? 'Especialista' :
-                            course.academicDegree}
-                  </p>
-                )}
-                {(course.academicLevel || course.academicDegree === 'PROFISSIONALIZANTE') && (
-                  <>
-                    {course.academicDegree && <span className="text-neutral-400">•</span>}
-                    <p className="text-neutral-600 text-sm">
-                      {getAcademicLevelLabel(course.academicLevel, course.academicDegree)}
-                    </p>
-                  </>
-                )}
-                {!course.academicDegree && (
-                  <p className="text-neutral-600 text-sm" itemProp="educationalCredentialAwarded">
-                    {courseParsed.type}
-                  </p>
-                )}
-              </div>
-              <p className="text-neutral-600 text-sm" itemScope itemProp="provider" itemType="https://schema.org/CollegeOrUniversity">
-                <span itemProp="name">{capitalizeFirstLetter(course.brand || '')}</span>
-              </p>
-              {course.unitName && (
-                <p className="text-neutral-600 text-sm">
-                  Campus: {capitalizeFirstLetter(course.unitName)}
-                </p>
-              )}
-              {!course.unitName && course.unitDistrict && (
-                <p className="text-neutral-600 text-sm">
-                  Campus: {capitalizeFirstLetter(course.unitDistrict)}
-                </p>
-              )}
-            </header>
-
-            {/* Detalhes rápidos */}
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center">
-                <Star size={18} className="text-yellow-400 mr-1" fill="#FACC15" />
-                <span className="font-medium">4.8</span>
-              </div>
-              <div className="flex items-center text-neutral-600">
-                <Building2 size={18} className="mr-1" />
-                <span itemProp="courseMode">
-                  {course.commercialModality || course.modality}
-                  {course.submodality === 'HIBRIDO_FLEX' && !course.commercialModality && (
-                    <span className="ml-1 text-xs text-emerald-600 font-medium">
-                      (com aulas práticas)
-                    </span>
-                  )}
-                </span>
-              </div>
-              {/* Seletor de turno inline (se necessário) ou exibição estática */}
-              {needsShiftSelection() && course.shiftOptions && course.shiftOptions.length > 0 ? (
-                <div className="flex items-center text-neutral-600">
-                  <Clock size={18} className="mr-1 flex-shrink-0" />
-                  <select
-                    aria-label="Selecione o turno"
-                    value={selectedShift}
-                    onChange={(e) => {
-                      setSelectedShift(e.target.value)
-                      trackEvent('course_shift_selected', {
-                        course_id: course.id,
-                        course_name: course.name,
-                        selected_shift: e.target.value,
-                        available_shifts: course.shiftOptions?.join(', ') || '',
-                        modality: courseModality,
-                      })
-                    }}
-                    className="bg-transparent border-b border-dashed border-neutral-400 hover:border-emerald-500 focus:border-emerald-500 outline-none text-neutral-600 cursor-pointer px-1 py-0 min-w-[120px] text-sm transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <option value="" disabled>Selecione</option>
-                    {course.shiftOptions.map((shift) => (
-                      <option key={shift} value={shift}>
-                        {shift === 'MATUTINO' ? 'Manhã' :
-                          shift === 'VESPERTINO' ? 'Tarde' :
-                            shift === 'NOTURNO' ? 'Noite' :
-                              shift === 'INTEGRAL' ? 'Integral' :
-                                shift}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ) : (
-                <>
-                  {(course.shiftOptions && course.shiftOptions.length > 0) && (
-                    <div className="flex items-center text-neutral-600">
-                      <Clock size={18} className="mr-1" />
-                      <span>{getShiftLabel(course.shiftOptions)}</span>
-                    </div>
-                  )}
-                  {course.classShift && !course.shiftOptions && (
-                    <div className="flex items-center text-neutral-600">
-                      <Clock size={18} className="mr-1" />
-                      {course.classShift}
-                    </div>
-                  )}
-                </>
-              )}
-              {course.city && (
-                <div className="flex items-center text-neutral-600">
-                  <MapPin size={18} className="mr-1" />
-                  <span>{capitalizeFirstLetter(course.city)}</span>
-                </div>
-              )}
+        <div className="relative p-5 flex flex-col flex-1">
+          {/* Topo: logo + favoritar */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex h-8 items-center">
+              <Image
+                src={renderUniversityImage(course.brand || '')}
+                alt={`Logo da faculdade ${course.brand}`}
+                width={70}
+                height={28}
+                title={`Faculdade ${course.brand}`}
+                className="h-7 w-auto object-contain transition-opacity duration-150 group-hover:opacity-80"
+              />
             </div>
+            <button
+              title="Favoritar curso"
+              aria-label="Favoritar curso"
+              onClick={() => {
+                const wasFavorite = isFavorite(course)
+                toggleFavorite(course)
+                trackEvent(wasFavorite ? 'course_unfavorited' : 'course_favorited', {
+                  course_id: course.id,
+                  course_name: course.name,
+                  course_brand: course.brand,
+                  academic_level: course.academicLevel,
+                  modality: courseModality,
+                  price: course.minPrice,
+                  city: course.city,
+                  view_mode: viewMode,
+                })
+              }}
+              className="-mr-1 -mt-1 flex-shrink-0 rounded-full p-2 text-neutral-400 transition-colors duration-300 hover:bg-neutral-50"
+            >
+              <Heart
+                size={20}
+                className={isFavorite(course) ? "text-red-500 fill-red-500" : ""}
+              />
+            </button>
+          </div>
 
-            {/* Período (duração em meses) */}
-            {(typeof course.durationInMonths === 'number' && course.durationInMonths > 0) && (
-              <div className="text-sm text-neutral-600 bg-neutral-50 p-3 rounded-lg">
-                <div className="font-medium mb-1">Período:</div>
-                <div>{course.durationInMonths} {course.durationInMonths === 1 ? 'mês' : 'meses'}</div>
-              </div>
+          {/* Título — 2 linhas reservadas para alinhar os cards */}
+          <h3
+            className="mt-3 min-h-[2.75rem] font-bold text-[17px] leading-snug text-neutral-900 line-clamp-2"
+            itemProp="name"
+          >
+            {courseParsed.name || course.name}
+          </h3>
+
+          {/* Grau • nível */}
+          <div className="mt-1 flex min-h-[1.25rem] flex-wrap items-center gap-x-1.5 text-sm text-neutral-500">
+            {course.academicDegree && (
+              <span itemProp="educationalCredentialAwarded">
+                {course.academicDegree === 'BACHARELADO' ? 'Bacharelado' :
+                  course.academicDegree === 'LICENCIATURA' ? 'Licenciatura' :
+                    course.academicDegree === 'TECNOLOGO' ? 'Tecnólogo' :
+                      course.academicDegree === 'ESPECIALISTA' ? 'Especialista' :
+                        course.academicDegree}
+              </span>
+            )}
+            {(course.academicLevel || course.academicDegree === 'PROFISSIONALIZANTE') && (
+              <>
+                {course.academicDegree && <span className="text-neutral-300">•</span>}
+                <span>{getAcademicLevelLabel(course.academicLevel, course.academicDegree)}</span>
+              </>
+            )}
+            {!course.academicDegree && (
+              <span itemProp="educationalCredentialAwarded">{courseParsed.type}</span>
+            )}
+          </div>
+
+          {/* Marca + campus — 2 linhas reservadas */}
+          <div className="mt-1 min-h-[2.5rem] text-sm">
+            <p
+              className="font-medium text-neutral-700 line-clamp-1"
+              itemScope
+              itemProp="provider"
+              itemType="https://schema.org/CollegeOrUniversity"
+            >
+              <span itemProp="name">{capitalizeFirstLetter(course.brand || '')}</span>
+            </p>
+            {(course.unitName || course.unitDistrict) && (
+              <p className="text-neutral-500 line-clamp-1">
+                Campus: {capitalizeFirstLetter(course.unitName || course.unitDistrict || '')}
+              </p>
+            )}
+          </div>
+
+          {/* Chips: avaliação, modalidade, turno, duração */}
+          <div className="mt-3 flex min-h-[2rem] flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+              <Star size={13} className="text-amber-400" fill="#FBBF24" />
+              4.8
+            </span>
+
+            <span
+              className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700"
+              itemProp="courseMode"
+            >
+              <Building2 size={13} />
+              {course.commercialModality || course.modality}
+            </span>
+
+            {course.submodality === 'HIBRIDO_FLEX' && !course.commercialModality && (
+              <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                com aulas práticas
+              </span>
             )}
 
-            {/* Preço e Botão */}
-            <div className="border-t border-neutral-100 pt-4 mt-auto" itemProp="hasCourseInstance" itemScope itemType="https://schema.org/CourseInstance">
-              <div className="flex justify-between items-end mb-4">
-                <div>
-                  <span className="text-sm text-neutral-600">
-                    {course.academicLevel === 'POS_GRADUACAO' &&
-                      typeof course.totalInstallment === 'number' &&
-                      typeof course.minInstallmentValue === 'number'
-                      ? 'Até:'
-                      : 'Por:'}
-                  </span>
-                  <div className="text-emerald-500 text-2xl font-bold" itemProp="offers" itemScope itemType="https://schema.org/Offer">
-                    {course.academicLevel === 'POS_GRADUACAO' &&
-                      typeof course.totalInstallment === 'number' &&
-                      typeof course.minInstallmentValue === 'number' ? (
-                      <span itemProp="price">
-                        {course.totalInstallment}x de{' '}
-                        {course.minInstallmentValue.toLocaleString('pt-BR', {
-                          style: 'currency',
-                          currency: 'BRL',
-                        })}
-                      </span>
-                    ) : (
-                      <span itemProp="price">
-                        {(course.minPrice / 1).toLocaleString('pt-BR', {
-                          style: 'currency',
-                          currency: 'BRL',
-                        })}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-
-              {/* Botão */}
-              <button
-                onClick={handleClick}
-                disabled={needsShiftSelection() && !selectedShift}
-                title={
-                  needsShiftSelection() && !selectedShift
-                    ? "Selecione o turno"
-                    : "Avançar para matrícula"
-                }
-                aria-label="Avançar para matrícula"
-                className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-300 mb-4 ${needsShiftSelection() && !selectedShift
-                    ? 'bg-gray-400 text-white cursor-not-allowed'
-                    : 'bg-emerald-500 text-white hover:bg-emerald-600 hover:shadow-lg hover:scale-[1.02]'
-                  }`}
-              >
-                {needsShiftSelection() && !selectedShift ? (
-                  'Selecione o turno'
-                ) : (
-                  'Inscreva-se'
-                )}
-              </button>
-
-              {/* Localização */}
-              <div className="flex items-start text-sm text-neutral-600">
-                <MapPin size={16} className="mr-2 mt-0.5 flex-shrink-0" />
-                <p
-                  className="truncate overflow-hidden text-ellipsis whitespace-nowrap"
-                  title={
-                    course.unitAddress
-                      ? `${capitalizeFirstLetter(course.unitAddress)}${course.unitNumber ? `, ${course.unitNumber}` : ''}${course.unitCity || course.city ? ` - ${course.unitCity || course.city}` : ''}${course.unitState || course.uf ? ` - ${course.unitState || course.uf}` : ''}${course.unitPostalCode ? ` - CEP: ${course.unitPostalCode}` : ''}`
-                      : course.unit
-                        ? `${course.unit}${course.unitPostalCode ? ` - CEP: ${course.unitPostalCode}` : ''}`
-                        : `${course.unitCity || course.city || ''}${course.unitCity || course.city ? ' - ' : ''}${course.unitState || course.uf || ''}${course.unitPostalCode ? ` - CEP: ${course.unitPostalCode}` : ''}`
-                  }
+            {/* Turno: seletor inline (se necessário) ou chip estático */}
+            {needsShiftSelection() && course.shiftOptions && course.shiftOptions.length > 0 ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-700">
+                <Clock size={13} className="flex-shrink-0" />
+                <select
+                  aria-label="Selecione o turno"
+                  value={selectedShift}
+                  onChange={(e) => {
+                    setSelectedShift(e.target.value)
+                    trackEvent('course_shift_selected', {
+                      course_id: course.id,
+                      course_name: course.name,
+                      selected_shift: e.target.value,
+                      available_shifts: course.shiftOptions?.join(', ') || '',
+                      modality: courseModality,
+                    })
+                  }}
+                  className="cursor-pointer bg-transparent text-xs font-medium text-neutral-700 outline-none"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  {course.unitAddress ? (
-                    <>
-                      {capitalizeFirstLetter(course.unitAddress)}
-                      {course.unitNumber && `, ${course.unitNumber}`}
-                      {course.unitCity || course.city ? ` - ${course.unitCity || course.city}` : ''}
-                      {course.unitState || course.uf ? ` - ${course.unitState || course.uf}` : ''}
-                      {course.unitPostalCode && ` - CEP: ${course.unitPostalCode}`}
-                    </>
-                  ) : course.unit ? (
-                    <>
-                      {course.unit}
-                      {course.unitPostalCode && ` - CEP: ${course.unitPostalCode}`}
-                    </>
-                  ) : (
-                    <>
-                      {course.unitCity || course.city || ''}
-                      {course.unitCity || course.city ? ' - ' : ''}
-                      {course.unitState || course.uf || ''}
-                      {course.unitPostalCode && ` - CEP: ${course.unitPostalCode}`}
-                    </>
-                  )}
-                </p>
-              </div>
+                  <option value="" disabled>Turno</option>
+                  {course.shiftOptions.map((shift) => (
+                    <option key={shift} value={shift}>
+                      {shift === 'MATUTINO' ? 'Manhã' :
+                        shift === 'VESPERTINO' ? 'Tarde' :
+                          shift === 'NOTURNO' ? 'Noite' :
+                            shift === 'INTEGRAL' ? 'Integral' :
+                              shift}
+                    </option>
+                  ))}
+                </select>
+              </span>
+            ) : (
+              <>
+                {(course.shiftOptions && course.shiftOptions.length > 0) && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-700">
+                    <Clock size={13} />
+                    {getShiftLabel(course.shiftOptions)}
+                  </span>
+                )}
+                {course.classShift && !course.shiftOptions && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-700">
+                    <Clock size={13} />
+                    {course.classShift}
+                  </span>
+                )}
+              </>
+            )}
+
+            {(typeof course.durationInMonths === 'number' && course.durationInMonths > 0) && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-700">
+                {course.durationInMonths} {course.durationInMonths === 1 ? 'mês' : 'meses'}
+              </span>
+            )}
+          </div>
+
+          {/* Preço + Botão + endereço — fixado no rodapé do card */}
+          <div
+            className="mt-auto border-t border-neutral-100 pt-4"
+            itemProp="hasCourseInstance"
+            itemScope
+            itemType="https://schema.org/CourseInstance"
+          >
+            <div className="mb-3 flex items-baseline gap-1.5">
+              <span className="text-sm text-neutral-500">
+                {course.academicLevel === 'POS_GRADUACAO' &&
+                  typeof course.totalInstallment === 'number' &&
+                  typeof course.minInstallmentValue === 'number'
+                  ? 'Até'
+                  : 'Por'}
+              </span>
+              <span
+                className="text-emerald-500 text-[26px] font-bold leading-none"
+                itemProp="offers"
+                itemScope
+                itemType="https://schema.org/Offer"
+              >
+                {course.academicLevel === 'POS_GRADUACAO' &&
+                  typeof course.totalInstallment === 'number' &&
+                  typeof course.minInstallmentValue === 'number' ? (
+                  <span itemProp="price">
+                    {course.totalInstallment}x de{' '}
+                    {course.minInstallmentValue.toLocaleString('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL',
+                    })}
+                  </span>
+                ) : (
+                  <span itemProp="price">
+                    {(course.minPrice / 1).toLocaleString('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL',
+                    })}
+                  </span>
+                )}
+              </span>
+            </div>
+
+            <button
+              onClick={handleClick}
+              disabled={needsShiftSelection() && !selectedShift}
+              title={
+                needsShiftSelection() && !selectedShift
+                  ? "Selecione o turno"
+                  : "Avançar para matrícula"
+              }
+              aria-label="Avançar para matrícula"
+              className={`w-full rounded-lg py-3 px-4 font-semibold transition-all duration-300 ${needsShiftSelection() && !selectedShift
+                  ? 'cursor-not-allowed bg-gray-300 text-white'
+                  : 'bg-emerald-500 text-white hover:bg-emerald-600 hover:shadow-lg'
+                }`}
+            >
+              {needsShiftSelection() && !selectedShift ? 'Selecione o turno' : 'Inscreva-se'}
+            </button>
+
+            <div className="mt-3 flex items-center text-xs text-neutral-400">
+              <MapPin size={14} className="mr-1.5 flex-shrink-0" />
+              <p
+                className="truncate"
+                title={
+                  course.unitAddress
+                    ? `${capitalizeFirstLetter(course.unitAddress)}${course.unitNumber ? `, ${course.unitNumber}` : ''}${course.unitCity || course.city ? ` - ${course.unitCity || course.city}` : ''}${course.unitState || course.uf ? ` - ${course.unitState || course.uf}` : ''}${course.unitPostalCode ? ` - CEP: ${course.unitPostalCode}` : ''}`
+                    : course.unit
+                      ? `${course.unit}${course.unitPostalCode ? ` - CEP: ${course.unitPostalCode}` : ''}`
+                      : `${course.unitCity || course.city || ''}${course.unitCity || course.city ? ' - ' : ''}${course.unitState || course.uf || ''}${course.unitPostalCode ? ` - CEP: ${course.unitPostalCode}` : ''}`
+                }
+              >
+                {course.unitAddress ? (
+                  <>
+                    {capitalizeFirstLetter(course.unitAddress)}
+                    {course.unitNumber && `, ${course.unitNumber}`}
+                    {course.unitCity || course.city ? ` - ${course.unitCity || course.city}` : ''}
+                    {course.unitState || course.uf ? ` - ${course.unitState || course.uf}` : ''}
+                    {course.unitPostalCode && ` - CEP: ${course.unitPostalCode}`}
+                  </>
+                ) : course.unit ? (
+                  <>
+                    {course.unit}
+                    {course.unitPostalCode && ` - CEP: ${course.unitPostalCode}`}
+                  </>
+                ) : (
+                  <>
+                    {course.unitCity || course.city || ''}
+                    {course.unitCity || course.city ? ' - ' : ''}
+                    {course.unitState || course.uf || ''}
+                    {course.unitPostalCode && ` - CEP: ${course.unitPostalCode}`}
+                  </>
+                )}
+              </p>
             </div>
           </div>
         </div>

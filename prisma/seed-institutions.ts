@@ -285,7 +285,7 @@ Os principais diferenciais da Estácio incluem: mais de 50 anos de tradição em
       'estacio graduação', 'estacio pós-graduação',
       'estacio mensalidade', 'estacio rio de janeiro',
     ],
-    metaTitle: 'Faculdade Estácio - Bolsas de Estudo com até 70% de Desconto | Bolsa Click',
+    metaTitle: 'Faculdade Estácio - Bolsas de Estudo com até 80% de Desconto | Bolsa Click',
     metaDescription: 'Encontre bolsas de estudo na Faculdade Estácio com descontos exclusivos. Nota 4 no MEC, mais de 50 anos de tradição. 100+ campus pelo Brasil. Inscreva-se grátis!',
     isActive: true,
     order: 6,

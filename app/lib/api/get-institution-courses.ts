@@ -5,8 +5,13 @@
 
 import { unstable_cache } from 'next/cache'
 import { getShowFiltersCourses } from './get-courses-filter'
+import { searchAthenaOffers, normalizeAthenaOffer } from './athena-offers'
+import { normalizeBrand } from '../utils/brand'
 import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
 import type { Course } from '@/app/interface/course'
+
+/** Marcas servidas pela API Athena (YDUQS) — buscadas server-side à parte. */
+const YDUQS_BRANDS = new Set(['Estácio', 'Wyden'])
 
 function normalize(s: string): string {
   return s
@@ -37,18 +42,42 @@ async function fetchAllOffersByCourse(): Promise<Course[]> {
 }
 
 /**
+ * Ofertas YDUQS (Estácio/Wyden) via Athena — fetch SERVER-SIDE (o merge padrão de
+ * getShowFiltersCourses só roda no browser). Cobre o TOP_CURSOS e normaliza p/ Course.
+ */
+async function fetchAthenaOffersByCourse(): Promise<Course[]> {
+  const results = await Promise.all(
+    TOP_CURSOS.map(curso =>
+      searchAthenaOffers({ courseName: curso.apiCourseName, academicLevel: 'GRADUACAO' })
+        .then(list => list.map(normalizeAthenaOffer))
+        .catch(error => {
+          console.error(`[institution-courses] Athena falhou em ${curso.apiCourseName}:`, error)
+          return [] as Course[]
+        })
+    )
+  )
+  return results.flat()
+}
+
+/**
  * Pra uma dada brand de faculdade, retorna 1 oferta por curso único (a mais barata).
  * Cobre todo o TOP_CURSOS (22) → diversidade real de cursos.
  * Cache 1h via unstable_cache.
  */
 export const getInstitutionCourses = unstable_cache(
   async (brandName: string): Promise<Course[]> => {
-    const brandKey = normalize(brandName)
-    const allOffers = await fetchAllOffersByCourse()
+    const brandKey = normalizeBrand(brandName)
+    const tartarusOffers = await fetchAllOffersByCourse()
+    // Ofertas YDUQS (Estácio) vêm da Athena server-side. Sem isso, a página de
+    // marca da Estácio ficava sem ofertas/preços e o AggregateOffer não era emitido.
+    const athenaOffers = YDUQS_BRANDS.has(brandKey)
+      ? await fetchAthenaOffersByCourse()
+      : []
+    const allOffers = [...tartarusOffers, ...athenaOffers]
 
-    // Filtra por brand
+    // Filtra por brand — normalizeBrand agrupa as razões sociais YDUQS sob "Estácio".
     const brandOffers = allOffers.filter(
-      o => normalize(o.brand || '') === brandKey
+      o => normalizeBrand((o as Course).brand) === brandKey
     )
 
     // Dedup por nome do curso, mantendo a oferta mais barata

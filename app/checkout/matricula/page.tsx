@@ -661,6 +661,10 @@ const isFormValidForPayment =
       || offerDetails?.academicLevel === 'CURSO_PROFISSIONALIZANTE')
     && (offerDetails?.paymentMethods?.length ?? 0) > 0
 
+  // Campo de voucher digitado à mão: liberado somente no checkout profissionalizante.
+  // Pós-graduação continua com o voucher GALENA+15 aplicado automaticamente (sem campo manual).
+  const showVoucherField = offerDetails?.academicLevel === 'CURSO_PROFISSIONALIZANTE'
+
   // Auto-selecionar boleto 18x para pós-graduação
   useEffect(() => {
     if (!offerDetails || offerDetails.academicLevel !== 'POS_GRADUACAO') return
@@ -2056,7 +2060,8 @@ const isFormValidForPayment =
                             O valor da matrícula e das mensalidades será pago diretamente à instituição de ensino.
                           </p>
 
-                          {/* Voucher */}
+                          {/* Voucher — digitação manual liberada somente no profissionalizante */}
+                          {showVoucherField && (
                           <div className="mt-4 p-3 border border-dashed border-gray-300 rounded-lg bg-gray-50">
                             <label className="block text-xs font-medium text-gray-700 mb-2">Possui um voucher?</label>
                             <div className="flex gap-2">
@@ -2092,6 +2097,7 @@ const isFormValidForPayment =
                               </p>
                             )}
                           </div>
+                          )}
 
                           <button
                             type="submit"

@@ -1,4 +1,6 @@
 import { tartarus } from './axios'
+import { searchAthenaOffers, normalizeAthenaOffer } from './athena-offers'
+import { normalizeBrand } from '../utils/brand'
 
 export type VitrineLevel = 'GRADUACAO' | 'POS_GRADUACAO' | 'CURSO_PROFISSIONALIZANTE'
 
@@ -35,19 +37,23 @@ type Modality = 'EAD' | 'PRESENCIAL' | 'SEMIPRESENCIAL'
 type VitrineSlot = {
   courseName: string
   modality?: Modality
+  /** Fonte da oferta. 'YDUQS' busca na Athena (Estácio); default Cogna (Tartarus). */
+  source?: 'COGNA' | 'YDUQS'
 }
 
 // Slots curados por nível. Cada slot vira 1 card. Modalidade opcional —
 // quando definida, força a query a pegar especificamente aquela modalidade
 // (útil pra mostrar a mesma graduação em EAD/Presencial, por exemplo).
 const SLOTS_BY_LEVEL: Record<VitrineLevel, VitrineSlot[]> = {
+  // Rebalanceado: alterna Cogna (Anhanguera/Unopar) e YDUQS (Estácio) pra dar
+  // presença de marca equilibrada na vitrine de graduação (antes era 100% Cogna).
   GRADUACAO: [
     { courseName: 'analise e desenvolvimento', modality: 'EAD' },
+    { courseName: 'Psicologia', source: 'YDUQS' },
     { courseName: 'engenharia de producao', modality: 'SEMIPRESENCIAL' },
-    { courseName: 'analise e desenvolvimento', modality: 'PRESENCIAL' },
-    { courseName: 'administracao' },
-    { courseName: 'pedagogia' },
+    { courseName: 'Pedagogia', source: 'YDUQS' },
     { courseName: 'direito' },
+    { courseName: 'Enfermagem', source: 'YDUQS' },
   ],
   POS_GRADUACAO: [
     { courseName: 'mba gestao empresarial' },
@@ -138,6 +144,53 @@ async function fetchOne(level: VitrineLevel, slot: VitrineSlot): Promise<Vitrine
   }
 }
 
+// Busca 1 oferta Estácio (YDUQS) via Athena para o slot. Graduação: minPrice já é
+// mensalidade (consistente com o card de graduação, que não divide por duração).
+async function fetchOneYduqs(level: VitrineLevel, slot: VitrineSlot): Promise<VitrineCourse | null> {
+  try {
+    const list = await searchAthenaOffers({
+      courseName: slot.courseName,
+      academicLevel: level,
+      modality: slot.modality,
+    })
+    const offers = list.map(normalizeAthenaOffer).filter((o) => !!o.offerId)
+    if (offers.length === 0) return null
+    // Preferir match exato do nome (ex.: "Administração" e não "Administração Pública");
+    // senão a oferta mais barata.
+    const norm = (s: string) =>
+      s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
+    const target = norm(slot.courseName)
+    const offer =
+      offers.find((o) => norm(o.name ?? '') === target) ||
+      offers.slice().sort((a, b) => (a.minPrice ?? 1e9) - (b.minPrice ?? 1e9))[0]
+    if (!offer.name) return null
+
+    const minPrice = Number(offer.minPrice ?? 0)
+    const maxPrice = Number(offer.maxPrice ?? 0)
+    const discountPct = maxPrice > 0 && minPrice > 0
+      ? Math.round((1 - minPrice / maxPrice) * 100)
+      : 0
+
+    return {
+      id: offer.offerId || String(offer.id) || slot.courseName,
+      name: offer.name,
+      brand: normalizeBrand(offer.brand) || 'Estácio',
+      modality: ((offer.modality || '').toUpperCase() as VitrineCourse['modality']) || 'EAD',
+      durationInMonths: offer.durationInMonths ?? null,
+      minPrice,
+      maxPrice,
+      discountPct,
+      city: capitalizeCity(offer.city),
+      uf: offer.uf ?? offer.unitState ?? null,
+      searchTerm: slot.courseName,
+      academicLevel: level,
+    }
+  } catch (error) {
+    console.error(`[vitrine] Athena erro "${slot.courseName}" (${level}):`, error)
+    return null
+  }
+}
+
 type GetVitrineOptions = {
   levels?: VitrineLevel[]
   perLevel?: number
@@ -151,7 +204,9 @@ export async function getVitrine({
 
   const fetches = targetLevels.flatMap((level) => {
     const slots = (SLOTS_BY_LEVEL[level] ?? []).slice(0, perLevel)
-    return slots.map((slot) => fetchOne(level, slot))
+    return slots.map((slot) =>
+      slot.source === 'YDUQS' ? fetchOneYduqs(level, slot) : fetchOne(level, slot),
+    )
   })
 
   const results = await Promise.all(fetches)

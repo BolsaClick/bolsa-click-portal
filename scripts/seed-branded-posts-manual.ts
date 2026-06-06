@@ -345,6 +345,158 @@ const POSTS: Post[] = [
 <p>Para cursos teóricos e da área da saúde (no formato semipresencial), e pra quem precisa de flexibilidade, sim — o EAD reconhecido pelo MEC tem a mesma validade do presencial.</p>
 `.trim(),
   },
+  {
+    slug: 'estacio-ead-como-conseguir-bolsa',
+    title: 'Estácio EAD: como conseguir bolsa de estudo em 2026',
+    metaTitle: 'Estácio EAD: como conseguir bolsa de estudo em 2026',
+    metaDescription:
+      'Como conseguir bolsa de estudo na Estácio EAD: busque o curso, compare as ofertas e inscreva-se grátis. Descontos de até 80% sem nota de corte, em cursos reconhecidos pelo MEC.',
+    excerpt:
+      'O passo a passo pra garantir bolsa de até 80% na Estácio EAD em 2026 — sem nota de corte, com inscrição gratuita e diploma reconhecido pelo MEC.',
+    keywords: [
+      'estacio ead', 'bolsa estacio', 'bolsa de estudo estacio', 'estacio ead bolsa',
+      'estacio ead como funciona', 'faculdade estacio ead', 'estacio desconto', 'estacio mensalidade',
+    ],
+    tags: ['Estácio', 'EAD', 'Bolsa de estudo'],
+    imageAlt: 'Estudante assistindo aula online de um curso EAD da Estácio com bolsa de estudo',
+    categorySlugs: ['ead', 'bolsas-de-estudo'],
+    featured: true,
+    content: `
+<p>Para conseguir bolsa de estudo na <strong>Estácio EAD</strong>, o caminho mais rápido é buscar o curso aqui no Bolsa Click, comparar as ofertas dos polos e se inscrever gratuitamente — os descontos chegam a <strong>até 80%</strong> na mensalidade, sem nota de corte, em cursos reconhecidos pelo MEC. <a href="/faculdades/estacio">Veja as bolsas de estudo na Estácio</a> e garanta a sua.</p>
+
+<h2>Como funciona a bolsa na Estácio EAD</h2>
+<p>Fundada em 1970 no Rio de Janeiro e hoje parte do grupo Yduqs, a Estácio é uma das maiores e mais tradicionais instituições de ensino superior privado do Brasil, com forte presença em ensino a distância. As bolsas oferecidas via Bolsa Click são <strong>bolsas próprias da faculdade</strong> — diferentes do ProUni e do FIES, que são programas federais. Na prática, isso traz três vantagens pra quem quer estudar EAD:</p>
+<ul>
+  <li><strong>Sem nota de corte:</strong> você não disputa vaga por pontuação de ENEM.</li>
+  <li><strong>Sem critério de renda:</strong> a bolsa não depende de comprovação de renda familiar.</li>
+  <li><strong>Inscrição o ano todo:</strong> não há janela fechada como nas edições do ProUni.</li>
+</ul>
+<p>O desconto é aplicado já na primeira mensalidade e vale durante todo o curso, enquanto você mantém a matrícula ativa e a aprovação acadêmica.</p>
+
+<h2>Passo a passo pra garantir sua bolsa</h2>
+<ol>
+  <li><strong>Busque o curso</strong> que você quer fazer (Pedagogia, Administração, Análise e Desenvolvimento de Sistemas, Gestão de RH e muitos outros têm oferta EAD).</li>
+  <li><strong>Compare as ofertas</strong> dos polos da Estácio e veja o percentual de desconto disponível antes de decidir.</li>
+  <li><strong>Faça a inscrição gratuita</strong> e conclua a matrícula direto com a instituição.</li>
+  <li><strong>Pague a mensalidade já com a bolsa</strong> — o pagamento é feito à faculdade, nunca ao Bolsa Click.</li>
+</ol>
+<p>Quer entender todas as modalidades de desconto antes? Veja o <a href="/bolsas-de-estudo">guia completo de bolsas de estudo</a>.</p>
+
+<h2>Quais cursos da Estácio têm bolsa em EAD</h2>
+<p>A modalidade a distância costuma concentrar os maiores percentuais de desconto, porque a mensalidade-base do EAD já parte de um valor menor que o presencial. Cursos teóricos como Pedagogia, Administração, Ciências Contábeis, Gestão de Recursos Humanos, Marketing e Análise e Desenvolvimento de Sistemas estão entre os mais procurados em EAD. Cursos com forte carga prática (como Enfermagem) seguem o modelo semipresencial, com encontros e estágios presenciais em polos credenciados, conforme exigência do MEC.</p>
+
+<h2>EAD da Estácio é reconhecido pelo MEC?</h2>
+<p>Sim. A Estácio é uma instituição reconhecida pelo Ministério da Educação, com nota institucional 4 (numa escala de 1 a 5), e o diploma de um curso EAD tem a mesma validade de um curso presencial. Ainda assim, o cuidado vale sempre: antes de matricular, confirme o reconhecimento do <strong>curso específico</strong> diretamente no portal oficial <a href="https://emec.mec.gov.br" rel="nofollow noopener" target="_blank">e-MEC</a>.</p>
+
+<h2>Perguntas frequentes</h2>
+<h3>Preciso de ENEM pra conseguir bolsa na Estácio EAD?</h3>
+<p>Não. A bolsa própria da Estácio via Bolsa Click aceita o processo seletivo da própria faculdade (geralmente uma redação online), sem exigir nota do ENEM.</p>
+<h3>De quanto é o desconto?</h3>
+<p>Os descontos nas mensalidades chegam a até 80%, variando por curso, modalidade e polo. Veja o valor real de cada oferta na <a href="/faculdades/estacio">página da Estácio</a>.</p>
+<h3>A bolsa vale durante todo o curso?</h3>
+<p>Sim. O desconto acompanha você do primeiro ao último semestre, enquanto a matrícula estiver ativa e você mantiver a aprovação acadêmica.</p>
+<h3>O diploma EAD vale o mesmo que o presencial?</h3>
+<p>Sim. Para o MEC, o diploma de um curso a distância reconhecido tem exatamente a mesma validade do presencial.</p>
+`.trim(),
+  },
+  {
+    slug: 'como-conseguir-bolsa-estacio-sem-enem',
+    title: 'Como conseguir bolsa na Estácio sem ENEM',
+    metaTitle: 'Como conseguir bolsa na Estácio sem ENEM',
+    metaDescription:
+      'Dá pra conseguir bolsa na Estácio sem nota do ENEM: use o processo seletivo próprio da faculdade (redação online), sem critério de renda. Veja o passo a passo.',
+    excerpt:
+      'Não fez ou não quer usar o ENEM? Veja como garantir bolsa de estudo na Estácio pelo processo seletivo próprio — sem nota de corte e com inscrição o ano todo.',
+    keywords: [
+      'bolsa estacio sem enem', 'estacio sem enem', 'como entrar na estacio sem enem',
+      'bolsa de estudo estacio', 'estacio processo seletivo', 'estacio vestibular online', 'bolsa estacio',
+    ],
+    tags: ['Estácio', 'Sem ENEM', 'Bolsa de estudo'],
+    imageAlt: 'Pessoa fazendo redação online no processo seletivo da Estácio para conseguir bolsa sem ENEM',
+    categorySlugs: ['bolsas-de-estudo', 'ead'],
+    content: `
+<p>Sim, dá pra conseguir bolsa na <strong>Estácio sem ENEM</strong>. As bolsas próprias da faculdade — disponíveis via Bolsa Click — aceitam o <strong>processo seletivo da própria instituição</strong>, geralmente uma redação online, sem exigir nota do ENEM e sem critério de renda. <a href="/faculdades/estacio">Veja as bolsas de estudo na Estácio</a> e inscreva-se gratuitamente.</p>
+
+<h2>Por que não precisa de ENEM</h2>
+<p>O ENEM só é obrigatório nos programas <strong>federais</strong>: ProUni (bolsa) e FIES (financiamento). A bolsa própria de uma faculdade particular como a Estácio é negociada diretamente entre a instituição e o estudante — por isso ela pode usar o próprio vestibular como porta de entrada. Resultado: você não depende de ter feito o ENEM nem de atingir uma nota de corte.</p>
+<p>Se você quer entender todos os caminhos de ingresso sem a prova, veja também o guia de <a href="/sem-enem">faculdade sem ENEM</a>.</p>
+
+<h2>Como funciona o processo seletivo próprio</h2>
+<ul>
+  <li><strong>Redação online:</strong> a forma mais comum. Você escreve um texto sobre um tema proposto, no conforto de casa.</li>
+  <li><strong>Sem nota mínima de corte:</strong> o objetivo é avaliar a escrita, não ranquear por pontuação.</li>
+  <li><strong>Resultado rápido:</strong> em geral a aprovação sai em pouco tempo, agilizando a matrícula.</li>
+</ul>
+<p>Quem já fez o ENEM em qualquer edição também pode usar a nota como atalho — mas isso é uma opção, não uma exigência.</p>
+
+<h2>Passo a passo pra garantir a bolsa sem ENEM</h2>
+<ol>
+  <li>Busque o curso desejado e veja as <a href="/bolsas-de-estudo">bolsas de estudo</a> disponíveis.</li>
+  <li>Escolha a oferta da Estácio com o melhor desconto pra você.</li>
+  <li>Faça o processo seletivo próprio (a redação online) e a inscrição gratuita.</li>
+  <li>Conclua a matrícula e comece a pagar a mensalidade já com a bolsa aplicada.</li>
+</ol>
+
+<h2>Sem ENEM e sem comprovar renda?</h2>
+<p>Isso mesmo. Ao contrário do ProUni, a bolsa própria não exige comprovação de renda familiar. Ela é uma alternativa pensada pra quem não atinge os critérios do programa federal, não fez o ENEM, ou simplesmente não quer esperar as janelas de inscrição que abrem duas vezes por ano. Antes de fechar, confirme sempre o reconhecimento do curso no <a href="https://emec.mec.gov.br" rel="nofollow noopener" target="_blank">e-MEC</a>.</p>
+
+<h2>Perguntas frequentes</h2>
+<h3>É verdade que consigo bolsa na Estácio sem ENEM?</h3>
+<p>Sim. A bolsa própria usa o processo seletivo da faculdade (normalmente uma redação online), sem exigir ENEM.</p>
+<h3>Preciso comprovar renda?</h3>
+<p>Não. Diferente do ProUni, a bolsa própria da Estácio não tem critério de renda.</p>
+<h3>Quando posso me inscrever?</h3>
+<p>O ano todo. Não há janela fechada como nas edições do ProUni e do FIES.</p>
+<h3>Quanto desconto eu consigo?</h3>
+<p>Os descontos chegam a até 80% na mensalidade, conforme o curso e o polo. Confira cada oferta na <a href="/faculdades/estacio">página da Estácio</a>.</p>
+`.trim(),
+  },
+  {
+    slug: 'estacio-vale-a-pena-mec-bolsas',
+    title: 'A Estácio vale a pena? Nota MEC, bolsas e o que esperar',
+    metaTitle: 'A Estácio vale a pena? Nota MEC, bolsas e o que esperar',
+    metaDescription:
+      'A Estácio vale a pena? Veja prós, pontos de atenção, como conferir a nota no MEC e as bolsas de até 80% — um panorama honesto pra decidir.',
+    excerpt:
+      'Um panorama honesto da Estácio: tradição desde 1970, forte em EAD, nota 4 no MEC e bolsas de até 80%. Veja os prós, os cuidados e pra quem faz sentido.',
+    keywords: [
+      'estacio vale a pena', 'estacio é boa', 'estacio nota mec', 'faculdade estacio',
+      'bolsa de estudo estacio', 'estacio é reconhecida pelo mec', 'estacio ead vale a pena',
+    ],
+    tags: ['Estácio', 'MEC', 'Bolsa de estudo'],
+    imageAlt: 'Estudante avaliando se a faculdade Estácio vale a pena, com nota do MEC e bolsa de estudo',
+    categorySlugs: ['guias-mec', 'bolsas-de-estudo'],
+    content: `
+<p>A <strong>Estácio</strong> vale a pena pra quem busca uma faculdade acessível, com tradição de mais de 50 anos, forte presença em EAD, diploma reconhecido pelo MEC (nota institucional 4) e bolsas de até 80% na mensalidade. Como toda instituição grande, o que mais pesa na decisão é o <strong>curso específico</strong> e a sua nota atual no MEC — que dá pra conferir em minutos. <a href="/faculdades/estacio">Veja as bolsas de estudo na Estácio</a> e compare antes de decidir.</p>
+
+<h2>Os pontos fortes</h2>
+<ul>
+  <li><strong>Tradição:</strong> fundada em 1970 no Rio de Janeiro, é uma das instituições privadas mais consolidadas do país, hoje parte do grupo Yduqs.</li>
+  <li><strong>Acessibilidade:</strong> bolsas próprias de até 80%, sem nota de corte e sem critério de renda, via Bolsa Click.</li>
+  <li><strong>Alcance nacional:</strong> mais de 100 campus e polos de EAD presentes em todos os estados brasileiros.</li>
+  <li><strong>Reconhecimento:</strong> instituição reconhecida pelo MEC, com nota institucional 4 e diploma de validade nacional.</li>
+</ul>
+
+<h2>Os pontos de atenção</h2>
+<p>Ser honesto também é parte de um bom panorama. Em redes grandes, a qualidade pode variar entre cursos e unidades — por isso a recomendação é sempre olhar o <strong>curso que você quer</strong>, e não só a instituição como um todo. Verifique a estrutura do polo mais próximo (laboratórios, biblioteca, suporte), a grade curricular e, no caso de cursos com prática (saúde, engenharias), como funcionam os encontros presenciais e estágios.</p>
+
+<h2>Qual a nota da Estácio no MEC?</h2>
+<p>A Estácio tem nota institucional <strong>4</strong> no MEC, numa escala de 1 a 5 — um bom indicador de qualidade. Mas a nota que mais importa pra você é a do <strong>curso específico</strong> que pretende fazer, no polo onde pretende estudar. Confira ambas, gratuitamente, no portal oficial <a href="https://emec.mec.gov.br" rel="nofollow noopener" target="_blank">e-MEC</a> antes de decidir.</p>
+
+<h2>Pra quem a Estácio faz sentido</h2>
+<p>Faz muito sentido pra quem precisa conciliar trabalho e estudo, quer flexibilidade de EAD ou semipresencial, busca uma mensalidade acessível com bolsa e valoriza uma rede ampla de polos. Pra cursos com forte componente prático, vale checar de perto a infraestrutura do polo. Em todos os casos, comparar as ofertas disponíveis ajuda a encontrar o melhor desconto. Veja o <a href="/bolsas-de-estudo">guia de bolsas de estudo</a> pra entender suas opções.</p>
+
+<h2>Perguntas frequentes</h2>
+<h3>A Estácio é reconhecida pelo MEC?</h3>
+<p>Sim. É uma instituição reconhecida pelo Ministério da Educação, com nota institucional 4. Confirme sempre a nota do curso específico no e-MEC.</p>
+<h3>De quanto são as bolsas?</h3>
+<p>As bolsas próprias chegam a até 80% de desconto na mensalidade, conforme o curso e o polo. Veja os valores reais na <a href="/faculdades/estacio">página da Estácio</a>.</p>
+<h3>Preciso de ENEM pra estudar na Estácio?</h3>
+<p>Não. A bolsa própria aceita o processo seletivo da própria faculdade (geralmente uma redação online), sem exigir ENEM nem comprovação de renda.</p>
+<h3>EAD da Estácio vale a pena?</h3>
+<p>Para cursos teóricos e da área da saúde (no formato semipresencial), e pra quem precisa de flexibilidade, sim — o EAD reconhecido pelo MEC tem a mesma validade do presencial.</p>
+`.trim(),
+  },
 ]
 
 async function main() {

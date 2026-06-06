@@ -1,0 +1,48 @@
+name: Precompute city offers
+
+# Mantém CityCourseOfferCache fresco — fonte de verdade do gate de indexação das
+# city pages (app/cursos/[slug]/[city]) e da emissão do sitemap. Sem isso o cache
+# envelhece, as páginas caem no fallback de API ao vivo e voltam a oscilar entre
+# index/noindex. Roda no GitHub Actions (não na Vercel) porque é job de horas e
+# funções serverless da Vercel têm limite de duração.
+
+on:
+  schedule:
+    # Semanal — domingo 03:17 UTC (~00:17 BRT). Minuto fora do :00 de propósito.
+    - cron: '17 3 * * 0'
+  workflow_dispatch:
+    inputs:
+      city_limit:
+        description: 'Cidades por curso (top N por ranking)'
+        required: false
+        default: '160'
+      concurrency:
+        description: 'Chamadas paralelas à Tartarus'
+        required: false
+        default: '4'
+
+# Evita duas execuções simultâneas escrevendo no mesmo cache.
+concurrency:
+  group: precompute-city-offers
+  cancel-in-progress: false
+
+jobs:
+  precompute:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Precompute CityCourseOfferCache
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXT_PUBLIC_TARTARUS_API: ${{ secrets.NEXT_PUBLIC_TARTARUS_API }}
+        run: >-
+          npx tsx scripts/precompute-city-offers.ts
+          --city-limit=${{ github.event.inputs.city_limit || '160' }}
+          --concurrency=${{ github.event.inputs.concurrency || '4' }}

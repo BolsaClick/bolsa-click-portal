@@ -10,6 +10,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { FeaturedCourseData } from '../_data/types'
@@ -447,17 +448,38 @@ export default function CursoPageClient({
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 grayscale opacity-70">
             {PARTNERS.map((p) => (
-              <Image
+              <Link
                 key={p.name}
-                src={p.src}
-                alt={p.name}
-                width={140}
-                height={36}
-                className="h-9 w-auto object-contain"
-                unoptimized
-              />
+                href={`/faculdades/${p.name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')}`}
+                aria-label={`Bolsas de estudo na ${p.name}`}
+                title={`Faculdade ${p.name}`}
+                className="transition-opacity hover:opacity-100"
+              >
+                <Image
+                  src={p.src}
+                  alt={p.name}
+                  width={140}
+                  height={36}
+                  className="h-9 w-auto object-contain"
+                  unoptimized
+                />
+              </Link>
             ))}
           </div>
+
+          {/* Links de texto com âncora rica (curso + marca) → reforço de internal linking */}
+          <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 max-w-3xl mx-auto">
+            {PARTNERS.slice(0, 4).map((p) => (
+              <li key={`brand-link-${p.name}`}>
+                <Link
+                  href={`/faculdades/${p.name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')}`}
+                  className="inline-flex items-center px-3.5 py-1.5 rounded-full border border-hairline bg-white text-[13px] text-ink-700 hover:border-ink-900 hover:text-ink-900 transition-colors"
+                >
+                  Bolsa de {cursoMetadata.name} na {p.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 

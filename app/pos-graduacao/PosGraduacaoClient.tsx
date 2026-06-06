@@ -418,15 +418,22 @@ export default function PosGraduacaoClient({ offers }: Props) {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 grayscale opacity-70">
             {PARTNERS.map((p) => (
-              <Image
+              <Link
                 key={p.name}
-                src={p.src}
-                alt={p.name}
-                width={140}
-                height={36}
-                className="h-9 w-auto object-contain"
-                unoptimized
-              />
+                href={`/faculdades/${p.name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')}`}
+                aria-label={`Bolsas de estudo na ${p.name}`}
+                title={`Faculdade ${p.name}`}
+                className="transition-opacity hover:opacity-100"
+              >
+                <Image
+                  src={p.src}
+                  alt={p.name}
+                  width={140}
+                  height={36}
+                  className="h-9 w-auto object-contain"
+                  unoptimized
+                />
+              </Link>
             ))}
           </div>
         </div>

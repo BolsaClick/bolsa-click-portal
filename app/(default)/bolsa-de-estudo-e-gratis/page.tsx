@@ -97,7 +97,7 @@ export default function BolsaDeEstudoEGratis() {
             <strong>Buscar bolsa de estudo não deve custar taxa.</strong> Plataformas sérias são
             gratuitas para o aluno: você compara as ofertas sem pagar nada. No Bolsa Click o cadastro
             é 100% grátis e o único valor que você paga é a mensalidade — já com o desconto da bolsa —
-            direto à faculdade, nunca à plataforma. Qualquer cobrança antecipada para "liberar" uma
+            direto à faculdade, nunca à plataforma. Qualquer cobrança antecipada para “liberar” uma
             bolsa é sinal de golpe.
           </p>
         </div>
@@ -113,7 +113,7 @@ export default function BolsaDeEstudoEGratis() {
             compra. Por isso, a busca e a comparação de ofertas devem ser gratuitas. As plataformas
             que reúnem bolsas são remuneradas pelas próprias faculdades quando o aluno se matricula —
             o estudante não entra nessa conta. Se algum site, perfil ou pessoa pede pagamento para
-            "garantir", "reservar" ou "liberar" a bolsa antes da matrícula, trate como alerta: numa
+            “garantir”, “reservar” ou “liberar” a bolsa antes da matrícula, trate como alerta: numa
             operação legítima esse tipo de cobrança não existe.
           </p>
         </div>

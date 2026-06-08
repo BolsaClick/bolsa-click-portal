@@ -6,7 +6,6 @@ import { useSearchParams } from 'next/navigation'
 import { CheckCircle2, ExternalLink } from 'lucide-react'
 import { formatCurrency } from '@/utils/fomartCurrency'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
-import { trackFbq } from '@/app/lib/analytics/fbq'
 import { trackTikTokDual } from '@/app/lib/analytics/ttq'
 
 export default function MatriculaSuccessClient() {
@@ -45,12 +44,9 @@ export default function MatriculaSuccessClient() {
       w.dataLayer = w.dataLayer ?? [];
       w.dataLayer.push({ event: eventName });
 
-      // Facebook Pixel - Lead (inscrição realizada, pagamento será na universidade)
-      trackFbq('Lead', {
-        content_name: course || undefined,
-        value: monthlyFee ?? 0,
-        currency: 'BRL',
-      })
+      // Meta Lead/Purchase NÃO são disparados aqui: o Lead vai server-side em
+      // /api/leads (PII completa, confiável) e o Purchase em confirmPaid +
+      // confirmPaidMatricula. Disparar aqui duplicaria a conversão.
 
       // TikTok Pixel + Events API - SubmitForm (conversão final, inscrição confirmada)
       void trackTikTokDual('SubmitForm', {

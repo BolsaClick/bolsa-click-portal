@@ -19,6 +19,7 @@ import { useForm } from 'react-hook-form'
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
+import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { normalizeAcademicLevel } from '@/app/lib/academic-level'
 import { titleCasePtBr } from '@/app/lib/utils/title-case'
 import { normalizeBrand } from '@/app/lib/utils/brand'
@@ -410,8 +411,19 @@ export default function SearchResultClient() {
         results_count: coursesCount,
         has_results: coursesCount > 0,
       })
+
+      // Meta Pixel + Conversions API - Search
+      if (courseNameForAPI) {
+        void trackFbqDual('Search', {
+          search_string: courseNameForAPI,
+          content_category: normalizedNivel || undefined,
+          city: cidade || undefined,
+          state: estado || undefined,
+          results_count: coursesCount,
+        })
+      }
     }
-  }, [showCourses, isLoading, courseNameForAPI, cidade, estado, modalidade, nivel, trackEvent])
+  }, [showCourses, isLoading, courseNameForAPI, cidade, estado, modalidade, nivel, normalizedNivel, trackEvent])
 
 
   // Filtrar por modalidade apenas se houver modalidade na URL

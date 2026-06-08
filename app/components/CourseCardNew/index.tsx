@@ -3,7 +3,7 @@ import { Course } from "@/app/interface/course"
 import { postSearch } from "@/app/lib/api/post-search"
 import { useFavorites } from "@/app/lib/hooks/useFavorites"
 import { usePostHogTracking } from "@/app/lib/hooks/usePostHogTracking"
-import { trackFbq } from "@/app/lib/analytics/fbq"
+import { trackFbqDual } from "@/app/lib/analytics/fbq"
 import { trackTikTok } from "@/app/lib/analytics/ttq"
 import { getAcademicLevelLabel } from "@/app/lib/academic-level"
 import { Building2, Clock, Heart, MapPin, Star } from "lucide-react"
@@ -157,10 +157,11 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
       is_favorite: isFavorite(course),
     })
 
-    // Facebook Pixel - ViewContent (curso selecionado)
-    trackFbq('ViewContent', {
+    // Facebook Pixel + Conversions API - ViewContent (curso selecionado)
+    void trackFbqDual('ViewContent', {
       content_name: course.name,
       content_type: 'product',
+      content_ids: course.id ? [String(course.id)] : undefined,
       value: course.minPrice || 0,
       currency: 'BRL',
     })

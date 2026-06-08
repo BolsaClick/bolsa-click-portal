@@ -17,6 +17,7 @@ import {
   User,
 } from 'lucide-react'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
+import { trackFbqDual } from '@/app/lib/analytics/fbq'
 
 /** Máscaras simples (CPF / telefone / CEP). */
 const maskCpf = (v: string) =>
@@ -246,6 +247,25 @@ export default function EstacioCheckoutClient() {
         numero_inscricao: data?.numeroInscricao ?? undefined,
         already_enrolled: !!data?.alreadyEnrolled,
       })
+
+      // Meta Pixel + Conversions API - Lead (inscrição Estácio; pagamento externo).
+      // event_id pela inscrição quando houver, para dedup/idempotência.
+      void trackFbqDual(
+        'Lead',
+        {
+          content_name: offer.courseName,
+          content_ids: offer.offerId ? [String(offer.offerId)] : undefined,
+          content_type: 'product',
+          currency: 'BRL',
+        },
+        {
+          email: form.email.trim() || undefined,
+          phone: form.mobile.replace(/\D/g, '') || undefined,
+          externalId: form.cpf.replace(/\D/g, '') || undefined,
+          firstName: form.name.trim().split(/\s+/)[0] || undefined,
+        },
+        data?.numeroInscricao ? `estacio_${data.numeroInscricao}` : undefined,
+      )
 
       const params = new URLSearchParams()
       if (offer.courseName) params.set('course', offer.courseName)

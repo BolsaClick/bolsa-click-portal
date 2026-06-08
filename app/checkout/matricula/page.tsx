@@ -40,7 +40,7 @@ import { createMarketplaceInscription } from '@/app/lib/api/create-inscription-m
 import { validateVoucher, type ValidateVoucherResponse, type VoucherInstallment } from '@/app/lib/api/validate-voucher'
 import type { PosPaymentMethod, PosInstallment } from '@/app/lib/api/get-offer-details'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
-import { trackFbq } from '@/app/lib/analytics/fbq'
+import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { trackTikTok, trackTikTokDual } from '@/app/lib/analytics/ttq'
 import { readUtmifyParams } from '@/app/lib/analytics/utmify-client'
 import { formatPhone } from '@/utils/formatters'
@@ -412,9 +412,11 @@ const isFormValidForPayment =
         state: offerDetails.unitState,
       })
 
-      // Facebook Pixel - InitiateCheckout
-      trackFbq('InitiateCheckout', {
+      // Facebook Pixel + Conversions API - InitiateCheckout
+      void trackFbqDual('InitiateCheckout', {
         content_name: offerDetails.course,
+        content_ids: offerDetails.courseId ? [String(offerDetails.courseId)] : undefined,
+        content_type: 'product',
         value: offerDetails.subscriptionValue || offerDetails.montlyFeeTo || 0,
         currency: 'BRL',
       })
@@ -1084,12 +1086,22 @@ const isFormValidForPayment =
       course_name: offerDetails.course,
     })
 
-    // Facebook Pixel - CompleteRegistration
-    trackFbq('CompleteRegistration', {
-      content_name: offerDetails.course,
-      value: offerDetails.montlyFeeTo || 0,
-      currency: 'BRL',
-    })
+    // Facebook Pixel + Conversions API - CompleteRegistration (com Advanced Matching)
+    void trackFbqDual(
+      'CompleteRegistration',
+      {
+        content_name: offerDetails.course,
+        content_ids: offerDetails.courseId ? [String(offerDetails.courseId)] : undefined,
+        content_type: 'product',
+        value: offerDetails.montlyFeeTo || 0,
+        currency: 'BRL',
+      },
+      {
+        email: data.email,
+        phone: data.phone,
+        externalId: data.cpf.replace(/\D/g, ''),
+      },
+    )
 
     // TikTok Pixel + Events API - CompleteRegistration (com Advanced Matching)
     void trackTikTokDual(
@@ -1593,12 +1605,22 @@ const isFormValidForPayment =
                                         course_name: offerDetails?.course,
                                       })
 
-                                      // Facebook Pixel - AddPaymentInfo (dados pessoais preenchidos + CPF validado)
-                                      trackFbq('AddPaymentInfo', {
-                                        content_name: offerDetails?.course,
-                                        value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
-                                        currency: 'BRL',
-                                      })
+                                      // Facebook Pixel + Conversions API - AddPaymentInfo (dados pessoais preenchidos + CPF validado)
+                                      void trackFbqDual(
+                                        'AddPaymentInfo',
+                                        {
+                                          content_name: offerDetails?.course,
+                                          content_ids: offerDetails?.courseId ? [String(offerDetails.courseId)] : undefined,
+                                          content_type: 'product',
+                                          value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
+                                          currency: 'BRL',
+                                        },
+                                        {
+                                          email: getValues('email') || undefined,
+                                          phone: getValues('phone') || undefined,
+                                          externalId: (getValues('cpf') || '').replace(/\D/g, '') || undefined,
+                                        },
+                                      )
 
                                       // TikTok Pixel - AddPaymentInfo
                                       trackTikTok('AddPaymentInfo', {

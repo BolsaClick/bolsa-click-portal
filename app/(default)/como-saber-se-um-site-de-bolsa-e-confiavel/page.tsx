@@ -95,7 +95,7 @@ export default function ComoSaberSeUmSiteDeBolsaEConfiavel() {
             Um site de bolsa de estudo é confiável quando <strong>não cobra taxa do aluno, mostra o
             preço antes do cadastro, trabalha com faculdades reconhecidas pelo MEC e o pagamento vai
             direto à instituição</strong> — nunca à plataforma. Se pedirem dinheiro antecipado para
-            "liberar" a bolsa, é golpe. Veja o checklist completo abaixo.
+            &quot;liberar&quot; a bolsa, é golpe. Veja o checklist completo abaixo.
           </p>
         </div>
       </section>
@@ -110,7 +110,7 @@ export default function ComoSaberSeUmSiteDeBolsaEConfiavel() {
             <li><strong>Preço visível antes do cadastro</strong> — você vê o desconto e o valor da mensalidade sem compromisso.</li>
             <li><strong>Faculdades reconhecidas pelo MEC</strong> — dá para conferir cada instituição no portal e-MEC.</li>
             <li><strong>Pagamento direto à faculdade</strong> — a mensalidade vai à instituição, nunca à plataforma ou a uma conta pessoal.</li>
-            <li><strong>Sem cobrança antecipada</strong> — nada de pagar para "reservar" ou "liberar" a bolsa antes da matrícula.</li>
+            <li><strong>Sem cobrança antecipada</strong> — nada de pagar para &quot;reservar&quot; ou &quot;liberar&quot; a bolsa antes da matrícula.</li>
           </ul>
         </div>
       </section>
@@ -122,7 +122,7 @@ export default function ComoSaberSeUmSiteDeBolsaEConfiavel() {
           </h2>
           <p className="text-ink-700 leading-relaxed">
             O golpe quase sempre começa por uma cobrança que não deveria existir: uma taxa para
-            "garantir a vaga", um depósito em conta de pessoa física, ou um valor para "destravar" a
+            &quot;garantir a vaga&quot;, um depósito em conta de pessoa física, ou um valor para &quot;destravar&quot; a
             bolsa. Plataformas legítimas não cobram o aluno antes da matrícula — elas são remuneradas
             pelas faculdades. Outro alerta é a falta de transparência: se o nome da faculdade, o
             reconhecimento pelo MEC ou o preço só aparecem depois de muita insistência, desconfie.

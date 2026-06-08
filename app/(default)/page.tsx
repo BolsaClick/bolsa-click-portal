@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   title: {
     absolute: 'Bolsas de Estudo de até 80% em 30.000+ Faculdades | Bolsa Click',
   },
-  description: 'Compare e garanta bolsa de estudo de até 80% em faculdades reconhecidas pelo MEC — Anhanguera, Unopar, Pitágoras e outras. Inscrição grátis, EAD ou presencial.',
+  description: 'Bolsa de estudo de até 80% em faculdades como Anhanguera, Unopar e Pitágoras, todas reconhecidas pelo MEC. Inscrição grátis, no EAD ou presencial.',
   keywords: [
     'bolsa de estudo',
     'bolsa de estudos',

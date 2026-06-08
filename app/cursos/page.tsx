@@ -3,8 +3,8 @@ import { prisma } from '@/app/lib/prisma'
 import CursosPageClient from './CursosPageClient'
 
 export const metadata: Metadata = {
-  title: 'Cursos com Bolsa de até 80% - Graduação, Licenciatura e Tecnólogo',
-  description: 'Compare bolsas de estudo com até 80% de desconto nos cursos mais procurados. Graduação, Licenciatura e Tecnólogo em mais de 30.000 faculdades. Veja salários, duração e inscreva-se grátis!',
+  title: 'Cursos com bolsa de até 80% de desconto',
+  description: 'Bolsas de estudo de até 80% nos cursos mais procurados de graduação, tecnólogo e licenciatura, no EAD ou presencial. Inscrição grátis.',
   keywords: [
     'cursos com bolsa',
     'cursos graduação',

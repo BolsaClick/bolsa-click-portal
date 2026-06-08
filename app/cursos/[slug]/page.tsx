@@ -22,6 +22,7 @@ import CoreSubjectsBlock from './_components/CoreSubjectsBlock'
 import RelatedPillarsBlock from './_components/RelatedPillarsBlock'
 import { getBrandMecRatings, mapToObject } from '@/app/lib/brand-mec-ratings'
 import { getCourseReviewsAggregate } from '@/app/lib/get-course-reviews-aggregate'
+import { getCurrentTheme } from '@/app/lib/themes'
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -125,11 +126,34 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // Buscar preços reais das ofertas para schema
   const { lowPrice } = await getCoursePriceRange(curso.apiCourseName, curso.nivel)
 
+  // Title ≤ 60 chars. O layout pai ainda cola "%s | <marca>" por cima, então
+  // descontamos esse sufixo do orçamento e degradamos o complemento de desconto
+  // conforme o nome do curso: cursos de nome longo (ex: "Análise e
+  // Desenvolvimento de Sistemas") ficam só com "Bolsa de <curso>" em vez de o
+  // Google truncar o texto no meio de uma palavra.
+  const brandSuffixLen = ` | ${getCurrentTheme().shortTitle}`.length
+  const titleBase = `Bolsa de ${curso.name}`
+  const titleSuffix =
+    [' com até 80% de desconto', ' de até 80%', ''].find(
+      (s) => titleBase.length + s.length + brandSuffixLen <= 60
+    ) ?? ''
+  const title = `${titleBase}${titleSuffix}`
+
+  // Description ≤ 155 chars, resposta direta primeiro (padrão GEO). Inclui o
+  // preço "a partir de" quando couber; nomes longos caem pra versão sem preço,
+  // e os mais longos pra abertura compacta. Duração e salário saíram daqui — não
+  // são a intenção de quem busca "bolsa <curso>" e estouravam o limite.
   const priceText = lowPrice > 0 ? ` a partir de R$ ${lowPrice.toFixed(0)}/mês` : ''
-  const title = lowPrice > 0
-    ? `Bolsa de ${curso.name}${priceText} | Até 80% de desconto`
-    : `Bolsa de ${curso.name} | Até 80% de desconto em faculdades`
-  const description = `Bolsas de estudo para ${curso.fullName}${priceText}. Até 80% de desconto em mais de 30.000 faculdades. ${curso.duration} de duração. Salário médio: ${curso.averageSalary}. Inscrição grátis!`
+  const description =
+    [
+      lowPrice > 0 &&
+        `Bolsa de estudo para ${curso.name}${priceText}, com até 80% de desconto. Faculdades reconhecidas pelo MEC, no EAD ou presencial. Inscrição grátis.`,
+      `Bolsa de estudo para ${curso.name} com até 80% de desconto em faculdades reconhecidas pelo MEC, no EAD ou presencial. Inscrição grátis.`,
+      `Bolsa de até 80% para ${curso.name} em faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`,
+    ]
+      .filter((d): d is string => Boolean(d))
+      .find((d) => d.length <= 155) ??
+    `Bolsa de até 80% para ${curso.name} em faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`
 
   // Construir URL da imagem
   const imageUrl = curso.imageUrl.startsWith('http')

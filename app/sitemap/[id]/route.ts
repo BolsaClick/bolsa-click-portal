@@ -57,11 +57,15 @@ function cityCoursePriority(trendScore: number, citySlug: string): number {
   return Math.round((0.30 + trendNorm * 0.35 + tierBonus) * 100) / 100
 }
 
+// Fallback p/ cursos SEM cache de oferta auditado (raro após threshold=5).
+// Sem dado de oferta, ser conservador: não emitir tier-1 incondicional (era a
+// 2ª fonte do flood). Só emite cidade de topo com demanda mínima; resto espera
+// o precompute popular o cache e cair no branch ciente de oferta.
 function shouldEmitCityUrl(trendScore: number, citySlug: string): boolean {
   const tier = cityTier(citySlug)
-  if (tier === 1) return true
-  if (tier === 2) return trendScore >= 30
-  return trendScore >= 60
+  if (tier === 1) return trendScore >= 30
+  if (tier === 2) return trendScore >= 60
+  return false
 }
 
 async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
@@ -153,8 +157,10 @@ async function buildCoursesSitemap(): Promise<SitemapEntry[]> {
 
 async function buildCourseCitiesSitemap(): Promise<SitemapEntry[]> {
   // Threshold mínimo de cache populado por curso pra considerá-lo "auditado".
-  // Abaixo disso, caímos no filtro só por tier+trendScore (mesmo do passado).
-  const CACHE_AUDITED_THRESHOLD = 20
+  // Abaixo disso, cai no fallback conservador (shouldEmitCityUrl). Baixado de
+  // 20 → 5 pra que ~todos os cursos (cache ~61 cidades/curso) usem o branch
+  // ciente de oferta em vez do fallback, cortando o flood de URLs sem oferta.
+  const CACHE_AUDITED_THRESHOLD = 5
 
   try {
     const [courses, cacheRows] = await withTimeout(
@@ -198,14 +204,15 @@ async function buildCourseCitiesSitemap(): Promise<SitemapEntry[]> {
             // Sem cache auditado pro curso → mantém comportamento legado.
             if (!isAudited) return shouldEmitCityUrl(score, city.slug)
 
-            // Com cache auditado: aplica o mesmo critério do
-            // shouldIndexCityPage (gate runtime) — emitir só se vale indexar.
+            // Com cache auditado: aplica o MESMO critério do shouldIndexCityPage
+            // (gate runtime) — emitir só o que é indexável, nunca URL noindex.
             //   offerCount ≥ 2 → emit
-            //   offerCount 0-1 + trendScore ≥ 60 → emit (ranking informacional)
-            //   caso contrário → skip (não polui sitemap com URL noindex).
+            //   offerCount = 1 + trendScore ≥ 60 → emit (alta demanda + alguma oferta)
+            //   offerCount = 0 → skip SEMPRE (era a fonte do flood: trend≥60 emitia
+            //                    todas as cidades de curso popular sem oferta local).
             const offers = courseCache!.get(city.slug) ?? 0
             if (offers >= 2) return true
-            if (score >= 60) return true
+            if (score >= 60 && offers >= 1) return true
             return false
           })
           .map((city) => ({

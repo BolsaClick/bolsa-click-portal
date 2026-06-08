@@ -162,6 +162,11 @@ const FAQ_ITEMS = [
       'O caminho mais comum é pelo ProUni: ter feito o ENEM com nota mínima de 450 pontos (sem zerar a redação), comprovar renda familiar per capita de até 1,5 salário mínimo, e se inscrever no portal do MEC nas duas edições anuais (fevereiro e julho). Alternativa: algumas faculdades parceiras oferecem bolsas próprias de 100% em vagas pontuais, sem critério de renda.',
   },
   {
+    question: 'Como concorrer a uma bolsa de estudo?',
+    answer:
+      'Pra concorrer a uma bolsa de estudo há dois caminhos. Pelos programas federais (ProUni e FIES): inscreva-se no portal do MEC nas edições de fevereiro e julho usando a nota do ENEM (mínimo 450, sem zerar a redação) e comprove a renda familiar. Por bolsa própria de faculdade parceira via Bolsa Click: escolha curso, modalidade e cidade, compare as ofertas e finalize a inscrição online o ano inteiro — sem nota de corte e sem critério de renda.',
+  },
+  {
     question: 'Qual a diferença entre ProUni e FIES?',
     answer:
       'O ProUni é uma bolsa de estudo (desconto): você não paga a mensalidade durante o curso. O FIES é um financiamento: você paga a mensalidade reduzida durante o curso e quita o restante após formado, com juros baixos. Ambos exigem ENEM 450+ e comprovação de renda, mas atendem perfis diferentes — ProUni pra quem precisa de bolsa, FIES pra quem aceita pagar depois.',
@@ -590,10 +595,37 @@ export default async function BolsasDeEstudoHubPage() {
           Renata (ProUni-Frustrada). Posicionado alto pra captura mobile-first. */}
       <CalendarioBolsas2026 />
 
+      {/* Bloco "onde conseguir" — captura a intenção de busca "onde conseguir bolsa
+          de estudo" (ATP) com resposta direta GEO + interlink pro widget de busca
+          (#buscar) e pras landings ProUni/FIES. */}
+      <section id="onde-conseguir" className="bg-white py-12 md:py-16 border-b border-hairline" data-speakable="onde-conseguir">
+        <div className="container mx-auto px-4 max-w-3xl prose prose-neutral">
+          <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900 mb-4">
+            Onde conseguir bolsa de estudo
+          </h2>
+          <p className="text-ink-700 leading-relaxed">
+            Você consegue bolsa de estudo em três lugares: no{' '}
+            <Link href="/prouni" className="underline decoration-1 underline-offset-4">ProUni</Link> e no{' '}
+            <Link href="/fies" className="underline decoration-1 underline-offset-4">FIES</Link>{' '}
+            (portal do MEC, usando a nota do ENEM) ou direto em faculdades particulares
+            parceiras pelo Bolsa Click, onde a bolsa própria chega a <strong>85% sem nota de
+            corte nem critério de renda</strong>. A inscrição é grátis e fica aberta o ano inteiro.
+          </p>
+          <p className="text-ink-700 leading-relaxed mt-3">
+            Pela busca abaixo você compara as ofertas reais por curso, modalidade (EAD,
+            semipresencial ou presencial) e cidade antes de se cadastrar — sem custo.{' '}
+            <Link href="#buscar" className="underline decoration-1 underline-offset-4">
+              Comparar bolsas agora →
+            </Link>
+          </p>
+        </div>
+      </section>
+
       {/* Camada funcional marketplace — search widget + offer cards.
           Match com intent transacional dominante na SERP de "bolsas de estudo"
           (60% dos top 10 são marketplaces com filtros e listings visíveis). */}
       <section
+        id="buscar"
         aria-label="Buscar bolsa de estudo"
         className="bg-paper border-b border-hairline py-8 md:py-10"
       >

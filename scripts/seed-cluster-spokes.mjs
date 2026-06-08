@@ -64,11 +64,11 @@ const POST_SEM_PROUNI = {
 
 <p>Anhanguera, Estácio, UniCesumar e outras grandes redes anunciam descontos sazonais (matrículas antecipadas, "vagas remanescentes"). Vale acompanhar redes sociais e site da faculdade alvo.</p>
 
-<h3>5. Educa Mais Brasil e outros marketplaces</h3>
+<h3>5. Plataformas agregadoras de bolsas</h3>
 
-<p>Marketplaces concorrentes ao Bolsa Click — Educa Mais Brasil, Quero Bolsa, Vai de Bolsa — também oferecem descontos de até 70% em faculdades particulares sem exigência de ENEM. O catálogo varia: cada um tem parcerias com instituições diferentes.</p>
+<p>Além do Bolsa Click, existem outras plataformas agregadoras que negociam descontos com faculdades particulares sem exigir ENEM. O catálogo de cada uma varia conforme as instituições parceiras — por isso vale comparar a oferta do mesmo curso, modalidade e cidade antes de decidir.</p>
 
-<p>Compare ofertas entre 2-3 marketplaces antes de decidir. Um pode ter desconto maior pra Psicologia em São Paulo enquanto outro tem desconto melhor pra Pedagogia EAD em Salvador.</p>
+<p>No Bolsa Click, essa comparação já vem pronta: você filtra por curso, modalidade e cidade e vê o desconto disponível em cada faculdade parceira antes de se cadastrar, sem custo nenhum.</p>
 
 <h2>Qual escolher?</h2>
 

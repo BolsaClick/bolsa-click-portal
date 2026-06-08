@@ -568,6 +568,44 @@ const ARCHETYPES: Archetype[] = [
     categorySlugs: ['guias-mec', 'bolsas-de-estudo'],
     briefing: 'Responder de forma equilibrada e honesta se a Anhanguera vale a pena: instituição privada do grupo Cogna, ampla rede de polos, diploma reconhecido pelo MEC, forte em EAD, bolsas de até 80% via Bolsa Click. Orientar o leitor a CONFERIR a nota institucional atual no e-MEC e na página da faculdade (NÃO afirmar um número de nota MEC específico — direcionar pra verificação). Cobrir prós (acessibilidade, flexibilidade, alcance), pontos de atenção (conferir reconhecimento do curso específico) e pra quem faz sentido. NÃO citar preço em R$. LINKAR pra /faculdades/anhanguera e /bolsas-de-estudo. Anhanguera é parceira. Seção Perguntas frequentes.',
   },
+
+  // ===========================================================
+  // CLUSTER "INTERCEPTAÇÃO DE INTENÇÃO" — captura a versão GENÉRICA das
+  // dúvidas que as pessoas digitam usando o nome de um agregador concorrente
+  // ("cobra taxa? é confiável? vale a pena pagar? como funciona?").
+  // REGRA CRÍTICA: tom de CATEGORIA ("plataformas de bolsa", "sites de bolsa")
+  // — NUNCA citar, comparar nominalmente ou aludir a concorrente. O wedge é o
+  // diferencial real (cadastro grátis, mensalidade direto à faculdade), dito de
+  // forma genérica. Cada post linka no primeiro terço pro hub correspondente.
+  // ===========================================================
+  {
+    slug: 'site-de-bolsa-de-estudo-cobra-taxa',
+    title: 'Site de bolsa de estudo cobra taxa? Quando há cobrança (e quando é golpe)',
+    kind: 'guia',
+    categorySlugs: ['bolsas-de-estudo', 'guias-mec'],
+    briefing: 'Responder direto nas primeiras 40-60 palavras: buscar e se cadastrar em bolsa NÃO deve custar taxa — plataformas sérias são gratuitas para o aluno e são remuneradas pelas faculdades quando há matrícula. O único valor é a mensalidade já com desconto, paga direto à instituição. Cobrir: por que a bolsa é um desconto e não um produto que se compra; quando uma cobrança antecipada é sinal de golpe (taxa pra "liberar/reservar", depósito em conta de pessoa física); o que você realmente paga e pra quem. Tom de CATEGORIA — NUNCA citar nem aludir a concorrente agregador. NÃO inventar preço em R$ (use DATA_BLOCK.allowedPrices ou fale em percentuais). LINKAR no primeiro terço pra /bolsa-de-estudo-e-gratis (anchor "bolsa de estudo é grátis") e pra /bolsas-de-estudo. Seção Perguntas frequentes.',
+  },
+  {
+    slug: 'vale-a-pena-pagar-por-bolsa-de-estudo',
+    title: 'Vale a pena pagar por um site de bolsa de estudo?',
+    kind: 'guia',
+    categorySlugs: ['bolsas-de-estudo'],
+    briefing: 'Responder direto: não há motivo pra pagar pela busca de bolsas, porque existem plataformas 100% gratuitas que reúnem as mesmas ofertas de faculdades reconhecidas pelo MEC. Explicar o modelo (a plataforma é paga pela faculdade na matrícula, não pelo aluno), o que o estudante de fato paga (mensalidade já com desconto, direto à instituição) e como comparar ofertas sem custo e sem compromisso. Tom de CATEGORIA — NUNCA citar nem comparar nominalmente concorrente. NÃO inventar preço em R$. LINKAR no primeiro terço pra /bolsa-de-estudo-e-gratis e pra /bolsas-de-estudo. Seção Perguntas frequentes.',
+  },
+  {
+    slug: 'como-saber-se-bolsa-de-estudo-e-confiavel',
+    title: 'Como saber se uma plataforma de bolsa de estudo é confiável',
+    kind: 'guia',
+    categorySlugs: ['bolsas-de-estudo', 'guias-mec'],
+    briefing: 'Responder direto: uma plataforma de bolsa é confiável quando não cobra taxa do aluno, mostra o preço antes do cadastro, trabalha com faculdades reconhecidas pelo MEC e o pagamento vai direto à instituição. Trazer um checklist de 5 sinais e os principais sinais de golpe (cobrança antecipada, conta de pessoa física, preço escondido). Ensinar a conferir o reconhecimento no portal e-MEC (emec.mec.gov.br). Tom de CATEGORIA — NUNCA citar nem aludir a concorrente. Citar fonte .gov.br (e-MEC). NÃO inventar preço em R$. LINKAR no primeiro terço pra /como-saber-se-um-site-de-bolsa-e-confiavel e pra /bolsa-click-e-confiavel; também pra /bolsas-de-estudo. Seção Perguntas frequentes.',
+  },
+  {
+    slug: 'como-funciona-desconto-em-faculdade-ead',
+    title: 'Como funciona o desconto em faculdade EAD com bolsa de estudo',
+    kind: 'guia',
+    categorySlugs: ['ead', 'bolsas-de-estudo'],
+    briefing: 'Responder direto: o desconto é uma bolsa aplicada à mensalidade — você busca o curso, compara o percentual de cada faculdade, se cadastra grátis e passa a pagar a mensalidade já reduzida, direto à instituição. Explicar passo a passo, a diferença entre bolsa própria (sem ENEM, sem critério de renda) e programas federais (ProUni/FIES), e por que o EAD costuma ter desconto maior. Tom de CATEGORIA — NUNCA citar concorrente. NÃO inventar preço em R$; falar em percentuais. LINKAR no primeiro terço pra /como-funciona-bolsa-de-estudo e pra /bolsas-de-estudo; citar /prouni e /fies. Seção Perguntas frequentes.',
+  },
 ]
 
 // ============================================================

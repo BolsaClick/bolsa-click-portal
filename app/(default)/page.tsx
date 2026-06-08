@@ -28,11 +28,13 @@ const theme = getCurrentTheme()
 // "marketplace" fica no corpo/FAQ/llms.txt (diferencial + classificação por IA),
 // não no início do title (zero volume de busca).
 export const metadata: Metadata = {
+  // `absolute` ignora o title.template do layout pai (a home é folha, não tem
+  // rotas filhas). Sem isso, "%s | Bolsa Click" era colado por cima de um valor
+  // que já terminava em "Bolsa Click" → marca duplicada no <title>.
   title: {
-    default: 'Bolsas de Estudo de até 80% em 30.000+ Faculdades | Bolsa Click',
-    template: `%s | ${theme.shortTitle}`,
+    absolute: 'Bolsas de Estudo de até 80% em 30.000+ Faculdades | Bolsa Click',
   },
-  description: 'Compare e garanta bolsa de estudo de até 80% em 100.000+ cursos de faculdades parceiras reconhecidas pelo MEC — Anhanguera, Unopar, Pitágoras e outras. Marketplace independente, inscrição grátis, EAD ou presencial.',
+  description: 'Compare e garanta bolsa de estudo de até 80% em faculdades reconhecidas pelo MEC — Anhanguera, Unopar, Pitágoras e outras. Inscrição grátis, EAD ou presencial.',
   keywords: [
     'bolsa de estudo',
     'bolsa de estudos',

@@ -24,10 +24,11 @@ export function shouldIndexCityPage(
   // Oferta local suficiente → index (comparativo tem valor SEO)
   if (offerCount >= MIN_OFFERS_TO_INDEX) return true
 
-  // Sem oferta local (ou só 1) MAS demanda alta → index assim mesmo, o conteúdo
-  // de curso + FAQ + contexto da cidade rankeia pela intenção informacional.
-  // Threshold mais alto (≥ 60) pra compensar a falta de oferta concreta.
-  if ((trendScore ?? 0) >= 60) return true
+  // Demanda alta (≥ 60) MAS ainda exige ao menos 1 oferta local: sem nenhuma
+  // oferta, a página é duplicata do conteúdo nacional + nome da cidade — thin em
+  // escala que afoga o crawl budget (Google joga pra "Detectada, não indexada").
+  // Com ≥ 1 oferta + alta demanda, o comparativo local tem substância pra rankear.
+  if ((trendScore ?? 0) >= 60 && offerCount >= 1) return true
 
   return false
 }

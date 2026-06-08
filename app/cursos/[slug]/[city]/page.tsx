@@ -19,6 +19,7 @@ import CityContextBlock from './_seo/CityContextBlock'
 import LocalDemandBlock from './_seo/LocalDemandBlock'
 import NearbyInstitutionsBlock from './_seo/NearbyInstitutionsBlock'
 import RegionalSalaryBlock from './_seo/RegionalSalaryBlock'
+import { getCurrentTheme } from '@/app/lib/themes'
 
 type Props = {
   params: Promise<{ slug: string; city: string }>
@@ -141,9 +142,34 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   )
   const { lowPrice } = priceRangeFromOffers(offers)
 
+  // Title ≤ 60 chars (o layout pai ainda cola "%s | <marca>"). Lidera com o
+  // keyword "<curso> em <cidade>" e degrada o complemento de bolsa conforme o
+  // tamanho. Combos extremos (nome de curso + cidade muito longos) truncam só a
+  // marca no fim — o keyword principal fica sempre front-loaded.
+  const brandSuffixLen = ` | ${getCurrentTheme().shortTitle}`.length
+  const titleBase = `${curso.name} em ${cityData.name}`
+  const titleSuffix =
+    [' com bolsa de até 80%', ' com bolsa', ''].find(
+      (s) => titleBase.length + s.length + brandSuffixLen <= 60
+    ) ?? ''
+  const title = `${titleBase}${titleSuffix}`
+
+  // Description ≤ 155 chars, resposta direta primeiro (padrão GEO). Preço quando
+  // couber; nomes/cidades longos caem pras versões compactas. Duração e salário
+  // saíram (estouravam o limite e não são a intenção de "bolsa <curso> <cidade>").
   const priceText = lowPrice > 0 ? ` a partir de R$ ${lowPrice.toFixed(0)}/mês` : ''
-  const title = `${curso.name} em ${cityData.name} com Bolsa de até 80% - Faculdades e Preços`
-  const description = `Bolsas de estudo para ${curso.fullName} em ${cityData.name}-${cityData.state}${priceText}. Até 80% de desconto. ${curso.duration} de duração. Salário médio: ${curso.averageSalary}. Inscrição grátis!`
+  const cityUf = `${cityData.name}-${cityData.state}`
+  const description =
+    [
+      lowPrice > 0 &&
+        `Bolsa de estudo para ${curso.name} em ${cityUf}${priceText}, com até 80% de desconto. Faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`,
+      `Bolsa de estudo para ${curso.name} em ${cityUf} com até 80% de desconto. Faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`,
+      `Bolsa de até 80% para ${curso.name} em ${cityUf}, no EAD ou presencial, em faculdades com nota MEC. Inscrição grátis.`,
+      `Bolsa de até 80% para ${curso.name} em ${cityData.name}, no EAD ou presencial. Inscrição grátis.`,
+    ]
+      .filter((d): d is string => Boolean(d))
+      .find((d) => d.length <= 155) ??
+    `Bolsa de até 80% para ${curso.name} em ${cityData.name}, no EAD ou presencial. Inscrição grátis.`
   const pageUrl = `https://www.bolsaclick.com.br/cursos/${slug}/${citySlug}`
   const nationalUrl = `https://www.bolsaclick.com.br/cursos/${slug}`
 

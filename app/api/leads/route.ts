@@ -1,6 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { upsertNotealyContact } from '@/app/lib/api/notealy'
+import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
+
+// Meta Conversions API — Lead server-side (não depende do pixel do browser).
+// Best-effort: nunca bloqueia o cadastro.
+async function sendLeadToMeta(params: {
+  leadId: string
+  name: string
+  email: string
+  phone: string
+  cpf: string
+  courseName?: string
+  request: NextRequest
+}) {
+  try {
+    const [firstName, ...rest] = params.name.trim().split(/\s+/)
+    const clientIp =
+      params.request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+      params.request.headers.get('x-real-ip') ??
+      undefined
+    await sendFacebookEvent({
+      eventName: 'Lead',
+      eventId: `lead_${params.leadId}`,
+      userData: {
+        email: params.email,
+        phone: params.phone,
+        externalId: params.cpf,
+        firstName: firstName || undefined,
+        lastName: rest.length ? rest.join(' ') : undefined,
+        clientIp,
+        userAgent: params.request.headers.get('user-agent') ?? undefined,
+      },
+      customData: {
+        ...(params.courseName ? { content_name: params.courseName } : {}),
+        content_type: 'product',
+      },
+      actionSource: 'website',
+      eventSourceUrl: params.request.headers.get('referer') ?? undefined,
+    })
+  } catch (error) {
+    console.error('⚠️ Meta CAPI Lead falhou:', error)
+  }
+}
 
 // Estágio 1 do CRM Notealy: cria/atualiza o contato com a tag de lead.
 // Best-effort — nunca bloqueia o cadastro. O email de boas-vindas fica fora
@@ -83,6 +125,16 @@ export async function POST(request: NextRequest) {
         cpf: cleanCpf,
       })
 
+      await sendLeadToMeta({
+        leadId: updatedLead.id,
+        name,
+        email,
+        phone: cleanPhone,
+        cpf: cleanCpf,
+        courseName,
+        request,
+      })
+
       return NextResponse.json({
         lead: updatedLead,
         message: 'Lead updated',
@@ -110,6 +162,16 @@ export async function POST(request: NextRequest) {
       email,
       phone: cleanPhone,
       cpf: cleanCpf,
+    })
+
+    await sendLeadToMeta({
+      leadId: lead.id,
+      name,
+      email,
+      phone: cleanPhone,
+      cpf: cleanCpf,
+      courseName,
+      request,
     })
 
     return NextResponse.json({ lead }, { status: 201 })

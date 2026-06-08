@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import {
   BadgeCheck,
   Barcode,
@@ -105,6 +106,31 @@ export default function MatriculaPayment({
     paidRef.current = true
     setPaid(true)
     setPixOpen(false)
+
+    // Meta Pixel + Conversions API - Purchase. eventID = externalId dedupa com
+    // o Purchase server-side disparado em confirmPaidMatricula (mesmo id).
+    const [firstName, ...rest] = (customer.name || '').trim().split(/\s+/)
+    const courseId = typeof metadata?.courseId === 'string' ? metadata.courseId : undefined
+    const courseName = typeof metadata?.courseName === 'string' ? metadata.courseName : description
+    void trackFbqDual(
+      'Purchase',
+      {
+        content_name: courseName,
+        content_ids: courseId ? [courseId] : undefined,
+        content_type: 'product',
+        value: (amountInCents || 0) / 100,
+        currency: 'BRL',
+      },
+      {
+        email: customer.email,
+        phone: customer.phone,
+        externalId: customer.cpf.replace(/\D/g, ''),
+        firstName: firstName || undefined,
+        lastName: rest.length ? rest.join(' ') : undefined,
+      },
+      externalId,
+    )
+
     // Dispara a confirmação server-side (cria inscrição + atualiza CRM).
     // Idempotente: o webhook do gateway/Elysium também cobre (aba fechada).
     if (externalId) {
@@ -119,7 +145,7 @@ export default function MatriculaPayment({
       }
     }
     onPaidRef.current()
-  }, [])
+  }, [amountInCents, customer, description, metadata])
 
   const createCharge = useCallback(
     async (m: Method): Promise<ChargeState | null> => {

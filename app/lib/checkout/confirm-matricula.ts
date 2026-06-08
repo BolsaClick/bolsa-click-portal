@@ -8,6 +8,7 @@ import {
 import type { OfferDetails } from '@/app/lib/api/get-offer-details'
 import { upsertNotealyContact } from '@/app/lib/api/notealy'
 import { sendUtmifyOrder, paymentMethodToUtmify } from '@/app/lib/api/utmify'
+import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 
 /**
  * Dados montados no checkout (cliente) e guardados em Transaction.metadata.confirm
@@ -166,6 +167,33 @@ export async function confirmPaidMatricula(
     })
   } catch (e) {
     console.error('❌ confirm: UTMify falhou', externalTransactionId, e)
+  }
+
+  // 4) Meta Conversions API — Purchase server-side (chega mesmo com aba fechada).
+  // event_id = externalTransactionId dedupa com o Purchase do pixel na página
+  // de sucesso (que usa o mesmo id).
+  try {
+    const [firstName, ...rest] = tx.name.trim().split(/\s+/)
+    await sendFacebookEvent({
+      eventName: 'Purchase',
+      eventId: externalTransactionId,
+      userData: {
+        email: tx.email,
+        phone: phoneDigits,
+        externalId: cpfDigits,
+        firstName: firstName || undefined,
+        lastName: rest.length ? rest.join(' ') : undefined,
+      },
+      customData: {
+        currency: 'BRL',
+        value: tx.amountInCents / 100,
+        content_name: tx.courseName || 'Matrícula',
+        content_type: 'product',
+        ...(tx.courseId ? { content_ids: [tx.courseId] } : {}),
+      },
+    })
+  } catch (e) {
+    console.error('❌ confirm: Meta CAPI Purchase falhou', externalTransactionId, e)
   }
 
   // Persistir resultados (best-effort) para auditoria.

@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 860" font-family="Georgia, 'Times New Roman', serif" role="img" aria-labelledby="ig-title ig-desc">
+  <title id="ig-title">Comparativo: ProUni vs FIES vs Bolsa Própria</title>
+  <desc id="ig-desc">Infográfico comparando os três caminhos pra estudar pagando menos no Brasil: ProUni (bolsa federal de 50% a 100%, exige ENEM 450+ e renda até 1,5 salário mínimo per capita, inscrições em fevereiro e julho), FIES (financiamento federal com pagamento após a formatura, exige ENEM 450+ e renda até 3 salários mínimos) e Bolsa Própria via Bolsa Click (desconto de até 85% no EAD, sem ENEM, sem critério de renda, inscrição aberta o ano inteiro).</desc>
+
+  <!-- fundo -->
+  <rect width="1200" height="860" fill="#FAF7F2"/>
+
+  <!-- título -->
+  <text x="60" y="78" font-size="40" font-weight="600" fill="#0B1F3C">ProUni, FIES ou bolsa própria?</text>
+  <text x="60" y="116" font-size="19" fill="#5A6B82" font-family="Helvetica, Arial, sans-serif">Os três caminhos pra estudar pagando menos — lado a lado · Bolsa Click, 2026</text>
+  <line x1="60" y1="140" x2="1140" y2="140" stroke="#0B1F3C" stroke-opacity="0.1" stroke-width="1"/>
+
+  <!-- ===== coluna 1: ProUni ===== -->
+  <g>
+    <rect x="60" y="170" width="340" height="600" fill="#FFFFFF" stroke="#0B1F3C" stroke-opacity="0.1"/>
+    <rect x="60" y="170" width="340" height="64" fill="#0B1F3C"/>
+    <text x="230" y="210" font-size="24" font-weight="600" fill="#FAF7F2" text-anchor="middle">ProUni</text>
+
+    <text x="84" y="270" font-size="13" fill="#5A6B82" font-family="Helvetica, Arial, sans-serif" letter-spacing="2">O QUE É</text>
+    <text x="84" y="296" font-size="17" fill="#243652">Bolsa do governo federal:</text>
+    <text x="84" y="320" font-size="17" fill="#243652">você não paga a parte coberta</text>
+
+    <text x="84" y="368" font-size="13" fill="#5A6B82" font-family="Helvetica, Arial, sans-serif" letter-spacing="2">DESCONTO</text>
+    <text x="84" y="402" font-size="28" font-weight="600" fill="#0B1F3C">50% ou 100%</text>
+
+    <text x="84" y="450" font-size="13" fill="#5A6B82" font-family="Helvetica, Arial, sans-serif" letter-spacing="2">ENEM</text>
+    <text x="84" y="476" font-size="17" fill="#243652">Obrigatório: 450+ pontos</text>
+    <text x="84" y="500" font-size="17" fill="#243652">e redação acima de zero</text>
+
+    <text x="84" y="548" font-size="13" fill="#5A6B82" font-family="Helvetica, Arial, sans-serif" letter-spacing="2">RENDA FAMILIAR</text>
+    <text x="84" y="574" font-size="17" fill="#243652">Até 1,5 salário mínimo per</text>
+    <text x="84" y="598" font-size="17" fill="#243652">capita (100%) · até 3 (50%)</text>
+
+    <text x="84" y="646" font-size="13" fill="#5A6B82" font-family="Helvetica, Arial, sans-serif" letter-spacing="2">QUANDO</text>
+    <text x="84" y="672" font-size="17" fill="#243652">2 edições por ano:</text>
+    <text x="84" y="696" font-size="17" font-weight="600" fill="#0B1F3C">fevereiro e julho</text>
+
+    <text x="84" y="742" font-size="14" fill="#5A6B82" font-style="italic">Ideal: nota boa + renda baixa</text>
+  </g>
+
+  <!-- ===== coluna 2: FIES ===== -->
+  <g>
+    <rect x="430" y="170" width="340" height="600" fill="#FFFFFF" stroke="#0B1F3C" stroke-opacity="0.1"/>
+    <rect x="430" y="170" width="340" height="64" fill="#243652"/>
+    <text x="600" y="210" font-size="24" font-weight="600" fill="#FAF7F2" text-anchor="middle">FIES</text>
+
+    <text x="454" y="270" font-size="13" fill="#5A6B82" font-family="Helvetica, Arial, sans-serif" letter-spacing="2">O QUE É</text>
+    <text x="454" y="296" font-size="17" fill="#243652">Financiamento federal: paga</text>
+    <text x="454" y="320" font-size="17" fill="#243652">o restante após se formar</text>
+
+    <text x="454" y="368" font-size="13" fill="#5A6B82" font-family="Helvetica, Arial, sans-serif" letter-spacing="2">DESCONTO</text>
+    <text x="454" y="402" font-size="28" font-weight="600" fill="#0B1F3C">Mensalidade reduzida</text>
+
+    <text x="454" y="450" font-size="13" fill="#5A6B82" font-family="Helvetica, Arial, sans-serif" letter-spacing="2">ENEM</text>
+    <text x="454" y="476" font-size="17" fill="#243652">Obrigatório: 450+ pontos,</text>
+    <text x="454" y="500" font-size="17" fill="#243652">qualquer edição desde 2010</text>
+
+    <text x="454" y="548" font-size="13" fill="#5A6B82" font-family="Helvetica, Arial, sans-serif" letter-spacing="2">RENDA FAMILIAR</text>
+    <text x="454" y="574" font-size="17" fill="#243652">Até 3 salários mínimos</text>
+    <text x="454" y="598" font-size="17" fill="#243652">per capita</text>
+
+    <text x="454" y="646" font-size="13" fill="#5A6B82" font-family="Helvetica, Arial, sans-serif" letter-spacing="2">QUANDO</text>
+    <text x="454" y="672" font-size="17" fill="#243652">2 edições por ano,</text>
+    <text x="454" y="696" font-size="17" font-weight="600" fill="#0B1F3C">no portal do MEC</text>
+
+    <text x="454" y="742" font-size="14" fill="#5A6B82" font-style="italic">Ideal: aceita pagar depois</text>
+  </g>
+
+  <!-- ===== coluna 3: Bolsa Própria ===== -->
+  <g>
+    <rect x="800" y="170" width="340" height="600" fill="#FFFFFF" stroke="#f21d44" stroke-width="2"/>
+    <rect x="800" y="170" width="340" height="64" fill="#f21d44"/>
+    <text x="970" y="210" font-size="24" font-weight="600" fill="#FFFFFF" text-anchor="middle">Bolsa própria</text>
+
+    <text x="824" y="270" font-size="13" fill="#5A6B82" font-family="Helvetica, Arial, sans-serif" letter-spacing="2">O QUE É</text>
+    <text x="824" y="296" font-size="17" fill="#243652">Desconto negociado direto</text>
+    <text x="824" y="320" font-size="17" fill="#243652">com a faculdade parceira</text>
+
+    <text x="824" y="368" font-size="13" fill="#5A6B82" font-family="Helvetica, Arial, sans-serif" letter-spacing="2">DESCONTO</text>
+    <text x="824" y="402" font-size="28" font-weight="600" fill="#f21d44">até 85% (EAD)</text>
+
+    <text x="824" y="450" font-size="13" fill="#5A6B82" font-family="Helvetica, Arial, sans-serif" letter-spacing="2">ENEM</text>
+    <text x="824" y="476" font-size="17" font-weight="600" fill="#0B1F3C">Não exige.</text>
+    <text x="824" y="500" font-size="17" fill="#243652">Vestibular online substitui</text>
+
+    <text x="824" y="548" font-size="13" fill="#5A6B82" font-family="Helvetica, Arial, sans-serif" letter-spacing="2">RENDA FAMILIAR</text>
+    <text x="824" y="574" font-size="17" font-weight="600" fill="#0B1F3C">Sem critério de renda</text>
+    <text x="824" y="598" font-size="17" fill="#243652">e sem nota de corte</text>
+
+    <text x="824" y="646" font-size="13" fill="#5A6B82" font-family="Helvetica, Arial, sans-serif" letter-spacing="2">QUANDO</text>
+    <text x="824" y="672" font-size="17" font-weight="600" fill="#0B1F3C">O ano inteiro,</text>
+    <text x="824" y="696" font-size="17" fill="#243652">inscrição grátis</text>
+
+    <text x="824" y="742" font-size="14" fill="#5A6B82" font-style="italic">Ideal: começar agora, sem fila</text>
+  </g>
+
+  <!-- rodapé -->
+  <line x1="60" y1="800" x2="1140" y2="800" stroke="#0B1F3C" stroke-opacity="0.1" stroke-width="1"/>
+  <text x="60" y="830" font-size="14" fill="#5A6B82" font-family="Helvetica, Arial, sans-serif">Fontes: MEC (acessounico.mec.gov.br) · Catálogo Bolsa Click, junho/2026 · bolsaclick.com.br/bolsas-de-estudo</text>
+</svg>

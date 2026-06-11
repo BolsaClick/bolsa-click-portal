@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { prisma } from '@/app/lib/prisma'
 import { BRAZILIAN_CITIES } from '@/app/lib/constants/brazilian-cities'
@@ -18,14 +19,23 @@ const SITE_URL = 'https://www.bolsaclick.com.br'
 // Datas de freshness pra Article schema + UI. Atualizar manualmente quando
 // fizer revisão editorial significativa do pillar (regra do roadmap M3/M5).
 const DATE_PUBLISHED = '2025-08-12'
-const DATE_MODIFIED = '2026-05-25'
-const DATE_MODIFIED_LABEL = '25 de maio de 2026'
+const DATE_MODIFIED = '2026-06-11'
+const DATE_MODIFIED_LABEL = '11 de junho de 2026'
+
+// Autor real nomeado (E-E-A-T): Person verificável > Organization genérica.
+// sameAs: adicionar URL do LinkedIn pessoal quando disponível (1 linha).
+const AUTHOR = {
+  name: 'Rodrigo Silvério',
+  jobTitle: 'Fundador do Bolsa Click',
+  url: `${SITE_URL}/sobre/equipe-editorial`,
+  sameAs: [] as string[],
+}
 
 export const revalidate = 86400 // 24h — conteúdo institucional muda devagar
 
 export const metadata: Metadata = {
   title: 'Bolsas de Estudo até 80%: Compare Faculdades, Preços e Notas MEC | Bolsa Click',
-  description: `Compare bolsas de estudo de até 80% em 100.000+ cursos de graduação, pós e tecnólogos. ${BRAZILIAN_CITIES.length} cidades, faculdades reconhecidas pelo MEC, EAD e presencial. ProUni, FIES e bolsa própria.`,
+  description: `Compare bolsas de estudo de até 80% em cursos de graduação, pós e tecnólogos. ${BRAZILIAN_CITIES.length} cidades, faculdades reconhecidas pelo MEC, EAD e presencial. ProUni, FIES e bolsa própria.`,
   keywords: [
     'bolsa de estudo',
     'bolsas de estudo',
@@ -112,7 +122,7 @@ const PROGRAMAS = [
     desconto: '25% a 85%',
     requisitoNota: 'Não exige ENEM (ou processo seletivo próprio)',
     requisitoRenda: 'Sem critério de renda',
-    onde: 'Anhanguera, Unopar, Pitágoras, Unime e outras parceiras',
+    onde: 'Anhanguera, Estácio, Unopar, Pitágoras, Unime e outras parceiras',
     quando: 'Inscrição aberta o ano inteiro',
   },
 ]
@@ -159,7 +169,7 @@ const FAQ_ITEMS = [
   {
     question: 'Como conseguir uma bolsa de estudo de 100%?',
     answer:
-      'O caminho mais comum é pelo ProUni: ter feito o ENEM com nota mínima de 450 pontos (sem zerar a redação), comprovar renda familiar per capita de até 1,5 salário mínimo, e se inscrever no portal do MEC nas duas edições anuais (fevereiro e julho). Alternativa: algumas faculdades parceiras oferecem bolsas próprias de 100% em vagas pontuais, sem critério de renda.',
+      'O caminho mais comum é pelo ProUni: ter feito o ENEM com nota mínima de 450 pontos (sem zerar a redação), comprovar renda familiar per capita de até 1,5 salário mínimo e se inscrever no portal do MEC nas duas edições anuais (fevereiro e julho). A bolsa integral cobre 100% da mensalidade durante todo o curso, e a seleção é pela nota — quanto maior, mais chance em cursos concorridos. Quem cursou todo o ensino médio em escola pública (ou particular com bolsa integral) já cumpre o critério de formação exigido. Alternativas: o SISU dá vaga gratuita em universidade pública pra notas competitivas, e algumas faculdades parceiras oferecem bolsas próprias de 100% em vagas pontuais, sem critério de renda — elas aparecem no catálogo do Bolsa Click quando disponíveis, com inscrição gratuita. Vale acompanhar as duas frentes: a federal nas janelas de fevereiro e julho, e a privada o ano inteiro.',
   },
   {
     question: 'Como concorrer a uma bolsa de estudo?',
@@ -169,12 +179,12 @@ const FAQ_ITEMS = [
   {
     question: 'Qual a diferença entre ProUni e FIES?',
     answer:
-      'O ProUni é uma bolsa de estudo (desconto): você não paga a mensalidade durante o curso. O FIES é um financiamento: você paga a mensalidade reduzida durante o curso e quita o restante após formado, com juros baixos. Ambos exigem ENEM 450+ e comprovação de renda, mas atendem perfis diferentes — ProUni pra quem precisa de bolsa, FIES pra quem aceita pagar depois.',
+      'O ProUni é uma bolsa de estudo (desconto): você não paga a mensalidade durante o curso — o governo compensa a faculdade com isenção fiscal. O FIES é um financiamento: você paga uma mensalidade reduzida durante o curso e quita o restante depois de formado, com juros subsidiados. Ambos exigem ENEM com 450 pontos ou mais e redação acima de zero, mas os limites de renda diferem: até 1,5 salário mínimo per capita pra bolsa integral do ProUni (até 3 pra parcial de 50%) e até 3 salários mínimos pro FIES. Na prática, o ProUni atende quem precisa estudar sem custo nenhum; o FIES atende quem aceita pagar depois pra não depender de bolsa. Os dois podem ser combinados num caso específico: bolsa parcial ProUni de 50% + FIES financiando os outros 50% — combinação permitida pelo MEC e usada por muitos estudantes.',
   },
   {
     question: 'Posso conseguir bolsa sem ter feito o ENEM?',
     answer:
-      'Sim. Bolsas próprias de faculdades parceiras do Bolsa Click não exigem ENEM — você usa o processo seletivo da própria instituição (geralmente uma redação ou prova simples online) e garante o desconto direto. ProUni e FIES, por serem federais, exigem ENEM.',
+      'Sim. Bolsas próprias de faculdades parceiras do Bolsa Click não exigem ENEM — você usa o processo seletivo da própria instituição, que em geral é uma redação ou prova simples feita online, com resultado em poucas horas e matrícula liberada em até 48h. O desconto não muda por causa disso: a bolsa de até 85% vale igualmente pra quem entra por vestibular online, por nota de ENEM antiga ou por aproveitamento do histórico do ensino médio. Quem tem ENEM de qualquer edição pode usá-lo só pra agilizar o ingresso, sem refazer prova. Já ProUni, FIES e SISU, por serem programas federais, exigem ENEM recente com nota mínima de 450 pontos e redação acima de zero — então, sem ENEM, o caminho realista é a bolsa própria, que fica com inscrição aberta o ano inteiro.',
   },
   {
     question: 'Qual a nota mínima do ENEM pra ProUni?',
@@ -188,12 +198,12 @@ const FAQ_ITEMS = [
   },
   {
     question: 'Quais faculdades têm bolsa de estudo?',
-    answer: `O Bolsa Click trabalha com ${BRAZILIAN_CITIES.length}+ cidades e faculdades parceiras de alcance nacional (Anhanguera, Unopar, Pitágoras, Unime e outras reconhecidas pelo MEC). Pelo ProUni e FIES, mais de 1.200 instituições particulares aderem aos programas federais. A disponibilidade da bolsa varia por curso, cidade e modalidade.`,
+    answer: `O Bolsa Click trabalha com ${BRAZILIAN_CITIES.length}+ cidades e faculdades parceiras de alcance nacional (Anhanguera, Estácio, Unopar, Pitágoras, Unime e outras reconhecidas pelo MEC). Pelo ProUni e FIES, mais de 1.200 instituições particulares aderem aos programas federais. A disponibilidade da bolsa varia por curso, cidade e modalidade.`,
   },
   {
     question: 'Bolsa de estudo serve pra EAD?',
     answer:
-      'Serve sim, e é onde os descontos costumam ser maiores. Cursos EAD em faculdades parceiras do Bolsa Click têm bolsas próprias de até 85% da mensalidade, e o ProUni também cobre EAD desde 2017. Vantagem do EAD: mensalidade base já é mais baixa que o presencial, então o desconto final fica ainda mais econômico.',
+      'Serve sim, e é onde os descontos costumam ser maiores. Cursos EAD em faculdades parceiras do Bolsa Click têm bolsas próprias de até 85% da mensalidade, e o ProUni também cobre cursos a distância desde 2017 — com os mesmos critérios de nota e renda do presencial. A vantagem econômica do EAD é dupla: a mensalidade base já é mais baixa que a do presencial (o custo operacional por aluno é menor) e o percentual de bolsa aplicado costuma ser maior, então o valor final fica na faixa de R$ 99 a R$ 250 por mês na maioria dos cursos do catálogo. O diploma EAD tem a mesma validade legal do presencial quando o curso é reconhecido pelo MEC, e cursos com componente prático (como os da área da saúde) usam polos presenciais pra laboratórios e estágios obrigatórios.',
   },
   {
     question: 'Vale a pena ProUni ou bolsa própria de faculdade?',
@@ -232,7 +242,7 @@ const FAQ_ITEMS = [
   },
   {
     question: 'Qual a melhor faculdade com bolsa de estudo?',
-    answer: `Depende do curso, modalidade e cidade. Entre as parceiras do Bolsa Click, as maiores em alcance nacional são Anhanguera (presencial e EAD em ${BRAZILIAN_CITIES.length}+ cidades), Unopar (líder em EAD com mais de 800 polos), Pitágoras e Unime. Todas reconhecidas pelo MEC. A "melhor" pra você é a que combina curso desejado + cidade + maior bolsa disponível.`,
+    answer: `Depende do curso, modalidade e cidade. Entre as parceiras do Bolsa Click, as maiores em alcance nacional são Anhanguera (presencial e EAD em ${BRAZILIAN_CITIES.length}+ cidades), Unopar (líder em EAD com mais de 800 polos), Estácio (forte presença nas capitais), Pitágoras e Unime. Todas reconhecidas pelo MEC. A "melhor" pra você é a que combina curso desejado + cidade + maior bolsa disponível.`,
   },
   {
     question: 'Quanto economizo com bolsa de estudo?',
@@ -242,7 +252,7 @@ const FAQ_ITEMS = [
   {
     question: 'Como sei se a bolsa de estudo é confiável?',
     answer:
-      'Verifique três coisas: (1) a faculdade tem cadastro válido no e-MEC (consulta no site oficial mec.gov.br), (2) a bolsa é negociada com a instituição, não com terceiros (a Bolsa Click intermedia direto com as faculdades parceiras, sem cobrar nada do aluno), e (3) o desconto é aplicado já na primeira mensalidade e refletido no contrato. Nunca pague nada antecipado por uma promessa de bolsa.',
+      'Verifique três coisas: (1) a faculdade tem cadastro válido no e-MEC (consulta gratuita no portal oficial emec.mec.gov.br, incluindo a nota de avaliação do MEC), (2) a bolsa é negociada com a instituição, não com terceiros — a Bolsa Click intermedia direto com as faculdades parceiras, sem cobrar nada do aluno —, e (3) o desconto aparece descrito no contrato e aplicado já na primeira mensalidade. Nunca pague valor antecipado por promessa de bolsa: cobrança pra "garantir vaga", "reservar desconto" ou "liberar inscrição" é o sinal mais claro de golpe, porque bolsa legítima não tem taxa — ProUni e FIES são gratuitos no portal do MEC e a bolsa própria é gratuita na plataforma. Em caso de dúvida, ligue pra própria faculdade pelo telefone do site institucional e confirme se a oferta existe antes de enviar qualquer documento.',
   },
 ]
 
@@ -333,8 +343,9 @@ export default async function BolsasDeEstudoHubPage() {
   // Article schema pra GEO: dateModified visível + author = sinal forte de
   // freshness e autoridade pra AI Overviews / ChatGPT / Perplexity. Mesmo
   // sendo hub page, o pillar tem conteúdo editorial autêntico (12 seções).
-  // author é Organization (Equipe Editorial), com url pra página de
-  // autoridade — não fabricamos Person fake (penalty risk + desonesto).
+  // author é Person real (fundador) — pessoa verificável, não fabricada
+  // (penalty risk + desonesto). reviewedBy fica na Equipe Editorial, criando
+  // revisão cruzada (entidade diferente do autor) em vez de auto-revisão.
   // citation[] aponta pras fontes primárias seguidas por AI crawlers.
   const articleSchema = {
     '@context': 'https://schema.org',
@@ -347,10 +358,17 @@ export default async function BolsasDeEstudoHubPage() {
     inLanguage: 'pt-BR',
     isAccessibleForFree: true,
     author: {
-      '@type': 'Organization',
-      '@id': `${SITE_URL}/sobre/equipe-editorial#editorial-team`,
-      name: 'Equipe Editorial Bolsa Click',
-      url: `${SITE_URL}/sobre/equipe-editorial`,
+      '@type': 'Person',
+      '@id': `${SITE_URL}/sobre/equipe-editorial#rodrigo-silverio`,
+      name: AUTHOR.name,
+      jobTitle: AUTHOR.jobTitle,
+      url: AUTHOR.url,
+      ...(AUTHOR.sameAs.length > 0 && { sameAs: AUTHOR.sameAs }),
+      worksFor: {
+        '@type': 'Organization',
+        '@id': `${SITE_URL}/#organization`,
+        name: 'Bolsa Click',
+      },
     },
     reviewedBy: {
       '@type': 'Organization',
@@ -561,7 +579,9 @@ export default async function BolsasDeEstudoHubPage() {
             {' '}cidades. Compare ProUni, FIES e bolsas próprias e finalize a inscrição grátis pelo Bolsa Click.
           </p>
           <p className="mt-6 font-mono text-[11px] tracking-[0.18em] uppercase text-ink-500">
-            Por <span className="text-ink-700">Equipe Editorial Bolsa Click</span>
+            Por <span className="text-ink-700">{AUTHOR.name}, {AUTHOR.jobTitle.toLowerCase()}</span>
+            <span className="mx-2">·</span>
+            Revisado pela <span className="text-ink-700">Equipe Editorial</span>
             <span className="mx-2">·</span>
             Atualizado em{' '}
             <time dateTime={DATE_MODIFIED} className="text-ink-700">
@@ -588,6 +608,126 @@ export default async function BolsasDeEstudoHubPage() {
           <p className="text-lg md:text-xl text-ink-900 font-medium leading-relaxed">
             Pra conseguir uma <strong>bolsa de estudo</strong> de 50% a 100% na faculdade no Brasil, o caminho mais rápido é candidatar-se ao <Link href="/prouni" className="underline decoration-1 underline-offset-4 hover:text-ink-700">ProUni</Link> com sua nota do ENEM (bolsa integral ou parcial em faculdades particulares) ou buscar bolsa própria em faculdades EAD parceiras, onde os descontos chegam a 85% sem nota de corte. Veja abaixo cada opção, requisitos e o passo-a-passo.
           </p>
+        </div>
+      </section>
+
+      {/* Split de intent — duas portas de entrada explícitas nos primeiros 600px.
+          Persona "Renata" (pós-resultado ProUni, maior volume sazonal fev-mar)
+          precisa ver o caminho "sem espera" sem rolar a página inteira. */}
+      <section aria-label="Escolha o seu caminho pra bolsa" className="bg-white pb-10 md:pb-12 border-b border-hairline">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-hairline border border-hairline">
+            <div className="bg-paper p-6 md:p-8">
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 block mb-3">
+                Caminho 1 · Programas federais
+              </span>
+              <h3 className="font-display text-xl md:text-2xl text-ink-900 mb-3">
+                Tenho nota do ENEM e renda dentro do limite
+              </h3>
+              <p className="text-ink-700 text-[15px] leading-relaxed mb-5">
+                ENEM com 450+ e renda familiar de até 1,5 salário mínimo per capita (bolsa
+                integral) ou até 3 (parcial)? O ProUni dá bolsa de 50% a 100% — inscrições em
+                fevereiro e julho no portal do MEC, usando só a nota.
+              </p>
+              <Link
+                href="/prouni"
+                className="inline-flex items-center gap-2 font-mono text-[12px] tracking-[0.18em] uppercase text-ink-900 border-b-2 border-ink-900 pb-1 hover:text-bolsa-secondary hover:border-bolsa-secondary transition-colors"
+              >
+                Ver guia do ProUni →
+              </Link>
+            </div>
+            <div className="bg-paper p-6 md:p-8">
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 block mb-3">
+                Caminho 2 · Bolsa própria
+              </span>
+              <h3 className="font-display text-xl md:text-2xl text-ink-900 mb-3">
+                Quero começar agora, sem ENEM e sem fila
+              </h3>
+              <p className="text-ink-700 text-[15px] leading-relaxed mb-5">
+                Não fez ENEM, não fecha o critério de renda ou perdeu a janela do ProUni? A
+                bolsa própria de faculdade parceira chega a 85% no EAD, sem nota de corte, com
+                inscrição grátis e aberta o ano inteiro.
+              </p>
+              <Link
+                href="#buscar"
+                className="inline-flex items-center gap-2 font-mono text-[12px] tracking-[0.18em] uppercase text-ink-900 border-b-2 border-ink-900 pb-1 hover:text-bolsa-secondary hover:border-bolsa-secondary transition-colors"
+              >
+                Comparar bolsas agora →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* "Em números" — dados scannable nos primeiros 30% do documento. Formato
+          tabular = extração direta por AI Overviews/Perplexity. Só números
+          verificáveis (CLAUDE.md): Portaria MEC pro ProUni, catálogo first-party
+          pro resto — cada linha com fonte explícita. */}
+      <section
+        aria-label="Bolsas de estudo em números"
+        className="bg-paper py-10 md:py-12 border-b border-hairline"
+        data-speakable="numeros"
+      >
+        <div className="container mx-auto px-4 max-w-5xl">
+          <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900 mb-6">
+            Bolsas de estudo em números (2026)
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+              <caption className="sr-only">
+                Principais números das bolsas de estudo no Brasil em 2026, com fonte de cada dado
+              </caption>
+              <thead>
+                <tr className="border-y border-hairline">
+                  <th className="text-left py-3 px-3 font-mono text-[11px] tracking-[0.18em] uppercase text-ink-500">Indicador</th>
+                  <th className="text-left py-3 px-3 font-mono text-[11px] tracking-[0.18em] uppercase text-ink-500">Valor</th>
+                  <th className="text-left py-3 px-3 font-mono text-[11px] tracking-[0.18em] uppercase text-ink-500">Fonte</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-hairline">
+                  <td className="py-3 px-3 text-ink-700">Nota mínima do ENEM pra ProUni e FIES</td>
+                  <td className="py-3 px-3 text-ink-900 font-medium num-tabular">450 pontos + redação acima de zero</td>
+                  <td className="py-3 px-3 text-ink-500">Portaria Normativa MEC nº 1/2015</td>
+                </tr>
+                <tr className="border-b border-hairline">
+                  <td className="py-3 px-3 text-ink-700">Renda máxima — bolsa integral ProUni (100%)</td>
+                  <td className="py-3 px-3 text-ink-900 font-medium num-tabular">1,5 salário mínimo per capita</td>
+                  <td className="py-3 px-3 text-ink-500">MEC — Acesso Único</td>
+                </tr>
+                <tr className="border-b border-hairline">
+                  <td className="py-3 px-3 text-ink-700">Renda máxima — bolsa parcial ProUni (50%)</td>
+                  <td className="py-3 px-3 text-ink-900 font-medium num-tabular">3 salários mínimos per capita</td>
+                  <td className="py-3 px-3 text-ink-500">MEC — Acesso Único</td>
+                </tr>
+                <tr className="border-b border-hairline">
+                  <td className="py-3 px-3 text-ink-700">Edições do ProUni por ano</td>
+                  <td className="py-3 px-3 text-ink-900 font-medium num-tabular">2 (fevereiro e julho)</td>
+                  <td className="py-3 px-3 text-ink-500">MEC — Acesso Único</td>
+                </tr>
+                <tr className="border-b border-hairline">
+                  <td className="py-3 px-3 text-ink-700">Desconto máximo — bolsa própria de parceiras</td>
+                  <td className="py-3 px-3 text-ink-900 font-medium num-tabular">85% (EAD) · 80% (presencial)</td>
+                  <td className="py-3 px-3 text-ink-500">Catálogo Bolsa Click, jun/2026</td>
+                </tr>
+                <tr className="border-b border-hairline">
+                  <td className="py-3 px-3 text-ink-700">Menor mensalidade EAD com bolsa</td>
+                  <td className="py-3 px-3 text-ink-900 font-medium num-tabular">R$ 99/mês</td>
+                  <td className="py-3 px-3 text-ink-500">Catálogo Bolsa Click, jun/2026</td>
+                </tr>
+                <tr className="border-b border-hairline">
+                  <td className="py-3 px-3 text-ink-700">Cidades com polos de faculdades parceiras</td>
+                  <td className="py-3 px-3 text-ink-900 font-medium num-tabular">{BRAZILIAN_CITIES.length}</td>
+                  <td className="py-3 px-3 text-ink-500">Catálogo Bolsa Click, jun/2026</td>
+                </tr>
+                <tr className="border-b border-hairline">
+                  <td className="py-3 px-3 text-ink-700">Instituições particulares aderentes a ProUni/FIES</td>
+                  <td className="py-3 px-3 text-ink-900 font-medium num-tabular">1.200+</td>
+                  <td className="py-3 px-3 text-ink-500">Sistema e-MEC</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -758,6 +898,22 @@ export default async function BolsasDeEstudoHubPage() {
               </tbody>
             </table>
           </div>
+          {/* Infográfico — primeira imagem de conteúdo da pillar (gap Media 5/15
+              na auditoria SXO). SVG leve, indexável no Google Images, alt rico
+              com os dados-chave pra acessibilidade + extração por AI. */}
+          <figure className="mt-10">
+            <Image
+              src="/assets/infografico-prouni-fies-bolsa-propria.svg"
+              alt="Infográfico comparando ProUni, FIES e bolsa própria: ProUni dá bolsa de 50% ou 100% com ENEM 450+ e renda até 1,5 salário mínimo per capita, inscrições em fevereiro e julho; FIES financia a mensalidade pra pagar após a formatura, com ENEM 450+ e renda até 3 salários mínimos; bolsa própria via Bolsa Click dá até 85% de desconto no EAD, sem ENEM e sem critério de renda, com inscrição grátis o ano inteiro"
+              width={1200}
+              height={860}
+              className="w-full h-auto border border-hairline"
+              loading="lazy"
+            />
+            <figcaption className="mt-3 font-mono text-[11px] tracking-[0.18em] uppercase text-ink-500">
+              Os três caminhos lado a lado — fontes: MEC e Catálogo Bolsa Click, jun/2026
+            </figcaption>
+          </figure>
         </div>
       </section>
 
@@ -840,6 +996,55 @@ export default async function BolsasDeEstudoHubPage() {
         </div>
       </section>
 
+      {/* SISU + ENCCEJA — gaps de cobertura apontados na auditoria de conteúdo:
+          pillar "definitiva" de bolsas precisa explicar a via gratuita pública
+          (SISU) e a porta de entrada pra quem não concluiu o ensino médio. */}
+      <section id="sisu" className="bg-white py-12 md:py-16 border-b border-hairline" data-speakable="sisu">
+        <div className="container mx-auto px-4 max-w-3xl prose prose-neutral">
+          <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900 mb-4">
+            SISU — quando a vaga gratuita vale mais que a bolsa
+          </h2>
+          <p className="text-ink-700 leading-relaxed">
+            O <strong>SISU (Sistema de Seleção Unificada)</strong> não é bolsa de estudo: é a
+            porta de entrada pra <strong>vagas gratuitas em universidades públicas</strong>{' '}
+            (federais e estaduais) usando a nota do ENEM. Se a sua nota é competitiva, o SISU é
+            a opção mais econômica de todas — não existe mensalidade, então não há desconto a
+            negociar. As inscrições abrem duas vezes por ano (janeiro e junho), logo após a
+            divulgação dos resultados do ENEM, no mesmo portal único do MEC que opera ProUni e
+            FIES.
+          </p>
+          <p className="text-ink-700 leading-relaxed mt-3">
+            A comparação prática: o SISU exige as notas de corte mais altas dos três caminhos
+            federais, porque a concorrência por vaga gratuita é a maior. O ProUni atende quem
+            tem nota intermediária e renda dentro do limite; a bolsa própria atende quem precisa
+            começar logo, não tem ENEM recente ou não fecha os critérios federais. Muita gente
+            combina as tentativas: disputa o SISU na primeira chamada, o ProUni na sequência, e
+            garante bolsa própria como plano ativo — já estudando — enquanto tenta a transferência
+            futura.
+          </p>
+          <h3 className="font-display text-xl text-ink-900 mt-6 mb-3">
+            ENCCEJA: a porta de entrada pra quem não concluiu o ensino médio
+          </h3>
+          <p className="text-ink-700 leading-relaxed">
+            Quem não terminou o ensino médio na idade regular pode obter a certificação pelo{' '}
+            <strong>ENCCEJA</strong> (Exame Nacional pra Certificação de Competências de Jovens
+            e Adultos), aplicado pelo INEP. Com o certificado em mãos, você fica elegível a
+            fazer o ENEM e, a partir dele, concorrer a ProUni, FIES e SISU — ou ir direto pra
+            bolsa própria de faculdade parceira, que aceita a certificação como conclusão do
+            ensino médio. É o caminho mais usado por adultos que voltam a estudar.
+          </p>
+          <p className="text-ink-700 leading-relaxed mt-4">
+            <Link href="/sisu" className="underline decoration-1 underline-offset-4">
+              Guia completo do SISU →
+            </Link>
+            <span className="mx-3 text-ink-300">·</span>
+            <Link href="/encceja" className="underline decoration-1 underline-offset-4">
+              Como funciona o ENCCEJA →
+            </Link>
+          </p>
+        </div>
+      </section>
+
       <section id="bolsa-enem" className="bg-white py-12 md:py-16 border-b border-hairline">
         <div className="container mx-auto px-4 max-w-3xl prose prose-neutral">
           <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900 mb-4">
@@ -859,6 +1064,56 @@ export default async function BolsasDeEstudoHubPage() {
             vagas. Em cursos concorridos (Medicina, Direito, Engenharia), nota de corte costuma
             ficar entre 700 e 850. Em cursos menos concorridos, pode baixar pra 500-600.
           </p>
+          {/* Faixas de corte por curso — dados quantitativos scannable (GEO).
+              Faixas aproximadas observadas em edições recentes, com disclaimer
+              explícito: corte real varia por instituição/campus/turno. */}
+          <div className="overflow-x-auto mt-6 not-prose">
+            <table className="w-full border-collapse text-sm">
+              <caption className="text-left font-mono text-[11px] tracking-[0.18em] uppercase text-ink-500 pb-3">
+                Faixas de nota de corte do ProUni por curso (aproximadas)
+              </caption>
+              <thead>
+                <tr className="border-y border-hairline">
+                  <th className="text-left py-3 px-3 font-mono text-[11px] tracking-[0.18em] uppercase text-ink-500">Curso</th>
+                  <th className="text-left py-3 px-3 font-mono text-[11px] tracking-[0.18em] uppercase text-ink-500">Faixa típica de corte (bolsa 100%)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-hairline">
+                  <td className="py-3 px-3 text-ink-700">Medicina</td>
+                  <td className="py-3 px-3 text-ink-900 font-medium num-tabular">740-800+</td>
+                </tr>
+                <tr className="border-b border-hairline">
+                  <td className="py-3 px-3 text-ink-700">Direito</td>
+                  <td className="py-3 px-3 text-ink-900 font-medium num-tabular">640-700</td>
+                </tr>
+                <tr className="border-b border-hairline">
+                  <td className="py-3 px-3 text-ink-700">Psicologia</td>
+                  <td className="py-3 px-3 text-ink-900 font-medium num-tabular">620-680</td>
+                </tr>
+                <tr className="border-b border-hairline">
+                  <td className="py-3 px-3 text-ink-700">Enfermagem</td>
+                  <td className="py-3 px-3 text-ink-900 font-medium num-tabular">580-650</td>
+                </tr>
+                <tr className="border-b border-hairline">
+                  <td className="py-3 px-3 text-ink-700">Administração</td>
+                  <td className="py-3 px-3 text-ink-900 font-medium num-tabular">550-620</td>
+                </tr>
+                <tr className="border-b border-hairline">
+                  <td className="py-3 px-3 text-ink-700">Pedagogia</td>
+                  <td className="py-3 px-3 text-ink-900 font-medium num-tabular">520-580</td>
+                </tr>
+              </tbody>
+            </table>
+            <p className="text-[13px] text-ink-500 leading-relaxed mt-3">
+              Faixas aproximadas observadas em edições recentes do ProUni. O corte real muda a
+              cada edição e varia por instituição, campus e turno — consulte os valores oficiais
+              da edição vigente no{' '}
+              <a href="https://acessounico.mec.gov.br/prouni" rel="nofollow noopener" target="_blank" className="underline decoration-1 underline-offset-4">
+                portal Acesso Único do MEC
+              </a>.
+            </p>
+          </div>
           <h3 className="font-display text-xl text-ink-900 mt-6 mb-3">E pra bolsa própria via Bolsa Click</h3>
           <p className="text-ink-700 leading-relaxed">
             As faculdades parceiras do Bolsa Click aceitam ENEM como processo seletivo, mas{' '}
@@ -986,28 +1241,29 @@ export default async function BolsasDeEstudoHubPage() {
       <section id="cuidados" className="bg-paper py-12 md:py-16 border-b border-hairline">
         <div className="container mx-auto px-4 max-w-3xl prose prose-neutral">
           <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900 mb-4">
-            Cuidados ao buscar bolsa de estudo
+            Como saber se uma bolsa de estudo é confiável?
           </h2>
           <p className="text-ink-700 leading-relaxed">
-            O mercado de bolsas no Brasil tem ofertas legítimas e também atalhos perigosos. Antes
-            de fechar qualquer matrícula com promessa de desconto, valide três pontos pra evitar
-            cair em golpe ou perder dinheiro com curso de qualidade duvidosa.
+            Uma bolsa de estudo confiável nunca cobra valor antecipado, vem de faculdade com
+            cadastro ativo no e-MEC e aparece com o desconto descrito em contrato desde a
+            primeira mensalidade. Falhou em qualquer um desses três pontos, desconfie. Veja como
+            validar cada um antes de fechar matrícula.
           </p>
-          <h3 className="font-display text-xl text-ink-900 mt-6 mb-3">1. Verifique o reconhecimento da faculdade no e-MEC</h3>
-          <p className="text-ink-700 leading-relaxed">
-            Toda faculdade reconhecida pelo MEC tem cadastro consultável publicamente no portal{' '}
-            <strong>e-mec.mec.gov.br</strong>. Confira o nome da instituição, a nota MEC (de 1 a
-            5 — abaixo de 3 indica problemas estruturais), se o curso específico que você quer
-            tem autorização vigente. Curso não reconhecido = diploma sem validade pra concursos
-            públicos e mestrado.
-          </p>
-          <h3 className="font-display text-xl text-ink-900 mt-6 mb-3">2. Bolsa não cobra antecipado</h3>
+          <h3 className="font-display text-xl text-ink-900 mt-6 mb-3">1. Bolsa não cobra antecipado</h3>
           <p className="text-ink-700 leading-relaxed">
             Bolsa de estudo legítima — seja ProUni, FIES ou bolsa própria via Bolsa Click — nunca
             cobra do aluno valor antecipado pra &quot;garantir a vaga&quot;, &quot;agilizar a inscrição&quot; ou
             &quot;destravar o desconto&quot;. O ProUni e FIES são 100% gratuitos no portal do MEC. A bolsa
             própria via Bolsa Click é grátis — você só paga a mensalidade já com desconto direto
             pra faculdade, depois de matriculado. Cobrança antecipada de &quot;taxa de bolsa&quot; é golpe.
+          </p>
+          <h3 className="font-display text-xl text-ink-900 mt-6 mb-3">2. Verifique o reconhecimento da faculdade no e-MEC</h3>
+          <p className="text-ink-700 leading-relaxed">
+            Toda faculdade reconhecida pelo MEC tem cadastro consultável publicamente no portal{' '}
+            <strong>e-mec.mec.gov.br</strong>. Confira o nome da instituição, a nota MEC (de 1 a
+            5 — abaixo de 3 indica problemas estruturais), se o curso específico que você quer
+            tem autorização vigente. Curso não reconhecido = diploma sem validade pra concursos
+            públicos e mestrado.
           </p>
           <h3 className="font-display text-xl text-ink-900 mt-6 mb-3">3. Compare antes de fechar</h3>
           <p className="text-ink-700 leading-relaxed">
@@ -1026,6 +1282,11 @@ export default async function BolsasDeEstudoHubPage() {
             atraso superior a 90 dias no pagamento da parte que cabe a você (em bolsas parciais),
             (d) mudança expressiva na renda familiar comprovada no caso do ProUni. Acompanhe seu
             histórico acadêmico todo semestre.
+          </p>
+          <p className="text-ink-700 leading-relaxed mt-4">
+            <Link href="/como-saber-se-um-site-de-bolsa-e-confiavel" className="underline decoration-1 underline-offset-4">
+              Guia completo: como saber se um site de bolsa é confiável →
+            </Link>
           </p>
         </div>
       </section>

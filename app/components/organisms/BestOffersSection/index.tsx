@@ -213,7 +213,7 @@ export default function BestOffersSection() {
               Não achou seu curso aqui?
             </h3>
             <p className="text-white/80 text-[14px] mt-1">
-              Temos +100 mil cursos com bolsa em todo o Brasil. Encontre o seu em segundos.
+              Temos centenas de cursos com bolsa em todo o Brasil. Encontre o seu em segundos.
             </p>
           </div>
           <Link

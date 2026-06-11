@@ -48,7 +48,7 @@ const FAQ_ITEMS = [
   {
     question: 'Quanto custa faculdade de saúde com bolsa?',
     answer:
-      'Mensalidades variam por curso e unidade. Em parceiras do Bolsa Click (Anhanguera, Unopar, Pitágoras, Unime), valores começam: Psicologia a partir de R$ 199/mês, Enfermagem R$ 299, Fisioterapia R$ 399, Nutrição R$ 299. Descontos chegam a 80% sobre o valor cheio.',
+      'Mensalidades variam por curso e unidade. Em parceiras do Bolsa Click (Anhanguera, Estácio, Unopar, Pitágoras, Unime), valores começam: Psicologia a partir de R$ 199/mês, Enfermagem R$ 299, Fisioterapia R$ 399, Nutrição R$ 299. Descontos chegam a 80% sobre o valor cheio.',
   },
 ]
 
@@ -90,7 +90,7 @@ const jsonLdSchemas = [
 export const metadata: Metadata = {
   title: 'Bolsa de Estudo em Faculdade de Saúde | Até 80% de Desconto',
   description:
-    'Bolsas em faculdades de saúde com até 80% de desconto: Psicologia, Enfermagem, Fisioterapia, Nutrição, Biomedicina, Farmácia e mais. Mais de 30 mil faculdades parceiras. Inscrição grátis, sem ENEM.',
+    'Bolsas em faculdades de saúde com até 80% de desconto: Psicologia, Enfermagem, Fisioterapia, Nutrição, Biomedicina, Farmácia e mais. Inscrição grátis, sem ENEM.',
   keywords: [
     'bolsa faculdade de saúde',
     'bolsa de estudo psicologia',
@@ -139,7 +139,7 @@ export default function BolsasSaudePage() {
               <span className="italic text-white/85">faculdades de saúde</span>
             </h1>
             <p className="text-white/80 text-base md:text-lg max-w-2xl mx-auto leading-relaxed mb-8">
-              Compare bolsas em mais de 30 mil faculdades parceiras pra Psicologia, Enfermagem,
+              Compare bolsas nas maiores redes de ensino do país pra Psicologia, Enfermagem,
               Fisioterapia, Nutrição e mais cursos da área da saúde. Descontos de até 80%.
               Inscrição 100% gratuita, sem ENEM.
             </p>
@@ -186,7 +186,7 @@ export default function BolsasSaudePage() {
             </p>
             <p>
               No Bolsa Click, você encontra bolsas em cursos de saúde nas principais redes de
-              ensino particular do Brasil — Anhanguera, Unopar, Pitágoras, Unime, Ampli — com
+              ensino particular do Brasil — Anhanguera, Estácio, Unopar, Pitágoras, Unime, Ampli — com
               descontos que chegam a 80% sobre o valor cheio da mensalidade.
             </p>
           </div>
@@ -296,7 +296,7 @@ export default function BolsasSaudePage() {
             Sua carreira na saúde começa aqui
           </h2>
           <p className="text-white/80 mb-7 leading-relaxed">
-            Mais de 30 mil faculdades parceiras. Cadastro gratuito. Sem ENEM, sem CPF do parente.
+            Faculdades parceiras em mais de 280 cidades. Cadastro gratuito. Sem ENEM, sem CPF do parente.
           </p>
           <Link
             href="#cursos"

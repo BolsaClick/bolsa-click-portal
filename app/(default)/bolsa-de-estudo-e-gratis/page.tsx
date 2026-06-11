@@ -49,7 +49,7 @@ const FAQ = [
   },
   {
     q: 'Vale a pena pagar por um site de bolsa de estudo?',
-    a: 'Não há motivo para pagar pela busca de bolsas, porque existem plataformas 100% gratuitas que reúnem as mesmas ofertas de faculdades reconhecidas pelo MEC. No Bolsa Click você compara descontos de mais de 30.000 faculdades sem custo e sem compromisso, e só paga a mensalidade com desconto quando decide se matricular.',
+    a: 'Não há motivo para pagar pela busca de bolsas, porque existem plataformas 100% gratuitas que reúnem as mesmas ofertas de faculdades reconhecidas pelo MEC. No Bolsa Click você compara descontos das maiores redes de ensino do país sem custo e sem compromisso, e só paga a mensalidade com desconto quando decide se matricular.',
   },
   {
     q: 'Como o Bolsa Click ganha dinheiro se é grátis para o aluno?',
@@ -128,7 +128,7 @@ export default function BolsaDeEstudoEGratis() {
             O único valor que você paga é a <strong>mensalidade da faculdade, já com o desconto da
             bolsa aplicado</strong>, e esse pagamento é feito diretamente à instituição de ensino. O
             Bolsa Click não recebe a mensalidade nem cobra taxa de inscrição: o cadastro, a busca e a
-            comparação entre mais de 30.000 faculdades parceiras são gratuitos. Você vê o percentual
+            comparação entre as faculdades parceiras são gratuitos. Você vê o percentual
             de desconto e o preço antes de decidir, sem compromisso.
           </p>
         </div>
@@ -155,7 +155,7 @@ export default function BolsaDeEstudoEGratis() {
           <p className="text-ink-700 leading-relaxed">
             Quer ver quanto custa na prática?{' '}
             <Link href="/bolsas-de-estudo" className="underline decoration-1 underline-offset-4">
-              Compare bolsas de estudo grátis em 30.000+ faculdades
+              Compare bolsas de estudo grátis nas maiores redes do país
             </Link>
             , entenda{' '}
             <Link href="/como-saber-se-um-site-de-bolsa-e-confiavel" className="underline decoration-1 underline-offset-4">

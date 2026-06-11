@@ -13,9 +13,9 @@ export default function Stats() {
 
   const s = getStats();
   const stats = [
-    { number: s.partnersCount, label: 'Grupos Educacionais Parceiros', delay: 0 },
+    { number: s.partnersCount, label: 'Redes de Ensino Parceiras', delay: 0 },
     { number: `até ${s.maxDiscount}%`, label: 'De Desconto Oferecido', delay: 0.2 },
-    { number: s.coursesCount, label: 'Cursos Disponíveis', delay: 0.4 },
+    { number: s.citiesCount, label: 'Cidades com Polos', delay: 0.4 },
     { number: s.studentsCount, label: 'Alunos Beneficiados', delay: 0.6 }
   ];
 

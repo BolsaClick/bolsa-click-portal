@@ -43,7 +43,7 @@ const jsonLdSchema = {
 
 export const metadata: Metadata = {
   title: 'Bolsa de Estudo em Faculdades - Pós-graduação com até 80% de Desconto',
-  description: 'Encontre bolsa de estudo em faculdades para pós-graduação com até 80% de desconto. Desconto em faculdade para especialização, MBA e mestrado. Mais de 30.000 faculdades parceiras. Cadastre-se grátis!',
+  description: 'Encontre bolsa de estudo em faculdades para pós-graduação com até 80% de desconto. Desconto em faculdade para especialização, MBA e mestrado. Cadastre-se grátis!',
   keywords: [
     'bolsa de estudo pós-graduação',
     'bolsa de estudos pós-graduação',

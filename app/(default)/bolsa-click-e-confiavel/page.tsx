@@ -114,7 +114,7 @@ export default function BolsaClickEConfiavel() {
           </h2>
           <p className="text-ink-700 leading-relaxed">
             O Bolsa Click é uma plataforma brasileira de bolsas de estudo que reúne, num só lugar,
-            ofertas de mais de 30.000 faculdades parceiras em 100.000+ cursos de graduação,
+            ofertas das maiores redes de ensino do país em centenas de cursos de graduação,
             pós-graduação e técnicos, em EAD ou presencial. Você busca o curso, escolhe a cidade e a
             modalidade, e a plataforma mostra o desconto disponível em cada faculdade antes do
             cadastro. Quando decide, você se inscreve gratuitamente e segue a matrícula direto com a
@@ -162,7 +162,7 @@ export default function BolsaClickEConfiavel() {
           <p className="text-ink-700 leading-relaxed">
             Pronto pra começar?{' '}
             <Link href="/bolsas-de-estudo" className="underline decoration-1 underline-offset-4">
-              Compare bolsas de estudo em 30.000+ faculdades
+              Compare bolsas de estudo nas maiores redes de ensino do país
             </Link>{' '}
             ou conheça mais sobre{' '}
             <Link href="/quem-somos" className="underline decoration-1 underline-offset-4">

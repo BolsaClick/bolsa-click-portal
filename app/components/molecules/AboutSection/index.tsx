@@ -16,14 +16,14 @@ const AboutSection: React.FC = () => {
 
   const benefits = [
     "Descontos de até 80% durante todo o curso",
-    "Mais de 30.000 faculdades parceiras",
+    "Parceria com as maiores redes de ensino do Brasil",
     "Processo de matrícula simplificado",
     "Suporte personalizado durante todo o processo"
   ];
 
   const quickStats = [
-    { number: "30.000+", label: "Faculdades parceiras", icon: <School size={24} /> },
-    { number: "100.000+", label: "Cursos disponíveis", icon: <Users size={24} /> },
+    { number: "6", label: "Redes de ensino parceiras", icon: <School size={24} /> },
+    { number: "280+", label: "Cidades com polos", icon: <Users size={24} /> },
     { number: "80%", label: "Desconto máximo", icon: <Award size={24} /> },
     { number: "98%", label: "Alunos recomendam", icon: <TrendingUp size={24} /> }
   ];
@@ -57,9 +57,9 @@ const AboutSection: React.FC = () => {
             O que é o Bolsa<span className="text-red-500">Click</span>?
           </h2>
           <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            O Bolsa Click é a maior plataforma de bolsas de estudo em faculdades do Brasil.
+            O Bolsa Click é uma plataforma de bolsas de estudo em faculdades particulares.
             Aqui você encontra descontos de até 80% em graduação, pós-graduação e cursos técnicos.
-            São mais de 30.000 faculdades parceiras com bolsas exclusivas.
+            Trabalhamos com as maiores redes de ensino do país, com polos em mais de 280 cidades.
             Nossa missão é tornar o ensino superior acessível para todos.
           </p>
         </div>

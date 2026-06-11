@@ -88,7 +88,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
   const description = hasCourseSelected
     ? `Encontre bolsa de estudo em ${courseName} (${modalidadeFormatted})${locationText}. Desconto em faculdade de até 80% nas principais instituições do Brasil. Compare preços e garanta sua bolsa. Cadastre-se grátis!`
-    : 'Busque e compare bolsas de estudo em faculdades de todo Brasil. Desconto em faculdade de até 80% para graduação, pós-graduação e cursos técnicos. Mais de 30.000 faculdades parceiras. Cadastre-se grátis!'
+    : 'Busque e compare bolsas de estudo em faculdades de todo Brasil. Desconto em faculdade de até 80% para graduação, pós-graduação e cursos técnicos. Cadastre-se grátis!'
 
   // Construir URL canônica auto-referencial e normalizada
   // Normalização: sempre usar 'c' limpo e 'cn' separado (se aplicável)

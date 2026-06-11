@@ -25,7 +25,7 @@ const PersonaReturnBanner = () => {
               <span className="text-bolsa-secondary">Recomeça hoje</span>, sem ENEM.
             </h2>
             <p className="text-white/85 text-base md:text-lg leading-relaxed mb-6 max-w-2xl">
-              Mais de 30 mil faculdades aceitam histórico parcial e dispensam ENEM. Estude 100%
+              Faculdades parceiras em mais de 280 cidades aceitam histórico parcial e dispensam ENEM. Estude 100%
               online, no seu ritmo, com diploma reconhecido pelo MEC e bolsa de até 80%.
             </p>
 

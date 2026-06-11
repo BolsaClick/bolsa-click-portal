@@ -66,8 +66,6 @@ export const metadata: Metadata = {
     'faculdade com desconto',
     'bolsa para faculdade',
     'bolsa de estudo até 80%',
-    '30.000 faculdades',
-    '100.000 cursos',
     'bolsa de estudo online',
     'bolsa de estudo EAD',
     'bolsa de estudo presencial',

@@ -21,7 +21,7 @@ const sections = [
     label: 'Graduação',
     title: 'Bacharelado, licenciatura ou tecnólogo',
     body:
-      'Mais de 100 mil cursos disponíveis em 30 mil faculdades parceiras. Administração, Direito, Enfermagem, Pedagogia e muito mais.',
+      'Centenas de cursos disponíveis nas maiores redes de ensino do país. Administração, Direito, Enfermagem, Pedagogia e muito mais.',
   },
   {
     number: '04',
@@ -87,7 +87,7 @@ export default function ScholarshipInfoSection() {
             <p className="mt-6 text-[15px] text-ink-500 leading-relaxed">
               Quer entender as opções antes?{' '}
               <Link href="/bolsas-de-estudo" className="text-ink-700 underline decoration-1 underline-offset-4 hover:text-bolsa-secondary transition-colors">
-                Compare bolsas de estudo em 30.000+ faculdades
+                Compare bolsas de estudo nas maiores redes de ensino do Brasil
               </Link>
               .
             </p>

@@ -11,7 +11,7 @@ const DEFAULTS = {
   instagramUrl: 'https://instagram.com/bolsaclick',
   linkedinUrl: 'https://www.linkedin.com/company/bolsa-click',
   siteName: 'Bolsa Click',
-  siteDescription: 'O maior marketplace de bolsas de estudo do Brasil',
+  siteDescription: 'Marketplace de bolsas de estudo nas maiores redes de ensino do Brasil',
   logoUrl: '/assets/logo-bolsa-click-rosa.png',
 }
 

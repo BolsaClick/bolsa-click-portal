@@ -2341,7 +2341,7 @@ const isFormValidForPayment =
               <li className="flex items-start gap-3 text-[12px] text-ink-700 leading-relaxed">
                 <Check size={14} className="text-ink-900 flex-shrink-0 mt-0.5" />
                 <span>
-                  Mais de <strong className="font-semibold num-tabular text-ink-900">100 mil</strong> estudantes já garantiram bolsa pelo Bolsa Click.
+                  Mais de <strong className="font-semibold num-tabular text-ink-900">1.000</strong> estudantes já garantiram bolsa pelo Bolsa Click.
                 </span>
               </li>
             </ul>

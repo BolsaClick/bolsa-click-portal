@@ -51,7 +51,7 @@ const FAQ = [
   },
   {
     q: 'Preciso pagar para usar uma plataforma de bolsa confiável?',
-    a: 'Não. Plataformas confiáveis são gratuitas para o aluno porque são remuneradas pelas faculdades quando há matrícula. No Bolsa Click, por exemplo, o cadastro e a comparação de ofertas de mais de 30.000 faculdades são 100% grátis, e o único valor pago é a mensalidade já com desconto, diretamente à instituição.',
+    a: 'Não. Plataformas confiáveis são gratuitas para o aluno porque são remuneradas pelas faculdades quando há matrícula. No Bolsa Click, por exemplo, o cadastro e a comparação de ofertas das maiores redes de ensino do país são 100% grátis, e o único valor pago é a mensalidade já com desconto, diretamente à instituição.',
   },
   {
     q: 'Dá para confiar em bolsa de estudo de faculdade EAD?',
@@ -159,7 +159,7 @@ export default function ComoSaberSeUmSiteDeBolsaEConfiavel() {
             </Link>{' '}
             ou{' '}
             <Link href="/bolsas-de-estudo" className="underline decoration-1 underline-offset-4">
-              compare bolsas em 30.000+ faculdades
+              compare bolsas nas maiores redes de ensino do país
             </Link>
             .
           </p>

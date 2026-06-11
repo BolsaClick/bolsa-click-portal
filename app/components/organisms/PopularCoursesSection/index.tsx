@@ -49,7 +49,7 @@ export default function PopularCoursesSection() {
           </div>
           <div className="md:col-span-6 md:col-start-7 md:pt-3">
             <p className="text-ink-500 leading-relaxed text-[15px] md:text-base">
-              Compare preços, modalidades e bolsas em mais de 30 mil instituições parceiras. Inscrição gratuita,
+              Compare preços, modalidades e bolsas nas maiores redes de ensino do país. Inscrição gratuita,
               sem precisar de nota do ENEM, com diploma reconhecido pelo MEC.
             </p>
           </div>

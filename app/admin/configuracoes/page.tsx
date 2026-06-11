@@ -299,7 +299,7 @@ export default function AdminConfiguracoesPage() {
               <textarea
                 value={formData.siteDescription}
                 onChange={(e) => handleChange('siteDescription', e.target.value)}
-                placeholder="O maior marketplace de bolsas de estudo do Brasil"
+                placeholder="Marketplace de bolsas de estudo nas maiores redes de ensino do Brasil"
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bolsa-primary focus:border-transparent resize-none"
               />

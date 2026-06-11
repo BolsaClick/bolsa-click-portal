@@ -205,7 +205,7 @@ export default function CategoryPageClient({ category, posts, otherCategories }:
               <span className="italic text-white/85">depois da leitura.</span>
             </h2>
             <p className="text-white/75 text-[15px] md:text-base leading-relaxed mb-8 max-w-xl mx-auto">
-              Bolsas de até 80% em mais de 30 mil faculdades. Cadastro grátis, sem ENEM.
+              Bolsas de até 80% nas maiores redes de ensino do país. Cadastro grátis, sem ENEM.
             </p>
             <Link
               href="/cursos"

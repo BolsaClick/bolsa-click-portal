@@ -14,7 +14,7 @@ const faqs = [
   {
     question: 'Quais tipos de bolsa de estudo posso encontrar?',
     answer:
-      'Você encontra bolsas para graduação, pós-graduação e cursos técnicos. Todas as modalidades estão disponíveis: presencial, semipresencial e EAD. São mais de 100.000 cursos em 30.000 faculdades.',
+      'Você encontra bolsas para graduação, pós-graduação e cursos técnicos. Todas as modalidades estão disponíveis: presencial, semipresencial e EAD. São centenas de cursos nas maiores redes de ensino do Brasil.',
   },
   {
     question: 'Preciso da nota do ENEM para conseguir bolsa?',

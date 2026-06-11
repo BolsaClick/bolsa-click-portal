@@ -75,7 +75,7 @@ Editores BR costumam exigir **3+ matérias independentes**, em **veículos difer
 
 Pitch ao **G1 Educação** com o "Panorama Bolsa 2026":
 - Estudo próprio com dados reais do catálogo (já existe em `/estudos/panorama-bolsa-2026`)
-- Ângulo jornalístico: "Onde estão as bolsas mais altas no Brasil em 2026 (análise de 100.000 cursos)"
+- Ângulo jornalístico: "Onde estão as bolsas mais altas no Brasil em 2026 (análise do catálogo Bolsa Click: 117 cursos, 283 cidades)"
 - Embargo, dados exclusivos, executiva disponível pra entrevista
 - Alvo: 1 matéria principal G1 antes do fim de ago/2026
 

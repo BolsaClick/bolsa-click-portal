@@ -50,7 +50,7 @@ const FAQ_GROUPS: FaqGroup[] = [
       {
         question: 'O que é o Bolsa Click?',
         answer:
-          'Bolsa Click é um marketplace de bolsas de estudo em faculdades particulares brasileiras. Reúne ofertas de bolsa direta (sem ENEM, sem nota de corte) negociadas com instituições parceiras como Anhanguera, Unopar, Pitágoras, Ampli e Unime. Descontos de 25% a 85% em graduação, pós-graduação e cursos técnicos, com inscrição grátis o ano inteiro.',
+          'Bolsa Click é um marketplace de bolsas de estudo em faculdades particulares brasileiras. Reúne ofertas de bolsa direta (sem ENEM, sem nota de corte) negociadas com instituições parceiras como Anhanguera, Estácio, Unopar, Pitágoras, Ampli e Unime. Descontos de 25% a 85% em graduação, pós-graduação e cursos técnicos, com inscrição grátis o ano inteiro.',
       },
       {
         question: 'O Bolsa Click é confiável e seguro?',
@@ -70,7 +70,7 @@ const FAQ_GROUPS: FaqGroup[] = [
       {
         question: 'Em quais faculdades o Bolsa Click tem bolsa?',
         answer:
-          'Trabalhamos com mais de 30.000 unidades de faculdades parceiras espalhadas pelo Brasil, incluindo Anhanguera, Unopar, Pitágoras, Ampli e Unime, com cobertura nacional em modalidade EAD e presencial em 262+ cidades. Veja a lista completa em /faculdades.',
+          'Trabalhamos com as maiores redes de ensino do país — Anhanguera, Unopar, Pitágoras, Ampli, Unime e Estácio —, com cobertura nacional em modalidade EAD e polos presenciais em mais de 280 cidades. Veja a lista completa em /faculdades.',
       },
     ],
   },
@@ -288,8 +288,8 @@ export default function FaqHubPage() {
           <p className="text-lg md:text-xl text-ink-900 font-medium leading-relaxed">
             O <strong>Bolsa Click</strong> é um marketplace de bolsas de estudo em faculdades
             particulares brasileiras — descontos de 25% a 85% sem ENEM e sem nota de corte, com
-            inscrição grátis e matrícula online. Trabalhamos com mais de 30.000 unidades de
-            faculdades parceiras reconhecidas pelo MEC.
+            inscrição grátis e matrícula online. Trabalhamos com as maiores redes de ensino do
+            país, todas reconhecidas pelo MEC.
           </p>
         </div>
       </section>

@@ -60,12 +60,12 @@ const Hero = async () => {
                   : 'font-display text-4xl md:text-5xl lg:text-6xl font-semibold text-white leading-[1.05] mb-4'
               }
             >
-              Bolsas de até <span className="text-bolsa-secondary">80%</span> em mais de{' '}
-              <span className="text-bolsa-secondary">30.000 faculdades</span>
+              Bolsas de até <span className="text-bolsa-secondary">80%</span> nas{' '}
+              <span className="text-bolsa-secondary">maiores redes de ensino</span> do Brasil
             </h1>
             {!hasBanners && (
               <p className="text-white/85 text-base md:text-lg max-w-2xl leading-relaxed mb-6">
-                Compare mensalidades em mais de 100.000 cursos de graduação, pós e técnicos.
+                Compare mensalidades em centenas de cursos de graduação, pós e técnicos.
                 Sem ENEM, matrícula 100% online — cadastro grátis.
               </p>
             )}
@@ -73,15 +73,15 @@ const Hero = async () => {
                 social numérica antes do scroll. */}
             <dl className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-white/95">
               <div className="flex items-baseline gap-1.5">
-                <dt className="sr-only">Faculdades parceiras</dt>
-                <dd className="font-semibold text-base md:text-lg">30.000+</dd>
-                <span className="text-white/70 text-sm md:text-base">faculdades</span>
+                <dt className="sr-only">Redes de ensino parceiras</dt>
+                <dd className="font-semibold text-base md:text-lg">6</dd>
+                <span className="text-white/70 text-sm md:text-base">redes parceiras</span>
               </div>
               <span aria-hidden="true" className="text-white/30">·</span>
               <div className="flex items-baseline gap-1.5">
-                <dt className="sr-only">Cursos disponíveis</dt>
-                <dd className="font-semibold text-base md:text-lg">100.000+</dd>
-                <span className="text-white/70 text-sm md:text-base">cursos</span>
+                <dt className="sr-only">Cidades com polos</dt>
+                <dd className="font-semibold text-base md:text-lg">280+</dd>
+                <span className="text-white/70 text-sm md:text-base">cidades com polos</span>
               </div>
               <span aria-hidden="true" className="text-white/30">·</span>
               <div className="flex items-baseline gap-1.5">

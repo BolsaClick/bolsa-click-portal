@@ -32,9 +32,9 @@ export const metadata: Metadata = {
   // rotas filhas). Sem isso, "%s | Bolsa Click" era colado por cima de um valor
   // que já terminava em "Bolsa Click" → marca duplicada no <title>.
   title: {
-    absolute: 'Bolsas de Estudo de até 80% em 30.000+ Faculdades | Bolsa Click',
+    absolute: 'Bolsas de Estudo com até 80% de Desconto | Bolsa Click',
   },
-  description: 'Bolsa de estudo de até 80% em faculdades como Anhanguera, Unopar e Pitágoras, todas reconhecidas pelo MEC. Inscrição grátis, no EAD ou presencial.',
+  description: 'Bolsa de estudo de até 80% em faculdades como Anhanguera, Estácio e Unopar, todas reconhecidas pelo MEC. Inscrição grátis, no EAD ou presencial.',
   keywords: [
     'bolsa de estudo',
     'bolsa de estudos',
@@ -50,8 +50,6 @@ export const metadata: Metadata = {
     'faculdade com desconto',
     'bolsa para faculdade',
     'bolsa de estudo até 80%',
-    '30.000 faculdades',
-    '100.000 cursos',
     'bolsa de estudo online',
     'bolsa de estudo EAD',
     'bolsa de estudo presencial',
@@ -130,7 +128,7 @@ export default async function HomePage() {
         "name": "Como funcionam as bolsas de estudo do Bolsa Click?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "O Bolsa Click conecta estudantes a bolsas de estudo de até 80% de desconto em mais de 30.000 escolas e faculdades em todo Brasil. Você pode buscar por curso, cidade e modalidade, comparar preços e se cadastrar gratuitamente para garantir sua bolsa."
+          "text": "O Bolsa Click conecta estudantes a bolsas de estudo de até 80% de desconto nas maiores redes de ensino do Brasil — Anhanguera, Unopar, Pitágoras, Ampli, Unime e Estácio. Você pode buscar por curso, cidade e modalidade, comparar preços e se cadastrar gratuitamente para garantir sua bolsa."
         }
       },
       {
@@ -162,7 +160,7 @@ export default async function HomePage() {
         "name": "As bolsas são válidas para todo o Brasil?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Sim! O Bolsa Click oferece bolsas em mais de 30.000 escolas e faculdades em todas as regiões do Brasil. Você pode buscar por cidade e estado para encontrar as melhores ofertas na sua região."
+          "text": "Sim! O Bolsa Click oferece bolsas em faculdades parceiras com polos em mais de 280 cidades, em todas as regiões do Brasil. Você pode buscar por cidade e estado para encontrar as melhores ofertas na sua região."
         }
       },
       {

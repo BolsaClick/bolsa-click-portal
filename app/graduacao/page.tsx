@@ -43,7 +43,7 @@ const jsonLdSchema = {
 
 export const metadata: Metadata = {
   title: 'Bolsa de Estudo em Faculdades - Graduação com até 80% de Desconto',
-  description: 'Encontre bolsa de estudo em faculdades para graduação com até 80% de desconto. Desconto em faculdade para bacharelado, licenciatura e tecnólogo. Mais de 30.000 faculdades parceiras. Cadastre-se grátis!',
+  description: 'Encontre bolsa de estudo em faculdades para graduação com até 80% de desconto. Desconto em faculdade para bacharelado, licenciatura e tecnólogo. Cadastre-se grátis!',
   keywords: [
     'bolsa de estudo graduação',
     'bolsa de estudos graduação',

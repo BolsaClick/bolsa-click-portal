@@ -69,8 +69,8 @@ export default function CarreirasPageClient({ careers }: Props) {
                 <dd className="mt-1 font-display num-tabular text-2xl text-bolsa-secondary">80%</dd>
               </div>
               <div className="bg-white px-5 py-4">
-                <dt className="font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500">Faculdades</dt>
-                <dd className="mt-1 font-display num-tabular text-2xl text-ink-900">30k+</dd>
+                <dt className="font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500">Cidades com polos</dt>
+                <dd className="mt-1 font-display num-tabular text-2xl text-ink-900">280+</dd>
               </div>
             </dl>
           </div>
@@ -166,7 +166,7 @@ export default function CarreirasPageClient({ careers }: Props) {
             Já sabe o que quer cursar?
           </h2>
           <p className="mt-3 text-ink-700">
-            Compare bolsas, modalidades e preços em mais de 30.000 faculdades parceiras.
+            Compare bolsas, modalidades e preços nas maiores redes de ensino do país.
           </p>
           <Link
             href="/cursos"

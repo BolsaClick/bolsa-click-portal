@@ -273,7 +273,7 @@ export default function BlogPostClient({
                   <span className="italic text-white/85">aqui.</span>
                 </h3>
                 <p className="text-[12px] text-white/70 leading-relaxed mb-5">
-                  Até 80% de desconto em mais de 30 mil faculdades. Cadastro grátis, sem ENEM.
+                  Até 80% de desconto nas maiores redes de ensino do país. Cadastro grátis, sem ENEM.
                 </p>
                 <Link
                   href="/cursos"
@@ -381,7 +381,7 @@ export default function BlogPostClient({
               <span className="italic text-white/85">sua bolsa?</span>
             </h2>
             <p className="text-white/75 text-[15px] md:text-base leading-relaxed mb-8 max-w-xl mx-auto">
-              Compare ofertas em mais de 30 mil faculdades parceiras. Cadastro grátis, sem ENEM.
+              Compare ofertas nas maiores redes de ensino do país. Cadastro grátis, sem ENEM.
             </p>
             <Link
               href="/cursos"

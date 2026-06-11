@@ -181,7 +181,7 @@ export default function CursosPageClient({ courses }: CursosPageClientProps) {
               <span className="italic text-white/85">com a bolsa que cabe.</span>
             </h1>
             <p className="text-white/80 text-base md:text-lg max-w-2xl leading-relaxed mb-9">
-              Bacharelado, licenciatura ou tecnólogo — em mais de 30 mil faculdades parceiras.
+              Bacharelado, licenciatura ou tecnólogo — nas maiores redes de ensino do país.
               Descontos de até 80%, sem ENEM, sem fila e com diploma reconhecido pelo MEC.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
@@ -217,10 +217,10 @@ export default function CursosPageClient({ courses }: CursosPageClientProps) {
             </div>
             <div className="px-4 py-8 md:py-10 text-center">
               <div className="font-display num-tabular text-3xl md:text-4xl text-ink-900 leading-none">
-                30k+
+                280+
               </div>
               <div className="text-[12px] md:text-[13px] text-ink-500 mt-2 leading-snug">
-                Faculdades parceiras
+                Cidades com polos
               </div>
             </div>
             <div className="px-4 py-8 md:py-10 text-center">
@@ -585,7 +585,7 @@ export default function CursosPageClient({ courses }: CursosPageClientProps) {
               <span className="italic text-white/85">aqui?</span>
             </h2>
             <p className="text-white/75 text-[15px] md:text-base leading-relaxed mb-8 max-w-xl mx-auto">
-              Temos mais de 30 mil opções na busca completa. Compare faculdades, modalidades e
+              Temos centenas de outros cursos na busca completa. Compare faculdades, modalidades e
               descontos em segundos — cadastro grátis, sem ENEM, sem compromisso.
             </p>
             <Link

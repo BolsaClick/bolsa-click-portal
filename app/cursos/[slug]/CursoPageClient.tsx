@@ -493,7 +493,7 @@ export default function CursoPageClient({
               <span className="italic text-white/85">{cursoMetadata.name}?</span>
             </h2>
             <p className="text-white/75 text-[15px] md:text-base leading-relaxed mb-8 max-w-xl mx-auto">
-              Bolsas de estudo de até 80% em mais de 30 mil faculdades parceiras. Cadastro grátis,
+              Bolsas de estudo de até 80% nas maiores redes de ensino do país. Cadastro grátis,
               sem ENEM, sem complicação.
             </p>
             <button

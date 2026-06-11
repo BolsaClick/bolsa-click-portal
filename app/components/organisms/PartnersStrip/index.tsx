@@ -3,6 +3,7 @@ import { getTrustData } from '@/app/lib/trust'
 
 const partners = [
   { name: 'Anhanguera', src: '/assets/logo-anhanguera-bolsa-click.svg', width: 160, height: 36 },
+  { name: 'Estácio', src: '/estacio-logo.png', width: 120, height: 36 },
   { name: 'Unopar', src: '/assets/logo-unopar.svg', width: 130, height: 36 },
   { name: 'Pitágoras', src: '/assets/logo-pitagoras.svg', width: 140, height: 36 },
   { name: 'Ampli', src: '/assets/ampli-logo.png', width: 110, height: 36 },
@@ -48,14 +49,14 @@ export default async function PartnersStrip() {
               Parceiros
             </p>
             <h2 id="partners-title" className="font-display text-2xl md:text-3xl text-ink-900 leading-tight">
-              <span className="font-semibold">+30 mil faculdades</span>{' '}
+              <span className="font-semibold">As maiores redes de ensino do Brasil</span>{' '}
               <span className="italic text-ink-700">conectadas em uma plataforma só.</span>
             </h2>
           </div>
           <div className="md:col-span-7 md:col-start-6 grid grid-cols-3 gap-6 text-center md:text-left">
             <div>
-              <div className="font-display num-tabular text-3xl md:text-4xl text-ink-900">100k+</div>
-              <div className="text-[12px] text-ink-500 mt-1">cursos no catálogo</div>
+              <div className="font-display num-tabular text-3xl md:text-4xl text-ink-900">280+</div>
+              <div className="text-[12px] text-ink-500 mt-1">cidades com polos</div>
             </div>
             <div>
               <div className="font-display num-tabular text-3xl md:text-4xl text-ink-900">{studentLabel.value}</div>

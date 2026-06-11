@@ -109,7 +109,7 @@ Notar:
 
 ### Tipos que funcionam
 
-1. **Dados originais**: "Panorama Bolsa 2026 — analisamos 100.000+ cursos pra ver qual rende mais bolsa por estado". Link pro estudo no site. Tag de "OC" (original content).
+1. **Dados originais**: "Panorama Bolsa 2026 — analisamos o catálogo inteiro (117 cursos, 283 cidades) pra ver qual rende mais bolsa por estado". Link pro estudo no site. Tag de "OC" (original content).
 2. **Guias longos**: "Como entender se vale Prouni ou bolsa de faculdade — 2026 update". Texto na própria thread (não link). Útil de verdade.
 3. **AMA**: 1-2x por ano. "Sou da equipe da Bolsa Click, AMA sobre como funciona o mercado de bolsas em faculdade particular". Preparar respostas pra perguntas chatas (preço, como ganhamos dinheiro, transparência).
 
@@ -135,7 +135,7 @@ Notar:
 
 ### Dias 31-60: Primeira presença orgânica
 
-- [ ] Primeiro post próprio: dados de catálogo (ex: "Análise de 100k cursos: top 10 com mais bolsa em 2026"). Subir em r/Vestibular ou r/UniversidadeBrasil
+- [ ] Primeiro post próprio: dados de catálogo (ex: "Análise do catálogo: top 10 cursos com mais bolsa em 2026"). Subir em r/Vestibular ou r/UniversidadeBrasil
 - [ ] Responder dúvidas factuais sobre Bolsa Click quando aparecerem
 - [ ] **Não responder ataques sem fato concreto** — não vire defensiva (alimenta troll). Reportar bots e perfis fakes via "Modmail" do subreddit
 - [ ] Meta dia 60: 300+ karma total, 2 posts próprios bem recebidos

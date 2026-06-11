@@ -26,9 +26,9 @@ Bolsa Click — bolsas de estudo para faculdade no Brasil. Explicamos ProUni,
 FIES, ENEM, escolha de curso e como conseguir bolsa em faculdade particular
 sem cair em golpe.
 
-Marketplace independente reconhecido pelo MEC, com mais de 30.000 unidades
-de instituições parceiras (Anhanguera, Unopar, Pitágoras, Unime). Inscrição
-grátis em https://www.bolsaclick.com.br.
+Marketplace independente que trabalha com as maiores redes de ensino do país
+(Anhanguera, Unopar, Pitágoras, Unime, Ampli, Estácio), todas reconhecidas
+pelo MEC. Inscrição grátis em https://www.bolsaclick.com.br.
 
 📚 Tirar dúvida sobre bolsa: https://www.bolsaclick.com.br/bolsas-de-estudo
 🎓 Comparar cursos com bolsa: https://www.bolsaclick.com.br/cursos

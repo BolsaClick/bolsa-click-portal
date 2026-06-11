@@ -1,20 +1,20 @@
 // CLAUDE.md: nunca inventar números. Fallback estático usado por components
 // CLIENT-ONLY (Stats.tsx — Framer Motion). Servers DEVEM usar
 // `getTrustData()` de @/app/lib/trust pra contagem real via Prisma.
+// Bases verificáveis: 6 redes ativas (prisma.institution), polos em 283
+// cidades (estudo Panorama Bolsa 2026), +1.000 estudantes beneficiados.
 export const stats = {
   bolsaclick: {
-    maxDiscount: 95,
-    institutionsCount: '30.000+',
-    coursesCount: '100.000+',
-    studentsCount: '+10k',
-    partnersCount: '+25',
+    maxDiscount: 80,
+    citiesCount: '280+',
+    studentsCount: '+1.000',
+    partnersCount: '6',
   },
   anhanguera: {
     maxDiscount: 85,
-    institutionsCount: '30.000+',
-    coursesCount: '100.000+',
-    studentsCount: '+10k',
-    partnersCount: '+25',
+    citiesCount: '280+',
+    studentsCount: '+1.000',
+    partnersCount: '6',
   },
 } as const
 

@@ -188,7 +188,7 @@ export default function CarreiraPageClient({ profissao, related }: Props) {
           <p className="text-ink-900 text-lg leading-relaxed">
             Para atuar como <strong>{profissao.name}</strong>, é necessário cursar{' '}
             <strong>{profissao.fullName}</strong>, com duração de <strong>{profissao.duration}</strong>.
-            Pelo Bolsa Click, você encontra a graduação em mais de 30.000 faculdades parceiras com{' '}
+            Pelo Bolsa Click, você encontra a graduação nas maiores redes de ensino do país com{' '}
             <strong>bolsa de até 80%</strong> nas modalidades presencial, EAD e semipresencial.
           </p>
           <Link
@@ -218,7 +218,7 @@ export default function CarreiraPageClient({ profissao, related }: Props) {
               },
               {
                 q: `Como se tornar um profissional de ${profissao.name}?`,
-                a: `Para atuar como ${profissao.name} no Brasil, o caminho principal é cursar a graduação em ${profissao.fullName}, com duração padrão de ${profissao.duration} conforme as Diretrizes Curriculares Nacionais (DCN) do MEC. O curso pode ser feito em modalidade presencial, EAD ou semipresencial — todas formam profissionais com diploma equivalente e mesma validade legal. As principais habilidades desenvolvidas durante a graduação são ${profissao.skills.slice(0, 3).join(', ')}. Pelo Bolsa Click, você encontra a graduação em mais de 30.000 faculdades parceiras com bolsa de até 80% sobre a mensalidade. A inscrição é gratuita e em algumas faculdades o ingresso é por vestibular agendado online (sem necessidade de ENEM), com resultado em até 48 horas e matrícula imediata após aprovação.`,
+                a: `Para atuar como ${profissao.name} no Brasil, o caminho principal é cursar a graduação em ${profissao.fullName}, com duração padrão de ${profissao.duration} conforme as Diretrizes Curriculares Nacionais (DCN) do MEC. O curso pode ser feito em modalidade presencial, EAD ou semipresencial — todas formam profissionais com diploma equivalente e mesma validade legal. As principais habilidades desenvolvidas durante a graduação são ${profissao.skills.slice(0, 3).join(', ')}. Pelo Bolsa Click, você encontra a graduação nas maiores redes de ensino do país com bolsa de até 80% sobre a mensalidade. A inscrição é gratuita e em algumas faculdades o ingresso é por vestibular agendado online (sem necessidade de ENEM), com resultado em até 48 horas e matrícula imediata após aprovação.`,
               },
               {
                 q: `Como está o mercado de trabalho para ${profissao.name}?`,

@@ -15,8 +15,8 @@ import type { VitrineCourse } from '@/app/lib/api/get-vitrine'
 import { getBrandLogo } from '@/app/lib/brand-logos'
 
 const STATS = [
-  { value: '50k+', label: 'Cursos de graduação' },
-  { value: '30k+', label: 'Faculdades parceiras' },
+  { value: '6', label: 'redes de ensino parceiras' },
+  { value: '280+', label: 'cidades com polos' },
   { value: 'até 80%', label: 'de desconto em bolsas' },
   { value: '100%', label: 'sem necessidade de ENEM' },
 ]
@@ -142,7 +142,7 @@ export default function GraduacaoClient({ offers }: Props) {
               <span className="italic text-white/85">portas pra você.</span>
             </h1>
             <p className="text-white/80 text-base md:text-lg max-w-2xl leading-relaxed mb-8">
-              Bacharelado, licenciatura ou tecnólogo — em mais de 30 mil faculdades parceiras.
+              Bacharelado, licenciatura ou tecnólogo — nas maiores redes de ensino do país.
               Sem ENEM, sem fila, com diploma reconhecido pelo MEC.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">

@@ -11,15 +11,16 @@ import { prisma } from '@/app/lib/prisma'
 export interface TrustData {
   /** Ano de fundação/início de operação. Banda anual — schema.org aceita YYYY. */
   foundingYear: number
-  /** Nomes oficiais das marcas parceiras institucionais (grupo Cogna Educação). */
+  /** Nomes oficiais das marcas parceiras institucionais (Cogna Educação + YDUQS). */
   partnerBrandNames: string[]
-  /** Label do grupo controlador dos parceiros institucionais. */
+  /** Label dos grupos controladores dos parceiros institucionais (plural). */
   partnerGroupLabel: string
   /** Total de usuários cadastrados — null se contagem não disponível ou < 100. */
   studentCount: number | null
 }
 
-const COGNA_BRANDS = ['Anhanguera', 'Unopar', 'Pitágoras', 'Ampli', 'Unime'] as const
+// Cogna: Anhanguera, Unopar, Pitágoras, Ampli, Unime. YDUQS: Estácio.
+const PARTNER_BRANDS = ['Anhanguera', 'Unopar', 'Pitágoras', 'Ampli', 'Unime', 'Estácio'] as const
 const FOUNDING_YEAR = 2024
 
 /**
@@ -40,8 +41,8 @@ export async function getTrustData(): Promise<TrustData> {
 
   return {
     foundingYear: FOUNDING_YEAR,
-    partnerBrandNames: [...COGNA_BRANDS],
-    partnerGroupLabel: 'grupo Cogna Educação',
+    partnerBrandNames: [...PARTNER_BRANDS],
+    partnerGroupLabel: 'grupos Cogna Educação e YDUQS',
     studentCount,
   }
 }
@@ -53,7 +54,7 @@ export async function getTrustData(): Promise<TrustData> {
 export function getStaticTrustData(): Omit<TrustData, 'studentCount'> {
   return {
     foundingYear: FOUNDING_YEAR,
-    partnerBrandNames: [...COGNA_BRANDS],
-    partnerGroupLabel: 'grupo Cogna Educação',
+    partnerBrandNames: [...PARTNER_BRANDS],
+    partnerGroupLabel: 'grupos Cogna Educação e YDUQS',
   }
 }

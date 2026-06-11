@@ -128,7 +128,7 @@ const FAQ_ITEMS = [
   {
     question: 'Como o Bolsa Click se relaciona com os programas federais?',
     answer:
-      'O Bolsa Click é um marketplace independente que negocia bolsas próprias diretamente com faculdades particulares parceiras (Anhanguera, Unopar, Pitágoras, Ampli, Unime e outras). Funciona como alternativa ou complemento aos programas federais — não substitui o ProUni, FIES ou SISU. Vantagem: sem critério de renda, sem nota de corte, inscrição grátis o ano inteiro, descontos de 25% a 85% dependendo de curso e modalidade. Indicado especialmente para quem não fecha critério dos programas federais ou quer começar fora dos meses de inscrição oficial.',
+      'O Bolsa Click é um marketplace independente que negocia bolsas próprias diretamente com faculdades particulares parceiras (Anhanguera, Estácio, Unopar, Pitágoras, Ampli, Unime e outras). Funciona como alternativa ou complemento aos programas federais — não substitui o ProUni, FIES ou SISU. Vantagem: sem critério de renda, sem nota de corte, inscrição grátis o ano inteiro, descontos de 25% a 85% dependendo de curso e modalidade. Indicado especialmente para quem não fecha critério dos programas federais ou quer começar fora dos meses de inscrição oficial.',
   },
 ]
 

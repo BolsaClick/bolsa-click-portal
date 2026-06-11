@@ -37,7 +37,7 @@ export default function TrustBadges() {
             </span>
             <p className="text-sm text-ink-700 leading-snug">
               <strong className="text-ink-900">{partnerBrandNames.join(', ')}</strong>
-              {' '}— marcas do {partnerGroupLabel}
+              {' '}— marcas dos {partnerGroupLabel}
             </p>
           </li>
           <li className="bg-paper px-5 py-4">

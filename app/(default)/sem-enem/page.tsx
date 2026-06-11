@@ -45,7 +45,7 @@ const faqItems = [
   {
     question: 'Quais faculdades aceitam matrícula sem ENEM?',
     answer:
-      'A maioria das faculdades particulares brasileiras aceita ingresso sem ENEM, especialmente nas modalidades EAD e semipresencial. Entre as instituições parceiras do Bolsa Click, Anhanguera, Unopar, Pitágoras, Ampli e Unime oferecem vestibular agendado online em praticamente todos os cursos de graduação, com matrícula em até 48 horas após a aprovação. Cursos de tecnólogo (2 a 2,5 anos) costumam ser ainda mais acessíveis nesse formato, já que o foco é prático e a seleção valoriza o histórico escolar. Faculdades presenciais de grande porte mantêm vestibular tradicional, mas também aceitam vestibular agendado em datas específicas. Para confirmar quais cursos da faculdade desejada estão disponíveis sem ENEM, basta buscar pelo curso na plataforma Bolsa Click e filtrar pelas ofertas que indicam "vestibular online" ou "ingresso simplificado".',
+      'A maioria das faculdades particulares brasileiras aceita ingresso sem ENEM, especialmente nas modalidades EAD e semipresencial. Entre as instituições parceiras do Bolsa Click, Anhanguera, Estácio, Unopar, Pitágoras, Ampli e Unime oferecem vestibular agendado online em praticamente todos os cursos de graduação, com matrícula em até 48 horas após a aprovação. Cursos de tecnólogo (2 a 2,5 anos) costumam ser ainda mais acessíveis nesse formato, já que o foco é prático e a seleção valoriza o histórico escolar. Faculdades presenciais de grande porte mantêm vestibular tradicional, mas também aceitam vestibular agendado em datas específicas. Para confirmar quais cursos da faculdade desejada estão disponíveis sem ENEM, basta buscar pelo curso na plataforma Bolsa Click e filtrar pelas ofertas que indicam "vestibular online" ou "ingresso simplificado".',
   },
   {
     question: 'Faculdades EAD precisam de ENEM?',
@@ -121,10 +121,10 @@ export default function SemEnemPage() {
 
       <h2>Faculdades parceiras com ingresso sem ENEM</h2>
       <p>
-        Pelo Bolsa Click, as redes <strong>Anhanguera</strong>, <strong>Unopar</strong>,{' '}
-        <strong>Pitágoras</strong>, <strong>Ampli</strong> e <strong>Unime</strong> oferecem
-        vestibular agendado online em praticamente todos os cursos de graduação, com matrícula em
-        até 48h após a aprovação. Todas são reconhecidas pelo MEC e oferecem polos físicos em
+        Pelo Bolsa Click, as redes <strong>Anhanguera</strong>, <strong>Estácio</strong>,{' '}
+        <strong>Unopar</strong>, <strong>Pitágoras</strong>, <strong>Ampli</strong> e{' '}
+        <strong>Unime</strong> oferecem vestibular agendado online em praticamente todos os cursos
+        de graduação, com matrícula em até 48h após a aprovação. Todas são reconhecidas pelo MEC e oferecem polos físicos em
         centenas de cidades brasileiras.
       </p>
 

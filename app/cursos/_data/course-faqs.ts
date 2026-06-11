@@ -215,6 +215,52 @@ export const COURSE_FAQS: Record<string, CourseFaqEntry[]> = {
     },
   ],
 
+  odontologia: [
+    {
+      question: 'Odontologia pode ser feita EAD?',
+      answer:
+        'Não. O Conselho Federal de Odontologia (CFO) e o MEC não autorizam a graduação em Odontologia 100% EAD. O curso exige carga prática intensiva em laboratórios e clínicas-escola — atendimento a pacientes, dentística, cirurgia e radiologia precisam ser presenciais. É permitida apenas parte teórica em formato semipresencial.',
+    },
+    {
+      question: 'Quanto tempo dura a faculdade de Odontologia?',
+      answer:
+        'Odontologia é um bacharelado de 5 anos (10 semestres), com carga horária mínima de 4.000 horas e estágios obrigatórios em clínica-escola. Após formado, o cirurgião-dentista registra-se no CRO do seu estado pra atuar — especializações como Ortodontia e Implantodontia exigem cursos adicionais reconhecidos pelo CFO.',
+    },
+    {
+      question: 'Qual o salário de um dentista recém-formado?',
+      answer:
+        'Em consultórios e clínicas, dentistas recém-formados em CLT ganham entre R$ 4.000 e R$ 6.000. Profissionais com consultório próprio ou especialização (Ortodontia, Implantodontia) chegam a R$ 10.000–R$ 15.000+, com renda variável por procedimento. O setor público (concursos, saúde da família) oferece estabilidade com salários a partir de R$ 5.000.',
+    },
+    {
+      question: 'Quanto custa Odontologia com bolsa pelo Bolsa Click?',
+      answer:
+        'Odontologia é um dos cursos com mensalidade mais alta por exigir laboratórios e clínica-escola, mas a bolsa pelo Bolsa Click chega a 80% sobre o valor cheio. O preço exato varia por faculdade parceira, unidade e turno — confira os valores reais nas ofertas listadas nesta página antes de se inscrever (cadastro gratuito).',
+    },
+  ],
+
+  biomedicina: [
+    {
+      question: 'Biomedicina pode ser feita EAD?',
+      answer:
+        'Não totalmente. O MEC permite Biomedicina em formato semipresencial — disciplinas teóricas podem ser online, mas as aulas práticas de análises clínicas, microbiologia, biologia molecular e os estágios em laboratório exigem presença física. Não existe Biomedicina 100% EAD com reconhecimento oficial.',
+    },
+    {
+      question: 'O que faz um biomédico?',
+      answer:
+        'O biomédico atua em análises clínicas (exames de sangue, urina, microbiologia), diagnóstico por imagem, biologia molecular, reprodução humana, banco de sangue e perícia criminal. É o profissional habilitado a assumir responsabilidade técnica por laboratórios. São mais de 30 habilitações reconhecidas pelo Conselho Federal de Biomedicina (CFBM).',
+    },
+    {
+      question: 'Quanto tempo dura o curso de Biomedicina?',
+      answer:
+        'Biomedicina é um bacharelado de 4 anos (8 semestres), com estágios obrigatórios em laboratórios de análises clínicas, pesquisa ou imagenologia. Após a formatura, o registro no CRBM do estado é obrigatório pra atuar, e habilitações específicas (como imagenologia ou reprodução humana) podem exigir aperfeiçoamento posterior.',
+    },
+    {
+      question: 'Quanto ganha um biomédico no Brasil?',
+      answer:
+        'O salário de biomédicos varia de R$ 3.500 a R$ 10.000 conforme a área e a região. Recém-formados em laboratórios de análises clínicas começam por volta de R$ 3.500–R$ 4.500; biomédicos responsáveis técnicos, em imagenologia ou na indústria farmacêutica chegam a R$ 7.000–R$ 10.000+. A área de reprodução humana costuma ser a mais bem remunerada.',
+    },
+  ],
+
   'analise-e-desenvolvimento-de-sistemas': [
     {
       question: 'ADS (Análise e Desenvolvimento de Sistemas) tem o mesmo valor que Ciência da Computação?',

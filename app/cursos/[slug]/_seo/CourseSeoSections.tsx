@@ -204,10 +204,19 @@ export function CitiesGrid({ courseSlug, courseName, currentCitySlug }: CitiesGr
 // FAQ answers expandidos pra ~134-167 palavras (target ideal pra extração AI).
 // Combinam dados do DB (longDescription, areas, skills, careerPaths, averageSalary,
 // marketDemand, duration) pra produzir blocos self-contained e citáveis.
+// Slugs canônicos têm sufixo de tipo (ex: "psicologia-bacharelado"), mas
+// COURSE_FAQS é chaveado pelo nome-base ("psicologia"). Removemos o sufixo pra
+// casar — funciona tanto com slug curto quanto canônico.
+const COURSE_SLUG_SUFFIXES = ['-bacharelado', '-licenciatura', '-tecnologo', '-especializacao', '-mba']
+function baseCourseSlug(slug: string): string {
+  const suffix = COURSE_SLUG_SUFFIXES.find((s) => slug.endsWith(s))
+  return suffix ? slug.slice(0, -suffix.length) : slug
+}
+
 export function buildCourseFaqItems(curso: FeaturedCourseData, lowPrice: number): FaqItem[] {
   // Se o curso tem FAQ específico curado, usar (top 10 cursos).
   // Fallback pro template genérico nos restantes.
-  const custom = COURSE_FAQS[curso.slug]
+  const custom = COURSE_FAQS[curso.slug] ?? COURSE_FAQS[baseCourseSlug(curso.slug)]
   if (custom && custom.length > 0) {
     return custom
   }
@@ -221,18 +230,18 @@ export function buildCourseFaqItems(curso: FeaturedCourseData, lowPrice: number)
   return [
     {
       question: `O que é o curso de ${curso.name}?`,
-      answer: `${curso.longDescription}${areas ? ` As principais áreas de atuação incluem ${areas}.` : ''}${skills ? ` Durante a graduação, o aluno desenvolve competências como ${skills}.` : ''} Pelo Bolsa Click, é possível encontrar ofertas com bolsa de até 80% em mais de 30.000 faculdades parceiras reconhecidas pelo MEC, nas modalidades presencial, EAD e semipresencial.`,
+      answer: `${curso.longDescription}${areas ? ` As principais áreas de atuação incluem ${areas}.` : ''}${skills ? ` Durante a graduação, o aluno desenvolve competências como ${skills}.` : ''} Pelo Bolsa Click, é possível encontrar ofertas com bolsa de até 80% nas maiores redes de ensino do país, todas reconhecidas pelo MEC, nas modalidades presencial, EAD e semipresencial.`,
     },
     {
       question: `Quanto tempo dura o curso de ${curso.name}?`,
-      answer: `O curso de ${curso.fullName} tem duração de ${curso.duration} em sua versão padrão reconhecida pelo MEC. Essa duração inclui carga horária mínima exigida pelas Diretrizes Curriculares Nacionais (DCN), além do estágio supervisionado quando obrigatório pela profissão. Cursos na modalidade EAD ou semipresencial mantêm a mesma duração total da modalidade presencial — o diploma final é equivalente em todas as modalidades. Algumas faculdades oferecem aceleração via aproveitamento de disciplinas (transferência interna ou externa), permitindo reduzir o tempo total quando o estudante já cursou ao menos um semestre em outra instituição. Pelo Bolsa Click, você compara modalidades disponíveis para ${curso.name} em mais de 30.000 faculdades parceiras com bolsa de até 80%.`,
+      answer: `O curso de ${curso.fullName} tem duração de ${curso.duration} em sua versão padrão reconhecida pelo MEC. Essa duração inclui carga horária mínima exigida pelas Diretrizes Curriculares Nacionais (DCN), além do estágio supervisionado quando obrigatório pela profissão. Cursos na modalidade EAD ou semipresencial mantêm a mesma duração total da modalidade presencial — o diploma final é equivalente em todas as modalidades. Algumas faculdades oferecem aceleração via aproveitamento de disciplinas (transferência interna ou externa), permitindo reduzir o tempo total quando o estudante já cursou ao menos um semestre em outra instituição. Pelo Bolsa Click, você compara modalidades disponíveis para ${curso.name} nas maiores redes de ensino do país com bolsa de até 80%.`,
     },
     {
       question: `Quanto custa o curso de ${curso.name} com bolsa?`,
       answer:
         lowPrice > 0
-          ? `Com bolsa pelo Bolsa Click, o curso de ${curso.name} pode ser encontrado a partir de R$ ${formatBRL(lowPrice)} por mês, com descontos de até 80% sobre a mensalidade cheia. Os valores variam por modalidade (EAD costuma ser mais acessível que presencial), por instituição (faculdades de grande porte como Anhanguera, Unopar e Pitágoras têm faixas competitivas) e pela região (capitais de SP/RJ tendem a ter mensalidades cheias maiores). A inscrição no Bolsa Click é totalmente gratuita — você compara ofertas, escolhe a bolsa que melhor cabe no orçamento e faz matrícula direto pela faculdade sem custo de processo seletivo. Não há taxa de manutenção ou cobrança escondida na bolsa.`
-          : `O Bolsa Click oferece bolsas de até 80% de desconto para o curso de ${curso.name} em mais de 30.000 faculdades parceiras. Os valores específicos dependem da modalidade (presencial, EAD ou semipresencial), da instituição escolhida e da disponibilidade de vagas com bolsa no momento da inscrição. Em geral, cursos EAD têm mensalidades a partir de R$ 99 a R$ 199 com bolsa, enquanto presencial varia de R$ 299 a R$ 599 com bolsa em capitais. Cadastre-se grátis para ver as ofertas atualizadas em tempo real e simular o valor com bolsa antes de decidir.`,
+          ? `Com bolsa pelo Bolsa Click, o curso de ${curso.name} pode ser encontrado a partir de R$ ${formatBRL(lowPrice)} por mês, com descontos de até 80% sobre a mensalidade cheia. Os valores variam por modalidade (EAD costuma ser mais acessível que presencial), por instituição (faculdades de grande porte como Anhanguera, Estácio, Unopar e Pitágoras têm faixas competitivas) e pela região (capitais de SP/RJ tendem a ter mensalidades cheias maiores). A inscrição no Bolsa Click é totalmente gratuita — você compara ofertas, escolhe a bolsa que melhor cabe no orçamento e faz matrícula direto pela faculdade sem custo de processo seletivo. Não há taxa de manutenção ou cobrança escondida na bolsa.`
+          : `O Bolsa Click oferece bolsas de até 80% de desconto para o curso de ${curso.name} nas maiores redes de ensino do país. Os valores específicos dependem da modalidade (presencial, EAD ou semipresencial), da instituição escolhida e da disponibilidade de vagas com bolsa no momento da inscrição. Em geral, cursos EAD têm mensalidades a partir de R$ 99 a R$ 199 com bolsa, enquanto presencial varia de R$ 299 a R$ 599 com bolsa em capitais. Cadastre-se grátis para ver as ofertas atualizadas em tempo real e simular o valor com bolsa antes de decidir.`,
     },
     {
       question: `Qual o salário médio de quem faz ${curso.name}?`,
@@ -254,12 +263,12 @@ export function buildCityFaqItems(
       question: `Quanto custa ${curso.name} em ${cityName}?`,
       answer:
         lowPrice > 0
-          ? `Em ${cityName}-${cityState}, o curso de ${curso.name} pode ser encontrado a partir de R$ ${formatBRL(lowPrice)} por mês com bolsa pelo Bolsa Click, considerando descontos de até 80% sobre a mensalidade cheia. Os valores variam conforme a faculdade escolhida, modalidade (EAD costuma ser mais acessível que presencial em ${cityName}) e disponibilidade de vagas. Faculdades parceiras como Anhanguera, Unopar e Pitágoras costumam ter polos físicos em ${cityName} oferecendo o curso em modalidade presencial e semipresencial, com flexibilidade de turno (manhã, tarde ou noite). A inscrição é totalmente gratuita e a matrícula é feita direto pela faculdade após a aprovação no processo seletivo simplificado. Não há custo de processo seletivo nas ofertas com bolsa pelo Bolsa Click.`
-          : `O Bolsa Click oferece bolsas de até 80% de desconto para ${curso.name} em ${cityName}-${cityState}. Os valores variam por instituição parceira, modalidade (presencial, EAD ou semipresencial) e disponibilidade de vagas no momento da inscrição. Em ${cityName}, faculdades como Anhanguera, Unopar e Pitágoras costumam ter polos físicos com oferta de ${curso.name} a partir de R$ 199 a R$ 599 por mês com bolsa aplicada. A inscrição é gratuita e a matrícula é feita direto pela faculdade após a aprovação no vestibular simplificado. Cadastre-se grátis pra ver as ofertas atualizadas em tempo real e comparar preço, polo, modalidade e desconto.`,
+          ? `Em ${cityName}-${cityState}, o curso de ${curso.name} pode ser encontrado a partir de R$ ${formatBRL(lowPrice)} por mês com bolsa pelo Bolsa Click, considerando descontos de até 80% sobre a mensalidade cheia. Os valores variam conforme a faculdade escolhida, modalidade (EAD costuma ser mais acessível que presencial em ${cityName}) e disponibilidade de vagas. Faculdades parceiras como Anhanguera, Estácio, Unopar e Pitágoras costumam ter polos físicos em ${cityName} oferecendo o curso em modalidade presencial e semipresencial, com flexibilidade de turno (manhã, tarde ou noite). A inscrição é totalmente gratuita e a matrícula é feita direto pela faculdade após a aprovação no processo seletivo simplificado. Não há custo de processo seletivo nas ofertas com bolsa pelo Bolsa Click.`
+          : `O Bolsa Click oferece bolsas de até 80% de desconto para ${curso.name} em ${cityName}-${cityState}. Os valores variam por instituição parceira, modalidade (presencial, EAD ou semipresencial) e disponibilidade de vagas no momento da inscrição. Em ${cityName}, faculdades como Anhanguera, Estácio, Unopar e Pitágoras costumam ter polos físicos com oferta de ${curso.name} a partir de R$ 199 a R$ 599 por mês com bolsa aplicada. A inscrição é gratuita e a matrícula é feita direto pela faculdade após a aprovação no vestibular simplificado. Cadastre-se grátis pra ver as ofertas atualizadas em tempo real e comparar preço, polo, modalidade e desconto.`,
     },
     {
       question: `Quais faculdades oferecem ${curso.name} em ${cityName}?`,
-      answer: `Em ${cityName}-${cityState}, diversas faculdades parceiras do Bolsa Click oferecem ${curso.name}, incluindo redes nacionais como Anhanguera, Unopar, Pitágoras, Ampli e Unime — todas reconhecidas pelo Ministério da Educação (MEC) com cursos avaliados pelo Sistema Nacional de Avaliação da Educação Superior (Sinaes). A oferta exata depende do polo local de cada instituição e da modalidade escolhida (presencial, EAD ou semipresencial). Cursos EAD têm cobertura praticamente universal — qualquer cidade brasileira com internet permite estudar. Já a modalidade presencial depende de polo físico em ${cityName} ou cidade vizinha. Pelo Bolsa Click, você compara as faculdades disponíveis em ${cityName}, vê o polo de cada uma, a mensalidade com bolsa, a nota do MEC e as condições de pagamento — tudo em uma única busca.`,
+      answer: `Em ${cityName}-${cityState}, diversas faculdades parceiras do Bolsa Click oferecem ${curso.name}, incluindo redes nacionais como Anhanguera, Estácio, Unopar, Pitágoras, Ampli e Unime — todas reconhecidas pelo Ministério da Educação (MEC) com cursos avaliados pelo Sistema Nacional de Avaliação da Educação Superior (Sinaes). A oferta exata depende do polo local de cada instituição e da modalidade escolhida (presencial, EAD ou semipresencial). Cursos EAD têm cobertura praticamente universal — qualquer cidade brasileira com internet permite estudar. Já a modalidade presencial depende de polo físico em ${cityName} ou cidade vizinha. Pelo Bolsa Click, você compara as faculdades disponíveis em ${cityName}, vê o polo de cada uma, a mensalidade com bolsa, a nota do MEC e as condições de pagamento — tudo em uma única busca.`,
     },
     {
       question: `${curso.name} em ${cityName} é EAD ou presencial?`,

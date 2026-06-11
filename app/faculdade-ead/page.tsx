@@ -34,6 +34,11 @@ const CURSOS_NAO_EAD = [
 
 const FAQ_ITEMS = [
   {
+    question: 'Qual a faculdade EAD mais barata do Brasil?',
+    answer:
+      'As faculdades EAD mais baratas com bolsa pelo Bolsa Click têm mensalidade a partir de R$ 99/mês, em cursos tecnólogos como Análise e Desenvolvimento de Sistemas, Gestão de RH e Pedagogia. O valor exato depende do curso, da unidade e do turno — bacharelados (4-5 anos) custam um pouco mais que tecnólogos (2-2,5 anos). Em todos os casos, a bolsa chega a 80% sobre o valor cheio e a inscrição é gratuita, sem ENEM.',
+  },
+  {
     question: 'Faculdade EAD é reconhecida pelo MEC?',
     answer:
       'Sim. Desde 2005, o MEC autoriza graduações em modalidade EAD com o mesmo valor legal e profissional do diploma presencial. O reconhecimento é por curso e por instituição — sempre verifique a Portaria do MEC antes de matricular. Cursos como Administração, Pedagogia, ADS e Engenharia Civil (autorizada em 2023) têm reconhecimento pleno em modalidade EAD.',
@@ -81,7 +86,7 @@ const jsonLdSchemas = [
     '@type': 'CollectionPage',
     name: 'Faculdade EAD com Bolsa de Estudo',
     description:
-      'Mais de 30 mil faculdades EAD parceiras com bolsa de até 80%. Graduação a distância reconhecida pelo MEC. Inscrição grátis, sem ENEM.',
+      'Faculdades EAD parceiras com bolsa de até 80%, das maiores redes de ensino do país. Graduação a distância reconhecida pelo MEC. Inscrição grátis, sem ENEM.',
     url: `${SITE_URL}/faculdade-ead`,
     provider: {
       '@type': 'EducationalOrganization',
@@ -109,23 +114,25 @@ const jsonLdSchemas = [
 ]
 
 export const metadata: Metadata = {
-  title: 'Faculdade EAD com Bolsa de até 80% | Graduação a Distância Reconhecida MEC',
+  title: 'Faculdade EAD Mais Barata: Bolsa de até 80%',
   description:
-    'Mais de 30 mil faculdades EAD parceiras com bolsa de até 80% pelo Bolsa Click. Graduação a distância reconhecida pelo MEC em Administração, Pedagogia, ADS, Engenharia Civil e mais. Inscrição grátis, sem ENEM.',
+    'A faculdade EAD mais barata começa a partir de R$ 99/mês com bolsa de até 80% pelo Bolsa Click — em graduações reconhecidas pelo MEC como Administração, Pedagogia e ADS. Inscrição grátis, sem ENEM.',
   keywords: [
     'faculdade ead',
+    'faculdade ead mais barata',
+    'faculdade ead mais barata do brasil',
+    'faculdade ead barata',
     'faculdade ead com bolsa',
     'graduação a distância',
-    'faculdade ead barata',
     'curso ead com bolsa',
     'ead reconhecido mec',
     'faculdade online com desconto',
   ],
   alternates: { canonical: `${SITE_URL}/faculdade-ead` },
   openGraph: {
-    title: 'Faculdade EAD com Bolsa de até 80% | Bolsa Click',
+    title: 'Faculdade EAD Mais Barata: Bolsa de até 80% | Bolsa Click',
     description:
-      'Graduação EAD reconhecida pelo MEC com bolsa de até 80%. Mais de 30 mil faculdades parceiras. Inscrição grátis, sem ENEM.',
+      'A faculdade EAD mais barata parte de R$ 99/mês com bolsa de até 80%, reconhecida pelo MEC, nas maiores redes de ensino do país. Inscrição grátis, sem ENEM.',
     url: `${SITE_URL}/faculdade-ead`,
     siteName: 'Bolsa Click',
     locale: 'pt_BR',
@@ -157,11 +164,11 @@ export default function FaculdadeEadPage() {
               Graduação a distância reconhecida MEC
             </p>
             <h1 className="font-display text-4xl md:text-5xl lg:text-[64px] font-semibold text-white leading-[1.05] mb-5">
-              Faculdade EAD{' '}
+              Faculdade EAD mais barata{' '}
               <span className="italic text-white/85">com bolsa de até 80% de desconto</span>
             </h1>
             <p className="text-white/80 text-base md:text-lg max-w-2xl mx-auto leading-relaxed mb-8">
-              Compare mais de 30 mil faculdades EAD parceiras (Anhanguera, Unopar, Ampli, Pitágoras)
+              Compare as faculdades EAD das maiores redes do país (Anhanguera, Estácio, Unopar, Ampli, Pitágoras)
               e garanta sua bolsa em graduações reconhecidas pelo MEC. Sem ENEM, sem fila, inscrição
               100% gratuita.
             </p>
@@ -411,7 +418,7 @@ export default function FaculdadeEadPage() {
             Comece sua graduação EAD com bolsa hoje
           </h2>
           <p className="text-white/80 mb-7 leading-relaxed">
-            Mais de 30 mil faculdades parceiras. Cadastro gratuito. Sem ENEM, sem CPF do parente,
+            As maiores redes de ensino do país. Cadastro gratuito. Sem ENEM, sem CPF do parente,
             sem fila.
           </p>
           <Link

@@ -58,7 +58,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: 'Profissão não encontrada' }
   }
 
-  const title = `${profissao.name}: Salário, Mercado de Trabalho e Como se Tornar`
+  // Title ≤ 60 chars (layout cola "%s | Bolsa Click", 14 chars). Degrada conforme
+  // o tamanho do nome da profissão; prioriza o ano de freshness (2026) quando cabe.
+  const brandSuffixLen = ' | Bolsa Click'.length
+  const titleBase = profissao.name
+  const titleSuffix =
+    [': Salário e Mercado de Trabalho 2026', ': Salário e Mercado 2026', ': Salário 2026', ': Salário', ''].find(
+      (s) => titleBase.length + s.length + brandSuffixLen <= 60
+    ) ?? ''
+  const title = `${titleBase}${titleSuffix}`
   const description = `Carreira em ${profissao.name}: salário médio de ${profissao.averageSalary}, demanda ${profissao.marketDemand.toLowerCase()}, formação em ${profissao.duration}. Veja o que faz, áreas de atuação e qual faculdade fazer com bolsa de até 80%.`
   const pageUrl = `https://www.bolsaclick.com.br/carreiras/${slug}`
 

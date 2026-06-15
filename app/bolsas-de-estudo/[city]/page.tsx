@@ -79,10 +79,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const hasOffers = offers.length > 0
   const pageUrl = `${SITE_URL}/bolsas-de-estudo/${citySlug}`
 
-  const title = `Bolsas de Estudo em ${cityData.name}/${cityData.state} - Faculdades, Cursos e Descontos`
+  // Title ≤ 60 chars (layout cola "%s | Bolsa Click", 14 chars). Degrada o
+  // sufixo conforme o tamanho do nome da cidade.
+  const brandSuffixLen = ' | Bolsa Click'.length
+  const titleBase = `Bolsas de Estudo em ${cityData.name}`
+  const titleSuffix =
+    [`/${cityData.state} — até 80% de desconto`, ' — até 80% de desconto', ' — até 80%', ''].find(
+      (s) => titleBase.length + s.length + brandSuffixLen <= 60
+    ) ?? ''
+  const title = `${titleBase}${titleSuffix}`
+
+  // Description: abre com dado concreto (# de cursos + preço) seguido de CTA.
+  // Sem "!" — sinal de spam nos SERPs.
+  const offerPrices = offers.map((o: Course) => o.minPrice || 0).filter((p: number) => p > 0)
+  const minOfferPrice = offerPrices.length > 0 ? Math.min(...offerPrices) : 0
+  const priceText = minOfferPrice > 0 ? ` a partir de R$${minOfferPrice.toFixed(0)}/mês` : ''
   const description = hasOffers
-    ? `Encontre bolsas de estudo em ${cityData.name}/${cityData.state} com até 80% de desconto. ${offers.length} ofertas em faculdades parceiras. Compare cursos e mensalidades. Inscrição grátis!`
-    : `Bolsas de estudo em ${cityData.name}/${cityData.state} com até 80% de desconto. Faculdades parceiras Bolsa Click. Cadastre-se e veja as ofertas disponíveis.`
+    ? `${offers.length} cursos com bolsa em ${cityData.name}/${cityData.state}${priceText}. Até 80% de desconto em faculdades reconhecidas pelo MEC. Inscrição grátis.`
+    : `Bolsas de estudo em ${cityData.name}/${cityData.state} com até 80% de desconto. Faculdades parceiras reconhecidas pelo MEC. Inscrição grátis.`
 
   return {
     title,

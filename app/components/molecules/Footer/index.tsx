@@ -241,6 +241,19 @@ const Footer: React.FC = () => {
                 <Linkedin size={18} />
               </a>
               <WhatsAppSocialIcon />
+              <a
+                href="https://www.reclameaqui.com.br/empresa/bolsa-click/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Reclame Aqui — perfil Bolsa Click"
+                title="Reclame Aqui"
+                className="hover:opacity-80 transition-opacity"
+              >
+                <svg width="20" height="20" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                  <rect width="40" height="40" rx="6" fill="#00B140"/>
+                  <text x="20" y="27" textAnchor="middle" fill="white" fontSize="15" fontFamily="Arial,sans-serif" fontWeight="700">RA</text>
+                </svg>
+              </a>
             </div>
           </div>
 
@@ -278,16 +291,6 @@ const Footer: React.FC = () => {
                   <Link href="/blog" className={linkClass}>
                     Blog
                   </Link>
-                </li>
-                <li>
-                  <a
-                    href="https://www.reclameaqui.com.br/empresa/bolsa-click/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={linkClass}
-                  >
-                    Reclame Aqui
-                  </a>
                 </li>
               </ul>
             </nav>

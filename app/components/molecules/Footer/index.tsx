@@ -279,6 +279,16 @@ const Footer: React.FC = () => {
                     Blog
                   </Link>
                 </li>
+                <li>
+                  <a
+                    href="https://www.reclameaqui.com.br/empresa/bolsa-click/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={linkClass}
+                  >
+                    Reclame Aqui
+                  </a>
+                </li>
               </ul>
             </nav>
           </div>

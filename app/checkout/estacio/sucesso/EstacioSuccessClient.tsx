@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { CheckCircle2, Copy, ExternalLink } from 'lucide-react'
+import QRCode from 'react-qr-code'
 import ReviewInviteCard from '@/app/components/molecules/ReviewInviteCard'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { trackFbq } from '@/app/lib/analytics/fbq'
@@ -107,23 +108,40 @@ export default function EstacioSuccessClient() {
 
           {pixCode && (
             <div className="border border-gray-200 rounded-lg p-4">
-              <h3 className="font-medium text-gray-800 mb-2">PIX copia e cola</h3>
-              <p className="text-xs text-gray-500 mb-2 break-all bg-gray-50 rounded p-2 font-mono">
-                {pixCode}
+              <h3 className="font-medium text-gray-800 mb-4 text-center">Pague com PIX</h3>
+              <div className="flex justify-center mb-4">
+                <div className="p-3 bg-white border border-gray-200 rounded-xl shadow-sm inline-block">
+                  <QRCode
+                    value={pixCode}
+                    size={180}
+                    bgColor="#ffffff"
+                    fgColor="#000000"
+                    level="M"
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-center text-gray-500 mb-3">
+                Escaneie o QR code com o app do seu banco
               </p>
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard?.writeText(pixCode).then(() => {
-                    setPixCopied(true)
-                    setTimeout(() => setPixCopied(false), 2000)
-                  })
-                }}
-                className="inline-flex items-center gap-2 text-sm font-medium text-emerald-700 hover:text-emerald-800"
-              >
-                <Copy className="w-4 h-4" />
-                {pixCopied ? 'Copiado!' : 'Copiar código PIX'}
-              </button>
+              <div className="border-t border-gray-100 pt-3 mt-3">
+                <p className="text-xs text-gray-500 mb-1 font-medium">Ou copie o código PIX:</p>
+                <p className="text-xs text-gray-400 mb-2 break-all bg-gray-50 rounded p-2 font-mono leading-relaxed">
+                  {pixCode}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard?.writeText(pixCode).then(() => {
+                      setPixCopied(true)
+                      setTimeout(() => setPixCopied(false), 2000)
+                    })
+                  }}
+                  className="inline-flex items-center gap-2 text-sm font-medium text-emerald-700 hover:text-emerald-800"
+                >
+                  <Copy className="w-4 h-4" />
+                  {pixCopied ? 'Copiado!' : 'Copiar código PIX'}
+                </button>
+              </div>
             </div>
           )}
 

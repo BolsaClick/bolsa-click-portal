@@ -133,8 +133,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // Google truncar o texto no meio de uma palavra.
   const brandSuffixLen = ` | ${getCurrentTheme().shortTitle}`.length
   const titleBase = `Bolsa de ${curso.name}`
+  const priceSuffix = lowPrice > 0 ? ` — de R$${lowPrice.toFixed(0)}/mês` : ''
   const titleSuffix =
-    [' com até 80% de desconto', ' de até 80%', ''].find(
+    (lowPrice > 0
+      ? [priceSuffix, ' com até 80% de desconto', ' de até 80%', '']
+      : [' com até 80% de desconto', ' de até 80%', '']
+    ).find(
       (s) => titleBase.length + s.length + brandSuffixLen <= 60
     ) ?? ''
   const title = `${titleBase}${titleSuffix}`

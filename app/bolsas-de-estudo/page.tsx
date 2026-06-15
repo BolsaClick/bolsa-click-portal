@@ -792,6 +792,50 @@ export default async function BolsasDeEstudoHubPage() {
           (score 36/100, persona crítica). Sazonal: 594K candidatos ProUni 2026. */}
       <ProUniAlternativasSection />
 
+      {/* Internal linking curso+cidade — distribui PageRank para ~48 URLs de alta
+          intenção de compra e ajuda o Google a descobrir o padrão /cursos/[slug]/[city].
+          Cursos e cidades ordenados por volume de busca (TOP_CURSOS + BRAZILIAN_CITIES). */}
+      <section id="bolsas-por-curso" className="bg-paper py-12 md:py-16 border-b border-hairline">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="flex items-baseline justify-between hairline-b pb-3 mb-6">
+            <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900">
+              Bolsas por curso e cidade
+            </h2>
+          </div>
+          <p className="text-ink-700 leading-relaxed mb-8 max-w-3xl text-[15px]">
+            Compare bolsas nos cursos mais procurados pelas principais cidades do Brasil.
+            Descontos de até 80%, inscrição grátis e resultado em até 48h.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {TOP_CURSOS.slice(0, 6).map(curso => (
+              <div key={curso.slug}>
+                <h3 className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink-500 mb-3">
+                  {curso.name}
+                </h3>
+                <ul className="space-y-2">
+                  {BRAZILIAN_CITIES.slice(0, 8).map(city => (
+                    <li key={city.slug}>
+                      <Link
+                        href={`/cursos/${curso.slug}/${city.slug}`}
+                        className="text-[14px] text-ink-700 hover:text-ink-900 underline decoration-1 underline-offset-2 decoration-hairline transition-colors"
+                      >
+                        {curso.name} em {city.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href={`/cursos/${curso.slug}`}
+                  className="mt-3 inline-block font-mono text-[11px] tracking-[0.16em] uppercase text-ink-500 hover:text-ink-700 transition-colors"
+                >
+                  Ver {curso.name} →
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section id="como-funcionam" className="bg-paper py-12 md:py-16 border-b border-hairline" data-speakable="como-funcionam">
         <div className="container mx-auto px-4 max-w-3xl prose prose-neutral">
           <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900 mb-4">

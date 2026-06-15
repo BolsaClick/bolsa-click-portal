@@ -148,8 +148,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // marca no fim — o keyword principal fica sempre front-loaded.
   const brandSuffixLen = ` | ${getCurrentTheme().shortTitle}`.length
   const titleBase = `${curso.name} em ${cityData.name}`
+  const priceSuffix = lowPrice > 0 ? ` — de R$${lowPrice.toFixed(0)}/mês` : ''
   const titleSuffix =
-    [' com bolsa de até 80%', ' com bolsa', ''].find(
+    (lowPrice > 0
+      ? [priceSuffix, ' com bolsa de até 80%', ' com bolsa', '']
+      : [' com bolsa de até 80%', ' com bolsa', '']
+    ).find(
       (s) => titleBase.length + s.length + brandSuffixLen <= 60
     ) ?? ''
   const title = `${titleBase}${titleSuffix}`

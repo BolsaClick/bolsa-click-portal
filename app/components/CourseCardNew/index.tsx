@@ -8,8 +8,10 @@ import { trackTikTok } from "@/app/lib/analytics/ttq"
 import { getAcademicLevelLabel } from "@/app/lib/academic-level"
 import { Building2, Clock, Heart, MapPin, Star } from "lucide-react"
 import Image from "next/image"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { toast } from "sonner"
+import { useFeatureFlags } from "@/app/lib/hooks/usePostHogFeatureFlags"
+import CourseCardRedesign from "./Redesign"
 
 interface CourseCardProps {
   course: Course
@@ -26,7 +28,30 @@ type CourseInfo = {
 }
 
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const CourseCardNew: React.FC<CourseCardProps> = ({
+  course,
+  viewMode,
+  courseName,
+  isPos
+}) => {
+  const { featureFlags, isFeatureFlagLoading } = useFeatureFlags()
+  const useRedesign = useMemo(
+    () => !isFeatureFlagLoading && featureFlags['course_card_redesign_v2'] === true,
+    [featureFlags, isFeatureFlagLoading]
+  )
+
+  // Se feature flag está ativa, usar novo design
+  if (useRedesign) {
+    return <CourseCardRedesign course={course} courseName={courseName} />
+  }
+
+  // Caso contrário, manter design original
+  return <CourseCardOriginal course={course} viewMode={viewMode} courseName={courseName} isPos={isPos} />
+}
+
+// Renomear componente original
+const CourseCardOriginal: React.FC<CourseCardProps> = ({
   course,
   viewMode,
   courseName,
@@ -558,4 +583,5 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
   );
 }
 
-export default CourseCardNew;
+export default CourseCardNew
+export { CourseCardOriginal, CourseCardRedesign }

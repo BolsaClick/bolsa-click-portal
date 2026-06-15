@@ -168,6 +168,10 @@ const nextConfig: NextConfig = {
         source: "/ingest/decide",
         destination: "https://us.i.posthog.com/decide",
       },
+      {
+        source: "/utm/:path*",
+        destination: "https://cdn.utmify.com.br/:path*",
+      },
     ];
   },
   async redirects() {

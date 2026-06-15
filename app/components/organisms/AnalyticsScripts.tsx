@@ -144,7 +144,7 @@ export function AnalyticsScripts({ gtmId, ga4Id, facebookPixelIds, tiktokPixelId
       {/* UTMify (marketing) */}
       {marketing && (
         <Script
-          src="https://cdn.utmify.com.br/scripts/utms/latest.js"
+          src="/utm/scripts/utms/latest.js"
           key={`utmify-${versionKey}`}
           data-utmify-prevent-xcod-sck=""
           data-utmify-prevent-subids=""

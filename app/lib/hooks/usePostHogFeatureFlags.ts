@@ -91,3 +91,55 @@ export function useWhatsappFeatureFlag() {
   return flagValue as boolean
 }
 
+/**
+ * Hook para acessar todas as feature flags de uma vez
+ * Útil para A/B tests que consultam múltiplas flags
+ */
+export function useFeatureFlags() {
+  const posthog = usePostHog()
+  const [featureFlags, setFeatureFlags] = useState<Record<string, boolean | string>>({})
+  const [isFeatureFlagLoading, setIsFeatureFlagLoading] = useState(true)
+
+  useEffect(() => {
+    if (!posthog) {
+      setIsFeatureFlagLoading(false)
+      return
+    }
+
+    const getAllFlags = () => {
+      try {
+        const flags: Record<string, boolean | string> = {
+          'course_card_redesign_v2': posthog.isFeatureEnabled('course_card_redesign_v2') ?? false,
+          'marketplace': posthog.isFeatureEnabled('marketplace') ?? false,
+          'pix-before-enrollment': posthog.isFeatureEnabled('pix-before-enrollment') ?? false,
+          'pix_enabled': posthog.isFeatureEnabled('pix_enabled') ?? true,
+          'whatsapp_enabled': posthog.isFeatureEnabled('whatsapp_enabled') ?? true,
+        }
+        setFeatureFlags(flags)
+        setIsFeatureFlagLoading(false)
+
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔍 PostHog Feature Flags:', flags)
+        }
+      } catch (error) {
+        console.error('Erro ao obter feature flags:', error)
+        setIsFeatureFlagLoading(false)
+      }
+    }
+
+    getAllFlags()
+
+    const unsubscribe = posthog.onFeatureFlags(() => {
+      getAllFlags()
+    })
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe()
+      }
+    }
+  }, [posthog])
+
+  return { featureFlags, isFeatureFlagLoading }
+}
+

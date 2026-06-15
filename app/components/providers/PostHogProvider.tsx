@@ -31,7 +31,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
     if (!analyticsAllowed || initializedRef.current) return
 
     const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY
-    const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.posthog.com"
+    const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || "/ingest"
 
     if (!posthogKey) {
       console.warn("⚠️ NEXT_PUBLIC_POSTHOG_KEY não está definida")

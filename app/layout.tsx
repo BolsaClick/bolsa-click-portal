@@ -245,7 +245,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             a.setAttribute("async", "");
             a.setAttribute("defer", "");
             a.setAttribute("crossorigin", "anonymous");
-            a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
+            a.setAttribute("src", "/utm/scripts/pixel/pixel.js");
             (document.head || document.body || document.documentElement).appendChild(a);
           }
           var idle = window.requestIdleCallback || function (cb) { return setTimeout(cb, 1500); };

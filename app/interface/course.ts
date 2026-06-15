@@ -46,4 +46,14 @@ export interface Course {
   source?: 'TARTARUS' | 'YDUQS'
   /** uuid do Offer no catálogo da Athena. Usado só no trilho 'YDUQS'. */
   offerId?: string
+  /** Avaliação MEC do curso (0-5) */
+  mecScore?: number
+  /** Quantidade de alunos inscritos neste semestre */
+  enrolledCount?: number
+  /** Desconto aplicado (em %) */
+  discount?: number
+  /** Data de expiração do desconto */
+  discountExpires?: string
+  /** Vagas disponíveis (null = ilimitado) */
+  availableSpots?: number | null
 }

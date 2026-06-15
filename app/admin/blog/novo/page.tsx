@@ -109,6 +109,11 @@ export default function AdminBlogNewPostPage() {
     const file = e.target.files?.[0]
     if (!file || !firebaseUser) return
 
+    if (file.size > 3 * 1024 * 1024) {
+      setError('A imagem deve ter no máximo 3MB. Reduza o tamanho antes de fazer upload.')
+      return
+    }
+
     setUploading(true)
     setError(null)
 
@@ -148,6 +153,7 @@ export default function AdminBlogNewPostPage() {
 
   const handleContentImageUpload = useCallback(async (file: File): Promise<string> => {
     if (!firebaseUser) throw new Error('Não autenticado')
+    if (file.size > 3 * 1024 * 1024) throw new Error('A imagem deve ter no máximo 3MB.')
 
     const reader = new FileReader()
     return new Promise((resolve, reject) => {

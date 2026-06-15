@@ -119,6 +119,8 @@ const CURSOS: Record<string, CursoRef> = {
   engenharia_civil: { slug: 'engenharia-civil-bacharelado', apiCourseName: 'Engenharia Civil', name: 'Engenharia Civil', nivel: 'GRADUACAO', imagePath: '/assets/images/engenharia-civil.jpg' },
   contabeis: { slug: 'ciencias-contabeis-bacharelado', apiCourseName: 'Ciências Contábeis', name: 'Ciências Contábeis', nivel: 'GRADUACAO', imagePath: '/assets/images/ciencias-contabeis.jpg' },
   educacao_fisica: { slug: 'educacao-fisica-licenciatura', apiCourseName: 'Educação Física', name: 'Educação Física', nivel: 'GRADUACAO', imagePath: '/assets/images/educacao-fisica.jpeg' },
+  biomedicina: { slug: 'biomedicina-bacharelado', apiCourseName: 'Biomedicina', name: 'Biomedicina', nivel: 'GRADUACAO', imagePath: '/assets/images/Biomedicina.jpeg' },
+  farmacia: { slug: 'farmacia-bacharelado', apiCourseName: 'Farmácia', name: 'Farmácia', nivel: 'GRADUACAO', imagePath: '/assets/images/farmacia.jpeg' },
 }
 
 function imageForArchetype(arch: { cursoKey?: keyof typeof CURSOS }): string {
@@ -605,6 +607,93 @@ const ARCHETYPES: Archetype[] = [
     kind: 'guia',
     categorySlugs: ['ead', 'bolsas-de-estudo'],
     briefing: 'Responder direto: o desconto é uma bolsa aplicada à mensalidade — você busca o curso, compara o percentual de cada faculdade, se cadastra grátis e passa a pagar a mensalidade já reduzida, direto à instituição. Explicar passo a passo, a diferença entre bolsa própria (sem ENEM, sem critério de renda) e programas federais (ProUni/FIES), e por que o EAD costuma ter desconto maior. Tom de CATEGORIA — NUNCA citar concorrente. NÃO inventar preço em R$; falar em percentuais. LINKAR no primeiro terço pra /como-funciona-bolsa-de-estudo e pra /bolsas-de-estudo; citar /prouni e /fies. Seção Perguntas frequentes.',
+  },
+
+  // ===========================================================
+  // CLUSTER "QUANTO GANHA" — captura BOFU de salário por profissão.
+  // Queries: "quanto ganha um psicólogo", "salário enfermeiro 2026", etc.
+  // Fonte obrigatória para salários: CBO/CAGED/conselho profissional.
+  // Linkar pra /cursos/[slug] e /bolsas-de-estudo no primeiro terço.
+  // ===========================================================
+  {
+    slug: 'quanto-ganha-psicologo-salario-2026',
+    title: 'Quanto ganha um psicólogo em 2026? Salário por área e experiência',
+    kind: 'guia',
+    cursoKey: 'psicologia',
+    categorySlugs: ['carreira-e-mercado', 'cursos-de-graduacao'],
+    featured: true,
+    briefing: 'Responder direto nos primeiros 40-60 palavras: faixa salarial do psicólogo em 2026 por área de atuação (clínica, organizacional/RH, hospitalar, escolar, jurídica). Cobrir: piso salarial referenciado pelo CFP e CBO, diferença CLT vs autônomo/liberal, impacto da especialização no salário, perspectiva de crescimento (junior/pleno/sênior). Dados de CAGED/CBO como fonte — NÃO inventar valores. Incluir tabela com áreas × faixa salarial. LINKAR no primeiro terço pra /cursos/psicologia-bacharelado (anchor "bolsa de psicologia com até 80% de desconto") e pra /bolsas-de-estudo. Encerrar com CTA de comparar bolsas. Seção FAQ com 4+ perguntas.',
+  },
+  {
+    slug: 'quanto-ganha-enfermeiro-salario-2026',
+    title: 'Quanto ganha um enfermeiro em 2026? Salário e mercado de trabalho',
+    kind: 'guia',
+    cursoKey: 'enfermagem',
+    categorySlugs: ['carreira-e-mercado', 'cursos-de-graduacao'],
+    featured: true,
+    briefing: 'Responder direto: faixa salarial do enfermeiro em 2026 por área (hospital geral, UTI, home care, saúde pública, enfermeiro do trabalho). Cobrir: piso salarial pelo COFEN e CBO, diferença entre enfermeiro × técnico × auxiliar de enfermagem, alta demanda do mercado (projeção OMS de déficit global de profissionais), impacto da especialização (UTI, oncologia, estética). Dados de CAGED/COFEN — NÃO inventar salários. Tabela área × faixa. LINKAR no primeiro terço pra /cursos/enfermagem-bacharelado ("bolsa de enfermagem") e pra /bolsas-de-estudo. Seção FAQ.',
+  },
+  {
+    slug: 'quanto-ganha-biomedico-salario-2026',
+    title: 'Quanto ganha um biomédico em 2026? Salário e áreas de atuação',
+    kind: 'guia',
+    cursoKey: 'biomedicina',
+    categorySlugs: ['carreira-e-mercado', 'cursos-de-graduacao'],
+    briefing: 'Responder direto: faixa salarial do biomédico em 2026 por área (laboratório clínico, pesquisa, biomedicina estética, indústria farmacêutica, hematologia, análises clínicas). Cobrir: CFBM (Conselho Federal de Biomedicina) e habilitações, impacto da habilitação em estética no salário, diferença pro farmacêutico e pro biólogo. Dados de CBO/CAGED — NÃO inventar valores. Tabela área × faixa. LINKAR no primeiro terço pra /cursos/biomedicina-bacharelado ("bolsa de biomedicina") e pra /bolsas-de-estudo. Seção FAQ.',
+  },
+
+  // ===========================================================
+  // CLUSTER "VALE A PENA EAD?" — decisão de matrícula em curso EAD.
+  // Queries: "psicologia ead vale a pena", "biomedicina ead", etc.
+  // Apareceu em consultas do GSC (biomedicina). Alta intenção de compra.
+  // ===========================================================
+  {
+    slug: 'psicologia-ead-vale-a-pena-2026',
+    title: 'Psicologia EAD vale a pena em 2026? O que diz o CFP e o MEC',
+    kind: 'guia',
+    cursoKey: 'psicologia',
+    modality: 'EAD',
+    categorySlugs: ['cursos-de-graduacao', 'ead', 'bolsas-de-estudo'],
+    featured: true,
+    briefing: 'Responder direto: Psicologia EAD é autorizada pelo MEC em formato semipresencial, com componente prático obrigatório. Cobrir: posição do CFP (Conselho Federal de Psicologia) que exige mínimo de horas presenciais, como verificar se a faculdade tem o curso reconhecido no e-MEC, comparativo de custo EAD vs presencial com bolsa, e pra quem faz sentido cada modalidade. NÃO inventar preços — usar DATA_BLOCK.allowedPrices. LINKAR no primeiro terço pra /cursos/psicologia-bacharelado e /bolsas-de-estudo. Seção FAQ com 4+ perguntas incluindo "CRP reconhece EAD?" e "Qual a diferença de salário".',
+  },
+  {
+    slug: 'biomedicina-ead-vale-a-pena-2026',
+    title: 'Biomedicina EAD vale a pena? O que você precisa saber antes de se matricular',
+    kind: 'guia',
+    cursoKey: 'biomedicina',
+    modality: 'EAD',
+    categorySlugs: ['cursos-de-graduacao', 'ead', 'bolsas-de-estudo'],
+    briefing: 'Responder direto: Biomedicina EAD/semipresencial existe e é autorizada pelo MEC — mas exige componente prático presencial (laboratórios, estágios) no polo. Cobrir: quais habilitações o biomédico pode exercer ao se formar em EAD, como conferir reconhecimento no e-MEC, custo com bolsa vs presencial, o que a grade inclui de presencial. NÃO inventar preços — usar DATA_BLOCK. LINKAR no primeiro terço pra /cursos/biomedicina-bacharelado e /bolsas-de-estudo. Seção FAQ com "CFBM reconhece EAD?", "Posso fazer biomedicina estética com EAD?".',
+  },
+  {
+    slug: 'enfermagem-ead-vale-a-pena-2026',
+    title: 'Enfermagem EAD vale a pena em 2026? Guia completo sobre o curso',
+    kind: 'guia',
+    cursoKey: 'enfermagem',
+    modality: 'EAD',
+    categorySlugs: ['cursos-de-graduacao', 'ead', 'bolsas-de-estudo'],
+    briefing: 'Responder direto: Enfermagem EAD (semipresencial) existe, com parte teórica online e estágios/laboratórios obrigatórios no polo. COREN reconhece formados em EAD quando o curso tem reconhecimento MEC. Cobrir: carga horária presencial mínima, como escolher polo com estrutura de laboratório, custo com bolsa (maior desconto que presencial), mercado de trabalho. NÃO inventar preços — usar DATA_BLOCK. LINKAR pra /cursos/enfermagem-bacharelado e /bolsas-de-estudo. Seção FAQ com "COREN reconhece EAD?", "Dá pra trabalhar em UTI com EAD?".',
+  },
+
+  // ===========================================================
+  // CLUSTER "QUAL CURSO ESCOLHER?" — decisão entre dois cursos similares.
+  // Queries: "psicologia ou pedagogia", "biomedicina ou farmácia", etc.
+  // ===========================================================
+  {
+    slug: 'psicologia-ou-pedagogia-qual-escolher',
+    title: 'Psicologia ou Pedagogia: diferenças, mercado e qual fazer em 2026',
+    kind: 'ranking',
+    categorySlugs: ['cursos-de-graduacao', 'carreira-e-mercado'],
+    briefing: 'Comparativo direto Psicologia vs Pedagogia: duração (5 anos vs 4 anos), tipo de habilitação (CRP vs licenciatura), áreas de atuação (clínica/organizacional/escolar vs gestão escolar/concurso público/docência), salário médio e mercado de trabalho. Tabela lado a lado. Perfil ideal pra cada curso — quando Psicologia faz sentido e quando Pedagogia é melhor escolha. NÃO inventar salários. LINKAR no primeiro terço pra /cursos/psicologia-bacharelado e /cursos/pedagogia-licenciatura, ambos com anchor de bolsa. LINKAR pra /bolsas-de-estudo. Seção FAQ.',
+  },
+  {
+    slug: 'biomedicina-ou-farmacia-qual-curso-escolher',
+    title: 'Biomedicina ou Farmácia: diferenças, mercado e salário em 2026',
+    kind: 'ranking',
+    cursoKey: 'biomedicina',
+    categorySlugs: ['cursos-de-graduacao', 'carreira-e-mercado'],
+    briefing: 'Comparativo direto Biomedicina vs Farmácia: áreas de atuação (laboratório/pesquisa/estética para biomedicina; farmácia clínica/indústria/varejo/oncologia para farmácia), habilitações (CFBM vs CFF), duração semelhante (4-5 anos), mercado e salário. Tabela comparativa. Quando cada curso faz sentido: quem quer trabalhar com diagnóstico e pesquisa vai pra Biomedicina; quem quer varejo ou indústria farmacêutica vai pra Farmácia. NÃO inventar salários. LINKAR pra /cursos/biomedicina-bacharelado e /cursos/farmacia-bacharelado. LINKAR pra /bolsas-de-estudo. Seção FAQ.',
   },
 ]
 

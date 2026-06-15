@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Course } from '@/app/interface/course'
+import { useOptionalAuth } from '@/app/contexts/AuthContext'
 
 const FAVORITES_KEY = 'bolsa-click-favorites'
 
@@ -42,8 +43,39 @@ const getCourseKey = (course: Course): string => {
   return `${id}-${unitId}`
 }
 
+function syncAddToApi(course: Course, firebaseUser: { getIdToken: () => Promise<string> } | null) {
+  if (!firebaseUser) return
+  firebaseUser.getIdToken().then(token => {
+    fetch('/api/user/favorites', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        courseId: String(course.id),
+        courseName: course.name ?? '',
+        courseSlug: String(course.id),
+        institutionName: course.brand ?? null,
+        modalidade: course.modality ?? course.commercialModality ?? null,
+        price: course.minPrice ?? null,
+        discount: course.discount ?? null,
+      }),
+    }).catch(() => {})
+  })
+}
+
+function syncRemoveFromApi(course: Course, firebaseUser: { getIdToken: () => Promise<string> } | null) {
+  if (!firebaseUser) return
+  firebaseUser.getIdToken().then(token => {
+    fetch(`/api/user/favorites?courseId=${String(course.id)}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    }).catch(() => {})
+  })
+}
+
 export function useFavorites() {
   const [favorites, setFavorites] = useState<Course[]>([])
+  const auth = useOptionalAuth()
+  const firebaseUser = auth?.firebaseUser ?? null
 
   // Carregar favoritos do localStorage ao montar
   useEffect(() => {
@@ -76,13 +108,14 @@ export function useFavorites() {
         const favKey = getCourseKey(fav)
         return favKey === courseKey
       })
-      
+
       if (exists) {
         return prev
       }
-      
+
       return [...prev, course]
     })
+    syncAddToApi(course, firebaseUser)
   }
 
   const removeFavorite = (course: Course) => {
@@ -93,6 +126,7 @@ export function useFavorites() {
         return favKey !== courseKey
       })
     })
+    syncRemoveFromApi(course, firebaseUser)
   }
 
   const toggleFavorite = (course: Course) => {

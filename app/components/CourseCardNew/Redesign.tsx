@@ -5,6 +5,7 @@ import { usePostHogTracking } from "@/app/lib/hooks/usePostHogTracking"
 import { trackFbqDual } from "@/app/lib/analytics/fbq"
 import { trackTikTok } from "@/app/lib/analytics/ttq"
 import { Building2, Clock, Heart, MapPin, Star, Users, Lock } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -21,6 +22,7 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
   const { isFavorite, toggleFavorite } = useFavorites()
   const { trackEvent } = usePostHogTracking()
   const [selectedShift, setSelectedShift] = useState<string>('')
+  const [justFavorited, setJustFavorited] = useState(false)
 
   const courseModality = course.modality?.toUpperCase() || course.commercialModality?.toUpperCase() || ''
 
@@ -191,22 +193,54 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
             priority
           />
         </div>
-        <button
+        <motion.button
+          whileTap={{ scale: 0.72 }}
           onClick={() => {
             const wasFavorite = isFavorite(course)
             toggleFavorite(course)
+            if (!wasFavorite) {
+              setJustFavorited(true)
+              setTimeout(() => setJustFavorited(false), 700)
+            }
             trackEvent(wasFavorite ? 'course_unfavorited' : 'course_favorited', {
               course_id: course.id,
               design_version: 'redesign_v2',
             })
           }}
-          className="p-1.5 hover:bg-ink-100/50 rounded-full transition-colors"
+          className="relative p-1.5 hover:bg-ink-100/50 rounded-full transition-colors"
         >
-          <Heart
-            size={17}
-            className={isFavorite(course) ? 'fill-bolsa-secondary text-bolsa-secondary' : 'text-ink-300'}
-          />
-        </button>
+          <motion.div
+            animate={isFavorite(course)
+              ? { scale: [1, 1.45, 0.9, 1], rotate: [0, -15, 8, 0] }
+              : { scale: 1, rotate: 0 }
+            }
+            transition={{ duration: 0.45, ease: 'easeOut' }}
+          >
+            <Heart
+              size={17}
+              className={isFavorite(course) ? 'fill-bolsa-secondary text-bolsa-secondary' : 'text-ink-300'}
+              style={{ transition: 'fill 0.2s, color 0.2s' }}
+            />
+          </motion.div>
+          <AnimatePresence>
+            {justFavorited && [0, 1, 2, 3].map(i => {
+              const angle = (i / 4) * Math.PI * 2
+              const x = Math.cos(angle) * 18
+              const y = Math.sin(angle) * 18
+              return (
+                <motion.span
+                  key={i}
+                  initial={{ opacity: 1, scale: 0.5, x: 0, y: 0 }}
+                  animate={{ opacity: 0, scale: 1, x, y }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.55, ease: 'easeOut' }}
+                  className="absolute w-1.5 h-1.5 rounded-full bg-bolsa-secondary pointer-events-none"
+                  style={{ top: '50%', left: '50%', marginTop: -3, marginLeft: -3 }}
+                />
+              )
+            })}
+          </AnimatePresence>
+        </motion.button>
       </div>
 
       {/* NOME DO CURSO */}

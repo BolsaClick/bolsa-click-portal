@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { CheckCircle2, Copy, ExternalLink } from 'lucide-react'
+import ReviewInviteCard from '@/app/components/molecules/ReviewInviteCard'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { trackFbq } from '@/app/lib/analytics/fbq'
 import { trackTikTokDual } from '@/app/lib/analytics/ttq'
@@ -134,6 +135,9 @@ export default function EstacioSuccessClient() {
               <li>Verifique seu e-mail para acompanhar os próximos passos.</li>
             </ul>
           </div>
+
+          {/* Coleta de reviews — checkout Estácio sempre é Estácio. */}
+          <ReviewInviteCard brand="Estácio" />
         </div>
 
         <div className="p-6 border-t border-gray-200 flex flex-col gap-3">

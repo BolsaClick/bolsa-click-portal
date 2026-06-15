@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { formatCurrency } from '@/utils/fomartCurrency'
 import { trackFbq } from '@/app/lib/analytics/fbq'
 import { trackTikTokDual } from '@/app/lib/analytics/ttq'
+import ReviewInviteCard from '@/app/components/molecules/ReviewInviteCard'
 
 
 
@@ -15,6 +16,9 @@ export default function SuccessClient() {
   const course = searchParams.get('course')
   const paymentMethod = searchParams.get('paymentMethod')
   const payToday = searchParams.get('price')
+  // Opcional — quando o fluxo de checkout informa a marca, o convite de
+  // avaliação deep-linka pra /faculdades/{slug}#avaliacoes.
+  const brand = searchParams.get('brand')
 
 
   const [status, setStatus] = useState<'waiting' | 'processing' | 'confirmed'>(
@@ -282,6 +286,9 @@ useEffect(() => {
               </div>
             </div>
           )}
+
+          {/* Coleta de reviews — convite após confirmação da matrícula. */}
+          {status === 'confirmed' && <ReviewInviteCard brand={brand} />}
         </div>
 
         {/* Footer */}

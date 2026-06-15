@@ -239,7 +239,9 @@ export default async function FaculdadeDetailPage({
       />
       <FaculdadePageClient institution={institution} initialCourses={institutionCourses} />
 
-      <section className="bg-white py-12 md:py-16 border-t border-hairline">
+      {/* id="avaliacoes": âncora dos CTAs pós-matrícula (success pages) que
+          alimentam o funil de coleta de reviews → AggregateRating. */}
+      <section id="avaliacoes" className="bg-white py-12 md:py-16 border-t border-hairline scroll-mt-24">
         <div className="container mx-auto px-4 max-w-3xl">
           <div className="flex items-baseline justify-between hairline-b pb-3 mb-6">
             <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">

@@ -44,7 +44,9 @@
       "salário cientista da computação",
       "curso de programação",
       "ciência da computação online"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/ciencia-da-computacao-bacharelado.jpg",
+    "imageAlt": "Ciência da Computação — carreira e formação"
   },
   {
     "slug": "sistemas-de-informacao-bacharelado",
@@ -91,7 +93,9 @@
       "curso de TI",
       "sistemas de informação EAD",
       "graduação em tecnologia"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/sistemas-de-informacao-bacharelado.jpg",
+    "imageAlt": "Sistemas de Informação — carreira e formação"
   },
   {
     "slug": "engenharia-de-software-bacharelado",
@@ -138,7 +142,9 @@
       "curso de programação",
       "engenharia de software EAD",
       "graduação em software"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/engenharia-de-software-bacharelado.jpg",
+    "imageAlt": "Engenharia de Software — carreira e formação"
   },
   {
     "slug": "engenharia-da-computacao-bacharelado",
@@ -184,7 +190,9 @@
       "salário engenheiro da computação",
       "curso de hardware",
       "engenharia da computação EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/engenharia-da-computacao-bacharelado.jpg",
+    "imageAlt": "Engenharia da Computação — carreira e formação"
   },
   {
     "slug": "engenharia-eletrica-bacharelado",
@@ -231,7 +239,9 @@
       "curso de engenharia elétrica",
       "engenharia elétrica EAD",
       "engenheiro eletricista"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/engenharia-eletrica-bacharelado.jpg",
+    "imageAlt": "Engenharia Elétrica — carreira e formação"
   },
   {
     "slug": "engenharia-mecanica-bacharelado",
@@ -277,7 +287,9 @@
       "salário engenheiro mecânico",
       "curso de engenharia mecânica",
       "engenharia mecânica EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/engenharia-mecanica-bacharelado.jpg",
+    "imageAlt": "Engenharia Mecânica — carreira e formação"
   },
   {
     "slug": "engenharia-quimica-bacharelado",
@@ -323,7 +335,9 @@
       "salário engenheiro químico",
       "curso de engenharia química",
       "engenharia química EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/engenharia-quimica-bacharelado.jpg",
+    "imageAlt": "Engenharia Química — carreira e formação"
   },
   {
     "slug": "medicina-veterinaria-bacharelado",
@@ -370,7 +384,9 @@
       "curso de medicina veterinária",
       "veterinária EAD não tem",
       "ser veterinário"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/medicina-veterinaria-bacharelado.jpg",
+    "imageAlt": "Medicina Veterinária — carreira e formação"
   },
   {
     "slug": "fonoaudiologia-bacharelado",
@@ -417,7 +433,9 @@
       "curso de fonoaudiologia",
       "fonoaudiologia EAD",
       "ser fonoaudiólogo"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/fonoaudiologia-bacharelado.jpg",
+    "imageAlt": "Fonoaudiologia — carreira e formação"
   },
   {
     "slug": "ciencias-economicas-bacharelado",
@@ -464,7 +482,9 @@
       "curso de economia",
       "economia EAD",
       "ser economista"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/ciencias-economicas-bacharelado.jpg",
+    "imageAlt": "Ciências Econômicas — carreira e formação"
   },
   {
     "slug": "relacoes-internacionais-bacharelado",
@@ -511,7 +531,9 @@
       "curso de RI",
       "relações internacionais EAD",
       "carreira diplomática"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/relacoes-internacionais-bacharelado.jpg",
+    "imageAlt": "Relações Internacionais — carreira e formação"
   },
   {
     "slug": "servico-social-bacharelado",
@@ -557,7 +579,9 @@
       "salário assistente social",
       "curso de serviço social",
       "serviço social EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/servico-social-bacharelado.jpg",
+    "imageAlt": "Serviço Social — carreira e formação"
   },
   {
     "slug": "jornalismo-bacharelado",
@@ -604,7 +628,9 @@
       "curso de jornalismo",
       "jornalismo EAD",
       "comunicação social jornalismo"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/jornalismo-bacharelado.jpg",
+    "imageAlt": "Jornalismo — carreira e formação"
   },
   {
     "slug": "publicidade-e-propaganda-bacharelado",
@@ -651,7 +677,9 @@
       "curso de publicidade",
       "publicidade e propaganda EAD",
       "agência de publicidade"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/publicidade-e-propaganda-bacharelado.jpg",
+    "imageAlt": "Publicidade e Propaganda — carreira e formação"
   },
   {
     "slug": "gastronomia-tecnologo",
@@ -698,7 +726,9 @@
       "curso de gastronomia",
       "gastronomia EAD",
       "curso de cozinha"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/gastronomia-tecnologo.jpg",
+    "imageAlt": "Gastronomia — carreira e formação"
   },
   {
     "slug": "design-grafico-tecnologo",
@@ -744,7 +774,9 @@
       "salário designer gráfico",
       "curso de design gráfico",
       "design gráfico EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/design-grafico-tecnologo.jpg",
+    "imageAlt": "Design Gráfico — carreira e formação"
   },
   {
     "slug": "estetica-e-cosmetica-tecnologo",
@@ -791,7 +823,9 @@
       "curso de estética",
       "estética e cosmética EAD",
       "curso de cosmética"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/estetica-e-cosmetica-tecnologo.jpg",
+    "imageAlt": "Estética e Cosmética — carreira e formação"
   },
   {
     "slug": "agronomia-bacharelado",
@@ -838,7 +872,9 @@
       "curso de agronomia",
       "agronomia EAD",
       "ser agrônomo"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/agronomia-bacharelado.jpg",
+    "imageAlt": "Agronomia — carreira e formação"
   },
   {
     "slug": "terapia-ocupacional-bacharelado",
@@ -885,7 +921,9 @@
       "curso de terapia ocupacional",
       "terapia ocupacional EAD",
       "ser terapeuta ocupacional"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/terapia-ocupacional-bacharelado.jpg",
+    "imageAlt": "Terapia Ocupacional — carreira e formação"
   },
   {
     "slug": "ciencias-biologicas-bacharelado",
@@ -932,7 +970,9 @@
       "curso de biologia",
       "ciências biológicas EAD bacharelado",
       "ser biólogo"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/ciencias-biologicas-bacharelado.jpg",
+    "imageAlt": "Ciências Biológicas — carreira e formação"
   },
   {
     "slug": "design-bacharelado",
@@ -979,7 +1019,9 @@
       "curso de design",
       "design EAD",
       "design de produto"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/design-bacharelado.jpg",
+    "imageAlt": "Design — carreira e formação"
   },
   {
     "slug": "artes-visuais-bacharelado",
@@ -1026,7 +1068,9 @@
       "curso de artes visuais",
       "artes visuais EAD",
       "artes plásticas"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/artes-visuais-bacharelado.jpg",
+    "imageAlt": "Artes Visuais — carreira e formação"
   },
   {
     "slug": "engenharia-ambiental-bacharelado",
@@ -1072,7 +1116,9 @@
       "salário engenheiro ambiental",
       "curso de engenharia ambiental",
       "engenharia ambiental EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/engenharia-ambiental-bacharelado.jpg",
+    "imageAlt": "Engenharia Ambiental — carreira e formação"
   },
   {
     "slug": "engenharia-de-controle-e-automacao-bacharelado",
@@ -1118,7 +1164,9 @@
       "salário engenheiro de automação",
       "curso de engenharia de controle e automação",
       "engenharia de controle e automação EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/engenharia-de-controle-e-automacao-bacharelado.jpg",
+    "imageAlt": "Engenharia de Controle e Automação — carreira e formação"
   },
   {
     "slug": "engenharia-de-minas-bacharelado",
@@ -1164,7 +1212,9 @@
       "salário engenheiro de minas",
       "curso de engenharia de minas",
       "mineração engenharia"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/engenharia-de-minas-bacharelado.jpg",
+    "imageAlt": "Engenharia de Minas — carreira e formação"
   },
   {
     "slug": "ciencias-aeronauticas-bacharelado",
@@ -1211,7 +1261,9 @@
       "curso de pilotagem",
       "piloto comercial",
       "como ser piloto de avião"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/ciencias-aeronauticas-bacharelado.jpg",
+    "imageAlt": "Ciências Aeronáuticas — carreira e formação"
   },
   {
     "slug": "criminologia-bacharelado",
@@ -1258,7 +1310,9 @@
       "curso de criminologia",
       "criminologia EAD",
       "perito criminal"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/criminologia-bacharelado.jpg",
+    "imageAlt": "Criminologia — carreira e formação"
   },
   {
     "slug": "administracao-publica-bacharelado",
@@ -1305,7 +1359,9 @@
       "curso de administração pública",
       "adm pública EAD",
       "concurso público administração"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/administracao-publica-bacharelado.jpg",
+    "imageAlt": "Administração Pública — carreira e formação"
   },
   {
     "slug": "ciencia-politica-bacharelado",
@@ -1352,7 +1408,9 @@
       "curso de ciência política",
       "ciência política EAD",
       "analista político"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/ciencia-politica-bacharelado.jpg",
+    "imageAlt": "Ciência Política — carreira e formação"
   },
   {
     "slug": "quimica-bacharelado",
@@ -1399,7 +1457,9 @@
       "curso de química",
       "química EAD",
       "química industrial"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/quimica-bacharelado.jpg",
+    "imageAlt": "Química — carreira e formação"
   },
   {
     "slug": "psicopedagogia-bacharelado",
@@ -1446,7 +1506,9 @@
       "curso de psicopedagogia",
       "psicopedagogia EAD",
       "dificuldades de aprendizagem"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/psicopedagogia-bacharelado.jpg",
+    "imageAlt": "Psicopedagogia — carreira e formação"
   },
   {
     "slug": "teologia-bacharelado",
@@ -1493,7 +1555,9 @@
       "curso de teologia",
       "teologia EAD",
       "estudar teologia"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/teologia-bacharelado.jpg",
+    "imageAlt": "Teologia — carreira e formação"
   },
   {
     "slug": "letras-portugues-e-ingles-bacharelado",
@@ -1540,7 +1604,9 @@
       "curso de letras",
       "letras EAD",
       "tradução"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/letras-portugues-e-ingles-bacharelado.jpg",
+    "imageAlt": "Letras Português e Inglês — carreira e formação"
   },
   {
     "slug": "gestao-do-agronegocio",
@@ -1587,7 +1653,9 @@
       "curso de agronegócio",
       "agronegócio EAD",
       "carreira no agro"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/gestao-do-agronegocio.jpg",
+    "imageAlt": "Gestão do Agronegócio — carreira e formação"
   },
   {
     "slug": "engenharia-ambiental-e-sanitaria-bacharelado",
@@ -1633,7 +1701,9 @@
       "salário engenheiro sanitarista",
       "marco legal do saneamento",
       "saneamento básico engenharia"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/engenharia-ambiental-e-sanitaria-bacharelado.jpg",
+    "imageAlt": "Engenharia Ambiental e Sanitária — carreira e formação"
   },
   {
     "slug": "matematica-licenciatura",
@@ -1679,7 +1749,9 @@
       "salário professor de matemática",
       "curso de matemática EAD",
       "concurso professor matemática"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/matematica-licenciatura.jpg",
+    "imageAlt": "Matemática — carreira e formação"
   },
   {
     "slug": "historia-licenciatura",
@@ -1725,7 +1797,9 @@
       "salário professor de história",
       "curso de história EAD",
       "concurso professor história"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/historia-licenciatura.jpg",
+    "imageAlt": "História — carreira e formação"
   },
   {
     "slug": "geografia-licenciatura",
@@ -1771,7 +1845,9 @@
       "salário professor de geografia",
       "curso de geografia EAD",
       "concurso professor geografia"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/geografia-licenciatura.jpg",
+    "imageAlt": "Geografia — carreira e formação"
   },
   {
     "slug": "filosofia-licenciatura",
@@ -1817,7 +1893,9 @@
       "salário professor de filosofia",
       "curso de filosofia EAD",
       "filosofia ensino médio"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/filosofia-licenciatura.jpg",
+    "imageAlt": "Filosofia — carreira e formação"
   },
   {
     "slug": "sociologia-licenciatura",
@@ -1862,7 +1940,9 @@
       "faculdade de sociologia licenciatura",
       "salário professor de sociologia",
       "curso de sociologia EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/sociologia-licenciatura.jpg",
+    "imageAlt": "Sociologia — carreira e formação"
   },
   {
     "slug": "educacao-especial-licenciatura",
@@ -1908,7 +1988,9 @@
       "faculdade de educação especial",
       "salário professor educação especial",
       "educação especial EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/educacao-especial-licenciatura.jpg",
+    "imageAlt": "Educação Especial — carreira e formação"
   },
   {
     "slug": "letras-portugues-licenciatura",
@@ -1954,7 +2036,9 @@
       "salário professor de português",
       "curso de letras EAD",
       "concurso professor português"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/letras-portugues-licenciatura.jpg",
+    "imageAlt": "Letras Português — carreira e formação"
   },
   {
     "slug": "letras-portugues-e-espanhol-licenciatura",
@@ -2000,7 +2084,9 @@
       "salário professor de espanhol",
       "curso de espanhol licenciatura",
       "português espanhol EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/letras-portugues-e-espanhol-licenciatura.jpg",
+    "imageAlt": "Letras Português e Espanhol — carreira e formação"
   },
   {
     "slug": "letras-portugues-e-ingles-licenciatura",
@@ -2046,7 +2132,9 @@
       "salário professor de inglês",
       "curso de inglês licenciatura",
       "português inglês EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/letras-portugues-e-ingles-licenciatura.jpg",
+    "imageAlt": "Letras Português e Inglês — carreira e formação"
   },
   {
     "slug": "ciencia-de-dados-tecnologo",
@@ -2093,7 +2181,9 @@
       "curso de ciência de dados",
       "ciência de dados EAD",
       "data science"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/ciencia-de-dados-tecnologo.jpg",
+    "imageAlt": "Ciência de Dados — carreira e formação"
   },
   {
     "slug": "ciberseguranca-tecnologo",
@@ -2140,7 +2230,9 @@
       "salário analista de segurança",
       "curso de cibersegurança",
       "cibersegurança EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/ciberseguranca-tecnologo.jpg",
+    "imageAlt": "Cibersegurança — carreira e formação"
   },
   {
     "slug": "seguranca-da-informacao-tecnologo",
@@ -2186,7 +2278,9 @@
       "faculdade de segurança da informação",
       "salário segurança informação",
       "curso de segurança da informação EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/seguranca-da-informacao-tecnologo.jpg",
+    "imageAlt": "Segurança da Informação — carreira e formação"
   },
   {
     "slug": "devops-tecnologo",
@@ -2233,7 +2327,9 @@
       "curso de devops",
       "devops EAD",
       "site reliability engineer"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/devops-tecnologo.jpg",
+    "imageAlt": "DevOps — carreira e formação"
   },
   {
     "slug": "arquitetura-de-dados-tecnologo",
@@ -2280,7 +2376,9 @@
       "salário engenheiro de dados",
       "curso de dados",
       "data engineering EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/arquitetura-de-dados-tecnologo.jpg",
+    "imageAlt": "Arquitetura de Dados — carreira e formação"
   },
   {
     "slug": "computacao-em-nuvem-tecnologo",
@@ -2327,7 +2425,9 @@
       "curso de cloud computing",
       "AWS Azure GCP",
       "cloud EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/computacao-em-nuvem-tecnologo.jpg",
+    "imageAlt": "Computação em Nuvem — carreira e formação"
   },
   {
     "slug": "desenvolvimento-mobile-tecnologo",
@@ -2374,7 +2474,9 @@
       "curso de desenvolvimento de apps",
       "Android iOS Flutter",
       "mobile EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/desenvolvimento-mobile-tecnologo.jpg",
+    "imageAlt": "Desenvolvimento Mobile — carreira e formação"
   },
   {
     "slug": "desenvolvimento-web-tecnologo",
@@ -2421,7 +2523,9 @@
       "curso de programação web",
       "frontend backend fullstack",
       "web EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/desenvolvimento-web-tecnologo.jpg",
+    "imageAlt": "Desenvolvimento Web — carreira e formação"
   },
   {
     "slug": "sistemas-para-internet-tecnologo",
@@ -2467,7 +2571,9 @@
       "salário sistemas para internet",
       "curso de sistemas web",
       "sistemas para internet EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/sistemas-para-internet-tecnologo.jpg",
+    "imageAlt": "Sistemas para Internet — carreira e formação"
   },
   {
     "slug": "redes-de-computadores-tecnologo",
@@ -2514,7 +2620,9 @@
       "curso de redes",
       "redes EAD",
       "CCNA Cisco"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/redes-de-computadores-tecnologo.jpg",
+    "imageAlt": "Redes de Computadores — carreira e formação"
   },
   {
     "slug": "jogos-digitais-tecnologo",
@@ -2561,7 +2669,9 @@
       "curso de jogos digitais",
       "game development EAD",
       "Unity Unreal"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/jogos-digitais-tecnologo.jpg",
+    "imageAlt": "Jogos Digitais — carreira e formação"
   },
   {
     "slug": "blockchain-criptomoedas-e-financas-na-era-digital-tecnologo",
@@ -2608,7 +2718,9 @@
       "salário blockchain",
       "smart contract solidity",
       "faculdade de criptomoedas"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/blockchain-criptomoedas-e-financas-na-era-digital-tecnologo.jpg",
+    "imageAlt": "Blockchain, Criptomoedas e Finanças na Era Digital — carreira e formação"
   },
   {
     "slug": "gestao-da-tecnologia-da-informacao-tecnologo",
@@ -2654,7 +2766,9 @@
       "salário gerente de TI",
       "curso de gestão de TI",
       "TI management EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/gestao-da-tecnologia-da-informacao-tecnologo.jpg",
+    "imageAlt": "Gestão da Tecnologia da Informação — carreira e formação"
   },
   {
     "slug": "marketing-digital-tecnologo",
@@ -2701,7 +2815,9 @@
       "curso de marketing digital",
       "marketing digital EAD",
       "Google Ads Meta Ads"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/marketing-digital-tecnologo.jpg",
+    "imageAlt": "Marketing Digital — carreira e formação"
   },
   {
     "slug": "gestao-de-produto-tecnologo",
@@ -2748,7 +2864,9 @@
       "salário product manager",
       "curso de gestão de produto",
       "PM EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/gestao-de-produto-tecnologo.jpg",
+    "imageAlt": "Gestão de Produto — carreira e formação"
   },
   {
     "slug": "inteligencia-de-mercado-e-analise-de-dados-tecnologo",
@@ -2795,7 +2913,9 @@
       "curso de pesquisa de mercado",
       "BI EAD",
       "market intelligence"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/inteligencia-de-mercado-e-analise-de-dados-tecnologo.jpg",
+    "imageAlt": "Inteligência de Mercado e Análise de Dados — carreira e formação"
   },
   {
     "slug": "gestao-financeira-tecnologo",
@@ -2841,7 +2961,9 @@
       "salário analista financeiro",
       "curso de gestão financeira",
       "gestão financeira EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/gestao-financeira-tecnologo.jpg",
+    "imageAlt": "Gestão Financeira — carreira e formação"
   },
   {
     "slug": "gestao-hospitalar-tecnologo",
@@ -2887,7 +3009,9 @@
       "salário gestor hospitalar",
       "curso de gestão hospitalar",
       "gestão hospitalar EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/gestao-hospitalar-tecnologo.jpg",
+    "imageAlt": "Gestão Hospitalar — carreira e formação"
   },
   {
     "slug": "gestao-ambiental-tecnologo",
@@ -2934,7 +3058,9 @@
       "curso de gestão ambiental",
       "gestão ambiental EAD",
       "ESG"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/gestao-ambiental-tecnologo.jpg",
+    "imageAlt": "Gestão Ambiental — carreira e formação"
   },
   {
     "slug": "gestao-publica-tecnologo",
@@ -2981,7 +3107,9 @@
       "curso de gestão pública",
       "gestão pública EAD",
       "concurso prefeitura"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/gestao-publica-tecnologo.jpg",
+    "imageAlt": "Gestão Pública — carreira e formação"
   },
   {
     "slug": "gestao-portuaria-tecnologo",
@@ -3027,7 +3155,9 @@
       "salário gestão portuária",
       "curso de gestão portuária",
       "porto santos paranaguá EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/gestao-portuaria-tecnologo.jpg",
+    "imageAlt": "Gestão Portuária — carreira e formação"
   },
   {
     "slug": "gestao-de-cooperativas-tecnologo",
@@ -3073,7 +3203,9 @@
       "salário cooperativa",
       "curso de gestão de cooperativas",
       "cooperativismo EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/gestao-de-cooperativas-tecnologo.jpg",
+    "imageAlt": "Gestão de Cooperativas — carreira e formação"
   },
   {
     "slug": "gestao-de-turismo-tecnologo",
@@ -3120,7 +3252,9 @@
       "curso de turismo",
       "turismo EAD",
       "hotelaria gestão"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/gestao-de-turismo-tecnologo.jpg",
+    "imageAlt": "Gestão de Turismo — carreira e formação"
   },
   {
     "slug": "gestao-de-seguranca-privada-tecnologo",
@@ -3166,7 +3300,9 @@
       "salário gestor de segurança",
       "curso de segurança privada",
       "segurança patrimonial EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/gestao-de-seguranca-privada-tecnologo.jpg",
+    "imageAlt": "Gestão de Segurança Privada — carreira e formação"
   },
   {
     "slug": "gestao-da-qualidade-tecnologo",
@@ -3212,7 +3348,9 @@
       "faculdade de gestão da qualidade",
       "salário gestor da qualidade",
       "curso de qualidade EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/gestao-da-qualidade-tecnologo.jpg",
+    "imageAlt": "Gestão da Qualidade — carreira e formação"
   },
   {
     "slug": "gestao-da-producao-industrial-tecnologo",
@@ -3258,7 +3396,9 @@
       "salário PCP",
       "curso de produção industrial",
       "produção industrial EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/gestao-da-producao-industrial-tecnologo.jpg",
+    "imageAlt": "Gestão da Produção Industrial — carreira e formação"
   },
   {
     "slug": "gestao-da-inovacao-tecnologo",
@@ -3304,7 +3444,9 @@
       "salário gestor de inovação",
       "curso de inovação",
       "inovação corporativa EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/gestao-da-inovacao-tecnologo.jpg",
+    "imageAlt": "Gestão da Inovação — carreira e formação"
   },
   {
     "slug": "processos-gerenciais-tecnologo",
@@ -3350,7 +3492,9 @@
       "salário processos gerenciais",
       "curso de processos gerenciais EAD",
       "tecnólogo em administração"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/processos-gerenciais-tecnologo.jpg",
+    "imageAlt": "Processos Gerenciais — carreira e formação"
   },
   {
     "slug": "comercio-exterior-tecnologo",
@@ -3396,7 +3540,9 @@
       "salário comércio exterior",
       "curso de comex EAD",
       "import export Siscomex"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/comercio-exterior-tecnologo.jpg",
+    "imageAlt": "Comércio Exterior — carreira e formação"
   },
   {
     "slug": "negocios-imobiliarios-tecnologo",
@@ -3442,7 +3588,9 @@
       "faculdade de negócios imobiliários",
       "salário corretor de imóveis",
       "curso de corretor EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/negocios-imobiliarios-tecnologo.jpg",
+    "imageAlt": "Negócios Imobiliários — carreira e formação"
   },
   {
     "slug": "mecatronica-industrial-tecnologo",
@@ -3488,7 +3636,9 @@
       "salário mecatrônica",
       "curso de mecatrônica",
       "mecatrônica industrial EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/mecatronica-industrial-tecnologo.jpg",
+    "imageAlt": "Mecatrônica Industrial — carreira e formação"
   },
   {
     "slug": "automacao-industrial-tecnologo",
@@ -3535,7 +3685,9 @@
       "curso de automação industrial",
       "automação EAD",
       "Siemens Rockwell"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/automacao-industrial-tecnologo.jpg",
+    "imageAlt": "Automação Industrial — carreira e formação"
   },
   {
     "slug": "logistica-tecnologo",
@@ -3581,7 +3733,9 @@
       "salário logística",
       "curso de logística EAD",
       "supply chain"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/logistica-tecnologo.jpg",
+    "imageAlt": "Logística — carreira e formação"
   },
   {
     "slug": "radiologia-tecnologo",
@@ -3628,7 +3782,9 @@
       "curso de radiologia",
       "radiologia EAD",
       "raio-X tomografia ressonância"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/radiologia-tecnologo.jpg",
+    "imageAlt": "Radiologia — carreira e formação"
   },
   {
     "slug": "podologia-tecnologo",
@@ -3674,7 +3830,9 @@
       "salário podólogo",
       "curso de podologia EAD",
       "pé diabético"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/podologia-tecnologo.jpg",
+    "imageAlt": "Podologia — carreira e formação"
   },
   {
     "slug": "gerontologia-tecnologo",
@@ -3720,7 +3878,9 @@
       "salário gerontólogo",
       "curso de gerontologia EAD",
       "cuidado ao idoso"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/gerontologia-tecnologo.jpg",
+    "imageAlt": "Gerontologia — carreira e formação"
   },
   {
     "slug": "terapias-integrativas-e-complementares-tecnologo",
@@ -3766,7 +3926,9 @@
       "salário terapeuta integrativo",
       "curso de terapias holísticas",
       "aromaterapia reiki EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/terapias-integrativas-e-complementares-tecnologo.jpg",
+    "imageAlt": "Terapias Integrativas e Complementares — carreira e formação"
   },
   {
     "slug": "design-de-moda-tecnologo",
@@ -3812,7 +3974,9 @@
       "salário estilista",
       "curso de design de moda EAD",
       "modelagem moda"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/design-de-moda-tecnologo.jpg",
+    "imageAlt": "Design de Moda — carreira e formação"
   },
   {
     "slug": "design-de-interiores-tecnologo",
@@ -3857,7 +4021,9 @@
       "faculdade de design de interiores",
       "salário designer de interiores",
       "curso de design de interiores EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/design-de-interiores-tecnologo.jpg",
+    "imageAlt": "Design de Interiores — carreira e formação"
   },
   {
     "slug": "fotografia-tecnologo",
@@ -3903,7 +4069,9 @@
       "salário fotógrafo",
       "curso de fotografia EAD",
       "fotografia profissional"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/fotografia-tecnologo.jpg",
+    "imageAlt": "Fotografia — carreira e formação"
   },
   {
     "slug": "producao-audiovisual-tecnologo",
@@ -3949,7 +4117,9 @@
       "salário produtor audiovisual",
       "curso de audiovisual EAD",
       "cinema e TV"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/producao-audiovisual-tecnologo.jpg",
+    "imageAlt": "Produção Audiovisual — carreira e formação"
   },
   {
     "slug": "seguranca-no-trabalho-tecnologo",
@@ -3995,7 +4165,9 @@
       "salário segurança do trabalho",
       "curso de SST EAD",
       "NRs"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/seguranca-no-trabalho-tecnologo.jpg",
+    "imageAlt": "Segurança no Trabalho — carreira e formação"
   },
   {
     "slug": "seguranca-publica-tecnologo",
@@ -4041,7 +4213,9 @@
       "salário policial",
       "curso de segurança pública EAD",
       "concursos PM PC PF"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/seguranca-publica-tecnologo.jpg",
+    "imageAlt": "Segurança Pública — carreira e formação"
   },
   {
     "slug": "investigacao-e-pericia-criminal-tecnologo",
@@ -4087,7 +4261,9 @@
       "salário perito criminal federal",
       "curso de perícia criminal EAD",
       "concurso perito PF"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/investigacao-e-pericia-criminal-tecnologo.jpg",
+    "imageAlt": "Investigação e Perícia Criminal — carreira e formação"
   },
   {
     "slug": "servicos-juridicos-cartorarios-e-notariais-tecnologo",
@@ -4133,7 +4309,9 @@
       "faculdade de serviços jurídicos",
       "salário escrevente cartório",
       "curso de cartório EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/servicos-juridicos-cartorarios-e-notariais-tecnologo.jpg",
+    "imageAlt": "Serviços Jurídicos Cartorários e Notariais — carreira e formação"
   },
   {
     "slug": "mediacao-tecnologo",
@@ -4180,7 +4358,9 @@
       "curso de mediação",
       "mediação EAD",
       "resolução de conflitos"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/mediacao-tecnologo.jpg",
+    "imageAlt": "Mediação — carreira e formação"
   },
   {
     "slug": "secretariado-tecnologo",
@@ -4226,7 +4406,9 @@
       "salário secretária",
       "curso de secretariado EAD",
       "apoio executivo bilíngue"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/secretariado-tecnologo.jpg",
+    "imageAlt": "Secretariado — carreira e formação"
   },
   {
     "slug": "agronegocios-tecnologo",
@@ -4272,7 +4454,9 @@
       "salário agronegócio",
       "curso de agronegócios EAD",
       "trading commodities"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/agronegocios-tecnologo.jpg",
+    "imageAlt": "Agronegócios — carreira e formação"
   },
   {
     "slug": "eventos-tecnologo",
@@ -4318,7 +4502,9 @@
       "faculdade de eventos",
       "salário produtor de eventos",
       "curso de eventos EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/eventos-tecnologo.jpg",
+    "imageAlt": "Eventos — carreira e formação"
   },
   {
     "slug": "empreendedorismo-tecnologo",
@@ -4364,7 +4550,9 @@
       "salário empreendedor",
       "curso de empreendedorismo EAD",
       "Sebrae consultoria"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/empreendedorismo-tecnologo.jpg",
+    "imageAlt": "Empreendedorismo — carreira e formação"
   },
   {
     "slug": "empreendedorismo-e-novos-negocios-tecnologo",
@@ -4410,7 +4598,9 @@
       "faculdade de empreendedorismo digital",
       "salário aceleradora",
       "curso de inovação EAD"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/empreendedorismo-e-novos-negocios-tecnologo.jpg",
+    "imageAlt": "Empreendedorismo e Novos Negócios — carreira e formação"
   },
   {
     "slug": "coaching-e-desenvolvimento-humano-tecnologo",
@@ -4457,7 +4647,9 @@
       "curso de coaching EAD",
       "desenvolvimento humano",
       "ICF coaching"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/coaching-e-desenvolvimento-humano-tecnologo.jpg",
+    "imageAlt": "Coaching e Desenvolvimento Humano — carreira e formação"
   },
   {
     "slug": "publicidade-e-propaganda-marketing-bacharelado",
@@ -4502,7 +4694,9 @@
       "faculdade de publicidade marketing",
       "salário brand manager",
       "curso de publicidade com ênfase em marketing"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/publicidade-e-propaganda-marketing-bacharelado.jpg",
+    "imageAlt": "Publicidade e Propaganda com ênfase em Marketing — carreira e formação"
   },
   {
     "slug": "direito-bacharelado",
@@ -4549,7 +4743,9 @@
       "quanto ganha advogado no brasil",
       "exame da oab",
       "direito presencial"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/direito-bacharelado.jpg",
+    "imageAlt": "Direito — carreira e formação"
   },
   {
     "slug": "enfermagem-bacharelado",
@@ -4596,7 +4792,9 @@
       "quanto ganha enfermeiro",
       "enfermagem reconhecida pelo mec",
       "graduação em enfermagem"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/enfermagem-bacharelado.jpg",
+    "imageAlt": "Enfermagem — carreira e formação"
   },
   {
     "slug": "psicologia-bacharelado",
@@ -4643,7 +4841,9 @@
       "quanto ganha psicólogo no brasil",
       "psicologia clínica",
       "crp registro profissional"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/psicologia-bacharelado.jpg",
+    "imageAlt": "Psicologia — carreira e formação"
   },
   {
     "slug": "medicina-bacharelado",
@@ -4690,7 +4890,9 @@
       "medicina reconhecida pelo mec",
       "residência médica",
       "crm registro profissional"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/medicina-bacharelado.jpg",
+    "imageAlt": "Medicina — carreira e formação"
   },
   {
     "slug": "engenharia-civil-bacharelado",
@@ -4737,7 +4939,9 @@
       "crea registro engenheiro",
       "graduação em engenharia civil",
       "engenharia civil presencial"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/engenharia-civil-bacharelado.jpg",
+    "imageAlt": "Engenharia Civil — carreira e formação"
   },
   {
     "slug": "pedagogia-licenciatura",
@@ -4784,7 +4988,9 @@
       "piso do magistério",
       "pedagogia reconhecida pelo mec",
       "curso de pedagogia a distância"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/pedagogia-licenciatura.jpg",
+    "imageAlt": "Pedagogia — carreira e formação"
   },
   {
     "slug": "educacao-fisica-bacharelado",
@@ -4831,7 +5037,9 @@
       "cref registro profissional",
       "educação física ead",
       "educação física presencial"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/educacao-fisica-bacharelado.jpg",
+    "imageAlt": "Educação Física — carreira e formação"
   },
   {
     "slug": "farmacia-bacharelado",
@@ -4878,7 +5086,9 @@
       "crf registro profissional",
       "farmácia reconhecida pelo mec",
       "farmácia presencial"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/farmacia-bacharelado.jpg",
+    "imageAlt": "Farmácia — carreira e formação"
   },
   {
     "slug": "nutricao-bacharelado",
@@ -4925,7 +5135,9 @@
       "crn registro profissional",
       "nutrição reconhecida pelo mec",
       "nutrição esportiva curso"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/nutricao-bacharelado.jpg",
+    "imageAlt": "Nutrição — carreira e formação"
   },
   {
     "slug": "odontologia-bacharelado",
@@ -4972,7 +5184,9 @@
       "cro registro profissional",
       "odontologia reconhecida pelo mec",
       "odontologia presencial"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/odontologia-bacharelado.jpg",
+    "imageAlt": "Odontologia — carreira e formação"
   },
   {
     "slug": "fisioterapia-bacharelado",
@@ -5019,7 +5233,9 @@
       "crefito registro profissional",
       "fisioterapia reconhecida pelo mec",
       "fisioterapia presencial"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/fisioterapia-bacharelado.jpg",
+    "imageAlt": "Fisioterapia — carreira e formação"
   },
   {
     "slug": "biomedicina-bacharelado",
@@ -5066,7 +5282,9 @@
       "crbm registro profissional",
       "biomedicina estética",
       "biomedicina reconhecida pelo mec"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/biomedicina-bacharelado.jpg",
+    "imageAlt": "Biomedicina — carreira e formação"
   },
   {
     "slug": "ciencias-contabeis-bacharelado",
@@ -5113,7 +5331,9 @@
       "exame de suficiência cfc",
       "contabilidade reconhecida pelo mec",
       "crc registro profissional"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/ciencias-contabeis-bacharelado.jpg",
+    "imageAlt": "Ciências Contábeis — carreira e formação"
   },
   {
     "slug": "arquitetura-e-urbanismo-bacharelado",
@@ -5160,7 +5380,9 @@
       "cau registro profissional",
       "arquitetura reconhecida pelo mec",
       "arquitetura presencial"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/arquitetura-e-urbanismo-bacharelado.jpg",
+    "imageAlt": "Arquitetura e Urbanismo — carreira e formação"
   },
   {
     "slug": "engenharia-de-producao-bacharelado",
@@ -5207,7 +5429,9 @@
       "crea registro engenheiro",
       "engenharia de produção ead",
       "engenharia de produção presencial"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/engenharia-de-producao-bacharelado.jpg",
+    "imageAlt": "Engenharia de Produção — carreira e formação"
   },
   {
     "slug": "administracao-bacharelado",
@@ -5254,7 +5478,9 @@
       "cra registro profissional",
       "administração reconhecida pelo mec",
       "administração presencial"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/administracao-bacharelado.jpg",
+    "imageAlt": "Administração — carreira e formação"
   },
   {
     "slug": "analise-e-desenvolvimento-de-sistemas-tecnologo",
@@ -5301,7 +5527,9 @@
       "ads reconhecido pelo mec",
       "graduação tecnológica em ti",
       "curso de programação superior"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/analise-e-desenvolvimento-de-sistemas-tecnologo.jpg",
+    "imageAlt": "Análise e Desenvolvimento de Sistemas — carreira e formação"
   },
   {
     "slug": "gestao-de-recursos-humanos-tecnologo",
@@ -5348,7 +5576,9 @@
       "rh reconhecido pelo mec",
       "tecnólogo em gestão de pessoas",
       "curso superior de rh"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/gestao-de-recursos-humanos-tecnologo.jpg",
+    "imageAlt": "Gestão de Recursos Humanos — carreira e formação"
   },
   {
     "slug": "gestao-comercial-tecnologo",
@@ -5395,7 +5625,9 @@
       "gestão comercial ead",
       "curso superior de vendas",
       "gestão comercial reconhecida pelo mec"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/gestao-comercial-tecnologo.jpg",
+    "imageAlt": "Gestão Comercial — carreira e formação"
   },
   {
     "slug": "marketing-tecnologo",
@@ -5442,7 +5674,9 @@
       "marketing reconhecido pelo mec",
       "curso superior de marketing",
       "marketing digital faculdade"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/marketing-tecnologo.jpg",
+    "imageAlt": "Marketing — carreira e formação"
   },
   {
     "slug": "mba-gestao-de-negocios",
@@ -5489,7 +5723,9 @@
       "melhor mba para gestor",
       "mba reconhecido mec",
       "bolsa mba gestão de negócios"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/mba-gestao-de-negocios.jpg",
+    "imageAlt": "Gestão de Negócios — carreira e formação"
   },
   {
     "slug": "mba-gestao-de-projetos",
@@ -5536,7 +5772,9 @@
       "pós gestão projetos a distância",
       "mba projetos mec",
       "bolsa mba gestão de projetos"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/mba-gestao-de-projetos.jpg",
+    "imageAlt": "Gestão de Projetos — carreira e formação"
   },
   {
     "slug": "mba-marketing-digital",
@@ -5583,7 +5821,9 @@
       "pós digital reconhecida mec",
       "mba seo e mídia paga",
       "bolsa mba marketing digital"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/mba-marketing-digital.jpg",
+    "imageAlt": "Marketing Digital — carreira e formação"
   },
   {
     "slug": "mba-financas",
@@ -5630,7 +5870,9 @@
       "pós finanças reconhecida mec",
       "mba finanças preparatório cfa",
       "bolsa mba finanças"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/mba-financas.jpg",
+    "imageAlt": "Finanças — carreira e formação"
   },
   {
     "slug": "mba-recursos-humanos",
@@ -5677,7 +5919,9 @@
       "pós rh reconhecida mec",
       "mba people analytics",
       "bolsa mba recursos humanos"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/mba-recursos-humanos.jpg",
+    "imageAlt": "Recursos Humanos — carreira e formação"
   },
   {
     "slug": "mba-logistica-e-supply-chain",
@@ -5724,7 +5968,9 @@
       "pós supply chain mec",
       "mba cadeia de suprimentos",
       "bolsa mba logística"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/mba-logistica-e-supply-chain.jpg",
+    "imageAlt": "Logística e Supply Chain — carreira e formação"
   },
   {
     "slug": "mba-lideranca-e-gestao-de-pessoas",
@@ -5771,7 +6017,9 @@
       "pós liderança a distância",
       "mba líderes de alta performance",
       "bolsa mba liderança"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/mba-lideranca-e-gestao-de-pessoas.jpg",
+    "imageAlt": "Liderança e Gestão de Pessoas — carreira e formação"
   },
   {
     "slug": "mba-inteligencia-artificial-aplicada-aos-negocios",
@@ -5818,7 +6066,9 @@
       "mba ia reconhecida mec",
       "mba transformação digital ia",
       "bolsa mba inteligência artificial"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/mba-inteligencia-artificial-aplicada-aos-negocios.jpg",
+    "imageAlt": "IA Aplicada aos Negócios — carreira e formação"
   },
   {
     "slug": "mba-data-science-e-analytics",
@@ -5865,7 +6115,9 @@
       "mba bi e analytics",
       "mba data science a distância",
       "bolsa mba data science"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/mba-data-science-e-analytics.jpg",
+    "imageAlt": "Data Science e Analytics — carreira e formação"
   },
   {
     "slug": "mba-controladoria-e-auditoria",
@@ -5912,7 +6164,9 @@
       "mba ifrs e contabilidade",
       "mba auditoria a distância",
       "bolsa mba controladoria"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/mba-controladoria-e-auditoria.jpg",
+    "imageAlt": "Controladoria e Auditoria — carreira e formação"
   },
   {
     "slug": "especializacao-psicologia-clinica",
@@ -5959,7 +6213,9 @@
       "especialização clínica para psicólogos",
       "pós psicologia a distância",
       "bolsa psicologia clínica"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/especializacao-psicologia-clinica.jpg",
+    "imageAlt": "Psicologia Clínica — carreira e formação"
   },
   {
     "slug": "especializacao-terapia-cognitivo-comportamental",
@@ -6006,7 +6262,9 @@
       "pós tcc baseada em evidências",
       "especialização tcc a distância",
       "bolsa tcc"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/especializacao-terapia-cognitivo-comportamental.jpg",
+    "imageAlt": "Terapia Cognitivo-Comportamental — carreira e formação"
   },
   {
     "slug": "especializacao-uti-enfermagem",
@@ -6053,7 +6311,9 @@
       "especialização uti cofen",
       "pós enfermagem intensivista",
       "bolsa uti enfermagem"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/especializacao-uti-enfermagem.jpg",
+    "imageAlt": "UTI - Enfermagem — carreira e formação"
   },
   {
     "slug": "especializacao-obstetricia-enfermagem",
@@ -6100,7 +6360,9 @@
       "enfermeiro obstetra cofen",
       "pós obstétrica a distância",
       "bolsa obstetrícia enfermagem"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/especializacao-obstetricia-enfermagem.jpg",
+    "imageAlt": "Obstetrícia - Enfermagem — carreira e formação"
   },
   {
     "slug": "especializacao-saude-do-trabalho-enfermagem",
@@ -6147,7 +6409,9 @@
       "especialização sesmt",
       "enfermeiro do trabalho cofen",
       "bolsa enfermagem do trabalho"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/especializacao-saude-do-trabalho-enfermagem.jpg",
+    "imageAlt": "Saúde do Trabalho - Enfermagem — carreira e formação"
   },
   {
     "slug": "especializacao-fisioterapia-esportiva",
@@ -6194,7 +6458,9 @@
       "especialização reabilitação esportiva",
       "fisioterapeuta esportivo formação",
       "bolsa fisioterapia esportiva"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/especializacao-fisioterapia-esportiva.jpg",
+    "imageAlt": "Fisioterapia Esportiva — carreira e formação"
   },
   {
     "slug": "especializacao-nutricao-clinica-funcional",
@@ -6241,7 +6507,9 @@
       "especialização nutricionista funcional",
       "pós nutrição funcional a distância",
       "bolsa nutrição funcional"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/especializacao-nutricao-clinica-funcional.jpg",
+    "imageAlt": "Nutrição Clínica Funcional — carreira e formação"
   },
   {
     "slug": "especializacao-nutricao-esportiva",
@@ -6288,7 +6556,9 @@
       "especialização nutricionista esportivo",
       "pós nutrição esportiva a distância",
       "bolsa nutrição esportiva"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/especializacao-nutricao-esportiva.jpg",
+    "imageAlt": "Nutrição Esportiva — carreira e formação"
   },
   {
     "slug": "especializacao-implantodontia",
@@ -6335,7 +6605,9 @@
       "especialização implantes dentários",
       "pós odontologia implantes",
       "bolsa implantodontia"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/especializacao-implantodontia.jpg",
+    "imageAlt": "Implantodontia — carreira e formação"
   },
   {
     "slug": "especializacao-saude-publica",
@@ -6382,7 +6654,9 @@
       "pós saúde pública concurso",
       "pós epidemiologia a distância",
       "bolsa saúde pública"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/especializacao-saude-publica.jpg",
+    "imageAlt": "Saúde Pública — carreira e formação"
   },
   {
     "slug": "especializacao-direito-tributario",
@@ -6429,7 +6703,9 @@
       "pós tributário para concursos",
       "pós direito fiscal a distância",
       "bolsa direito tributário"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/especializacao-direito-tributario.jpg",
+    "imageAlt": "Direito Tributário — carreira e formação"
   },
   {
     "slug": "especializacao-direito-penal-e-processo-penal",
@@ -6476,7 +6752,9 @@
       "pós direito penal para concursos",
       "pós direito penal a distância",
       "bolsa direito penal"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/especializacao-direito-penal-e-processo-penal.jpg",
+    "imageAlt": "Direito Penal e Processo Penal — carreira e formação"
   },
   {
     "slug": "especializacao-direito-de-familia-e-sucessoes",
@@ -6523,7 +6801,9 @@
       "pós planejamento sucessório",
       "pós direito de família a distância",
       "bolsa direito de família"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/especializacao-direito-de-familia-e-sucessoes.jpg",
+    "imageAlt": "Direito de Família e Sucessões — carreira e formação"
   },
   {
     "slug": "especializacao-educacao-especial-e-inclusiva",
@@ -6570,7 +6850,9 @@
       "pós educação especial a distância",
       "pós inclusão escolar",
       "bolsa educação especial"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/especializacao-educacao-especial-e-inclusiva.jpg",
+    "imageAlt": "Educação Especial e Inclusiva — carreira e formação"
   },
   {
     "slug": "especializacao-psicopedagogia",
@@ -6617,7 +6899,9 @@
       "pós psicopedagogia a distância",
       "pós dificuldades de aprendizagem",
       "bolsa psicopedagogia"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/especializacao-psicopedagogia.jpg",
+    "imageAlt": "Psicopedagogia — carreira e formação"
   },
   {
     "slug": "especializacao-engenharia-de-seguranca-do-trabalho",
@@ -6664,7 +6948,9 @@
       "pós perito de segurança do trabalho",
       "pós engenharia de segurança a distância",
       "bolsa engenharia de segurança do trabalho"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/especializacao-engenharia-de-seguranca-do-trabalho.jpg",
+    "imageAlt": "Engenharia de Segurança do Trabalho — carreira e formação"
   },
   {
     "slug": "especializacao-gestao-publica-municipal",
@@ -6711,7 +6997,9 @@
       "pós gestão municipal para concursos",
       "pós gestão pública a distância",
       "bolsa gestão pública municipal"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/especializacao-gestao-publica-municipal.jpg",
+    "imageAlt": "Gestão Pública Municipal — carreira e formação"
   },
   {
     "slug": "especializacao-administracao-hospitalar",
@@ -6758,7 +7046,9 @@
       "pós qualidade e acreditação hospitalar",
       "pós administração hospitalar a distância",
       "bolsa administração hospitalar"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/especializacao-administracao-hospitalar.jpg",
+    "imageAlt": "Administração Hospitalar — carreira e formação"
   },
   {
     "slug": "especializacao-coaching-e-mentoring",
@@ -6805,7 +7095,9 @@
       "pós mentoring de carreira",
       "pós coaching a distância",
       "bolsa coaching e mentoring"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/especializacao-coaching-e-mentoring.jpg",
+    "imageAlt": "Coaching e Mentoring — carreira e formação"
   },
   {
     "slug": "especializacao-pericia-criminal-e-ciencias-forenses",
@@ -6852,7 +7144,9 @@
       "pós perícia para concursos",
       "pós ciências forenses a distância",
       "bolsa perícia criminal"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/especializacao-pericia-criminal-e-ciencias-forenses.jpg",
+    "imageAlt": "Perícia Criminal e Ciências Forenses — carreira e formação"
   },
   {
     "slug": "eletricista-industrial-profissionalizante",
@@ -6899,7 +7193,9 @@
       "como ser eletricista industrial",
       "curso CLP iniciante",
       "eletricista industrial salário"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/eletricista-industrial-profissionalizante.jpg",
+    "imageAlt": "Eletricista Industrial — carreira e formação"
   },
   {
     "slug": "eletricista-residencial-profissionalizante",
@@ -6946,7 +7242,9 @@
       "curso eletricista para iniciantes",
       "eletricista residencial salário",
       "curso eletricista NR-10 básica"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/eletricista-residencial-profissionalizante.jpg",
+    "imageAlt": "Eletricista Residencial — carreira e formação"
   },
   {
     "slug": "soldador-profissionalizante",
@@ -6993,7 +7291,9 @@
       "curso soldagem ASME IX",
       "soldador salário",
       "curso soldagem para iniciantes"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/soldador-profissionalizante.jpg",
+    "imageAlt": "Soldador — carreira e formação"
   },
   {
     "slug": "mecanico-de-automoveis-profissionalizante",
@@ -7040,7 +7340,9 @@
       "curso mecânico para iniciantes",
       "mecânico automotivo salário",
       "curso mecânica de veículos leves"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/mecanico-de-automoveis-profissionalizante.jpg",
+    "imageAlt": "Mecânico de Automóveis — carreira e formação"
   },
   {
     "slug": "mecanico-diesel-profissionalizante",
@@ -7087,7 +7389,9 @@
       "como ser mecânico diesel",
       "mecânico diesel salário",
       "curso máquinas pesadas"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/mecanico-diesel-profissionalizante.jpg",
+    "imageAlt": "Mecânico Diesel — carreira e formação"
   },
   {
     "slug": "mecanico-de-motos-profissionalizante",
@@ -7134,7 +7438,9 @@
       "curso scanner de motos",
       "mecânico de motos salário",
       "curso oficina de motos"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/mecanico-de-motos-profissionalizante.jpg",
+    "imageAlt": "Mecânico de Motos — carreira e formação"
   },
   {
     "slug": "operador-de-empilhadeira-profissionalizante",
@@ -7181,7 +7487,9 @@
       "curso NR-11 prático",
       "operador de empilhadeira salário",
       "curso logística e movimentação"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/operador-de-empilhadeira-profissionalizante.jpg",
+    "imageAlt": "Operador de Empilhadeira — carreira e formação"
   },
   {
     "slug": "almoxarife-profissionalizante",
@@ -7228,7 +7536,9 @@
       "curso logística e estoque",
       "almoxarife salário",
       "curso ERP TOTVS SAP estoque"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/almoxarife-profissionalizante.jpg",
+    "imageAlt": "Almoxarife — carreira e formação"
   },
   {
     "slug": "pintor-predial-profissionalizante",
@@ -7275,7 +7585,9 @@
       "curso pintura decorativa",
       "pintor predial salário",
       "curso pintor para iniciantes"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/pintor-predial-profissionalizante.jpg",
+    "imageAlt": "Pintor Predial — carreira e formação"
   },
   {
     "slug": "pedreiro-profissionalizante",
@@ -7322,7 +7634,9 @@
       "curso construção residencial",
       "pedreiro salário",
       "curso pedreiro iniciante"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/pedreiro-profissionalizante.jpg",
+    "imageAlt": "Pedreiro — carreira e formação"
   },
   {
     "slug": "cuidador-de-idosos-profissionalizante",
@@ -7369,7 +7683,9 @@
       "curso cuidador RDC Anvisa",
       "cuidador de idosos salário",
       "curso cuidador Estatuto do Idoso"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/cuidador-de-idosos-profissionalizante.jpg",
+    "imageAlt": "Cuidador de Idosos — carreira e formação"
   },
   {
     "slug": "auxiliar-de-enfermagem-profissionalizante",
@@ -7416,7 +7732,9 @@
       "curso auxiliar enfermagem hospital",
       "auxiliar de enfermagem salário",
       "curso enfermagem Lei 7498"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/auxiliar-de-enfermagem-profissionalizante.jpg",
+    "imageAlt": "Auxiliar de Enfermagem — carreira e formação"
   },
   {
     "slug": "auxiliar-de-saude-bucal-profissionalizante",
@@ -7463,7 +7781,9 @@
       "curso ASB Lei 11.889",
       "auxiliar saúde bucal salário",
       "curso ASB iniciante"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/auxiliar-de-saude-bucal-profissionalizante.jpg",
+    "imageAlt": "Auxiliar de Saúde Bucal — carreira e formação"
   },
   {
     "slug": "auxiliar-de-farmacia-profissionalizante",
@@ -7510,7 +7830,9 @@
       "curso atendimento em drogaria",
       "auxiliar de farmácia salário",
       "curso auxiliar farmácia iniciante"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/auxiliar-de-farmacia-profissionalizante.jpg",
+    "imageAlt": "Auxiliar de Farmácia — carreira e formação"
   },
   {
     "slug": "auxiliar-de-veterinaria-profissionalizante",
@@ -7557,7 +7879,9 @@
       "curso atendente de pet shop",
       "auxiliar veterinária salário",
       "curso bem-estar animal"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/auxiliar-de-veterinaria-profissionalizante.jpg",
+    "imageAlt": "Auxiliar de Veterinária — carreira e formação"
   },
   {
     "slug": "massoterapia-profissionalizante",
@@ -7604,7 +7928,9 @@
       "curso shiatsu e reflexologia",
       "massoterapeuta salário",
       "curso massagem relaxante"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/massoterapia-profissionalizante.jpg",
+    "imageAlt": "Massoterapia — carreira e formação"
   },
   {
     "slug": "socorrista-profissionalizante",
@@ -7651,7 +7977,9 @@
       "curso socorrista rodovia",
       "socorrista salário",
       "curso emergências médicas"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/socorrista-profissionalizante.jpg",
+    "imageAlt": "Socorrista — carreira e formação"
   },
   {
     "slug": "cuidador-infantil-profissionalizante",
@@ -7698,7 +8026,9 @@
       "curso ECA e desenvolvimento infantil",
       "babá profissional salário",
       "curso auxiliar de creche"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/cuidador-infantil-profissionalizante.jpg",
+    "imageAlt": "Cuidador Infantil — carreira e formação"
   },
   {
     "slug": "acompanhante-hospitalar-profissionalizante",
@@ -7745,7 +8075,9 @@
       "curso acompanhante NR-32",
       "acompanhante hospitalar salário",
       "curso acompanhante de pacientes"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/acompanhante-hospitalar-profissionalizante.jpg",
+    "imageAlt": "Acompanhante Hospitalar — carreira e formação"
   },
   {
     "slug": "auxiliar-de-saude-mental-profissionalizante",
@@ -7792,7 +8124,9 @@
       "curso atendimento psicossocial",
       "auxiliar saúde mental salário",
       "curso saúde mental humanizada"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/auxiliar-de-saude-mental-profissionalizante.jpg",
+    "imageAlt": "Auxiliar de Saúde Mental — carreira e formação"
   },
   {
     "slug": "auxiliar-administrativo-profissionalizante",
@@ -7839,7 +8173,9 @@
       "curso administração para iniciantes",
       "auxiliar administrativo salário",
       "curso departamento pessoal básico"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/auxiliar-administrativo-profissionalizante.jpg",
+    "imageAlt": "Auxiliar Administrativo — carreira e formação"
   },
   {
     "slug": "recepcionista-profissionalizante",
@@ -7886,7 +8222,9 @@
       "curso atendimento ao cliente",
       "recepcionista salário",
       "curso recepcionista para iniciantes"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/recepcionista-profissionalizante.jpg",
+    "imageAlt": "Recepcionista — carreira e formação"
   },
   {
     "slug": "secretariado-profissionalizante",
@@ -7933,7 +8271,9 @@
       "curso secretariado Lei 7377",
       "secretária executiva salário",
       "curso assistente de diretoria"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/secretariado-profissionalizante.jpg",
+    "imageAlt": "Secretariado — carreira e formação"
   },
   {
     "slug": "vendedor-profissionalizante",
@@ -7980,7 +8320,9 @@
       "curso CRM para vendas",
       "vendedor salário",
       "curso vendedor para iniciantes"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/vendedor-profissionalizante.jpg",
+    "imageAlt": "Vendedor — carreira e formação"
   },
   {
     "slug": "cabeleireiro-profissionalizante",
@@ -8027,7 +8369,9 @@
       "curso mechas e balayage",
       "cabeleireiro salário",
       "curso cabeleireiro iniciante"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/cabeleireiro-profissionalizante.jpg",
+    "imageAlt": "Cabeleireiro — carreira e formação"
   },
   {
     "slug": "manicure-e-pedicure-profissionalizante",
@@ -8074,7 +8418,9 @@
       "curso manicure biossegurança",
       "manicure salário",
       "curso manicure iniciante"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/manicure-e-pedicure-profissionalizante.jpg",
+    "imageAlt": "Manicure e Pedicure — carreira e formação"
   },
   {
     "slug": "maquiagem-profissional-profissionalizante",
@@ -8121,7 +8467,9 @@
       "curso maquiagem editorial",
       "maquiadora salário",
       "curso maquiagem iniciante"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/maquiagem-profissional-profissionalizante.jpg",
+    "imageAlt": "Maquiagem Profissional — carreira e formação"
   },
   {
     "slug": "confeitaria-profissionalizante",
@@ -8168,7 +8516,9 @@
       "curso confeitaria RDC 216",
       "confeiteiro salário",
       "curso confeitaria para MEI"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/confeitaria-profissionalizante.jpg",
+    "imageAlt": "Confeitaria — carreira e formação"
   },
   {
     "slug": "padeiro-profissionalizante",
@@ -8215,7 +8565,9 @@
       "curso pães doces e salgados",
       "padeiro salário",
       "curso padeiro iniciante"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/padeiro-profissionalizante.jpg",
+    "imageAlt": "Padeiro — carreira e formação"
   },
   {
     "slug": "bartender-profissionalizante",
@@ -8262,6 +8614,8 @@
       "curso bartender para eventos",
       "bartender salário",
       "curso bartender iniciante"
-    ]
+    ],
+    "imageUrl": "https://bolsa-click.fly.storage.tigris.dev/carreiras/bartender-profissionalizante.jpg",
+    "imageAlt": "Bartender — carreira e formação"
   }
 ]

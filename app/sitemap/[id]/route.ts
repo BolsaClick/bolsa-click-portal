@@ -98,6 +98,7 @@ function buildStaticSitemap(): SitemapEntry[] {
     { loc: `${SITE_URL}/contato`, lastmod: now, changefreq: 'weekly', priority: 0.7 },
     { loc: `${SITE_URL}/central-de-ajuda`, lastmod: now, changefreq: 'weekly', priority: 0.7 },
     { loc: `${SITE_URL}/faq`, lastmod: now, changefreq: 'weekly', priority: 0.8 },
+    { loc: `${SITE_URL}/carreiras`, lastmod: now, changefreq: 'weekly', priority: 0.9 },
     { loc: `${SITE_URL}/teste-vocacional`, lastmod: now, changefreq: 'monthly', priority: 0.85 },
     { loc: `${SITE_URL}/enem`, lastmod: now, changefreq: 'monthly', priority: 0.85 },
     { loc: `${SITE_URL}/prouni`, lastmod: now, changefreq: 'monthly', priority: 0.85 },
@@ -346,6 +347,12 @@ async function buildEditorialSitemap(): Promise<SitemapEntry[]> {
         lastmod: updatedAt.toISOString(),
         changefreq: 'monthly' as const,
         priority: Math.round((0.55 + (trendScore ?? 0) / 100 * 0.25) * 100) / 100,
+      })),
+      ...vocacionalCourses.map(({ slug, updatedAt, trendScore }) => ({
+        loc: `${SITE_URL}/carreiras/${slug}`,
+        lastmod: updatedAt.toISOString(),
+        changefreq: 'weekly' as const,
+        priority: Math.round((0.75 + (trendScore ?? 0) / 100 * 0.10) * 100) / 100,
       })),
     ]
   } catch (e) {

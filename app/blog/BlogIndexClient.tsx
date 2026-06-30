@@ -163,46 +163,43 @@ export default function BlogIndexClient({
         </div>
       </section>
 
-      {/* CATEGORIES */}
+      {/* CATEGORIES — nav horizontal minimalista */}
       {categories.length > 0 && (
-        <section className="bg-paper border-b border-hairline">
-          <div className="container mx-auto px-4 py-5 flex flex-wrap items-center gap-2">
-            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 mr-2">
-              Categorias
-            </span>
-            <button
-              onClick={() => setActiveCategory(null)}
-              className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-colors ${
-                !activeCategory
-                  ? 'bg-ink-900 text-white'
-                  : 'bg-white border border-hairline text-ink-700 hover:border-ink-300 hover:text-ink-900'
-              }`}
-            >
-              Todos
-            </button>
-            {categories.map((cat) => (
+        <nav className="bg-paper border-b border-hairline overflow-x-auto">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center gap-0 whitespace-nowrap">
               <button
-                key={cat.id}
-                onClick={() =>
-                  setActiveCategory(cat.id === activeCategory ? null : cat.id)
-                }
-                className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-colors ${
-                  activeCategory === cat.id
-                    ? 'bg-ink-900 text-white'
-                    : 'bg-white border border-hairline text-ink-700 hover:border-ink-300 hover:text-ink-900'
+                onClick={() => setActiveCategory(null)}
+                className={`px-4 py-3.5 text-[13px] font-semibold border-b-2 transition-colors ${
+                  !activeCategory
+                    ? 'border-bolsa-primary text-bolsa-primary'
+                    : 'border-transparent text-ink-500 hover:text-ink-900 hover:border-ink-300'
                 }`}
               >
-                {cat.title}
+                Tudo
               </button>
-            ))}
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id === activeCategory ? null : cat.id)}
+                  className={`px-4 py-3.5 text-[13px] font-semibold border-b-2 transition-colors ${
+                    activeCategory === cat.id
+                      ? 'border-bolsa-primary text-bolsa-primary'
+                      : 'border-transparent text-ink-500 hover:text-ink-900 hover:border-ink-300'
+                  }`}
+                >
+                  {cat.title}
+                </button>
+              ))}
+            </div>
           </div>
-        </section>
+        </nav>
       )}
 
-      {/* FEATURED — magazine layout (1 hero + 3 secundários) */}
+      {/* FEATURED — GE-style overlay (1 hero + 2 cards empilhados) */}
       {showFeatured && heroPost && (
         <section className="container mx-auto px-4 py-14 md:py-16">
-          <div className="flex items-baseline justify-between hairline-b pb-3 mb-8">
+          <div className="flex items-baseline justify-between hairline-b pb-3 mb-6">
             <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
               Em destaque
             </h2>
@@ -211,86 +208,84 @@ export default function BlogIndexClient({
             </span>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-1.5 lg:h-[520px]">
             {/* Hero post */}
-            <article className="lg:col-span-7 group">
-              <Link href={`/blog/${heroPost.slug}`} className="block">
-                <div className="relative aspect-[16/10] mb-6 overflow-hidden bg-paper-warm">
-                  {heroPost.featuredImage ? (
-                    <Image
-                      src={heroPost.featuredImage}
-                      alt={heroPost.imageAlt || heroPost.title}
-                      fill
-                      className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-                      sizes="(min-width: 1024px) 60vw, 100vw"
-                      priority
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <BookOpen size={48} className="text-ink-300" />
-                    </div>
-                  )}
+            <article className="lg:col-span-7 group relative overflow-hidden">
+              <Link
+                href={`/blog/${heroPost.slug}`}
+                className="block relative aspect-[16/10] lg:aspect-auto lg:h-full"
+              >
+                {heroPost.featuredImage ? (
+                  <Image
+                    src={heroPost.featuredImage}
+                    alt={heroPost.imageAlt || heroPost.title}
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                    sizes="(min-width: 1024px) 60vw, 100vw"
+                    priority
+                  />
+                ) : (
+                  <div className="w-full h-full bg-paper-warm flex items-center justify-center">
+                    <BookOpen size={48} className="text-ink-300" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+                  <div className="flex items-center gap-3 mb-3 font-mono text-[10px] tracking-[0.22em] uppercase text-white/65">
+                    {heroPost.categories[0] && (
+                      <>
+                        <span>{heroPost.categories[0].title}</span>
+                        <span className="text-white/35">·</span>
+                      </>
+                    )}
+                    <span className="num-tabular">{fmtDate(heroPost.publishedAt, { month: 'short' })}</span>
+                    <span className="text-white/35">·</span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Clock size={11} /> {heroPost.readingTime} min
+                    </span>
+                  </div>
+                  <h3 className="font-display text-2xl md:text-3xl lg:text-[36px] text-white leading-[1.05] group-hover:italic transition-all duration-300">
+                    {heroPost.title}
+                  </h3>
                 </div>
-
-                <div className="flex items-center gap-3 mb-4 font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500">
-                  {heroPost.categories[0] && (
-                    <>
-                      <span>{heroPost.categories[0].title}</span>
-                      <span className="text-ink-300">·</span>
-                    </>
-                  )}
-                  <span className="num-tabular">{fmtDate(heroPost.publishedAt)}</span>
-                  <span className="text-ink-300">·</span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <Clock size={11} /> {heroPost.readingTime} min
-                  </span>
-                </div>
-
-                <h3 className="font-display text-3xl md:text-4xl lg:text-[44px] text-ink-900 leading-[1.05] mb-4 group-hover:italic transition-all duration-300">
-                  {heroPost.title}
-                </h3>
-                <p className="text-ink-500 text-[15px] md:text-base leading-relaxed line-clamp-3 max-w-2xl">
-                  {heroPost.excerpt}
-                </p>
               </Link>
             </article>
 
             {/* Side featured */}
-            <div className="lg:col-span-5 flex flex-col divide-y divide-hairline">
+            <div className="lg:col-span-5 flex flex-col gap-1.5">
               {sideFeatured.map((post) => (
-                <article key={post.id} className="group py-6 first:pt-0 last:pb-0">
-                  <Link href={`/blog/${post.slug}`} className="flex gap-5">
-                    <div className="relative w-28 h-28 md:w-32 md:h-32 flex-shrink-0 overflow-hidden bg-paper-warm">
-                      {post.featuredImage ? (
-                        <Image
-                          src={post.featuredImage}
-                          alt={post.imageAlt || post.title}
-                          fill
-                          className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-                          sizes="128px"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <BookOpen size={20} className="text-ink-300" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex flex-col flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2 font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500">
+                <article key={post.id} className="group relative flex-1 overflow-hidden">
+                  <Link
+                    href={`/blog/${post.slug}`}
+                    className="block relative aspect-[16/7] lg:aspect-auto lg:h-full"
+                  >
+                    {post.featuredImage ? (
+                      <Image
+                        src={post.featuredImage}
+                        alt={post.imageAlt || post.title}
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                        sizes="(min-width: 1024px) 40vw, 100vw"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-paper-warm flex items-center justify-center">
+                        <BookOpen size={24} className="text-ink-300" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
+                      <div className="flex items-center gap-2 mb-2 font-mono text-[10px] tracking-[0.2em] uppercase text-white/60">
                         {post.categories[0] && (
                           <>
                             <span>{post.categories[0].title}</span>
-                            <span className="text-ink-300">·</span>
+                            <span className="text-white/35">·</span>
                           </>
                         )}
                         <span className="num-tabular">{post.readingTime} min</span>
                       </div>
-                      <h3 className="font-display text-lg md:text-xl text-ink-900 leading-snug group-hover:italic transition-all duration-300 line-clamp-3">
+                      <h3 className="font-display text-lg md:text-xl text-white leading-snug group-hover:italic transition-all duration-300 line-clamp-2">
                         {post.title}
                       </h3>
-                      <span className="mt-auto pt-2 font-mono num-tabular text-[10px] tracking-[0.2em] uppercase text-ink-300">
-                        {fmtDate(post.publishedAt, { month: 'short' })}
-                      </span>
                     </div>
                   </Link>
                 </article>
@@ -300,32 +295,28 @@ export default function BlogIndexClient({
         </section>
       )}
 
-      {/* GRID DE POSTS */}
+      {/* LISTA DE POSTS — estilo GE (imagem esquerda + texto direita) */}
       <section className="container mx-auto px-4 pb-16 md:pb-20">
-        <div className="flex items-baseline justify-between hairline-b pb-3 mb-8">
+        <div className="flex items-baseline justify-between hairline-b pb-3 mb-2 mt-8">
           <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
-            {search ? 'Resultados' : activeCategory ? 'Categoria' : 'Todos os artigos'}
+            {search ? 'Resultados' : activeCategory ? 'Categoria' : 'Últimas notícias'}
           </h2>
-          <span className="font-mono num-tabular text-[11px] text-ink-500">
-            ({String(filteredPosts.length).padStart(2, '0')})
-          </span>
+          {search && (
+            <button
+              onClick={() => handleSearch('')}
+              className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink-400 hover:text-bolsa-primary transition-colors"
+            >
+              Limpar ×
+            </button>
+          )}
         </div>
 
         {filteredPosts.length === 0 ? (
-          <div className="bg-white border border-hairline rounded-2xl py-16 px-6 text-center">
-            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 inline-flex items-center gap-3 mb-4">
-              <span className="h-px w-8 bg-ink-300" />
-              Sem resultados
-              <span className="h-px w-8 bg-ink-300" />
-            </span>
-            <h3 className="font-display text-2xl md:text-3xl text-ink-900 leading-tight mb-3">
-              Nada por aqui{' '}
-              <span className="italic text-ink-700">ainda.</span>
-            </h3>
-            <p className="text-ink-500 text-[14px] mb-6 max-w-md mx-auto leading-relaxed">
+          <div className="py-16 text-center">
+            <p className="text-ink-500 text-[15px] mb-4">
               {search
-                ? 'Não achamos artigos pra essa busca. Tente outras palavras-chave.'
-                : 'Ainda não temos artigos publicados nessa categoria.'}
+                ? 'Nenhum artigo encontrado. Tente outras palavras-chave.'
+                : 'Ainda não há artigos nessa categoria.'}
             </p>
             {search && (
               <button
@@ -338,70 +329,58 @@ export default function BlogIndexClient({
           </div>
         ) : (
           <>
-            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 md:gap-x-8 gap-y-10 md:gap-y-12">
+            <ul className="divide-y divide-hairline">
               {filteredPosts.map((post) => (
                 <li key={post.id} className="group">
-                  <Link href={`/blog/${post.slug}`} className="flex flex-col h-full">
-                    <div className="relative aspect-[4/3] mb-4 overflow-hidden bg-paper-warm">
+                  <Link href={`/blog/${post.slug}`} className="flex gap-5 md:gap-7 py-6">
+                    {/* Imagem */}
+                    <div className="relative w-28 h-20 md:w-52 md:h-36 flex-shrink-0 overflow-hidden bg-paper-warm">
                       {post.featuredImage ? (
                         <Image
                           src={post.featuredImage}
                           alt={post.imageAlt || post.title}
                           fill
-                          className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-                          sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw"
+                          className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                          sizes="(min-width: 768px) 210px, 112px"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <BookOpen size={28} className="text-ink-300" />
+                          <BookOpen size={24} className="text-ink-300" />
                         </div>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 flex-wrap mb-3 font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500">
-                      {post.categories.map((cat, idx) => (
-                        <span key={cat.slug} className="inline-flex items-center gap-2">
-                          {idx > 0 && <span className="text-ink-300">·</span>}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              router.push(`/blog/categoria/${cat.slug}`)
-                            }}
-                            className="hover:text-bolsa-secondary transition-colors"
-                          >
-                            {cat.title}
-                          </button>
-                        </span>
-                      ))}
-                      {post.categories.length > 0 && (
-                        <span className="text-ink-300">·</span>
+                    {/* Conteúdo */}
+                    <div className="flex flex-col flex-1 min-w-0">
+                      {post.categories[0] && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            router.push(`/blog/categoria/${post.categories[0].slug}`)
+                          }}
+                          className="font-mono text-[10px] tracking-[0.22em] uppercase text-bolsa-primary mb-2 text-left hover:underline w-fit"
+                        >
+                          {post.categories[0].title}
+                        </button>
                       )}
-                      <span className="inline-flex items-center gap-1.5 num-tabular">
-                        <Clock size={11} /> {post.readingTime} min
-                      </span>
-                    </div>
 
-                    <h3 className="font-display text-xl md:text-[22px] text-ink-900 leading-snug mb-3 group-hover:italic transition-all duration-300 line-clamp-2">
-                      {post.title}
-                    </h3>
+                      <h3 className="font-display text-lg md:text-xl lg:text-2xl text-ink-900 leading-snug mb-2 group-hover:text-bolsa-secondary transition-colors line-clamp-3">
+                        {post.title}
+                      </h3>
 
-                    <p className="text-ink-500 text-[14px] leading-relaxed line-clamp-3">
-                      {post.excerpt}
-                    </p>
+                      <p className="text-ink-500 text-[14px] leading-relaxed line-clamp-2 hidden md:block mb-3">
+                        {post.excerpt}
+                      </p>
 
-                    <div className="flex items-center justify-between mt-4 pt-3 hairline-t">
-                      <span className="font-mono num-tabular text-[10px] tracking-[0.2em] uppercase text-ink-300">
-                        {fmtDate(post.publishedAt, { month: 'short' })}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 font-mono text-[11px] tracking-[0.2em] uppercase text-ink-700 group-hover:text-bolsa-secondary transition-colors">
-                        Ler
-                        <ArrowRight
-                          size={12}
-                          className="transition-transform duration-300 group-hover:translate-x-0.5"
-                        />
-                      </span>
+                      <div className="mt-auto flex items-center gap-2 font-mono text-[10px] tracking-[0.18em] uppercase text-ink-400">
+                        <span className="num-tabular">{fmtDate(post.publishedAt, { month: 'short' })}</span>
+                        <span>·</span>
+                        <span className="inline-flex items-center gap-1">
+                          <Clock size={10} /> {post.readingTime} min
+                        </span>
+                      </div>
                     </div>
                   </Link>
                 </li>
@@ -409,11 +388,11 @@ export default function BlogIndexClient({
             </ul>
 
             {hasMore && !activeCategory && (
-              <div className="text-center mt-14">
+              <div className="text-center mt-10">
                 <button
                   onClick={loadMore}
                   disabled={loadingMore}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-ink-900 text-white font-semibold rounded-full text-[13px] hover:bg-bolsa-secondary transition-colors disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-6 py-3 border border-hairline text-ink-700 font-semibold text-[13px] hover:border-ink-400 hover:text-ink-900 transition-colors disabled:opacity-50"
                 >
                   {loadingMore ? (
                     <>

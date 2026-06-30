@@ -109,7 +109,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const firstCategory = post.categories[0]
-  const title = post.metaTitle || post.title
+  // Strip any trailing brand suffix (e.g. "| Bolsa Click") that may already be
+  // stored in metaTitle — the root layout template appends it automatically,
+  // so keeping it in the DB value causes "| Bolsa Click | Bolsa Click".
+  const rawTitle = post.metaTitle || post.title
+  const title = rawTitle.replace(/\s*\|\s*Bolsa Click\s*$/i, '').trim()
   const description = post.metaDescription || post.excerpt
   const rawMetaImage = post.featuredImage || 'https://www.bolsaclick.com.br/assets/logo-bolsa-click-rosa.png'
   const imageUrl = rawMetaImage.startsWith('http')
@@ -203,17 +207,23 @@ export default async function BlogPostPage({ params }: Props) {
       dateModified: post.updatedAt.toISOString(),
       author: {
         '@type': 'Person',
+        '@id': 'https://www.bolsaclick.com.br/sobre/equipe-editorial#mariana-fonseca',
         name: post.author,
-        url: 'https://www.bolsaclick.com.br/sobre/equipe-editorial',
+        url: 'https://www.bolsaclick.com.br/sobre/equipe-editorial#mariana-fonseca',
+        jobTitle: 'Editora de Conteúdo Educacional',
         worksFor: {
           '@type': 'Organization',
           name: 'Bolsa Click',
           url: 'https://www.bolsaclick.com.br',
         },
-        jobTitle: 'Equipe Editorial',
-        sameAs: [
-          'https://www.instagram.com/bolsaclick',
-          'https://www.linkedin.com/company/bolsa-click',
+        knowsAbout: [
+          'Bolsas de estudo',
+          'ProUni',
+          'FIES',
+          'ENEM',
+          'Educação superior EAD',
+          'Mercado de trabalho brasileiro',
+          'Financiamento estudantil',
         ],
       },
       reviewedBy: {

@@ -9,6 +9,7 @@ import { getAcademicLevelLabel } from "@/app/lib/academic-level"
 import { Building2, Clock, Heart, MapPin, Star } from "lucide-react"
 import Image from "next/image"
 import { useState, useMemo } from "react"
+import { usePathname } from "next/navigation"
 import { toast } from "sonner"
 import { useFeatureFlags } from "@/app/lib/hooks/usePostHogFeatureFlags"
 import CourseCardRedesign from "./Redesign"
@@ -58,6 +59,7 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
   isPos
 }) => {
   const { isFavorite, toggleFavorite } = useFavorites()
+  const pathname = usePathname()
   const { trackEvent } = usePostHogTracking()
 
   // Estado para seleção de turno
@@ -291,7 +293,7 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
       "price": course.minPrice || 0,
       "priceCurrency": "BRL",
       "availability": "https://schema.org/InStock",
-      "url": typeof window !== 'undefined' ? window.location.href : ""
+      "url": `https://www.bolsaclick.com.br${pathname}`
     },
     ...(course.city && {
       "location": {

@@ -40,18 +40,18 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { userId, role, permissions } = body
+    const { userId, email, role, permissions } = body
 
-    if (!userId || !role) {
+    if (!role || (!userId && !email)) {
       return NextResponse.json(
-        { error: 'userId and role are required' },
+        { error: 'role and either userId or email are required' },
         { status: 400 }
       )
     }
 
-    // Buscar usuário
+    // Buscar usuário por userId ou email
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: userId ? { id: userId } : { email },
     })
 
     if (!user) {
@@ -76,11 +76,12 @@ export async function POST(request: NextRequest) {
         'dashboard',
         'help_center',
         'courses',
+        'blog',
         'users',
         'admin_management',
       ],
-      ADMIN: ['dashboard', 'help_center', 'courses', 'users'],
-      EDITOR: ['dashboard', 'help_center', 'courses'],
+      ADMIN: ['dashboard', 'help_center', 'courses', 'blog', 'users'],
+      EDITOR: ['dashboard', 'help_center', 'courses', 'blog'],
     }
 
     const finalPermissions =

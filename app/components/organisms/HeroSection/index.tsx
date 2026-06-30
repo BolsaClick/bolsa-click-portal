@@ -65,8 +65,8 @@ const Hero = async () => {
             </h1>
             {!hasBanners && (
               <p className="text-white/85 text-base md:text-lg max-w-2xl leading-relaxed mb-6">
-                Compare mensalidades em centenas de cursos de graduação, pós e técnicos.
-                Sem ENEM, matrícula 100% online — cadastro grátis.
+                Mensalidades a partir de R$99/mês em faculdades reconhecidas pelo MEC.
+                Sem ENEM, matrícula 100% online — compare grátis e inscreva-se em minutos.
               </p>
             )}
             {/* Stats strip — densidade marketplace. Sempre visível, dá prova
@@ -88,6 +88,11 @@ const Hero = async () => {
                 <dt className="sr-only">Desconto máximo</dt>
                 <dd className="font-semibold text-base md:text-lg">até 80%</dd>
                 <span className="text-white/70 text-sm md:text-base">de desconto</span>
+              </div>
+              <span aria-hidden="true" className="text-white/30">·</span>
+              <div className="flex items-baseline gap-1.5">
+                <dt className="sr-only">Mensalidade mínima com bolsa</dt>
+                <dd className="font-semibold text-base md:text-lg">a partir de R$99/mês</dd>
               </div>
             </dl>
           </div>

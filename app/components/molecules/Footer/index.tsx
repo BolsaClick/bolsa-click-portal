@@ -5,7 +5,8 @@ import Link from 'next/link';
 import Container from '../../atoms/Container';
 import { business } from '@/app/lib/constants/business';
 import { WhatsAppSocialIcon, WhatsAppPhoneLink } from './WhatsAppContactLink';
-import { ManageCookiesButton } from './ManageCookiesButton';
+import { ManageCookiesButton } from './ManageCookiesButton'
+import { ReclameAquiSeal } from './ReclameAquiSeal';
 
 const linkClass = 'text-neutral-300 text-sm hover:text-white transition-colors'
 
@@ -389,6 +390,7 @@ const Footer: React.FC = () => {
       <div className="border-t border-white/10 bg-[#080b14]">
         <Container>
           <div className="py-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex flex-col md:flex-row items-center gap-4">
             <div className="text-neutral-400 text-xs space-y-1 text-center md:text-left">
               <p>
                 © {new Date().getFullYear()} {business.legalName || 'Bolsa Click'}. Todos os direitos reservados.
@@ -396,6 +398,8 @@ const Footer: React.FC = () => {
               {business.cnpj && (
                 <p>CNPJ {business.cnpj}</p>
               )}
+            </div>
+            <ReclameAquiSeal />
             </div>
             <div className="flex flex-wrap justify-center gap-4 md:gap-6">
               <Link href="/central-de-ajuda/seguranca-dados-privacidade/termos-de-uso" className="text-neutral-400 text-xs hover:text-neutral-300 transition-colors">

@@ -48,6 +48,32 @@ const orgSchema = {
     'https://www.linkedin.com/company/bolsa-click',
     'https://www.facebook.com/bolsaclickbrasil',
   ],
+  member: [
+    {
+      '@type': 'Person',
+      '@id': `${SITE_URL}/sobre/equipe-editorial#mariana-fonseca`,
+      name: 'Mariana Fonseca',
+      jobTitle: 'Editora de Conteúdo Educacional',
+      url: `${SITE_URL}/sobre/equipe-editorial#mariana-fonseca`,
+      worksFor: {
+        '@type': 'Organization',
+        name: 'Bolsa Click',
+        url: SITE_URL,
+      },
+      knowsAbout: [
+        'Bolsas de estudo',
+        'ProUni',
+        'FIES',
+        'ENEM',
+        'Educação superior EAD',
+        'Mercado de trabalho brasileiro',
+        'Financiamento estudantil',
+      ],
+      sameAs: [
+        'https://www.linkedin.com/company/bolsa-click',
+      ],
+    },
+  ],
 }
 
 const breadcrumbSchema = {
@@ -93,6 +119,35 @@ export default function EquipeEditorialPage() {
               passo. Todo conteúdo publicado passa por critérios claros de fonte, revisão e
               atualização — pra você confiar no que lê.
             </p>
+          </div>
+        </section>
+
+        <section className="bg-white border-b border-hairline py-12 md:py-16">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <h2 className="font-display text-3xl text-ink-900 mb-8">Quem escreve aqui</h2>
+            <div
+              id="mariana-fonseca"
+              className="flex items-start gap-5 bg-paper rounded-xl border border-hairline p-6"
+            >
+              <div
+                aria-hidden="true"
+                className="flex-shrink-0 w-14 h-14 rounded-full bg-bolsa-primary/10 flex items-center justify-center text-bolsa-primary font-display text-xl font-semibold"
+              >
+                MF
+              </div>
+              <div>
+                <p className="font-display text-lg text-ink-900 leading-snug">Mariana Fonseca</p>
+                <p className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink-500 mt-0.5 mb-3">
+                  Editora de Conteúdo Educacional
+                </p>
+                <p className="text-ink-700 text-sm leading-relaxed">
+                  Jornalista especializada em acesso à educação superior, financiamento estudantil e
+                  mercado de trabalho. Cobre ProUni, FIES, ENEM e bolsas em faculdades privadas há
+                  mais de oito anos. No Bolsa Click, é responsável pelos guias de carreira, análises
+                  de mensalidade e artigos sobre programas federais.
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 

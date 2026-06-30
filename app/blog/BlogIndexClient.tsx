@@ -163,37 +163,35 @@ export default function BlogIndexClient({
         </div>
       </section>
 
-      {/* CATEGORIES — nav horizontal minimalista */}
+      {/* CATEGORIES — tags estilo blog */}
       {categories.length > 0 && (
-        <nav className="bg-paper border-b border-hairline overflow-x-auto">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center gap-0 whitespace-nowrap">
+        <div className="container mx-auto px-4 pt-8 pb-2">
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setActiveCategory(null)}
+              className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold tracking-wide transition-all duration-150 ${
+                !activeCategory
+                  ? 'bg-ink-900 text-white'
+                  : 'bg-white border border-ink-100 text-ink-500 hover:border-ink-300 hover:text-ink-900'
+              }`}
+            >
+              Tudo
+            </button>
+            {categories.map((cat) => (
               <button
-                onClick={() => setActiveCategory(null)}
-                className={`px-4 py-3.5 text-[13px] font-semibold border-b-2 transition-colors ${
-                  !activeCategory
-                    ? 'border-bolsa-primary text-bolsa-primary'
-                    : 'border-transparent text-ink-500 hover:text-ink-900 hover:border-ink-300'
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id === activeCategory ? null : cat.id)}
+                className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold tracking-wide transition-all duration-150 ${
+                  activeCategory === cat.id
+                    ? 'bg-ink-900 text-white'
+                    : 'bg-white border border-ink-100 text-ink-500 hover:border-ink-300 hover:text-ink-900'
                 }`}
               >
-                Tudo
+                {cat.title}
               </button>
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.id === activeCategory ? null : cat.id)}
-                  className={`px-4 py-3.5 text-[13px] font-semibold border-b-2 transition-colors ${
-                    activeCategory === cat.id
-                      ? 'border-bolsa-primary text-bolsa-primary'
-                      : 'border-transparent text-ink-500 hover:text-ink-900 hover:border-ink-300'
-                  }`}
-                >
-                  {cat.title}
-                </button>
-              ))}
-            </div>
+            ))}
           </div>
-        </nav>
+        </div>
       )}
 
       {/* FEATURED — GE-style overlay (1 hero + 2 cards empilhados) */}

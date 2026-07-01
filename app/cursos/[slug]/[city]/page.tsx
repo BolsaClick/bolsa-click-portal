@@ -27,7 +27,7 @@ type Props = {
 }
 
 // ISR: Revalidar a cada 1 hora
-export const revalidate = 3600
+export const revalidate = 86400
 
 // Helper para buscar curso do banco de dados
 const getCourseBySlug = cache(async (slug: string): Promise<FeaturedCourseData | null> => {

@@ -3,7 +3,7 @@ import { Metadata } from 'next'
 import PosGraduacaoClient from './PosGraduacaoClient';
 import { getVitrine } from '@/app/lib/api/get-vitrine'
 
-export const revalidate = 600
+export const revalidate = 3600
 
 const jsonLdSchema = {
   '@context': 'https://schema.org',

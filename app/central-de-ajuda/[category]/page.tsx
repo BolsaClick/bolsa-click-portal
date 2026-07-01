@@ -5,7 +5,7 @@ import { HelpCategoryHero } from '@/app/components/help/HelpCategoryHero'
 import { getHelpCategoryBySlug, getAllCategorySlugs } from '../_lib/data'
 import { renderIcon } from '../_lib/icons'
 
-export const revalidate = 3600 // Revalidar a cada 1 hora
+export const revalidate = 86400 // Revalidar a cada 1 hora
 
 interface PageProps {
   params: Promise<{ category: string }>

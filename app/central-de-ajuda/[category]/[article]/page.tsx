@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { ArticleLayout } from '@/app/components/help/ArticleLayout'
 import { getHelpArticle, getAllArticleSlugs } from '../../_lib/data'
 
-export const revalidate = 3600 // Revalidar a cada 1 hora
+export const revalidate = 86400 // Revalidar a cada 1 hora
 
 interface PageProps {
   params: Promise<{ category: string; article: string }>

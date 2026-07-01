@@ -15,7 +15,7 @@ import { ReviewForm } from './_components/ReviewForm'
 
 const theme = getCurrentTheme()
 
-export const revalidate = 3600
+export const revalidate = 86400
 
 async function getInstitution(slug: string) {
   return prisma.institution.findUnique({

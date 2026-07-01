@@ -9,7 +9,7 @@ import { shouldIndexCityPage } from '@/app/lib/seo/city-page-gate'
 import FaculdadeCidadeClient from './FaculdadeCidadeClient'
 
 const theme = getCurrentTheme()
-export const revalidate = 3600
+export const revalidate = 86400
 
 type Props = {
   params: Promise<{ slug: string; city: string }>

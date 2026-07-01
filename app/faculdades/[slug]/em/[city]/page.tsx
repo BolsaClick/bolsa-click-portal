@@ -17,7 +17,7 @@ type Props = {
   params: Promise<{ slug: string; city: string }>
 }
 
-export const revalidate = 3600
+export const revalidate = 86400
 
 export async function generateStaticParams() {
   return []

@@ -9,7 +9,7 @@ type Props = {
   params: Promise<{ slug: string }>
 }
 
-export const revalidate = 3600
+export const revalidate = 86400
 
 function generateHeadingId(text: string): string {
   return text

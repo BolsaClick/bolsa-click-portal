@@ -16,7 +16,7 @@ type Props = {
   params: Promise<{ city: string }>
 }
 
-export const revalidate = 3600
+export const revalidate = 86400
 
 // On-demand ISR — não pré-gera as 100 cidades no build pra não martelar a API.
 export async function generateStaticParams() {

@@ -29,7 +29,7 @@ type Props = {
 }
 
 // ISR: Revalidar a cada 1 hora (3600 segundos)
-export const revalidate = 3600
+export const revalidate = 86400
 
 // Helper para buscar curso do banco de dados
 async function getCourseBySlug(slug: string): Promise<FeaturedCourseData | null> {

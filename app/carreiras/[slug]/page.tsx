@@ -7,7 +7,7 @@ import { courseTypeLabel } from '@/app/lib/courseTypeLabel'
 import { resolveCanonicalCourseSlug } from '@/app/lib/seo/slug-resolver'
 import { parseSalary } from '@/app/lib/seo/schema-helpers'
 
-export const revalidate = 3600
+export const revalidate = 86400
 
 type Props = {
   params: Promise<{ slug: string }>

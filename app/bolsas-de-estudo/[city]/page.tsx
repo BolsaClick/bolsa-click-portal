@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { cache } from 'react'
+import { unstable_cache } from 'next/cache'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/app/lib/prisma'
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
@@ -42,17 +43,23 @@ function findCourseSlug(offerName: string): string | null {
   return null
 }
 
-const getCityOffers = cache(async (cityName: string, stateUF: string) => {
-  try {
-    const res = await getShowFiltersCourses(
-      undefined, cityName, stateUF, undefined, 'GRADUACAO', 1, 60
-    )
-    return (res?.data || []) as Course[]
-  } catch (error) {
-    console.error(`Erro ao buscar ofertas da cidade ${cityName}:`, error)
-    return []
-  }
-})
+const _getCityOffersBase = unstable_cache(
+  async (cityName: string, stateUF: string) => {
+    try {
+      const res = await getShowFiltersCourses(
+        undefined, cityName, stateUF, undefined, 'GRADUACAO', 1, 60
+      )
+      return (res?.data || []) as Course[]
+    } catch (error) {
+      console.error(`Erro ao buscar ofertas da cidade ${cityName}:`, error)
+      return []
+    }
+  },
+  ['bolsas-city-offers'],
+  { revalidate: 600 },
+)
+
+const getCityOffers = cache(_getCityOffersBase)
 
 const getActiveInstitutions = cache(async () => {
   return prisma.institution.findMany({

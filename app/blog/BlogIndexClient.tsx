@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { ArrowRight, BookOpen, Clock, Loader2, Search } from 'lucide-react'
+import { ArrowRight, BookOpen, ChevronDown, Clock, Loader2, Search } from 'lucide-react'
 
 interface BlogPostCard {
   id: string
@@ -48,12 +48,24 @@ export default function BlogIndexClient({
 }: Props) {
   const router = useRouter()
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
   const [search, setSearch] = useState('')
   const [posts, setPosts] = useState(initialPosts)
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(initialPosts.length >= 24)
   const [loadingMore, setLoadingMore] = useState(false)
   const [searching, setSearching] = useState(false)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   const filteredPosts = activeCategory
     ? posts.filter((p) => p.categories.some((c) => c.id === activeCategory))
@@ -163,36 +175,6 @@ export default function BlogIndexClient({
         </div>
       </section>
 
-      {/* CATEGORIES — tags estilo blog */}
-      {categories.length > 0 && (
-        <div className="container mx-auto px-4 pt-8 pb-2">
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setActiveCategory(null)}
-              className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold tracking-wide transition-all duration-150 ${
-                !activeCategory
-                  ? 'bg-ink-900 text-white'
-                  : 'bg-white border border-ink-100 text-ink-500 hover:border-ink-300 hover:text-ink-900'
-              }`}
-            >
-              Tudo
-            </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id === activeCategory ? null : cat.id)}
-                className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold tracking-wide transition-all duration-150 ${
-                  activeCategory === cat.id
-                    ? 'bg-ink-900 text-white'
-                    : 'bg-white border border-ink-100 text-ink-500 hover:border-ink-300 hover:text-ink-900'
-                }`}
-              >
-                {cat.title}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* FEATURED — GE-style overlay (1 hero + 2 cards empilhados) */}
       {showFeatured && heroPost && (
@@ -295,18 +277,77 @@ export default function BlogIndexClient({
 
       {/* LISTA DE POSTS — estilo GE (imagem esquerda + texto direita) */}
       <section className="container mx-auto px-4 pb-16 md:pb-20">
-        <div className="flex items-baseline justify-between hairline-b pb-3 mb-2 mt-8">
+        <div className="flex items-center justify-between hairline-b pb-3 mb-2 mt-8">
           <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
-            {search ? 'Resultados' : activeCategory ? 'Categoria' : 'Últimas notícias'}
+            {search
+              ? 'Resultados'
+              : activeCategory
+                ? categories.find((c) => c.id === activeCategory)?.title ?? 'Categoria'
+                : 'Últimas notícias'}
           </h2>
-          {search && (
-            <button
-              onClick={() => handleSearch('')}
-              className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink-400 hover:text-bolsa-primary transition-colors"
-            >
-              Limpar ×
-            </button>
-          )}
+
+          <div className="flex items-center gap-3">
+            {search && (
+              <button
+                onClick={() => handleSearch('')}
+                className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink-400 hover:text-bolsa-primary transition-colors"
+              >
+                Limpar ×
+              </button>
+            )}
+
+            {categories.length > 0 && !search && (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setDropdownOpen((o) => !o)}
+                  className="flex items-center gap-1 font-mono text-[11px] tracking-[0.18em] uppercase text-ink-400 hover:text-ink-900 transition-colors"
+                >
+                  {activeCategory ? (
+                    <span
+                      className="text-bolsa-primary cursor-pointer mr-1"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setActiveCategory(null)
+                        setDropdownOpen(false)
+                      }}
+                    >
+                      ×
+                    </span>
+                  ) : null}
+                  Categoria
+                  <ChevronDown
+                    size={11}
+                    className={`transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+
+                {dropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 z-20 bg-white border border-hairline rounded-xl shadow-[0_8px_32px_-8px_rgba(11,31,60,0.14)] py-1.5 min-w-[200px] max-h-72 overflow-y-auto">
+                    <button
+                      onClick={() => { setActiveCategory(null); setDropdownOpen(false) }}
+                      className={`w-full text-left px-4 py-2 text-[13px] transition-colors ${
+                        !activeCategory ? 'text-ink-900 font-semibold' : 'text-ink-500 hover:text-ink-900'
+                      }`}
+                    >
+                      Todas as categorias
+                    </button>
+                    <div className="my-1 border-t border-hairline" />
+                    {categories.map((cat) => (
+                      <button
+                        key={cat.id}
+                        onClick={() => { setActiveCategory(cat.id === activeCategory ? null : cat.id); setDropdownOpen(false) }}
+                        className={`w-full text-left px-4 py-2 text-[13px] transition-colors ${
+                          activeCategory === cat.id ? 'text-ink-900 font-semibold' : 'text-ink-500 hover:text-ink-900'
+                        }`}
+                      >
+                        {cat.title}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {filteredPosts.length === 0 ? (

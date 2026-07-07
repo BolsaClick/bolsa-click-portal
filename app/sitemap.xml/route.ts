@@ -6,6 +6,7 @@
 import { NextResponse } from 'next/server'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
+const BUILD_TIME = new Date().toISOString()
 
 // IDs estáveis sincronizados com app/sitemap/[id]/route.ts.
 // Mantenha em paridade — não reordenar (afeta GSC).
@@ -15,13 +16,12 @@ const SUB_SITEMAP_IDS = [0, 1, 2, 3, 4] as const
 export const revalidate = 3600
 
 export async function GET() {
-  const now = new Date().toISOString()
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${SUB_SITEMAP_IDS.map(
   (id) => `  <sitemap>
     <loc>${SITE_URL}/sitemap/${id}.xml</loc>
-    <lastmod>${now}</lastmod>
+    <lastmod>${BUILD_TIME}</lastmod>
   </sitemap>`
 ).join('\n')}
 </sitemapindex>

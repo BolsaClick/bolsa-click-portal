@@ -9,7 +9,6 @@ const PRIVATE_PATHS = [
   '/minha-conta/',
   '/favoritos',
   '/recuperar-senha',
-  '/curso/resultado',
 ]
 
 export default function robots(): MetadataRoute.Robots {

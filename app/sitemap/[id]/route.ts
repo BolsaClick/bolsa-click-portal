@@ -5,8 +5,19 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { BRAZILIAN_CITIES } from '@/app/lib/constants/brazilian-cities'
+import { shouldIndexCityPage } from '@/app/lib/seo/city-page-gate'
+import { normalizeBrand } from '@/app/lib/utils/brand'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
+
+// lastmod estável por deploy — NÃO usar `new Date()` por request.
+// As páginas estáticas não têm updatedAt próprio, então um `new Date()` a cada
+// requisição fazia o lastmod mudar a cada poucos segundos, o que leva o Google
+// a desconfiar e ignorar o sinal de freshness. Fixado no boot do módulo: muda
+// só quando há novo deploy (que é quando o conteúdo estático pode ter mudado).
+// As páginas de dinheiro (cursos, cidades, faculdades, posts) já usam o
+// updatedAt real da entidade — este constante cobre só estáticas e fallbacks.
+const BUILD_TIME = new Date().toISOString()
 
 export const revalidate = 3600
 
@@ -42,6 +53,17 @@ const CITY_TIER_1_CUTOFF = 60
 const CITY_TIER_2_CUTOFF = 160
 
 const cityRankBySlug = new Map(BRAZILIAN_CITIES.map((c, idx) => [c.slug, idx]))
+const citySlugByLocation = new Map(
+  BRAZILIAN_CITIES.map((c) => [`${normalizeLocation(c.name)}|${c.state}`, c.slug])
+)
+
+function normalizeLocation(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .trim()
+}
 
 function cityTier(citySlug: string): 1 | 2 | 3 {
   const rank = cityRankBySlug.get(citySlug) ?? 999
@@ -80,7 +102,7 @@ async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): P
 // ─────────────────────────────────────────────────────────────────────────
 
 function buildStaticSitemap(): SitemapEntry[] {
-  const now = new Date().toISOString()
+  const now = BUILD_TIME
   return [
     { loc: SITE_URL, lastmod: now, changefreq: 'daily', priority: 1.0 },
     { loc: `${SITE_URL}/cursos`, lastmod: now, changefreq: 'daily', priority: 0.9 },
@@ -127,7 +149,7 @@ function buildStaticSitemap(): SitemapEntry[] {
 }
 
 async function buildCoursesSitemap(): Promise<SitemapEntry[]> {
-  const now = new Date().toISOString()
+  const now = BUILD_TIME
   try {
     const courses = await withTimeout(
       prisma.featuredCourse.findMany({
@@ -227,7 +249,7 @@ async function buildCourseCitiesSitemap(): Promise<SitemapEntry[]> {
       .slice(0, MAX_URLS_PER_SITEMAP)
   } catch (e) {
     console.error('[sitemap:course-cities] erro, fallback:', e)
-    const now = new Date().toISOString()
+    const now = BUILD_TIME
     return FALLBACK_COURSE_SLUGS.flatMap((slug) =>
       BRAZILIAN_CITIES.slice(0, CITY_TIER_1_CUTOFF).map((city) => ({
         loc: `${SITE_URL}/cursos/${slug}/${city.slug}`,
@@ -241,15 +263,55 @@ async function buildCourseCitiesSitemap(): Promise<SitemapEntry[]> {
 
 async function buildInstitutionsSitemap(): Promise<SitemapEntry[]> {
   try {
-    const institutions = await withTimeout(
-      prisma.institution.findMany({
-        where: { isActive: true },
-        select: { slug: true, updatedAt: true },
-      }),
+    const [institutions, localOffers] = await withTimeout(
+      Promise.all([
+        prisma.institution.findMany({
+          where: { isActive: true },
+          select: {
+            slug: true,
+            name: true,
+            shortName: true,
+            fullName: true,
+            hasCityPages: true,
+            updatedAt: true,
+          },
+        }),
+        prisma.faculdadeCurso.findMany({
+          where: {
+            OR: [
+              { vencimento: null },
+              { vencimento: { gte: new Date() } },
+            ],
+          },
+          select: {
+            updatedAt: true,
+            curso: { select: { brand: true } },
+            unidade: { select: { cidade: true, estado: true } },
+          },
+        }),
+      ]),
       8_000,
       'institutions'
     )
     console.log(`[sitemap:institutions] ${institutions.length} ativas`)
+
+    const localInventory = new Map<string, { offerCount: number; updatedAt: Date }>()
+    for (const offer of localOffers) {
+      const brand = normalizeBrand(offer.curso.brand)
+      const citySlug = citySlugByLocation.get(
+        `${normalizeLocation(offer.unidade.cidade)}|${offer.unidade.estado}`,
+      )
+      if (!brand || !citySlug) continue
+
+      const key = `${brand}|${citySlug}`
+      const current = localInventory.get(key)
+      if (current) {
+        current.offerCount += 1
+        if (offer.updatedAt > current.updatedAt) current.updatedAt = offer.updatedAt
+      } else {
+        localInventory.set(key, { offerCount: 1, updatedAt: offer.updatedAt })
+      }
+    }
 
     const sortedByRecency = [...institutions].sort(
       (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()
@@ -272,6 +334,47 @@ async function buildInstitutionsSitemap(): Promise<SitemapEntry[]> {
       }
     }
 
+    const institutionCityUrls = institutions.flatMap((institution) => {
+      if (!institution.hasCityPages) return []
+
+      const brandCandidates = new Set(
+        [institution.name, institution.shortName, institution.fullName]
+          .map((name) => normalizeBrand(name))
+          .filter(Boolean)
+      )
+
+      return BRAZILIAN_CITIES.flatMap((city) => {
+        let bestInventory: { offerCount: number; updatedAt: Date } | undefined
+        for (const brand of brandCandidates) {
+          const inventory = localInventory.get(`${brand}|${city.slug}`)
+          if (!inventory) continue
+          if (!bestInventory || inventory.offerCount > bestInventory.offerCount) {
+            bestInventory = inventory
+          }
+        }
+
+        if (!bestInventory || !shouldIndexCityPage(bestInventory.offerCount)) {
+          return []
+        }
+
+        const lastmod =
+          bestInventory.updatedAt > institution.updatedAt
+            ? bestInventory.updatedAt
+            : institution.updatedAt
+
+        return [{
+          loc: `${SITE_URL}/faculdades/${institution.slug}/em/${city.slug}`,
+          lastmod: lastmod.toISOString(),
+          changefreq: 'weekly' as const,
+          priority: 0.65,
+        }]
+      })
+    })
+
+    console.log(
+      `[sitemap:institutions] ${institutionCityUrls.length} URLs faculdade-cidade indexáveis`
+    )
+
     return [
       ...institutions.map(({ slug, updatedAt }) => ({
         loc: `${SITE_URL}/faculdades/${slug}`,
@@ -279,14 +382,7 @@ async function buildInstitutionsSitemap(): Promise<SitemapEntry[]> {
         changefreq: 'weekly' as const,
         priority: 0.8,
       })),
-      ...institutions.flatMap(({ slug, updatedAt }) =>
-        BRAZILIAN_CITIES.slice(0, CITY_TIER_1_CUTOFF).map((city) => ({
-          loc: `${SITE_URL}/faculdades/${slug}/em/${city.slug}`,
-          lastmod: updatedAt.toISOString(),
-          changefreq: 'weekly' as const,
-          priority: 0.65,
-        })),
-      ),
+      ...institutionCityUrls,
       ...compareUrls,
     ].slice(0, MAX_URLS_PER_SITEMAP)
   } catch (e) {

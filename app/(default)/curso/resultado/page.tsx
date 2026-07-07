@@ -177,7 +177,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     title,
     description,
     // Só indexar páginas com curso selecionado e estado brasileiro válido
-    robots: shouldIndex ? 'index, follow' : 'noindex, nofollow',
+    robots: shouldIndex ? 'index, follow' : 'noindex, follow',
     keywords,
     alternates: {
       canonical: canonicalUrl,

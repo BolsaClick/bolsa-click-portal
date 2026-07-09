@@ -295,9 +295,11 @@ export default function AdminLeadsPage() {
                         <Phone className="w-3 h-3" />
                         {formatPhone(lead.phone)}
                       </p>
-                      <p className="text-gray-400 text-xs mt-1">
-                        CPF: {lead.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
-                      </p>
+                      {lead.cpf && (
+                        <p className="text-gray-400 text-xs mt-1">
+                          CPF: {lead.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
+                        </p>
+                      )}
                     </div>
 
                     {/* Course Info */}

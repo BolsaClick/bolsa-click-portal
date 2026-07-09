@@ -9,7 +9,8 @@ import { PrismaClient } from '@prisma/client'
  *
  * `connection_limit=1` mantém ~1 conexão por worker/instância; `pool_timeout`
  * faz as queries concorrentes da mesma página aguardarem em fila em vez de falhar.
- * Respeita um valor já presente na DATABASE_URL, se houver.
+ * Mantém um `pool_timeout` mínimo porque ambientes locais/preview podem trazer
+ * DATABASE_URL com timeout agressivo (ex.: 2s), insuficiente para SSG.
  */
 function databaseUrlWithPool(): string | undefined {
   const url = process.env.DATABASE_URL
@@ -17,7 +18,10 @@ function databaseUrlWithPool(): string | undefined {
   try {
     const u = new URL(url)
     if (!u.searchParams.has('connection_limit')) u.searchParams.set('connection_limit', '1')
-    if (!u.searchParams.has('pool_timeout')) u.searchParams.set('pool_timeout', '20')
+    const poolTimeout = Number(u.searchParams.get('pool_timeout') ?? 0)
+    if (!Number.isFinite(poolTimeout) || poolTimeout < 20) {
+      u.searchParams.set('pool_timeout', '20')
+    }
     return u.toString()
   } catch {
     return url

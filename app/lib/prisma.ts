@@ -1,23 +1,29 @@
 import { PrismaClient } from '@prisma/client'
 
 /**
- * Limita o pool de conexões por client. Sem isso o Prisma usa o default
- * (num_cpus * 2 + 1) por client; no `next build` cada worker que pré-renderiza
- * as páginas estáticas abre seu próprio pool → o Postgres estoura
- * ("too many clients already") e o build falha. Em serverless (Vercel) manter o
- * pool baixo por instância também é a recomendação do Prisma.
+ * Ajusta o pool de conexões conforme a fase, porque build e runtime têm
+ * necessidades opostas:
  *
- * `connection_limit=1` mantém ~1 conexão por worker/instância; `pool_timeout`
- * faz as queries concorrentes da mesma página aguardarem em fila em vez de falhar.
- * Mantém um `pool_timeout` mínimo porque ambientes locais/preview podem trazer
- * DATABASE_URL com timeout agressivo (ex.: 2s), insuficiente para SSG.
+ * - **Build (`next build`, SSG):** cada worker que pré-renderiza páginas abre
+ *   seu próprio pool. Com pool alto o Postgres estoura ("too many clients
+ *   already") e o build falha → usamos `connection_limit=1` por worker.
+ * - **Runtime (servidor persistente, ex.: Railway):** é um processo só servindo
+ *   requests concorrentes. `connection_limit=1` serializa o app inteiro numa
+ *   única conexão (requests enfileiram até `pool_timeout`) → usamos um pool
+ *   maior (default 5, ajustável via `DB_CONNECTION_LIMIT`).
+ *
+ * A distinção usa `NEXT_PHASE`, que o Next define como `phase-production-build`
+ * durante o build. `pool_timeout` mínimo de 20s cobre DATABASE_URLs de
+ * preview/local que venham com timeout agressivo (ex.: 2s), insuficiente pra SSG.
  */
 function databaseUrlWithPool(): string | undefined {
   const url = process.env.DATABASE_URL
   if (!url) return undefined
   try {
     const u = new URL(url)
-    if (!u.searchParams.has('connection_limit')) u.searchParams.set('connection_limit', '1')
+    const isBuild = process.env.NEXT_PHASE === 'phase-production-build'
+    const connectionLimit = isBuild ? '1' : process.env.DB_CONNECTION_LIMIT ?? '5'
+    u.searchParams.set('connection_limit', connectionLimit)
     const poolTimeout = Number(u.searchParams.get('pool_timeout') ?? 0)
     if (!Number.isFinite(poolTimeout) || poolTimeout < 20) {
       u.searchParams.set('pool_timeout', '20')

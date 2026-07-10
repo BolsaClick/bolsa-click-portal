@@ -884,3 +884,73 @@ enum GapMatchStatus {
   PARTIAL // match parcial (ex: keyword bate mas não tem página dedicada)
   COVERED // match exato (slug ou title)
 }
+
+// ==========================================
+// BETTER AUTH (migração Firebase→Better Auth, Fase 1)
+// Tabelas próprias (ba_*) pra conviver com o `User` (perfil) existente.
+// Vínculo authUser↔User será por email na migração de usuários.
+// ==========================================
+
+model AuthUser {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  // plugin admin
+  role          String?   @default("user")
+  banned        Boolean?
+  banReason     String?
+  banExpires    DateTime?
+  sessions      AuthSession[]
+  accounts      AuthAccount[]
+
+  @@map("ba_user")
+}
+
+model AuthSession {
+  id             String   @id
+  expiresAt      DateTime
+  token          String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  ipAddress      String?
+  userAgent      String?
+  userId         String
+  impersonatedBy String?
+  user           AuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ba_session")
+}
+
+model AuthAccount {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  AuthUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("ba_account")
+}
+
+model AuthVerification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("ba_verification")
+}

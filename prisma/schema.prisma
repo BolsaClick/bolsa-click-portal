@@ -13,7 +13,7 @@ generator client {
 
 model User {
   id          String  @id @default(uuid())
-  firebaseUid String  @unique // UID do Firebase Auth
+  firebaseUid String? @unique // UID do Firebase Auth (opcional: usuários do Better Auth não têm)
   email       String  @unique
   name        String?
   phone       String?

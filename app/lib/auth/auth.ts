@@ -22,5 +22,31 @@ export const auth = betterAuth({
   session: { modelName: 'authSession' },
   account: { modelName: 'authAccount' },
   verification: { modelName: 'authVerification' },
+  // Provisiona/religa o perfil `User` do portal por email quando um usuário é
+  // criado no Better Auth (favoritos/matrículas ficam pelo email — sem firebaseUid).
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          try {
+            await prisma.user.upsert({
+              where: { email: user.email },
+              update: { lastLoginAt: new Date() },
+              create: {
+                email: user.email,
+                name: user.name ?? null,
+                emailVerified: user.emailVerified ?? false,
+              },
+            })
+          } catch (e) {
+            console.error(
+              'Better Auth: falha ao provisionar User do portal',
+              e,
+            )
+          }
+        },
+      },
+    },
+  },
   plugins: [admin(), nextCookies()],
 })

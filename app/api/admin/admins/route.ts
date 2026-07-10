@@ -107,12 +107,15 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Definir custom claims no Firebase
-    await setAdminClaims(user.firebaseUid, {
-      admin: true,
-      role: role as 'SUPER_ADMIN' | 'ADMIN' | 'EDITOR',
-      permissions: finalPermissions,
-    })
+    // Definir custom claims no Firebase (só p/ usuários Firebase; Better Auth
+    // não tem firebaseUid — roles migram pro AdminUser na Fase 3).
+    if (user.firebaseUid) {
+      await setAdminClaims(user.firebaseUid, {
+        admin: true,
+        role: role as 'SUPER_ADMIN' | 'ADMIN' | 'EDITOR',
+        permissions: finalPermissions,
+      })
+    }
 
     return NextResponse.json({ admin: adminUser }, { status: 201 })
   } catch (error) {
@@ -160,8 +163,10 @@ export async function DELETE(request: NextRequest) {
       where: { id: adminId },
     })
 
-    // Remover claims do Firebase
-    await removeAdminClaims(adminUser.user.firebaseUid)
+    // Remover claims do Firebase (só p/ usuários Firebase)
+    if (adminUser.user.firebaseUid) {
+      await removeAdminClaims(adminUser.user.firebaseUid)
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

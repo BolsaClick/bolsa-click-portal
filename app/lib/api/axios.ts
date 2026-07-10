@@ -51,10 +51,17 @@ export const cogna = axios.create({
   },
 })
 
+// `ELYSIUM_API_KEY` é segredo de servidor (NÃO NEXT_PUBLIC): só existe nas
+// chamadas server-side (rotas /api/*), que é por onde o checkout passa. No
+// bundle client fica undefined e o header não é enviado — correto, pois o
+// browser nunca fala direto com o Elysium.
 export const elysium = axios.create({
   baseURL: process.env.NEXT_PUBLIC_ELYSIUM_API,
   headers: {
     'Content-Type': 'application/json',
+    ...(process.env.ELYSIUM_API_KEY
+      ? { 'x-api-key': process.env.ELYSIUM_API_KEY }
+      : {}),
   },
 })
 

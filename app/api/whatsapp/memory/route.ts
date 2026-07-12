@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
+import { withAgentAuth, isAgentAuthError } from '@/app/lib/middleware/agent-auth'
+
+// Auth de agente: a mesma AGENT_BLOG_API_KEY (header X-Agent-Key) que o Hermes
+// já manda. Fail-closed: sem a env configurada, todas as rotas dão 503.
 
 /**
  * GET /api/whatsapp/memory?phone=5511999999999
  * Busca o histórico de conversa de um número
  */
 export async function GET(request: NextRequest) {
+  const auth = await withAgentAuth(request)
+  if (isAgentAuthError(auth)) return auth
+
   const phone = request.nextUrl.searchParams.get('phone')
   if (!phone) {
     return NextResponse.json({ error: 'phone parameter is required' }, { status: 400 })
@@ -28,6 +35,9 @@ export async function GET(request: NextRequest) {
  * Salva ou atualiza o histórico de conversa
  */
 export async function POST(request: NextRequest) {
+  const auth = await withAgentAuth(request)
+  if (isAgentAuthError(auth)) return auth
+
   try {
     const { phone, data } = await request.json()
 
@@ -58,6 +68,9 @@ export async function POST(request: NextRequest) {
  * Limpa o histórico de um número (reset da conversa)
  */
 export async function DELETE(request: NextRequest) {
+  const auth = await withAgentAuth(request)
+  if (isAgentAuthError(auth)) return auth
+
   const phone = request.nextUrl.searchParams.get('phone')
   if (!phone) {
     return NextResponse.json({ error: 'phone parameter is required' }, { status: 400 })

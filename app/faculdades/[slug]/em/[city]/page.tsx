@@ -59,6 +59,22 @@ const getCityOffers = cache(async (cityName: string, stateUF: string) => {
   }
 })
 
+// Inventário ESTÁVEL marca×cidade (precompute-institution-city-offers). É o que
+// decide index/noindex — mata o flip-flop do fetch ao vivo. try/catch cobre o
+// período antes da migration ser aplicada (tabela ainda não existe → null →
+// fallback pro count ao vivo).
+const getCachedInventory = cache(async (brandSlug: string, citySlug: string): Promise<number | null> => {
+  try {
+    const row = await prisma.institutionCityOfferCache.findUnique({
+      where: { brand_citySlug: { brand: brandSlug, citySlug } },
+      select: { offerCount: true },
+    })
+    return row?.offerCount ?? null
+  } catch {
+    return null
+  }
+})
+
 function filterByInstitution(offers: Course[], institutionName: string, institutionShortName: string): Course[] {
   const candidates = [normalize(institutionName), normalize(institutionShortName)].filter(Boolean)
   return offers.filter(o => {
@@ -81,8 +97,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const allOffers = await getCityOffers(cityData.name, cityData.state)
   const offers = filterByInstitution(allOffers, institution.name, institution.shortName)
   const hasOffers = offers.length > 0
-  // Gate de qualidade: exige MIN_OFFERS_TO_INDEX (2) — 1 oferta é thin content.
-  const shouldIndex = shouldIndexCityPage(offers.length)
+  // Gate de qualidade (MIN_OFFERS_TO_INDEX=2): decide pelo inventário ESTÁVEL do
+  // cache; fallback pro count ao vivo enquanto o cache não estiver populado.
+  const cachedCount = await getCachedInventory(slug, citySlug)
+  const shouldIndex = shouldIndexCityPage(cachedCount ?? offers.length)
 
   const pageUrl = `${SITE_URL}/faculdades/${slug}/em/${citySlug}`
   const fallbackUrl = `${SITE_URL}/faculdades/${slug}`

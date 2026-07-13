@@ -1494,6 +1494,52 @@ export default async function BolsasDeEstudoHubPage() {
         </div>
       </section>
 
+      {/* GUIAS — hub→spoke: liga a pillar aos melhores posts do cluster, fechando
+          o hub-and-spoke (os spokes já linkam de volta pro pillar via backfill). */}
+      <section id="guias" className="bg-white py-12 md:py-16 border-b border-hairline">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="flex items-baseline justify-between hairline-b pb-3 mb-6">
+            <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
+              Guias sobre bolsas de estudo
+            </h2>
+            <span className="font-mono num-tabular text-[11px] text-ink-500">(14)</span>
+          </div>
+          <p className="text-ink-700 leading-relaxed mb-6 max-w-3xl">
+            Aprofunde em cada caminho pra conseguir bolsa: programas do governo, bolsa própria
+            sem ENEM, como evitar golpes e quanto custa cada curso com desconto.
+          </p>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-hairline">
+            {[
+              { slug: 'como-conseguir-bolsa-estudo-2026-guia-passo-a-passo', t: 'Como conseguir bolsa de estudo em 2026: guia passo a passo' },
+              { slug: 'prouni-2026-inscricao-notas-de-corte-como-usar', t: 'ProUni 2026: inscrição, notas de corte e como usar' },
+              { slug: 'fies-2026-como-funciona-quem-tem-direito-como-solicitar', t: 'FIES 2026: como funciona e quem tem direito' },
+              { slug: 'bolsa-integral-100-como-conseguir-2026', t: 'Bolsa integral (100%): como conseguir em 2026' },
+              { slug: 'bolsa-de-estudo-sem-enem-como-conseguir', t: 'Bolsa de estudo sem ENEM: como conseguir' },
+              { slug: 'bolsa-sem-prouni', t: 'Bolsa de estudo sem ProUni: 5 alternativas' },
+              { slug: 'nota-minima-enem-prouni-quanto-precisa', t: 'Nota mínima do ENEM pro ProUni: quanto precisa' },
+              { slug: 'como-conseguir-bolsa-estudo-50-faculdade', t: 'Bolsa de 50% na faculdade: como conseguir' },
+              { slug: 'bolsa-de-estudo-golpe-como-evitar', t: 'Bolsa de estudo é golpe? Como evitar fraudes' },
+              { slug: 'mensalidade-de-psicologia-com-bolsa', t: 'Mensalidade de Psicologia com bolsa' },
+              { slug: 'mensalidade-de-direito-faculdade-particular', t: 'Mensalidade de Direito em faculdade particular' },
+              { slug: 'como-conseguir-bolsa-anhanguera-sem-enem', t: 'Bolsa na Anhanguera sem ENEM: passo a passo' },
+              { slug: 'como-conseguir-bolsa-estacio-sem-enem', t: 'Bolsa na Estácio sem ENEM: passo a passo' },
+              { slug: 'anhanguera-vale-a-pena-mec-bolsas', t: 'Anhanguera vale a pena? Nota MEC e bolsas' },
+            ].map(g => (
+              <li key={g.slug} className="bg-white">
+                <Link
+                  href={`/blog/${g.slug}`}
+                  className="block px-5 py-4 h-full transition-colors hover:bg-paper"
+                >
+                  <span className="block font-display text-[15px] text-ink-900 leading-snug">
+                    {g.t}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
       <VisibleFaq
         items={FAQ_ITEMS}
         heading="Perguntas frequentes sobre bolsas de estudo"

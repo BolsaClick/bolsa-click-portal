@@ -186,7 +186,7 @@ export default function BolsasSaudePage() {
             </p>
             <p>
               No Bolsa Click, você encontra bolsas em cursos de saúde nas principais redes de
-              ensino particular do Brasil — Anhanguera, Estácio, Unopar, Pitágoras, Unime, Ampli — com
+              ensino particular do Brasil — Anhanguera, Estácio, Unopar, Pitágoras, Unime — com
               descontos que chegam a 80% sobre o valor cheio da mensalidade.
             </p>
           </div>

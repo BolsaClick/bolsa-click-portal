@@ -170,6 +170,7 @@ const Footer: React.FC = () => {
                 <li><Link href="/faculdades/anhanguera" className={linkClass}>Anhanguera</Link></li>
                 <li><Link href="/faculdades/estacio" className={linkClass}>Estácio</Link></li>
                 <li><Link href="/faculdades/unopar" className={linkClass}>Unopar</Link></li>
+                <li><Link href="/faculdades/pitagoras" className={linkClass}>Pitágoras</Link></li>
                 <li><Link href="/faculdades/unime" className={linkClass}>Unime</Link></li>
                 <li><Link href="/faculdades" className={linkClass}>Ver todas as faculdades</Link></li>
               </ul>
@@ -211,7 +212,7 @@ const Footer: React.FC = () => {
               className="brightness-0 invert"
             />
             <p className="text-neutral-400 text-sm leading-relaxed">
-              Marketplace de bolsas de estudo com até 80% de desconto nas maiores redes de ensino do Brasil — Anhanguera, Unopar, Pitágoras, Ampli, Unime e Estácio.
+              Marketplace de bolsas de estudo com até 80% de desconto nas maiores redes de ensino do Brasil — Anhanguera, Unopar, Pitágoras, Unime e Estácio.
             </p>
             <div className="flex space-x-4 pt-2">
               <a

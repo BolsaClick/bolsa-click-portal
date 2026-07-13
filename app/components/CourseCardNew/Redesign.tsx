@@ -126,7 +126,6 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
     const n = (universityName || '').toLowerCase()
     if (n.includes('anhanguera')) return '/assets/logo-anhanguera-bolsa-click.svg'
     if (n.includes('unopar')) return '/assets/logo-unopar.svg'
-    if (n.includes('ampli')) return '/assets/ampli-logo.png'
     if (n.includes('pitagoras') || n.includes('pitágoras')) return '/assets/logo-pitagoras.svg'
     if (n.includes('unime')) return '/assets/logo-unime-p.png'
     if (n.includes('estacio') || n.includes('estácio')) return '/estacio-logo.png'

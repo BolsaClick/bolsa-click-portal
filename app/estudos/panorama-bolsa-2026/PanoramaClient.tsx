@@ -226,7 +226,7 @@ export default function PanoramaClient({ data, datePublished, dateModified }: Pr
             Cobertura territorial do Bolsa Click em 2026: {data.totalCidadesCobertas} cidades em{' '}
             {data.estadosCobertos} estados brasileiros (cobertura nacional completa). A lista de
             cidades é gerada combinando os 27 capitais + grandes municípios IBGE 2022 + cidades com
-            polo físico confirmado das instituições parceiras (Anhanguera, Unopar, Pitágoras, Ampli,
+            polo físico confirmado das instituições parceiras (Anhanguera, Unopar, Pitágoras,
             Unime).
           </p>
 

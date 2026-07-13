@@ -56,7 +56,7 @@ const FAQ_ITEMS = [
   {
     question: 'Quanto custa uma faculdade EAD com bolsa?',
     answer:
-      'Mensalidades de faculdade EAD com bolsa pelo Bolsa Click começam a partir de R$ 99/mês em parceiras como Anhanguera, Unopar, Ampli e Pitágoras. Descontos chegam a 80% sobre o valor cheio. Cursos tecnólogos (2-2,5 anos) tendem a ser mais baratos que bacharelados (4-5 anos).',
+      'Mensalidades de faculdade EAD com bolsa pelo Bolsa Click começam a partir de R$ 99/mês em parceiras como Anhanguera, Unopar e Pitágoras. Descontos chegam a 80% sobre o valor cheio. Cursos tecnólogos (2-2,5 anos) tendem a ser mais baratos que bacharelados (4-5 anos).',
   },
   {
     question: 'Como funciona a graduação EAD na prática?',
@@ -168,7 +168,7 @@ export default function FaculdadeEadPage() {
               <span className="italic text-white/85">com bolsa de até 80% de desconto</span>
             </h1>
             <p className="text-white/80 text-base md:text-lg max-w-2xl mx-auto leading-relaxed mb-8">
-              Compare as faculdades EAD das maiores redes do país (Anhanguera, Estácio, Unopar, Ampli, Pitágoras)
+              Compare as faculdades EAD das maiores redes do país (Anhanguera, Estácio, Unopar, Pitágoras)
               e garanta sua bolsa em graduações reconhecidas pelo MEC. Sem ENEM, sem fila, inscrição
               100% gratuita.
             </p>
@@ -405,6 +405,45 @@ export default function FaculdadeEadPage() {
                   {item.question}
                 </h3>
                 <p className="text-ink-700 leading-relaxed">{item.answer}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* FACULDADES EAD PARCEIRAS — links internos com âncora de marca ("[marca] EAD") */}
+      <section className="bg-white py-16 md:py-20 border-t border-hairline">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <p className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-500 mb-3">
+            Faculdades EAD parceiras
+          </p>
+          <h2 className="font-display text-3xl md:text-4xl font-semibold text-ink-900 mb-6 leading-tight">
+            Bolsas de estudo nas maiores faculdades EAD do país
+          </h2>
+          <p className="text-ink-700 leading-relaxed mb-8 max-w-3xl">
+            Compare mensalidades com bolsa, nota do MEC e cursos de cada rede. Todas
+            reconhecidas pelo MEC, com graduação EAD em todo o Brasil.
+          </p>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-px bg-hairline">
+            {[
+              { slug: 'anhanguera', name: 'Anhanguera' },
+              { slug: 'estacio', name: 'Estácio' },
+              { slug: 'unopar', name: 'Unopar' },
+              { slug: 'pitagoras', name: 'Pitágoras' },
+              { slug: 'unime', name: 'Unime' },
+            ].map((inst) => (
+              <li key={inst.slug} className="bg-white">
+                <Link
+                  href={`/faculdades/${inst.slug}`}
+                  className="block px-5 py-4 transition-colors hover:bg-paper"
+                >
+                  <span className="block font-display text-lg text-ink-900">
+                    {inst.name} EAD
+                  </span>
+                  <span className="block font-mono text-[11px] text-ink-500 mt-1">
+                    Bolsas e mensalidades da {inst.name}
+                  </span>
+                </Link>
               </li>
             ))}
           </ul>

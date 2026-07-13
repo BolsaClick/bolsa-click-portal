@@ -5,9 +5,7 @@
 export const BRAND_LOGOS: Record<string, string> = {
   ANHANGUERA: '/assets/logo-anhanguera-bolsa-click.svg',
   UNOPAR: '/assets/logo-unopar.svg',
-  PITAGORAS: '/assets/logo-pitagoras.svg',
-  AMPLI: '/assets/ampli-logo.png',
-  UNIME: '/assets/logo-unime-p.png',
+  PITAGORAS: '/assets/logo-pitagoras.svg',  UNIME: '/assets/logo-unime-p.png',
   UNAES: '/assets/logo-bolsa-click-rosa.png',
   ESTACIO: '/estacio-logo.png',
   WYDEN: '/assets/wyden.svg',

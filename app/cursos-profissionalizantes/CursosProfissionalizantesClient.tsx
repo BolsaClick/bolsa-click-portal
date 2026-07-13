@@ -63,7 +63,6 @@ const PARTNERS = [
   { name: 'Estácio', src: '/estacio-logo.png' },
   { name: 'Unopar', src: '/assets/logo-unopar.svg' },
   { name: 'Pitágoras', src: '/assets/logo-pitagoras.svg' },
-  { name: 'Ampli', src: '/assets/ampli-logo.png' },
   { name: 'Unime', src: '/assets/logo-unime-p.png' },
 ]
 

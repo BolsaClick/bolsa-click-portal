@@ -10,7 +10,7 @@ import { Star } from 'lucide-react'
  * deep-linka pra seção #avaliacoes da página da faculdade.
  */
 
-const KNOWN_SLUGS = ['anhanguera', 'unopar', 'pitagoras', 'ampli', 'unime', 'estacio']
+const KNOWN_SLUGS = ['anhanguera', 'unopar', 'pitagoras', 'unime', 'estacio']
 
 function brandToSlug(brand?: string | null): string | null {
   if (!brand) return null

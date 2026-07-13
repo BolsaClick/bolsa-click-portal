@@ -6,7 +6,6 @@ const partners = [
   { name: 'Estácio', src: '/estacio-logo.png', width: 120, height: 36 },
   { name: 'Unopar', src: '/assets/logo-unopar.svg', width: 130, height: 36 },
   { name: 'Pitágoras', src: '/assets/logo-pitagoras.svg', width: 140, height: 36 },
-  { name: 'Ampli', src: '/assets/ampli-logo.png', width: 110, height: 36 },
   { name: 'Unime', src: '/assets/logo-unime-p.png', width: 110, height: 36 },
 ]
 

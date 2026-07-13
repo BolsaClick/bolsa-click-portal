@@ -148,7 +148,7 @@ export const CALENDARIO_2026: CalendarEvent[] = [
     status: 'CONFIRMADO',
     sourceUrl: 'https://www.bolsaclick.com.br/sem-enem',
     organizer: 'Faculdade parceira',
-    notes: 'Faculdades parceiras (Anhanguera, Estácio, Unopar, Pitágoras, Ampli, Unime) mantêm vestibular online sem ENEM aberto continuamente.',
+    notes: 'Faculdades parceiras (Anhanguera, Estácio, Unopar, Pitágoras, Unime) mantêm vestibular online sem ENEM aberto continuamente.',
   },
 ]
 

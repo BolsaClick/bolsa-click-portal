@@ -19,8 +19,8 @@ export interface TrustData {
   studentCount: number | null
 }
 
-// Cogna: Anhanguera, Unopar, Pitágoras, Ampli, Unime. YDUQS: Estácio.
-const PARTNER_BRANDS = ['Anhanguera', 'Unopar', 'Pitágoras', 'Ampli', 'Unime', 'Estácio'] as const
+// Cogna: Anhanguera, Unopar, Pitágoras, Unime. YDUQS: Estácio.
+const PARTNER_BRANDS = ['Anhanguera', 'Unopar', 'Pitágoras', 'Unime', 'Estácio'] as const
 const FOUNDING_YEAR = 2024
 
 /**

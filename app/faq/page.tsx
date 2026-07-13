@@ -50,7 +50,7 @@ const FAQ_GROUPS: FaqGroup[] = [
       {
         question: 'O que é o Bolsa Click?',
         answer:
-          'Bolsa Click é um marketplace de bolsas de estudo em faculdades particulares brasileiras. Reúne ofertas de bolsa direta (sem ENEM, sem nota de corte) negociadas com instituições parceiras como Anhanguera, Estácio, Unopar, Pitágoras, Ampli e Unime. Descontos de 25% a 85% em graduação, pós-graduação e cursos técnicos, com inscrição grátis o ano inteiro.',
+          'Bolsa Click é um marketplace de bolsas de estudo em faculdades particulares brasileiras. Reúne ofertas de bolsa direta (sem ENEM, sem nota de corte) negociadas com instituições parceiras como Anhanguera, Estácio, Unopar, Pitágoras e Unime. Descontos de 25% a 85% em graduação, pós-graduação e cursos técnicos, com inscrição grátis o ano inteiro.',
       },
       {
         question: 'O Bolsa Click é confiável e seguro?',
@@ -70,7 +70,7 @@ const FAQ_GROUPS: FaqGroup[] = [
       {
         question: 'Em quais faculdades o Bolsa Click tem bolsa?',
         answer:
-          'Trabalhamos com as maiores redes de ensino do país — Anhanguera, Unopar, Pitágoras, Ampli, Unime e Estácio —, com cobertura nacional em modalidade EAD e polos presenciais em mais de 280 cidades. Veja a lista completa em /faculdades.',
+          'Trabalhamos com as maiores redes de ensino do país — Anhanguera, Unopar, Pitágoras, Unime e Estácio —, com cobertura nacional em modalidade EAD e polos presenciais em mais de 280 cidades. Veja a lista completa em /faculdades.',
       },
     ],
   },

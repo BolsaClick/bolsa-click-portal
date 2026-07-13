@@ -41,8 +41,6 @@ const CourseCard: React.FC<CourseCardProps> = ({
         return '/assets/logo-anhanguera-bolsa-click.svg'
       case 'unopar':
         return '/assets/logo-unopar.svg'
-      case 'ampli':
-        return '/assets/ampli-logo.png'
       case 'pitagoras':
         return '/assets/logo-pitagoras.svg'
 

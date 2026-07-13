@@ -328,6 +328,11 @@ const Footer: React.FC = () => {
                   </Link>
                 </li>
                 <li>
+                  <Link href="/simulador-de-bolsa" className={linkClass}>
+                    Simulador de Bolsa
+                  </Link>
+                </li>
+                <li>
                   <Link href="/central-de-ajuda/primeiros-passos" className={linkClass}>
                     Primeiros Passos
                   </Link>

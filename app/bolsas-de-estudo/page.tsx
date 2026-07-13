@@ -659,6 +659,33 @@ export default async function BolsasDeEstudoHubPage() {
         </div>
       </section>
 
+      {/* CTA simulador — desambigua os dois caminhos acima (ProUni vs bolsa própria)
+          com uma ferramenta interativa. Cross-link pra frente P1 do roadmap. */}
+      <section aria-label="Simulador de bolsa" className="bg-bolsa-secondary/5 py-8 md:py-10 border-b border-hairline">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+            <div>
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-bolsa-secondary block mb-2">
+                Não sabe por onde começar?
+              </span>
+              <h2 className="font-display text-xl md:text-2xl text-ink-900 mb-1">
+                Simule sua bolsa em 1 minuto
+              </h2>
+              <p className="text-ink-700 text-[15px] leading-relaxed max-w-xl">
+                Informe curso, nota do ENEM e renda e descubra na hora se você se qualifica
+                pra ProUni, FIES ou bolsa própria — com as ofertas reais pro seu curso.
+              </p>
+            </div>
+            <Link
+              href="/simulador-de-bolsa"
+              className="shrink-0 inline-flex items-center gap-2 px-5 py-3 bg-bolsa-secondary text-white text-sm font-medium rounded-md hover:opacity-90"
+            >
+              Simular minha bolsa →
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* "Em números" — dados scannable nos primeiros 30% do documento. Formato
           tabular = extração direta por AI Overviews/Perplexity. Só números
           verificáveis (CLAUDE.md): Portaria MEC pro ProUni, catálogo first-party

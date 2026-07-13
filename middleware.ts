@@ -29,6 +29,35 @@ export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const host = (request.headers.get("host") || "").split(":")[0];
 
+  // ─── Domínio ingressa.digital (landings de conversão / mídia paga) ───────────
+  // ingressa.digital/{parceiro} → reescreve (URL limpa) pra /lp/{parceiro}.
+  // /api, /_next e assets passam intactos; raiz vai pra uma landing default.
+  if (host === "ingressa.digital" || host === "www.ingressa.digital") {
+    const passthrough =
+      pathname.startsWith("/api") ||
+      pathname.startsWith("/_next") ||
+      pathname.startsWith("/lp") ||
+      pathname.includes(".");
+    if (!passthrough) {
+      const url = request.nextUrl.clone();
+      url.pathname = pathname === "/" ? "/lp/anhanguera" : `/lp${pathname}`;
+      return NextResponse.rewrite(url);
+    }
+    return NextResponse.next();
+  }
+
+  // No bolsaclick.com.br, /lp/* não deve ser acessível (é do ingressa) → manda
+  // pra página de marca equivalente.
+  if (
+    (host === "www.bolsaclick.com.br" || host === "bolsaclick.com.br") &&
+    pathname.startsWith("/lp/")
+  ) {
+    const url = publicRedirectUrl(request);
+    url.hostname = "www.bolsaclick.com.br";
+    url.pathname = pathname.replace(/^\/lp\//, "/faculdades/");
+    return NextResponse.redirect(url, 302);
+  }
+
   // Redirect non-www → www (301 permanent)
   if (host === "bolsaclick.com.br") {
     const url = publicRedirectUrl(request);

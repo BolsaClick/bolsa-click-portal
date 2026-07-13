@@ -19,10 +19,12 @@ import {
 import CourseCardNew from '@/app/components/CourseCardNew'
 import { Course } from '@/app/interface/course'
 import type { InstitutionData } from '../_data/types'
+import type { BrandContent } from './_data/brand-content'
 
 type Props = {
   institution: InstitutionData
   initialCourses: Course[]
+  brandContent: BrandContent | null
 }
 
 const modalityShortLabel: Record<string, string> = {
@@ -66,7 +68,7 @@ const modalityDetail: Record<string, { title: (n: string) => string; body: (n: s
   },
 }
 
-export default function FaculdadePageClient({ institution, initialCourses }: Props) {
+export default function FaculdadePageClient({ institution, initialCourses, brandContent }: Props) {
   const [selectedModality, setSelectedModality] = useState<string>('')
   const [visibleCount, setVisibleCount] = useState(6)
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(0)
@@ -90,7 +92,7 @@ export default function FaculdadePageClient({ institution, initialCourses }: Pro
 
   const yearsActive = institution.founded ? new Date().getFullYear() - institution.founded : null
 
-  const faqItems: Array<{ q: string; a: string }> = [
+  const fallbackFaqItems: Array<{ q: string; a: string }> = [
     {
       q: `Qual a nota da Faculdade ${institution.name} no MEC?`,
       a: institution.mecRating
@@ -128,6 +130,27 @@ export default function FaculdadePageClient({ institution, initialCourses }: Pro
             .join(' e ')}.`,
     },
   ]
+
+  // FAQ única da marca (Fase 3) quando existe; senão, fallback templado.
+  const faqItems = brandContent?.faq ?? fallbackFaqItems
+
+  // "Cursos com bolsa na {marca}": deriva dos cursos REAIS da API (dedupe por
+  // nome, menor mensalidade, ordenado por preço). Zero preço inventado.
+  const cursosComBolsa = useMemo(() => {
+    const byName = new Map<string, { name: string; minPrice: number; modality?: string }>()
+    for (const c of initialCourses) {
+      const name = String(c.name ?? '').trim()
+      const price = Number(c.minPrice ?? 0)
+      if (!name || price <= 0) continue
+      const existing = byName.get(name)
+      if (!existing || price < existing.minPrice) {
+        byName.set(name, { name, minPrice: price, modality: c.modality ?? c.commercialModality })
+      }
+    }
+    return Array.from(byName.values())
+      .sort((a, b) => a.minPrice - b.minPrice)
+      .slice(0, 10)
+  }, [initialCourses])
 
   return (
     <div className="bg-paper">
@@ -687,6 +710,127 @@ export default function FaculdadePageClient({ institution, initialCourses }: Pro
           </aside>
         </div>
       </section>
+
+      {/* FASE 3 — Como conseguir bolsa na {marca} (único por marca) */}
+      {brandContent && (
+        <section className="bg-white border-t border-hairline py-14 md:py-20">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 flex items-center gap-3 mb-4">
+              <span className="h-px w-8 bg-ink-300" />
+              Passo a passo
+            </span>
+            <h2 className="font-display text-3xl md:text-4xl text-ink-900 leading-tight mb-4">
+              Como conseguir bolsa na {institution.name}
+            </h2>
+            <p className="text-ink-700 text-[15px] md:text-base leading-relaxed mb-8 max-w-3xl">
+              {brandContent.comoConseguir.intro}
+            </p>
+            <ol className="space-y-5">
+              {brandContent.comoConseguir.passos.map((p, i) => (
+                <li key={i} className="flex gap-4 md:gap-5">
+                  <span className="flex-shrink-0 w-9 h-9 rounded-full bg-bolsa-secondary/10 text-bolsa-secondary font-display font-semibold flex items-center justify-center">
+                    {i + 1}
+                  </span>
+                  <div>
+                    <h3 className="font-display text-lg md:text-xl text-ink-900 leading-snug mb-1">
+                      {p.titulo}
+                    </h3>
+                    <p className="text-ink-600 text-[15px] leading-relaxed">{p.descricao}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+      )}
+
+      {/* FASE 3 — {marca} vale a pena? (análise editorial única) */}
+      {brandContent && (
+        <section className="bg-paper border-t border-hairline py-14 md:py-20">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 flex items-center gap-3 mb-4">
+              <span className="h-px w-8 bg-ink-300" />
+              Vale a pena?
+            </span>
+            <h2 className="font-display text-3xl md:text-4xl text-ink-900 leading-tight mb-5">
+              A {institution.name} vale a pena?
+            </h2>
+            <p className="text-ink-800 text-lg leading-relaxed mb-8 max-w-3xl">
+              {brandContent.valeAPena.veredito}
+            </p>
+            <div className="grid md:grid-cols-2 gap-8 md:gap-10">
+              <div>
+                <h3 className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink-500 mb-4">
+                  Pontos fortes
+                </h3>
+                <ul className="space-y-2.5">
+                  {brandContent.valeAPena.pontosFortes.map((pt, i) => (
+                    <li key={i} className="flex gap-2.5 text-ink-700 text-[15px] leading-relaxed">
+                      <CheckCircle2 size={18} className="text-bolsa-secondary shrink-0 mt-0.5" />
+                      <span>{pt}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink-500 mb-4">
+                  Antes de decidir
+                </h3>
+                <p className="text-ink-700 text-[15px] leading-relaxed">
+                  {brandContent.valeAPena.consideracoes}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* FASE 3 — Cursos com bolsa na {marca} (mensalidades REAIS da API) */}
+      {cursosComBolsa.length > 0 && (
+        <section className="bg-white border-t border-hairline py-14 md:py-20">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 flex items-center gap-3 mb-4">
+              <span className="h-px w-8 bg-ink-300" />
+              Mensalidades reais
+            </span>
+            <h2 className="font-display text-3xl md:text-4xl text-ink-900 leading-tight mb-4">
+              Cursos com bolsa na {institution.name}
+            </h2>
+            <p className="text-ink-700 text-[15px] md:text-base leading-relaxed mb-8 max-w-3xl">
+              Algumas das mensalidades com bolsa já aplicada, direto do catálogo. Os valores
+              variam por curso, modalidade e polo — veja a oferta completa na busca.
+            </p>
+            <ul className="divide-y divide-hairline border-t border-hairline">
+              {cursosComBolsa.map((c, i) => (
+                <li key={i} className="flex items-center justify-between gap-4 py-3.5">
+                  <div className="min-w-0">
+                    <span className="block font-display text-[17px] text-ink-900 truncate">
+                      {c.name}
+                    </span>
+                    {c.modality && (
+                      <span className="font-mono text-[11px] tracking-wide uppercase text-ink-500">
+                        {modalityShortLabel[c.modality.toUpperCase()] ?? c.modality}
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-display text-ink-900 whitespace-nowrap text-[15px]">
+                    a partir de{' '}
+                    <strong>
+                      {c.minPrice.toLocaleString('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                      })}
+                    </strong>
+                    <span className="text-ink-500 text-sm">/mês</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
     </div>
   )
 }

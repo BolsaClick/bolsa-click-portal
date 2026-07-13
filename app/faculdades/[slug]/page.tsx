@@ -12,6 +12,7 @@ import { getInstitutionCourses } from '@/app/lib/api/get-institution-courses'
 import FaculdadePageClient from './FaculdadePageClient'
 import { ReviewList } from './_components/ReviewList'
 import { ReviewForm } from './_components/ReviewForm'
+import { BRAND_CONTENT } from './_data/brand-content'
 
 const theme = getCurrentTheme()
 
@@ -96,6 +97,10 @@ export default async function FaculdadeDetailPage({
   const aggregateRating = buildAggregateRatingSchema(reviewSummary)
   const institutionCourses = await getInstitutionCourses(institution.name)
 
+  // Conteúdo editorial único da marca (Fase 3). Null se a marca ainda não tem
+  // conteúdo dedicado → template cai no fallback templado.
+  const brandContent = BRAND_CONTENT[institution.slug] ?? null
+
   // Faixa de preço REAL das ofertas (anti-hallucination: só preços vindos da API,
   // nunca inventado). Alimenta AggregateOffer pra rich result + citabilidade em IA.
   const offerPrices = institutionCourses
@@ -139,64 +144,66 @@ export default async function FaculdadeDetailPage({
     }),
   }
 
+  // FAQ da marca: usa o conteúdo único (Fase 3) quando existe; senão, fallback
+  // templado a partir dos campos da instituição.
+  const fallbackFaq: { q: string; a: string }[] = [
+    {
+      q: `Qual a nota da Faculdade ${institution.name} no MEC?`,
+      a: institution.mecRating
+        ? `A Faculdade ${institution.name} possui nota ${institution.mecRating} no MEC (em uma escala de 1 a 5), demonstrando a qualidade do ensino oferecido pela instituição.`
+        : `A nota da Faculdade ${institution.name} no MEC pode ser consultada diretamente no portal e-MEC.`,
+    },
+    {
+      q: `Como conseguir bolsa de estudo na Faculdade ${institution.name}?`,
+      a: `Para conseguir bolsa de estudo na Faculdade ${institution.name}, basta acessar o Bolsa Click, buscar pelo curso desejado, escolher a melhor oferta e se inscrever gratuitamente. As bolsas podem chegar a até 80% de desconto.`,
+    },
+    {
+      q: `Quais cursos a Faculdade ${institution.name} oferece?`,
+      a: `A Faculdade ${institution.name} oferece cursos de ${institution.academicLevels.map(l => l === 'GRADUACAO' ? 'graduação' : 'pós-graduação').join(' e ')} nas modalidades ${institution.modalities.map(m => m === 'EAD' ? 'EAD' : m === 'PRESENCIAL' ? 'presencial' : 'semipresencial').join(', ')}.${institution.coursesOffered ? ` São mais de ${institution.coursesOffered} cursos disponíveis.` : ''}`,
+    },
+    {
+      q: `A Faculdade ${institution.name} é reconhecida pelo MEC?`,
+      a: `Sim, a Faculdade ${institution.name} é uma instituição de ensino superior reconhecida pelo Ministério da Educação (MEC).${institution.mecRating ? ` Sua nota institucional é ${institution.mecRating} em uma escala de 1 a 5.` : ''}`,
+    },
+    {
+      q: `Quanto custa estudar na Faculdade ${institution.name}?`,
+      a: `Os valores das mensalidades na Faculdade ${institution.name} variam de acordo com o curso e a modalidade escolhida. Pelo Bolsa Click, você encontra bolsas de estudo com descontos de até 80% nas mensalidades, tornando o ensino superior muito mais acessível.`,
+    },
+    {
+      q: `A Faculdade ${institution.name} tem cursos EAD?`,
+      a: institution.modalities.includes('EAD')
+        ? `Sim, a Faculdade ${institution.name} oferece cursos na modalidade EAD (Ensino a Distância), permitindo que você estude de qualquer lugar do Brasil com flexibilidade de horários.`
+        : `Atualmente, a Faculdade ${institution.name} oferece cursos nas modalidades ${institution.modalities.map(m => m === 'PRESENCIAL' ? 'presencial' : 'semipresencial').join(' e ')}.`,
+    },
+  ]
+
+  const faqItems = brandContent?.faq ?? fallbackFaq
+
   const faqSchema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: [
-      {
-        '@type': 'Question',
-        name: `Qual a nota da Faculdade ${institution.name} no MEC?`,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: institution.mecRating
-            ? `A Faculdade ${institution.name} possui nota ${institution.mecRating} no MEC (em uma escala de 1 a 5), demonstrando a qualidade do ensino oferecido pela instituição.`
-            : `A nota da Faculdade ${institution.name} no MEC pode ser consultada diretamente no portal e-MEC.`,
-        },
-      },
-      {
-        '@type': 'Question',
-        name: `Como conseguir bolsa de estudo na Faculdade ${institution.name}?`,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: `Para conseguir bolsa de estudo na Faculdade ${institution.name}, basta acessar o Bolsa Click, buscar pelo curso desejado, escolher a melhor oferta e se inscrever gratuitamente. As bolsas podem chegar a até 80% de desconto.`,
-        },
-      },
-      {
-        '@type': 'Question',
-        name: `Quais cursos a Faculdade ${institution.name} oferece?`,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: `A Faculdade ${institution.name} oferece cursos de ${institution.academicLevels.map(l => l === 'GRADUACAO' ? 'graduação' : 'pós-graduação').join(' e ')} nas modalidades ${institution.modalities.map(m => m === 'EAD' ? 'EAD' : m === 'PRESENCIAL' ? 'presencial' : 'semipresencial').join(', ')}.${institution.coursesOffered ? ` São mais de ${institution.coursesOffered} cursos disponíveis.` : ''}`,
-        },
-      },
-      {
-        '@type': 'Question',
-        name: `A Faculdade ${institution.name} é reconhecida pelo MEC?`,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: `Sim, a Faculdade ${institution.name} é uma instituição de ensino superior reconhecida pelo Ministério da Educação (MEC).${institution.mecRating ? ` Sua nota institucional é ${institution.mecRating} em uma escala de 1 a 5.` : ''}`,
-        },
-      },
-      {
-        '@type': 'Question',
-        name: `Quanto custa estudar na Faculdade ${institution.name}?`,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: `Os valores das mensalidades na Faculdade ${institution.name} variam de acordo com o curso e a modalidade escolhida. Pelo Bolsa Click, você encontra bolsas de estudo com descontos de até 80% nas mensalidades, tornando o ensino superior muito mais acessível.`,
-        },
-      },
-      {
-        '@type': 'Question',
-        name: `A Faculdade ${institution.name} tem cursos EAD?`,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: institution.modalities.includes('EAD')
-            ? `Sim, a Faculdade ${institution.name} oferece cursos na modalidade EAD (Ensino a Distância), permitindo que você estude de qualquer lugar do Brasil com flexibilidade de horários.`
-            : `Atualmente, a Faculdade ${institution.name} oferece cursos nas modalidades ${institution.modalities.map(m => m === 'PRESENCIAL' ? 'presencial' : 'semipresencial').join(' e ')}.`,
-        },
-      },
-    ],
+    mainEntity: faqItems.map(f => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
   }
+
+  // HowTo "Como conseguir bolsa na {marca}" — só quando há conteúdo dedicado.
+  const howToSchema = brandContent
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'HowTo',
+        name: `Como conseguir bolsa de estudo na ${institution.name}`,
+        description: brandContent.comoConseguir.intro,
+        step: brandContent.comoConseguir.passos.map((p, i) => ({
+          '@type': 'HowToStep',
+          position: i + 1,
+          name: p.titulo,
+          text: p.descricao,
+        })),
+      }
+    : null
 
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
@@ -237,7 +244,17 @@ export default async function FaculdadeDetailPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <FaculdadePageClient institution={institution} initialCourses={institutionCourses} />
+      {howToSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
+        />
+      )}
+      <FaculdadePageClient
+        institution={institution}
+        initialCourses={institutionCourses}
+        brandContent={brandContent}
+      />
 
       {/* id="avaliacoes": âncora dos CTAs pós-matrícula (success pages) que
           alimentam o funil de coleta de reviews → AggregateRating. */}

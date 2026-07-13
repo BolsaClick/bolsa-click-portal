@@ -297,7 +297,7 @@ export default async function FaculdadeDetailPage({
                 {BRAZILIAN_CITIES.slice(0, 30).map(city => (
                   <li key={city.slug} className="bg-white">
                     <Link
-                      href={`/faculdades/${institution.slug}/${city.slug}`}
+                      href={`/faculdades/${institution.slug}/em/${city.slug}`}
                       className="block px-4 py-3 transition-colors hover:bg-paper"
                     >
                       <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500">

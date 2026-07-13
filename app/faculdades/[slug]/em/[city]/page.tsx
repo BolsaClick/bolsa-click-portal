@@ -5,6 +5,7 @@ import { cache } from 'react'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/app/lib/prisma'
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
+import { searchAthenaOffers, normalizeAthenaOffer } from '@/app/lib/api/athena-offers'
 import { BRAZILIAN_CITIES, getCityBySlug } from '@/app/lib/constants/brazilian-cities'
 import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
 import { Course } from '@/app/interface/course'
@@ -48,15 +49,25 @@ const getInstitution = cache(async (slug: string) => {
 })
 
 const getCityOffers = cache(async (cityName: string, stateUF: string) => {
-  try {
-    const res = await getShowFiltersCourses(
-      undefined, cityName, stateUF, undefined, 'GRADUACAO', 1, 60
-    )
-    return (res?.data || []) as Course[]
-  } catch (error) {
-    console.error(`Erro ao buscar ofertas da cidade ${cityName}:`, error)
-    return []
-  }
+  // Mescla Tartarus (Cogna) + Athena (Estácio/YDUQS). O merge padrão do
+  // getShowFiltersCourses só puxa a Athena no BROWSER (guard typeof window); como
+  // esta página é server-side, sem este fetch server-side as ofertas Estácio não
+  // aparecem e a página de cidade da Estácio fica vazia.
+  const [tartarus, athena] = await Promise.all([
+    getShowFiltersCourses(undefined, cityName, stateUF, undefined, 'GRADUACAO', 1, 60)
+      .then((res) => (res?.data || []) as Course[])
+      .catch((error) => {
+        console.error(`Erro Tartarus cidade ${cityName}:`, error)
+        return [] as Course[]
+      }),
+    searchAthenaOffers({ city: cityName, state: stateUF, academicLevel: 'GRADUACAO' })
+      .then((list) => list.map(normalizeAthenaOffer) as Course[])
+      .catch((error) => {
+        console.error(`Erro Athena cidade ${cityName}:`, error)
+        return [] as Course[]
+      }),
+  ])
+  return [...tartarus, ...athena]
 })
 
 // Inventário ESTÁVEL marca×cidade (precompute-institution-city-offers). É o que

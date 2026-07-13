@@ -6,7 +6,6 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { BRAZILIAN_CITIES } from '@/app/lib/constants/brazilian-cities'
 import { shouldIndexCityPage } from '@/app/lib/seo/city-page-gate'
-import { normalizeBrand } from '@/app/lib/utils/brand'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 
@@ -53,17 +52,6 @@ const CITY_TIER_1_CUTOFF = 60
 const CITY_TIER_2_CUTOFF = 160
 
 const cityRankBySlug = new Map(BRAZILIAN_CITIES.map((c, idx) => [c.slug, idx]))
-const citySlugByLocation = new Map(
-  BRAZILIAN_CITIES.map((c) => [`${normalizeLocation(c.name)}|${c.state}`, c.slug])
-)
-
-function normalizeLocation(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .trim()
-}
 
 function cityTier(citySlug: string): 1 | 2 | 3 {
   const rank = cityRankBySlug.get(citySlug) ?? 999
@@ -276,18 +264,10 @@ async function buildInstitutionsSitemap(): Promise<SitemapEntry[]> {
             updatedAt: true,
           },
         }),
-        prisma.faculdadeCurso.findMany({
-          where: {
-            OR: [
-              { vencimento: null },
-              { vencimento: { gte: new Date() } },
-            ],
-          },
-          select: {
-            updatedAt: true,
-            curso: { select: { brand: true } },
-            unidade: { select: { cidade: true, estado: true } },
-          },
+        // Inventário marca×cidade ESTÁVEL (precompute-institution-city-offers).
+        // Substitui a FaculdadeCurso legada, que nunca foi populada neste repo.
+        prisma.institutionCityOfferCache.findMany({
+          select: { brand: true, citySlug: true, offerCount: true, fetchedAt: true },
         }),
       ]),
       8_000,
@@ -295,22 +275,13 @@ async function buildInstitutionsSitemap(): Promise<SitemapEntry[]> {
     )
     console.log(`[sitemap:institutions] ${institutions.length} ativas`)
 
+    // Chave do cache: `${slug}|${citySlug}` (brand no cache já é o slug da marca).
     const localInventory = new Map<string, { offerCount: number; updatedAt: Date }>()
-    for (const offer of localOffers) {
-      const brand = normalizeBrand(offer.curso.brand)
-      const citySlug = citySlugByLocation.get(
-        `${normalizeLocation(offer.unidade.cidade)}|${offer.unidade.estado}`,
-      )
-      if (!brand || !citySlug) continue
-
-      const key = `${brand}|${citySlug}`
-      const current = localInventory.get(key)
-      if (current) {
-        current.offerCount += 1
-        if (offer.updatedAt > current.updatedAt) current.updatedAt = offer.updatedAt
-      } else {
-        localInventory.set(key, { offerCount: 1, updatedAt: offer.updatedAt })
-      }
+    for (const row of localOffers) {
+      localInventory.set(`${row.brand}|${row.citySlug}`, {
+        offerCount: row.offerCount,
+        updatedAt: row.fetchedAt,
+      })
     }
 
     const sortedByRecency = [...institutions].sort(
@@ -337,21 +308,8 @@ async function buildInstitutionsSitemap(): Promise<SitemapEntry[]> {
     const institutionCityUrls = institutions.flatMap((institution) => {
       if (!institution.hasCityPages) return []
 
-      const brandCandidates = new Set(
-        [institution.name, institution.shortName, institution.fullName]
-          .map((name) => normalizeBrand(name))
-          .filter(Boolean)
-      )
-
       return BRAZILIAN_CITIES.flatMap((city) => {
-        let bestInventory: { offerCount: number; updatedAt: Date } | undefined
-        for (const brand of brandCandidates) {
-          const inventory = localInventory.get(`${brand}|${city.slug}`)
-          if (!inventory) continue
-          if (!bestInventory || inventory.offerCount > bestInventory.offerCount) {
-            bestInventory = inventory
-          }
-        }
+        const bestInventory = localInventory.get(`${institution.slug}|${city.slug}`)
 
         if (!bestInventory || !shouldIndexCityPage(bestInventory.offerCount)) {
           return []

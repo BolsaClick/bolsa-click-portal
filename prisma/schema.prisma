@@ -458,6 +458,27 @@ model CityCourseOfferCache {
   @@index([offerCount])
 }
 
+// Inventário de ofertas por MARCA × cidade (Fase 4 — faculdade city pages).
+// Análogo ao CityCourseOfferCache, mas agrupado por marca (normalizeBrand) em vez
+// de curso. Populado por scripts/precompute-institution-city-offers.ts a partir da
+// API viva (Tartarus p/ Cogna + Athena p/ Estácio). É a fonte ESTÁVEL que o
+// sitemap E a página /faculdades/[slug]/em/[city] usam pra decidir index/noindex
+// (mata o flip-flop de fetch ao vivo). Substitui a leitura da FaculdadeCurso legada
+// (que nunca foi populada neste repo).
+model InstitutionCityOfferCache {
+  id         String   @id @default(cuid())
+  brand      String // chave de marca normalizada (normalizeBrand): "anhanguera", "estacio", ...
+  citySlug   String
+  offerCount Int      @default(0)
+  minPrice   Float?
+  fetchedAt  DateTime @default(now())
+
+  @@unique([brand, citySlug])
+  @@index([citySlug])
+  @@index([brand])
+  @@index([offerCount])
+}
+
 enum CourseType {
   BACHARELADO
   LICENCIATURA

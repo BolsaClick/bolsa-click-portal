@@ -1117,6 +1117,13 @@ function validatePost(post: GeneratedPost, _arch: Archetype, dataBlock: DataBloc
     }
   }
 
+  // Internal linking: exige link pro pillar do cluster (hub-and-spoke). Sem isto
+  // o spoke não passa autoridade pro hub — foi o gap que deixou 71 posts órfãos
+  // do pillar (batch de julho zerou). Aceita o pillar ou suas city pages.
+  if (!/href="\/bolsas-de-estudo/i.test(content)) {
+    return { ok: false, reason: 'content sem link interno pro pillar /bolsas-de-estudo — inclua um <a href="/bolsas-de-estudo"> com âncora variada no primeiro terço ou antes da FAQ' }
+  }
+
   // Anti-hallucination de preço
   const prices = extractPrices(content)
   for (const p of prices) {

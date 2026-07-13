@@ -35,7 +35,7 @@ const PROGRAMAS = [
     desconto: 'Até 80%',
     requisito: 'Nenhum — sem ENEM, sem CPF do parente, sem comprovação de renda',
     quando: 'Disponível o ano inteiro',
-    onde: 'Anhanguera, Unopar, Pitágoras, Unime, Ampli (rede Cogna) e Estácio (YDUQS)',
+    onde: 'Anhanguera, Unopar, Pitágoras, Unime (rede Cogna) e Estácio (YDUQS)',
   },
   {
     nome: 'Bolsa Filantrópica (faculdades confessionais)',
@@ -64,7 +64,7 @@ const FAQ_ITEMS = [
   {
     question: 'Como conseguir bolsa de estudo sem ENEM?',
     answer:
-      'Sim, é possível. Pelo Bolsa Click você consegue bolsa de até 80% em faculdades particulares parceiras (Anhanguera, Estácio, Unopar, Pitágoras, Unime, Ampli) sem precisar de nota do ENEM. Outros marketplaces de bolsa também oferecem opções sem ENEM. ProUni e FIES exigem ENEM ≥ 450, mas são gratuitos e cobrem até 100% da mensalidade pra famílias de baixa renda.',
+      'Sim, é possível. Pelo Bolsa Click você consegue bolsa de até 80% em faculdades particulares parceiras (Anhanguera, Estácio, Unopar, Pitágoras, Unime) sem precisar de nota do ENEM. Outros marketplaces de bolsa também oferecem opções sem ENEM. ProUni e FIES exigem ENEM ≥ 450, mas são gratuitos e cobrem até 100% da mensalidade pra famílias de baixa renda.',
   },
   {
     question: 'Quem tem direito a bolsa de estudo integral 100%?',
@@ -99,7 +99,7 @@ const FAQ_ITEMS = [
   {
     question: 'Como funciona a bolsa de estudo do Bolsa Click?',
     answer:
-      'É simples: você se cadastra grátis no site, escolhe o curso e a faculdade entre os parceiros (Anhanguera, Estácio, Unopar, Pitágoras, Unime, Ampli), garante o desconto de até 80% antes de matricular, e segue direto pra matrícula com a faculdade — já pagando só a mensalidade com bolsa aplicada. Sem ENEM, sem CPF do parente, sem prova presencial.',
+      'É simples: você se cadastra grátis no site, escolhe o curso e a faculdade entre os parceiros (Anhanguera, Estácio, Unopar, Pitágoras, Unime), garante o desconto de até 80% antes de matricular, e segue direto pra matrícula com a faculdade — já pagando só a mensalidade com bolsa aplicada. Sem ENEM, sem CPF do parente, sem prova presencial.',
   },
 ]
 
@@ -311,7 +311,7 @@ export default function ComoConseguirBolsaPage() {
               </h3>
               <p>
                 <strong>Bolsa Click</strong> é o caminho. Desconto de até 80% em faculdades
-                particulares parceiras (Anhanguera, Estácio, Unopar, Pitágoras, Unime, Ampli) sem
+                particulares parceiras (Anhanguera, Estácio, Unopar, Pitágoras, Unime) sem
                 exigência de nota, sem prova presencial, sem comprovação de renda. Cadastro
                 gratuito, garantia da bolsa antes da matrícula.
               </p>

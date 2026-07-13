@@ -96,7 +96,7 @@ export const COURSE_FAQS: Record<string, CourseFaqEntry[]> = {
     {
       question: 'Quanto custa Administração com bolsa pelo Bolsa Click?',
       answer:
-        'Mensalidades de Administração com bolsa começam a partir de R$ 149/mês em modalidade EAD em faculdades parceiras como Anhanguera, Unopar e Ampli. Descontos chegam a 80% sobre o valor cheio.',
+        'Mensalidades de Administração com bolsa começam a partir de R$ 149/mês em modalidade EAD em faculdades parceiras como Anhanguera e Unopar. Descontos chegam a 80% sobre o valor cheio.',
     },
   ],
 
@@ -280,7 +280,7 @@ export const COURSE_FAQS: Record<string, CourseFaqEntry[]> = {
     {
       question: 'Quanto custa ADS com bolsa?',
       answer:
-        'Mensalidades de ADS começam a partir de R$ 99/mês em modalidade EAD em faculdades parceiras do Bolsa Click como Anhanguera, Unopar e Ampli. Bolsas de até 80% sobre o valor cheio.',
+        'Mensalidades de ADS começam a partir de R$ 99/mês em modalidade EAD em faculdades parceiras do Bolsa Click como Anhanguera e Unopar. Bolsas de até 80% sobre o valor cheio.',
     },
   ],
 }

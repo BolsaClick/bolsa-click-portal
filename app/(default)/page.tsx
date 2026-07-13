@@ -128,7 +128,7 @@ export default async function HomePage() {
         "name": "Como funcionam as bolsas de estudo do Bolsa Click?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "O Bolsa Click conecta estudantes a bolsas de estudo de até 80% de desconto nas maiores redes de ensino do Brasil — Anhanguera, Unopar, Pitágoras, Ampli, Unime e Estácio. Você pode buscar por curso, cidade e modalidade, comparar preços e se cadastrar gratuitamente para garantir sua bolsa."
+          "text": "O Bolsa Click conecta estudantes a bolsas de estudo de até 80% de desconto nas maiores redes de ensino do Brasil — Anhanguera, Unopar, Pitágoras, Unime e Estácio. Você pode buscar por curso, cidade e modalidade, comparar preços e se cadastrar gratuitamente para garantir sua bolsa."
         }
       },
       {

@@ -47,7 +47,7 @@ const FAQ = [
   },
   {
     q: 'Como funciona um site de bolsa de estudo?',
-    a: 'Uma plataforma de bolsa reúne, em um só lugar, ofertas de desconto de várias faculdades. Você pesquisa o curso, a cidade e a modalidade, e vê o desconto de cada instituição antes de decidir. O cadastro é gratuito e a matrícula segue direto com a faculdade escolhida. O Bolsa Click trabalha com as maiores redes de ensino do país — Anhanguera, Unopar, Pitágoras, Ampli, Unime e Estácio —, todas reconhecidas pelo MEC.',
+    a: 'Uma plataforma de bolsa reúne, em um só lugar, ofertas de desconto de várias faculdades. Você pesquisa o curso, a cidade e a modalidade, e vê o desconto de cada instituição antes de decidir. O cadastro é gratuito e a matrícula segue direto com a faculdade escolhida. O Bolsa Click trabalha com as maiores redes de ensino do país — Anhanguera, Unopar, Pitágoras, Unime e Estácio —, todas reconhecidas pelo MEC.',
   },
   {
     q: 'Preciso de nota do ENEM para conseguir bolsa?',

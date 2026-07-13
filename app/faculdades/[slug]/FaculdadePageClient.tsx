@@ -162,20 +162,26 @@ export default function FaculdadePageClient({ institution, initialCourses }: Pro
             {/* Logo + Title */}
             <div className="flex flex-col md:flex-row md:items-end gap-6 md:gap-8 mb-6">
               <div className="flex-shrink-0 w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-white p-3 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.5)]">
-                <Image
-                  src={institution.logoUrl}
-                  alt={institution.imageAlt || `Logo ${institution.name}`}
-                  width={96}
-                  height={96}
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement
-                    target.style.display = 'none'
-                    if (target.parentElement) {
-                      target.parentElement.innerHTML = `<span class="text-3xl font-display font-semibold text-bolsa-primary flex items-center justify-center w-full h-full">${institution.shortName.charAt(0)}</span>`
-                    }
-                  }}
-                />
+                {institution.logoUrl ? (
+                  <Image
+                    src={institution.logoUrl}
+                    alt={institution.imageAlt || `Logo ${institution.name}`}
+                    width={96}
+                    height={96}
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.style.display = 'none'
+                      if (target.parentElement) {
+                        target.parentElement.innerHTML = `<span class="text-3xl font-display font-semibold text-bolsa-primary flex items-center justify-center w-full h-full">${institution.shortName.charAt(0)}</span>`
+                      }
+                    }}
+                  />
+                ) : (
+                  <span className="text-3xl font-display font-semibold text-bolsa-primary flex items-center justify-center w-full h-full">
+                    {institution.shortName.charAt(0)}
+                  </span>
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-white/60 inline-flex items-center gap-3 mb-3">

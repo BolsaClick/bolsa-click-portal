@@ -33,7 +33,6 @@ const PARTNERS = [
   { name: 'Estácio', src: '/estacio-logo.png' },
   { name: 'Unopar', src: '/assets/logo-unopar.svg' },
   { name: 'Pitágoras', src: '/assets/logo-pitagoras.svg' },
-  { name: 'Ampli', src: '/assets/ampli-logo.png' },
   { name: 'Unime', src: '/assets/logo-unime-p.png' },
 ]
 
@@ -65,8 +64,8 @@ const FEATURED_OFFERS: Offer[] = [
   },
   {
     course: 'Administração',
-    institution: 'Ampli',
-    logo: '/assets/ampli-logo.png',
+    institution: 'Unopar',
+    logo: '/assets/logo-unopar.svg',
     modality: 'EAD',
     city: 'Curitiba',
     uf: 'PR',

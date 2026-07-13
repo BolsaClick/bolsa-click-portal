@@ -86,7 +86,7 @@ const Recommended = () => {
     },
     {
       id: 4,
-      logo: '/assets/ampli-logo.png',
+      logo: '/assets/logo-unopar.svg',
       curso: 'Psicologia',
       modalidade: 'Presencial - Manhã',
       local: 'Belo Horizonte - MG',

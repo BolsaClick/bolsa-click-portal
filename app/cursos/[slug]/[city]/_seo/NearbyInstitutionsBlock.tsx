@@ -13,9 +13,7 @@ const BRAND_LABEL: Record<string, string> = {
   anhanguera: 'Anhanguera',
   unopar: 'Unopar',
   pitagoras: 'Pitágoras',
-  unime: 'Unime',
-  ampli: 'Ampli',
-  fama: 'FAMA',
+  unime: 'Unime',  fama: 'FAMA',
   fapan: 'Fapan',
   uniderp: 'Uniderp',
 }

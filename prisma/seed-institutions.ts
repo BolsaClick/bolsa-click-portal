@@ -148,53 +148,6 @@ Entre os diferenciais da Faculdade Pitágoras estão: tradição de mais de 50 a
     order: 3,
   },
   {
-    slug: 'ampli',
-    name: 'Ampli',
-    shortName: 'AMPLI',
-    fullName: 'Ampli',
-    description: 'A Ampli é a faculdade 100% digital do grupo Cogna Educação, criada para tornar o ensino superior mais acessível através de cursos totalmente online com mensalidades baixas e flexibilidade total. Oferece graduação reconhecida pelo MEC sem necessidade de comparecer a polos físicos.',
-    longDescription: `A Ampli é uma das mais recentes e inovadoras instituições de ensino superior do Brasil, criada pelo grupo Cogna Educação (antiga Kroton) com uma proposta clara: oferecer graduação 100% online, com mensalidades acessíveis e total flexibilidade para o aluno estudar de onde quiser.
-
-Diferente do EAD tradicional, na Ampli não é necessário comparecer a polos físicos. Todo o curso — aulas, materiais, avaliações e atividades — acontece no ambiente virtual da plataforma, permitindo que o estudante organize seu próprio tempo de estudo. Essa modalidade é ideal para quem precisa conciliar a faculdade com trabalho, família ou outras responsabilidades.
-
-O catálogo da Ampli foca em cursos de graduação com alta demanda no mercado de trabalho, como Administração, Análise e Desenvolvimento de Sistemas, Pedagogia, Recursos Humanos, Marketing, Gestão Financeira, Gestão Comercial, Logística e cursos tecnólogos em diversas áreas. Os cursos são reconhecidos pelo MEC, com a mesma validade do diploma de qualquer faculdade presencial.
-
-A metodologia da Ampli é baseada em aulas em vídeo gravadas e ao vivo, materiais didáticos digitais interativos, fóruns de discussão e tutoria online. A plataforma também conta com biblioteca virtual ampla e ferramentas de empregabilidade, conectando alunos a vagas em empresas parceiras do grupo Cogna.
-
-Entre os diferenciais da Ampli estão: graduação 100% online sem necessidade de polo presencial, mensalidades a partir de valores baixos e parceladas, flexibilidade total para estudar de qualquer lugar e horário, diploma reconhecido pelo MEC com a mesma validade de cursos presenciais, ferramentas de empregabilidade conectadas ao mercado, e suporte da estrutura do grupo Cogna, maior grupo educacional do Brasil.`,
-    founded: 2020,
-    type: 'PRIVADA' as const,
-    campusCount: null,
-    studentCount: null,
-    coursesOffered: null,
-    headquartersCity: null,
-    headquartersState: null,
-    mecRating: null,
-    emecLink: 'https://emec.mec.gov.br/',
-    modalities: ['EAD'],
-    academicLevels: ['GRADUACAO'],
-    highlights: [
-      'Faculdade 100% digital, sem necessidade de polo presencial',
-      'Mensalidades baixas e parceladas',
-      'Flexibilidade total para estudar de qualquer lugar e horário',
-      'Pertence ao grupo Cogna, maior grupo educacional do Brasil',
-      'Diploma reconhecido pelo MEC, equivalente a cursos presenciais',
-      'Plataforma com aulas em vídeo, tutoria online e biblioteca virtual',
-    ],
-    logoUrl: '/assets/ampli-logo.png',
-    imageUrl: '',
-    imageAlt: 'Logo da Ampli',
-    keywords: [
-      'ampli', 'faculdade ampli', 'ampli ead', 'ampli online',
-      'ampli cursos', 'ampli bolsa', 'ampli graduação',
-      'ampli mensalidade', 'ampli digital', 'ampli cogna',
-    ],
-    metaTitle: 'Faculdade Ampli - Graduação 100% Online com Mensalidades Baixas | Bolsa Click',
-    metaDescription: 'Encontre bolsas e descontos na Ampli, faculdade 100% online do grupo Cogna. Graduação reconhecida pelo MEC, mensalidades acessíveis. Estude de onde quiser. Inscreva-se!',
-    isActive: true,
-    order: 4,
-  },
-  {
     slug: 'unime',
     name: 'Unime',
     shortName: 'UNIME',

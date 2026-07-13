@@ -1422,7 +1422,7 @@ export default async function BolsasDeEstudoHubPage() {
                   className="block px-5 py-4 transition-colors hover:bg-paper"
                 >
                   <span className="block font-display text-lg text-ink-900">
-                    {inst.fullName}
+                    Bolsas na {inst.fullName}
                   </span>
                   <span className="block font-mono text-[11px] text-ink-500 mt-1">
                     {inst.mecRating ? `Nota MEC ${inst.mecRating}` : 'Reconhecida pelo MEC'}

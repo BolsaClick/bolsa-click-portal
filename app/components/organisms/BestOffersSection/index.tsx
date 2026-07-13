@@ -60,8 +60,8 @@ const offers: Offer[] = [
   {
     id: '4',
     course: 'Psicologia',
-    institution: 'Ampli',
-    logo: '/assets/ampli-logo.png',
+    institution: 'Unopar',
+    logo: '/assets/logo-unopar.svg',
     modality: 'PRESENCIAL',
     city: 'Belo Horizonte',
     uf: 'MG',

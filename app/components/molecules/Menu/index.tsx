@@ -32,6 +32,7 @@ const menuItems: MenuItem[] = [
   { label: 'Graduação', href: '/graduacao' },
   { label: 'Pós', href: '/pos-graduacao' },
   { label: 'Profissionalizantes', href: '/cursos-profissionalizantes' },
+  { label: 'Simulador de Bolsa', href: '/simulador-de-bolsa' },
   { label: 'Carreiras', href: '/carreiras' },
   { label: 'Ajuda', href: '/central-de-ajuda' },
 ]

@@ -11,6 +11,10 @@ type Props = {
   params: Promise<{ slug: string; city: string }>
 }
 
+// force-dynamic: sem isto o Next prerenderiza a rota e o redirect sai como
+// meta-refresh (HTTP 200), sinal fraco de SEO. Dinâmico → HTTP 308 de verdade.
+export const dynamic = 'force-dynamic'
+
 export default async function LegacyFaculdadeCidadeRedirect({ params }: Props) {
   const { slug, city } = await params
   permanentRedirect(`/faculdades/${slug}/em/${city}`)

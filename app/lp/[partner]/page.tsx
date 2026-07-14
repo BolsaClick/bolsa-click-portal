@@ -14,13 +14,13 @@ const PARTNERS = ['anhanguera', 'unopar', 'pitagoras', 'unime', 'estacio']
 // Cor de marca por parceiro (extraída dos sites oficiais / do concorrente
 // matricula.digital). O hero, os acentos e o CTA usam essa cor — a landing fica
 // com a cara da marca, o que converte melhor no tráfego de anúncio de brand.
-// Unime (site fora do ar) cai no default Bolsa Click até termos a cor real.
 const DEFAULT_BRAND = '#023e73'
 const PARTNER_BRAND: Record<string, string> = {
-  anhanguera: '#f94d12',
-  estacio: '#022549',
-  unopar: '#0a3c7d',
-  pitagoras: '#e2521d',
+  anhanguera: '#f94d12', // laranja (site oficial)
+  estacio: '#022549', // navy (matricula.digital)
+  unopar: '#0a3c7d', // azul (site oficial)
+  pitagoras: '#e2521d', // laranja-vermelho (site oficial)
+  unime: '#e31b22', // vermelho (unime.edu.br)
 }
 
 export async function generateStaticParams() {

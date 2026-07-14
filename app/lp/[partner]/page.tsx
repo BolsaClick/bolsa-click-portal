@@ -11,6 +11,18 @@ export const revalidate = 3600
 
 const PARTNERS = ['anhanguera', 'unopar', 'pitagoras', 'unime', 'estacio']
 
+// Cor de marca por parceiro (extraída dos sites oficiais / do concorrente
+// matricula.digital). O hero, os acentos e o CTA usam essa cor — a landing fica
+// com a cara da marca, o que converte melhor no tráfego de anúncio de brand.
+// Unime (site fora do ar) cai no default Bolsa Click até termos a cor real.
+const DEFAULT_BRAND = '#023e73'
+const PARTNER_BRAND: Record<string, string> = {
+  anhanguera: '#f94d12',
+  estacio: '#022549',
+  unopar: '#0a3c7d',
+  pitagoras: '#e2521d',
+}
+
 export async function generateStaticParams() {
   const insts = await prisma.institution.findMany({
     where: { isActive: true, slug: { in: PARTNERS } },
@@ -58,6 +70,7 @@ export default async function PartnerLanding({
 
   const [courses] = await Promise.all([getInstitutionCourses(inst.name)])
   const brand = BRAND_CONTENT[partner]
+  const brandColor = PARTNER_BRAND[partner] ?? DEFAULT_BRAND
 
   // Top cursos com preço real (ordenados pela mensalidade com bolsa).
   const topCourses = courses
@@ -77,8 +90,8 @@ export default async function PartnerLanding({
   return (
     <>
       {/* HERO + FORM */}
-      <section className="relative bg-bolsa-primary overflow-hidden">
-        <div aria-hidden className="absolute -top-24 -right-32 w-[28rem] h-[28rem] rounded-full bg-bolsa-secondary/20 blur-3xl" />
+      <section className="relative overflow-hidden" style={{ backgroundColor: brandColor }}>
+        <div aria-hidden className="absolute -top-24 -right-32 w-[28rem] h-[28rem] rounded-full bg-white/10 blur-3xl" />
         <div className="container mx-auto px-4 py-10 md:py-16 relative">
           <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
             {/* Copy */}
@@ -97,7 +110,7 @@ export default async function PartnerLanding({
                 )}
               </div>
               <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-semibold text-white leading-[1.08] mb-4">
-                Bolsa de até <span className="text-bolsa-secondary">80%</span> na {inst.name}
+                Bolsa de até <span className="underline decoration-white/40 decoration-[3px] underline-offset-4">80%</span> na {inst.name}
               </h1>
               <p className="text-white/80 text-base md:text-lg leading-relaxed mb-6 max-w-xl">
                 Estude na {inst.fullName} pagando muito menos. Sem ENEM, sem nota de corte,
@@ -106,20 +119,20 @@ export default async function PartnerLanding({
               <ul className="flex flex-wrap gap-x-5 gap-y-2 text-white/85 text-sm">
                 {inst.mecRating ? (
                   <li className="inline-flex items-center gap-1.5">
-                    <Star size={15} className="text-bolsa-secondary" /> Nota {inst.mecRating}/5 no MEC
+                    <Star size={15} className="text-white/80" /> Nota {inst.mecRating}/5 no MEC
                   </li>
                 ) : (
                   <li className="inline-flex items-center gap-1.5">
-                    <ShieldCheck size={15} className="text-bolsa-secondary" /> Reconhecida pelo MEC
+                    <ShieldCheck size={15} className="text-white/80" /> Reconhecida pelo MEC
                   </li>
                 )}
                 {inst.studentCount && (
                   <li className="inline-flex items-center gap-1.5">
-                    <CheckCircle2 size={15} className="text-bolsa-secondary" /> {inst.studentCount} alunos
+                    <CheckCircle2 size={15} className="text-white/80" /> {inst.studentCount} alunos
                   </li>
                 )}
                 <li className="inline-flex items-center gap-1.5">
-                  <Clock size={15} className="text-bolsa-secondary" /> Resposta em minutos
+                  <Clock size={15} className="text-white/80" /> Resposta em minutos
                 </li>
               </ul>
             </div>
@@ -131,7 +144,7 @@ export default async function PartnerLanding({
                   Garanta sua bolsa agora
                 </span>
               </div>
-              <LeadForm partner={partner} partnerName={inst.name} courses={courseNames} />
+              <LeadForm partner={partner} partnerName={inst.name} courses={courseNames} accentColor={brandColor} />
             </div>
           </div>
         </div>
@@ -169,7 +182,7 @@ export default async function PartnerLanding({
           <ul className="grid sm:grid-cols-2 gap-3">
             {pontosFortes.map((p, i) => (
               <li key={i} className="flex gap-2.5 text-ink-700 leading-relaxed">
-                <CheckCircle2 size={20} className="text-bolsa-secondary shrink-0 mt-0.5" />
+                <CheckCircle2 size={20} className="shrink-0 mt-0.5" style={{ color: brandColor }} />
                 <span>{p}</span>
               </li>
             ))}
@@ -178,7 +191,7 @@ export default async function PartnerLanding({
       </section>
 
       {/* CTA FINAL */}
-      <section className="bg-bolsa-primary py-12 md:py-16 text-center">
+      <section className="py-12 md:py-16 text-center" style={{ backgroundColor: brandColor }}>
         <div className="container mx-auto px-4 max-w-2xl">
           <h2 className="font-display text-2xl md:text-3xl font-semibold text-white mb-3">
             Sua bolsa na {inst.name} está esperando
@@ -188,7 +201,8 @@ export default async function PartnerLanding({
           </p>
           <a
             href="#top"
-            className="inline-flex items-center justify-center px-7 py-3.5 bg-bolsa-secondary text-white font-semibold rounded-full hover:opacity-90"
+            className="inline-flex items-center justify-center px-7 py-3.5 bg-white font-semibold rounded-full hover:opacity-90"
+            style={{ color: brandColor }}
           >
             Quero minha bolsa
           </a>

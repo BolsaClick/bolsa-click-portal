@@ -46,6 +46,12 @@ export function LeadForm({ partner, partnerName, courses, accentColor = '#023e73
     e.preventDefault()
     if (!canSubmit) return
     setSubmitting(true)
+    // eventID único compartilhado entre o Pixel (browser) e o CAPI (server) →
+    // o Meta deduplica o Lead (não conta a conversão em dobro).
+    const eventId =
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `ing_${Date.now()}_${Math.round(Math.random() * 1e9)}`
     try {
       await fetch('/api/ingressa', {
         method: 'POST',
@@ -57,12 +63,14 @@ export function LeadForm({ partner, partnerName, courses, accentColor = '#023e73
           partnerName,
           curso: curso || null,
           utm,
+          eventId,
         }),
       })
-      // Dispara o pixel do browser (dedup com o CAPI server pelo eventID não é
-      // crítico aqui; o server já registra o Lead).
+      // Pixel do browser com o MESMO eventID → dedup com o CAPI server.
       const w = window as unknown as { fbq?: (...a: unknown[]) => void }
-      if (typeof w.fbq === 'function') w.fbq('track', 'Lead', { content_name: partner })
+      if (typeof w.fbq === 'function') {
+        w.fbq('track', 'Lead', { content_name: partner }, { eventID: eventId })
+      }
     } catch {
       // best-effort: mostra sucesso mesmo se o registro falhar (não travar o lead)
     } finally {

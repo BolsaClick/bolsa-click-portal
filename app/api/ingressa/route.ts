@@ -3,6 +3,10 @@ import { prisma } from '@/app/lib/prisma'
 import { upsertNotealyContact } from '@/app/lib/api/notealy'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 
+// Tag fixa do funil ingressa no Notealy (criada 2026-07-14). Hardcoded — não
+// depende de env.
+const NOTEALY_TAG_INGRESSA = '2efcf93c-f924-4b32-a3d0-37995d1b5d69'
+
 interface IngressaBody {
   name: string
   phone: string
@@ -10,6 +14,8 @@ interface IngressaBody {
   partnerName?: string
   curso?: string | null
   utm?: Record<string, string>
+  /** eventID gerado no browser p/ deduplicar Pixel (client) × CAPI (server). */
+  eventId?: string
 }
 
 // Rate-limit por IP (mesmo padrão do simulador/teste vocacional).
@@ -34,6 +40,7 @@ async function sendLeadToMeta(params: {
   name: string
   phone: string
   partner?: string
+  eventId?: string
   request: NextRequest
 }) {
   try {
@@ -44,7 +51,8 @@ async function sendLeadToMeta(params: {
       undefined
     await sendFacebookEvent({
       eventName: 'Lead',
-      eventId: `ingressa_${params.leadId}`,
+      // Mesmo eventID do Pixel do browser → o Meta deduplica (não conta 2×).
+      eventId: params.eventId || `ingressa_${params.leadId}`,
       userData: {
         phone: params.phone,
         firstName: firstName || undefined,
@@ -119,7 +127,7 @@ export async function POST(request: NextRequest) {
     await upsertNotealyContact({
       name: cleanName,
       phone: cleanPhone,
-      tagId: process.env.NOTEALY_TAG_INGRESSA ?? process.env.NOTEALY_TAG_LEAD,
+      tagId: NOTEALY_TAG_INGRESSA,
     })
   } catch (error) {
     console.error('⚠️ Notealy (ingressa) falhou:', error)
@@ -127,7 +135,7 @@ export async function POST(request: NextRequest) {
 
   // 3) Meta CAPI (best-effort).
   if (leadId) {
-    await sendLeadToMeta({ leadId, name: cleanName, phone: cleanPhone, partner: partnerSlug, request })
+    await sendLeadToMeta({ leadId, name: cleanName, phone: cleanPhone, partner: partnerSlug, eventId: body.eventId, request })
   }
 
   return NextResponse.json({ ok: true }, { status: 201 })

@@ -10,7 +10,7 @@ import { BRAZILIAN_CITIES, getCityBySlug } from '@/app/lib/constants/brazilian-c
 import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
 import { Course } from '@/app/interface/course'
 import { VisibleFaq } from '@/app/cursos/[slug]/_seo/CourseSeoSections'
-import { shouldIndexCityPage } from '@/app/lib/seo/city-page-gate'
+import { shouldIndexInstitutionCityPage } from '@/app/lib/seo/city-page-gate'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 
@@ -108,10 +108,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const allOffers = await getCityOffers(cityData.name, cityData.state)
   const offers = filterByInstitution(allOffers, institution.name, institution.shortName)
   const hasOffers = offers.length > 0
-  // Gate de qualidade (MIN_OFFERS_TO_INDEX=2): decide pelo inventário ESTÁVEL do
-  // cache; fallback pro count ao vivo enquanto o cache não estiver populado.
+  // Gate de qualidade (MIN_OFFERS_TO_INDEX_INSTITUTION=8): decide pelo inventário
+  // ESTÁVEL do cache; fallback pro count ao vivo enquanto o cache não estiver
+  // populado. Threshold de marca é mais alto que o de curso×cidade (agrega vários
+  // cursos → precisa de catálogo real pra não ser thin).
   const cachedCount = await getCachedInventory(slug, citySlug)
-  const shouldIndex = shouldIndexCityPage(cachedCount ?? offers.length)
+  const shouldIndex = shouldIndexInstitutionCityPage(cachedCount ?? offers.length)
 
   const pageUrl = `${SITE_URL}/faculdades/${slug}/em/${citySlug}`
   const fallbackUrl = `${SITE_URL}/faculdades/${slug}`

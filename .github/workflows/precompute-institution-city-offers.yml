@@ -1,0 +1,55 @@
+name: Precompute institution city offers
+
+# Mantém InstitutionCityOfferCache fresco — fonte de verdade do gate de indexação
+# das páginas de marca por cidade (app/faculdades/[slug]/em/[city]) e da emissão
+# do sitemap de instituições. Sem isso o cache envelhece: cidades que perderam
+# oferta continuam indexadas (thin) e cidades que ganharam oferta ficam dormentes.
+# Roda no GitHub Actions (não na Vercel/Railway) porque é job de minutos-a-horas e
+# varre o Brasil inteiro — uma busca por cidade agrupando todas as marcas.
+#
+# Difere do "precompute-city-offers" (curso×cidade, só Tartarus): aqui também
+# consultamos a Athena (Estácio/YDUQS), então exige o secret ATHENA_BASE_URL.
+
+on:
+  schedule:
+    # Semanal — domingo 04:17 UTC (~01:17 BRT). 1h depois do precompute de curso
+    # (03:17) pra não dobrar a carga na Tartarus rodando os dois juntos.
+    - cron: '17 4 * * 0'
+  workflow_dispatch:
+    inputs:
+      city_limit:
+        description: 'Cidades a varrer (top N; vazio = todas)'
+        required: false
+        default: ''
+      concurrency:
+        description: 'Cidades em paralelo'
+        required: false
+        default: '4'
+
+# Evita duas execuções simultâneas escrevendo no mesmo cache.
+concurrency:
+  group: precompute-institution-city-offers
+  cancel-in-progress: false
+
+jobs:
+  precompute:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Precompute InstitutionCityOfferCache
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXT_PUBLIC_TARTARUS_API: ${{ secrets.NEXT_PUBLIC_TARTARUS_API }}
+          # Athena (Estácio/YDUQS) — sem esse secret a Estácio fica sem inventário
+          # e a superfície dela permanece dormente (comportamento seguro).
+          ATHENA_BASE_URL: ${{ secrets.ATHENA_BASE_URL }}
+          CITY_LIMIT: ${{ github.event.inputs.city_limit }}
+          CONCURRENCY: ${{ github.event.inputs.concurrency || '4' }}
+        run: npx tsx scripts/precompute-institution-city-offers.ts

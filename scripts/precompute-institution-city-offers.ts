@@ -28,8 +28,13 @@ import { TOP_CURSOS } from '../app/cursos/_data/cursos'
 const prisma = new PrismaClient()
 
 const DRY_RUN = process.argv.includes('--dry-run')
-const arg = (k: string) =>
-  process.argv.find((a) => a.startsWith(`${k}=`))?.split('=')[1] ?? process.env[k]
+const arg = (k: string) => {
+  // Trata "" (env setada mas vazia, ex.: input opcional do GitHub Actions) como
+  // ausente — senão Number("") vira 0 e o cron varreria 0 cidades.
+  const fromArgv = process.argv.find((a) => a.startsWith(`${k}=`))?.split('=')[1]
+  const raw = fromArgv ?? process.env[k]
+  return raw && raw.trim() !== '' ? raw : undefined
+}
 const CITY_LIMIT = Number(arg('CITY_LIMIT') ?? BRAZILIAN_CITIES.length)
 const CONCURRENCY = Number(arg('CONCURRENCY') ?? 4)
 const PAGE_SIZE = 50

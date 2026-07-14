@@ -4,6 +4,8 @@ import { prisma } from '@/app/lib/prisma'
 import BlogPostClient from './BlogPostClient'
 import Breadcrumb from '@/app/components/atoms/Breadcrumb'
 import { extractFaqFromHtml } from '@/app/lib/seo/extract-faq'
+import { getPersona, personaAtId, EDITORIAL_TEAM_ORG } from '@/app/lib/blog/editorial-team'
+import { isOffTopicNoindex } from '@/app/lib/blog/noindex-slugs'
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -124,7 +126,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description,
     keywords: post.keywords,
-    robots: 'index, follow',
+    // Posts off-topic (biografias, esporte, gramática) saem do índice — diluíam
+    // a autoridade temática do domínio no nicho de bolsas (ver noindex-slugs).
+    robots: isOffTopicNoindex(slug) ? 'noindex, follow' : 'index, follow',
     alternates: {
       canonical: `https://www.bolsaclick.com.br/blog/${slug}`,
     },
@@ -196,6 +200,32 @@ export default async function BlogPostPage({ params }: Props) {
   // FAQPage schema condicional. Posts sem FAQ não emitem o segundo schema.
   const faqItems = extractFaqFromHtml(processedContent)
 
+  // Resolve o byline pra uma persona real do registry editorial. Antes, o @id
+  // era hardcoded pra #mariana-fonseca em TODOS os posts (mesmo os assinados por
+  // outros nomes) → entidade inconsistente que quebra E-E-A-T. Agora cada autor
+  // aponta pro seu próprio @id; bylines não mapeadas caem na Organization.
+  const persona = getPersona(post.author)
+  const authorSchema = persona
+    ? {
+        '@type': 'Person',
+        '@id': personaAtId(persona),
+        name: persona.name,
+        url: personaAtId(persona),
+        jobTitle: persona.jobTitle,
+        worksFor: {
+          '@type': 'Organization',
+          name: 'Bolsa Click',
+          url: 'https://www.bolsaclick.com.br',
+        },
+        knowsAbout: persona.knowsAbout,
+      }
+    : {
+        '@type': 'Organization',
+        '@id': personaAtId(null),
+        name: EDITORIAL_TEAM_ORG.name,
+        url: 'https://www.bolsaclick.com.br/sobre/equipe-editorial',
+      }
+
   const jsonLdSchemas = [
     {
       '@context': 'https://schema.org',
@@ -205,27 +235,7 @@ export default async function BlogPostPage({ params }: Props) {
       image: [imageUrl],
       datePublished: post.publishedAt?.toISOString(),
       dateModified: post.updatedAt.toISOString(),
-      author: {
-        '@type': 'Person',
-        '@id': 'https://www.bolsaclick.com.br/sobre/equipe-editorial#mariana-fonseca',
-        name: post.author,
-        url: 'https://www.bolsaclick.com.br/sobre/equipe-editorial#mariana-fonseca',
-        jobTitle: 'Editora de Conteúdo Educacional',
-        worksFor: {
-          '@type': 'Organization',
-          name: 'Bolsa Click',
-          url: 'https://www.bolsaclick.com.br',
-        },
-        knowsAbout: [
-          'Bolsas de estudo',
-          'ProUni',
-          'FIES',
-          'ENEM',
-          'Educação superior EAD',
-          'Mercado de trabalho brasileiro',
-          'Financiamento estudantil',
-        ],
-      },
+      author: authorSchema,
       reviewedBy: {
         '@type': 'Organization',
         name: 'Equipe Editorial Bolsa Click',

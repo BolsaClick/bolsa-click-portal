@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import { EDITORIAL_TEAM } from '@/app/lib/blog/editorial-team'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 
@@ -48,32 +49,23 @@ const orgSchema = {
     'https://www.linkedin.com/company/bolsa-click',
     'https://www.facebook.com/bolsaclickbrasil',
   ],
-  member: [
-    {
-      '@type': 'Person',
-      '@id': `${SITE_URL}/sobre/equipe-editorial#mariana-fonseca`,
-      name: 'Mariana Fonseca',
-      jobTitle: 'Editora de Conteúdo Educacional',
-      url: `${SITE_URL}/sobre/equipe-editorial#mariana-fonseca`,
-      worksFor: {
-        '@type': 'Organization',
-        name: 'Bolsa Click',
-        url: SITE_URL,
-      },
-      knowsAbout: [
-        'Bolsas de estudo',
-        'ProUni',
-        'FIES',
-        'ENEM',
-        'Educação superior EAD',
-        'Mercado de trabalho brasileiro',
-        'Financiamento estudantil',
-      ],
-      sameAs: [
-        'https://www.linkedin.com/company/bolsa-click',
-      ],
+  // Membros derivados do registry único (app/lib/blog/editorial-team) — o @id de
+  // cada Person bate com o @id usado no `author` de cada post (mesma âncora).
+  member: EDITORIAL_TEAM.map((p) => ({
+    '@type': 'Person',
+    '@id': `${SITE_URL}/sobre/equipe-editorial#${p.slug}`,
+    name: p.name,
+    jobTitle: p.jobTitle,
+    url: `${SITE_URL}/sobre/equipe-editorial#${p.slug}`,
+    description: p.bio,
+    worksFor: {
+      '@type': 'Organization',
+      name: 'Bolsa Click',
+      url: SITE_URL,
     },
-  ],
+    knowsAbout: p.knowsAbout,
+    sameAs: ['https://www.linkedin.com/company/bolsa-click'],
+  })),
 }
 
 const breadcrumbSchema = {
@@ -125,28 +117,28 @@ export default function EquipeEditorialPage() {
         <section className="bg-white border-b border-hairline py-12 md:py-16">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="font-display text-3xl text-ink-900 mb-8">Quem escreve aqui</h2>
-            <div
-              id="mariana-fonseca"
-              className="flex items-start gap-5 bg-paper rounded-xl border border-hairline p-6"
-            >
-              <div
-                aria-hidden="true"
-                className="flex-shrink-0 w-14 h-14 rounded-full bg-bolsa-primary/10 flex items-center justify-center text-bolsa-primary font-display text-xl font-semibold"
-              >
-                MF
-              </div>
-              <div>
-                <p className="font-display text-lg text-ink-900 leading-snug">Mariana Fonseca</p>
-                <p className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink-500 mt-0.5 mb-3">
-                  Editora de Conteúdo Educacional
-                </p>
-                <p className="text-ink-700 text-sm leading-relaxed">
-                  Jornalista especializada em acesso à educação superior, financiamento estudantil e
-                  mercado de trabalho. Cobre ProUni, FIES, ENEM e bolsas em faculdades privadas há
-                  mais de oito anos. No Bolsa Click, é responsável pelos guias de carreira, análises
-                  de mensalidade e artigos sobre programas federais.
-                </p>
-              </div>
+            <div className="space-y-4">
+              {EDITORIAL_TEAM.map((persona) => (
+                <div
+                  key={persona.slug}
+                  id={persona.slug}
+                  className="flex items-start gap-5 bg-paper rounded-xl border border-hairline p-6 scroll-mt-24"
+                >
+                  <div
+                    aria-hidden="true"
+                    className="flex-shrink-0 w-14 h-14 rounded-full bg-bolsa-primary/10 flex items-center justify-center text-bolsa-primary font-display text-xl font-semibold"
+                  >
+                    {persona.initials}
+                  </div>
+                  <div>
+                    <p className="font-display text-lg text-ink-900 leading-snug">{persona.name}</p>
+                    <p className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink-500 mt-0.5 mb-3">
+                      {persona.jobTitle}
+                    </p>
+                    <p className="text-ink-700 text-sm leading-relaxed">{persona.bio}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </section>

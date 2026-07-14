@@ -68,9 +68,21 @@ export default async function PartnerLanding({
     notFound()
   }
 
-  const [courses] = await Promise.all([getInstitutionCourses(inst.name)])
+  const [courses, catalog] = await Promise.all([
+    getInstitutionCourses(inst.name),
+    // Catálogo completo do site (FeaturedCourse) pro dropdown "curso de interesse"
+    // — todos os cursos, não só os do parceiro, pra o lead escolher exatamente.
+    prisma.featuredCourse.findMany({
+      where: { isActive: true },
+      select: { name: true },
+      orderBy: { name: 'asc' },
+    }),
+  ])
   const brand = BRAND_CONTENT[partner]
   const brandColor = PARTNER_BRAND[partner] ?? DEFAULT_BRAND
+  const courseOptions = Array.from(
+    new Set(catalog.map((c) => c.name.trim()).filter(Boolean))
+  )
 
   // Top cursos com preço real (ordenados pela mensalidade com bolsa).
   const topCourses = courses
@@ -79,7 +91,6 @@ export default async function PartnerLanding({
     .filter((c) => c.name)
     .sort((a, b) => a.minPrice - b.minPrice)
     .slice(0, 6)
-  const courseNames = topCourses.map((c) => c.name)
 
   const pontosFortes = brand?.valeAPena.pontosFortes ?? [
     'Diploma reconhecido pelo MEC',
@@ -144,7 +155,7 @@ export default async function PartnerLanding({
                   Garanta sua bolsa agora
                 </span>
               </div>
-              <LeadForm partner={partner} partnerName={inst.name} courses={courseNames} accentColor={brandColor} />
+              <LeadForm partner={partner} partnerName={inst.name} courses={courseOptions} accentColor={brandColor} />
             </div>
           </div>
         </div>

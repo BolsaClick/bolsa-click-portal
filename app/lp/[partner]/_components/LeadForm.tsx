@@ -7,6 +7,7 @@ interface LeadFormProps {
   partner: string
   partnerName: string
   courses: string[]
+  accentColor?: string
 }
 
 function formatPhone(value: string): string {
@@ -19,7 +20,7 @@ function formatPhone(value: string): string {
 
 const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid']
 
-export function LeadForm({ partner, partnerName, courses }: LeadFormProps) {
+export function LeadForm({ partner, partnerName, courses, accentColor = '#023e73' }: LeadFormProps) {
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [curso, setCurso] = useState('')
@@ -134,7 +135,8 @@ export function LeadForm({ partner, partnerName, courses }: LeadFormProps) {
       <button
         type="submit"
         disabled={!canSubmit}
-        className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-bolsa-secondary text-white text-base font-semibold rounded-md hover:opacity-90 disabled:opacity-40"
+        style={{ backgroundColor: accentColor }}
+        className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 text-white text-base font-semibold rounded-md hover:opacity-90 disabled:opacity-40"
       >
         {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
         Quero minha bolsa na {partnerName}

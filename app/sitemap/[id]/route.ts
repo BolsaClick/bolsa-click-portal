@@ -5,7 +5,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { BRAZILIAN_CITIES } from '@/app/lib/constants/brazilian-cities'
-import { shouldIndexCityPage } from '@/app/lib/seo/city-page-gate'
+import { shouldIndexInstitutionCityPage } from '@/app/lib/seo/city-page-gate'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 
@@ -312,7 +312,9 @@ async function buildInstitutionsSitemap(): Promise<SitemapEntry[]> {
       return BRAZILIAN_CITIES.flatMap((city) => {
         const bestInventory = localInventory.get(`${institution.slug}|${city.slug}`)
 
-        if (!bestInventory || !shouldIndexCityPage(bestInventory.offerCount)) {
+        // Mesmo gate da página de marca (MIN_OFFERS_TO_INDEX_INSTITUTION=8) — o
+        // sitemap NÃO pode emitir URL que a página marca como noindex.
+        if (!bestInventory || !shouldIndexInstitutionCityPage(bestInventory.offerCount)) {
           return []
         }
 

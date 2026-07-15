@@ -7,8 +7,18 @@
 // Conservador: melhor perder cauda longa de baixa oferta do que arriscar
 // penalidade no domínio inteiro.
 
-/** Mínimo de ofertas locais pra considerar a página indexável. */
+/** Mínimo de ofertas locais pra considerar a página de CURSO×cidade indexável. */
 export const MIN_OFFERS_TO_INDEX = 2
+
+/**
+ * Mínimo pra página de FACULDADE×cidade (marca). Threshold mais alto que o de
+ * curso×cidade porque uma página de marca agrega VÁRIOS cursos — com poucas
+ * ofertas ela é thin (nome da marca + cidade + 2-3 cursos), enquanto a de
+ * curso×cidade já tem substância com poucas ofertas por ser específica de 1
+ * curso. Calibrado no inventário real: derruba só a cauda micro (Pitágoras/
+ * Unime com 2-3 ofertas) sem afetar Anhanguera/Estácio/Unopar (dezenas/cidade).
+ */
+export const MIN_OFFERS_TO_INDEX_INSTITUTION = 8
 
 /**
  * Decide se uma página de curso×cidade ou faculdade×cidade deve ser indexada.
@@ -31,4 +41,14 @@ export function shouldIndexCityPage(
   if ((trendScore ?? 0) >= 60 && offerCount >= 1) return true
 
   return false
+}
+
+/**
+ * Decide se uma página de FACULDADE×cidade (marca) deve ser indexada. Usa o
+ * threshold mais alto porque agrega vários cursos — ver MIN_OFFERS_TO_INDEX_INSTITUTION.
+ *
+ * @param offerCount Quantidade de ofertas LOCAIS da marca na cidade
+ */
+export function shouldIndexInstitutionCityPage(offerCount: number): boolean {
+  return offerCount >= MIN_OFFERS_TO_INDEX_INSTITUTION
 }

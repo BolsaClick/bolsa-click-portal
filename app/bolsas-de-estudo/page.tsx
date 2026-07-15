@@ -34,7 +34,10 @@ const AUTHOR = {
 export const revalidate = 86400 // 24h — conteúdo institucional muda devagar
 
 export const metadata: Metadata = {
-  title: 'Bolsas de Estudo até 80%: Compare Faculdades, Preços e Notas MEC | Bolsa Click',
+  // Sem "| Bolsa Click" aqui: o template do layout raiz (`%s | Bolsa Click`) já
+  // anexa a marca uma vez. Repetir gerava "... | Bolsa Click | Bolsa Click" (92
+  // chars, truncado no SERP). Título enxuto e front-loaded no head term.
+  title: 'Bolsas de Estudo até 80%: Compare Faculdades e Preços',
   description: `Compare bolsas de estudo de até 80% em cursos de graduação, pós e tecnólogos. ${BRAZILIAN_CITIES.length} cidades, faculdades reconhecidas pelo MEC, EAD e presencial. ProUni, FIES e bolsa própria.`,
   keywords: [
     'bolsa de estudo',

@@ -58,6 +58,8 @@ export const ComboBox = <T extends CourseOption | CityOption>({
         setInputValue(
           fieldValue.city && fieldValue.state ? `${fieldValue.city} - ${fieldValue.state}` : '',
         )
+      } else if (typeof fieldValue === 'string') {
+        setInputValue(fieldValue)
       } else if (fieldValue === null || fieldValue === undefined || fieldValue === '') {
         // Valor foi limpo externamente
         setInputValue('')
@@ -119,10 +121,9 @@ export const ComboBox = <T extends CourseOption | CityOption>({
                 value={inputValue}
                 onChange={(e) => {
                   handleInputChange(e)
-                  // A digitação invalida uma seleção anterior. Uma correspondência
-                  // exata pode ser resolvida pelo formulário no submit.
-                  field.onChange(null)
-                  // Não atualizar o field enquanto está digitando, só o inputValue
+                  // O texto visível também é o valor do formulário. Assim o submit
+                  // sempre valida exatamente o conteúdo atual do input.
+                  field.onChange(e.target.value)
                   // Manter o dropdown aberto quando há opções disponíveis
                   if (options.length > 0) {
                     setIsOpen(true)

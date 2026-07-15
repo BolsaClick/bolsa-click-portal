@@ -17,8 +17,8 @@ import { useLastSearch } from '@/app/lib/personalization/hooks'
 
 type FormValues = {
   modalidade: 'EAD' | 'PRESENCIAL' | 'SEMIPRESENCIAL'
-  course: { name: string; id: string; slug: string }
-  city: { state: string; city: string }
+  course: { name: string; id: string; slug: string } | string
+  city: { state: string; city: string } | string
   levels: 'graduacao' | 'pos' | 'profissionalizante'
 }
 
@@ -32,7 +32,6 @@ const Filter = () => {
   const { city: geoCity, state: geoState } = useGeoLocation()
   const { saveSearch } = useLastSearch()
   const [searchCity, setSearchCity] = useState('')
-  const [searchCourse, setSearchCourse] = useState('')
   const [courseError, setCourseError] = useState('')
   const [cityError, setCityError] = useState('')
   const [activeTab, setActiveTab] = useState<FormValues['levels']>(() => {
@@ -78,7 +77,6 @@ const Filter = () => {
     setValue('levels', level)
 
     setValue('course', { id: '', name: '', slug: '' })
-    setSearchCourse('')
     setCourseError('')
   }
   const { control, handleSubmit, watch, setValue } = useForm<FormValues>({
@@ -193,9 +191,13 @@ const Filter = () => {
   }
 
   const onSubmit = (data: FormValues) => {
-    let selectedCourse = data.course || { id: '', name: '', slug: '' }
-    if (!selectedCourse.name && searchCourse.trim()) {
-      const normalizedInput = normalizeOptionText(searchCourse)
+    const typedCourse = typeof data.course === 'string' ? data.course.trim() : ''
+    let selectedCourse = typeof data.course === 'object'
+      ? data.course
+      : { id: '', name: '', slug: '' }
+
+    if (!selectedCourse.name && typedCourse) {
+      const normalizedInput = normalizeOptionText(typedCourse)
       const exactMatch = courseOptions.find(
         (option) =>
           normalizeOptionText(option.name) === normalizedInput ||
@@ -207,12 +209,12 @@ const Filter = () => {
       }
     }
 
-    if (searchCourse.trim() && !selectedCourse.name) {
+    if (typedCourse && !selectedCourse.name) {
       setCourseError('Selecione um curso da lista')
       return
     }
 
-    if (!data.city?.city || !data.city?.state) {
+    if (typeof data.city !== 'object' || !data.city.city || !data.city.state) {
       setCityError('Selecione uma cidade da lista')
       return
     }
@@ -311,8 +313,7 @@ const Filter = () => {
             icon={<GraduationCap size={20} />}
             placeholder="Digite o curso"
             error={courseError}
-            onInputChange={(inputValue) => {
-              setSearchCourse(inputValue)
+            onInputChange={() => {
               if (courseError) setCourseError('')
             }}
           />

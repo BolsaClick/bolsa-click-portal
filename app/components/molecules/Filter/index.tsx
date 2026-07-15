@@ -32,6 +32,9 @@ const Filter = () => {
   const { city: geoCity, state: geoState } = useGeoLocation()
   const { saveSearch } = useLastSearch()
   const [searchCity, setSearchCity] = useState('')
+  const [searchCourse, setSearchCourse] = useState('')
+  const [courseError, setCourseError] = useState('')
+  const [cityError, setCityError] = useState('')
   const [activeTab, setActiveTab] = useState<FormValues['levels']>(() => {
     if (typeof window !== 'undefined') {
       const savedLevel = localStorage.getItem('selectedLevel')
@@ -75,6 +78,8 @@ const Filter = () => {
     setValue('levels', level)
 
     setValue('course', { id: '', name: '', slug: '' })
+    setSearchCourse('')
+    setCourseError('')
   }
   const { control, handleSubmit, watch, setValue } = useForm<FormValues>({
     defaultValues: {
@@ -162,6 +167,13 @@ const Filter = () => {
     return match ? match[1] : ''
   }
 
+  const normalizeOptionText = (value: string) =>
+    value
+      .trim()
+      .toLocaleLowerCase('pt-BR')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+
   // Converter valores do ModalitySelect para o formato esperado
   const convertModalityToAPI = (value: string): FormValues['modalidade'] => {
     const lower = value.toLowerCase()
@@ -181,11 +193,36 @@ const Filter = () => {
   }
 
   const onSubmit = (data: FormValues) => {
+    let selectedCourse = data.course || { id: '', name: '', slug: '' }
+    if (!selectedCourse.name && searchCourse.trim()) {
+      const normalizedInput = normalizeOptionText(searchCourse)
+      const exactMatch = courseOptions.find(
+        (option) =>
+          normalizeOptionText(option.name) === normalizedInput ||
+          normalizeOptionText(removeCourseSuffix(option.name)) === normalizedInput,
+      )
+      if (exactMatch) {
+        selectedCourse = exactMatch
+        setValue('course', exactMatch)
+      }
+    }
 
-    const city = data.city.city || 'São Paulo'
-    const state = data.city.state || 'SP'
+    if (searchCourse.trim() && !selectedCourse.name) {
+      setCourseError('Selecione um curso da lista')
+      return
+    }
 
-    const courseNameClean = data.course.name ? removeCourseSuffix(data.course.name) : ''
+    if (!data.city?.city || !data.city?.state) {
+      setCityError('Selecione uma cidade da lista')
+      return
+    }
+
+    setCourseError('')
+    setCityError('')
+
+    const city = data.city.city
+    const state = data.city.state
+    const courseNameClean = selectedCourse.name ? removeCourseSuffix(selectedCourse.name) : ''
 
     // Construir URL com parâmetros - 'c' sempre primeiro se existir
     const params: string[] = [];
@@ -197,8 +234,8 @@ const Filter = () => {
     
     // Adicionar apenas o sufixo do curso (Bacharelado, Licenciatura, Tecnólogo) no cn
     // Só adiciona cn se o curso tiver sufixo
-    if (data.course.name && data.course.name.trim() && hasCourseSuffix(data.course.name)) {
-      const suffix = extractCourseSuffix(data.course.name)
+    if (selectedCourse.name && selectedCourse.name.trim() && hasCourseSuffix(selectedCourse.name)) {
+      const suffix = extractCourseSuffix(selectedCourse.name)
       if (suffix) {
         params.push(`cn=${encodeURIComponent(suffix)}`);
       }
@@ -273,6 +310,11 @@ const Filter = () => {
             options={courseOptions}
             icon={<GraduationCap size={20} />}
             placeholder="Digite o curso"
+            error={courseError}
+            onInputChange={(inputValue) => {
+              setSearchCourse(inputValue)
+              if (courseError) setCourseError('')
+            }}
           />
         </div>
 
@@ -283,7 +325,11 @@ const Filter = () => {
             options={cityOptions}
             placeholder="Digite uma cidade"
             icon={<MapPin size={20} />}
-            onInputChange={(inputValue) => handleCityChange(inputValue)}
+            error={cityError}
+            onInputChange={(inputValue) => {
+              handleCityChange(inputValue)
+              if (cityError) setCityError('')
+            }}
           />
         </div>
         {showModality && (

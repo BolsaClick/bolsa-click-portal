@@ -327,7 +327,7 @@ export default function SearchResultClient() {
     [courseNameForAPI, cidade, estado, modalidade, normalizedNivel],
   )
 
-  const { data: showCourses, isLoading, isFetching } = useQuery({
+  const { data: showCourses, isLoading, isFetching, isError, refetch } = useQuery({
     queryFn: () => getShowFiltersCourses(
       courseNameForAPI,
       cidade || undefined,
@@ -655,7 +655,7 @@ const onSubmit = (data: any) => {
   // - primeira request em andamento (isLoading=true)
   // - hidratação client-side antes de useSearchParams resolver
   // O empty state só aparece quando temos uma resposta de fato com 0 itens.
-  const awaitingResults = !showCourses || isLoading
+  const awaitingResults = !isError && (!showCourses || isLoading)
 
   return (
     <div className="w-full bg-paper min-h-screen">
@@ -875,7 +875,26 @@ const onSubmit = (data: any) => {
               </div>
             )}
 
-            {awaitingResults ? (
+            {isError ? (
+              <div className="bg-white border border-hairline rounded-2xl p-8 md:p-10 text-center">
+                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-red-500">
+                  Erro na busca
+                </span>
+                <h2 className="font-display text-xl md:text-2xl text-ink-900 mt-2">
+                  Não foi possível carregar as ofertas
+                </h2>
+                <p className="text-ink-500 text-[14px] mt-2 mb-6">
+                  Seus filtros foram preservados. Tente novamente.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void refetch()}
+                  className="inline-flex items-center justify-center px-6 py-3 bg-bolsa-secondary text-white font-semibold rounded-full text-[14px] hover:bg-bolsa-secondary/90 transition-colors"
+                >
+                  Tentar novamente
+                </button>
+              </div>
+            ) : awaitingResults ? (
               <div
                 className={`grid ${
                   viewMode === 'grid'

@@ -8,6 +8,8 @@ interface LeadFormProps {
   partnerName: string
   courses: string[]
   accentColor?: string
+  /** Curso pré-selecionado (landing de curso). Deve existir em `courses`. */
+  defaultCurso?: string
 }
 
 function formatPhone(value: string): string {
@@ -20,10 +22,10 @@ function formatPhone(value: string): string {
 
 const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid']
 
-export function LeadForm({ partner, partnerName, courses, accentColor = '#023e73' }: LeadFormProps) {
+export function LeadForm({ partner, partnerName, courses, accentColor = '#023e73', defaultCurso = '' }: LeadFormProps) {
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
-  const [curso, setCurso] = useState('')
+  const [curso, setCurso] = useState(defaultCurso)
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
   const [utm, setUtm] = useState<Record<string, string>>({})

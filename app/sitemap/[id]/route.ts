@@ -112,6 +112,7 @@ function buildStaticSitemap(): SitemapEntry[] {
     { loc: `${SITE_URL}/carreiras`, lastmod: now, changefreq: 'weekly', priority: 0.9 },
     { loc: `${SITE_URL}/teste-vocacional`, lastmod: now, changefreq: 'monthly', priority: 0.85 },
     { loc: `${SITE_URL}/simulador-de-bolsa`, lastmod: now, changefreq: 'monthly', priority: 0.9 },
+    { loc: `${SITE_URL}/descubra-sua-bolsa`, lastmod: now, changefreq: 'monthly', priority: 0.9 },
     { loc: `${SITE_URL}/enem`, lastmod: now, changefreq: 'monthly', priority: 0.85 },
     { loc: `${SITE_URL}/prouni`, lastmod: now, changefreq: 'monthly', priority: 0.85 },
     { loc: `${SITE_URL}/sisu`, lastmod: now, changefreq: 'monthly', priority: 0.85 },

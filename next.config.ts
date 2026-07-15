@@ -185,10 +185,17 @@ const nextConfig: NextConfig = {
       ['cst-em-mecatronica-industrial', 'mecatronica-industrial-tecnologo'],
       ['cst-em-automacao-industrial', 'automacao-industrial-tecnologo'],
     ]
-    return courseDupes.flatMap(([from, to]) => [
-      { source: `/cursos/${from}`, destination: `/cursos/${to}`, permanent: true },
-      { source: `/carreiras/${from}`, destination: `/carreiras/${to}`, permanent: true },
-    ])
+    return [
+      ...courseDupes.flatMap(([from, to]) => [
+        { source: `/cursos/${from}`, destination: `/cursos/${to}`, permanent: true },
+        { source: `/carreiras/${from}`, destination: `/carreiras/${to}`, permanent: true },
+      ]),
+      // URL "natural" que não existe (a central de ajuda é /central-de-ajuda).
+      // 301 pra não devolver 404 a backlink externo/citação que chute esse path
+      // (a auditoria GEO flagou o /perguntas-frequentes → 404).
+      { source: '/perguntas-frequentes', destination: '/central-de-ajuda', permanent: true },
+      { source: '/faq/perguntas-frequentes', destination: '/central-de-ajuda', permanent: true },
+    ]
   },
   // This is required to support PostHog trailing slash API requests
   skipTrailingSlashRedirect: true,

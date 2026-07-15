@@ -22,6 +22,8 @@ import { PrismaClient } from '@prisma/client'
 import axios from 'axios'
 import { BRAZILIAN_CITIES } from '../app/lib/constants/brazilian-cities'
 import { normalizeBrand } from '../app/lib/utils/brand'
+import { pingIndexNow } from '../app/lib/seo/indexnow'
+import { MIN_OFFERS_TO_INDEX_INSTITUTION } from '../app/lib/seo/city-page-gate'
 import { searchAthenaOffers, normalizeAthenaOffer } from '../app/lib/api/athena-offers'
 import { TOP_CURSOS } from '../app/cursos/_data/cursos'
 
@@ -144,6 +146,11 @@ async function main() {
 
   let upserts = 0
   const brandTotals = new Map<string, number>() // slug → nº de cidades com >=1 oferta
+  // URLs de marca×cidade que ficaram indexáveis (offerCount ≥ threshold) — pra
+  // pingar o IndexNow no fim (Bing/Yandex + AI Overviews descobrem sem esperar o
+  // crawl do sitemap). Fecha o gap do audit: antes só blog/help pingavam.
+  const SITE_URL = 'https://www.bolsaclick.com.br'
+  const indexableUrls: string[] = []
 
   await pMap(
     cities,
@@ -178,6 +185,9 @@ async function main() {
           update: { offerCount: agg.count, minPrice: agg.min, fetchedAt: new Date() },
         })
         upserts++
+        if (agg.count >= MIN_OFFERS_TO_INDEX_INSTITUTION) {
+          indexableUrls.push(`${SITE_URL}/faculdades/${slug}/em/${city.slug}`)
+        }
       }
     },
     CONCURRENCY
@@ -188,6 +198,22 @@ async function main() {
     console.log(`  ${slug}: ${n} cidades`)
   }
   console.log(`\n${DRY_RUN ? '(dry-run, nada escrito)' : `upserts: ${upserts}`}`)
+
+  // Ping IndexNow (best-effort) das city pages de marca indexáveis. Em lotes de
+  // 1.000 pra resposta rápida. Nunca derruba o job (só loga).
+  if (!DRY_RUN && indexableUrls.length > 0) {
+    console.log(`\n─── IndexNow: pingando ${indexableUrls.length} city pages indexáveis ───`)
+    for (let i = 0; i < indexableUrls.length; i += 1000) {
+      const batch = indexableUrls.slice(i, i + 1000)
+      try {
+        const r = await pingIndexNow(batch)
+        console.log(`  lote ${i / 1000 + 1}: ${batch.length} URLs → status ${r.status} (${r.ok ? 'ok' : 'falhou'})`)
+      } catch (e) {
+        console.error(`  lote ${i / 1000 + 1}: erro`, e instanceof Error ? e.message : e)
+      }
+    }
+  }
+
   await prisma.$disconnect()
 }
 

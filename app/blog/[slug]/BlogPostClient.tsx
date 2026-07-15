@@ -15,6 +15,7 @@ import {
 import ReadingProgress from '@/app/components/atoms/ReadingProgress'
 import TableOfContents, { TocItem } from '@/app/components/atoms/TableOfContents'
 import ShareButtons from '@/app/components/atoms/ShareButtons'
+import { getPersona, EDITORIAL_TEAM_ORG } from '@/app/lib/blog/editorial-team'
 
 interface BlogPost {
   id: string
@@ -227,25 +228,42 @@ export default function BlogPostClient({
               <ShareButtons url={postUrl} title={post.title} />
             </div>
 
-            {/* Author */}
-            <aside className="mt-10 bg-paper-warm border border-hairline rounded-2xl p-6 md:p-7">
-              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 inline-flex items-center gap-2 mb-4">
-                <span className="h-px w-6 bg-ink-300" />
-                Sobre o autor
-              </span>
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-ink-900 text-white flex items-center justify-center font-display text-[20px] font-semibold flex-shrink-0">
-                  {post.author.charAt(0)}
-                </div>
-                <div className="min-w-0">
-                  <p className="font-display text-lg text-ink-900 leading-tight">{post.author}</p>
-                  <p className="text-[13px] text-ink-500 mt-1.5 leading-relaxed">
-                    Equipe de conteúdo do Bolsa Click. Especialistas em educação superior e bolsas
-                    de estudo no Brasil.
-                  </p>
-                </div>
-              </div>
-            </aside>
+            {/* Author — bio real da persona (registry editorial); byline não
+                mapeada cai na bio do time. Link pra âncora da página de equipe
+                reforça o sinal E-E-A-T. */}
+            {(() => {
+              const persona = getPersona(post.author)
+              const jobTitle = persona?.jobTitle ?? EDITORIAL_TEAM_ORG.jobTitle
+              const bio = persona?.bio ?? EDITORIAL_TEAM_ORG.bio
+              const anchor = persona?.slug ?? EDITORIAL_TEAM_ORG.slug
+              const initials = persona?.initials ?? post.author.charAt(0)
+              return (
+                <aside className="mt-10 bg-paper-warm border border-hairline rounded-2xl p-6 md:p-7">
+                  <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 inline-flex items-center gap-2 mb-4">
+                    <span className="h-px w-6 bg-ink-300" />
+                    Sobre o autor
+                  </span>
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-full bg-ink-900 text-white flex items-center justify-center font-display text-[18px] font-semibold flex-shrink-0">
+                      {initials}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-display text-lg text-ink-900 leading-tight">{post.author}</p>
+                      <p className="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-500 mt-1">
+                        {jobTitle}
+                      </p>
+                      <p className="text-[13px] text-ink-500 mt-2 leading-relaxed">{bio}</p>
+                      <Link
+                        href={`/sobre/equipe-editorial#${anchor}`}
+                        className="inline-block text-[12px] text-bolsa-secondary hover:underline mt-2"
+                      >
+                        Conheça a equipe editorial →
+                      </Link>
+                    </div>
+                  </div>
+                </aside>
+              )
+            })()}
           </article>
 
           {/* SIDEBAR */}

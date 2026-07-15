@@ -28,9 +28,12 @@ function stripHtml(html: string): string {
 }
 
 // Regex pra detectar uma headline de seção FAQ (case-insensitive, com
-// variações comuns em pt-BR).
+// variações comuns em pt-BR). Aceita texto ao redor da keyword — os posts usam
+// títulos como "Perguntas Frequentes sobre o ProUni 2026", então NÃO exigimos
+// que a keyword seja o heading inteiro (o `\s*</h>` antigo derrubava esses e o
+// FAQPage schema nunca era emitido).
 const FAQ_HEADING_RE =
-  /<h([23])[^>]*>\s*(?:perguntas\s+frequentes|faq|d[uú]vidas\s+frequentes|principais\s+d[uú]vidas)\s*<\/h\1>/i
+  /<h([23])[^>]*>[^<]*(?:perguntas\s+frequentes|faq|d[uú]vidas\s+frequentes|principais\s+d[uú]vidas)[^<]*<\/h\1>/i
 
 export function extractFaqFromHtml(html: string): FaqItem[] {
   if (!html) return []

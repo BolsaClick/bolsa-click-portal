@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { BRAZILIAN_CITIES } from '@/app/lib/constants/brazilian-cities'
 import { shouldIndexInstitutionCityPage } from '@/app/lib/seo/city-page-gate'
+import { isOffTopicNoindex } from '@/app/lib/blog/noindex-slugs'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 
@@ -381,12 +382,16 @@ async function buildEditorialSitemap(): Promise<SitemapEntry[]> {
       `[sitemap:editorial] ${blogPosts.length} posts, ${blogCategories.length} cats, ${helpArticles.length} ajuda, ${vocacionalCourses.length} vocacional`
     )
     return [
-      ...blogPosts.map(({ slug, updatedAt }) => ({
-        loc: `${SITE_URL}/blog/${slug}`,
-        lastmod: updatedAt.toISOString(),
-        changefreq: 'weekly' as const,
-        priority: 0.8,
-      })),
+      // Posts off-topic marcados noindex não entram no sitemap (coerência com o
+      // robots da página — sitemap nunca deve listar URL noindex).
+      ...blogPosts
+        .filter(({ slug }) => !isOffTopicNoindex(slug))
+        .map(({ slug, updatedAt }) => ({
+          loc: `${SITE_URL}/blog/${slug}`,
+          lastmod: updatedAt.toISOString(),
+          changefreq: 'weekly' as const,
+          priority: 0.8,
+        })),
       ...blogCategories.map(({ slug, updatedAt }) => ({
         loc: `${SITE_URL}/blog/categoria/${slug}`,
         lastmod: updatedAt.toISOString(),

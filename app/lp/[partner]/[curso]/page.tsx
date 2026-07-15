@@ -3,7 +3,10 @@ import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { CheckCircle2, ShieldCheck, Clock, Star } from 'lucide-react'
 import { prisma } from '@/app/lib/prisma'
-import { getInstitutionCourses } from '@/app/lib/api/get-institution-courses'
+import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
+import { searchAthenaOffers, normalizeAthenaOffer } from '@/app/lib/api/athena-offers'
+import { normalizeBrand } from '@/app/lib/utils/brand'
+import type { Course } from '@/app/interface/course'
 import { BRAND_CONTENT } from '@/app/faculdades/[slug]/_data/brand-content'
 import { LeadForm } from '../_components/LeadForm'
 import { isPartner, brandColorFor } from '../../_shared/partners'
@@ -31,7 +34,7 @@ const getInstitution = (slug: string) => prisma.institution.findUnique({ where: 
 const getCourse = (slug: string) =>
   prisma.featuredCourse.findFirst({
     where: { slug, isActive: true },
-    select: { name: true, fullName: true, apiCourseName: true },
+    select: { name: true, fullName: true, apiCourseName: true, nivel: true },
   })
 
 function formatBRL(v: number): string {
@@ -43,14 +46,27 @@ function formatBRL(v: number): string {
   })
 }
 
-/** Menor mensalidade da oferta do parceiro pro curso alvo (0 = sem preço). */
-function partnerCoursePrice(courses: { name?: string; minPrice?: number }[], apiCourseName: string): number {
-  const target = normalize(apiCourseName)
-  const matches = courses.filter((c) => {
-    const n = normalize(String(c.name ?? ''))
-    return n === target || n.startsWith(`${target} `) || n.startsWith(`${target}-`) || n.includes(target)
-  })
-  const prices = matches.map((c) => Number(c.minPrice ?? 0)).filter((p) => p > 0)
+/**
+ * Menor mensalidade DAQUELE parceiro pro curso alvo (0 = sem preço).
+ * Consulta a API viva por curso (não só o TOP_CURSOS) pra cobrir os 177 cursos
+ * do catálogo, e filtra estritamente pela marca — a landing NUNCA mostra oferta
+ * de outra faculdade. Tartarus (Cogna) + Athena (Estácio/YDUQS); a Athena é
+ * buscada server-side à parte porque getShowFiltersCourses a pula fora do browser.
+ */
+async function fetchBrandCoursePrice(brandName: string, apiCourseName: string, nivel: string): Promise<number> {
+  const brandKey = normalizeBrand(brandName)
+  const [tartarus, athena] = await Promise.all([
+    getShowFiltersCourses(apiCourseName, undefined, undefined, undefined, nivel, 1, 60)
+      .then((res) => (res?.data || []) as Course[])
+      .catch(() => [] as Course[]),
+    searchAthenaOffers({ courseName: apiCourseName, academicLevel: nivel })
+      .then((list) => list.map(normalizeAthenaOffer) as Course[])
+      .catch(() => [] as Course[]),
+  ])
+  const prices = [...tartarus, ...athena]
+    .filter((o) => normalizeBrand(o.brand) === brandKey)
+    .map((o) => Number(o.minPrice ?? 0))
+    .filter((p) => p > 0)
   return prices.length ? Math.min(...prices) : 0
 }
 
@@ -72,17 +88,17 @@ export default async function PartnerCourseLanding({ params }: Props) {
   const [inst, course] = await Promise.all([getInstitution(partner), getCourse(curso)])
   if (!inst || !inst.isActive || !course) notFound()
 
-  const [offers, catalog] = await Promise.all([
-    getInstitutionCourses(inst.name),
+  const [catalog, minPrice] = await Promise.all([
     prisma.featuredCourse.findMany({
       where: { isActive: true },
       select: { name: true },
       orderBy: { name: 'asc' },
     }),
+    // Preço real DAQUELE parceiro pro curso (filtrado por marca) — API viva.
+    fetchBrandCoursePrice(inst.name, course.apiCourseName, course.nivel),
   ])
 
   const brandColor = brandColorFor(partner)
-  const minPrice = partnerCoursePrice(offers, course.apiCourseName)
   const courseOptions = Array.from(new Set(catalog.map((c) => c.name.trim()).filter(Boolean)))
   // Garante que o curso da landing esteja no dropdown (pré-selecionado).
   if (!courseOptions.some((c) => normalize(c) === normalize(course.name))) {

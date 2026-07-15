@@ -23,7 +23,6 @@ import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { normalizeAcademicLevel } from '@/app/lib/academic-level'
 import { titleCasePtBr } from '@/app/lib/utils/title-case'
 import { normalizeBrand } from '@/app/lib/utils/brand'
-import { enrichCourseWithMockData } from '@/app/lib/mock-course-data'
 
 import CourseCardNew from '@/app/components/CourseCardNew';
 import FiltersPanel from './FiltersPanel';
@@ -497,12 +496,7 @@ export default function SearchResultClient() {
     });
   }, [filteredByBrand, filters.montlyFeeToMin]);
 
-  // Enriquecer cursos com dados mockados pra testar redesign
-  const enrichedCourses = useMemo(() => {
-    return enrichCourseWithMockData(filteredByPrice as Course[]);
-  }, [filteredByPrice]);
-
-  const paginatedCourses = enrichedCourses.slice(
+  const paginatedCourses = filteredByPrice.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -528,7 +522,7 @@ export default function SearchResultClient() {
       seen.add(key)
       return true
     }).slice(0, 6)
-    return enrichCourseWithMockData(filtered as Course[])
+    return filtered as Course[]
   }, [fallbackData, modalidade])
 
 
@@ -1138,4 +1132,3 @@ const onSubmit = (data: any) => {
     </div>
   )
 }
-

@@ -58,21 +58,11 @@ else return <CourseCardOriginal />
 - Compare: course_selected em ambas versões
 - Breakdown by design_version no PostHog
 
-### **4. Dados mockados pra testar**
-📄 `app/lib/mock-course-data.ts`
+### **4. Dados reais nos cards**
 
-```typescript
-enrichCourseWithMockData(courses) → {
-  mecScore: 3.5-4.8
-  enrolledCount: 500-5000
-  discount: 0-80%
-  availableSpots: 5-20 ou null
-}
-```
-
-Integrado em:
-- `SearchResultClient.tsx` → `paginatedCourses`
-- `SearchResultClient.tsx` → `fallbackCourses`
+Os cards usam os preços retornados pela API de busca. O desconto é derivado de
+`minPrice` e `maxPrice`; avaliações, notas MEC e disponibilidade só aparecem
+quando existirem na resposta real.
 
 ### **5. Documentação**
 📄 `docs/REDESIGN_COURSE_CARD_AB_TEST.md`
@@ -185,10 +175,6 @@ Se subir <5% = iterar design
 - Feature flag não foi ativada no PostHog
 - useFeatureFlags() pode estar retornando undefined
 - Verificar: console > `featureFlags` object
-
-**Mock data não aparece?**
-- Verificar `enrichCourseWithMockData` está sendo chamado
-- Debug: adicionar `console.log(enrichedCourses)` em SearchResultClient
 
 ---
 

@@ -133,49 +133,26 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
     return '/assets/logo-bolsa-click-rosa.png'
   }
 
-  const originalPrice = course.minPrice && course.discount
-    ? Math.round(course.minPrice / (1 - course.discount / 100))
-    : null
-
-  const savings = originalPrice && course.minPrice
-    ? Math.round(originalPrice - course.minPrice)
+  const hasDiscount = Boolean(
+    course.minPrice > 0 &&
+    typeof course.maxPrice === 'number' &&
+    course.maxPrice > course.minPrice
+  )
+  const discountPercentage = hasDiscount
+    ? Math.round((1 - course.minPrice / course.maxPrice!) * 100)
     : 0
-
-  const hasDiscount = typeof course.discount === 'number' && course.discount >= 30
-  const hasLowSpots = typeof course.availableSpots === 'number' && course.availableSpots > 0 && course.availableSpots < 10
-
-  // Rotação determinística por courseId: varia qual sinal de urgência mostrar
-  // Par → mostra desconto se tiver; ímpar → mostra vagas se tiver
-  const courseIdNum = typeof course.id === 'number' ? course.id : parseInt(String(course.id || 0), 10)
-  const preferDiscount = courseIdNum % 2 === 0
-  const urgencyType = hasDiscount && (preferDiscount || !hasLowSpots)
-    ? 'discount'
-    : hasLowSpots && (!preferDiscount || !hasDiscount)
-    ? 'spots'
-    : hasDiscount
-    ? 'discount'
-    : hasLowSpots
-    ? 'spots'
-    : null
 
   return (
     <article className="group relative bg-white rounded-2xl overflow-hidden flex flex-col h-full border border-ink-100 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(11,31,60,0.12)] hover:-translate-y-0.5">
 
-      {/* TOPO: urgência — uma única faixa, estilo varia pelo tipo */}
-      {urgencyType === 'discount' && (
+      {/* TOPO: desconto calculado exclusivamente com preços retornados pela API */}
+      {hasDiscount && (
         <div className="px-5 py-2 bg-emerald-50 border-b border-emerald-100 flex items-center gap-2">
           <span className="inline-block bg-emerald-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-            {course.discount}% OFF
+            -{discountPercentage}%
           </span>
           <span className="text-xs text-emerald-700 font-medium">
-            Economize R$&nbsp;{savings.toLocaleString('pt-BR')}
-          </span>
-        </div>
-      )}
-      {urgencyType === 'spots' && (
-        <div className="px-5 py-2 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
-          <span className="text-xs text-amber-700 font-semibold">
-            ⚠ Apenas {course.availableSpots} vagas restantes
+            Desconto real na mensalidade
           </span>
         </div>
       )}
@@ -292,10 +269,12 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
 
       {/* RODAPÉ: preço + CTA */}
       <div className="px-5 pb-5 pt-4 border-t border-ink-100">
-        {/* Preço riscado — só renderiza se há desconto E preço original calculado */}
-        {hasDiscount && originalPrice && originalPrice > 0 && (
-          <p className="text-xs text-ink-300 line-through mb-0.5">
-            R$ {originalPrice.toLocaleString('pt-BR')}
+        {/* Comparativo usa apenas os preços real e cheio retornados pela API */}
+        {hasDiscount && (
+          <p className="text-xs text-ink-500 mb-1">
+            De {course.maxPrice!.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}{' '}
+            por {course.minPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}{' '}
+            · -{discountPercentage}%
           </p>
         )}
 

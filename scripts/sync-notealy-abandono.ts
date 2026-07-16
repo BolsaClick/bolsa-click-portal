@@ -23,6 +23,8 @@
  *   node --env-file=.env tsx scripts/sync-notealy-abandono.ts --apply    # + taggeia no Notealy
  */
 import { writeFileSync } from 'fs'
+import { tmpdir } from 'os'
+import { join } from 'path'
 
 const APPLY = process.argv.includes('--apply')
 
@@ -36,7 +38,8 @@ const NOTEALY_API_TOKEN = process.env.NOTEALY_API_TOKEN
 const NOTEALY_TAG_ABANDONO = process.env.NOTEALY_TAG_ABANDONO
 
 const SITE = 'https://www.bolsaclick.com.br'
-const OUT = '/private/tmp/claude-501/-Users-rodrigosilverio-Code-bolsa-click-portal/scratchpad/retargeting-abandono-checkout.csv'
+// CSV vai pro tmp do sistema (contém PII → fora do repo). Sobrescreva com RETARGETING_OUT.
+const OUT = process.env.RETARGETING_OUT || join(tmpdir(), 'retargeting-abandono-checkout.csv')
 
 interface PostHogPerson {
   properties?: { email?: string; phone?: string; name?: string }

@@ -18,9 +18,23 @@ type Props = {
 
 export const revalidate = 86400
 
-// On-demand ISR — não pré-gera as 100 cidades no build pra não martelar a API.
+const CAPITAL_SLUGS = new Set([
+  'sao-paulo', 'rio-de-janeiro', 'brasilia', 'fortaleza', 'salvador',
+  'belo-horizonte', 'manaus', 'curitiba', 'recife', 'goiania', 'belem',
+  'porto-alegre', 'sao-luis', 'maceio', 'campo-grande', 'natal', 'teresina',
+  'joao-pessoa', 'aracaju', 'cuiaba', 'florianopolis', 'vitoria',
+  'porto-velho', 'macapa', 'rio-branco', 'boa-vista', 'palmas',
+])
+
+// Pré-renderiza as 30 maiores cidades (a constante já é ordenada por
+// população/relevância) e todas as capitais. O restante continua em ISR
+// on-demand, limitando o volume de chamadas externas durante o build.
 export async function generateStaticParams() {
-  return []
+  const largestCitySlugs = new Set(BRAZILIAN_CITIES.slice(0, 30).map(({ slug }) => slug))
+
+  return BRAZILIAN_CITIES
+    .filter(({ slug }) => CAPITAL_SLUGS.has(slug) || largestCitySlugs.has(slug))
+    .map(({ slug }) => ({ city: slug }))
 }
 
 function normalize(text: string): string {

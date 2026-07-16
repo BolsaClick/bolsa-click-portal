@@ -19,6 +19,7 @@ interface ProgramHubProps {
   datePublished: string
   dateModified: string
   children: ReactNode
+  sources?: ReactNode
 }
 
 export function ProgramHub({
@@ -31,6 +32,7 @@ export function ProgramHub({
   datePublished,
   dateModified,
   children,
+  sources,
 }: ProgramHubProps) {
   const pageUrl = `${SITE_URL}/${slug}`
 
@@ -116,6 +118,8 @@ export function ProgramHub({
           {children}
         </div>
       </article>
+
+      {sources}
 
       <VisibleFaq
         items={faqItems}

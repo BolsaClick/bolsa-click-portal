@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import { FontesConsultadas } from '@/app/components/seo/FontesConsultadas'
 import { ProgramHub } from '../_components/ProgramHub'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
@@ -82,6 +83,27 @@ export default function ProuniPage() {
       datePublished={DATA_PUBLISHED}
       dateModified={DATA_MODIFIED}
       faqItems={faqItems}
+      sources={
+        <FontesConsultadas
+          fontes={[
+            {
+              label: 'ProUni — MEC',
+              url: 'https://www.gov.br/mec/pt-br/assuntos/prouni',
+              descricao: 'página oficial do Programa Universidade para Todos, com regras e orientações.',
+              linkLabel: 'gov.br/mec/prouni',
+            },
+            {
+              label: 'Lei nº 11.096/2005',
+              url: 'https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2005/lei/l11096.htm',
+              descricao: 'lei que institui o ProUni e define seus critérios.',
+              linkLabel: 'planalto.gov.br',
+            },
+          ]}
+          introducao="Este guia se baseia em fontes oficiais do Governo Federal e na legislação do programa."
+          dateTime={DATA_MODIFIED}
+          dateLabel="15 de maio de 2026"
+        />
+      }
     >
       <h2>O que é o PROUNI</h2>
       <p>

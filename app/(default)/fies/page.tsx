@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import { FontesConsultadas } from '@/app/components/seo/FontesConsultadas'
 import { ProgramHub } from '../_components/ProgramHub'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
@@ -82,6 +83,27 @@ export default function FiesPage() {
       datePublished={DATA_PUBLISHED}
       dateModified={DATA_MODIFIED}
       faqItems={faqItems}
+      sources={
+        <FontesConsultadas
+          fontes={[
+            {
+              label: 'FIES — MEC',
+              url: 'https://fies.mec.gov.br',
+              descricao: 'portal oficial do Fundo de Financiamento Estudantil.',
+              linkLabel: 'fies.mec.gov.br',
+            },
+            {
+              label: 'FIES — FNDE',
+              url: 'https://www.gov.br/fnde/pt-br/acesso-a-informacao/acoes-e-programas/financiamento/fies',
+              descricao: 'informações oficiais sobre a operação e as regras do financiamento.',
+              linkLabel: 'gov.br/fnde/fies',
+            },
+          ]}
+          introducao="Este guia se baseia em fontes oficiais do Governo Federal sobre o financiamento estudantil."
+          dateTime={DATA_MODIFIED}
+          dateLabel="15 de maio de 2026"
+        />
+      }
     >
       <h2>O que é o FIES</h2>
       <p>

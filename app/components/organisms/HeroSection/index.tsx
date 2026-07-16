@@ -1,7 +1,6 @@
 import { prisma } from '@/app/lib/prisma'
 import HeroBannerSlider from './HeroBannerSlider'
 import Filter from '@/app/components/molecules/Filter'
-import Mascot from '@/app/components/v2/mascot/Mascot'
 
 const Hero = async () => {
   let banners: { id: string; title: string; subtitle: string | null; imageUrl: string; linkUrl: string | null }[] = []
@@ -51,15 +50,6 @@ const Hero = async () => {
               className="absolute -bottom-32 -left-24 w-[28rem] h-[28rem] rounded-full bg-blue-400/15 blur-3xl"
             />
           </>
-        )}
-        {/* Bob dando boas-vindas (decorativo) — docs/MASCOTES.md */}
-        {!hasBanners && (
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute bottom-0 right-[4%] hidden lg:block"
-          >
-            <Mascot pose="acenando" size={150} priority />
-          </div>
         )}
         <div className={hasBanners ? 'container mx-auto px-4 relative' : 'container mx-auto px-4 py-16 md:py-24 relative'}>
           <div className="max-w-3xl mx-auto text-center flex flex-col items-center">

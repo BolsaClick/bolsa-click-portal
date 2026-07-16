@@ -20,6 +20,7 @@ import {
 } from '@/app/components/v2/home/featured-offers'
 import HeroSearch from '@/app/components/v2/home/HeroSearch'
 import Mascot from '@/app/components/v2/mascot/Mascot'
+import { courseAreaPose } from '@/app/components/v2/mascot/course-area'
 import ReactiveCta, { reactiveClasses } from '@/app/components/v2/ui/ReactiveCta'
 import HeaderNew from '@/app/components/molecules/Header/New'
 import Footer from '@/app/components/molecules/Footer'
@@ -312,7 +313,7 @@ export default async function HomeV3PreviewPage() {
                   href={`/curso/resultado?courseName=${encodeURIComponent(category.query)}&academicLevel=GRADUACAO`}
                   className={`flex min-h-[48px] items-center gap-2.5 rounded-xl border border-ink-100 bg-white px-4 text-[14px] font-semibold text-ink-900 hover:border-bolsa-primary hover:text-bolsa-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bolsa-primary ${reactiveClasses.soft}`}
                 >
-                  <category.icon size={18} className="text-bolsa-primary" aria-hidden />
+                  <Mascot pose={courseAreaPose(category.query)} size={34} className="-my-1" />
                   {category.name}
                 </a>
               </li>

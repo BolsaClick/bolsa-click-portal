@@ -22,3 +22,20 @@ O mascote oficial do Bolsa Click é o **Bob** — a capivara estudante (claymati
 4. **Peek de botão** (`ReactiveCta`): todo CTA primary tem a capivara comemorando espiando por trás no hover/foco — ≤240ms, decorativa, respeita `prefers-reduced-motion` (não aparece).
 5. **Acessibilidade**: `alt=""` quando decorativo ao lado de texto; alt descritivo quando for o único conteúdo visual.
 6. **Poses novas**: gerar a partir da folha de referência original mantendo personagem, roupa navy e a marca "+" no peito; recortar com o pipeline de componentes conexos (ver scripts da sessão 2026-07-15) para preservar sombras translúcidas.
+
+## Bob por profissão (área de curso)
+
+Set gerado 2026-07-16 na conversa oficial "Bob o Mascote" (ChatGPT, projeto Bolsa Click) com transparência nativa. Mapa área→pose para páginas de curso, hubs e chips de categoria:
+
+| Asset | Área/cursos |
+|---|---|
+| `bob-medico` | Medicina, biomedicina, saúde em geral |
+| `bob-enfermeiro` | Enfermagem, técnico de enfermagem |
+| `bob-advogado` | Direito |
+| `bob-engenheiro` | Engenharias, arquitetura |
+| `bob-psicologo` | Psicologia |
+| `bob-pedagogo` | Pedagogia, licenciaturas |
+| `bob-dentista` | Odontologia |
+| `bob-chef` | Gastronomia, nutrição |
+
+Para novas áreas: gerar na MESMA conversa "Bob o Mascote" pedindo fundo transparente e sem textos; baixar e fatiar com o pipeline de componentes conexos.

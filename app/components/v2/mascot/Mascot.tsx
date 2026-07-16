@@ -24,6 +24,9 @@ export type MascotPose =
   | 'headset-notebook' | 'notebook-casual' | 'gamer' | 'programando'
   | 'digitando' | 'ia' | 'chat' | 'headset' | 'smartphone' | 'smartwatch'
   | 'tablet-sofa'
+  // profissões (Bob por área de curso — medicina, direito, engenharias...)
+  | 'medico' | 'enfermeiro' | 'advogado' | 'engenheiro' | 'psicologo'
+  | 'pedagogo' | 'dentista' | 'chef'
 
 export function mascotSrc(pose: MascotPose): string {
   return `/assets/mascote/3d/bob-${pose}.png`

@@ -12,6 +12,8 @@ import Image from 'next/image'
 import type { CourseOffer } from '@/app/components/v2/course-offer'
 import BlogTeaser, { type BlogTeaserPost } from '@/app/components/v2/home/BlogTeaser'
 import CourseShelf from '@/app/components/v2/home/CourseShelf'
+import GeoShelf from '@/app/components/v2/home/GeoShelf'
+import RelatedShelf from '@/app/components/v2/home/RelatedShelf'
 import {
   SAMPLE_FEATURED_OFFERS,
   toCourseOffer,
@@ -230,11 +232,12 @@ async function loadBlogPosts(): Promise<BlogTeaserPost[]> {
 }
 
 export default async function HomeV3PreviewPage() {
-  const [popularRaw, eadRaw, presencialSp, blogPosts] = await Promise.all([
+  // A prateleira presencial agora é client-side (GeoShelf, geolocalização por
+  // IP); só as vitrines genéricas continuam server-side.
+  const [popularRaw, eadRaw, blogPosts] = await Promise.all([
     // "Mais procurados": com cidade a API usa o endpoint real /offers/most-searched
     loadShelf({ city: 'SAO PAULO', state: 'SP' }),
     loadShelf({ modality: 'EAD' }),
-    loadShelf({ modality: 'PRESENCIAL', city: 'SAO PAULO', state: 'SP' }),
     loadBlogPosts(),
   ])
 
@@ -329,6 +332,10 @@ export default async function HomeV3PreviewPage() {
 
       {/* ===== Prateleiras (vitrine de produto) ===== */}
       <div className="pt-4">
+        {/* Personalizada: última busca salva (LGPD-gated; sem consentimento/
+            busca, não renderiza nada — quem volta vê primeiro o que procurava) */}
+        <RelatedShelf cardHref={DEMO_CARD_HREF} />
+
         <CourseShelf
           headingId="shelf-populares"
           eyebrow="Vitrine"
@@ -375,15 +382,9 @@ export default async function HomeV3PreviewPage() {
           cardHref={DEMO_CARD_HREF}
         />
 
-        <CourseShelf
-          headingId="shelf-presencial"
-          eyebrow="Perto de você"
-          title="Presencial em São Paulo"
-          subtitle="Campi com turnos de manhã e noite — escolha o turno no card."
-          offers={presencialSp}
-          cardHref={DEMO_CARD_HREF}
-          emptyMessage="Nenhuma oferta presencial carregada neste preview — no site real, esta prateleira usa a cidade do visitante."
-        />
+        {/* Personalizada: geolocalização por IP (skeleton → cidade do
+            visitante → fallback honesto São Paulo → erro c/ mascote) */}
+        <GeoShelf cardHref={DEMO_CARD_HREF} />
 
         {(!popularLive || !eadLive) && (
           <p className="mx-auto w-full max-w-screen-lg px-4 pb-4 font-mono text-[11px] uppercase tracking-[0.1em] text-ink-300 sm:px-6 lg:px-8">

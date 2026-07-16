@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti'
 import { useEffect, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { CheckCircle2, ExternalLink } from 'lucide-react'
+import Mascot from '@/app/components/v2/mascot/Mascot'
 import { formatCurrency } from '@/utils/fomartCurrency'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { trackTikTokDual } from '@/app/lib/analytics/ttq'
@@ -123,8 +124,8 @@ export default function MatriculaSuccessClient() {
         {/* Header */}
         <div className="p-6 border-b border-gray-200 text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center shadow-green-glow animate-scale-in">
-              <CheckCircle2 className="w-14 h-14 text-green-600" />
+            <div className="animate-scale-in">
+              <Mascot pose="comemorando" size={120} alt="Bob, o mascote do Bolsa Click, comemorando" />
             </div>
           </div>
           <h2 className="text-2xl font-bold text-gray-800 animate-fade-in">

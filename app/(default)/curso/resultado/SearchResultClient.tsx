@@ -2,6 +2,7 @@
 
 'use client'
 
+import Mascot from '@/app/components/v2/mascot/Mascot'
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   MapPin,
@@ -953,6 +954,9 @@ const onSubmit = (data: any) => {
                       <p className="text-ink-500 text-[14px] mt-2 leading-relaxed">
                         Não encontramos ofertas com essa combinação exata de filtros.
                       </p>
+                      <div className="mt-4 flex justify-center">
+                        <Mascot pose="surpreso" size={104} alt="Bob, o mascote do Bolsa Click, surpreso" />
+                      </div>
                     </div>
                   </div>
                 </div>

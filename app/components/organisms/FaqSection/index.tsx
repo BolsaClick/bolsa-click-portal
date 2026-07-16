@@ -1,4 +1,5 @@
 import Container from '../../atoms/Container'
+import Mascot from '@/app/components/v2/mascot/Mascot'
 
 const faqs = [
   {
@@ -53,6 +54,9 @@ export default function FaqSection() {
                 Perguntas frequentes sobre bolsas, cadastros, modalidades e o que esperar do
                 processo. Não achou sua dúvida? Fala com a gente.
               </p>
+              <div className="mt-8 hidden md:block">
+                <Mascot pose="ideia" size={132} />
+              </div>
             </div>
           </div>
 

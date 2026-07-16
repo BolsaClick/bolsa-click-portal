@@ -48,3 +48,7 @@ Posts de blog e landing pages devem **responder a query principal nos primeiros 
 > "Pra conseguir bolsa de 50% ou mais, o caminho mais rápido é candidatar-se ao Prouni via ENEM ou buscar bolsas próprias de faculdades EAD parceiras, onde os descontos chegam a 85% sem nota de corte. Veja como cada opção funciona..."
 
 Aplicar tanto em posts novos quanto na revisão de posts existentes. O script `scripts/seed-blog-posts.ts` deve incluir essa regra no system prompt.
+
+## Mascote (identidade visual)
+
+O Bolsa Click tem mascote oficial: o **Bob**, a capivara estudante (biblioteca de 40 poses 3D em `public/assets/mascote/3d/bob-*.png`; set flat do livrinho arquivado em `public/assets/mascote/`). **Sempre** usar o mascote em novas superfícies de UI com espaço ilustrativo (empty states, sucessos, FAQ, loading, blog) em vez de ilustração genérica — regras completas e mapa pose→contexto em `docs/MASCOTES.md`.

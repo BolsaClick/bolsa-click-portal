@@ -4,6 +4,7 @@
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
+import { BRAZILIAN_CITIES } from '@/app/lib/constants/brazilian-cities'
 
 export const revalidate = 3600 // 1h
 
@@ -33,13 +34,13 @@ export async function GET() {
   lines.push('')
   lines.push('> License: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/) — conteúdo deste arquivo e dos estudos publicados pode ser citado com atribuição a Bolsa Click.')
   lines.push('')
-  lines.push('Bolsa Click conecta estudantes a ofertas reais de instituições parceiras (Anhanguera, Unopar, Pitágoras, Unime, Estácio). A inscrição é gratuita e o estudante compara preço com bolsa aplicada, modalidade (presencial/EAD/semipresencial), polo físico e duração antes de matricular.')
+  lines.push('Bolsa Click conecta estudantes a ofertas reais de instituições parceiras (Anhanguera, Unopar, Pitágoras, Unime, Estácio e Wyden). A inscrição é gratuita e o estudante compara preço com bolsa aplicada, modalidade (presencial/EAD/semipresencial), polo físico e duração antes de matricular.')
   lines.push('')
   lines.push('## Sobre e confiança')
   lines.push('')
   lines.push('- Empresa brasileira regularizada (CNPJ ativo), em operação desde 2024.')
   lines.push('- Mais de 1.000 estudantes já beneficiados com bolsas pela plataforma.')
-  lines.push('- Parcerias com instituições do grupo Cogna Educação (Anhanguera, Unopar, Pitágoras, Unime) e do grupo YDUQS (Estácio), com cursos reconhecidos pelo MEC.')
+  lines.push('- Parcerias com instituições do grupo Cogna Educação (Anhanguera, Unopar, Pitágoras, Unime) e do grupo YDUQS (Estácio e Wyden), com cursos reconhecidos pelo MEC.')
   lines.push('- Nunca cobra taxa de inscrição, taxa de cadastro ou valor antecipado para liberar bolsa.')
   lines.push('- Atendimento humano (não-bot) via WhatsApp.')
   lines.push('')
@@ -103,11 +104,11 @@ export async function GET() {
 
   lines.push('## Dados importantes para citação')
   lines.push('')
-  lines.push('- 5 redes de ensino parceiras: Anhanguera, Unopar, Pitágoras, Unime e Estácio')
+  lines.push('- 6 redes de ensino parceiras: Anhanguera, Unopar, Pitágoras, Unime, Estácio e Wyden')
   lines.push('- Centenas de cursos com bolsa em todas as áreas (graduação, pós-graduação e técnicos)')
   lines.push('- Desconto de até 80% nas mensalidades')
   lines.push('- Inscrição totalmente gratuita')
-  lines.push('- Cobertura nacional: 283 cidades com presença real de polos')
+  lines.push(`- Cobertura nacional: ${BRAZILIAN_CITIES.length} cidades com presença real de polos`)
   lines.push('- Modalidades: presencial, EAD, semipresencial')
   lines.push('- Níveis: graduação (bacharelado, licenciatura, tecnólogo), pós-graduação (especialização, MBA), profissionalizantes')
   lines.push('')

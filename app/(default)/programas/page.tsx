@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { VisibleFaq } from '@/app/cursos/[slug]/_seo/CourseSeoSections'
+import { FontesConsultadas } from '@/app/components/seo/FontesConsultadas'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 const PAGE_URL = `${SITE_URL}/programas`
@@ -334,58 +335,17 @@ export default function ProgramasHubPage() {
         heading="Perguntas frequentes sobre programas de estudo"
       />
 
-      <section
-        id="fontes"
-        aria-label="Fontes consultadas"
-        className="bg-paper py-10 md:py-12 border-t border-hairline"
-      >
-        <div className="container mx-auto px-4 max-w-3xl">
-          <div className="flex items-baseline justify-between hairline-b pb-3 mb-6">
-            <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
-              Fontes consultadas
-            </h2>
-            <span className="font-mono num-tabular text-[11px] text-ink-500">(04)</span>
-          </div>
-          <p className="text-ink-700 leading-relaxed mb-6 text-sm">
-            Este guia se baseia em fontes oficiais do Governo Federal. Última revisão editorial
-            em{' '}
-            <time dateTime={DATE_MODIFIED} className="text-ink-900 font-medium">
-              {DATE_MODIFIED_LABEL}
-            </time>
-            .
-          </p>
-          <ul className="space-y-3 text-sm text-ink-700">
-            <li>
-              <strong className="text-ink-900">Acesso Único MEC</strong> — portal oficial de
-              inscrição ProUni, FIES e SISU.{' '}
-              <a href="https://acessounico.mec.gov.br" rel="nofollow noopener" target="_blank" className="underline decoration-1 underline-offset-4">
-                acessounico.mec.gov.br
-              </a>
-            </li>
-            <li>
-              <strong className="text-ink-900">INEP</strong> — Instituto Nacional de Estudos e
-              Pesquisas Educacionais. ENEM, ENCCEJA e indicadores.{' '}
-              <a href="https://www.gov.br/inep" rel="nofollow noopener" target="_blank" className="underline decoration-1 underline-offset-4">
-                gov.br/inep
-              </a>
-            </li>
-            <li>
-              <strong className="text-ink-900">FNDE</strong> — Fundo Nacional de Desenvolvimento
-              da Educação. Operação financeira do FIES.{' '}
-              <a href="https://www.gov.br/fnde" rel="nofollow noopener" target="_blank" className="underline decoration-1 underline-offset-4">
-                gov.br/fnde
-              </a>
-            </li>
-            <li>
-              <strong className="text-ink-900">e-MEC</strong> — cadastro nacional de instituições
-              e cursos reconhecidos.{' '}
-              <a href="https://emec.mec.gov.br" rel="nofollow noopener" target="_blank" className="underline decoration-1 underline-offset-4">
-                emec.mec.gov.br
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      <FontesConsultadas
+        fontes={[
+          { label: 'Acesso Único MEC', url: 'https://acessounico.mec.gov.br', descricao: 'portal oficial de inscrição ProUni, FIES e SISU.' },
+          { label: 'INEP', url: 'https://www.gov.br/inep', descricao: 'Instituto Nacional de Estudos e Pesquisas Educacionais. ENEM, ENCCEJA e indicadores.' },
+          { label: 'FNDE', url: 'https://www.gov.br/fnde', descricao: 'Fundo Nacional de Desenvolvimento da Educação. Operação financeira do FIES.' },
+          { label: 'e-MEC', url: 'https://emec.mec.gov.br', descricao: 'cadastro nacional de instituições e cursos reconhecidos.' },
+        ]}
+        introducao="Este guia se baseia em fontes oficiais do Governo Federal."
+        dateTime={DATE_MODIFIED}
+        dateLabel={DATE_MODIFIED_LABEL}
+      />
     </>
   )
 }

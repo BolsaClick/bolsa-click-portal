@@ -7,6 +7,7 @@ import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
 import { VisibleFaq } from '@/app/cursos/[slug]/_seo/CourseSeoSections'
 import Filter from '@/app/components/molecules/Filter'
 import BestOffersSection from '@/app/components/organisms/BestOffersSection'
+import { FontesConsultadas } from '@/app/components/seo/FontesConsultadas'
 import CalendarioBolsas2026 from './_components/CalendarioBolsas2026'
 import ComparadorCursos from './_components/ComparadorCursos'
 import DepoimentosSection from './_components/DepoimentosSection'
@@ -1581,110 +1582,20 @@ export default async function BolsasDeEstudoHubPage() {
         heading="Perguntas frequentes sobre bolsas de estudo"
       />
 
-      <section
-        id="fontes"
-        aria-label="Fontes consultadas"
-        className="bg-paper py-10 md:py-12 border-t border-hairline"
-      >
-        <div className="container mx-auto px-4 max-w-3xl">
-          <div className="flex items-baseline justify-between hairline-b pb-3 mb-6">
-            <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
-              Fontes consultadas
-            </h2>
-            <span className="font-mono num-tabular text-[11px] text-ink-500">(06)</span>
-          </div>
-          <p className="text-ink-700 leading-relaxed mb-6 text-sm">
-            Este guia se baseia em fontes oficiais do Governo Federal, dados
-            first-party do catálogo Bolsa Click e legislação vigente. Última
-            revisão editorial em{' '}
-            <time dateTime={DATE_MODIFIED} className="text-ink-900 font-medium">
-              {DATE_MODIFIED_LABEL}
-            </time>
-            .
-          </p>
-          <ul className="space-y-3 text-sm text-ink-700">
-            <li>
-              <strong className="text-ink-900">MEC</strong> — Ministério da
-              Educação. Programas ProUni e FIES, política nacional de educação
-              superior.{' '}
-              <a
-                href="https://www.gov.br/mec"
-                rel="nofollow noopener"
-                target="_blank"
-                className="underline decoration-1 underline-offset-4"
-              >
-                gov.br/mec
-              </a>
-            </li>
-            <li>
-              <strong className="text-ink-900">Acesso Único MEC</strong> —
-              portal oficial de inscrição ProUni/FIES/SISU.{' '}
-              <a
-                href="https://acessounico.mec.gov.br"
-                rel="nofollow noopener"
-                target="_blank"
-                className="underline decoration-1 underline-offset-4"
-              >
-                acessounico.mec.gov.br
-              </a>
-            </li>
-            <li>
-              <strong className="text-ink-900">e-MEC</strong> — cadastro
-              nacional de instituições e cursos reconhecidos.{' '}
-              <a
-                href="https://emec.mec.gov.br"
-                rel="nofollow noopener"
-                target="_blank"
-                className="underline decoration-1 underline-offset-4"
-              >
-                emec.mec.gov.br
-              </a>
-            </li>
-            <li>
-              <strong className="text-ink-900">INEP</strong> — Instituto
-              Nacional de Estudos e Pesquisas Educacionais. ENEM e indicadores.{' '}
-              <a
-                href="https://www.gov.br/inep"
-                rel="nofollow noopener"
-                target="_blank"
-                className="underline decoration-1 underline-offset-4"
-              >
-                gov.br/inep
-              </a>
-            </li>
-            <li>
-              <strong className="text-ink-900">FNDE</strong> — Fundo Nacional
-              de Desenvolvimento da Educação. Operação financeira do FIES.{' '}
-              <a
-                href="https://www.gov.br/fnde"
-                rel="nofollow noopener"
-                target="_blank"
-                className="underline decoration-1 underline-offset-4"
-              >
-                gov.br/fnde
-              </a>
-            </li>
-            <li>
-              <strong className="text-ink-900">Lei nº 11.096/2005</strong> —
-              marco legal do ProUni.{' '}
-              <a
-                href="https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2005/lei/l11096.htm"
-                rel="nofollow noopener"
-                target="_blank"
-                className="underline decoration-1 underline-offset-4"
-              >
-                planalto.gov.br
-              </a>
-            </li>
-          </ul>
-          <p className="text-ink-500 text-xs leading-relaxed mt-6">
-            Catálogo de preços, modalidades, faculdades parceiras e cidades
-            cobertas: dados first-party do Bolsa Click, atualizados em tempo
-            real via API do catálogo. Mensalidades exibidas refletem ofertas
-            reais vigentes na data da consulta.
-          </p>
-        </div>
-      </section>
+      <FontesConsultadas
+        fontes={[
+          { label: 'MEC', url: 'https://www.gov.br/mec', descricao: 'Ministério da Educação. Programas ProUni e FIES, política nacional de educação superior.' },
+          { label: 'Acesso Único MEC', url: 'https://acessounico.mec.gov.br', descricao: 'portal oficial de inscrição ProUni/FIES/SISU.' },
+          { label: 'e-MEC', url: 'https://emec.mec.gov.br', descricao: 'cadastro nacional de instituições e cursos reconhecidos.' },
+          { label: 'INEP', url: 'https://www.gov.br/inep', descricao: 'Instituto Nacional de Estudos e Pesquisas Educacionais. ENEM e indicadores.' },
+          { label: 'FNDE', url: 'https://www.gov.br/fnde', descricao: 'Fundo Nacional de Desenvolvimento da Educação. Operação financeira do FIES.' },
+          { label: 'Lei nº 11.096/2005', url: 'https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2005/lei/l11096.htm', descricao: 'marco legal do ProUni.', linkLabel: 'planalto.gov.br' },
+        ]}
+        introducao="Este guia se baseia em fontes oficiais do Governo Federal, dados first-party do catálogo Bolsa Click e legislação vigente."
+        dateTime={DATE_MODIFIED}
+        dateLabel={DATE_MODIFIED_LABEL}
+        observacao="Catálogo de preços, modalidades, faculdades parceiras e cidades cobertas: dados first-party do Bolsa Click, atualizados em tempo real via API do catálogo. Mensalidades exibidas refletem ofertas reais vigentes na data da consulta."
+      />
     </>
   )
 }

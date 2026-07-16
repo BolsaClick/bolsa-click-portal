@@ -90,8 +90,31 @@ async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): P
 // BUILDERS
 // ─────────────────────────────────────────────────────────────────────────
 
-function buildStaticSitemap(): SitemapEntry[] {
+async function buildStaticSitemap(): Promise<SitemapEntry[]> {
   const now = BUILD_TIME
+  let citySlugsWithOffers = new Set<string>()
+
+  try {
+    // A página usa `offers.length > 0` como gate. No sitemap usamos o espelho
+    // persistido desse inventário, alimentado pelo precompute da mesma API,
+    // para evitar 284 requests externos em uma única geração. O Route Handler
+    // já revalida em 1h. Em falha, a escolha é conservadora: não emitir city
+    // spokes em vez de voltar a listar URLs que podem responder noindex.
+    const rows = await withTimeout(
+      prisma.cityCourseOfferCache.findMany({
+        where: { offerCount: { gt: 0 } },
+        distinct: ['citySlug'],
+        select: { citySlug: true },
+      }),
+      8_000,
+      'scholarship-cities',
+    )
+    citySlugsWithOffers = new Set(rows.map(({ citySlug }) => citySlug))
+    console.log(`[sitemap:static] ${citySlugsWithOffers.size} cidades com oferta`)
+  } catch (error) {
+    console.error('[sitemap:static] erro ao carregar cidades com oferta:', error)
+  }
+
   return [
     { loc: SITE_URL, lastmod: now, changefreq: 'daily', priority: 1.0 },
     { loc: `${SITE_URL}/cursos`, lastmod: now, changefreq: 'daily', priority: 0.9 },
@@ -118,12 +141,14 @@ function buildStaticSitemap(): SitemapEntry[] {
     { loc: `${SITE_URL}/sisu`, lastmod: now, changefreq: 'monthly', priority: 0.85 },
     { loc: `${SITE_URL}/fies`, lastmod: now, changefreq: 'monthly', priority: 0.85 },
     { loc: `${SITE_URL}/encceja`, lastmod: now, changefreq: 'monthly', priority: 0.8 },
-    ...BRAZILIAN_CITIES.map((city) => ({
-      loc: `${SITE_URL}/bolsas-de-estudo/${city.slug}`,
-      lastmod: now,
-      changefreq: 'weekly' as const,
-      priority: 0.7,
-    })),
+    ...BRAZILIAN_CITIES
+      .filter((city) => citySlugsWithOffers.has(city.slug))
+      .map((city) => ({
+        loc: `${SITE_URL}/bolsas-de-estudo/${city.slug}`,
+        lastmod: now,
+        changefreq: 'weekly' as const,
+        priority: 0.7,
+      })),
     ...['realista', 'investigativo', 'artistico', 'social', 'empreendedor', 'convencional'].map((tipo) => ({
       loc: `${SITE_URL}/teste-vocacional/perfil/${tipo}`,
       lastmod: now,
@@ -469,7 +494,7 @@ export async function GET(_request: Request, { params }: Params) {
   let entries: SitemapEntry[] = []
   switch (id) {
     case 0:
-      entries = buildStaticSitemap()
+      entries = await buildStaticSitemap()
       break
     case 1:
       entries = await buildCoursesSitemap()

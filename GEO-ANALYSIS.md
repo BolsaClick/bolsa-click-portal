@@ -121,3 +121,53 @@ A pillar usa **HowTo** (linha 20 acima). HowTo foi **deprecado como rich result 
 - Perguntar a ChatGPT/Perplexity "qual site pra bolsa sem ENEM?" e checar se Bolsa Click aparece (baseline: não).
 - PostHog: `$pageview` por `$referring_domain` filtrando `chatgpt.com`/`perplexity.ai`/`gemini.google.com`, mensal.
 - Brand SERP "Bolsa Click é confiável" passar a ter resultados próprios + terceiros.
+
+---
+
+# UPDATE 2026-07-16 — Auditoria GEO e precisão factual
+
+## GEO Readiness Score: 71/100
+
+O avanço técnico e estrutural desde maio é consistente: o site está mais fácil de rastrear, interpretar
+e citar. A autoridade externa, porém, continua sendo o limitador do score geral e da probabilidade de o
+Bolsa Click aparecer como fonte principal em respostas de IA.
+
+| Critério | Score | Leitura |
+|---|---:|---|
+| Citability | 72 | Respostas diretas, fontes oficiais e fatos-âncora consistentes melhoram a extração; ainda há espaço para mais evidência proprietária citável. |
+| Structural | 90 | Pillar, spokes, FAQs, schemas e links internos formam um cluster claro e navegável. |
+| Multi-Modal | 55 | O conteúdo textual está forte, mas vídeo e outros ativos multimodais próprios seguem limitados. |
+| Authority | 40 | Houve progresso nos sinais de entidade, porém a confirmação independente da marca ainda é insuficiente. |
+| Technical | 95 | SSR, regras para crawlers de IA, sitemap coerente e prerender das cidades prioritárias deixam a base técnica madura. |
+
+## Progresso desde maio
+
+- `ChatGPT-User` está explicitamente permitido no `robots.txt`.
+- `Organization.sameAs` está preenchido com perfis oficiais.
+- O perfil do Reclame Aqui está linkado como sinal de confiança de terceiros.
+- A autoria editorial usa uma `Person` real, em vez de uma equipe genérica.
+
+## Gargalo atual: autoridade off-site
+
+O principal gargalo permanece fora do código. A correlação reportada entre presença no YouTube e
+visibilidade em respostas de IA é de **0,737**; o Reddit aparece em **46,7%** das citações do
+Perplexity; e a Wikipedia aparece em **47,9%** das citações do ChatGPT. Esses canais não devem ser
+tratados como simples distribuição: são fontes independentes que ajudam os modelos a confirmar a
+entidade e suas afirmações.
+
+## Correções deste ciclo
+
+1. **Precisão do `llms.txt`:** redes parceiras corrigidas para 6, com Wyden incluída no grupo YDUQS, e total de cidades derivado de `BRAZILIAN_CITIES.length`.
+2. **Fontes reutilizáveis:** bloco `Fontes consultadas` extraído para componente compartilhado, preservando a estrutura visual e semântica existente.
+3. **Autoridade temática:** páginas de ProUni e FIES passaram a citar fontes oficiais do MEC, Planalto e FNDE.
+4. **Openers citáveis:** aberturas de ProUni e FIES reescritas em 40–60 palavras, com resposta direta e dados oficiais verificáveis.
+5. **Sitemap coerente:** o sub-sitemap de cidades passou a listar somente páginas com oferta, eliminando o conflito entre URLs publicadas e páginas `noindex`.
+6. **Pillar → spokes dinâmico:** guias publicados do cluster de bolsas passaram a alimentar dinamicamente os links internos da pillar, com fallback estático seguro.
+7. **Prerender prioritário:** capitais e maiores cidades passaram a ser geradas estaticamente, reduzindo o TTFB frio nas páginas de maior demanda.
+
+## Próxima alavanca
+
+A próxima evolução relevante depende menos de novos ajustes técnicos e mais de um programa contínuo
+de autoridade: conteúdo útil em vídeo, participação genuína em comunidades, pesquisa proprietária
+que gere imprensa e construção gradual de notabilidade enciclopédica. O objetivo é criar fontes
+externas confiáveis que confirmem — e não apenas repitam — os fatos publicados pelo Bolsa Click.

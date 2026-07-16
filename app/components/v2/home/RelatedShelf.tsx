@@ -24,7 +24,7 @@ import { fetchOffers } from './fetch-offers'
 
 const HEADING_ID = 'shelf-ultima-busca'
 
-export default function RelatedShelf({ cardHref }: { cardHref: string }) {
+export default function RelatedShelf({ cardHref }: { cardHref?: string }) {
   const { lastSearch, enabled } = useLastSearch()
 
   const course = enabled ? lastSearch?.course?.trim() || null : null

@@ -13,7 +13,7 @@ import { useRef, useState } from 'react'
 
 import CourseCardV2 from '../CourseCardV2'
 import CourseCardV2Skeleton from '../CourseCardV2Skeleton'
-import type { CourseOffer } from '../course-offer'
+import { offerResultHref, type CourseOffer } from '../course-offer'
 import Mascot from '../mascot/Mascot'
 import MascotPop from '../mascot/MascotPop'
 import styles from '../ui/reactive.module.css'
@@ -23,7 +23,11 @@ export interface CourseShelfProps {
   title: string
   subtitle?: string
   offers: CourseOffer[]
-  cardHref: string
+  /**
+   * Destino fixo do CTA (ex.: preview). Omitido -> cada card linka pro
+   * resultado real do próprio curso (offerResultHref).
+   */
+  cardHref?: string
   emptyMessage?: string
   /** id pro aria-labelledby da section */
   headingId: string
@@ -97,7 +101,7 @@ export default function CourseShelf({
               >
                 <CourseCardV2
                   offer={offer}
-                  href={cardHref}
+                  href={cardHref ?? offerResultHref(offer)}
                   onCtaClick={() => setPopCount((c) => c + 1)}
                 />
               </li>

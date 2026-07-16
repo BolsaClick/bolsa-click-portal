@@ -122,6 +122,23 @@ export function brandLogoSrc(brand: string): string {
   return '/assets/logo-bolsa-click-rosa.png'
 }
 
+/**
+ * Link REAL pro funil de resultados. /curso/resultado lê cn/nivel/cidade/
+ * estado/modalidade (não courseName/academicLevel — conferido no
+ * SearchResultClient). Usado como href default dos cards nas prateleiras
+ * da home real; valores passam crus (round-trip do payload da própria API).
+ */
+export function offerResultHref(offer: CourseOffer): string {
+  const params = new URLSearchParams()
+  params.set('cn', parseCourseName(offer.name).title)
+  params.set('nivel', offer.academicLevel || 'GRADUACAO')
+  const modality = offer.commercialModality || offer.modality
+  if (modality) params.set('modalidade', modality)
+  if (offer.city) params.set('cidade', offer.city)
+  if (offer.uf) params.set('estado', offer.uf)
+  return `/curso/resultado?${params.toString()}`
+}
+
 /** Pós com parcelamento explícito no payload */
 export function hasInstallmentPlan(offer: CourseOffer): boolean {
   return (

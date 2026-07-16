@@ -26,7 +26,7 @@ import { fetchOffers } from './fetch-offers'
 const HEADING_ID = 'shelf-perto-de-voce'
 const FALLBACK = { city: 'SAO PAULO', state: 'SP', label: 'São Paulo' }
 
-export default function GeoShelf({ cardHref }: { cardHref: string }) {
+export default function GeoShelf({ cardHref }: { cardHref?: string }) {
   const geo = useGeoLocation()
 
   // O contexto resolve com city (sucesso ou default de bot/erro) ou error.

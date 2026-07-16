@@ -29,6 +29,9 @@ const menuItems: MenuItem[] = [
       { label: 'Ver todos os cursos', description: 'Catálogo completo', href: '/cursos' },
     ],
   },
+  // Pillar do head term no nav primário: crawl priority + link equity
+  // (auditoria SXO 2026-07 — a página construída pra rankear estava só no footer)
+  { label: 'Bolsas de Estudo', href: '/bolsas-de-estudo' },
   { label: 'Graduação', href: '/graduacao' },
   { label: 'Pós', href: '/pos-graduacao' },
   { label: 'Profissionalizantes', href: '/cursos-profissionalizantes' },

@@ -9,23 +9,18 @@ import {
 } from 'lucide-react'
 import Image from 'next/image'
 
-import type { CourseOffer } from '@/app/components/v2/course-offer'
-import BlogTeaser, { type BlogTeaserPost } from '@/app/components/v2/home/BlogTeaser'
+import BlogTeaser from '@/app/components/v2/home/BlogTeaser'
 import CourseShelf from '@/app/components/v2/home/CourseShelf'
 import GeoShelf from '@/app/components/v2/home/GeoShelf'
 import RelatedShelf from '@/app/components/v2/home/RelatedShelf'
-import {
-  SAMPLE_FEATURED_OFFERS,
-  toCourseOffer,
-} from '@/app/components/v2/home/featured-offers'
+import { SAMPLE_FEATURED_OFFERS } from '@/app/components/v2/home/featured-offers'
 import HeroSearch from '@/app/components/v2/home/HeroSearch'
 import Mascot from '@/app/components/v2/mascot/Mascot'
 import { courseAreaPose } from '@/app/components/v2/mascot/course-area'
 import ReactiveCta, { reactiveClasses } from '@/app/components/v2/ui/ReactiveCta'
 import HeaderNew from '@/app/components/molecules/Header/New'
 import Footer from '@/app/components/molecules/Footer'
-import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
-import { prisma } from '@/app/lib/prisma'
+import { loadBlogPosts, loadShelf } from '@/app/lib/home/vitrine'
 
 export const metadata = { robots: { index: false, follow: false } }
 
@@ -116,121 +111,6 @@ const FAQ = [
     a: 'A faculdade conduz o processo seletivo e a matrícula (documentos, prazos e eventuais taxas são definidos por ela). A bolsa que você viu no card é aplicada na mensalidade, e o nosso time acompanha você pelo WhatsApp até a matrícula sair.',
   },
 ] as const
-
-const shelfTimeout = (ms: number) =>
-  new Promise<never>((_, reject) => setTimeout(() => reject(new Error('shelf timeout')), ms))
-
-/**
- * Ofertas Estácio (Athena) direto no server: o fetchAthenaOffers do funil só
- * roda no browser (guard typeof window), então a vitrine server-side chama a
- * rota interna com URL absoluta. TODO(sistema de vitrine): extrair pra um
- * service compartilhado em vez de self-fetch.
- */
-async function loadAthenaOffersServer(params: {
-  modality?: string
-  city?: string
-  state?: string
-}): Promise<unknown[]> {
-  try {
-    const qs = new URLSearchParams({ academicLevel: 'GRADUACAO' })
-    if (params.modality) qs.set('modality', params.modality)
-    if (params.city) qs.set('city', params.city)
-    if (params.state) qs.set('state', params.state)
-    const base = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-    const res = await fetch(`${base}/api/athena-offers?${qs.toString()}`, {
-      cache: 'no-store',
-      signal: AbortSignal.timeout(6000),
-    })
-    if (!res.ok) return []
-    const json = await res.json()
-    return Array.isArray(json?.data) ? json.data : []
-  } catch {
-    return []
-  }
-}
-
-/**
- * Prateleira: fetch server-side real (Cogna + Estácio em paralelo), com
- * dedupe por nome de curso — vitrine mostra VARIEDADE de cursos, não o mesmo
- * curso em 8 polos. Falha -> [].
- */
-async function loadShelf(params: {
-  modality?: string
-  city?: string
-  state?: string
-}): Promise<CourseOffer[]> {
-  try {
-    const [cognaResult, athenaRaw] = (await Promise.race([
-      Promise.all([
-        getShowFiltersCourses(
-          undefined,
-          params.city,
-          params.state,
-          params.modality,
-          'GRADUACAO',
-          1,
-          24,
-        ),
-        loadAthenaOffersServer(params),
-      ]),
-      shelfTimeout(8000),
-    ])) as [{ data?: unknown[] }, unknown[]]
-
-    const all = [
-      ...(Array.isArray(cognaResult?.data) ? cognaResult.data : []),
-      ...athenaRaw,
-    ]
-      .map(toCourseOffer)
-      .filter((offer): offer is CourseOffer => offer !== null)
-
-    // Dedupe por nome-base do curso, intercalando marcas quando possível
-    const seen = new Set<string>()
-    const deduped: CourseOffer[] = []
-    for (const offer of all) {
-      const key = offer.name.replace(/ - (Bacharelado|Licenciatura|Tecn[oó]logo)$/i, '').trim().toUpperCase()
-      if (seen.has(key)) continue
-      seen.add(key)
-      deduped.push(offer)
-      if (deduped.length >= 8) break
-    }
-    return deduped
-  } catch (error) {
-    console.error('[home-v3 preview] prateleira falhou:', params, error)
-    return []
-  }
-}
-
-/** Blog: mesma query da home real (prisma.blogPost); falha -> [] (placeholders). */
-async function loadBlogPosts(): Promise<BlogTeaserPost[]> {
-  try {
-    const latest = await prisma.blogPost.findMany({
-      where: { isActive: true, publishedAt: { not: null, lte: new Date() } },
-      orderBy: { publishedAt: 'desc' },
-      take: 4,
-      select: {
-        slug: true,
-        title: true,
-        featuredImage: true,
-        imageAlt: true,
-        readingTime: true,
-        publishedAt: true,
-        categories: { select: { title: true } },
-      },
-    })
-    return latest.map((post: (typeof latest)[number]) => ({
-      slug: post.slug,
-      title: post.title,
-      featuredImage: post.featuredImage,
-      imageAlt: post.imageAlt,
-      readingTime: post.readingTime,
-      publishedAt: post.publishedAt!.toISOString(),
-      category: post.categories[0]?.title ?? null,
-    }))
-  } catch (error) {
-    console.error('[home-v3 preview] blog indisponível:', error)
-    return []
-  }
-}
 
 export default async function HomeV3PreviewPage() {
   // A prateleira presencial agora é client-side (GeoShelf, geolocalização por

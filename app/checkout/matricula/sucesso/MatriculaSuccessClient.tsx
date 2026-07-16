@@ -8,6 +8,7 @@ import Mascot from '@/app/components/v2/mascot/Mascot'
 import { formatCurrency } from '@/utils/fomartCurrency'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { trackTikTokDual } from '@/app/lib/analytics/ttq'
+import { trackEnrollmentConverted } from '@/app/lib/analytics/checkout-funnel'
 
 export default function MatriculaSuccessClient() {
   const searchParams = useSearchParams()
@@ -31,6 +32,16 @@ export default function MatriculaSuccessClient() {
       is_graduacao: isGraduacao,
       is_pos: isPos,
     })
+
+    // Funil unificado — etapa 4: conversão final (sinal confiável na página de
+    // sucesso, independente do ramo). Cobre a graduação, antes invisível.
+    trackEnrollmentConverted(trackEvent, {
+      flow: 'matricula',
+      academicLevel: isPos ? 'POS_GRADUACAO' : isGraduacao ? 'GRADUACAO' : undefined,
+      courseName: course || undefined,
+      value: monthlyFee ?? undefined,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {

@@ -18,6 +18,11 @@ import {
 } from 'lucide-react'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { trackFbqDual } from '@/app/lib/analytics/fbq'
+import {
+  trackCheckoutViewed,
+  trackCheckoutSubmitted,
+  trackCheckoutIdentified,
+} from '@/app/lib/analytics/checkout-funnel'
 
 /** Máscaras simples (CPF / telefone / CEP). */
 const maskCpf = (v: string) =>
@@ -87,7 +92,7 @@ const labelClass =
 export default function EstacioCheckoutClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { trackEvent } = usePostHogTracking()
+  const { trackEvent, setUserProperties } = usePostHogTracking()
 
   const offer = useMemo(
     () => ({
@@ -127,6 +132,15 @@ export default function EstacioCheckoutClient() {
       brand: offer.brand,
       modality: offer.modality,
       price: offer.price,
+    })
+
+    // Funil unificado — etapa 1 (fluxo Estácio)
+    trackCheckoutViewed(trackEvent, {
+      flow: 'estacio',
+      brand: offer.brand,
+      modality: offer.modality,
+      offerId: offer.offerId,
+      courseName: offer.courseName,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -247,6 +261,32 @@ export default function EstacioCheckoutClient() {
         numero_inscricao: data?.numeroInscricao ?? undefined,
         already_enrolled: !!data?.alreadyEnrolled,
       })
+
+      // Funil unificado — etapa 3 (fluxo Estácio): inscrição criada.
+      trackCheckoutSubmitted(trackEvent, {
+        flow: 'estacio',
+        brand: offer.brand,
+        modality: offer.modality,
+        offerId: offer.offerId,
+        courseName: offer.courseName,
+      })
+
+      // Funil unificado — etapa 2 (fluxo Estácio): contato preenchido →
+      // identifica no PostHog (habilita retargeting de quem não converter).
+      trackCheckoutIdentified(
+        trackEvent,
+        {
+          flow: 'estacio',
+          brand: offer.brand,
+          modality: offer.modality,
+          offerId: offer.offerId,
+          courseName: offer.courseName,
+          email: form.email.trim() || undefined,
+          phone: form.mobile.replace(/\D/g, '') || undefined,
+          name: form.name.trim() || undefined,
+        },
+        setUserProperties,
+      )
 
       // Meta Pixel + Conversions API - Lead (inscrição Estácio; pagamento externo).
       // event_id pela inscrição quando houver, para dedup/idempotência.

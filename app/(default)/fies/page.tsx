@@ -7,7 +7,7 @@ const SITE_URL = 'https://www.bolsaclick.com.br'
 
 // REVISAR ANUAL — juros, datas, valores oficiais do FNDE
 const DATA_PUBLISHED = '2024-01-15'
-const DATA_MODIFIED = '2026-05-15'
+const DATA_MODIFIED = '2026-07-16'
 
 export const metadata: Metadata = {
   title: 'FIES 2026 - Como Funciona, Inscrição, Juros e Quem Pode',

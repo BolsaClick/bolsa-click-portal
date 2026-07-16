@@ -62,11 +62,19 @@ export function ProgramHub({
     description: articleSummary,
     inLanguage: 'pt-BR',
     isAccessibleForFree: true,
+    // Autor Person real + revisão editorial (E-E-A-T). O @id #organization é
+    // reservado à Organization "Bolsa Click" — usar outro name no mesmo @id
+    // criava conflito de entidade (auditoria 2026-07, schema).
     author: {
+      '@type': 'Person',
+      name: 'Rodrigo Silvério',
+      jobTitle: 'Fundador do Bolsa Click',
+      url: `${SITE_URL}/sobre/equipe-editorial`,
+    },
+    reviewedBy: {
       '@type': 'Organization',
-      '@id': `${SITE_URL}/#organization`,
       name: 'Equipe Editorial Bolsa Click',
-      url: SITE_URL,
+      url: `${SITE_URL}/sobre/equipe-editorial`,
     },
     publisher: {
       '@type': 'Organization',
@@ -110,6 +118,18 @@ export function ProgramHub({
             {h1}
           </h1>
           <p className="text-lg md:text-xl text-ink-700 max-w-3xl">{lede}</p>
+          {/* Byline visível (E-E-A-T): mesma informação do Article schema */}
+          <p className="mt-5 text-[13px] text-ink-500">
+            Por <span className="font-semibold text-ink-700">Rodrigo Silvério</span>, fundador do
+            Bolsa Click · Revisado pela Equipe Editorial · Atualizado em{' '}
+            <time dateTime={dateModified}>
+              {new Date(`${dateModified}T12:00:00-03:00`).toLocaleDateString('pt-BR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })}
+            </time>
+          </p>
         </div>
       </header>
 

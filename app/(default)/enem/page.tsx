@@ -6,7 +6,7 @@ const SITE_URL = 'https://www.bolsaclick.com.br'
 
 // REVISAR ANUAL — datas, valor da taxa, calendário oficial INEP/MEC
 const DATA_PUBLISHED = '2024-01-15'
-const DATA_MODIFIED = '2026-05-15'
+const DATA_MODIFIED = '2026-05-16'
 
 export const metadata: Metadata = {
   title: 'ENEM 2026 - Datas, Inscrição, Notas de Corte e Como Usar',

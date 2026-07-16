@@ -7,6 +7,7 @@ import { prisma } from '@/app/lib/prisma'
 import { BRAZILIAN_CITIES } from '@/app/lib/constants/brazilian-cities'
 import { shouldIndexInstitutionCityPage } from '@/app/lib/seo/city-page-gate'
 import { isOffTopicNoindex } from '@/app/lib/blog/noindex-slugs'
+import { COURSE_PROFILES } from '@/app/lib/teste-vocacional/methodology-profiles'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 
@@ -100,9 +101,12 @@ async function buildStaticSitemap(): Promise<SitemapEntry[]> {
     // para evitar 284 requests externos em uma única geração. O Route Handler
     // já revalida em 1h. Em falha, a escolha é conservadora: não emitir city
     // spokes em vez de voltar a listar URLs que podem responder noindex.
+    // Só linhas atualizadas nos últimos 14 dias: cache defasado do estoque
+    // vivo gerava mismatch sitemap × noindex (auditoria 2026-07, Critical #3).
+    const staleCutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
     const rows = await withTimeout(
       prisma.cityCourseOfferCache.findMany({
-        where: { offerCount: { gt: 0 } },
+        where: { offerCount: { gt: 0 }, fetchedAt: { gte: staleCutoff } },
         distinct: ['citySlug'],
         select: { citySlug: true },
       }),
@@ -430,11 +434,14 @@ async function buildEditorialSitemap(): Promise<SitemapEntry[]> {
         changefreq: 'weekly' as const,
         priority: 0.7,
       })),
-      ...vocacionalCourses.map(({ slug, updatedAt, trendScore }) => ({
+      // Só os slugs com perfil vocacional implementado (COURSE_PROFILES, 10
+      // páginas reais). A lista do banco (177 slugs sufixados) não intersecta
+      // o mapa — gerava 177 soft-404 no sitemap (auditoria 2026-07, Critical #1).
+      ...Object.keys(COURSE_PROFILES).map((slug) => ({
         loc: `${SITE_URL}/teste-vocacional/${slug}`,
-        lastmod: updatedAt.toISOString(),
+        lastmod: BUILD_TIME,
         changefreq: 'monthly' as const,
-        priority: Math.round((0.55 + (trendScore ?? 0) / 100 * 0.25) * 100) / 100,
+        priority: 0.7,
       })),
       ...vocacionalCourses.map(({ slug, updatedAt, trendScore }) => ({
         loc: `${SITE_URL}/carreiras/${slug}`,

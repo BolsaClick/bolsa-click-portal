@@ -6,7 +6,7 @@ const SITE_URL = 'https://www.bolsaclick.com.br'
 
 // REVISAR ANUAL — calendário, notas de corte de referência
 const DATA_PUBLISHED = '2024-01-15'
-const DATA_MODIFIED = '2026-05-15'
+const DATA_MODIFIED = '2026-05-16'
 
 export const metadata: Metadata = {
   title: 'SISU 2026 - Inscrição, Notas de Corte e Como Funciona',

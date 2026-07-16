@@ -50,7 +50,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const cursoData = TOP_CURSOS.find(c => c.slug === curso)
   const profile = COURSE_PROFILES[curso]
   if (!cursoData || !profile) {
-    return { title: 'Curso não encontrado' }
+    // Cinto de segurança: slug sem perfil não deve indexar nem que o 404
+    // falhe em algum caminho de render (auditoria 2026-07, Critical #1).
+    return { title: 'Curso não encontrado', robots: { index: false, follow: false } }
   }
 
   const name = cursoData.apiCourseName

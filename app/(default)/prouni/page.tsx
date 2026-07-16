@@ -7,7 +7,7 @@ const SITE_URL = 'https://www.bolsaclick.com.br'
 
 // REVISAR ANUAL — datas, valores mínimos de nota, faixas de renda
 const DATA_PUBLISHED = '2024-01-15'
-const DATA_MODIFIED = '2026-05-15'
+const DATA_MODIFIED = '2026-07-16'
 
 export const metadata: Metadata = {
   title: 'PROUNI 2026 - Inscrição, Notas, Renda e Bolsas',

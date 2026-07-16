@@ -13,6 +13,7 @@ import DepoimentosSection from './_components/DepoimentosSection'
 import ProUniAlternativasSection from './_components/ProUniAlternativasSection'
 import TrustBadges from './_components/TrustBadges'
 import { CALENDARIO_2026, classifyEvents } from './_data/calendario-2026'
+import { OFF_TOPIC_NOINDEX_SLUGS } from '@/app/lib/blog/noindex-slugs'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 
@@ -259,6 +260,48 @@ const FAQ_ITEMS = [
   },
 ]
 
+type ScholarshipGuide = { slug: string; title: string }
+
+const FALLBACK_SCHOLARSHIP_GUIDES: ScholarshipGuide[] = [
+  { slug: 'como-conseguir-bolsa-estudo-2026-guia-passo-a-passo', title: 'Como conseguir bolsa de estudo em 2026: guia passo a passo' },
+  { slug: 'prouni-2026-inscricao-notas-de-corte-como-usar', title: 'ProUni 2026: inscrição, notas de corte e como usar' },
+  { slug: 'fies-2026-como-funciona-quem-tem-direito-como-solicitar', title: 'FIES 2026: como funciona e quem tem direito' },
+  { slug: 'bolsa-integral-100-como-conseguir-2026', title: 'Bolsa integral (100%): como conseguir em 2026' },
+  { slug: 'bolsa-de-estudo-sem-enem-como-conseguir', title: 'Bolsa de estudo sem ENEM: como conseguir' },
+  { slug: 'bolsa-sem-prouni', title: 'Bolsa de estudo sem ProUni: 5 alternativas' },
+  { slug: 'nota-minima-enem-prouni-quanto-precisa', title: 'Nota mínima do ENEM pro ProUni: quanto precisa' },
+  { slug: 'como-conseguir-bolsa-estudo-50-faculdade', title: 'Bolsa de 50% na faculdade: como conseguir' },
+  { slug: 'bolsa-de-estudo-golpe-como-evitar', title: 'Bolsa de estudo é golpe? Como evitar fraudes' },
+  { slug: 'mensalidade-de-psicologia-com-bolsa', title: 'Mensalidade de Psicologia com bolsa' },
+  { slug: 'mensalidade-de-direito-faculdade-particular', title: 'Mensalidade de Direito em faculdade particular' },
+  { slug: 'como-conseguir-bolsa-anhanguera-sem-enem', title: 'Bolsa na Anhanguera sem ENEM: passo a passo' },
+  { slug: 'como-conseguir-bolsa-estacio-sem-enem', title: 'Bolsa na Estácio sem ENEM: passo a passo' },
+  { slug: 'anhanguera-vale-a-pena-mec-bolsas', title: 'Anhanguera vale a pena? Nota MEC e bolsas' },
+]
+
+async function getScholarshipGuides(): Promise<ScholarshipGuide[]> {
+  try {
+    const posts = await prisma.blogPost.findMany({
+      where: {
+        isActive: true,
+        publishedAt: { not: null, lte: new Date() },
+        slug: { notIn: [...OFF_TOPIC_NOINDEX_SLUGS] },
+        categories: {
+          some: { slug: { in: ['bolsas-de-estudo', 'enem'] }, isActive: true },
+        },
+      },
+      select: { slug: true, title: true },
+      orderBy: { publishedAt: 'desc' },
+      take: 24,
+    })
+
+    return posts.length > 0 ? posts : FALLBACK_SCHOLARSHIP_GUIDES
+  } catch (error) {
+    console.error('[bolsas-de-estudo] erro ao carregar guias; usando fallback:', error)
+    return FALLBACK_SCHOLARSHIP_GUIDES
+  }
+}
+
 async function getActiveInstitutions() {
   return prisma.institution.findMany({
     where: { isActive: true },
@@ -276,7 +319,10 @@ async function getActiveInstitutions() {
 }
 
 export default async function BolsasDeEstudoHubPage() {
-  const institutions = await getActiveInstitutions()
+  const [institutions, scholarshipGuides] = await Promise.all([
+    getActiveInstitutions(),
+    getScholarshipGuides(),
+  ])
 
   const pageUrl = `${SITE_URL}/bolsas-de-estudo`
 
@@ -1505,36 +1551,23 @@ export default async function BolsasDeEstudoHubPage() {
             <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
               Guias sobre bolsas de estudo
             </h2>
-            <span className="font-mono num-tabular text-[11px] text-ink-500">(14)</span>
+            <span className="font-mono num-tabular text-[11px] text-ink-500">
+              ({String(scholarshipGuides.length).padStart(2, '0')})
+            </span>
           </div>
           <p className="text-ink-700 leading-relaxed mb-6 max-w-3xl">
             Aprofunde em cada caminho pra conseguir bolsa: programas do governo, bolsa própria
             sem ENEM, como evitar golpes e quanto custa cada curso com desconto.
           </p>
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-hairline">
-            {[
-              { slug: 'como-conseguir-bolsa-estudo-2026-guia-passo-a-passo', t: 'Como conseguir bolsa de estudo em 2026: guia passo a passo' },
-              { slug: 'prouni-2026-inscricao-notas-de-corte-como-usar', t: 'ProUni 2026: inscrição, notas de corte e como usar' },
-              { slug: 'fies-2026-como-funciona-quem-tem-direito-como-solicitar', t: 'FIES 2026: como funciona e quem tem direito' },
-              { slug: 'bolsa-integral-100-como-conseguir-2026', t: 'Bolsa integral (100%): como conseguir em 2026' },
-              { slug: 'bolsa-de-estudo-sem-enem-como-conseguir', t: 'Bolsa de estudo sem ENEM: como conseguir' },
-              { slug: 'bolsa-sem-prouni', t: 'Bolsa de estudo sem ProUni: 5 alternativas' },
-              { slug: 'nota-minima-enem-prouni-quanto-precisa', t: 'Nota mínima do ENEM pro ProUni: quanto precisa' },
-              { slug: 'como-conseguir-bolsa-estudo-50-faculdade', t: 'Bolsa de 50% na faculdade: como conseguir' },
-              { slug: 'bolsa-de-estudo-golpe-como-evitar', t: 'Bolsa de estudo é golpe? Como evitar fraudes' },
-              { slug: 'mensalidade-de-psicologia-com-bolsa', t: 'Mensalidade de Psicologia com bolsa' },
-              { slug: 'mensalidade-de-direito-faculdade-particular', t: 'Mensalidade de Direito em faculdade particular' },
-              { slug: 'como-conseguir-bolsa-anhanguera-sem-enem', t: 'Bolsa na Anhanguera sem ENEM: passo a passo' },
-              { slug: 'como-conseguir-bolsa-estacio-sem-enem', t: 'Bolsa na Estácio sem ENEM: passo a passo' },
-              { slug: 'anhanguera-vale-a-pena-mec-bolsas', t: 'Anhanguera vale a pena? Nota MEC e bolsas' },
-            ].map(g => (
+            {scholarshipGuides.map(g => (
               <li key={g.slug} className="bg-white">
                 <Link
                   href={`/blog/${g.slug}`}
                   className="block px-5 py-4 h-full transition-colors hover:bg-paper"
                 >
                   <span className="block font-display text-[15px] text-ink-900 leading-snug">
-                    {g.t}
+                    {g.title}
                   </span>
                 </Link>
               </li>

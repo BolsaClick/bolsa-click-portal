@@ -43,6 +43,11 @@ import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { trackTikTok, trackTikTokDual } from '@/app/lib/analytics/ttq'
 import { readUtmifyParams } from '@/app/lib/analytics/utmify-client'
+import {
+  trackCheckoutViewed,
+  trackCheckoutIdentified,
+  trackCheckoutSubmitted,
+} from '@/app/lib/analytics/checkout-funnel'
 import { formatPhone } from '@/utils/formatters'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { Loader2 } from 'lucide-react'
@@ -127,7 +132,7 @@ type FormSchema = z.infer<typeof formSchema>
 function MatriculaContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const { trackEvent, identifyUser } = usePostHogTracking()
+  const { trackEvent, identifyUser, setUserProperties } = usePostHogTracking()
   const { user, firebaseUser, loading: authLoading, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth()
 
 
@@ -410,6 +415,16 @@ const isFormValidForPayment =
         unit_id: offerDetails.unitId,
         city: offerDetails.unitCity,
         state: offerDetails.unitState,
+      })
+
+      // Funil unificado — etapa 1 (ver app/lib/analytics/checkout-funnel.ts)
+      trackCheckoutViewed(trackEvent, {
+        flow: 'matricula',
+        academicLevel: offerDetails.academicLevel,
+        brand: offerDetails.brand,
+        modality: offerDetails.modality,
+        courseId: offerDetails.courseId,
+        courseName: offerDetails.course,
       })
 
       // Facebook Pixel + Conversions API - InitiateCheckout
@@ -970,6 +985,18 @@ const isFormValidForPayment =
                 course_name: offerDetails.course,
                 idDmhElastic: offerDetails.idDmhElastic,
               })
+
+              // Funil unificado — etapa 3 (ramo graduação/ATHENAS).
+              // Cobre o ponto cego: `marketplace_inscription_created` disparava
+              // ~1x/90d; `checkout_submitted` dá o sinal confiável do envio.
+              trackCheckoutSubmitted(trackEvent, {
+                flow: 'matricula',
+                academicLevel: offerDetails.academicLevel,
+                brand: offerDetails.brand,
+                modality: offerDetails.modality,
+                courseId: offerDetails.courseId,
+                courseName: offerDetails.course,
+              })
             } else {
               console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceResult.error)
             }
@@ -1084,6 +1111,16 @@ const isFormValidForPayment =
     trackEvent('checkout_inscription_submitted', {
       course_id: offerDetails.courseId,
       course_name: offerDetails.course,
+    })
+
+    // Funil unificado — etapa 3 (ramo pós/profissionalizante)
+    trackCheckoutSubmitted(trackEvent, {
+      flow: 'matricula',
+      academicLevel: offerDetails.academicLevel,
+      brand: offerDetails.brand,
+      modality: offerDetails.modality,
+      courseId: offerDetails.courseId,
+      courseName: offerDetails.course,
     })
 
     // Facebook Pixel + Conversions API - CompleteRegistration (com Advanced Matching)
@@ -1604,6 +1641,26 @@ const isFormValidForPayment =
                                         course_id: offerDetails?.courseId,
                                         course_name: offerDetails?.course,
                                       })
+
+                                      // Funil unificado — etapa 2: contato já
+                                      // preenchido + CPF validado. Identifica a
+                                      // pessoa no PostHog (tira do anonimato →
+                                      // habilita retargeting de quem NÃO concluir).
+                                      trackCheckoutIdentified(
+                                        trackEvent,
+                                        {
+                                          flow: 'matricula',
+                                          academicLevel: offerDetails?.academicLevel,
+                                          brand: offerDetails?.brand,
+                                          modality: offerDetails?.modality,
+                                          courseId: offerDetails?.courseId,
+                                          courseName: offerDetails?.course,
+                                          email: getValues('email') || undefined,
+                                          phone: getValues('phone') || undefined,
+                                          name: getValues('name') || undefined,
+                                        },
+                                        setUserProperties,
+                                      )
 
                                       // Facebook Pixel + Conversions API - AddPaymentInfo (dados pessoais preenchidos + CPF validado)
                                       void trackFbqDual(

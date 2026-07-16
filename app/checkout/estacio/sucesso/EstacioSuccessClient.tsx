@@ -8,6 +8,7 @@ import ReviewInviteCard from '@/app/components/molecules/ReviewInviteCard'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { trackFbq } from '@/app/lib/analytics/fbq'
 import { trackTikTokDual } from '@/app/lib/analytics/ttq'
+import { trackEnrollmentConverted } from '@/app/lib/analytics/checkout-funnel'
 
 export default function EstacioSuccessClient() {
   const searchParams = useSearchParams()
@@ -37,6 +38,13 @@ export default function EstacioSuccessClient() {
       course_name: course || undefined,
       numero_inscricao: numeroInscricao || undefined,
       has_payment_url: !!paymentUrl,
+    })
+
+    // Funil unificado — etapa 4: conversão final do fluxo Estácio.
+    trackEnrollmentConverted(trackEvent, {
+      flow: 'estacio',
+      courseName: course || undefined,
+      value: amount ? Number(amount) || undefined : undefined,
     })
 
     // Conversão: inscrição realizada (pagamento será concluído na instituição).

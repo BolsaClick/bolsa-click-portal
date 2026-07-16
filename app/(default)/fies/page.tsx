@@ -78,7 +78,7 @@ export default function FiesPage() {
       slug="fies"
       title="FIES"
       h1="FIES 2026: Como Financiar a Faculdade com o Governo"
-      lede="O Fundo de Financiamento Estudantil financia até 100% da mensalidade de cursos de graduação em faculdades privadas, com juros baixos e pagamento que só começa depois de formado."
+      lede="O Fundo de Financiamento Estudantil financia até 100% dos encargos educacionais de cursos de graduação em faculdades privadas, com taxa real de juros zero. Para participar, é preciso ter média mínima de 450 pontos no ENEM, nota acima de zero na redação e atender aos demais critérios oficiais do programa."
       articleSummary="Guia completo do FIES 2026: o que é, quem pode, calendário de inscrição, juros, valores financiados, P-FIES, prazo de pagamento e como combinar com PROUNI e Bolsa Click."
       datePublished={DATA_PUBLISHED}
       dateModified={DATA_MODIFIED}

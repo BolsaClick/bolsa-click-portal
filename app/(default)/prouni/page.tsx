@@ -78,7 +78,7 @@ export default function ProuniPage() {
       slug="prouni"
       title="PROUNI"
       h1="PROUNI 2026: Como Conseguir Bolsa Integral ou Parcial"
-      lede="O Programa Universidade para Todos oferece bolsas de 50% ou 100% em faculdades particulares para quem fez o ENEM e atende ao critério de renda. Veja regras, datas e como se inscrever."
+      lede="O Programa Universidade para Todos oferece bolsas integrais (100%) e parciais (50%) em faculdades privadas. Para concorrer, a renda familiar por pessoa deve ser de até 1,5 salário mínimo na bolsa integral ou até 3 salários mínimos na parcial, além dos demais requisitos oficiais e da participação no ENEM."
       articleSummary="Guia completo do PROUNI 2026: requisitos de renda e nota do ENEM, calendário de inscrição, diferença entre bolsa integral e parcial, faculdades participantes, e comparação com outras formas de bolsa."
       datePublished={DATA_PUBLISHED}
       dateModified={DATA_MODIFIED}

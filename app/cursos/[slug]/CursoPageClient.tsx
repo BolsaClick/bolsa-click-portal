@@ -147,13 +147,6 @@ export default function CursoPageClient({
           aria-hidden="true"
           className="absolute -bottom-32 -left-24 w-[28rem] h-[28rem] rounded-full bg-blue-400/15 blur-3xl"
         />
-        {/* Bob da área do curso (decorativo) — mapa em docs/MASCOTES.md */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute bottom-0 right-6 hidden lg:block xl:right-16"
-        >
-          <Mascot pose={courseAreaPose(cursoMetadata.name)} size={168} />
-        </div>
         <div className="container mx-auto px-4 py-20 md:py-28 relative">
           <div className="max-w-4xl mx-auto text-center flex flex-col items-center">
             <h1 className="font-display text-4xl md:text-5xl lg:text-[64px] font-semibold text-white leading-[1.05] mb-5">
@@ -396,6 +389,10 @@ export default function CursoPageClient({
                   className="object-cover"
                   sizes="(min-width: 768px) 40vw, 100vw"
                 />
+                {/* Bob da área explicando o curso (docs/MASCOTES.md) */}
+                <div aria-hidden="true" className="pointer-events-none absolute -bottom-1 right-3 hidden md:block">
+                  <Mascot pose={courseAreaPose(cursoMetadata.name)} size={112} />
+                </div>
               </div>
             </div>
           </div>

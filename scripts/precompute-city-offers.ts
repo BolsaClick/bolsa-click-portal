@@ -50,7 +50,21 @@ if (!TARTARUS_API) {
   process.exit(1)
 }
 
-const prisma = new PrismaClient()
+// Upserts rodam com CONCURRENCY em paralelo; a DATABASE_URL do app costuma vir
+// com connection_limit=1 (bom pro serverless, fatal aqui: pool timeout no fim
+// da rodada). Força um pool que comporta a concorrência do script.
+function scriptDatabaseUrl(): string | undefined {
+  const raw = process.env.DATABASE_URL
+  if (!raw) return undefined
+  const url = new URL(raw)
+  url.searchParams.set('connection_limit', String(Math.max(CONCURRENCY + 1, 5)))
+  url.searchParams.set('pool_timeout', '30')
+  return url.toString()
+}
+
+const prisma = new PrismaClient({
+  datasources: { db: { url: scriptDatabaseUrl() } },
+})
 const tartarus = axios.create({
   baseURL: TARTARUS_API,
   headers: { 'Content-Type': 'application/json' },

@@ -37,8 +37,11 @@ export async function loadAthenaOffersServer(params: {
     if (params.city) qs.set('city', params.city)
     if (params.state) qs.set('state', params.state)
     const base = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    // NUNCA 'no-store' aqui: um fetch no-store durante o render opta a rota
+    // inteira pra renderização dinâmica e mata o ISR da home (regressão
+    // 2026-07-16: home caiu pra DYNAMIC e passou a levar ~7s por request).
     const res = await fetch(`${base}/api/athena-offers?${qs.toString()}`, {
-      cache: 'no-store',
+      next: { revalidate: 3600 },
       signal: AbortSignal.timeout(6000),
     })
     if (!res.ok) return []

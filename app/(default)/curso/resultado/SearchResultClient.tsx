@@ -23,7 +23,6 @@ import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { normalizeAcademicLevel } from '@/app/lib/academic-level'
 import { titleCasePtBr } from '@/app/lib/utils/title-case'
 import { normalizeBrand } from '@/app/lib/utils/brand'
-import { enrichCourseWithMockData } from '@/app/lib/mock-course-data'
 
 import CourseCardNew from '@/app/components/CourseCardNew';
 import FiltersPanel from './FiltersPanel';
@@ -328,7 +327,7 @@ export default function SearchResultClient() {
     [courseNameForAPI, cidade, estado, modalidade, normalizedNivel],
   )
 
-  const { data: showCourses, isLoading, isFetching } = useQuery({
+  const { data: showCourses, isLoading, isFetching, isError, refetch } = useQuery({
     queryFn: () => getShowFiltersCourses(
       courseNameForAPI,
       cidade || undefined,
@@ -497,12 +496,7 @@ export default function SearchResultClient() {
     });
   }, [filteredByBrand, filters.montlyFeeToMin]);
 
-  // Enriquecer cursos com dados mockados pra testar redesign
-  const enrichedCourses = useMemo(() => {
-    return enrichCourseWithMockData(filteredByPrice as Course[]);
-  }, [filteredByPrice]);
-
-  const paginatedCourses = enrichedCourses.slice(
+  const paginatedCourses = filteredByPrice.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -528,7 +522,7 @@ export default function SearchResultClient() {
       seen.add(key)
       return true
     }).slice(0, 6)
-    return enrichCourseWithMockData(filtered as Course[])
+    return filtered as Course[]
   }, [fallbackData, modalidade])
 
 
@@ -661,7 +655,7 @@ const onSubmit = (data: any) => {
   // - primeira request em andamento (isLoading=true)
   // - hidratação client-side antes de useSearchParams resolver
   // O empty state só aparece quando temos uma resposta de fato com 0 itens.
-  const awaitingResults = !showCourses || isLoading
+  const awaitingResults = !isError && (!showCourses || isLoading)
 
   return (
     <div className="w-full bg-paper min-h-screen">
@@ -881,7 +875,26 @@ const onSubmit = (data: any) => {
               </div>
             )}
 
-            {awaitingResults ? (
+            {isError ? (
+              <div className="bg-white border border-hairline rounded-2xl p-8 md:p-10 text-center">
+                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-red-500">
+                  Erro na busca
+                </span>
+                <h2 className="font-display text-xl md:text-2xl text-ink-900 mt-2">
+                  Não foi possível carregar as ofertas
+                </h2>
+                <p className="text-ink-500 text-[14px] mt-2 mb-6">
+                  Seus filtros foram preservados. Tente novamente.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void refetch()}
+                  className="inline-flex items-center justify-center px-6 py-3 bg-bolsa-secondary text-white font-semibold rounded-full text-[14px] hover:bg-bolsa-secondary/90 transition-colors"
+                >
+                  Tentar novamente
+                </button>
+              </div>
+            ) : awaitingResults ? (
               <div
                 className={`grid ${
                   viewMode === 'grid'
@@ -1138,4 +1151,3 @@ const onSubmit = (data: any) => {
     </div>
   )
 }
-

@@ -45,6 +45,9 @@ const getCourseKey = (course: Course): string => {
 
 function syncAddToApi(course: Course, firebaseUser: { getIdToken: () => Promise<string> } | null) {
   if (!firebaseUser) return
+  const discount = course.minPrice > 0 && course.maxPrice && course.maxPrice > course.minPrice
+    ? Math.round((1 - course.minPrice / course.maxPrice) * 100)
+    : null
   firebaseUser.getIdToken().then(token => {
     fetch('/api/user/favorites', {
       method: 'POST',
@@ -56,7 +59,7 @@ function syncAddToApi(course: Course, firebaseUser: { getIdToken: () => Promise<
         institutionName: course.brand ?? null,
         modalidade: course.modality ?? course.commercialModality ?? null,
         price: course.minPrice ?? null,
-        discount: course.discount ?? null,
+        discount,
       }),
     }).catch(() => {})
   })
@@ -185,4 +188,3 @@ export function useFavorites() {
     clearFavorites,
   }
 }
-

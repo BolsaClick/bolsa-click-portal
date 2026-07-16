@@ -50,10 +50,6 @@ export interface Course {
   mecScore?: number
   /** Quantidade de alunos inscritos neste semestre */
   enrolledCount?: number
-  /** Desconto aplicado (em %) */
+  /** Desconto derivado de minPrice/maxPrice, persistido em favoritos */
   discount?: number
-  /** Data de expiração do desconto */
-  discountExpires?: string
-  /** Vagas disponíveis (null = ilimitado) */
-  availableSpots?: number | null
 }

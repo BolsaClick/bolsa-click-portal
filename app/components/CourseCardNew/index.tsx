@@ -6,7 +6,7 @@ import { usePostHogTracking } from "@/app/lib/hooks/usePostHogTracking"
 import { trackFbqDual } from "@/app/lib/analytics/fbq"
 import { trackTikTok } from "@/app/lib/analytics/ttq"
 import { getAcademicLevelLabel } from "@/app/lib/academic-level"
-import { Building2, Clock, Heart, MapPin, Star } from "lucide-react"
+import { Building2, Clock, Heart, MapPin } from "lucide-react"
 import Image from "next/image"
 import { useState, useMemo } from "react"
 import { usePathname } from "next/navigation"
@@ -29,7 +29,6 @@ type CourseInfo = {
 }
 
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const CourseCardNew: React.FC<CourseCardProps> = ({
   course,
   viewMode,
@@ -246,6 +245,14 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
 
 
   const courseParsed = parseCourseName(courseName || course.name);
+  const hasDiscount = Boolean(
+    course.minPrice > 0 &&
+    typeof course.maxPrice === 'number' &&
+    course.maxPrice > course.minPrice
+  )
+  const discountPercentage = hasDiscount
+    ? Math.round((1 - course.minPrice / course.maxPrice!) * 100)
+    : 0
 
   // Função para determinar o turno baseado em shiftOptions
   const getShiftLabel = (shiftOptions?: string[]): string => {
@@ -406,13 +413,8 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
             )}
           </div>
 
-          {/* Chips: avaliação, modalidade, turno, duração */}
+          {/* Chips: modalidade, turno, duração */}
           <div className="mt-3 flex min-h-[2rem] flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
-              <Star size={13} className="text-amber-400" fill="#FBBF24" />
-              4.8
-            </span>
-
             <span
               className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700"
               itemProp="courseMode"
@@ -490,6 +492,13 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
             itemScope
             itemType="https://schema.org/CourseInstance"
           >
+            {hasDiscount && (
+              <p className="mb-2 text-xs text-neutral-500">
+                De {course.maxPrice!.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}{' '}
+                por {course.minPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}{' '}
+                · -{discountPercentage}%
+              </p>
+            )}
             <div className="mb-3 flex items-baseline gap-1.5">
               <span className="text-sm text-neutral-500">
                 {course.academicLevel === 'POS_GRADUACAO' &&

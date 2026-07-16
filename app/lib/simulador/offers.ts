@@ -3,9 +3,8 @@ import type { Modalidade } from './types'
 
 /**
  * Oferta real normalizada pro simulador. Todos os campos derivam da busca real
- * (Tartarus/Cogna + Athena/Estácio via getShowFiltersCourses) — nunca de
- * mock-course-data.ts. `discountPct` é DERIVADO de (1 - min/max), não um campo
- * inventado.
+ * (Tartarus/Cogna + Athena/Estácio via getShowFiltersCourses).
+ * `discountPct` é DERIVADO de (1 - min/max), não um campo inventado.
  */
 export interface SimuladorOferta {
   name: string

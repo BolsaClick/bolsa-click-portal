@@ -22,6 +22,7 @@ type ComboBoxProps<T> = {
   onInputChange?: (value: string) => void
   value?: T
   icon?: ReactNode
+  error?: string
 }
 
 export const ComboBox = <T extends CourseOption | CityOption>({
@@ -31,6 +32,7 @@ export const ComboBox = <T extends CourseOption | CityOption>({
   placeholder = 'Selecione uma opção',
   onInputChange,
   icon,
+  error,
 }: ComboBoxProps<T>) => {
   const [inputValue, setInputValue] = useState('')
   const [isOpen, setIsOpen] = useState(false)
@@ -52,6 +54,12 @@ export const ComboBox = <T extends CourseOption | CityOption>({
       if (fieldValue && typeof fieldValue === 'object' && 'name' in fieldValue) {
         // É uma seleção de opção, atualizar o input
         setInputValue(fieldValue.name || '')
+      } else if (fieldValue && typeof fieldValue === 'object' && 'city' in fieldValue) {
+        setInputValue(
+          fieldValue.city && fieldValue.state ? `${fieldValue.city} - ${fieldValue.state}` : '',
+        )
+      } else if (typeof fieldValue === 'string') {
+        setInputValue(fieldValue)
       } else if (fieldValue === null || fieldValue === undefined || fieldValue === '') {
         // Valor foi limpo externamente
         setInputValue('')
@@ -113,7 +121,9 @@ export const ComboBox = <T extends CourseOption | CityOption>({
                 value={inputValue}
                 onChange={(e) => {
                   handleInputChange(e)
-                  // Não atualizar o field enquanto está digitando, só o inputValue
+                  // O texto visível também é o valor do formulário. Assim o submit
+                  // sempre valida exatamente o conteúdo atual do input.
+                  field.onChange(e.target.value)
                   // Manter o dropdown aberto quando há opções disponíveis
                   if (options.length > 0) {
                     setIsOpen(true)
@@ -136,7 +146,13 @@ export const ComboBox = <T extends CourseOption | CityOption>({
                     }
                   }, 200)
                 }}
-               className={`w-full ${icon ? 'pl-10' : 'pl-4'}  pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bolsa-secondary focus:border-bolsa-secondary outline-none transition-colors`}
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? `${name}-error` : undefined}
+                className={`w-full ${icon ? 'pl-10' : 'pl-4'} pr-3 py-3 border rounded-lg focus:ring-2 outline-none transition-colors ${
+                  error
+                    ? 'border-red-500 focus:ring-red-200 focus:border-red-500'
+                    : 'border-gray-300 focus:ring-bolsa-secondary focus:border-bolsa-secondary'
+                }`}
                 placeholder={placeholder}
               />
               {isOpen && filteredOptions.length > 0 && (
@@ -185,6 +201,7 @@ export const ComboBox = <T extends CourseOption | CityOption>({
                         isSelectingRef.current = false
                         setIsOpen(false)
                         field.onChange(selectedValue)
+                        onInputChange?.(displayValue)
                         // Manter o foco no input após selecionar
                         if (inputRef.current) {
                           inputRef.current.focus()
@@ -205,6 +222,11 @@ export const ComboBox = <T extends CourseOption | CityOption>({
                     Nenhuma opção encontrada
                   </div>
                 </div>
+              )}
+              {error && (
+                <p id={`${name}-error`} className="mt-1.5 text-xs text-red-500" role="alert">
+                  {error}
+                </p>
               )}
             </>
           )

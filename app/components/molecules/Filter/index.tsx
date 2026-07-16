@@ -17,8 +17,8 @@ import { useLastSearch } from '@/app/lib/personalization/hooks'
 
 type FormValues = {
   modalidade: 'EAD' | 'PRESENCIAL' | 'SEMIPRESENCIAL'
-  course: { name: string; id: string; slug: string }
-  city: { state: string; city: string }
+  course: { name: string; id: string; slug: string } | string
+  city: { state: string; city: string } | string
   levels: 'graduacao' | 'pos' | 'profissionalizante'
 }
 
@@ -32,6 +32,8 @@ const Filter = () => {
   const { city: geoCity, state: geoState } = useGeoLocation()
   const { saveSearch } = useLastSearch()
   const [searchCity, setSearchCity] = useState('')
+  const [courseError, setCourseError] = useState('')
+  const [cityError, setCityError] = useState('')
   const [activeTab, setActiveTab] = useState<FormValues['levels']>(() => {
     if (typeof window !== 'undefined') {
       const savedLevel = localStorage.getItem('selectedLevel')
@@ -75,6 +77,7 @@ const Filter = () => {
     setValue('levels', level)
 
     setValue('course', { id: '', name: '', slug: '' })
+    setCourseError('')
   }
   const { control, handleSubmit, watch, setValue } = useForm<FormValues>({
     defaultValues: {
@@ -162,6 +165,13 @@ const Filter = () => {
     return match ? match[1] : ''
   }
 
+  const normalizeOptionText = (value: string) =>
+    value
+      .trim()
+      .toLocaleLowerCase('pt-BR')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+
   // Converter valores do ModalitySelect para o formato esperado
   const convertModalityToAPI = (value: string): FormValues['modalidade'] => {
     const lower = value.toLowerCase()
@@ -181,11 +191,40 @@ const Filter = () => {
   }
 
   const onSubmit = (data: FormValues) => {
+    const typedCourse = typeof data.course === 'string' ? data.course.trim() : ''
+    let selectedCourse = typeof data.course === 'object'
+      ? data.course
+      : { id: '', name: '', slug: '' }
 
-    const city = data.city.city || 'São Paulo'
-    const state = data.city.state || 'SP'
+    if (!selectedCourse.name && typedCourse) {
+      const normalizedInput = normalizeOptionText(typedCourse)
+      const exactMatch = courseOptions.find(
+        (option) =>
+          normalizeOptionText(option.name) === normalizedInput ||
+          normalizeOptionText(removeCourseSuffix(option.name)) === normalizedInput,
+      )
+      if (exactMatch) {
+        selectedCourse = exactMatch
+        setValue('course', exactMatch)
+      }
+    }
 
-    const courseNameClean = data.course.name ? removeCourseSuffix(data.course.name) : ''
+    if (typedCourse && !selectedCourse.name) {
+      setCourseError('Selecione um curso da lista')
+      return
+    }
+
+    if (typeof data.city !== 'object' || !data.city.city || !data.city.state) {
+      setCityError('Selecione uma cidade da lista')
+      return
+    }
+
+    setCourseError('')
+    setCityError('')
+
+    const city = data.city.city
+    const state = data.city.state
+    const courseNameClean = selectedCourse.name ? removeCourseSuffix(selectedCourse.name) : ''
 
     // Construir URL com parâmetros - 'c' sempre primeiro se existir
     const params: string[] = [];
@@ -197,8 +236,8 @@ const Filter = () => {
     
     // Adicionar apenas o sufixo do curso (Bacharelado, Licenciatura, Tecnólogo) no cn
     // Só adiciona cn se o curso tiver sufixo
-    if (data.course.name && data.course.name.trim() && hasCourseSuffix(data.course.name)) {
-      const suffix = extractCourseSuffix(data.course.name)
+    if (selectedCourse.name && selectedCourse.name.trim() && hasCourseSuffix(selectedCourse.name)) {
+      const suffix = extractCourseSuffix(selectedCourse.name)
       if (suffix) {
         params.push(`cn=${encodeURIComponent(suffix)}`);
       }
@@ -273,6 +312,10 @@ const Filter = () => {
             options={courseOptions}
             icon={<GraduationCap size={20} />}
             placeholder="Digite o curso"
+            error={courseError}
+            onInputChange={() => {
+              if (courseError) setCourseError('')
+            }}
           />
         </div>
 
@@ -283,7 +326,11 @@ const Filter = () => {
             options={cityOptions}
             placeholder="Digite uma cidade"
             icon={<MapPin size={20} />}
-            onInputChange={(inputValue) => handleCityChange(inputValue)}
+            error={cityError}
+            onInputChange={(inputValue) => {
+              handleCityChange(inputValue)
+              if (cityError) setCityError('')
+            }}
           />
         </div>
         {showModality && (

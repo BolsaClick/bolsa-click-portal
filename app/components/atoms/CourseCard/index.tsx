@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
-import { ChevronDown, ChevronUp, MapPin, Star } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
+import { ChevronDown, ChevronUp, MapPin } from 'lucide-react'
+import React, { useState } from 'react'
 
 import Image from 'next/image'
 import { Course } from '../../../interface/course'
@@ -18,22 +18,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
   courseName,
 
 }) => {
-  const [rating, setRating] = useState<number>(0)
   const [showAddress, setShowAddress] = useState(false)
-  useEffect(() => {
-    const randomRating = (Math.random() * (5 - 4) + 4).toFixed(1)
-    setRating(Number(randomRating))
-  }, [])
-
-  const getRatingColor = () => {
-    if (rating === 5) {
-      return 'text-green-500'
-    }
-    if (rating > 3) {
-      return 'text-yellow-500'
-    }
-    return 'text-red-500'
-  }
 
   const renderUniversityImage = (universityName: string) => {
     switch (universityName.toLowerCase()) {
@@ -87,6 +72,14 @@ const CourseCard: React.FC<CourseCardProps> = ({
   }
 
   const universityLogo = renderUniversityImage(course.brand)
+  const hasDiscount = Boolean(
+    course.minPrice > 0 &&
+    typeof course.maxPrice === 'number' &&
+    course.maxPrice > course.minPrice
+  )
+  const discountPercentage = hasDiscount
+    ? Math.round((1 - course.minPrice / course.maxPrice!) * 100)
+    : 0
   return (
     <div className="rounded-lg border border-gray-200 bg-white overflow-hidden transition-all duration-200 hover:shadow-md">
       {/* Header */}
@@ -99,12 +92,6 @@ const CourseCard: React.FC<CourseCardProps> = ({
             height={96}
             className="object-contain"
           />
-          <div className="flex items-center gap-1 rounded-md bg-amber-50 px-2 py-1 text-amber-600">
-            <Star className="h-4 w-4 fill-amber-500 text-amber-500" />
-            <div className={`${getRatingColor()} text-lg font-semibold`}>
-              {rating}
-            </div>
-          </div>
         </div>
       </div>
 
@@ -169,6 +156,13 @@ const CourseCard: React.FC<CourseCardProps> = ({
 
       {/* Footer */}
       <div className="border-t border-gray-200 px-4 py-3">
+        {hasDiscount && (
+          <p className="mb-1 text-xs text-gray-500">
+            De {course.maxPrice!.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}{' '}
+            por {course.minPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}{' '}
+            · -{discountPercentage}%
+          </p>
+        )}
         <div className="mb-2 flex items-baseline gap-1">
           <span className="text-lg font-bold">
             {(course.minPrice / 1).toLocaleString('pt-BR', {

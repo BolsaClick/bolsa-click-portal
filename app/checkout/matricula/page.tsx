@@ -998,6 +998,14 @@ const isFormValidForPayment =
 
             if (marketplaceResult.success) {
               console.log('✅ Inscrição no marketplace ATHENAS criada com sucesso')
+              // NOTA (auditoria 2026-07-17): este evento é quase-morto por
+              // construção — as ofertas ATHENAS com idDmhElastic são graduação
+              // EAD/semi, que são `chargeable`, e o submit retorna em
+              // `matriculaCharge.chargeable` (linha ~1181) ANTES de chegar aqui.
+              // A inscrição marketplace dessas ofertas é criada server-side em
+              // confirmPaidMatricula e a conversão é sinalizada por
+              // `enrollment_paid_confirmed`. Este ramo só roda numa oferta
+              // ATHENAS não-chargeable (raro) — mantido pra não perder o sinal.
               trackEvent('marketplace_inscription_created', {
                 course_id: offerDetails.courseId,
                 course_name: offerDetails.course,

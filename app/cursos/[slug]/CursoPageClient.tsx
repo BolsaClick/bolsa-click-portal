@@ -17,6 +17,7 @@ import { FeaturedCourseData } from '../_data/types'
 import { useVisitedCourses } from '@/app/lib/personalization/hooks'
 import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { pushDataLayerEvent } from '@/app/lib/analytics/gtag'
+import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { getBrandLogo } from '@/app/lib/brand-logos'
 import Mascot from '@/app/components/v2/mascot/Mascot'
 import { courseAreaPose } from '@/app/components/v2/mascot/course-area'
@@ -73,6 +74,7 @@ export default function CursoPageClient({
   const infoSectionRef = useRef<HTMLElement>(null)
   const offersRef = useRef<HTMLElement>(null)
   const { recordVisit } = useVisitedCourses()
+  const { trackEvent } = usePostHogTracking()
 
   useEffect(() => {
     recordVisit({ slug: cursoMetadata.slug, name: cursoMetadata.name })
@@ -105,6 +107,18 @@ export default function CursoPageClient({
           },
         ],
       },
+    })
+
+    // PostHog - paridade com Meta/GA4. O $pageview cobria a URL, mas sem um
+    // evento tipado não dava pra montar funil/cohort de "viu curso X" no mesmo
+    // vocabulário dos outros vendors nem cruzar com os eventos de checkout.
+    trackEvent('course_viewed', {
+      course_slug: cursoMetadata.slug,
+      course_name: cursoMetadata.name,
+      academic_level: cursoMetadata.nivel,
+      offer_count: courseOffers.length,
+      min_price: cheapest.length ? Math.min(...cheapest) : null,
+      page_type: 'course',
     })
     // Dispara 1x por curso visitado — ofertas não mudam sem trocar de slug.
     // eslint-disable-next-line react-hooks/exhaustive-deps

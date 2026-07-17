@@ -23,7 +23,7 @@ const CSP_REPORT_ONLY = [
   "img-src 'self' data: blob: https:",
   "media-src 'self' blob:",
   // Fetch / XHR / WebSocket — todas as APIs first-party + integrações.
-  "connect-src 'self' https://us.i.posthog.com https://us-assets.i.posthog.com https://api.utmify.com.br https://analytics.tiktok.com https://www.google-analytics.com https://www.googletagmanager.com https://stats.g.doubleclick.net https://*.facebook.com https://thanos.notealy.com https://tartarus-api.inovitdigital.com.br https://elysium-api.inovitdigital.com.br https://t3.storageapi.dev https://bolsa-click.fly.storage.tigris.dev https://*.firebaseio.com https://*.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com",
+  "connect-src 'self' https://hermes.bolsamais.com.br https://us.i.posthog.com https://us-assets.i.posthog.com https://api.utmify.com.br https://analytics.tiktok.com https://www.google-analytics.com https://www.googletagmanager.com https://stats.g.doubleclick.net https://*.facebook.com https://thanos.notealy.com https://tartarus-api.inovitdigital.com.br https://elysium-api.inovitdigital.com.br https://t3.storageapi.dev https://bolsa-click.fly.storage.tigris.dev https://*.firebaseio.com https://*.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com",
   // iframes: GTM noscript pixel.
   "frame-src 'self' https://www.googletagmanager.com https://www.facebook.com",
   // Frame ancestors — quem pode embedar o site (Clickjacking).

@@ -83,6 +83,20 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
       // no-opavam em silêncio (chat_*, consent_given, vocational_test_shared
       // com ZERO ingestões confirmadas na auditoria de 2026-07-17).
       ;(window as unknown as Record<string, unknown>).posthog = posthog
+
+      // Dispara o consent_given que o ConsentProvider não conseguiu emitir: no
+      // 1º "aceitar", o PostHog ainda não existia (ele é gated pelo próprio
+      // consent), então o evento foi enfileirado em sessionStorage. Emite uma
+      // única vez e limpa — não re-dispara em reloads.
+      try {
+        const pending = sessionStorage.getItem("ph_pending_consent")
+        if (pending) {
+          sessionStorage.removeItem("ph_pending_consent")
+          posthog.capture("consent_given", JSON.parse(pending))
+        }
+      } catch {
+        /* sessionStorage indisponível / JSON inválido — ignora */
+      }
     })
   }, [analyticsAllowed])
 

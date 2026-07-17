@@ -49,7 +49,7 @@ function logConsentDecision(categories: ConsentCategoriesState) {
     /* ignore */
   }
 
-  // Evento PostHog quando analytics estiver habilitado
+  // Evento PostHog quando analytics estiver habilitado.
   try {
     const ph = (window as unknown as { posthog?: PostHogLite }).posthog
     if (ph && categories.analytics) {
@@ -57,6 +57,20 @@ function logConsentDecision(categories: ConsentCategoriesState) {
         categories,
         version: CONSENT_VERSION,
       })
+    } else if (categories.analytics) {
+      // O PostHog só inicializa DEPOIS do consent de analytics ser dado, então
+      // no 1º "aceitar" o window.posthog ainda não existe e o evento se perdia
+      // (bug: consent_given com 0 ingestões). Enfileira pro PostHogProvider
+      // disparar assim que carregar. Mudanças posteriores de consent (PostHog já
+      // carregado) caem no ramo de cima e disparam direto.
+      try {
+        sessionStorage.setItem(
+          'ph_pending_consent',
+          JSON.stringify({ categories, version: CONSENT_VERSION }),
+        )
+      } catch {
+        /* sessionStorage indisponível — segue */
+      }
     }
   } catch {
     /* ignore */

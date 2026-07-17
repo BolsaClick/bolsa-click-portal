@@ -12,11 +12,14 @@ import {
   LayoutGrid,
   LayoutList,
   ArrowRight,
+  RefreshCw,
+  TriangleAlert,
   X,
 } from 'lucide-react';
 
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
@@ -346,6 +349,10 @@ export default function SearchResultClient() {
     refetchOnMount: false,
     refetchOnReconnect: false,
     placeholderData: keepPreviousData,
+    // 1 retry só: cada tentativa já tem timeout de 15s na camada de API
+    // (get-courses-filter) — com os 3 retries default o usuário ficaria
+    // mais de 1 min olhando skeleton antes do estado de erro aparecer.
+    retry: 1,
   })
 
   // Fallback automático: quando a busca exata vier vazia mas o usuário pediu
@@ -425,6 +432,25 @@ export default function SearchResultClient() {
       }
     }
   }, [showCourses, isLoading, courseNameForAPI, cidade, estado, modalidade, nivel, normalizedNivel, trackEvent])
+
+  // Fontes que falharam quando o resultado veio PARCIAL (uma fonte ok, outra fora).
+  // Vem do get-courses-filter — usado no aviso discreto acima da lista.
+  const failedSources = useMemo<string[]>(
+    () => (Array.isArray(showCourses?.failedSources) ? showCourses.failedSources : []),
+    [showCourses],
+  )
+
+  // Track de falha total da busca (todas as fontes fora) — o usuário viu o estado de erro.
+  useEffect(() => {
+    if (!isError) return
+    trackEvent('course_search_failed', {
+      course_name: courseNameForAPI,
+      city: cidade,
+      state: estado,
+      modality: modalidade,
+      academic_level: normalizedNivel,
+    })
+  }, [isError, courseNameForAPI, cidade, estado, modalidade, normalizedNivel, trackEvent])
 
 
   // Filtrar por modalidade apenas se houver modalidade na URL
@@ -863,6 +889,28 @@ const onSubmit = (data: any) => {
 
           {/* RESULTADOS */}
           <div className="lg:col-span-8 xl:col-span-9 min-w-0">
+            {/* Aviso discreto: resultado PARCIAL (uma das fontes de oferta falhou,
+                mas a outra respondeu — mostramos o que veio em vez de esconder tudo) */}
+            {!isError && !awaitingResults && failedSources.length > 0 && (
+              <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 mb-6">
+                <TriangleAlert size={16} className="flex-shrink-0 text-amber-600 mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] text-amber-900 leading-relaxed">
+                    Parte das ofertas não carregou agora — algumas instituições podem estar
+                    faltando na lista.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void refetch()}
+                    className="inline-flex items-center gap-1.5 mt-1 font-mono text-[10px] tracking-[0.18em] uppercase text-amber-700 hover:text-amber-900 transition-colors"
+                  >
+                    <RefreshCw size={11} />
+                    Recarregar
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Toolbar de resultados */}
             {!awaitingResults && totalResults > 0 && (
               <div className="flex items-baseline justify-between hairline-b pb-3 mb-6">
@@ -878,22 +926,36 @@ const onSubmit = (data: any) => {
 
             {isError ? (
               <div className="bg-white border border-hairline rounded-2xl p-8 md:p-10 text-center">
+                <div className="flex justify-center mb-5">
+                  <Mascot pose="confuso" size={120} alt="Bob, o mascote do Bolsa Click, confuso" />
+                </div>
                 <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-red-500">
                   Erro na busca
                 </span>
                 <h2 className="font-display text-xl md:text-2xl text-ink-900 mt-2">
-                  Não foi possível carregar as ofertas
+                  Não conseguimos carregar as ofertas agora
                 </h2>
-                <p className="text-ink-500 text-[14px] mt-2 mb-6">
-                  Seus filtros foram preservados. Tente novamente.
+                <p className="text-ink-500 text-[14px] mt-2 mb-6 max-w-md mx-auto leading-relaxed">
+                  Pode ter sido uma instabilidade momentânea. Seus filtros foram
+                  preservados — tente de novo em alguns segundos.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => void refetch()}
-                  className="inline-flex items-center justify-center px-6 py-3 bg-bolsa-secondary text-white font-semibold rounded-full text-[14px] hover:bg-bolsa-secondary/90 transition-colors"
-                >
-                  Tentar novamente
-                </button>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => void refetch()}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-bolsa-secondary text-white font-semibold rounded-full text-[14px] hover:bg-bolsa-secondary/90 transition-colors"
+                  >
+                    <RefreshCw size={15} />
+                    Tentar de novo
+                  </button>
+                  <Link
+                    href="/"
+                    className="inline-flex items-center gap-2 px-6 py-3 font-mono text-[11px] tracking-[0.18em] uppercase text-ink-700 hover:text-ink-900 transition-colors"
+                  >
+                    Voltar pra home
+                    <ArrowRight size={14} />
+                  </Link>
+                </div>
               </div>
             ) : awaitingResults ? (
               <div

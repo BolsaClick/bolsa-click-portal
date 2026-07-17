@@ -34,12 +34,44 @@ function databaseUrlWithPool(): string | undefined {
   }
 }
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
+/**
+ * Erros transitórios de conexão (o Postgres fecha conexão ociosa e o Prisma
+ * tenta reusá-la morta). Acontece principalmente no build/SSG longo, onde uma
+ * única falha dessas derruba o deploy inteiro (ex.: P1017 em
+ * /bolsas-de-estudo/[city]). Retry com backoff resolve — o Prisma reabre a
+ * conexão na tentativa seguinte.
+ */
+const TRANSIENT_DB_ERROR_CODES = new Set(['P1001', 'P1002', 'P1008', 'P1017'])
+
+function isTransientDbError(error: unknown): boolean {
+  const code = (error as { code?: string } | null)?.code
+  return typeof code === 'string' && TRANSIENT_DB_ERROR_CODES.has(code)
 }
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({ datasourceUrl: databaseUrlWithPool() })
+function createPrismaClient() {
+  return new PrismaClient({ datasourceUrl: databaseUrlWithPool() }).$extends({
+    query: {
+      async $allOperations({ args, query }) {
+        const RETRIES = 2
+        for (let attempt = 0; ; attempt++) {
+          try {
+            return await query(args)
+          } catch (error) {
+            if (attempt >= RETRIES || !isTransientDbError(error)) throw error
+            await new Promise((r) => setTimeout(r, 500 * (attempt + 1)))
+          }
+        }
+      },
+    },
+  })
+}
+
+type ExtendedPrismaClient = ReturnType<typeof createPrismaClient>
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: ExtendedPrismaClient | undefined
+}
+
+export const prisma = globalForPrisma.prisma ?? createPrismaClient()
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma

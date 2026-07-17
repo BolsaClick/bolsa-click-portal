@@ -75,18 +75,26 @@ const _getCityOffersBase = unstable_cache(
 
 const getCityOffers = cache(_getCityOffersBase)
 
-const getActiveInstitutions = cache(async () => {
-  return prisma.institution.findMany({
-    where: { isActive: true },
-    select: {
-      slug: true,
-      name: true,
-      shortName: true,
-      fullName: true,
-      mecRating: true,
-    },
-  })
-})
+// unstable_cache compartilha o resultado entre todas as city pages (1 query no
+// build inteiro em vez de 1 por página) — menos pressão no Postgres durante o SSG.
+const _getActiveInstitutionsBase = unstable_cache(
+  async () => {
+    return prisma.institution.findMany({
+      where: { isActive: true },
+      select: {
+        slug: true,
+        name: true,
+        shortName: true,
+        fullName: true,
+        mecRating: true,
+      },
+    })
+  },
+  ['bolsas-city-institutions'],
+  { revalidate: 3600 },
+)
+
+const getActiveInstitutions = cache(_getActiveInstitutionsBase)
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { city: citySlug } = await params

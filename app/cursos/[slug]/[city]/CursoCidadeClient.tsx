@@ -15,9 +15,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { FeaturedCourseData } from '../../_data/types'
-import { trackFbqDual } from '@/app/lib/analytics/fbq'
-import { pushDataLayerEvent } from '@/app/lib/analytics/gtag'
-import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
+import { useConversionMirror } from '@/app/lib/analytics/track-conversion'
 import { getBrandLogo } from '@/app/lib/brand-logos'
 
 interface CursoCidadeClientProps {
@@ -75,47 +73,50 @@ export default function CursoCidadeClient({
   const [activeTab, setActiveTab] = useState<'areas' | 'skills' | 'careers'>('areas')
   const [selectedModality, setSelectedModality] = useState<ModalityFilter>('TODAS')
   const router = useRouter()
-  const { trackEvent } = usePostHogTracking()
+  const mirror = useConversionMirror()
 
-  // Meta Pixel + Conversions API - ViewContent (curso×cidade). Mesmo motivo da
-  // página do curso: entrada direta orgânica não passa pelo clique do card.
+  // ViewContent (curso×cidade), espelhado nos 3 vendors com o mesmo event_id.
+  // Mesmo motivo da página do curso: entrada direta orgânica não passa pelo
+  // clique do card. Carrega a dimensão cidade/UF pra segmentar demanda.
   useEffect(() => {
     const cheapest = courseOffers
       .map((o) => o.minPrice || 0)
       .filter((p) => p > 0)
-    void trackFbqDual('ViewContent', {
-      content_name: cursoMetadata.name,
-      content_type: 'product',
-      content_category: cursoMetadata.nivel,
-      value: cheapest.length ? Math.min(...cheapest) : 0,
-      currency: 'BRL',
-    })
-
-    // GA4 ecommerce (dataLayer/GTM) - view_item, paridade com o ViewContent acima.
-    pushDataLayerEvent('view_item', {
-      ecommerce: {
-        currency: 'BRL',
-        value: cheapest.length ? Math.min(...cheapest) : 0,
-        items: [
-          {
-            item_name: cursoMetadata.name,
-            item_category: cursoMetadata.nivel,
-          },
-        ],
+    const value = cheapest.length ? Math.min(...cheapest) : 0
+    mirror({
+      meta: {
+        event: 'ViewContent',
+        data: {
+          content_name: cursoMetadata.name,
+          content_type: 'product',
+          content_category: cursoMetadata.nivel,
+          value,
+          currency: 'BRL',
+        },
       },
-    })
-
-    // PostHog - paridade com Meta/GA4. Mesmo evento da página do curso, com a
-    // dimensão cidade/UF pra segmentar demanda geográfica no funil.
-    trackEvent('course_viewed', {
-      course_slug: courseSlug,
-      course_name: cursoMetadata.name,
-      academic_level: cursoMetadata.nivel,
-      offer_count: courseOffers.length,
-      min_price: cheapest.length ? Math.min(...cheapest) : null,
-      city: cityName,
-      state: cityState,
-      page_type: 'course_city',
+      ga4: {
+        event: 'view_item',
+        params: {
+          ecommerce: {
+            currency: 'BRL',
+            value,
+            items: [{ item_name: cursoMetadata.name, item_category: cursoMetadata.nivel }],
+          },
+        },
+      },
+      posthog: {
+        event: 'course_viewed',
+        props: {
+          course_slug: courseSlug,
+          course_name: cursoMetadata.name,
+          academic_level: cursoMetadata.nivel,
+          offer_count: courseOffers.length,
+          min_price: value || null,
+          city: cityName,
+          state: cityState,
+          page_type: 'course_city',
+        },
+      },
     })
     // 1x por curso×cidade visitado.
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -338,7 +338,30 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(courseSchema) }}
       />
       <article
-        className={`group bg-white rounded-xl shadow-card hover:shadow-hover hover:-translate-y-0.5 transition-all duration-300 flex flex-col h-full animate-fade-in ${viewMode === "list" ? "p-6" : ""
+        onClick={(e) => {
+          // Card inteiro clicável → mesma ação do "Inscreva-se". O corpo do card
+          // parecia clicável (hover levanta/sombra) mas não fazia nada: era o
+          // maior foco de rageclick do site (/curso/resultado, 18 em 14d) e o
+          // maior ponto de saída. Ignora cliques em controles internos
+          // (favoritar, seletor de turno, botão) pra não conflitar com eles.
+          if (
+            (e.target as HTMLElement).closest(
+              'button, a, select, input, label, [role="button"]',
+            )
+          ) {
+            return
+          }
+          void handleClick()
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            void handleClick()
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        className={`group cursor-pointer bg-white rounded-xl shadow-card hover:shadow-hover hover:-translate-y-0.5 transition-all duration-300 flex flex-col h-full animate-fade-in ${viewMode === "list" ? "p-6" : ""
           }`}
         itemScope
         itemType="https://schema.org/Course"

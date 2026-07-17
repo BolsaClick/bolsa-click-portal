@@ -885,8 +885,10 @@ const isFormValidForPayment =
           brand: offerDetails.brand,
           modality: offerDetails.modality,
           shift: offerDetails.shift,
-          student_email: data.email,
-          student_cpf: data.cpf.replace(/\D/g, ''),
+          // Privacidade: nunca enviar email/CPF crus como propriedade de evento —
+          // só flags. O contato real vai como person properties no identifyUser abaixo.
+          has_email: !!data.email && data.email.includes('@'),
+          has_cpf: data.cpf.replace(/\D/g, '').length === 11,
           amount_paid: 0,
           promoter_id: promoterId,
         })

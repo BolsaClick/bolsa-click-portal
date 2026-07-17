@@ -16,7 +16,7 @@ import Image from 'next/image'
 import { useCallback, useEffect, useState } from 'react'
 
 import { mascotSrc } from '../v2/mascot/Mascot'
-import { captureChatEvent, CHAT_TEASER_DISMISS_KEY } from './chat-types'
+import { captureChatEvent, CHAT_OPEN_EVENT, CHAT_TEASER_DISMISS_KEY } from './chat-types'
 
 const ChatPanel = dynamic(() => import('./ChatPanel'), { ssr: false })
 
@@ -74,6 +74,12 @@ export default function ChatWidget() {
   }, [dismissTeaser])
 
   const closeChat = useCallback(() => setOpen(false), [])
+
+  // Abertura programática de qualquer lugar do site (ex.: Bob Mago do FAQ).
+  useEffect(() => {
+    window.addEventListener(CHAT_OPEN_EVENT, openChat)
+    return () => window.removeEventListener(CHAT_OPEN_EVENT, openChat)
+  }, [openChat])
 
   return (
     <>

@@ -39,3 +39,14 @@ Set gerado 2026-07-16 na conversa oficial "Bob o Mascote" (ChatGPT, projeto Bols
 | `bob-chef` | Gastronomia, nutrição |
 
 Para novas áreas: gerar na MESMA conversa "Bob o Mascote" pedindo fundo transparente e sem textos; baixar e fatiar com o pipeline de componentes conexos.
+
+## Bob Mago (atendente mágico — FAQ e chat)
+
+Set gerado 2026-07-16 na mesma conversa "Bob o Mascote" (chapéu pontudo de mago azul-marinho com estrelas douradas + varinha mágica). Uso: o assistente `BobWizard` do FAQ (estilo assistente clássico do Office) e superfícies de ajuda/chat.
+
+| Asset | Quando usar |
+|---|---|
+| `bob-mago-acenando` | Idle do atendente, boas-vindas |
+| `bob-mago-apontando` | Direcionar pra uma resposta/CTA |
+| `bob-mago-magia` | Reação "lançando magia" (pergunta aberta, sucesso) |
+| `bob-mago-lendo` | Consultando o "livro de magias" (loading, busca) |

@@ -335,7 +335,7 @@ export default async function HomePage() {
           visível inicial. */}
       <PersonalizationStrip />
 
-      {/* ===== Como funciona — Bob professor ===== */}
+      {/* ===== Como funciona — Bob apontando (recorte limpo) ===== */}
       <section aria-labelledby="como-funciona-titulo" className="border-y border-ink-100 bg-white">
         <div className="mx-auto w-full max-w-screen-lg px-4 py-12 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between gap-6">
@@ -347,7 +347,7 @@ export default async function HomePage() {
                 Quatro passos, sem pegadinha — inclusive o que acontece depois da inscrição.
               </p>
             </div>
-            <Mascot pose="professor" size={120} className="hidden shrink-0 sm:block" />
+            <Mascot pose="apontando" size={128} className="hidden shrink-0 sm:block" />
           </div>
           <ol className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
             {STEPS.map((step, index) => (

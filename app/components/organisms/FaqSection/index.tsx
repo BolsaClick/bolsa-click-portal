@@ -1,5 +1,5 @@
 import Container from '../../atoms/Container'
-import Mascot from '@/app/components/v2/mascot/Mascot'
+import BobWizard from './BobWizard'
 
 const faqs = [
   {
@@ -54,14 +54,14 @@ export default function FaqSection() {
                 Perguntas frequentes sobre bolsas, cadastros, modalidades e o que esperar do
                 processo. Não achou sua dúvida? Fala com a gente.
               </p>
-              <div className="mt-8 hidden md:block">
-                <Mascot pose="ideia" size={132} />
-              </div>
+              {/* Bob Mago — atendente mágico do FAQ (reage ao abrir perguntas
+                  e abre o chat no CTA). */}
+              <BobWizard />
             </div>
           </div>
 
           {/* Right column — accordion */}
-          <div className="md:col-span-7">
+          <div className="md:col-span-7" data-faq-root>
             <ul className="border-t border-hairline">
               {faqs.map((faq, idx) => (
                 <li key={idx} className="border-b border-hairline">

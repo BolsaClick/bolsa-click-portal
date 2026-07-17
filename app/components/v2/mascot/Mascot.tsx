@@ -27,6 +27,8 @@ export type MascotPose =
   // profissões (Bob por área de curso — medicina, direito, engenharias...)
   | 'medico' | 'enfermeiro' | 'advogado' | 'engenheiro' | 'psicologo'
   | 'pedagogo' | 'dentista' | 'chef'
+  // mago (atendente mágico do FAQ/chat — chapéu de mago + varinha)
+  | 'mago-acenando' | 'mago-apontando' | 'mago-magia' | 'mago-lendo'
 
 export function mascotSrc(pose: MascotPose): string {
   return `/assets/mascote/3d/bob-${pose}.png`

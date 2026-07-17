@@ -116,8 +116,9 @@ export default function CourseShelf({
         )}
       </div>
 
-      {/* Feedback do CTA: joinha pipoca no canto, em paralelo à navegação */}
-      <MascotPop pose="comemorando" trigger={popCount} size={104} className="fixed bottom-5 right-5 z-50" />
+      {/* Feedback do CTA: joinha pipoca no canto, em paralelo à navegação.
+          Deslocado pra esquerda pra não ficar embaixo do launcher do chat (bottom-5 right-4/6). */}
+      <MascotPop pose="comemorando" trigger={popCount} size={104} className="fixed bottom-5 right-24 z-50" />
     </section>
   )
 }

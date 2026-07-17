@@ -50,6 +50,13 @@ export interface StoredChatState {
 export const CHAT_STORAGE_KEY = 'bolsaclick_chat'
 export const CHAT_TEASER_DISMISS_KEY = 'bolsaclick_chat_teaser_dismissed'
 
+/**
+ * Evento global pra abrir o chat de qualquer lugar do site (ex.: o Bob Mago
+ * do FAQ). `window.dispatchEvent(new CustomEvent(CHAT_OPEN_EVENT))` — o
+ * ChatWidget escuta e abre o painel.
+ */
+export const CHAT_OPEN_EVENT = 'bolsaclick:chat:open'
+
 // ---------------------------------------------------------------------------
 // Hermes webchat — API chamada DIRETO do browser (CORS liberado pro domínio;
 // rate limit é por IP do visitante, então proxy server-side afunilaria tudo

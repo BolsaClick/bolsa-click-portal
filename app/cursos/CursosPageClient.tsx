@@ -45,9 +45,15 @@ type Offer = {
   uf: string
   finalPrice: number
   originalPrice: number
-  discountPct: number
   href: string
 }
+
+// Desconto DERIVADO dos preços, nunca hardcoded. floor: o % exibido
+// nunca é maior que o desconto real (transparência).
+const discountPct = (o: Offer) =>
+  o.originalPrice > o.finalPrice && o.finalPrice > 0
+    ? Math.floor((1 - o.finalPrice / o.originalPrice) * 100)
+    : 0
 
 const FEATURED_OFFERS: Offer[] = [
   {
@@ -59,7 +65,6 @@ const FEATURED_OFFERS: Offer[] = [
     uf: 'MG',
     finalPrice: 119,
     originalPrice: 950,
-    discountPct: 87,
     href: '/curso/resultado?c=pedagogia&nivel=GRADUACAO&modalidade=EAD',
   },
   {
@@ -71,7 +76,6 @@ const FEATURED_OFFERS: Offer[] = [
     uf: 'PR',
     finalPrice: 99.99,
     originalPrice: 1290,
-    discountPct: 92,
     href: '/curso/resultado?c=administracao&nivel=GRADUACAO&modalidade=EAD',
   },
   {
@@ -83,7 +87,6 @@ const FEATURED_OFFERS: Offer[] = [
     uf: 'PE',
     finalPrice: 109,
     originalPrice: 1100,
-    discountPct: 90,
     href: '/curso/resultado?c=analise-e-desenvolvimento-de-sistemas&nivel=GRADUACAO&modalidade=EAD',
   },
 ]
@@ -314,9 +317,11 @@ export default function CursosPageClient({ courses }: CursosPageClientProps) {
                         unoptimized
                       />
                     </div>
-                    <span className="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-bolsa-secondary text-white text-[11px] font-bold tracking-wide">
-                      -{o.discountPct}%
-                    </span>
+                    {discountPct(o) > 0 && (
+                      <span className="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-bolsa-secondary text-white text-[11px] font-bold tracking-wide">
+                        -{discountPct(o)}%
+                      </span>
+                    )}
                   </div>
 
                   <h3 className="text-[17px] font-bold text-ink-900 leading-snug mb-3 group-hover:text-bolsa-secondary transition-colors line-clamp-2 min-h-[2.6em]">
@@ -336,15 +341,18 @@ export default function CursosPageClient({ courses }: CursosPageClientProps) {
                       <div className="text-[11px] text-ink-500 uppercase tracking-wide font-medium">
                         Mensalidade com bolsa
                       </div>
+                      {/* Âncora riscada ACIMA do preço herói (decisão CEO) */}
+                      {discountPct(o) > 0 && (
+                        <div className="text-[12px] text-ink-300 line-through num-tabular mt-1">
+                          De R$ {formatPrice(o.originalPrice)}
+                        </div>
+                      )}
                       <div className="flex items-baseline gap-1 mt-1">
                         <span className="text-[13px] text-ink-700 font-medium">R$</span>
                         <span className="font-display num-tabular text-3xl font-bold text-bolsa-secondary leading-none">
                           {formatPrice(o.finalPrice)}
                         </span>
                         <span className="text-[12px] text-ink-500">/mês</span>
-                      </div>
-                      <div className="text-[12px] text-ink-300 line-through num-tabular mt-1">
-                        De R$ {formatPrice(o.originalPrice)}
                       </div>
                     </div>
                     <span className="flex-shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full bg-ink-900 text-white group-hover:bg-bolsa-secondary transition-colors">

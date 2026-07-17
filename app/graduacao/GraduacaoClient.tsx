@@ -285,6 +285,12 @@ export default function GraduacaoClient({ offers }: Props) {
                           <div className="text-[11px] text-ink-500 uppercase tracking-wide font-medium">
                             Mensalidade com bolsa
                           </div>
+                          {/* Âncora riscada ACIMA do preço herói (decisão CEO) */}
+                          {monthlyFull > monthly && (
+                            <div className="text-[12px] text-ink-300 line-through num-tabular mt-1">
+                              De R$ {formatPrice(monthlyFull)}
+                            </div>
+                          )}
                           <div className="flex items-baseline gap-1 mt-1">
                             <span className="text-[13px] text-ink-700 font-medium">R$</span>
                             <span className="font-display num-tabular text-3xl font-bold text-bolsa-secondary leading-none">
@@ -292,11 +298,6 @@ export default function GraduacaoClient({ offers }: Props) {
                             </span>
                             <span className="text-[12px] text-ink-500">/mês</span>
                           </div>
-                          {monthlyFull > monthly && (
-                            <div className="text-[12px] text-ink-300 line-through num-tabular mt-1">
-                              De R$ {formatPrice(monthlyFull)}
-                            </div>
-                          )}
                         </div>
                         <span className="flex-shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full bg-ink-900 text-white group-hover:bg-bolsa-secondary transition-colors">
                           →

@@ -43,7 +43,8 @@ function pickString(...vals: unknown[]): string | undefined {
 
 function computeDiscount(min: number, max: number): number {
   if (max > 0 && min > 0 && max > min) {
-    return Math.round((1 - min / max) * 100)
+    // floor: o % exibido nunca é maior que o desconto real (transparência)
+    return Math.floor((1 - min / max) * 100)
   }
   return 0
 }

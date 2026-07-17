@@ -7,7 +7,8 @@
  * bolsa -> preço final (+ De/desconto calculado) -> turno -> CTA.
  *
  * Regras de honestidade:
- * - Desconto sempre Math.round((1 - min/max) * 100), só quando max > min.
+ * - Desconto sempre Math.floor((1 - min/max) * 100), só quando max > min —
+ *   o % exibido nunca é maior que o desconto real.
  * - Nada de nota, avaliação ou escassez inventada. "Nota MEC" é um slot
  *   opcional que só renderiza se o campo existir no payload.
  * - CTA é <a> real; microcopy final depende do fluxo por fornecedor.
@@ -153,6 +154,12 @@ export default function CourseCardV2({ offer, href, ctaLabel = 'Garantir bolsa',
           )}
         </div>
 
+        {/* Âncora riscada ACIMA do preço herói (decisão CEO: 1 preço só, grande) */}
+        {!installments && discount !== null && typeof offer.maxPrice === 'number' && (
+          <s className="mt-1 block text-[13px] leading-none text-ink-500">
+            De {formatBRL(offer.maxPrice)}
+          </s>
+        )}
         <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
           {installments ? (
             <>
@@ -167,9 +174,6 @@ export default function CourseCardV2({ offer, href, ctaLabel = 'Garantir bolsa',
                 {formatBRL(offer.minPrice)}
               </span>
               <span className="text-[13px] font-medium text-ink-500">/mês</span>
-              {discount !== null && typeof offer.maxPrice === 'number' && (
-                <s className="text-[13px] text-ink-500">De {formatBRL(offer.maxPrice)}</s>
-              )}
             </>
           )}
         </div>

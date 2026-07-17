@@ -33,7 +33,8 @@ function normModality(m?: string): ShowcaseOffer['modality'] {
 
 function discountPct(min: number, max: number): number {
   if (!max || max <= 0 || min <= 0 || min >= max) return 0
-  return Math.round((1 - min / max) * 100)
+  // floor: o % exibido nunca é maior que o desconto real (transparência)
+  return Math.floor((1 - min / max) * 100)
 }
 
 function capitalize(s: string): string {

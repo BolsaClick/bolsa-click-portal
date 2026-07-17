@@ -113,7 +113,7 @@ async function fetchOne(level: VitrineLevel, slot: VitrineSlot): Promise<Vitrine
     const minPrice = Number(c.minPrice ?? 0)
     const maxPrice = Number(c.maxPrice ?? 0)
     const discountPct = maxPrice > 0 && minPrice > 0
-      ? Math.round((1 - minPrice / maxPrice) * 100)
+      ? Math.floor((1 - minPrice / maxPrice) * 100)
       : 0
 
     // commercialModality é o rótulo de fachada (ex.: SEMIPRESENCIAL),
@@ -168,7 +168,7 @@ async function fetchOneYduqs(level: VitrineLevel, slot: VitrineSlot): Promise<Vi
     const minPrice = Number(offer.minPrice ?? 0)
     const maxPrice = Number(offer.maxPrice ?? 0)
     const discountPct = maxPrice > 0 && minPrice > 0
-      ? Math.round((1 - minPrice / maxPrice) * 100)
+      ? Math.floor((1 - minPrice / maxPrice) * 100)
       : 0
 
     return {

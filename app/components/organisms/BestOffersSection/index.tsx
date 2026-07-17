@@ -13,9 +13,13 @@ type Offer = {
   uf: string
   originalPrice: number
   finalPrice: number
-  discountPct: number
   href: string
 }
+
+// Desconto DERIVADO dos preços, nunca hardcoded. floor: o % exibido
+// nunca é maior que o desconto real (transparência).
+const discountPct = (o: Offer) =>
+  Math.floor((1 - o.finalPrice / o.originalPrice) * 100)
 
 const offers: Offer[] = [
   {
@@ -28,7 +32,6 @@ const offers: Offer[] = [
     uf: 'SP',
     originalPrice: 2329,
     finalPrice: 549,
-    discountPct: 76,
     href: '/curso/resultado?c=direito&nivel=GRADUACAO&modalidade=PRESENCIAL',
   },
   {
@@ -41,7 +44,6 @@ const offers: Offer[] = [
     uf: 'RJ',
     originalPrice: 3200,
     finalPrice: 298.99,
-    discountPct: 90,
     href: '/curso/resultado?c=engenharia%20de%20producao&nivel=GRADUACAO&modalidade=EAD',
   },
   {
@@ -54,7 +56,6 @@ const offers: Offer[] = [
     uf: 'SP',
     originalPrice: 474,
     finalPrice: 129,
-    discountPct: 73,
     href: '/curso/resultado?c=pedagogia&nivel=GRADUACAO&modalidade=EAD',
   },
   {
@@ -67,7 +68,6 @@ const offers: Offer[] = [
     uf: 'MG',
     originalPrice: 2800,
     finalPrice: 579,
-    discountPct: 79,
     href: '/curso/resultado?c=psicologia&nivel=GRADUACAO&modalidade=PRESENCIAL',
   },
   {
@@ -80,7 +80,6 @@ const offers: Offer[] = [
     uf: 'SP',
     originalPrice: 494,
     finalPrice: 119,
-    discountPct: 76,
     href: '/curso/resultado?c=administracao&nivel=GRADUACAO&modalidade=EAD',
   },
   {
@@ -93,7 +92,6 @@ const offers: Offer[] = [
     uf: 'MG',
     originalPrice: 2280,
     finalPrice: 589,
-    discountPct: 74,
     href: '/curso/resultado?c=enfermagem&nivel=GRADUACAO&modalidade=PRESENCIAL',
   },
 ]
@@ -157,7 +155,7 @@ export default function BestOffersSection() {
                     />
                   </div>
                   <span className="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-bolsa-secondary text-white text-[11px] font-bold tracking-wide">
-                    -{o.discountPct}%
+                    -{discountPct(o)}%
                   </span>
                 </div>
 
@@ -185,15 +183,16 @@ export default function BestOffersSection() {
                     <div className="text-[11px] text-ink-500 uppercase tracking-wide font-medium">
                       Mensalidade com bolsa
                     </div>
+                    {/* Âncora riscada ACIMA do preço herói (decisão CEO) */}
+                    <div className="text-[12px] text-ink-300 line-through num-tabular mt-1">
+                      De R$ {formatPrice(o.originalPrice)}
+                    </div>
                     <div className="flex items-baseline gap-1 mt-1">
                       <span className="text-[13px] text-ink-700 font-medium">R$</span>
                       <span className="font-display num-tabular text-3xl md:text-[34px] font-bold text-bolsa-secondary leading-none">
                         {formatPrice(o.finalPrice)}
                       </span>
                       <span className="text-[12px] text-ink-500">/mês</span>
-                    </div>
-                    <div className="text-[12px] text-ink-300 line-through num-tabular mt-1">
-                      De R$ {formatPrice(o.originalPrice)}
                     </div>
                   </div>
 

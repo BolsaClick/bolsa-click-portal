@@ -36,12 +36,13 @@ export const formatBRL = (value: number): string =>
 
 /**
  * Desconto SEMPRE calculado a partir do payload; nunca hardcoded.
+ * Math.floor por transparência: o % exibido nunca é maior que o desconto real.
  * Retorna null quando não há maxPrice maior que minPrice.
  */
 export function computeDiscount(offer: CourseOffer): number | null {
   if (typeof offer.maxPrice !== 'number' || typeof offer.minPrice !== 'number') return null
   if (offer.maxPrice <= offer.minPrice) return null
-  return Math.round((1 - offer.minPrice / offer.maxPrice) * 100)
+  return Math.floor((1 - offer.minPrice / offer.maxPrice) * 100)
 }
 
 export interface ParsedCourseName {

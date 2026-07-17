@@ -34,7 +34,8 @@ const modalityLabel = (m: string) => {
 
 function discountPct(min: number, max?: number) {
   if (!max || max <= min) return null
-  return Math.round(((max - min) / max) * 100)
+  // floor: o % exibido nunca é maior que o desconto real (transparência)
+  return Math.floor(((max - min) / max) * 100)
 }
 
 export default function FaculdadeCidadeClient({

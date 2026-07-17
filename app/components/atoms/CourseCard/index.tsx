@@ -77,8 +77,9 @@ const CourseCard: React.FC<CourseCardProps> = ({
     typeof course.maxPrice === 'number' &&
     course.maxPrice > course.minPrice
   )
+  // floor: o % exibido nunca é maior que o desconto real (transparência)
   const discountPercentage = hasDiscount
-    ? Math.round((1 - course.minPrice / course.maxPrice!) * 100)
+    ? Math.floor((1 - course.minPrice / course.maxPrice!) * 100)
     : 0
   return (
     <div className="rounded-lg border border-gray-200 bg-white overflow-hidden transition-all duration-200 hover:shadow-md">
@@ -156,11 +157,19 @@ const CourseCard: React.FC<CourseCardProps> = ({
 
       {/* Footer */}
       <div className="border-t border-gray-200 px-4 py-3">
+        {/* Âncora riscada + badge de desconto ACIMA do preço herói (decisão CEO:
+            1 preço só, grande; nunca repetir o preço final na linha de cima) */}
         {hasDiscount && (
-          <p className="mb-1 text-xs text-gray-500">
-            De {course.maxPrice!.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}{' '}
-            por {course.minPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}{' '}
-            · -{discountPercentage}%
+          <p className="mb-1 flex items-center gap-2 text-xs text-gray-500">
+            <span>
+              De{' '}
+              <span className="line-through decoration-gray-400">
+                {course.maxPrice!.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </span>
+            </span>
+            <span className="rounded-full bg-rose-50 px-2 py-0.5 font-semibold text-bolsa-secondary">
+              -{discountPercentage}%
+            </span>
           </p>
         )}
         <div className="mb-2 flex items-baseline gap-1">

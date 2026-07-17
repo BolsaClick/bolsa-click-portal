@@ -139,7 +139,7 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
     course.maxPrice > course.minPrice
   )
   const discountPercentage = hasDiscount
-    ? Math.round((1 - course.minPrice / course.maxPrice!) * 100)
+    ? Math.floor((1 - course.minPrice / course.maxPrice!) * 100)
     : 0
 
   return (
@@ -271,11 +271,17 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
       <div className="px-5 pb-5 pt-4 border-t border-ink-100">
         {/* Comparativo usa apenas os preços real e cheio retornados pela API */}
         {hasDiscount && (
-          <p className="text-xs text-ink-500 mb-1">
-            De {course.maxPrice!.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}{' '}
-            por {course.minPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}{' '}
-            · -{discountPercentage}%
-          </p>
+          <div className="mb-1.5 flex items-center gap-2 text-xs text-ink-500">
+            <span>
+              De{' '}
+              <span className="line-through decoration-ink-300">
+                {course.maxPrice!.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </span>
+            </span>
+            <span className="rounded-full bg-rose-50 px-2 py-0.5 font-bold text-bolsa-secondary">
+              -{discountPercentage}%
+            </span>
+          </div>
         )}
 
         {/* Preço atual */}
@@ -293,7 +299,10 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
             typeof course.minInstallmentValue === 'number' ? (
               <span>{course.totalInstallment}x {course.minInstallmentValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
             ) : (
-              <span>{(course.minPrice ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+              <span>
+                {(course.minPrice ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                <span className="text-sm font-semibold text-ink-500">/mês</span>
+              </span>
             )}
           </p>
         </div>

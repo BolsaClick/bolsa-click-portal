@@ -251,7 +251,7 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
     course.maxPrice > course.minPrice
   )
   const discountPercentage = hasDiscount
-    ? Math.round((1 - course.minPrice / course.maxPrice!) * 100)
+    ? Math.floor((1 - course.minPrice / course.maxPrice!) * 100)
     : 0
 
   // Função para determinar o turno baseado em shiftOptions
@@ -493,22 +493,28 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
             itemType="https://schema.org/CourseInstance"
           >
             {hasDiscount && (
-              <p className="mb-2 text-xs text-neutral-500">
-                De {course.maxPrice!.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}{' '}
-                por {course.minPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}{' '}
-                · -{discountPercentage}%
-              </p>
+              <div className="mb-1.5 flex items-center gap-2 text-xs text-neutral-500">
+                <span>
+                  De{' '}
+                  <span className="line-through decoration-neutral-400">
+                    {course.maxPrice!.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </span>
+                </span>
+                <span className="rounded-full bg-rose-50 px-2 py-0.5 font-semibold text-bolsa-secondary">
+                  -{discountPercentage}%
+                </span>
+              </div>
             )}
-            <div className="mb-3 flex items-baseline gap-1.5">
-              <span className="text-sm text-neutral-500">
+            <div className="mb-3">
+              <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-neutral-500">
                 {course.academicLevel === 'POS_GRADUACAO' &&
                   typeof course.totalInstallment === 'number' &&
                   typeof course.minInstallmentValue === 'number'
                   ? 'Até'
-                  : 'Por'}
+                  : 'A partir de'}
               </span>
               <span
-                className="text-emerald-500 text-[26px] font-bold leading-none"
+                className="mt-0.5 block text-[26px] font-bold leading-none text-emerald-500"
                 itemProp="offers"
                 itemScope
                 itemType="https://schema.org/Offer"
@@ -528,7 +534,7 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
                     {(course.minPrice / 1).toLocaleString('pt-BR', {
                       style: 'currency',
                       currency: 'BRL',
-                    })}
+                    })}<span className="text-sm font-semibold text-neutral-500">/mês</span>
                   </span>
                 )}
               </span>

@@ -15,9 +15,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { FeaturedCourseData } from '../_data/types'
 import { useVisitedCourses } from '@/app/lib/personalization/hooks'
-import { trackFbqDual } from '@/app/lib/analytics/fbq'
-import { pushDataLayerEvent } from '@/app/lib/analytics/gtag'
-import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
+import { useConversionMirror } from '@/app/lib/analytics/track-conversion'
 import { getBrandLogo } from '@/app/lib/brand-logos'
 import Mascot from '@/app/components/v2/mascot/Mascot'
 import { courseAreaPose } from '@/app/components/v2/mascot/course-area'
@@ -74,51 +72,53 @@ export default function CursoPageClient({
   const infoSectionRef = useRef<HTMLElement>(null)
   const offersRef = useRef<HTMLElement>(null)
   const { recordVisit } = useVisitedCourses()
-  const { trackEvent } = usePostHogTracking()
+  const mirror = useConversionMirror()
 
   useEffect(() => {
     recordVisit({ slug: cursoMetadata.slug, name: cursoMetadata.name })
   }, [cursoMetadata.slug, cursoMetadata.name, recordVisit])
 
-  // Meta Pixel + Conversions API - ViewContent na página do curso. Cobre a
-  // entrada direta (orgânico/ads) que nunca passa pelo clique do card — sem
-  // isso, públicos de "viu o curso X" só enxergavam quem veio da busca interna.
+  // ViewContent na página do curso, espelhado nos 3 vendors (Meta+GA4+PostHog)
+  // com o mesmo event_id. Cobre a entrada direta (orgânico/ads) que nunca passa
+  // pelo clique do card — sem isso, públicos de "viu o curso X" só enxergavam
+  // quem veio da busca interna.
   useEffect(() => {
     const cheapest = courseOffers
       .map((o) => o.minPrice || 0)
       .filter((p) => p > 0)
-    void trackFbqDual('ViewContent', {
-      content_name: cursoMetadata.name,
-      content_type: 'product',
-      content_category: cursoMetadata.nivel,
-      value: cheapest.length ? Math.min(...cheapest) : 0,
-      currency: 'BRL',
-    })
-
-    // GA4 ecommerce (dataLayer/GTM) - view_item, paridade com o ViewContent acima.
-    pushDataLayerEvent('view_item', {
-      ecommerce: {
-        currency: 'BRL',
-        value: cheapest.length ? Math.min(...cheapest) : 0,
-        items: [
-          {
-            item_name: cursoMetadata.name,
-            item_category: cursoMetadata.nivel,
-          },
-        ],
+    const value = cheapest.length ? Math.min(...cheapest) : 0
+    mirror({
+      meta: {
+        event: 'ViewContent',
+        data: {
+          content_name: cursoMetadata.name,
+          content_type: 'product',
+          content_category: cursoMetadata.nivel,
+          value,
+          currency: 'BRL',
+        },
       },
-    })
-
-    // PostHog - paridade com Meta/GA4. O $pageview cobria a URL, mas sem um
-    // evento tipado não dava pra montar funil/cohort de "viu curso X" no mesmo
-    // vocabulário dos outros vendors nem cruzar com os eventos de checkout.
-    trackEvent('course_viewed', {
-      course_slug: cursoMetadata.slug,
-      course_name: cursoMetadata.name,
-      academic_level: cursoMetadata.nivel,
-      offer_count: courseOffers.length,
-      min_price: cheapest.length ? Math.min(...cheapest) : null,
-      page_type: 'course',
+      ga4: {
+        event: 'view_item',
+        params: {
+          ecommerce: {
+            currency: 'BRL',
+            value,
+            items: [{ item_name: cursoMetadata.name, item_category: cursoMetadata.nivel }],
+          },
+        },
+      },
+      posthog: {
+        event: 'course_viewed',
+        props: {
+          course_slug: cursoMetadata.slug,
+          course_name: cursoMetadata.name,
+          academic_level: cursoMetadata.nivel,
+          offer_count: courseOffers.length,
+          min_price: value || null,
+          page_type: 'course',
+        },
+      },
     })
     // Dispara 1x por curso visitado — ofertas não mudam sem trocar de slug.
     // eslint-disable-next-line react-hooks/exhaustive-deps

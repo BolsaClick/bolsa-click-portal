@@ -1,6 +1,7 @@
 import { athena } from './axios'
 import type { Course } from '@/app/interface/course'
 import { titleCasePtBr } from '@/app/lib/utils/title-case'
+import { isServerFlagEnabled } from '@/app/lib/analytics/server-flags'
 
 /**
  * Client da API Athena — segunda fonte de ofertas (roteia YDUQS/Estácio).
@@ -219,6 +220,13 @@ export async function searchAthenaOffers(
   params: SearchAthenaOffersParams,
 ): Promise<AthenaOffer[]> {
   if (!process.env.ATHENA_BASE_URL) return []
+
+  // Kill switch de negócio (2026-07-17): Estácio/YDUQS fica ESCONDIDA no site
+  // por padrão (foco em tráfego pago + contratação de CMO). Toggle global pela
+  // flag PostHog `estacio_enabled` (0% = off, 100% = on) — sem redeploy.
+  // Choke point único: some das buscas, vitrine, faculdades e city pages de uma
+  // vez. Fallback `false` = se o PostHog cair, mantém escondida (falha segura).
+  if (!(await isServerFlagEnabled('estacio_enabled', false))) return []
 
   try {
     const query: Record<string, string> = {}

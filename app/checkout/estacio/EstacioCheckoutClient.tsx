@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { trackFbqDual } from '@/app/lib/analytics/fbq'
+import { pushDataLayerEvent } from '@/app/lib/analytics/gtag'
 import { createLead } from '@/app/lib/api/create-lead'
 import {
   trackCheckoutViewed,
@@ -142,6 +143,21 @@ export default function EstacioCheckoutClient() {
       modality: offer.modality,
       offerId: offer.offerId,
       courseName: offer.courseName,
+    })
+
+    // GA4 ecommerce (dataLayer/GTM) - begin_checkout, paridade com o estacio_checkout_viewed acima.
+    pushDataLayerEvent('begin_checkout', {
+      ecommerce: {
+        currency: 'BRL',
+        value: offer.price || 0,
+        items: [
+          {
+            item_id: offer.offerId ? String(offer.offerId) : undefined,
+            item_name: offer.courseName,
+            item_brand: offer.brand,
+          },
+        ],
+      },
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -333,6 +349,13 @@ export default function EstacioCheckoutClient() {
         },
         data?.numeroInscricao ? `estacio_${data.numeroInscricao}` : undefined,
       )
+
+      // GA4 (dataLayer/GTM) - generate_lead, paridade com o Lead do Meta acima.
+      // value só quando a oferta traz preço (o Lead do Meta também não fixa valor).
+      pushDataLayerEvent('generate_lead', {
+        currency: 'BRL',
+        ...(offer.price > 0 ? { value: offer.price } : {}),
+      })
 
       const params = new URLSearchParams()
       if (offer.courseName) params.set('course', offer.courseName)

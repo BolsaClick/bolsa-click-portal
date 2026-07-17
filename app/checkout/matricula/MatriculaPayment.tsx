@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { trackFbqDual } from '@/app/lib/analytics/fbq'
+import { pushDataLayerEvent } from '@/app/lib/analytics/gtag'
 import {
   BadgeCheck,
   Barcode,
@@ -130,6 +131,22 @@ export default function MatriculaPayment({
       },
       externalId,
     )
+
+    // GA4 ecommerce (dataLayer/GTM) - purchase, paridade com o Purchase acima.
+    // transaction_id = mesmo externalId do gateway (dedup nativo do GA4).
+    pushDataLayerEvent('purchase', {
+      ecommerce: {
+        transaction_id: externalId,
+        currency: 'BRL',
+        value: (amountInCents || 0) / 100,
+        items: [
+          {
+            item_id: courseId,
+            item_name: courseName,
+          },
+        ],
+      },
+    })
 
     // Dispara a confirmação server-side (cria inscrição + atualiza CRM).
     // Idempotente: o webhook do gateway/Elysium também cobre (aba fechada).

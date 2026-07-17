@@ -1,4 +1,5 @@
 import { normalizeEmail, normalizePhone, sha256 } from './hash'
+import { readConsent } from '@/app/lib/consent/storage'
 
 type TtqFn = (...args: unknown[]) => void
 
@@ -50,11 +51,20 @@ export async function identifyTikTok(user: TikTokUser): Promise<void> {
   callTtq('identify', payload)
 }
 
+function marketingAllowed(): boolean {
+  return readConsent()?.categories.marketing === true
+}
+
 export async function trackTikTokDual(
   eventName: string,
   data?: Record<string, unknown>,
   user?: TikTokUser,
 ): Promise<void> {
+  // Paridade LGPD com trackFbqDual: sem consent de marketing, nem o pixel nem
+  // o Events API server disparam (antes o POST /api/tiktok/event vazava mesmo
+  // com o script do pixel bloqueado pelo consent).
+  if (!marketingAllowed()) return
+
   const eventId =
     typeof crypto !== 'undefined' && 'randomUUID' in crypto
       ? crypto.randomUUID()

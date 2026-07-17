@@ -5,13 +5,17 @@ import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { formatCurrency } from '@/utils/fomartCurrency'
 import { trackFbqDual } from '@/app/lib/analytics/fbq'
+import { pushDataLayerEvent } from '@/app/lib/analytics/gtag'
 import { trackTikTokDual } from '@/app/lib/analytics/ttq'
+import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
+import { trackEnrollmentConverted } from '@/app/lib/analytics/checkout-funnel'
 import ReviewInviteCard from '@/app/components/molecules/ReviewInviteCard'
 
 
 
 export default function SuccessClient() {
 
+  const { trackEvent } = usePostHogTracking()
   const searchParams = useSearchParams()
   const course = searchParams.get('course')
   const paymentMethod = searchParams.get('paymentMethod')
@@ -44,6 +48,9 @@ useEffect(() => {
 
     // Meta Pixel + Conversions API - Purchase. eventID = transactionId (quando
     // presente) dedupa com o Purchase server-side de confirmPaidMatricula.
+    // Sem user data (a página só recebe course/price/paymentMethod via query),
+    // o EMQ deste caminho browser é baixo — o Purchase server-side do
+    // confirm-matricula cobre o advanced matching com o mesmo event_id.
     void trackFbqDual(
       'Purchase',
       {
@@ -54,6 +61,34 @@ useEffect(() => {
       undefined,
       transactionId ?? undefined,
     )
+
+    // GA4 ecommerce (dataLayer/GTM) - purchase, paridade com o Purchase acima.
+    // transaction_id quando o fluxo informa (mesmo id do server-side).
+    pushDataLayerEvent('purchase', {
+      ecommerce: {
+        transaction_id: transactionId ?? undefined,
+        currency: 'BRL',
+        value: payToday ? parseFloat(payToday) : 0,
+        items: [
+          {
+            item_name: course || undefined,
+          },
+        ],
+      },
+    })
+
+    // PostHog - conversão do funil unificado. Esta página disparava Purchase
+    // no Meta/GA4 mas NADA no PostHog (receita visível no pixel, invisível no
+    // funil). transaction_id cruza com o Purchase e com o
+    // enrollment_paid_confirmed server-side.
+    trackEnrollmentConverted(trackEvent, {
+      flow: 'matricula',
+      brand: brand || undefined,
+      courseName: course || undefined,
+      source: 'checkout_success_page',
+      value: payToday ? parseFloat(payToday) : undefined,
+      transactionId: transactionId ?? undefined,
+    })
 
     // TikTok Pixel + Events API - CompletePayment
     void trackTikTokDual('CompletePayment', {

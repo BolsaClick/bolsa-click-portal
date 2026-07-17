@@ -41,6 +41,7 @@ import { validateVoucher, type ValidateVoucherResponse, type VoucherInstallment 
 import type { PosPaymentMethod, PosInstallment } from '@/app/lib/api/get-offer-details'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { trackFbqDual } from '@/app/lib/analytics/fbq'
+import { pushDataLayerEvent } from '@/app/lib/analytics/gtag'
 import { trackTikTok, trackTikTokDual } from '@/app/lib/analytics/ttq'
 import { readUtmifyParams } from '@/app/lib/analytics/utmify-client'
 import {
@@ -434,6 +435,21 @@ const isFormValidForPayment =
         content_type: 'product',
         value: offerDetails.subscriptionValue || offerDetails.montlyFeeTo || 0,
         currency: 'BRL',
+      })
+
+      // GA4 ecommerce (dataLayer/GTM) - begin_checkout, paridade com o InitiateCheckout acima.
+      pushDataLayerEvent('begin_checkout', {
+        ecommerce: {
+          currency: 'BRL',
+          value: offerDetails.subscriptionValue || offerDetails.montlyFeeTo || 0,
+          items: [
+            {
+              item_id: offerDetails.courseId ? String(offerDetails.courseId) : undefined,
+              item_name: offerDetails.course,
+              item_brand: offerDetails.brand,
+            },
+          ],
+        },
       })
 
       // TikTok Pixel - InitiateCheckout
@@ -1680,6 +1696,21 @@ const isFormValidForPayment =
                                           externalId: (getValues('cpf') || '').replace(/\D/g, '') || undefined,
                                         },
                                       )
+
+                                      // GA4 ecommerce (dataLayer/GTM) - add_payment_info, paridade com o AddPaymentInfo acima.
+                                      pushDataLayerEvent('add_payment_info', {
+                                        ecommerce: {
+                                          currency: 'BRL',
+                                          value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
+                                          items: [
+                                            {
+                                              item_id: offerDetails?.courseId ? String(offerDetails.courseId) : undefined,
+                                              item_name: offerDetails?.course,
+                                              item_brand: offerDetails?.brand,
+                                            },
+                                          ],
+                                        },
+                                      })
 
                                       // TikTok Pixel - AddPaymentInfo
                                       trackTikTok('AddPaymentInfo', {

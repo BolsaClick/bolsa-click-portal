@@ -4,6 +4,7 @@ import { postSearch } from "@/app/lib/api/post-search"
 import { useFavorites } from "@/app/lib/hooks/useFavorites"
 import { usePostHogTracking } from "@/app/lib/hooks/usePostHogTracking"
 import { trackFbqDual } from "@/app/lib/analytics/fbq"
+import { pushDataLayerEvent } from "@/app/lib/analytics/gtag"
 import { trackTikTok } from "@/app/lib/analytics/ttq"
 import { getAcademicLevelLabel } from "@/app/lib/academic-level"
 import { Building2, Clock, Heart, MapPin } from "lucide-react"
@@ -190,6 +191,21 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
       content_ids: course.id ? [String(course.id)] : undefined,
       value: course.minPrice || 0,
       currency: 'BRL',
+    })
+
+    // GA4 ecommerce (dataLayer/GTM) - select_item, paridade com o ViewContent acima.
+    pushDataLayerEvent('select_item', {
+      ecommerce: {
+        currency: 'BRL',
+        value: course.minPrice || 0,
+        items: [
+          {
+            item_id: course.id ? String(course.id) : undefined,
+            item_name: course.name,
+            item_brand: course.brand,
+          },
+        ],
+      },
     })
 
     // TikTok Pixel - ViewContent

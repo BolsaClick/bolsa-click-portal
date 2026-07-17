@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { upsertNotealyContact } from '@/app/lib/api/notealy'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
+import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
 
 // Tag fixa do funil ingressa no Notealy (criada 2026-07-14). Hardcoded — não
 // depende de env.
@@ -136,6 +137,29 @@ export async function POST(request: NextRequest) {
   // 3) Meta CAPI (best-effort).
   if (leadId) {
     await sendLeadToMeta({ leadId, name: cleanName, phone: cleanPhone, partner: partnerSlug, eventId: body.eventId, request })
+  }
+
+  // 4) PostHog (best-effort) — mídia paga por parceiro era invisível no funil:
+  // o lead chegava ao Meta (Pixel+CAPI) mas nunca ao PostHog. Mesmo eventId do
+  // CAPI em $insert_id; distinct_id = telefone (único identificador do fluxo).
+  if (leadId) {
+    try {
+      await capturePostHogServerEvent({
+        event: 'lead_submitted',
+        distinctId: cleanPhone,
+        eventId: body.eventId || `ingressa_${leadId}`,
+        properties: {
+          lead_source: `ingressa-${partnerSlug}`,
+          partner: partnerSlug,
+          course_name: cursoName ?? null,
+          utm_source: body.utm?.utm_source ?? null,
+          utm_medium: body.utm?.utm_medium ?? null,
+          utm_campaign: body.utm?.utm_campaign ?? null,
+        },
+      })
+    } catch (error) {
+      console.error('⚠️ PostHog lead_submitted (ingressa) falhou:', error)
+    }
   }
 
   return NextResponse.json({ ok: true }, { status: 201 })

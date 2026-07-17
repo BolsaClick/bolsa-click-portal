@@ -104,10 +104,13 @@ export function trackCheckoutSubmitted(track: TrackFn, ctx: CheckoutContext): vo
 /** Etapa 4 — conversão final: página de sucesso de qualquer fluxo (sinal confiável). */
 export function trackEnrollmentConverted(
   track: TrackFn,
-  ctx: CheckoutContext & { value?: number },
+  ctx: CheckoutContext & { value?: number; transactionId?: string },
 ): void {
   track('enrollment_converted', {
     ...baseProps(ctx),
     value: ctx.value,
+    // Mesmo id do Purchase Meta/GA4 — permite cruzar a conversão entre vendors
+    // e casa com o enrollment_paid_confirmed server-side.
+    transaction_id: ctx.transactionId,
   })
 }

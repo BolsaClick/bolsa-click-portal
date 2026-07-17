@@ -49,20 +49,6 @@ export function trackFbq(eventName: string, data?: Record<string, unknown>): voi
   }
 }
 
-export function trackFbqCustom(eventName: string, data?: Record<string, unknown>): void {
-  const fbq = getFbq()
-  if (!fbq) return
-  try {
-    if (data) {
-      fbq('trackCustom', eventName, data)
-    } else {
-      fbq('trackCustom', eventName)
-    }
-  } catch {
-    // ignore
-  }
-}
-
 /**
  * Dispara o evento no pixel do browser E na Conversions API (server), com o
  * MESMO event_id para deduplicação. Espelha trackTikTokDual. O envio server

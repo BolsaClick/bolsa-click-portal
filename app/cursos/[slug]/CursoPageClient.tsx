@@ -16,6 +16,7 @@ import { useEffect, useRef, useState } from 'react'
 import { FeaturedCourseData } from '../_data/types'
 import { useVisitedCourses } from '@/app/lib/personalization/hooks'
 import { trackFbqDual } from '@/app/lib/analytics/fbq'
+import { pushDataLayerEvent } from '@/app/lib/analytics/gtag'
 import { getBrandLogo } from '@/app/lib/brand-logos'
 import Mascot from '@/app/components/v2/mascot/Mascot'
 import { courseAreaPose } from '@/app/components/v2/mascot/course-area'
@@ -90,6 +91,20 @@ export default function CursoPageClient({
       content_category: cursoMetadata.nivel,
       value: cheapest.length ? Math.min(...cheapest) : 0,
       currency: 'BRL',
+    })
+
+    // GA4 ecommerce (dataLayer/GTM) - view_item, paridade com o ViewContent acima.
+    pushDataLayerEvent('view_item', {
+      ecommerce: {
+        currency: 'BRL',
+        value: cheapest.length ? Math.min(...cheapest) : 0,
+        items: [
+          {
+            item_name: cursoMetadata.name,
+            item_category: cursoMetadata.nivel,
+          },
+        ],
+      },
     })
     // Dispara 1x por curso visitado — ofertas não mudam sem trocar de slug.
     // eslint-disable-next-line react-hooks/exhaustive-deps

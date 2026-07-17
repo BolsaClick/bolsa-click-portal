@@ -9,6 +9,7 @@ import type { OfferDetails } from '@/app/lib/api/get-offer-details'
 import { upsertNotealyContact } from '@/app/lib/api/notealy'
 import { sendUtmifyOrder, paymentMethodToUtmify } from '@/app/lib/api/utmify'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
+import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
 
 /**
  * Dados montados no checkout (cliente) e guardados em Transaction.metadata.confirm
@@ -194,6 +195,27 @@ export async function confirmPaidMatricula(
     })
   } catch (e) {
     console.error('❌ confirm: Meta CAPI Purchase falhou', externalTransactionId, e)
+  }
+
+  // 5) PostHog — conversão server-side (o funil browser perde quem fecha a aba
+  // antes da página de sucesso). distinct_id = CPF, mesmo id do identify feito
+  // no checkout; $insert_id = externalTransactionId dedupa retries de webhook.
+  try {
+    await capturePostHogServerEvent({
+      event: 'enrollment_paid_confirmed',
+      distinctId: cpfDigits,
+      eventId: externalTransactionId,
+      properties: {
+        transaction_id: externalTransactionId,
+        value: tx.amountInCents / 100,
+        currency: 'BRL',
+        course_name: tx.courseName || 'Matrícula',
+        course_id: tx.courseId || null,
+        payment_method: tx.paymentMethod,
+      },
+    })
+  } catch (e) {
+    console.error('❌ confirm: PostHog capture falhou', externalTransactionId, e)
   }
 
   // Persistir resultados (best-effort) para auditoria.

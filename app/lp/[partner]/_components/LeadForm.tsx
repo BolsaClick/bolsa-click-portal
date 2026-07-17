@@ -69,10 +69,21 @@ export function LeadForm({ partner, partnerName, courses, accentColor = '#023e73
         }),
       })
       // Pixel do browser com o MESMO eventID → dedup com o CAPI server.
-      const w = window as unknown as { fbq?: (...a: unknown[]) => void }
+      const w = window as unknown as {
+        fbq?: (...a: unknown[]) => void
+        dataLayer?: Record<string, unknown>[]
+      }
       if (typeof w.fbq === 'function') {
         w.fbq('track', 'Lead', { content_name: partner }, { eventID: eventId })
       }
+      // GA4 (dataLayer/GTM) — mídia paga por parceiro era invisível no Google.
+      // Push direto (sem helper) porque a LP não importa o bundle de analytics.
+      w.dataLayer = w.dataLayer ?? []
+      w.dataLayer.push({
+        event: 'generate_lead',
+        lead_source: `ingressa-${partner}`,
+        ...(curso ? { course_name: curso } : {}),
+      })
     } catch {
       // best-effort: mostra sucesso mesmo se o registro falhar (não travar o lead)
     } finally {

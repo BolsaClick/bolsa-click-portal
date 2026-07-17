@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { FeaturedCourseData } from '../../_data/types'
 import { trackFbqDual } from '@/app/lib/analytics/fbq'
+import { pushDataLayerEvent } from '@/app/lib/analytics/gtag'
 import { getBrandLogo } from '@/app/lib/brand-logos'
 
 interface CursoCidadeClientProps {
@@ -86,6 +87,20 @@ export default function CursoCidadeClient({
       content_category: cursoMetadata.nivel,
       value: cheapest.length ? Math.min(...cheapest) : 0,
       currency: 'BRL',
+    })
+
+    // GA4 ecommerce (dataLayer/GTM) - view_item, paridade com o ViewContent acima.
+    pushDataLayerEvent('view_item', {
+      ecommerce: {
+        currency: 'BRL',
+        value: cheapest.length ? Math.min(...cheapest) : 0,
+        items: [
+          {
+            item_name: cursoMetadata.name,
+            item_category: cursoMetadata.nivel,
+          },
+        ],
+      },
     })
     // 1x por curso×cidade visitado.
     // eslint-disable-next-line react-hooks/exhaustive-deps

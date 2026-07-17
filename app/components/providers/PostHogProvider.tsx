@@ -77,6 +77,12 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         },
       })
       setPosthogClient(posthog)
+      // Expõe a instância no window: vários call sites fora da árvore React
+      // (captureChatEvent, ConsentProvider, ShareButton) usam window.posthog —
+      // com o bundle npm (sem snippet) ele nunca existia e esses eventos
+      // no-opavam em silêncio (chat_*, consent_given, vocational_test_shared
+      // com ZERO ingestões confirmadas na auditoria de 2026-07-17).
+      ;(window as unknown as Record<string, unknown>).posthog = posthog
     })
   }, [analyticsAllowed])
 

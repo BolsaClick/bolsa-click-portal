@@ -15,6 +15,10 @@ export const revalidate = 3600
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 
+// Ano corrente calculado — evita título/meta com ano velho (auditoria SEO
+// 2026-07, item HIGH #9).
+const ANO = new Date().getFullYear()
+
 const PROGRAMAS = [
   {
     nome: 'ProUni (governo federal)',
@@ -107,7 +111,7 @@ const jsonLdSchemas = [
   {
     '@context': 'https://schema.org',
     '@type': 'Article',
-    headline: 'Como conseguir bolsa de estudo em faculdade particular — guia completo 2026',
+    headline: `Como conseguir bolsa de estudo em faculdade particular — guia completo ${ANO}`,
     description:
       'Guia atualizado de como conseguir bolsa de estudo em faculdades particulares: ProUni, FIES, Bolsa Click, programas próprios e filantrópicos. Comparativo, requisitos e dicas práticas.',
     author: {
@@ -153,7 +157,7 @@ const jsonLdSchemas = [
 ]
 
 export const metadata: Metadata = {
-  title: 'Como Conseguir Bolsa de Estudo em Faculdade Particular | Guia 2026',
+  title: `Como Conseguir Bolsa de Estudo em Faculdade Particular | Guia ${ANO}`,
   description:
     'Guia completo de como conseguir bolsa de estudo em faculdade particular: ProUni, FIES, Bolsa Click e mais. Sem ENEM, sem ProUni, sem complicação — descontos de até 80%.',
   keywords: [
@@ -163,7 +167,7 @@ export const metadata: Metadata = {
     'bolsa sem enem',
     'como conseguir bolsa integral',
     'desconto em faculdade',
-    'bolsa de estudo 2026',
+    `bolsa de estudo ${ANO}`,
   ],
   alternates: { canonical: `${SITE_URL}/como-conseguir-bolsa-de-estudo` },
   openGraph: {
@@ -195,6 +199,9 @@ export default function ComoConseguirBolsaPage() {
           <div className="max-w-4xl mx-auto text-center">
             <p className="font-mono text-[11px] tracking-[0.22em] uppercase text-white/70 mb-4 inline-flex items-center gap-2">
               <ScrollText size={12} className="text-bolsa-secondary" />
+              {/* Ano do último update editorial real (dateModified do Article
+                  schema) — não usar ANO dinâmico aqui: seria freshness
+                  fabricada (auditoria SEO 2026-07, CRITICAL #2). */}
               Guia editorial · Atualizado 2026
             </p>
             <h1 className="font-display text-4xl md:text-5xl lg:text-[64px] font-semibold text-white leading-[1.05] mb-5">

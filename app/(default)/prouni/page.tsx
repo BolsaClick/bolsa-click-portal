@@ -9,18 +9,25 @@ const SITE_URL = 'https://www.bolsaclick.com.br'
 const DATA_PUBLISHED = '2024-01-15'
 const DATA_MODIFIED = '2026-07-16'
 
+// Ano corrente calculado — evita título/meta com ano velho (auditoria SEO
+// 2026-07, item HIGH #9). O corpo editorial segue no ciclo REVISAR ANUAL.
+const ANO = new Date().getFullYear()
+
+// ISR diário: refresca o ano dinâmico e o bloco "Leia também" (posts do blog).
+export const revalidate = 86400
+
 export const metadata: Metadata = {
-  title: 'PROUNI 2026 - Inscrição, Notas, Renda e Bolsas',
+  title: `PROUNI ${ANO} - Inscrição, Notas, Renda e Bolsas`,
   description:
-    'Tudo sobre o PROUNI 2026: requisitos de renda, nota mínima do ENEM, inscrição, bolsas integrais e parciais, faculdades participantes e como combinar com outras formas de bolsa.',
+    `Tudo sobre o PROUNI ${ANO}: requisitos de renda, nota mínima do ENEM, inscrição, bolsas integrais e parciais, faculdades participantes e como combinar com outras formas de bolsa.`,
   keywords: [
-    'prouni 2026', 'prouni', 'inscrição prouni', 'bolsa integral',
+    `prouni ${ANO}`, 'prouni', 'inscrição prouni', 'bolsa integral',
     'bolsa parcial', 'prouni nota de corte', 'prouni renda',
     'prouni faculdades', 'como funciona o prouni',
   ],
   alternates: { canonical: `${SITE_URL}/prouni` },
   openGraph: {
-    title: 'PROUNI 2026 - Como Conseguir Bolsa Integral ou Parcial',
+    title: `PROUNI ${ANO} - Como Conseguir Bolsa Integral ou Parcial`,
     description: 'Renda, nota, inscrição e regras do Programa Universidade para Todos.',
     url: `${SITE_URL}/prouni`,
     siteName: 'Bolsa Click',
@@ -39,7 +46,7 @@ const faqItems = [
     answer: 'Para bolsa integral: renda familiar bruta mensal de até 1,5 salário mínimo por pessoa. Para parcial (50%): até 3 salários mínimos por pessoa. Em ambos os casos, é preciso ter feito o ENEM com média mínima de 450 e nota maior que zero na redação — e ter cursado o ensino médio em escola pública ou como bolsista integral em escola privada.',
   },
   {
-    question: 'Quando são as inscrições do PROUNI 2026?',
+    question: `Quando são as inscrições do PROUNI ${ANO}?`,
     answer: 'O PROUNI tem duas edições por ano: a primeira normalmente em janeiro/fevereiro (após o resultado do ENEM) e a segunda em junho/julho. As datas exatas são publicadas pelo MEC no edital — confirme em acessounico.mec.gov.br/prouni.',
   },
   {
@@ -77,11 +84,12 @@ export default function ProuniPage() {
     <ProgramHub
       slug="prouni"
       title="PROUNI"
-      h1="PROUNI 2026: Como Conseguir Bolsa Integral ou Parcial"
+      h1={`PROUNI ${ANO}: Como Conseguir Bolsa Integral ou Parcial`}
       lede="O Programa Universidade para Todos oferece bolsas integrais (100%) e parciais (50%) em faculdades privadas. Para concorrer, a renda familiar por pessoa deve ser de até 1,5 salário mínimo na bolsa integral ou até 3 salários mínimos na parcial, além dos demais requisitos oficiais e da participação no ENEM."
-      articleSummary="Guia completo do PROUNI 2026: requisitos de renda e nota do ENEM, calendário de inscrição, diferença entre bolsa integral e parcial, faculdades participantes, e comparação com outras formas de bolsa."
+      articleSummary={`Guia completo do PROUNI ${ANO}: requisitos de renda e nota do ENEM, calendário de inscrição, diferença entre bolsa integral e parcial, faculdades participantes, e comparação com outras formas de bolsa.`}
       datePublished={DATA_PUBLISHED}
       dateModified={DATA_MODIFIED}
+      blogTerms={['prouni', 'bolsa integral']}
       faqItems={faqItems}
       sources={
         <FontesConsultadas
@@ -101,7 +109,7 @@ export default function ProuniPage() {
           ]}
           introducao="Este guia se baseia em fontes oficiais do Governo Federal e na legislação do programa."
           dateTime={DATA_MODIFIED}
-          dateLabel="15 de maio de 2026"
+          dateLabel="16 de julho de 2026"
         />
       }
     >
@@ -141,7 +149,7 @@ export default function ProuniPage() {
         </li>
       </ol>
 
-      <h2>Calendário do PROUNI 2026</h2>
+      <h2>{`Calendário do PROUNI ${ANO}`}</h2>
       <p>
         O programa tem duas edições por ano, sempre após a publicação dos resultados do
         ENEM mais recente:

@@ -7,6 +7,9 @@ const SITE_URL = 'https://www.bolsaclick.com.br'
 const DATA_PUBLISHED = '2026-05-19'
 const DATA_MODIFIED = '2026-05-19'
 
+// ISR diário: refresca o bloco "Leia também" (posts do blog).
+export const revalidate = 86400
+
 export const metadata: Metadata = {
   title: 'Faculdade sem ENEM — Como Entrar com Bolsa de até 80%',
   description:
@@ -76,9 +79,10 @@ export default function SemEnemPage() {
       title="Sem ENEM"
       h1="Faculdade sem ENEM: como entrar com bolsa de até 80%"
       lede="Não fez o ENEM ou tirou nota baixa? Existe caminho. Veja como entrar em faculdade reconhecida pelo MEC via vestibular agendado, prova online ou histórico do ensino médio — com bolsa Bolsa Click."
-      articleSummary="Guia completo pra entrar na faculdade sem ENEM em 2026: vestibular agendado online, prova interna, histórico do ensino médio, transferência. Inclui lista de faculdades parceiras com ingresso simplificado e bolsa de até 80%."
+      articleSummary={`Guia completo pra entrar na faculdade sem ENEM em ${new Date().getFullYear()}: vestibular agendado online, prova interna, histórico do ensino médio, transferência. Inclui lista de faculdades parceiras com ingresso simplificado e bolsa de até 80%.`}
       datePublished={DATA_PUBLISHED}
       dateModified={DATA_MODIFIED}
+      blogTerms={['sem enem', 'vestibular', 'sem prouni']}
       faqItems={faqItems}
     >
       <h2>É possível entrar na faculdade sem ENEM?</h2>

@@ -10,12 +10,16 @@ const DATE_PUBLISHED = '2026-05-25'
 const DATE_MODIFIED = '2026-05-25'
 const DATE_MODIFIED_LABEL = '25 de maio de 2026'
 
+// Ano corrente calculado — evita título/meta com ano velho (auditoria SEO
+// 2026-07, item HIGH #9).
+const ANO = new Date().getFullYear()
+
 export const revalidate = 86400
 
 export const metadata: Metadata = {
   title: 'Programas de Estudo no Brasil — ProUni, FIES, SISU, ENEM | Bolsa Click',
   description:
-    'Guia central dos programas de estudo e financiamento no Brasil em 2026: ProUni, FIES, SISU, ENEM, ENCCEJA e faculdade sem ENEM. Compare requisitos, descontos e calendários oficiais.',
+    `Guia central dos programas de estudo e financiamento no Brasil em ${ANO}: ProUni, FIES, SISU, ENEM, ENCCEJA e faculdade sem ENEM. Compare requisitos, descontos e calendários oficiais.`,
   keywords: [
     'programas de estudo',
     'programas do governo educação',
@@ -122,9 +126,9 @@ const FAQ_ITEMS = [
       'Não. ProUni, FIES e SISU exigem ENEM 450+ com redação acima de zero. ENCCEJA é o próprio exame de certificação (não exige ENEM). Faculdade sem ENEM via vestibular agendado, prova interna ou histórico do ensino médio dispensa completamente o ENEM e ainda permite bolsa de até 80% nas parceiras Bolsa Click.',
   },
   {
-    question: 'Quando abrem as inscrições dos programas federais em 2026?',
+    question: `Quando abrem as inscrições dos programas federais em ${ANO}?`,
     answer:
-      'ProUni e FIES seguem o calendário oficial do MEC em 2 edições anuais (jan-fev e jun-jul). SISU também tem 2 edições por ano, geralmente nas mesmas janelas. ENEM 2026 segue padrão histórico: inscrições em maio/junho e provas em dois domingos de novembro. ENCCEJA tem inscrições em junho/julho e prova em agosto. Calendários oficiais publicados em acessounico.mec.gov.br e gov.br/inep.',
+      'ProUni e FIES seguem o calendário oficial do MEC em 2 edições anuais (jan-fev e jun-jul). SISU também tem 2 edições por ano, geralmente nas mesmas janelas. O ENEM segue padrão histórico: inscrições em maio/junho e provas em dois domingos de novembro. ENCCEJA tem inscrições em junho/julho e prova em agosto. Calendários oficiais publicados em acessounico.mec.gov.br e gov.br/inep.',
   },
   {
     question: 'Como o Bolsa Click se relaciona com os programas federais?',
@@ -171,7 +175,7 @@ export default function ProgramasHubPage() {
     '@type': 'Article',
     headline: 'Programas de Estudo no Brasil: ProUni, FIES, SISU, ENEM, ENCCEJA',
     description:
-      'Guia central dos programas federais de bolsa, financiamento e ingresso no ensino superior no Brasil em 2026.',
+      `Guia central dos programas federais de bolsa, financiamento e ingresso no ensino superior no Brasil em ${ANO}.`,
     datePublished: DATE_PUBLISHED,
     dateModified: DATE_MODIFIED,
     inLanguage: 'pt-BR',
@@ -222,7 +226,7 @@ export default function ProgramasHubPage() {
           </h1>
           <p className="text-lg md:text-xl text-ink-700 max-w-3xl">
             Guia central dos programas federais de bolsa, financiamento e ingresso no ensino
-            superior brasileiro em 2026. Compare ProUni, FIES, SISU, ENEM, ENCCEJA e faculdade
+            superior brasileiro em {ANO}. Compare ProUni, FIES, SISU, ENEM, ENCCEJA e faculdade
             sem ENEM lado a lado e descubra qual caminho rende mais para o seu perfil.
           </p>
           <p className="mt-6 font-mono text-[11px] tracking-[0.18em] uppercase text-ink-500">

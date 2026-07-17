@@ -8,18 +8,25 @@ const SITE_URL = 'https://www.bolsaclick.com.br'
 const DATA_PUBLISHED = '2024-01-15'
 const DATA_MODIFIED = '2026-05-15'
 
+// Ano corrente calculado — evita título/meta com ano velho (auditoria SEO
+// 2026-07, item HIGH #9). O corpo editorial segue no ciclo REVISAR ANUAL.
+const ANO = new Date().getFullYear()
+
+// ISR diário: refresca o ano dinâmico e o bloco "Leia também" (posts do blog).
+export const revalidate = 86400
+
 export const metadata: Metadata = {
-  title: 'ENCCEJA 2026 - Inscrição, Provas e Certificação de Ensino Médio',
+  title: `ENCCEJA ${ANO} - Inscrição, Provas e Certificação de Ensino Médio`,
   description:
-    'Tudo sobre o ENCCEJA 2026: como funciona o exame para certificação do ensino fundamental e médio, quem pode fazer, datas, como se inscrever e como entrar em faculdade depois.',
+    `Tudo sobre o ENCCEJA ${ANO}: como funciona o exame para certificação do ensino fundamental e médio, quem pode fazer, datas, como se inscrever e como entrar em faculdade depois.`,
   keywords: [
-    'encceja 2026', 'encceja', 'certificação ensino médio',
+    `encceja ${ANO}`, 'encceja', 'certificação ensino médio',
     'inscrição encceja', 'prova encceja',
     'concluir ensino médio', 'supletivo',
   ],
   alternates: { canonical: `${SITE_URL}/encceja` },
   openGraph: {
-    title: 'ENCCEJA 2026 - Como Concluir o Ensino Médio pelo Exame',
+    title: `ENCCEJA ${ANO} - Como Concluir o Ensino Médio pelo Exame`,
     description: 'Inscrição, regras e como usar o certificado do ENCCEJA para entrar em faculdade.',
     url: `${SITE_URL}/encceja`,
     siteName: 'Bolsa Click',
@@ -54,7 +61,7 @@ const faqItems = [
     answer: 'Sim. Se você for aprovado só em algumas áreas, pode pedir certificação parcial. Nas próximas edições, refaz apenas as áreas em que ficou abaixo da nota mínima, até completar todas e receber o certificado integral.',
   },
   {
-    question: 'Quando é o ENCCEJA 2026?',
+    question: `Quando é o ENCCEJA ${ANO}?`,
     answer: 'O ENCCEJA costuma acontecer uma vez por ano, geralmente em agosto. Em alguns anos há também uma edição específica para pessoas privadas de liberdade (ENCCEJA PPL). As datas oficiais saem no edital do INEP em torno de abril/maio.',
   },
   {
@@ -76,11 +83,12 @@ export default function EnccejaPage() {
     <ProgramHub
       slug="encceja"
       title="ENCCEJA"
-      h1="ENCCEJA 2026: Conclua o Ensino Médio pelo Exame"
+      h1={`ENCCEJA ${ANO}: Conclua o Ensino Médio pelo Exame`}
       lede="O ENCCEJA é a prova oficial do MEC que permite obter o certificado de conclusão do ensino fundamental ou médio sem precisar voltar para a sala de aula. Veja como funciona e o que fazer depois."
-      articleSummary="Guia completo do ENCCEJA 2026: o que é, quem pode fazer, calendário, estrutura da prova, notas mínimas, certificação parcial e como entrar em faculdade depois de receber o certificado."
+      articleSummary={`Guia completo do ENCCEJA ${ANO}: o que é, quem pode fazer, calendário, estrutura da prova, notas mínimas, certificação parcial e como entrar em faculdade depois de receber o certificado.`}
       datePublished={DATA_PUBLISHED}
       dateModified={DATA_MODIFIED}
+      blogTerms={['encceja', 'sem enem', 'ensino médio']}
       faqItems={faqItems}
     >
       <h2>O que é o ENCCEJA</h2>
@@ -125,7 +133,7 @@ export default function EnccejaPage() {
         completar todas, recebe o certificado integral.
       </p>
 
-      <h2>Calendário do ENCCEJA 2026</h2>
+      <h2>{`Calendário do ENCCEJA ${ANO}`}</h2>
       <ul>
         <li><strong>Inscrições</strong>: abril/maio (gratuitas, no site enccja.inep.gov.br)</li>
         <li><strong>Local da prova</strong>: divulgado em julho</li>

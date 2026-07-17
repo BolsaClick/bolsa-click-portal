@@ -9,18 +9,25 @@ const SITE_URL = 'https://www.bolsaclick.com.br'
 const DATA_PUBLISHED = '2024-01-15'
 const DATA_MODIFIED = '2026-07-16'
 
+// Ano corrente calculado — evita título/meta com ano velho (auditoria SEO
+// 2026-07, item HIGH #9). O corpo editorial segue no ciclo REVISAR ANUAL.
+const ANO = new Date().getFullYear()
+
+// ISR diário: refresca o ano dinâmico e o bloco "Leia também" (posts do blog).
+export const revalidate = 86400
+
 export const metadata: Metadata = {
-  title: 'FIES 2026 - Como Funciona, Inscrição, Juros e Quem Pode',
+  title: `FIES ${ANO} - Como Funciona, Inscrição, Juros e Quem Pode`,
   description:
-    'Tudo sobre o FIES 2026: requisitos, valores financiados, juros, prazo de pagamento, P-FIES e como combinar com PROUNI ou bolsa do Bolsa Click.',
+    `Tudo sobre o FIES ${ANO}: requisitos, valores financiados, juros, prazo de pagamento, P-FIES e como combinar com PROUNI ou bolsa do Bolsa Click.`,
   keywords: [
-    'fies 2026', 'fies', 'financiamento estudantil',
+    `fies ${ANO}`, 'fies', 'financiamento estudantil',
     'inscrição fies', 'juros fies', 'p-fies',
     'como funciona o fies', 'fies renda',
   ],
   alternates: { canonical: `${SITE_URL}/fies` },
   openGraph: {
-    title: 'FIES 2026 - Financiamento Estudantil do Governo Federal',
+    title: `FIES ${ANO} - Financiamento Estudantil do Governo Federal`,
     description: 'Como funciona, requisitos, valores e prazo de pagamento do FIES.',
     url: `${SITE_URL}/fies`,
     siteName: 'Bolsa Click',
@@ -43,7 +50,7 @@ const faqItems = [
     answer: 'Para o FIES tradicional: ter feito o ENEM (de 2010 em diante) com média mínima 450 nas 4 áreas e nota da redação acima de zero, renda familiar bruta de até 3 salários mínimos por pessoa, e não ter diploma de graduação. Para o P-FIES, os critérios variam por banco operador.',
   },
   {
-    question: 'Quando são as inscrições do FIES 2026?',
+    question: `Quando são as inscrições do FIES ${ANO}?`,
     answer: 'O FIES tem inscrições normalmente em fevereiro/março (1º semestre) e julho/agosto (2º semestre). As datas exatas são publicadas no edital do MEC, disponível em acessounico.mec.gov.br/fies.',
   },
   {
@@ -77,11 +84,12 @@ export default function FiesPage() {
     <ProgramHub
       slug="fies"
       title="FIES"
-      h1="FIES 2026: Como Financiar a Faculdade com o Governo"
+      h1={`FIES ${ANO}: Como Financiar a Faculdade com o Governo`}
       lede="O Fundo de Financiamento Estudantil financia até 100% dos encargos educacionais de cursos de graduação em faculdades privadas, com taxa real de juros zero. Para participar, é preciso ter média mínima de 450 pontos no ENEM, nota acima de zero na redação e atender aos demais critérios oficiais do programa."
-      articleSummary="Guia completo do FIES 2026: o que é, quem pode, calendário de inscrição, juros, valores financiados, P-FIES, prazo de pagamento e como combinar com PROUNI e Bolsa Click."
+      articleSummary={`Guia completo do FIES ${ANO}: o que é, quem pode, calendário de inscrição, juros, valores financiados, P-FIES, prazo de pagamento e como combinar com PROUNI e Bolsa Click.`}
       datePublished={DATA_PUBLISHED}
       dateModified={DATA_MODIFIED}
+      blogTerms={['fies', 'financiamento estudantil']}
       faqItems={faqItems}
       sources={
         <FontesConsultadas
@@ -101,7 +109,7 @@ export default function FiesPage() {
           ]}
           introducao="Este guia se baseia em fontes oficiais do Governo Federal sobre o financiamento estudantil."
           dateTime={DATA_MODIFIED}
-          dateLabel="15 de maio de 2026"
+          dateLabel="16 de julho de 2026"
         />
       }
     >
@@ -151,7 +159,7 @@ export default function FiesPage() {
         em renda, mas com avaliação de crédito do estudante ou fiador.
       </p>
 
-      <h2>Calendário do FIES 2026</h2>
+      <h2>{`Calendário do FIES ${ANO}`}</h2>
       <ul>
         <li><strong>1ª edição</strong>: inscrições em fevereiro/março</li>
         <li><strong>1ª chamada</strong>: cerca de 5 dias após o encerramento</li>

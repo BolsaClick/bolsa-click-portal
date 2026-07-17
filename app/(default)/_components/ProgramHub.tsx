@@ -1,6 +1,7 @@
 import { ReactNode } from 'react'
 import Link from 'next/link'
 import { VisibleFaq } from '@/app/cursos/[slug]/_seo/CourseSeoSections'
+import { RelatedBlogPosts } from './RelatedBlogPosts'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 
@@ -20,6 +21,12 @@ interface ProgramHubProps {
   dateModified: string
   children: ReactNode
   sources?: ReactNode
+  /**
+   * Termos de tema (ordem = prioridade) pro bloco "Leia também" com posts do
+   * blog. Sem termos, o bloco não renderiza. Interlinking hub→blog da
+   * auditoria SEO 2026-07 (item HIGH #5).
+   */
+  blogTerms?: string[]
 }
 
 export function ProgramHub({
@@ -33,6 +40,7 @@ export function ProgramHub({
   dateModified,
   children,
   sources,
+  blogTerms,
 }: ProgramHubProps) {
   const pageUrl = `${SITE_URL}/${slug}`
 
@@ -145,6 +153,8 @@ export function ProgramHub({
         items={faqItems}
         heading="Perguntas frequentes"
       />
+
+      {blogTerms && blogTerms.length > 0 && <RelatedBlogPosts terms={blogTerms} />}
 
       <section className="bg-paper py-12 md:py-16 border-t border-hairline">
         <div className="container mx-auto px-4 max-w-4xl">

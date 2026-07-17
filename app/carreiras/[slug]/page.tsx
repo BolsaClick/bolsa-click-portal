@@ -5,7 +5,6 @@ import CarreiraPageClient from './CarreiraPageClient'
 import { FeaturedCourseData } from '@/app/cursos/_data/types'
 import { courseTypeLabel } from '@/app/lib/courseTypeLabel'
 import { resolveCanonicalCourseSlug } from '@/app/lib/seo/slug-resolver'
-import { parseSalary } from '@/app/lib/seo/schema-helpers'
 
 export const revalidate = 86400
 
@@ -155,18 +154,8 @@ export default async function CarreiraPage({ params }: Props) {
         '@type': 'Country',
         name: 'Brasil',
       },
-      // MonetaryAmountDistribution.median exige number, não string ("R$ 4.500").
-      // parseSalary devolve undefined quando não consegue parsear — nesse caso
-      // omitimos o bloco inteiro pra não emitir "Salário R$ 0" no rich result.
-      ...(parseSalary(profissao.averageSalary) !== undefined && {
-        estimatedSalary: {
-          '@type': 'MonetaryAmountDistribution',
-          name: 'Salário médio',
-          currency: 'BRL',
-          duration: 'P1M',
-          median: parseSalary(profissao.averageSalary),
-        },
-      }),
+      // estimatedSalary removido: o rich result de salário estimado do Google
+      // foi descontinuado (jun/2025). O dado salarial segue no conteúdo visível.
       educationRequirements: {
         '@type': 'EducationalOccupationalCredential',
         credentialCategory: courseTypeLabel(profissao.type),

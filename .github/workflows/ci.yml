@@ -46,7 +46,9 @@ jobs:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       DB_CONNECTION_LIMIT: '5'
       NEXT_PUBLIC_SITE_URL: https://www.bolsaclick.com.br
-      NODE_ENV: production
+      # NÃO setar NODE_ENV=production aqui: faz o `npm ci` pular as devDependencies
+      # (tailwindcss, etc.) que o `next build` precisa. O next build já roda em
+      # modo production por conta própria.
     steps:
       - name: Guard — exige secrets do build
         run: |

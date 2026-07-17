@@ -159,7 +159,29 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
     : 0
 
   return (
-    <article className="group relative bg-white rounded-2xl overflow-hidden flex flex-col h-full border border-ink-100 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(11,31,60,0.12)] hover:-translate-y-0.5">
+    <article
+      onClick={(e) => {
+        // Card inteiro clicável → mesma ação do "Inscreva-se". Igual ao card
+        // original: o corpo parecia clicável mas não fazia nada (maior foco de
+        // rageclick e de saída do site). Ignora cliques em controles internos.
+        if (
+          (e.target as HTMLElement).closest(
+            'button, a, select, input, label, [role="button"]',
+          )
+        ) {
+          return
+        }
+        void handleClick()
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          void handleClick()
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      className="group relative cursor-pointer bg-white rounded-2xl overflow-hidden flex flex-col h-full border border-ink-100 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(11,31,60,0.12)] hover:-translate-y-0.5">
 
       {/* TOPO: desconto calculado exclusivamente com preços retornados pela API */}
       {hasDiscount && (

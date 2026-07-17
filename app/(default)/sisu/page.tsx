@@ -8,18 +8,22 @@ const SITE_URL = 'https://www.bolsaclick.com.br'
 const DATA_PUBLISHED = '2024-01-15'
 const DATA_MODIFIED = '2026-05-16'
 
+// Ano corrente calculado — evita título/meta com ano velho (auditoria SEO
+// 2026-07, item HIGH #9). O corpo editorial segue no ciclo REVISAR ANUAL.
+const ANO = new Date().getFullYear()
+
 export const metadata: Metadata = {
-  title: 'SISU 2026 - Inscrição, Notas de Corte e Como Funciona',
+  title: `SISU ${ANO} - Inscrição, Notas de Corte e Como Funciona`,
   description:
-    'Tudo sobre o SISU 2026: como funciona, calendário de inscrição, notas de corte por curso, lista de espera, segunda chamada e diferença para PROUNI e Bolsa Click.',
+    `Tudo sobre o SISU ${ANO}: como funciona, calendário de inscrição, notas de corte por curso, lista de espera, segunda chamada e diferença para PROUNI e Bolsa Click.`,
   keywords: [
-    'sisu 2026', 'sisu', 'sistema de seleção unificada',
+    `sisu ${ANO}`, 'sisu', 'sistema de seleção unificada',
     'inscrição sisu', 'nota de corte sisu', 'universidade pública',
     'sisu lista de espera', 'sisu segunda chamada',
   ],
   alternates: { canonical: `${SITE_URL}/sisu` },
   openGraph: {
-    title: 'SISU 2026 - Como Entrar em Universidade Pública com a Nota do ENEM',
+    title: `SISU ${ANO} - Como Entrar em Universidade Pública com a Nota do ENEM`,
     description: 'Inscrição, calendário, nota de corte e lista de espera do SISU.',
     url: `${SITE_URL}/sisu`,
     siteName: 'Bolsa Click',
@@ -34,7 +38,7 @@ const faqItems = [
     answer: 'O SISU (Sistema de Seleção Unificada) é a plataforma do MEC que reúne as vagas das universidades públicas (federais, estaduais e institutos federais) que usam a nota do ENEM como critério de ingresso. Você se inscreve uma vez e concorre a vagas em todo o Brasil.',
   },
   {
-    question: 'Quando são as inscrições do SISU 2026?',
+    question: `Quando são as inscrições do SISU ${ANO}?`,
     answer: 'O SISU tem duas edições por ano: a 1ª em janeiro/fevereiro (após a divulgação da nota do ENEM) e a 2ª em junho/julho (com a mesma nota). As datas exatas saem no edital do MEC. As inscrições duram cerca de 4 dias.',
   },
   {
@@ -76,9 +80,9 @@ export default function SisuPage() {
     <ProgramHub
       slug="sisu"
       title="SISU"
-      h1="SISU 2026: Como Entrar em Universidade Pública pelo ENEM"
+      h1={`SISU ${ANO}: Como Entrar em Universidade Pública pelo ENEM`}
       lede="O Sistema de Seleção Unificada reúne as vagas das universidades públicas que usam a nota do ENEM. Veja como funciona, quando se inscrever e o que olhar nas notas de corte."
-      articleSummary="Guia completo do SISU 2026: o que é, calendário, como funciona a inscrição, nota de corte, lista de espera e o que fazer se não passar."
+      articleSummary={`Guia completo do SISU ${ANO}: o que é, calendário, como funciona a inscrição, nota de corte, lista de espera e o que fazer se não passar.`}
       datePublished={DATA_PUBLISHED}
       dateModified={DATA_MODIFIED}
       faqItems={faqItems}
@@ -96,7 +100,7 @@ export default function SisuPage() {
         participantes, totalizando mais de 200 mil vagas por edição.
       </p>
 
-      <h2>Calendário do SISU 2026</h2>
+      <h2>{`Calendário do SISU ${ANO}`}</h2>
       <p>O programa tem duas edições por ano:</p>
       <ul>
         <li><strong>1ª edição</strong>: inscrição em janeiro/fevereiro, vagas para o 1º semestre letivo.</li>

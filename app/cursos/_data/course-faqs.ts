@@ -114,7 +114,7 @@ export const COURSE_FAQS: Record<string, CourseFaqEntry[]> = {
     {
       question: 'Qual o salário inicial de um pedagogo?',
       answer:
-        'O piso nacional do magistério em 2024 é R$ 4.580 (40h/semana, jornada plena). Em redes municipais menores, salários iniciais variam de R$ 2.500 a R$ 3.800. Coordenadores pedagógicos e diretores em redes privadas premium chegam a R$ 8.000–R$ 12.000.',
+        'O piso nacional do magistério é de R$ 4.580 para jornada plena de 40h/semana (referência MEC 2024). Em redes municipais menores, salários iniciais variam de R$ 2.500 a R$ 3.800. Coordenadores pedagógicos e diretores em redes privadas premium chegam a R$ 8.000–R$ 12.000.',
     },
     {
       question: 'Quanto custa Pedagogia EAD com bolsa?',

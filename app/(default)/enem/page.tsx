@@ -8,18 +8,23 @@ const SITE_URL = 'https://www.bolsaclick.com.br'
 const DATA_PUBLISHED = '2024-01-15'
 const DATA_MODIFIED = '2026-05-16'
 
+// Ano corrente calculado — evita título/meta com ano velho (auditoria SEO
+// 2026-07, item HIGH #9). Datas concretas da edição (provas, inscrição)
+// continuam editoriais no corpo — ciclo REVISAR ANUAL.
+const ANO = new Date().getFullYear()
+
 export const metadata: Metadata = {
-  title: 'ENEM 2026 - Datas, Inscrição, Notas de Corte e Como Usar',
+  title: `ENEM ${ANO} - Datas, Inscrição, Notas de Corte e Como Usar`,
   description:
-    'Tudo sobre o ENEM 2026: datas das provas, inscrição, estrutura, cálculo da nota TRI, redação e como usar sua nota em SISU, PROUNI, FIES e nas faculdades parceiras Bolsa Click.',
+    `Tudo sobre o ENEM ${ANO}: datas das provas, inscrição, estrutura, cálculo da nota TRI, redação e como usar sua nota em SISU, PROUNI, FIES e nas faculdades parceiras Bolsa Click.`,
   keywords: [
-    'enem 2026', 'enem', 'inscrição enem', 'nota enem',
+    `enem ${ANO}`, 'enem', 'inscrição enem', 'nota enem',
     'redação enem', 'enem datas', 'calendário enem',
     'como usar nota enem', 'sisu', 'prouni', 'fies',
   ],
   alternates: { canonical: `${SITE_URL}/enem` },
   openGraph: {
-    title: 'ENEM 2026 - Tudo o que Você Precisa Saber',
+    title: `ENEM ${ANO} - Tudo o que Você Precisa Saber`,
     description: 'Datas, inscrição, estrutura e como usar a nota do ENEM para entrar em faculdade.',
     url: `${SITE_URL}/enem`,
     siteName: 'Bolsa Click',
@@ -76,9 +81,9 @@ export default function EnemPage() {
     <ProgramHub
       slug="enem"
       title="ENEM"
-      h1="ENEM 2026: Datas, Inscrição e Como Usar Sua Nota"
+      h1={`ENEM ${ANO}: Datas, Inscrição e Como Usar Sua Nota`}
       lede="O Exame Nacional do Ensino Médio é a principal porta de entrada para universidades públicas e privadas no Brasil. Veja como funciona, quando acontece e como transformar sua nota em bolsa de até 80%."
-      articleSummary="Guia completo do ENEM 2026: datas, inscrição, estrutura da prova, cálculo da nota TRI, redação e como usar a nota em SISU, PROUNI, FIES e nas faculdades parceiras Bolsa Click."
+      articleSummary={`Guia completo do ENEM ${ANO}: datas, inscrição, estrutura da prova, cálculo da nota TRI, redação e como usar a nota em SISU, PROUNI, FIES e nas faculdades parceiras Bolsa Click.`}
       datePublished={DATA_PUBLISHED}
       dateModified={DATA_MODIFIED}
       faqItems={faqItems}

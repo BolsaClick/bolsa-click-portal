@@ -38,7 +38,7 @@ const FAQ_ITEMS = [
   {
     question: 'Qual o salário médio dos profissionais da saúde?',
     answer:
-      'Varia bastante por área e localização. Salários iniciais CLT em 2024: Enfermeiro R$ 4.750 (piso nacional), Psicólogo R$ 2.500-3.800, Fisioterapeuta R$ 2.500-4.500, Nutricionista R$ 2.500-4.000, Biomédico R$ 3.000-5.000. Profissionais autônomos em consultório próprio podem ultrapassar R$ 10.000-15.000 mensais com carteira de clientes.',
+      'Varia bastante por área e localização. Salários iniciais CLT (referência CAGED 2024): Enfermeiro R$ 4.750 (piso nacional), Psicólogo R$ 2.500-3.800, Fisioterapeuta R$ 2.500-4.500, Nutricionista R$ 2.500-4.000, Biomédico R$ 3.000-5.000. Profissionais autônomos em consultório próprio podem ultrapassar R$ 10.000-15.000 mensais com carteira de clientes.',
   },
   {
     question: 'Preciso de ENEM pra entrar em faculdade de saúde particular?',

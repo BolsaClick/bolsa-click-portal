@@ -44,7 +44,7 @@ export const metadata: Metadata = {
   keywords: [
     'bolsa de estudo',
     'bolsas de estudo',
-    'bolsas de estudo 2026',
+    `bolsas de estudo ${new Date().getFullYear()}`,
     'como conseguir bolsa de estudo',
     'faculdade com bolsa',
     'desconto faculdade',
@@ -387,7 +387,7 @@ export default async function BolsasDeEstudoHubPage() {
     '@type': 'Article',
     headline: 'Bolsas de Estudo no Brasil: ProUni, FIES, bolsa própria e EAD',
     description:
-      'Guia completo de bolsas de estudo no Brasil em 2026: tipos (integral, parcial, permanência), ProUni vs FIES vs bolsa própria, passo-a-passo e FAQ.',
+      `Guia completo de bolsas de estudo no Brasil em ${new Date().getFullYear()}: tipos (integral, parcial, permanência), ProUni vs FIES vs bolsa própria, passo-a-passo e FAQ.`,
     datePublished: DATE_PUBLISHED,
     dateModified: DATE_MODIFIED,
     inLanguage: 'pt-BR',

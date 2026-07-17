@@ -13,8 +13,9 @@ import {
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { FeaturedCourseData } from '../../_data/types'
+import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { getBrandLogo } from '@/app/lib/brand-logos'
 
 interface CursoCidadeClientProps {
@@ -72,6 +73,23 @@ export default function CursoCidadeClient({
   const [activeTab, setActiveTab] = useState<'areas' | 'skills' | 'careers'>('areas')
   const [selectedModality, setSelectedModality] = useState<ModalityFilter>('TODAS')
   const router = useRouter()
+
+  // Meta Pixel + Conversions API - ViewContent (curso×cidade). Mesmo motivo da
+  // página do curso: entrada direta orgânica não passa pelo clique do card.
+  useEffect(() => {
+    const cheapest = courseOffers
+      .map((o) => o.minPrice || 0)
+      .filter((p) => p > 0)
+    void trackFbqDual('ViewContent', {
+      content_name: cursoMetadata.name,
+      content_type: 'product',
+      content_category: cursoMetadata.nivel,
+      value: cheapest.length ? Math.min(...cheapest) : 0,
+      currency: 'BRL',
+    })
+    // 1x por curso×cidade visitado.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseSlug, cityName])
   const offersRef = useRef<HTMLElement>(null)
   const infoSectionRef = useRef<HTMLElement>(null)
 

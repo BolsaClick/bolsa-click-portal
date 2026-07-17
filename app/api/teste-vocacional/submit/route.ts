@@ -6,6 +6,7 @@ import {
   type Recommendation,
 } from '@/app/lib/teste-vocacional/openai'
 import { upsertNotealyContact } from '@/app/lib/api/notealy'
+import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
 import {
   computeUserProfile,
@@ -78,6 +79,46 @@ function sanitizeRecommendations(
   }
 
   return valid.slice(0, 3)
+}
+
+// Meta Conversions API — Lead server-side (espelha o /api/simulador).
+// eventId determinístico pelo lead → idempotente em retries.
+async function sendLeadToMeta(params: {
+  leadId: string
+  name: string
+  email: string
+  phone: string
+  courseName?: string
+  request: NextRequest
+}) {
+  try {
+    const [firstName, ...rest] = params.name.trim().split(/\s+/)
+    const clientIp =
+      params.request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+      params.request.headers.get('x-real-ip') ??
+      undefined
+    await sendFacebookEvent({
+      eventName: 'Lead',
+      eventId: `tv_${params.leadId}`,
+      userData: {
+        email: params.email,
+        phone: params.phone,
+        firstName: firstName || undefined,
+        lastName: rest.length ? rest.join(' ') : undefined,
+        clientIp,
+        userAgent: params.request.headers.get('user-agent') ?? undefined,
+      },
+      customData: {
+        ...(params.courseName ? { content_name: params.courseName } : {}),
+        content_category: 'teste-vocacional',
+        content_type: 'product',
+      },
+      actionSource: 'website',
+      eventSourceUrl: params.request.headers.get('referer') ?? undefined,
+    })
+  } catch (error) {
+    console.error('⚠️ Meta CAPI Lead (teste vocacional) falhou:', error)
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -161,16 +202,18 @@ export async function POST(request: NextRequest) {
   }
 
   // 4) Persistir Lead em Prisma (best-effort)
+  const courseNames = recommendations.map(r => {
+    const curso = TOP_CURSOS.find(c => c.slug === r.courseSlug)
+    return curso?.apiCourseName ?? r.courseSlug
+  })
+  let leadId = ''
   try {
-    await prisma.lead.create({
+    const lead = await prisma.lead.create({
       data: {
         name: name.trim().slice(0, 80),
         email: email.toLowerCase().trim(),
         phone: cleanPhone,
-        courseNames: recommendations.map(r => {
-          const curso = TOP_CURSOS.find(c => c.slug === r.courseSlug)
-          return curso?.apiCourseName ?? r.courseSlug
-        }),
+        courseNames,
         source: 'teste-vocacional',
         extraData: JSON.parse(JSON.stringify({
           likertAnswers,
@@ -180,6 +223,7 @@ export async function POST(request: NextRequest) {
         status: 'NEW',
       },
     })
+    leadId = lead.id
   } catch (error) {
     console.error('Falha ao criar Lead:', error)
   }
@@ -194,6 +238,18 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('⚠️ Falha ao sincronizar com Notealy:', error)
+  }
+
+  // 6) Meta CAPI — Lead (best-effort)
+  if (leadId) {
+    await sendLeadToMeta({
+      leadId,
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      phone: cleanPhone,
+      courseName: courseNames[0],
+      request,
+    })
   }
 
   return NextResponse.json(profileResult)

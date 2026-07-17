@@ -6,7 +6,7 @@ import { CheckCircle2, Copy, ExternalLink } from 'lucide-react'
 import QRCode from 'react-qr-code'
 import ReviewInviteCard from '@/app/components/molecules/ReviewInviteCard'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
-import { trackFbq } from '@/app/lib/analytics/fbq'
+import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { trackTikTokDual } from '@/app/lib/analytics/ttq'
 import { trackEnrollmentConverted } from '@/app/lib/analytics/checkout-funnel'
 
@@ -48,7 +48,17 @@ export default function EstacioSuccessClient() {
     })
 
     // Conversão: inscrição realizada (pagamento será concluído na instituição).
-    trackFbq('Lead', { content_name: course || undefined, currency: 'BRL' })
+    // MESMO event_id do Lead disparado no EstacioCheckoutClient (estacio_{numeroInscricao})
+    // → o Meta dedupa; este disparo é só redundância de entrega (reload/navegação).
+    // Sem numeroInscricao não há como dedupar, então não repete (o checkout já disparou).
+    if (numeroInscricao) {
+      void trackFbqDual(
+        'Lead',
+        { content_name: course || undefined, currency: 'BRL' },
+        undefined,
+        `estacio_${numeroInscricao}`,
+      )
+    }
     void trackTikTokDual('SubmitForm', {
       content_name: course || undefined,
       content_type: 'product',

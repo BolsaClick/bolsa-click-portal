@@ -4,7 +4,7 @@ import confetti from 'canvas-confetti'
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { formatCurrency } from '@/utils/fomartCurrency'
-import { trackFbq } from '@/app/lib/analytics/fbq'
+import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { trackTikTokDual } from '@/app/lib/analytics/ttq'
 import ReviewInviteCard from '@/app/components/molecules/ReviewInviteCard'
 
@@ -16,6 +16,9 @@ export default function SuccessClient() {
   const course = searchParams.get('course')
   const paymentMethod = searchParams.get('paymentMethod')
   const payToday = searchParams.get('price')
+  // Quando o fluxo informa o id da transação, o Purchase dedupa com o
+  // server-side (Conversions API) que usa o mesmo id.
+  const transactionId = searchParams.get('transactionId')
   // Opcional — quando o fluxo de checkout informa a marca, o convite de
   // avaliação deep-linka pra /faculdades/{slug}#avaliacoes.
   const brand = searchParams.get('brand')
@@ -39,12 +42,18 @@ useEffect(() => {
     w.dataLayer = w.dataLayer ?? [];
     w.dataLayer.push({ event: eventName });
 
-    // Facebook Pixel - Purchase
-    trackFbq('Purchase', {
-      value: payToday ? parseFloat(payToday) : 0,
-      currency: 'BRL',
-      content_name: course || undefined,
-    })
+    // Meta Pixel + Conversions API - Purchase. eventID = transactionId (quando
+    // presente) dedupa com o Purchase server-side de confirmPaidMatricula.
+    void trackFbqDual(
+      'Purchase',
+      {
+        value: payToday ? parseFloat(payToday) : 0,
+        currency: 'BRL',
+        content_name: course || undefined,
+      },
+      undefined,
+      transactionId ?? undefined,
+    )
 
     // TikTok Pixel + Events API - CompletePayment
     void trackTikTokDual('CompletePayment', {
@@ -54,6 +63,7 @@ useEffect(() => {
       content_type: 'product',
     })
   }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [])
 
   useEffect(() => {

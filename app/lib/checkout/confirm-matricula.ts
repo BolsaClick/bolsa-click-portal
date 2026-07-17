@@ -170,8 +170,8 @@ export async function confirmPaidMatricula(
   }
 
   // 4) Meta Conversions API — Purchase server-side (chega mesmo com aba fechada).
-  // event_id = externalTransactionId dedupa com o Purchase do pixel na página
-  // de sucesso (que usa o mesmo id).
+  // event_id = externalTransactionId dedupa com o Purchase do pixel disparado
+  // no MatriculaPayment (mesmo id).
   try {
     const [firstName, ...rest] = tx.name.trim().split(/\s+/)
     await sendFacebookEvent({

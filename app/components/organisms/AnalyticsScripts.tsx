@@ -1,13 +1,38 @@
 'use client'
 
 import Script from 'next/script'
+import { Suspense, useEffect, useRef } from 'react'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { useConsent } from '../providers/ConsentProvider'
+import { trackFbq } from '@/app/lib/analytics/fbq'
 
 type Props = {
   gtmId?: string
   ga4Id?: string
   facebookPixelIds?: string[]
   tiktokPixelId?: string
+}
+
+/**
+ * PageView do Meta em navegação SPA. O snippet de init do pixel já dispara o
+ * PageView do carregamento inicial; o App Router não recarrega a página nas
+ * navegações seguintes, então sem isso o Meta só via a primeira página da
+ * sessão. Espelha o PostHogPageView (usePathname + useSearchParams).
+ */
+function MetaPageView() {
+  const pathname = usePathname()
+  const search = useSearchParams().toString()
+  const isFirst = useRef(true)
+
+  useEffect(() => {
+    if (isFirst.current) {
+      isFirst.current = false
+      return
+    }
+    trackFbq('PageView')
+  }, [pathname, search])
+
+  return null
 }
 
 const logScriptError = (label: string) => (event: unknown) => {
@@ -103,6 +128,9 @@ export function AnalyticsScripts({ gtmId, ga4Id, facebookPixelIds, tiktokPixelId
               fbq('track', 'PageView');
             `}
           </Script>
+          <Suspense fallback={null}>
+            <MetaPageView />
+          </Suspense>
           {pixels.map((pixelId) => (
             <noscript key={pixelId}>
               {/* eslint-disable-next-line @next/next/no-img-element */}

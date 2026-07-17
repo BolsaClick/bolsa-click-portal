@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { FeaturedCourseData } from '../_data/types'
 import { useVisitedCourses } from '@/app/lib/personalization/hooks'
+import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { getBrandLogo } from '@/app/lib/brand-logos'
 import Mascot from '@/app/components/v2/mascot/Mascot'
 import { courseAreaPose } from '@/app/components/v2/mascot/course-area'
@@ -75,6 +76,24 @@ export default function CursoPageClient({
   useEffect(() => {
     recordVisit({ slug: cursoMetadata.slug, name: cursoMetadata.name })
   }, [cursoMetadata.slug, cursoMetadata.name, recordVisit])
+
+  // Meta Pixel + Conversions API - ViewContent na página do curso. Cobre a
+  // entrada direta (orgânico/ads) que nunca passa pelo clique do card — sem
+  // isso, públicos de "viu o curso X" só enxergavam quem veio da busca interna.
+  useEffect(() => {
+    const cheapest = courseOffers
+      .map((o) => o.minPrice || 0)
+      .filter((p) => p > 0)
+    void trackFbqDual('ViewContent', {
+      content_name: cursoMetadata.name,
+      content_type: 'product',
+      content_category: cursoMetadata.nivel,
+      value: cheapest.length ? Math.min(...cheapest) : 0,
+      currency: 'BRL',
+    })
+    // Dispara 1x por curso visitado — ofertas não mudam sem trocar de slug.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cursoMetadata.slug])
 
   const filteredOffers =
     selectedModality === 'TODAS'

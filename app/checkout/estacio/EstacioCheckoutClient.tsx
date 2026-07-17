@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { trackFbqDual } from '@/app/lib/analytics/fbq'
+import { createLead } from '@/app/lib/api/create-lead'
 import {
   trackCheckoutViewed,
   trackCheckoutSubmitted,
@@ -219,6 +220,20 @@ export default function EstacioCheckoutClient() {
     }
 
     setSubmitting(true)
+
+    // Notealy (estágio 1): cadastra o contato como lead sem bloquear a inscrição.
+    void createLead({
+      name: form.name.trim(),
+      cpf: form.cpf.replace(/\D/g, ''),
+      email: form.email.trim(),
+      phone: form.mobile.replace(/\D/g, ''),
+      courseNames: offer.courseName ? [offer.courseName] : [],
+      courseId: offer.offerId,
+      courseName: offer.courseName,
+      institutionName: offer.brand,
+      modalidade: offer.modality,
+    }).catch((leadError) => console.error('Notealy lead falhou:', leadError))
+
     try {
       const res = await fetch('/api/athena-checkout', {
         method: 'POST',
@@ -262,17 +277,20 @@ export default function EstacioCheckoutClient() {
         already_enrolled: !!data?.alreadyEnrolled,
       })
 
-      // Funil unificado — etapa 3 (fluxo Estácio): inscrição criada.
-      trackCheckoutSubmitted(trackEvent, {
-        flow: 'estacio',
-        brand: offer.brand,
-        modality: offer.modality,
-        offerId: offer.offerId,
-        courseName: offer.courseName,
-      })
+      // Notealy (estágio 2): marca o contato como "inscrito". Não-bloqueante.
+      fetch('/api/leads/confirm-inscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name.trim(),
+          email: form.email.trim(),
+          phone: form.mobile.replace(/\D/g, ''),
+          cpf: form.cpf.replace(/\D/g, ''),
+        }),
+      }).catch((confirmError) => console.error('Notealy confirm falhou:', confirmError))
 
       // Funil unificado — etapa 2 (fluxo Estácio): contato preenchido →
-      // identifica no PostHog (habilita retargeting de quem não converter).
+      // identifica no PostHog antes do evento de inscrição (habilita retargeting).
       trackCheckoutIdentified(
         trackEvent,
         {
@@ -287,6 +305,15 @@ export default function EstacioCheckoutClient() {
         },
         setUserProperties,
       )
+
+      // Funil unificado — etapa 3 (fluxo Estácio): inscrição criada.
+      trackCheckoutSubmitted(trackEvent, {
+        flow: 'estacio',
+        brand: offer.brand,
+        modality: offer.modality,
+        offerId: offer.offerId,
+        courseName: offer.courseName,
+      })
 
       // Meta Pixel + Conversions API - Lead (inscrição Estácio; pagamento externo).
       // event_id pela inscrição quando houver, para dedup/idempotência.

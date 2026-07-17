@@ -12,6 +12,9 @@ const DATA_MODIFIED = '2026-05-15'
 // 2026-07, item HIGH #9). O corpo editorial segue no ciclo REVISAR ANUAL.
 const ANO = new Date().getFullYear()
 
+// ISR diário: refresca o ano dinâmico e o bloco "Leia também" (posts do blog).
+export const revalidate = 86400
+
 export const metadata: Metadata = {
   title: `ENCCEJA ${ANO} - Inscrição, Provas e Certificação de Ensino Médio`,
   description:
@@ -85,6 +88,7 @@ export default function EnccejaPage() {
       articleSummary={`Guia completo do ENCCEJA ${ANO}: o que é, quem pode fazer, calendário, estrutura da prova, notas mínimas, certificação parcial e como entrar em faculdade depois de receber o certificado.`}
       datePublished={DATA_PUBLISHED}
       dateModified={DATA_MODIFIED}
+      blogTerms={['encceja', 'sem enem', 'ensino médio']}
       faqItems={faqItems}
     >
       <h2>O que é o ENCCEJA</h2>

@@ -12,6 +12,9 @@ const DATA_MODIFIED = '2026-05-16'
 // 2026-07, item HIGH #9). O corpo editorial segue no ciclo REVISAR ANUAL.
 const ANO = new Date().getFullYear()
 
+// ISR diário: refresca o ano dinâmico e o bloco "Leia também" (posts do blog).
+export const revalidate = 86400
+
 export const metadata: Metadata = {
   title: `SISU ${ANO} - Inscrição, Notas de Corte e Como Funciona`,
   description:
@@ -85,6 +88,7 @@ export default function SisuPage() {
       articleSummary={`Guia completo do SISU ${ANO}: o que é, calendário, como funciona a inscrição, nota de corte, lista de espera e o que fazer se não passar.`}
       datePublished={DATA_PUBLISHED}
       dateModified={DATA_MODIFIED}
+      blogTerms={['sisu', 'nota de corte', 'programas federais']}
       faqItems={faqItems}
     >
       <h2>O que é o SISU</h2>

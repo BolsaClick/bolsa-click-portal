@@ -13,6 +13,9 @@ const DATA_MODIFIED = '2026-07-16'
 // 2026-07, item HIGH #9). O corpo editorial segue no ciclo REVISAR ANUAL.
 const ANO = new Date().getFullYear()
 
+// ISR diário: refresca o ano dinâmico e o bloco "Leia também" (posts do blog).
+export const revalidate = 86400
+
 export const metadata: Metadata = {
   title: `FIES ${ANO} - Como Funciona, Inscrição, Juros e Quem Pode`,
   description:
@@ -86,6 +89,7 @@ export default function FiesPage() {
       articleSummary={`Guia completo do FIES ${ANO}: o que é, quem pode, calendário de inscrição, juros, valores financiados, P-FIES, prazo de pagamento e como combinar com PROUNI e Bolsa Click.`}
       datePublished={DATA_PUBLISHED}
       dateModified={DATA_MODIFIED}
+      blogTerms={['fies', 'financiamento estudantil']}
       faqItems={faqItems}
       sources={
         <FontesConsultadas

@@ -13,6 +13,9 @@ const DATA_MODIFIED = '2026-05-16'
 // continuam editoriais no corpo — ciclo REVISAR ANUAL.
 const ANO = new Date().getFullYear()
 
+// ISR diário: refresca o ano dinâmico e o bloco "Leia também" (posts do blog).
+export const revalidate = 86400
+
 export const metadata: Metadata = {
   title: `ENEM ${ANO} - Datas, Inscrição, Notas de Corte e Como Usar`,
   description:
@@ -86,6 +89,7 @@ export default function EnemPage() {
       articleSummary={`Guia completo do ENEM ${ANO}: datas, inscrição, estrutura da prova, cálculo da nota TRI, redação e como usar a nota em SISU, PROUNI, FIES e nas faculdades parceiras Bolsa Click.`}
       datePublished={DATA_PUBLISHED}
       dateModified={DATA_MODIFIED}
+      blogTerms={['nota do enem', 'nota mínima', 'redação', 'enem']}
       faqItems={faqItems}
     >
       <h2>O que é o ENEM</h2>

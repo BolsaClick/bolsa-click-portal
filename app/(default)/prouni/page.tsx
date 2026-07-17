@@ -13,6 +13,9 @@ const DATA_MODIFIED = '2026-07-16'
 // 2026-07, item HIGH #9). O corpo editorial segue no ciclo REVISAR ANUAL.
 const ANO = new Date().getFullYear()
 
+// ISR diário: refresca o ano dinâmico e o bloco "Leia também" (posts do blog).
+export const revalidate = 86400
+
 export const metadata: Metadata = {
   title: `PROUNI ${ANO} - Inscrição, Notas, Renda e Bolsas`,
   description:
@@ -86,6 +89,7 @@ export default function ProuniPage() {
       articleSummary={`Guia completo do PROUNI ${ANO}: requisitos de renda e nota do ENEM, calendário de inscrição, diferença entre bolsa integral e parcial, faculdades participantes, e comparação com outras formas de bolsa.`}
       datePublished={DATA_PUBLISHED}
       dateModified={DATA_MODIFIED}
+      blogTerms={['prouni', 'bolsa integral']}
       faqItems={faqItems}
       sources={
         <FontesConsultadas

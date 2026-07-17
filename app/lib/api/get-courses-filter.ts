@@ -23,11 +23,22 @@ interface CourseWithPrices {
   [key: string]: unknown
 }
 
+/** Fontes de oferta que podem falhar individualmente na busca mesclada. */
+export type OfferSource = 'cogna' | 'estacio'
+
+// Timeout de sanidade: nenhuma fonte pode segurar a busca além disso —
+// sem ele, uma request pendurada deixa o skeleton da página de resultado eterno.
+const SOURCE_TIMEOUT_MS = 15_000
+
 /**
  * Busca curso+cidade pública: mescla a fonte Tartarus (Cogna) com as ofertas
  * Estácio (via Athena), na mesma lista. As ofertas Athena entram apenas na
- * página 1 (a paginação client-side roda sobre o array combinado); falha da
- * Athena não derruba a busca Tartarus (Promise.allSettled).
+ * página 1 (a paginação client-side roda sobre o array combinado); falha de
+ * UMA fonte não derruba a outra (Promise.allSettled) — nesse caso o resultado
+ * volta com `failedSources` preenchido pra UI avisar que a lista está parcial.
+ * Se TODAS as fontes falharem (ou a principal falhar sem a Athena compensar),
+ * a função REJEITA, pra o react-query entrar em isError em vez de fingir
+ * "0 resultados" pro usuário.
  */
 export async function getShowFiltersCourses(
   courseName?: string,
@@ -48,6 +59,16 @@ export async function getShowFiltersCourses(
       : Promise.resolve([] as CourseWithPrices[]),
   ])
 
+  const failedSources: OfferSource[] = []
+  if (tartarusResult.status === 'rejected') {
+    console.error('Erro ao buscar ofertas Cogna (Tartarus):', tartarusResult.reason)
+    failedSources.push('cogna')
+  }
+  if (athenaResult.status === 'rejected') {
+    console.error('Erro ao mesclar ofertas Athena:', athenaResult.reason)
+    failedSources.push('estacio')
+  }
+
   const tartarus =
     tartarusResult.status === 'fulfilled'
       ? tartarusResult.value
@@ -55,8 +76,14 @@ export async function getShowFiltersCourses(
   let athenaOffers =
     athenaResult.status === 'fulfilled' ? athenaResult.value : []
 
-  if (athenaResult.status === 'rejected') {
-    console.error('Erro ao mesclar ofertas Athena:', athenaResult.reason)
+  // Fonte principal caiu e a Athena não trouxe nada pra compensar (falhou
+  // também, foi pulada, ou legitimamente não tem oferta): não há dado nenhum
+  // pra mostrar — rejeitar pra UI exibir o estado de erro com retry, em vez
+  // de um falso "não encontramos ofertas".
+  if (tartarusResult.status === 'rejected' && athenaOffers.length === 0) {
+    throw tartarusResult.reason instanceof Error
+      ? tartarusResult.reason
+      : new Error('Falha ao carregar as ofertas (Cogna e Estácio indisponíveis)')
   }
 
   // Modo descoberta (sem curso): deduplicar ofertas Athena por nome de curso —
@@ -81,7 +108,14 @@ export async function getShowFiltersCourses(
       : []
 
   if (athenaOffers.length === 0) {
-    return tartarus
+    if (failedSources.length === 0) {
+      return tartarus
+    }
+    // Tartarus respondeu mas a Athena falhou: devolver o que temos + flag
+    // de fonte parcial (normalizando o shape de array pra objeto, se preciso).
+    return Array.isArray(tartarus)
+      ? { data: tartarusData, totalItems: tartarusData.length, failedSources }
+      : { ...tartarus, failedSources }
   }
 
   // Round-robin POR MARCA: 1 oferta de cada instituição por vez (Anhanguera,
@@ -121,13 +155,16 @@ export async function getShowFiltersCourses(
     data: merged,
     totalItems,
     totalPages: Math.ceil(totalItems / Math.max(size, 1)),
+    ...(failedSources.length > 0 ? { failedSources } : {}),
   }
 }
 
 /**
  * Busca as ofertas Estácio no nosso route handler (/api/athena-offers), que
  * server-side chama a Athena. Retorna já normalizado como `Course` (source YDUQS).
- * Degradação graciosa: qualquer falha → [].
+ * Falha REJEITA (não engole em []): quem decide como degradar é o
+ * Promise.allSettled do getShowFiltersCourses — assim ele distingue
+ * "Athena sem ofertas" de "Athena fora do ar" e sinaliza resultado parcial.
  */
 async function fetchAthenaOffers(params: {
   courseName?: string
@@ -139,22 +176,21 @@ async function fetchAthenaOffers(params: {
   // Só roda no browser (fetch relativo). Em SSR/prefetch, pular.
   if (typeof window === 'undefined') return []
 
-  try {
-    const qs = new URLSearchParams()
-    if (params.courseName?.trim()) qs.set('courseName', params.courseName.trim())
-    if (params.city?.trim()) qs.set('city', params.city.trim())
-    if (params.state?.trim()) qs.set('state', params.state.trim())
-    if (params.modality?.trim()) qs.set('modality', params.modality.trim())
-    if (params.academicLevel?.trim()) qs.set('academicLevel', params.academicLevel.trim())
+  const qs = new URLSearchParams()
+  if (params.courseName?.trim()) qs.set('courseName', params.courseName.trim())
+  if (params.city?.trim()) qs.set('city', params.city.trim())
+  if (params.state?.trim()) qs.set('state', params.state.trim())
+  if (params.modality?.trim()) qs.set('modality', params.modality.trim())
+  if (params.academicLevel?.trim()) qs.set('academicLevel', params.academicLevel.trim())
 
-    const res = await fetch(`/api/athena-offers?${qs.toString()}`)
-    if (!res.ok) return []
-    const json = await res.json()
-    return Array.isArray(json?.data) ? (json.data as CourseWithPrices[]) : []
-  } catch (error) {
-    console.error('Erro ao buscar ofertas Athena no portal:', error)
-    return []
+  const res = await fetch(`/api/athena-offers?${qs.toString()}`, {
+    signal: AbortSignal.timeout(SOURCE_TIMEOUT_MS),
+  })
+  if (!res.ok) {
+    throw new Error(`Athena offers respondeu ${res.status}`)
   }
+  const json = await res.json()
+  return Array.isArray(json?.data) ? (json.data as CourseWithPrices[]) : []
 }
 
 async function getTartarusFilteredCourses(
@@ -288,9 +324,12 @@ async function getTartarusFilteredCourses(
     return searchParams.toString()
   }
 
-  const response = await tartarus.get('cogna/courses/search', { 
+  const response = await tartarus.get('cogna/courses/search', {
     params,
-    paramsSerializer
+    paramsSerializer,
+    // Sem timeout, uma request pendurada segura o isLoading do react-query
+    // pra sempre — e o usuário fica olhando skeleton eterno.
+    timeout: SOURCE_TIMEOUT_MS,
   })
   
   // Mapear os dados para garantir que minPrice e maxPrice estejam presentes

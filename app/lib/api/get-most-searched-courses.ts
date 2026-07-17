@@ -124,7 +124,10 @@ export async function getMostSearchedCourses(city: string) {
     const response = await tartarus.get<MostSearchedResponse>('/offers/most-searched', {
       params: {
         city: city.trim()
-      }
+      },
+      // Timeout de sanidade: essa chamada está no caminho da página de resultado —
+      // sem ele, request pendurada = skeleton eterno (mesmo valor do get-courses-filter).
+      timeout: 15_000,
     })
 
     // Mapear os dados para o formato esperado

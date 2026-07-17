@@ -57,12 +57,11 @@ export default function RegionalSalaryBlock({
       ? `abaixo da média nacional, refletindo o custo de vida regional`
       : `próximo da média nacional`
 
-  // Schema.org Occupation + MonetaryAmountDistribution. Captura SERPs
-  // "salário [profissão] [cidade]" e enriquece resposta de AI Overviews
-  // (que peso estimatedSalary com source explícito). percentile10/median/
-  // percentile90 são derivados da faixa CAGED ajustada pelo multiplier
-  // regional — honestos como estimativa, e o texto da copy já explica.
-  const medianRegional = Math.round((lowRegional + highRegional) / 2)
+  // Schema.org Occupation com localização — mantém a entidade "profissão ×
+  // cidade" legível por máquina. A propriedade estimatedSalary foi removida:
+  // o rich result de salário estimado do Google foi descontinuado (jun/2025)
+  // e o valor projetado divergia do texto visível (viola anti-hallucination).
+  // O dado salarial segue no conteúdo visível abaixo, com fonte explícita.
   const occupationSchema = {
     '@context': 'https://schema.org',
     '@type': 'Occupation',
@@ -76,17 +75,6 @@ export default function RegionalSalaryBlock({
         containedInPlace: { '@type': 'Country', name: 'Brasil' },
       },
     },
-    estimatedSalary: [
-      {
-        '@type': 'MonetaryAmountDistribution',
-        name: `Faixa salarial estimada — ${curso.name} (${cityState})`,
-        currency: 'BRL',
-        duration: 'P1M',
-        percentile10: lowRegional,
-        median: medianRegional,
-        percentile90: highRegional,
-      },
-    ],
   }
 
   return (

@@ -19,7 +19,7 @@ export interface BrandFaqItem {
 }
 
 export interface BrandContent {
-  /** "Como conseguir bolsa na {marca}" — intro + 4 passos (alimenta HowTo JSON-LD). */
+  /** "Como conseguir bolsa na {marca}" — intro + 4 passos (conteúdo visível da página). */
   comoConseguir: {
     intro: string
     passos: BrandPasso[]

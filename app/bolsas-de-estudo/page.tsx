@@ -75,7 +75,7 @@ export const metadata: Metadata = {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// CONTEÚDO EDITORIAL (data-driven pra reuso em schema HowTo, FAQ e UI)
+// CONTEÚDO EDITORIAL (data-driven pra reuso em schema FAQ e UI)
 // ─────────────────────────────────────────────────────────────────────────
 
 const TIPOS_BOLSA = [
@@ -375,21 +375,6 @@ export default async function BolsasDeEstudoHubPage() {
     })),
   }
 
-  const howToSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'HowTo',
-    name: 'Como conseguir bolsa de estudo no Brasil',
-    description:
-      'Passo-a-passo pra conseguir uma bolsa de estudo de 50% a 100% em faculdade particular no Brasil — pelo ProUni, FIES ou bolsa própria de faculdade parceira.',
-    totalTime: 'PT15M',
-    step: PASSOS.map((p, i) => ({
-      '@type': 'HowToStep',
-      position: i + 1,
-      name: p.titulo,
-      text: p.detalhe,
-    })),
-  }
-
   // Article schema pra GEO: dateModified visível + author = sinal forte de
   // freshness e autoridade pra AI Overviews / ChatGPT / Perplexity. Mesmo
   // sendo hub page, o pillar tem conteúdo editorial autêntico (12 seções).
@@ -594,7 +579,6 @@ export default async function BolsasDeEstudoHubPage() {
     itemListSchema,
     websiteSchema,
     faqSchema,
-    howToSchema,
     articleSchema,
     datasetSchema,
     ...educationalOrgSchemas,

@@ -189,22 +189,6 @@ export default async function FaculdadeDetailPage({
     })),
   }
 
-  // HowTo "Como conseguir bolsa na {marca}" — só quando há conteúdo dedicado.
-  const howToSchema = brandContent
-    ? {
-        '@context': 'https://schema.org',
-        '@type': 'HowTo',
-        name: `Como conseguir bolsa de estudo na ${institution.name}`,
-        description: brandContent.comoConseguir.intro,
-        step: brandContent.comoConseguir.passos.map((p, i) => ({
-          '@type': 'HowToStep',
-          position: i + 1,
-          name: p.titulo,
-          text: p.descricao,
-        })),
-      }
-    : null
-
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -244,12 +228,6 @@ export default async function FaculdadeDetailPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      {howToSchema && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
-        />
-      )}
       <FaculdadePageClient
         institution={institution}
         initialCourses={institutionCourses}

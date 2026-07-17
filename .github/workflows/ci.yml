@@ -1,0 +1,69 @@
+name: CI
+
+# Gate de qualidade ANTES do deploy no Railway.
+# - validate: typecheck + lint. Roda sempre, não precisa de secrets. É o gate rápido.
+# - build: `next build` completo (pega erros de SSG, ex. P1017). Precisa dos secrets
+#   do build espelhados do Railway (ver GUARD abaixo) — enquanto não houver
+#   DATABASE_URL configurada em Settings > Secrets, o build é PULADO (não falha o CI).
+#
+# Secrets a configurar (Settings > Secrets and variables > Actions), espelhando o Railway:
+#   DATABASE_URL  (obrigatório pro build)  •  demais NEXT_PUBLIC_* / chaves conforme o build reclamar.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Cancela runs antigos do mesmo branch/PR quando um novo push chega.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Typecheck & Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Prisma generate (tipos do client)
+        run: npx prisma generate
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Lint
+        run: npm run lint
+
+  build:
+    name: Build (next build)
+    runs-on: ubuntu-latest
+    needs: validate
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DB_CONNECTION_LIMIT: '5'
+      NEXT_PUBLIC_SITE_URL: https://www.bolsaclick.com.br
+      NODE_ENV: production
+    steps:
+      - name: Guard — exige secrets do build
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::warning::DATABASE_URL não configurada em Actions Secrets — pulando o next build. Configure os secrets (espelhe o Railway) pra habilitar o gate de build completo."
+            echo "SKIP_BUILD=true" >> "$GITHUB_ENV"
+          fi
+      - uses: actions/checkout@v4
+        if: env.SKIP_BUILD != 'true'
+      - uses: actions/setup-node@v4
+        if: env.SKIP_BUILD != 'true'
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install deps
+        if: env.SKIP_BUILD != 'true'
+        run: npm ci
+      - name: Build
+        if: env.SKIP_BUILD != 'true'
+        run: npm run build

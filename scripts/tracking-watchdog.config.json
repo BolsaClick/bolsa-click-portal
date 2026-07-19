@@ -1,0 +1,40 @@
+{
+  "_comment": "Config do tracking-watchdog (CMO). Ajuste thresholds aqui — sem tocar no código. Baselines calibrados com 8 dias reais do PostHog em 2026-07-18.",
+  "posthog": {
+    "host": "https://us.posthog.com",
+    "projectId": "160050"
+  },
+  "hosts": [
+    {
+      "host": "www.bolsaclick.com.br",
+      "brand": "Bolsa Click",
+      "minDailyBaseline": 40,
+      "dropPct": 0.7
+    },
+    {
+      "host": "www.bolsamais.com.br",
+      "brand": "Bolsa Mais",
+      "minDailyBaseline": 8,
+      "dropPct": 0.7
+    }
+  ],
+  "ignoreHosts": ["localhost:3000", "anhangueracursos.com.br", "www.anhangueracursos.com.br"],
+  "heartbeatEvents": [
+    { "event": "$pageview", "maxSilenceHours": 12, "severity": "critical" },
+    { "event": "course_viewed", "maxSilenceHours": 36, "severity": "warn" },
+    { "event": "checkout_viewed", "maxSilenceHours": 48, "severity": "warn" }
+  ],
+  "conversionEvents": [
+    "checkout_inscription_submitted",
+    "enrollment_completed",
+    "estacio_enrollment_created",
+    "chat_lead_submitted"
+  ],
+  "conversionWindowHours": 72,
+  "meta": {
+    "datasetId": "3830716730578943",
+    "datasetName": "Bolsa Click (pixel vivo)",
+    "maxStaleHours": 24
+  },
+  "failOn": "critical"
+}

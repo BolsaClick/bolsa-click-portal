@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
+const IS_WARMUP =
+  process.env.NEXT_PUBLIC_THEME === "bolsamais" &&
+  process.env.NEXT_PUBLIC_SEO_INDEXING_ENABLED !== "true";
+
+function seoResponse(response: NextResponse): NextResponse {
+  if (IS_WARMUP) {
+    response.headers.set("X-Robots-Tag", "noindex, follow");
+  }
+  return response;
+}
+
 /**
  * Constrói uma URL pública limpa para os redirects.
  *
@@ -43,7 +54,7 @@ export function middleware(request: NextRequest) {
       url.pathname = pathname === "/" ? "/lp/anhanguera" : `/lp${pathname}`;
       return NextResponse.rewrite(url);
     }
-    return NextResponse.next();
+    return seoResponse(NextResponse.next());
   }
 
   // No bolsaclick.com.br, /lp/* não deve ser acessível (é do ingressa) → manda
@@ -86,7 +97,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(target, 301);
   }
 
-  return NextResponse.next();
+  return seoResponse(NextResponse.next());
 }
 
 export const config = {

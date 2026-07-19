@@ -6,9 +6,11 @@ import { ClientProviders } from './components/providers/ClientProviders'
 import { ConsentProvider } from './components/providers/ConsentProvider'
 import { DeferredWidgets } from './components/providers/DeferredWidgets'
 import { GatedVercelAnalytics } from './components/providers/GatedVercelAnalytics'
+import { WebVitalsReporter } from './components/providers/WebVitalsReporter'
 import './globals.css'
 import { business } from './lib/constants/business'
 import { getCurrentTheme } from './lib/themes'
+import { publicRobots, seoSite } from './lib/seo/site-config'
 
 // font-display: optional reduz CLS — se a fonte web não carregar dentro de
 // ~100ms, fica com o fallback definitivamente (sem reflow tardio). Trade-off:
@@ -106,12 +108,13 @@ export const metadata: Metadata = {
     shortcut: theme.favicon,
     apple: theme.favicon,
   },
-  robots: 'index, follow',
+  metadataBase: new URL(seoSite.siteUrl),
+  robots: publicRobots(),
   applicationName: theme.name,
   category: 'education',
   other: {
-    copyright: 'Bolsa Click',
-    abstract: 'Bolsa Click é uma plataforma de bolsas de estudo para faculdades e universidades com descontos de até 80%. Graduação, pós-graduação, cursos técnicos e EAD em todo o Brasil.',
+    copyright: seoSite.name,
+    abstract: seoSite.description,
   },
 }
 
@@ -120,7 +123,7 @@ const jsonLd = [
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: theme.name,
-    alternateName: ['BolsaClick', 'Bolsa Click Brasil', 'bolsaclick.com.br'],
+    alternateName: seoSite.alternateNames,
     url: theme.siteUrl,
     potentialAction: {
       '@type': 'SearchAction',
@@ -135,13 +138,13 @@ const jsonLd = [
     '@context': 'https://schema.org',
     '@type': 'EducationalOrganization',
     '@id': `${theme.siteUrl}/#organization`,
-    name: 'Bolsa Click',
-    alternateName: ['BolsaClick', 'Bolsa Click Bolsas de Estudo'],
+    name: seoSite.name,
+    alternateName: seoSite.alternateNames,
     ...(business.legalName && { legalName: business.legalName }),
     ...(business.cnpj && { taxID: business.cnpj, vatID: business.cnpj }),
     description: 'Plataforma brasileira de bolsas de estudo com até 80% de desconto em faculdades e universidades. Graduação, pós-graduação, cursos técnicos e EAD.',
     url: theme.siteUrl,
-    logo: `${theme.siteUrl}/assets/logo-bolsa-click-rosa.png`,
+    logo: seoSite.logo,
     image: theme.ogImage,
     naics: '611710',
     industry: 'Educação Superior',
@@ -212,7 +215,7 @@ const jsonLd = [
     ],
     provider: {
       '@type': 'Organization',
-      name: 'Bolsa Click',
+      name: seoSite.name,
       url: theme.siteUrl,
     },
     programPrerequisites: 'Ensino médio completo',
@@ -260,11 +263,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Eclesiastes 3:1 — Tudo tem o seu tempo determinado, e há tempo para todo o propósito debaixo do céu. */}
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#ffffff" />
-        <meta name="apple-mobile-web-app-title" content="Bolsa Click" />
+        <meta name="apple-mobile-web-app-title" content={seoSite.shortTitle} />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="author" content="Bolsa Click" />
-        <meta name="publisher" content="Bolsa Click" />
+        <meta name="author" content={seoSite.name} />
+        <meta name="publisher" content={seoSite.name} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -275,6 +278,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AnalyticsScripts gtmId={gtmId} ga4Id={ga4Id} facebookPixelIds={facebookPixelIds} tiktokPixelId={tiktokPixelId} />
 
           <GatedVercelAnalytics />
+          <WebVitalsReporter />
           <ClientProviders>
             <div className="flex min-h-screen flex-col">
               <main className="flex flex-1 flex-col">{children}</main>

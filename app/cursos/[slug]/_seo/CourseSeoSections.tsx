@@ -3,6 +3,8 @@ import { Course } from '@/app/interface/course'
 import { FeaturedCourseData } from '../../_data/types'
 import { BRAZILIAN_CITIES } from '@/app/lib/constants/brazilian-cities'
 import { COURSE_FAQS } from '../../_data/course-faqs'
+import { prisma } from '@/app/lib/prisma'
+import { shouldIndexCityPage } from '@/app/lib/seo/city-page-gate'
 
 interface OffersTableProps {
   offers: Course[]
@@ -151,11 +153,30 @@ interface CitiesGridProps {
   currentCitySlug?: string
 }
 
-export function CitiesGrid({ courseSlug, courseName, currentCitySlug }: CitiesGridProps) {
+export async function CitiesGrid({ courseSlug, courseName, currentCitySlug }: CitiesGridProps) {
   // Com 100 cidades na base, mostrar todas no grid de uma vez fica ruim de
   // escanear. Limitamos a 30 destaques (top por relevância na lista) + um link
   // pro hub geral pra preservar crawl path.
-  const allOthers = BRAZILIAN_CITIES.filter(c => c.slug !== currentCitySlug)
+  const course = await prisma.featuredCourse.findUnique({
+    where: { slug: courseSlug },
+    select: { id: true, trendScore: true },
+  }).catch(() => null)
+  const cachedCities = course
+    ? await prisma.cityCourseOfferCache.findMany({
+        where: { featuredCourseId: course.id },
+        select: { citySlug: true, offerCount: true },
+      }).catch(() => [])
+    : []
+  const indexable = new Set(
+    cachedCities
+      .filter((row) => shouldIndexCityPage(row.offerCount, course?.trendScore))
+      .map((row) => row.citySlug),
+  )
+  // Nunca criar malha interna para URLs thin/noindex. Em cache miss, o hub
+  // nacional continua sendo o único caminho até o próximo precompute.
+  const allOthers = BRAZILIAN_CITIES.filter(
+    (city) => city.slug !== currentCitySlug && indexable.has(city.slug),
+  )
   const cities = allOthers.slice(0, 30)
   return (
     <section className="bg-white py-12 md:py-16 border-t border-hairline">

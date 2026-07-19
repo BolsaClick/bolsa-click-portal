@@ -7,6 +7,8 @@ import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { resolveCanonicalCourseSlug } from '@/app/lib/seo/slug-resolver'
 import { shouldIndexCityPage } from '@/app/lib/seo/city-page-gate'
 import { durationToIso8601 } from '@/app/lib/seo/schema-helpers'
+import { buildBrandedCourseCopy, canIndexBrandedCopy } from '@/app/lib/seo/branded-course-copy'
+import { absoluteUrl, publicRobots, seoSite } from '@/app/lib/seo/site-config'
 import { FeaturedCourseData } from '../../_data/types'
 import { BRAZILIAN_CITIES, getCityBySlug } from '@/app/lib/constants/brazilian-cities'
 import {
@@ -164,14 +166,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ).find(
       (s) => titleBase.length + s.length + brandSuffixLen <= 60
     ) ?? ''
-  const title = `${titleBase}${titleSuffix}`
+  let title = `${titleBase}${titleSuffix}`
 
   // Description ≤ 155 chars, resposta direta primeiro (padrão GEO). Preço quando
   // couber; nomes/cidades longos caem pras versões compactas. Duração e salário
   // saíram (estouravam o limite e não são a intenção de "bolsa <curso> <cidade>").
   const priceText = lowPrice > 0 ? ` a partir de R$ ${lowPrice.toFixed(0)}/mês` : ''
   const cityUf = `${cityData.name}-${cityData.state}`
-  const description =
+  let description =
     [
       lowPrice > 0 &&
         `Bolsa de estudo para ${curso.name} em ${cityUf}${priceText}, com até 80% de desconto. Faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`,
@@ -182,8 +184,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       .filter((d): d is string => Boolean(d))
       .find((d) => d.length <= 155) ??
     `Bolsa de até 80% para ${curso.name} em ${cityData.name}, no EAD ou presencial. Inscrição grátis.`
-  const pageUrl = `https://www.bolsaclick.com.br/cursos/${slug}/${citySlug}`
-  const nationalUrl = `https://www.bolsaclick.com.br/cursos/${slug}`
+  const brandedCopy = buildBrandedCourseCopy({
+    name: curso.name,
+    fullName: curso.fullName,
+    description: curso.description,
+    longDescription: curso.longDescription,
+    city: cityData.name,
+    state: cityData.state,
+    offerCount: offers.length,
+    minPrice: lowPrice,
+  })
+  if (seoSite.key === 'bolsamais') {
+    title = brandedCopy.title
+    description = brandedCopy.metaDescription
+  }
+  const pageUrl = absoluteUrl(`/cursos/${slug}/${citySlug}`)
+  const nationalUrl = absoluteUrl(`/cursos/${slug}`)
 
   // Indexação inteligente via gate compartilhado (app/lib/seo/city-page-gate.ts):
   // exige MIN_OFFERS_TO_INDEX=2 ofertas locais, ou trendScore ≥ 60 pra páginas
@@ -200,7 +216,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const imageUrl = curso.imageUrl.startsWith('http')
     ? curso.imageUrl
-    : `https://www.bolsaclick.com.br${curso.imageUrl}`
+    : absoluteUrl(curso.imageUrl)
 
   return {
     title,
@@ -216,14 +232,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       `quanto custa ${curso.name} em ${cityData.name}`,
       `faculdade em ${cityData.name}`,
       `bolsa de estudo ${cityData.name}`,
-      'bolsa click',
+      seoSite.name.toLowerCase(),
     ],
     // Indexação inteligente:
     //  - tem oferta local → index sempre
     //  - sem oferta local + curso com alta demanda (trendScore ≥ 50) → index
     //    (vale rankear pela busca; canonical próprio)
     //  - sem oferta local + baixa demanda → noindex,follow + canonical para nacional
-    robots: shouldIndex ? 'index, follow' : 'noindex, follow',
+    robots: publicRobots(shouldIndex && canIndexBrandedCopy(brandedCopy)),
     alternates: {
       canonical,
     },
@@ -231,7 +247,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       url: pageUrl,
-      siteName: 'Bolsa Click',
+      siteName: seoSite.name,
       locale: 'pt_BR',
       type: 'website',
       images: [

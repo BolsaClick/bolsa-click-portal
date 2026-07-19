@@ -4,8 +4,9 @@
 // retornar 404 em produção).
 
 import { NextResponse } from 'next/server'
+import { seoSite } from '@/app/lib/seo/site-config'
 
-const SITE_URL = 'https://www.bolsaclick.com.br'
+const SITE_URL = seoSite.siteUrl
 const BUILD_TIME = new Date().toISOString()
 
 // IDs estáveis sincronizados com app/sitemap/[id]/route.ts.
@@ -16,6 +17,16 @@ const SUB_SITEMAP_IDS = [0, 1, 2, 3, 4] as const
 export const revalidate = 3600
 
 export async function GET() {
+  if (!seoSite.indexingEnabled) {
+    return new NextResponse('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" />\n', {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/xml; charset=utf-8',
+        'Cache-Control': 'no-store',
+        'X-Robots-Tag': 'noindex, follow',
+      },
+    })
+  }
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${SUB_SITEMAP_IDS.map(

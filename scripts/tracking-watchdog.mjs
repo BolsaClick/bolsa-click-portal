@@ -239,7 +239,11 @@ async function main() {
     try {
       await c()
     } catch (err) {
-      add('warn', 'runner', `Cheque ${c.name} falhou: ${err.message}`)
+      // Cheque que não roda não é ressalva, é cegueira: sem sinal não dá pra
+      // afirmar que o tracking está vivo. Rebaixar isso a warn faria o job
+      // ficar verde com credencial errada ou PostHog fora — justamente o modo
+      // de falha silenciosa que este watchdog existe pra pegar.
+      add('critical', 'runner', `Cheque ${c.name} não pôde rodar: ${err.message}`)
     }
   }
 

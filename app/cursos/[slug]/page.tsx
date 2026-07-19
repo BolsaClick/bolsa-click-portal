@@ -23,6 +23,8 @@ import RelatedPillarsBlock from './_components/RelatedPillarsBlock'
 import { getBrandMecRatings, mapToObject } from '@/app/lib/brand-mec-ratings'
 import { getCourseReviewsAggregate } from '@/app/lib/get-course-reviews-aggregate'
 import { getCurrentTheme } from '@/app/lib/themes'
+import { buildBrandedCourseCopy, canIndexBrandedCopy } from '@/app/lib/seo/branded-course-copy'
+import { absoluteUrl, publicRobots, seoSite } from '@/app/lib/seo/site-config'
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -117,9 +119,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!curso) {
     return {
-      title: 'Curso não encontrado | Bolsa Click',
+      title: `Curso não encontrado | ${seoSite.shortTitle}`,
       robots: 'noindex, follow',
-      alternates: { canonical: 'https://www.bolsaclick.com.br/cursos' },
+      alternates: { canonical: absoluteUrl('/cursos') },
     }
   }
 
@@ -141,14 +143,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ).find(
       (s) => titleBase.length + s.length + brandSuffixLen <= 60
     ) ?? ''
-  const title = `${titleBase}${titleSuffix}`
+  let title = `${titleBase}${titleSuffix}`
 
   // Description ≤ 155 chars, resposta direta primeiro (padrão GEO). Inclui o
   // preço "a partir de" quando couber; nomes longos caem pra versão sem preço,
   // e os mais longos pra abertura compacta. Duração e salário saíram daqui — não
   // são a intenção de quem busca "bolsa <curso>" e estouravam o limite.
   const priceText = lowPrice > 0 ? ` a partir de R$ ${lowPrice.toFixed(0)}/mês` : ''
-  const description =
+  let description =
     [
       lowPrice > 0 &&
         `Bolsa de estudo para ${curso.name}${priceText}, com até 80% de desconto. Faculdades reconhecidas pelo MEC, no EAD ou presencial. Inscrição grátis.`,
@@ -159,10 +161,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       .find((d) => d.length <= 155) ??
     `Bolsa de até 80% para ${curso.name} em faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`
 
+  const brandedCopy = buildBrandedCourseCopy({
+    name: curso.name,
+    fullName: curso.fullName,
+    description: curso.description,
+    longDescription: curso.longDescription,
+    minPrice: lowPrice,
+  })
+  if (seoSite.key === 'bolsamais') {
+    title = brandedCopy.title
+    description = brandedCopy.metaDescription
+  }
+
   // Construir URL da imagem
   const imageUrl = curso.imageUrl.startsWith('http')
     ? curso.imageUrl
-    : `https://www.bolsaclick.com.br${curso.imageUrl}`
+    : absoluteUrl(curso.imageUrl)
 
   return {
     title,
@@ -176,17 +190,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       `${curso.name} presencial`,
       `quanto custa ${curso.name}`,
       `salário ${curso.name}`,
-      'bolsa click',
+      seoSite.name.toLowerCase(),
     ],
-    robots: 'index, follow',
+    robots: publicRobots(canIndexBrandedCopy(brandedCopy)),
     alternates: {
-      canonical: `https://www.bolsaclick.com.br/cursos/${slug}`,
+      canonical: absoluteUrl(`/cursos/${slug}`),
     },
     openGraph: {
       title,
       description,
-      url: `https://www.bolsaclick.com.br/cursos/${slug}`,
-      siteName: 'Bolsa Click',
+      url: absoluteUrl(`/cursos/${slug}`),
+      siteName: seoSite.name,
       locale: 'pt_BR',
       type: 'website',
       images: [
@@ -194,13 +208,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           url: imageUrl,
           width: 1200,
           height: 630,
-          alt: `${curso.name} - Bolsa Click`,
+          alt: `${curso.name} - ${seoSite.name}`,
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
-      site: '@bolsaclick',
+      site: seoSite.twitter,
       title,
       description,
       images: [imageUrl],

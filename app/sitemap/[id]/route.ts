@@ -8,8 +8,9 @@ import { BRAZILIAN_CITIES } from '@/app/lib/constants/brazilian-cities'
 import { shouldIndexInstitutionCityPage } from '@/app/lib/seo/city-page-gate'
 import { isOffTopicNoindex } from '@/app/lib/blog/noindex-slugs'
 import { COURSE_PROFILES } from '@/app/lib/teste-vocacional/methodology-profiles'
+import { seoSite } from '@/app/lib/seo/site-config'
 
-const SITE_URL = 'https://www.bolsaclick.com.br'
+const SITE_URL = seoSite.siteUrl
 
 // lastmod estável por deploy — NÃO usar `new Date()` por request.
 // As páginas estáticas não têm updatedAt próprio, então um `new Date()` a cada
@@ -493,6 +494,16 @@ ${entries
 type Params = { params: Promise<{ id: string }> }
 
 export async function GET(_request: Request, { params }: Params) {
+  if (!seoSite.indexingEnabled) {
+    return new NextResponse(entriesToXml([]), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/xml; charset=utf-8',
+        'Cache-Control': 'no-store',
+        'X-Robots-Tag': 'noindex, follow',
+      },
+    })
+  }
   const { id: rawId } = await params
   // Aceita "0", "1.xml", "0.xml" — normaliza pra inteiro
   const id = parseInt(rawId.replace(/\.xml$/, ''), 10)

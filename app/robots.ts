@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next'
+import { seoSite } from './lib/seo/site-config'
 
 const PRIVATE_PATHS = [
   '/admin/',
@@ -49,7 +50,9 @@ export default function robots(): MetadataRoute.Robots {
         disallow: PRIVATE_PATHS,
       })),
     ],
-    sitemap: 'https://www.bolsaclick.com.br/sitemap.xml',
-    host: 'https://www.bolsaclick.com.br',
+    // Warmup continua crawlable: o bloqueio de indexação é feito por meta/X-Robots,
+    // permitindo QA dos crawlers sem publicar URLs no sitemap.
+    sitemap: seoSite.indexingEnabled ? `${seoSite.siteUrl}/sitemap.xml` : undefined,
+    host: seoSite.siteUrl,
   }
 }

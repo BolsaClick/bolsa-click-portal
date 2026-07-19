@@ -1,3 +1,5 @@
+import { seoSite } from './seo/site-config'
+
 export const themes = {
   bolsaclick: {
     name: 'Bolsa Click',
@@ -19,9 +21,27 @@ export const themes = {
     siteUrl: 'https://www.anhangueracursos.com.br',
     twitter: '@bolsaclick',
   },
+  bolsamais: {
+    name: 'Bolsa Mais',
+    title: 'Bolsa Mais | Encontre sua bolsa de estudo',
+    shortTitle: 'Bolsa Mais',
+    description: 'Encontre bolsas de estudo e compare cursos, modalidades e mensalidades para escolher sua próxima formação.',
+    favicon: '/icon1.png',
+    ogImage: 'https://www.bolsamais.com.br/icon1.png',
+    siteUrl: 'https://www.bolsamais.com.br',
+    twitter: '@bolsamais',
+  },
 } as const
 
 export function getCurrentTheme() {
-  const theme = process.env.NEXT_PUBLIC_THEME || 'bolsaclick'
-  return themes[theme as keyof typeof themes]
+  return {
+    ...themes[seoSite.key],
+    name: seoSite.name,
+    title: seoSite.title,
+    shortTitle: seoSite.shortTitle,
+    description: seoSite.description,
+    favicon: seoSite.favicon,
+    ogImage: seoSite.ogImage,
+    siteUrl: seoSite.siteUrl,
+  }
 }

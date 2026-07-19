@@ -1,0 +1,36 @@
+name: Tracking watchdog
+
+# Blindagem contra apagão de tracking (CMO). Roda fora de qualquer sessão de
+# agente. Quando acha anomalia crítica, o script sai com exit 1 → este job falha
+# → o GitHub notifica os watchers do repo por email (sem credencial extra de
+# notificação). Slack/email dedicado são opcionais (ver secrets abaixo).
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # a cada 6h (UTC) — pega quebra em até 6h
+  workflow_dispatch: {}
+
+concurrency:
+  group: tracking-watchdog
+  cancel-in-progress: false
+
+jobs:
+  watchdog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run tracking watchdog
+        env:
+          # Obrigatório (dependência Rodrigo): personal API key PostHog com escopo query:read no projeto 160050
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          # Opcional: habilita o cheque de freshness do pixel Meta (o que pega o apagão de 17 dias direto)
+          META_SYSTEM_USER_TOKEN: ${{ secrets.META_SYSTEM_USER_TOKEN }}
+          # Opcionais: push dedicado além do email nativo do GitHub
+          SLACK_WEBHOOK_URL: ${{ secrets.TRACKING_ALERT_SLACK_WEBHOOK }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ALERT_EMAIL_TO: ${{ secrets.TRACKING_ALERT_EMAIL_TO }}
+          ALERT_EMAIL_FROM: ${{ secrets.TRACKING_ALERT_EMAIL_FROM }}
+        run: node scripts/tracking-watchdog.mjs

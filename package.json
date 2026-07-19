@@ -9,6 +9,9 @@
     "lint": "next lint",
     "bolsaclick": "env-cmd -f .env.bolsaclick next dev",
     "anhanguera": "env-cmd -f .env.anhanguera next dev",
+    "bolsamais": "env-cmd -f .env.bolsamais next dev",
+    "seo:audit": "node scripts/seo-audit.mjs",
+    "seo:audit:remote": "node scripts/seo-audit.mjs",
     "seed:institutions": "tsx prisma/seed-institutions.ts"
   },
   "prisma": {

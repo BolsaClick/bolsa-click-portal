@@ -116,11 +116,15 @@ export function AnalyticsScripts({ gtmId, ga4Id, facebookPixelIds, tiktokPixelId
             onError={logScriptError('Meta Pixel')}
           >
             {`
+              /* NÃO adicionar crossOrigin no loader do fbevents.js:
+                 connect.facebook.net não serve Access-Control-Allow-Origin, e com
+                 crossorigin=anonymous o browser bloqueia o script — o fbq vira fila
+                 que nunca envia (outage de 30/jun a 19/jul/2026). */
               !function(f,b,e,v,n,t,s)
               {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
               n.callMethod.apply(n,arguments):n.queue.push(arguments)};
               if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-              n.queue=[];t=b.createElement(e);t.async=!0;t.crossOrigin='anonymous';
+              n.queue=[];t=b.createElement(e);t.async=!0;
               t.src=v;s=b.getElementsByTagName(e)[0];
               s.parentNode.insertBefore(t,s)}(window, document,'script',
               'https://connect.facebook.net/en_US/fbevents.js');

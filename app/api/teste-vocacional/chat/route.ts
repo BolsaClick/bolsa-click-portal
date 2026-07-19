@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const profile = computeUserProfile(body.likertAnswers)
-    const stream = streamChat(profile, body.messages)
+    const stream = await streamChat(profile, body.messages)
     return new Response(stream, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',

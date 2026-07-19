@@ -27,8 +27,18 @@ export type Recommendation = {
 /**
  * Chama OpenAI em modo streaming pro refinamento de 2-3 turnos.
  * Recebe o perfil (já calculado deterministicamente) + histórico da conversa.
+ *
+ * É async de propósito: o handshake com a OpenAI acontece ANTES de devolver o
+ * stream. Se a chamada falhasse dentro do `start()` do ReadableStream, a rota
+ * já teria retornado a Response e enviado os headers — o `controller.error()`
+ * só conseguiria cortar a conexão, e o try/catch da rota nunca veria o erro.
+ * O usuário recebia socket cortado (e página de erro do Cloudflare) em vez do
+ * 502 JSON que a UI já trata. Aguardando aqui, a falha ainda é capturável.
  */
-export function streamChat(profile: UserProfile, messages: ChatMessage[]): ReadableStream<Uint8Array> {
+export async function streamChat(
+  profile: UserProfile,
+  messages: ChatMessage[]
+): Promise<ReadableStream<Uint8Array>> {
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
     throw new Error('OPENAI_API_KEY ausente')
@@ -46,26 +56,29 @@ export function streamChat(profile: UserProfile, messages: ChatMessage[]): Reada
 
   const encoder = new TextEncoder()
 
+  // Handshake ANTES de comprometer a Response — erro aqui vira exceção que a
+  // rota captura e transforma em 502 JSON.
+  const response = await fetch(OPENAI_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+
+  if (!response.ok || !response.body) {
+    const errBody = await response.text().catch(() => '')
+    console.error('OpenAI erro', response.status, errBody)
+    throw new Error(`OpenAI ${response.status}`)
+  }
+
+  const body = response.body
+
   return new ReadableStream({
     async start(controller) {
       try {
-        const response = await fetch(OPENAI_URL, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        })
-
-        if (!response.ok || !response.body) {
-          const errBody = await response.text().catch(() => '')
-          console.error('OpenAI erro', response.status, errBody)
-          controller.error(new Error(`OpenAI ${response.status}`))
-          return
-        }
-
-        const reader = response.body.getReader()
+        const reader = body.getReader()
         const decoder = new TextDecoder()
         let buffer = ''
 

@@ -53,8 +53,6 @@ import { formatPhone } from '@/utils/formatters'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { Loader2 } from 'lucide-react'
 import { getMatriculaCharge } from '@/app/lib/checkout/matricula-charge'
-import MatriculaPayment from './MatriculaPayment'
-import type { MatriculaConfirmBlob } from '@/app/lib/checkout/confirm-matricula'
 
 
 // Validação melhorada seguindo o exemplo
@@ -588,104 +586,15 @@ const isFormValidForPayment =
   const offerSource = offerDetails?.dmhSource?.source
   const isAthenasSource = offerSource === 'ATHENAS'
 
-  // Cobrança da matrícula no checkout transparente: graduação EAD/semipresencial
-  // de ofertas ATHENAS. Presencial e não-ATHENAS seguem com inscrição direta.
+  // Cobrança da matrícula no checkout transparente: DESATIVADA (decisão de
+  // negócio) para graduação EAD/semipresencial de ofertas ATHENAS — a Cogna
+  // dobrou a comissão nesse segmento, mas exige que o pagamento NÃO seja
+  // coletado no nosso site. `chargeable` aqui só sinaliza "é esse segmento";
+  // não é mais usado para decidir se cobra (ver onSubmit e o JSX da seção 03).
+  // O pagamento de verdade fica com a Cogna (payment-link deles, quando
+  // integrado) — enquanto isso não existe, a inscrição é criada direto e o
+  // aluno vai pra tela de sucesso sem pagar nada aqui.
   const matriculaCharge = getMatriculaCharge(offerDetails)
-
-  // Pacote de dados que o servidor usa para criar a inscrição + atualizar o CRM
-  // após o pagamento confirmado (webhook ou polling) — sem depender do navegador.
-  const buildMatriculaConfirmBlob = (): MatriculaConfirmBlob | undefined => {
-    if (!offerDetails) return undefined
-    const fd = watchedValues
-    const inscriptionPayload = buildInscriptionPayload(
-      {
-        name: fd.name || '',
-        cpf: fd.cpf || '',
-        gender: fd.gender || 'masculino',
-        schoolYear: fd.schoolYear || String(new Date().getFullYear()),
-        rg: fd.rg || '',
-        birthDate: fd.birthDate || '',
-        email: fd.email || '',
-        phone: fd.phone || '',
-        address: fd.address || '',
-        addressNumber: fd.addressNumber || '',
-        neighborhood: fd.neighborhood || '',
-        city: fd.city || '',
-        state: fd.state || '',
-        cep: fd.cep || '',
-      },
-      {
-        dmhId: offerDetails.dmhId,
-        businessKey: offerDetails.businessKey,
-        dmhSource: offerDetails.dmhSource,
-        academicLevel: offerDetails.academicLevel,
-        ingressType:
-          offerDetails.academicLevel === 'GRADUACAO'
-            ? [selectedIngressType]
-            : offerDetails.ingressType,
-        schedules: offerDetails.schedules,
-        shift: offerDetails.shift,
-      },
-      undefined
-    )
-    const marketplace =
-      isAthenasSource && offerDetails.idDmhElastic
-        ? {
-            data: {
-              name: fd.name || '',
-              cpf: fd.cpf || '',
-              email: fd.email || '',
-              phone: fd.phone || '',
-              rg: fd.rg || '',
-              birthDate: fd.birthDate || '',
-              gender: (fd.gender || 'masculino') as 'masculino' | 'feminino' | 'outro',
-              cep: fd.cep || '',
-              address: fd.address || '',
-              addressNumber: fd.addressNumber || '',
-              neighborhood: fd.neighborhood || '',
-              city: fd.city || '',
-              state: fd.state || '',
-              ingressType: selectedIngressType,
-              schoolYear: fd.schoolYear || String(new Date().getFullYear()),
-              acceptTerms: true,
-              acceptEmail: true,
-              acceptSms: true,
-              acceptWhatsapp: true,
-            },
-            offerDetails,
-          }
-        : null
-    return {
-      inscriptionPayload,
-      marketplace,
-      utmify: {
-        productId: offerDetails.courseId,
-        productName: offerDetails.course,
-        tracking: readUtmifyParams(),
-      },
-    }
-  }
-
-  // Pós-pagamento (graduação cobrável): a inscrição é criada no servidor
-  // (/api/payments/confirm + webhook). Aqui só registramos a conversão e
-  // seguimos para a página de sucesso.
-  const handleMatriculaPaidRedirect = () => {
-    if (!offerDetails) return
-    trackEvent('enrollment_completed', {
-      course_id: offerDetails.courseId,
-      course_name: offerDetails.course,
-      brand: offerDetails.brand,
-      modality: offerDetails.modality,
-      shift: offerDetails.shift,
-      amount_paid: matriculaCharge.amountInCents / 100,
-    })
-    const params = new URLSearchParams()
-    params.set('transactionId', `BC-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`)
-    if (offerDetails.course) params.set('course', offerDetails.course)
-    params.set('monthlyFee', String(monthlyFee))
-    params.set('installmentDescription', `Mensalidade ${formatCurrency(monthlyFee)}/mês`)
-    router.push(`/checkout/matricula/sucesso?${params.toString()}`)
-  }
 
   // Níveis que usam seleção de método de pagamento + voucher via Tartarus.
   // Graduação continua pagando direto na instituição (botão simples).
@@ -928,6 +837,22 @@ const isFormValidForPayment =
           }),
         }).catch((e) => console.error('Notealy confirm falhou:', e))
 
+        // Notealy: graduação EAD/semi ATHENAS sem cobrança no site (decisão de
+        // negócio — a Cogna cobra depois via payment-link deles). Marca
+        // "Pendente Pagamento" pra diferenciar de quem já pagou. Não-bloqueante.
+        if (matriculaCharge.chargeable) {
+          fetch('/api/leads/pending-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: data.name,
+              email: data.email,
+              phone: data.phone.replace(/\D/g, ''),
+              cpf: data.cpf.replace(/\D/g, ''),
+            }),
+          }).catch((e) => console.error('Notealy pendente pagamento falhou:', e))
+        }
+
         // Atualizar perfil do usuário no PostgreSQL (se estiver logado)
         if (firebaseUser) {
           await updateUserProfileInDB(data)
@@ -998,14 +923,13 @@ const isFormValidForPayment =
 
             if (marketplaceResult.success) {
               console.log('✅ Inscrição no marketplace ATHENAS criada com sucesso')
-              // NOTA (auditoria 2026-07-17): este evento é quase-morto por
-              // construção — as ofertas ATHENAS com idDmhElastic são graduação
-              // EAD/semi, que são `chargeable`, e o submit retorna em
-              // `matriculaCharge.chargeable` (linha ~1181) ANTES de chegar aqui.
-              // A inscrição marketplace dessas ofertas é criada server-side em
-              // confirmPaidMatricula e a conversão é sinalizada por
-              // `enrollment_paid_confirmed`. Este ramo só roda numa oferta
-              // ATHENAS não-chargeable (raro) — mantido pra não perder o sinal.
+              // ATUALIZAÇÃO (decisão de negócio): graduação EAD/semi ATHENAS não
+              // cobra mais no site, então esse ramo agora roda para TODAS as
+              // ofertas ATHENAS com idDmhElastic, não só as raras não-chargeable
+              // (histórico: antes disso, o submit retornava cedo em
+              // `matriculaCharge.chargeable` e a inscrição marketplace vinha de
+              // `confirmPaidMatricula`, pós-pagamento — isso não existe mais
+              // pra este segmento).
               trackEvent('marketplace_inscription_created', {
                 course_id: offerDetails.courseId,
                 course_name: offerDetails.course,
@@ -1183,13 +1107,9 @@ const isFormValidForPayment =
       },
     )
 
-    // Ofertas elegíveis (graduação EAD/semi ATHENAS): o pagamento da matrícula é
-    // feito inline na seção 03 (componente MatriculaPayment) e a inscrição só é
-    // criada após a confirmação do pagamento. Aqui o submit não cria nada.
-    if (matriculaCharge.chargeable) {
-      return
-    }
-
+    // Graduação EAD/semi ATHENAS não cobra mais no site (decisão de negócio —
+    // Cogna cobra depois via payment-link deles): cria a inscrição direto,
+    // igual aos outros níveis que já não coletavam pagamento aqui.
     await createInscriptionAfterPayment(data)
   }
 
@@ -2091,7 +2011,7 @@ const isFormValidForPayment =
                         03 · Pagamento
                       </span>
                       <h2 className="font-display text-[18px] text-ink-900 leading-tight">
-                        {matriculaCharge.chargeable ? 'Pagamento da matrícula' : 'Confirmar inscrição'}
+                        Confirmar inscrição
                       </h2>
                     </div>
                   </div>
@@ -2240,31 +2160,6 @@ const isFormValidForPayment =
                             )}
                           </button>
                         </>
-                      ) : matriculaCharge.chargeable ? (
-                        <MatriculaPayment
-                          amountInCents={matriculaCharge.amountInCents}
-                          customer={{
-                            name: watchedValues.name || '',
-                            cpf: watchedValues.cpf || '',
-                            email: watchedValues.email || '',
-                            phone: watchedValues.phone || '',
-                            postalCode: watchedValues.cep || '',
-                            addressNumber: watchedValues.addressNumber || '',
-                          }}
-                          description={`Matrícula - ${offerDetails?.course ?? ''}`}
-                          metadata={{
-                            courseId: offerDetails?.courseId,
-                            courseName: offerDetails?.course,
-                            institutionName: offerDetails?.brand,
-                            confirm: buildMatriculaConfirmBlob(),
-                          }}
-                          formReady={isFormValidForPayment}
-                          onRequireData={() => {
-                            toast.error('Preencha seus dados pessoais e endereço para pagar.')
-                            setExpandedSections((prev) => ({ ...prev, dadosPessoais: true, contato: true }))
-                          }}
-                          onPaid={handleMatriculaPaidRedirect}
-                        />
                       ) : (
                         <>
                           <p className="text-sm text-gray-600">

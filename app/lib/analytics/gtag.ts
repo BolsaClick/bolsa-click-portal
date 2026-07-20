@@ -27,7 +27,7 @@ const ECOMMERCE_EVENTS = new Set([
  * Push genérico no dataLayer do GTM, no schema padrão GA4 ecommerce — assim
  * GTM/GA4/Google Ads consomem os eventos sem tag/trigger custom por evento.
  *
- * Sem consent check próprio de propósito: o GTM (GTM-K4KZBRF3) só é injetado
+ * Sem consent check próprio de propósito: o GTM (GTM-P556C53J) só é injetado
  * quando o usuário aceita marketing (ver AnalyticsScripts), então pushes num
  * dataLayer sem GTM carregado são inertes — nada é enviado ao Google. Isso
  * também preserva a fila: se o consentimento chegar depois, o GTM processa

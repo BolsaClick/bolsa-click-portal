@@ -22,6 +22,9 @@ const VocationalTab = dynamic(
   () => import('../VocationalTab').then((m) => m.VocationalTab),
   { ssr: false },
 )
+const ExitIntentModal = dynamic(() => import('../organisms/ExitIntentModal'), {
+  ssr: false,
+})
 
 export function DeferredWidgets() {
   const [ready, setReady] = useState(false)
@@ -58,6 +61,7 @@ export function DeferredWidgets() {
       <WatiWhatsappWidget />
       <VocationalTab />
       <CookieConsent />
+      <ExitIntentModal />
     </>
   )
 }

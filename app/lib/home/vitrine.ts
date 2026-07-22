@@ -11,9 +11,11 @@
  */
 
 import type { CourseOffer } from '@/app/components/v2/course-offer'
+import { balanceByBrand } from '@/app/components/v2/home/balance-by-brand'
 import { toCourseOffer } from '@/app/components/v2/home/featured-offers'
 import type { BlogTeaserPost } from '@/app/components/v2/home/BlogTeaser'
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
+import { normalizeBrand } from '@/app/lib/utils/brand'
 import { prisma } from '@/app/lib/prisma'
 
 const shelfTimeout = (ms: number) =>
@@ -54,7 +56,10 @@ export async function loadAthenaOffersServer(params: {
 
 /**
  * Prateleira: fetch server-side real (Cogna + Estácio em paralelo), com
- * dedupe por nome de curso. Falha -> [].
+ * dedupe por nome de curso + marca e balanceamento pra não deixar uma marca
+ * dominar (achado: dedupe só por nome colapsava marcas diferentes com o
+ * mesmo curso — Anhanguera, que quase sempre chega primeiro do Tartarus,
+ * vencia a colisão mesmo quando havia oferta real de outra marca). Falha -> [].
  */
 export async function loadShelf(params: {
   modality?: string
@@ -71,7 +76,7 @@ export async function loadShelf(params: {
           params.modality,
           'GRADUACAO',
           1,
-          24,
+          50,
         ),
         loadAthenaOffersServer(params),
       ]),
@@ -85,20 +90,22 @@ export async function loadShelf(params: {
       .map(toCourseOffer)
       .filter((offer): offer is CourseOffer => offer !== null)
 
-    // Dedupe por nome-base do curso, intercalando marcas quando possível
+    // Dedupe por nome-base do curso + marca: preserva "Pedagogia" da
+    // Anhanguera E da Unopar como ofertas distintas (só colapsa polos
+    // repetidos DA MESMA marca).
     const seen = new Set<string>()
     const deduped: CourseOffer[] = []
     for (const offer of all) {
-      const key = offer.name
+      const baseName = offer.name
         .replace(/ - (Bacharelado|Licenciatura|Tecn[oó]logo)$/i, '')
         .trim()
         .toUpperCase()
+      const key = `${baseName}|${normalizeBrand(offer.brand)}`
       if (seen.has(key)) continue
       seen.add(key)
       deduped.push(offer)
-      if (deduped.length >= 8) break
     }
-    return deduped
+    return balanceByBrand(deduped, 8)
   } catch (error) {
     console.error('[home vitrine] prateleira falhou:', params, error)
     return []

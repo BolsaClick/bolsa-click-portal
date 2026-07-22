@@ -1,16 +1,12 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { env } from '@/lib/env'
 import axios from 'axios'
 
-
-
-const fixieUrlString = 'http://fixie:4XUwsVeZvVuwnPg@criterium.usefixie.com:80'
+const fixieUrlString = process.env.FIXIE_URL ?? ''
 
 let parsedFixieUrl: URL
 
 try {
   parsedFixieUrl = new URL(fixieUrlString)
-} catch (error) {
+} catch {
   console.error(
     'Erro: A URL fornecida para FIXIE_URL é inválida ou não foi definida.',
   )

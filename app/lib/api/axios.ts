@@ -1,32 +1,5 @@
 import axios from 'axios'
 
-const fixieUrlString = process.env.FIXIE_URL ?? ''
-
-let parsedFixieUrl: URL
-
-try {
-  parsedFixieUrl = new URL(fixieUrlString)
-} catch {
-  console.error(
-    'Erro: A URL fornecida para FIXIE_URL é inválida ou não foi definida.',
-  )
-  throw new Error(
-    'A URL fornecida para FIXIE_URL é inválida ou não foi definida!',
-  )
-}
-
-export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
-  proxy: {
-    host: parsedFixieUrl.hostname,
-    port: Number(parsedFixieUrl.port), 
-    auth: {
-      username: parsedFixieUrl.username,
-      password: parsedFixieUrl.password,
-    },
-  },
-
-})
 export const tartarus = axios.create({
   baseURL: process.env.NEXT_PUBLIC_TARTARUS_API,
   headers: {

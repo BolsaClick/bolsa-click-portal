@@ -130,6 +130,11 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
       const athenaState = course.uf || course.unitState || ''
       if (athenaState) params.set('state', athenaState)
       if (course.academicLevel) params.set('academicLevel', course.academicLevel)
+      // Endereço da unidade — opcional, pro checkout mostrar onde fica
+      // (relevante pra presencial/semipresencial).
+      if (course.unitAddress) params.set('unitAddress', course.unitAddress)
+      if (course.unitDistrict) params.set('unitDistrict', course.unitDistrict)
+      if (course.unitPostalCode) params.set('unitPostalCode', course.unitPostalCode)
 
       localStorage.setItem('selectedCourse', JSON.stringify(course))
       window.location.href = `/checkout/estacio?${params.toString()}`

@@ -65,6 +65,9 @@ interface FormState {
   codFormaIngresso: number
   graduationYear: string
   acceptTerms: boolean
+  acceptReceiveEmail: boolean
+  acceptReceiveSMS: boolean
+  acceptReceiveWhatsApp: boolean
 }
 
 const initialForm: FormState = {
@@ -87,6 +90,9 @@ const initialForm: FormState = {
   codFormaIngresso: 24,
   graduationYear: '',
   acceptTerms: false,
+  acceptReceiveEmail: false,
+  acceptReceiveSMS: false,
+  acceptReceiveWhatsApp: false,
 }
 
 const CODIGO_VESTIBULAR_ENEM = 7
@@ -132,6 +138,9 @@ export default function EstacioCheckoutClient() {
       city: searchParams.get('city') ?? '',
       state: searchParams.get('state') ?? '',
       academicLevel: searchParams.get('academicLevel') ?? '',
+      unitAddress: searchParams.get('unitAddress') ?? '',
+      unitDistrict: searchParams.get('unitDistrict') ?? '',
+      unitPostalCode: searchParams.get('unitPostalCode') ?? '',
     }),
     [searchParams],
   )
@@ -307,6 +316,9 @@ export default function EstacioCheckoutClient() {
               offer.academicLevel === 'POS_GRADUACAO'
                 ? CODIGO_INSCRICAO_POS_TECNICO
                 : form.codFormaIngresso,
+            acceptReceiveEmail: form.acceptReceiveEmail,
+            acceptReceiveSMS: form.acceptReceiveSMS,
+            acceptReceiveWhatsApp: form.acceptReceiveWhatsApp,
           },
         }),
       })
@@ -628,6 +640,24 @@ export default function EstacioCheckoutClient() {
                   Li e aceito os termos e autorizo a realização da inscrição.
                 </label>
 
+                <div className="mt-3 space-y-2">
+                  <label className="flex items-start gap-2.5 text-[13px] text-ink-700">
+                    <input type="checkbox" className="mt-1 accent-bolsa-secondary" checked={form.acceptReceiveEmail}
+                      onChange={(e) => set('acceptReceiveEmail', e.target.checked)} />
+                    Aceito receber novidades e atualizações da inscrição por e-mail.
+                  </label>
+                  <label className="flex items-start gap-2.5 text-[13px] text-ink-700">
+                    <input type="checkbox" className="mt-1 accent-bolsa-secondary" checked={form.acceptReceiveSMS}
+                      onChange={(e) => set('acceptReceiveSMS', e.target.checked)} />
+                    Aceito receber novidades e atualizações da inscrição por SMS.
+                  </label>
+                  <label className="flex items-start gap-2.5 text-[13px] text-ink-700">
+                    <input type="checkbox" className="mt-1 accent-bolsa-secondary" checked={form.acceptReceiveWhatsApp}
+                      onChange={(e) => set('acceptReceiveWhatsApp', e.target.checked)} />
+                    Aceito receber novidades e atualizações da inscrição por WhatsApp.
+                  </label>
+                </div>
+
                 {error && (
                   <p className="mt-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3">
                     {error}
@@ -715,12 +745,37 @@ export default function EstacioCheckoutClient() {
                   {offer.modality}
                 </li>
               )}
-              {(offer.city || offer.state) && (
+              {offer.unitAddress ? (
+                <li className="flex items-start gap-3 text-[13px] text-ink-700">
+                  <MapPin size={14} className="mt-0.5 text-ink-300 flex-shrink-0" />
+                  <span>
+                    {offer.unitAddress}
+                    {offer.unitDistrict && ` — ${offer.unitDistrict}`}
+                    {(offer.city || offer.state) && (
+                      <>
+                        {' — '}
+                        {offer.city}
+                        {offer.city && offer.state ? ' — ' : ''}
+                        {offer.state}
+                      </>
+                    )}
+                    {offer.unitPostalCode && ` — CEP: ${offer.unitPostalCode}`}
+                  </span>
+                </li>
+              ) : (
+                (offer.city || offer.state) && (
+                  <li className="flex items-center gap-3 text-[13px] text-ink-700">
+                    <MapPin size={14} className="text-ink-300 flex-shrink-0" />
+                    {offer.city}
+                    {offer.city && offer.state ? ' — ' : ''}
+                    {offer.state}
+                  </li>
+                )
+              )}
+              {offer.academicLevel !== 'POS_GRADUACAO' && (
                 <li className="flex items-center gap-3 text-[13px] text-ink-700">
-                  <MapPin size={14} className="text-ink-300 flex-shrink-0" />
-                  {offer.city}
-                  {offer.city && offer.state ? ' — ' : ''}
-                  {offer.state}
+                  <GraduationCap size={14} className="text-ink-300 flex-shrink-0" />
+                  Ingresso: {FORMA_INGRESSO_OPTIONS.find((o) => o.value === form.codFormaIngresso)?.label ?? '—'}
                 </li>
               )}
             </ul>

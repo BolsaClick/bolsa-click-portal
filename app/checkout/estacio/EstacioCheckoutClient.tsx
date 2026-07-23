@@ -62,7 +62,7 @@ interface FormState {
   neighborhood: string
   city: string
   state: string
-  useEnem: boolean
+  codFormaIngresso: number
   graduationYear: string
   acceptTerms: boolean
 }
@@ -81,10 +81,36 @@ const initialForm: FormState = {
   neighborhood: '',
   city: '',
   state: '',
-  useEnem: false,
+  // 24 = Vestibular (Ingresso Simplificado) — default recomendado pela
+  // própria Estácio no glossário (2026-07-23). Ver COD_FORMA_INGRESSO_GRADUACAO
+  // em athena-api (cod-forma-ingresso.constants.ts) para o conjunto validado.
+  codFormaIngresso: 24,
   graduationYear: '',
   acceptTerms: false,
 }
+
+const CODIGO_VESTIBULAR_ENEM = 7
+
+/**
+ * Opções de forma de ingresso pra graduação — codFormaIngresso Estácio/YDUQS.
+ * Nunca incluir o código 1 ("Vestibular" puro): a Estácio confirmou por
+ * e-mail (2026-07-22) que esse código não deve ser mostrado nem enviado.
+ * MSV Externa/Interna (3/5): rótulo mantido literal do glossário da Estácio —
+ * significado exato ainda não confirmado com o parceiro, então não
+ * reescrevemos pra uma frase amigável que possa estar errada.
+ */
+const FORMA_INGRESSO_OPTIONS: { value: number; label: string; hint?: string }[] = [
+  { value: 24, label: 'Vestibular (Ingresso Simplificado)', hint: 'Recomendado' },
+  { value: CODIGO_VESTIBULAR_ENEM, label: 'Vestibular (ENEM)', hint: 'Uso minha nota do ENEM' },
+  { value: 2, label: 'Transferência Externa', hint: 'Venho de outra faculdade' },
+  { value: 4, label: 'Transferência Interna', hint: 'Já sou aluno Estácio' },
+  { value: 6, label: 'Segundo Curso', hint: 'Já tenho graduação' },
+  { value: 3, label: 'MSV - Externa' },
+  { value: 5, label: 'MSV - Interna' },
+]
+
+/** Pós-graduação/técnico: forma de ingresso fixa, sem escolha do candidato. */
+const CODIGO_INSCRICAO_POS_TECNICO = 15
 
 const inputClass =
   'w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors'
@@ -274,9 +300,13 @@ export default function EstacioCheckoutClient() {
             city: form.city.trim(),
           },
           options: {
-            useEnem: form.useEnem,
+            useEnem: form.codFormaIngresso === CODIGO_VESTIBULAR_ENEM,
             graduationYear: form.graduationYear ? Number(form.graduationYear) : undefined,
             acceptTerms: form.acceptTerms,
+            codFormaIngresso:
+              offer.academicLevel === 'POS_GRADUACAO'
+                ? CODIGO_INSCRICAO_POS_TECNICO
+                : form.codFormaIngresso,
           },
         }),
       })
@@ -552,19 +582,45 @@ export default function EstacioCheckoutClient() {
                 onToggle={() => toggleSection('ingresso')}
                 last
               >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-end">
-                  <label className="flex items-center gap-2.5 text-[14px] text-ink-700 py-2">
-                    <input type="checkbox" checked={form.useEnem}
-                      onChange={(e) => set('useEnem', e.target.checked)} className="accent-bolsa-secondary" />
-                    Quero usar a nota do ENEM
-                  </label>
-                  <div>
-                    <label className={labelClass}>Ano de conclusão do ensino médio</label>
-                    <input inputMode="numeric" className={inputClass} value={form.graduationYear}
-                      onChange={(e) => set('graduationYear', e.target.value.replace(/\D/g, '').slice(0, 4))}
-                      placeholder="2018" />
-                  </div>
-                </div>
+                {offer.academicLevel === 'POS_GRADUACAO' ? (
+                  <p className="text-[14px] text-ink-500">
+                    Forma de ingresso: inscrição de pós-graduação — não precisa escolher, já está definida pra esse curso.
+                  </p>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {FORMA_INGRESSO_OPTIONS.map((option) => (
+                        <label
+                          key={option.value}
+                          className="flex items-start gap-2.5 text-[14px] text-ink-700 py-1.5"
+                        >
+                          <input
+                            type="radio"
+                            name="codFormaIngresso"
+                            className="mt-0.5 accent-bolsa-secondary"
+                            checked={form.codFormaIngresso === option.value}
+                            onChange={() => set('codFormaIngresso', option.value)}
+                          />
+                          <span>
+                            {option.label}
+                            {option.hint && (
+                              <span className="block text-[12px] text-ink-400">{option.hint}</span>
+                            )}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+
+                    {form.codFormaIngresso === CODIGO_VESTIBULAR_ENEM && (
+                      <div className="mt-3 max-w-xs">
+                        <label className={labelClass}>Ano de conclusão do ensino médio</label>
+                        <input inputMode="numeric" className={inputClass} value={form.graduationYear}
+                          onChange={(e) => set('graduationYear', e.target.value.replace(/\D/g, '').slice(0, 4))}
+                          placeholder="2018" />
+                      </div>
+                    )}
+                  </>
+                )}
 
                 <label className="flex items-start gap-2.5 text-[13px] text-ink-700 mt-4">
                   <input type="checkbox" className="mt-1 accent-bolsa-secondary" checked={form.acceptTerms}

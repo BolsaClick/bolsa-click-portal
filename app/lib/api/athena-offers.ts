@@ -81,6 +81,14 @@ export interface AthenaOptions {
   useEnem: boolean
   graduationYear?: number
   acceptTerms: boolean
+  /**
+   * Forma de ingresso escolhida pelo candidato (codFormaIngresso Estácio/YDUQS).
+   * Tem prioridade sobre o codFormaIngresso da oferta no athena-api — ver
+   * cod-forma-ingresso.constants.ts lá (nunca enviar 1 = "Vestibular" puro,
+   * confirmado por e-mail da Estácio como código que não deve ser mostrado
+   * ao candidato). Ausente = athena-api cai no default da oferta.
+   */
+  codFormaIngresso?: number
 }
 
 /** Body de POST /api/enrollments. */

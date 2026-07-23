@@ -1,6 +1,10 @@
 import { prisma } from '@/app/lib/prisma'
 import { getCheckoutStatus } from '@/app/lib/api/checkout-status'
-import { createInscription, type CreateInscriptionRequest } from '@/app/lib/api/create-inscription'
+import {
+  createInscription,
+  getCognaErrorMessage,
+  type CreateInscriptionRequest,
+} from '@/app/lib/api/create-inscription'
 import {
   createMarketplaceInscription,
   type MarketplaceInscriptionData,
@@ -94,7 +98,8 @@ export async function confirmPaidMatricula(
       results.inscriptionId = r.id ?? null
       console.log('✅ confirm: inscrição criada', { externalTransactionId, id: r.id })
     } catch (e) {
-      results.inscriptionError = e instanceof Error ? e.message : String(e)
+      results.inscriptionError =
+        getCognaErrorMessage(e) ?? (e instanceof Error ? e.message : String(e))
       console.error('❌ confirm: inscrição falhou', externalTransactionId, e)
     }
 

@@ -35,7 +35,7 @@ import { formatCurrency } from '@/utils/fomartCurrency'
 import { toast } from 'sonner'
 // [CUPOM] import { validateCoupon } from '@/app/lib/api/get-coupon'
 import { createLead } from '@/app/lib/api/create-lead'
-import { createInscription, buildInscriptionPayload } from '@/app/lib/api/create-inscription'
+import { createInscription, buildInscriptionPayload, getCognaErrorMessage } from '@/app/lib/api/create-inscription'
 import { createMarketplaceInscription } from '@/app/lib/api/create-inscription-marketplace'
 import { validateVoucher, type ValidateVoucherResponse, type VoucherInstallment } from '@/app/lib/api/validate-voucher'
 import type { PosPaymentMethod, PosInstallment } from '@/app/lib/api/get-offer-details'
@@ -1011,7 +1011,8 @@ const isFormValidForPayment =
       }
     } catch (error: unknown) {
       console.error('Erro ao criar matrícula:', error)
-      toast.error('Erro ao finalizar matrícula. Entre em contato com o suporte.')
+      const cognaMsg = getCognaErrorMessage(error)
+      toast.error(cognaMsg ?? 'Erro ao finalizar matrícula. Entre em contato com o suporte.')
     }
   }
 

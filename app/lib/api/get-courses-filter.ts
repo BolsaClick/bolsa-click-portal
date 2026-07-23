@@ -173,8 +173,17 @@ async function fetchAthenaOffers(params: {
   modality?: string
   academicLevel?: string
 }): Promise<CourseWithPrices[]> {
-  // Só roda no browser (fetch relativo). Em SSR/prefetch, pular.
-  if (typeof window === 'undefined') return []
+  // No servidor (SSR/RSC), chama a Athena direto — sem round-trip HTTP pra si
+  // mesmo (e sem depender de uma URL relativa, que não existe fora do browser).
+  // Import dinâmico: mantém athena-offers.ts (e o client axios `athena`) fora
+  // do bundle client, já que esse branch nunca roda lá (guard acima).
+  if (typeof window === 'undefined') {
+    const { searchAthenaOffers, normalizeAthenaOffer } = await import('./athena-offers')
+    const offers = await searchAthenaOffers(params)
+    return offers
+      .map(normalizeAthenaOffer)
+      .filter((c) => !!c.offerId) as unknown as CourseWithPrices[]
+  }
 
   const qs = new URLSearchParams()
   if (params.courseName?.trim()) qs.set('courseName', params.courseName.trim())

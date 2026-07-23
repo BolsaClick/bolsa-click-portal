@@ -106,7 +106,7 @@ export const metadata: Metadata = {
 }
 
 // Chips de categoria — links REAIS do funil (/curso/resultado lê cn/nivel,
-// não courseName/academicLevel; conferido no SearchResultClient).
+// não courseName/academicLevel; conferido no ResultsShell).
 const CATEGORIES = [
   { name: 'Administração', query: 'Administração' },
   { name: 'Enfermagem', query: 'Enfermagem' },

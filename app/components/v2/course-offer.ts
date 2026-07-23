@@ -126,7 +126,7 @@ export function brandLogoSrc(brand: string): string {
 /**
  * Link REAL pro funil de resultados. /curso/resultado lê cn/nivel/cidade/
  * estado/modalidade (não courseName/academicLevel — conferido no
- * SearchResultClient). Usado como href default dos cards nas prateleiras
+ * ResultsShell). Usado como href default dos cards nas prateleiras
  * da home real; valores passam crus (round-trip do payload da própria API).
  */
 export function offerResultHref(offer: CourseOffer): string {

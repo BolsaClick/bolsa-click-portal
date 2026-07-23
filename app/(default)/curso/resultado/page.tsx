@@ -1,7 +1,10 @@
 import { Metadata } from 'next'
 import { Suspense } from 'react'
-import SearchResultClient from './SearchResultClient'
 import { ACADEMIC_LEVEL, isProfissionalizanteLevel, normalizeAcademicLevel } from '@/app/lib/academic-level'
+import { ResultsFilterProvider } from './ResultsFilterContext'
+import ResultsShell from './ResultsShell'
+import ResultsSkeleton from './ResultsSkeleton'
+import SearchResultsData from './SearchResultsData'
 
 export const dynamic = 'force-dynamic'
 
@@ -202,7 +205,14 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 export default async function CursosPage({ searchParams }: Props) {
   const params = await searchParams
   const curso = typeof params.c === 'string' ? params.c : ''
+  const cursoNomeCompleto = typeof params.cn === 'string' ? params.cn : ''
+  const cidade = typeof params.cidade === 'string' ? params.cidade : ''
+  const estado = typeof params.estado === 'string' ? params.estado : ''
+  const modalidade = typeof params.modalidade === 'string' ? params.modalidade : ''
   const nivel = typeof params.nivel === 'string' ? params.nivel : 'GRADUACAO'
+
+  const current = { curso, cursoNomeCompleto, cidade, estado, modalidade, nivel }
+  const searchKey = `${curso}|${cursoNomeCompleto}|${cidade}|${estado}|${modalidade}|${normalizeAcademicLevel(nivel)}`
 
   const courseNameClean = curso ? removeCourseSuffix(curso) : ''
   const courseName = courseNameClean ? capitalizeText(courseNameClean) : ''
@@ -249,9 +259,13 @@ export default async function CursosPage({ searchParams }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
       />
-      <Suspense fallback={<div className="p-4 text-gray-500">Carregando cursos...</div>}>
-        <SearchResultClient />
-      </Suspense>
+      <ResultsFilterProvider searchKey={searchKey}>
+        <ResultsShell current={current}>
+          <Suspense fallback={<ResultsSkeleton />}>
+            <SearchResultsData current={current} />
+          </Suspense>
+        </ResultsShell>
+      </ResultsFilterProvider>
     </>
   )
 }

@@ -1,3 +1,4 @@
+import { isAxiosError } from 'axios'
 import { tartarus } from './axios'
 
 export interface CreateInscriptionRequest {
@@ -48,6 +49,18 @@ export interface CreateInscriptionResponse {
 }
 
 // Removida função mapDayToPortuguese - os dias devem ser enviados em inglês
+
+/**
+ * Extrai a mensagem de erro real vinda da Cogna (via Tartarus) de um erro do
+ * axios, em vez do texto genérico ("Request failed with status code 400").
+ */
+export function getCognaErrorMessage(error: unknown): string | undefined {
+  if (!isAxiosError(error)) return undefined
+  const data = error.response?.data as
+    | { cognaError?: { message?: string }; message?: string }
+    | undefined
+  return data?.cognaError?.message ?? data?.message
+}
 
 /**
  * Cria uma inscrição no Tartarus

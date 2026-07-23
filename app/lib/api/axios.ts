@@ -1,48 +1,5 @@
 import axios from 'axios'
 
-// FIXIE_URL é secret de servidor (proxy fixie, pra sair por IP fixo/allowlist
-// em chamadas server-side) — de propósito sem prefixo NEXT_PUBLIC_, já que a
-// URL carrega credencial (ver commit 89a8e4e). Isso significa que no bundle
-// client `process.env.FIXIE_URL` sempre chega `undefined`: construir o client
-// aqui embaixo tinha um `throw` incondicional na validação da URL, e como todo
-// o módulo (inclusive `tartarus`/`elysium`, usados no client) roda no import,
-// isso derrubava a hidratação do site inteiro (GeoLocationContext, no layout
-// raiz, importa `tartarus` deste arquivo). O proxy do axios também só existe
-// em Node — no browser essa config é inerte de qualquer forma — por isso a
-// validação só roda server-side; client-side, `api` nem deveria ser chamado
-// hoje (nenhum client component usa esse export).
-function buildApi() {
-  if (typeof window !== 'undefined') {
-    return axios.create({ baseURL: process.env.NEXT_PUBLIC_API_URL })
-  }
-
-  const fixieUrlString = process.env.FIXIE_URL ?? ''
-  let parsedFixieUrl: URL
-  try {
-    parsedFixieUrl = new URL(fixieUrlString)
-  } catch {
-    console.error(
-      'Erro: A URL fornecida para FIXIE_URL é inválida ou não foi definida.',
-    )
-    throw new Error(
-      'A URL fornecida para FIXIE_URL é inválida ou não foi definida!',
-    )
-  }
-
-  return axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL,
-    proxy: {
-      host: parsedFixieUrl.hostname,
-      port: Number(parsedFixieUrl.port),
-      auth: {
-        username: parsedFixieUrl.username,
-        password: parsedFixieUrl.password,
-      },
-    },
-  })
-}
-
-export const api = buildApi()
 export const tartarus = axios.create({
   baseURL: process.env.NEXT_PUBLIC_TARTARUS_API,
   headers: {

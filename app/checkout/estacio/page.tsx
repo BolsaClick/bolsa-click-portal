@@ -10,6 +10,13 @@ export const metadata: Metadata = {
   robots: 'noindex, nofollow',
 }
 
+// Sem isso a página é prerenderizada estaticamente no build — a checagem da
+// flag roda em build time (sem contexto real de request/usuário), sempre cai
+// no fallback `false`, e fica CONGELADA como indisponível pra sempre, mesmo
+// com a flag em 100% em produção. Mesmo padrão já usado em
+// app/(default)/curso/resultado/page.tsx pelo mesmo motivo.
+export const dynamic = 'force-dynamic'
+
 /**
  * Mesmo kill switch de `searchAthenaOffers` (flag `estacio_enabled`): a busca some
  * da listagem, mas sem checar aqui também a página do formulário continuava

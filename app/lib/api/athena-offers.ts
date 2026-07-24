@@ -32,14 +32,16 @@ export interface AthenaOffer {
   status?: string
   course?: { name?: string; slug?: string; academicLevel?: string }
   institution?: { name?: string; slug?: string; logo?: string | null }
+  unit?: { name?: string; city?: string; state?: string }
   /**
-   * `address`/`neighborhood`/`zipCode`: contrato ainda NÃO confirmado com a
-   * Athena (diferente do codFormaIngresso/consentimento, que veio de e-mail
-   * confirmado da Estácio) — nomes de campo assumidos por analogia ao
-   * contrato Cogna/Tartarus. Tratar como opcional e degradar graciosamente
-   * (cair pra city/state) até confirmar com o Tech Lead Backend.
+   * Endereço da unidade — campos PLANOS na oferta (não aninhados em `unit`).
+   * Confirmado com dado real da Athena (2026-07-23): `unitAddress` já vem com
+   * rua + número concatenados (ex.: "RUA CATAO, Nº 757"), `unitDistrict` é o
+   * bairro (ex.: "LAPA"), `unitPostalCode` só dígitos (ex.: "05049000").
    */
-  unit?: { name?: string; city?: string; state?: string; address?: string; neighborhood?: string | null; zipCode?: string }
+  unitAddress?: string
+  unitDistrict?: string
+  unitPostalCode?: string
   /** Metadados YDUQS — inscrevibilidade (codCurso==codCursoPai) + duração textual. */
   metadata?: {
     codCurso?: number
@@ -228,12 +230,12 @@ export function normalizeAthenaOffer(raw: AthenaOffer): Course {
     unitState: raw.unit?.state,
     unitId: raw.unitId,
     unitName: raw.unit?.name,
-    // Endereço completo da unidade — opcional (ver comentário em AthenaOffer.unit
-    // sobre o contrato ainda não confirmado). unitNumber não populado: se
-    // `address` já vier com número concatenado, duplicaria no card/checkout.
-    unitAddress: raw.unit?.address,
-    unitDistrict: raw.unit?.neighborhood ?? undefined,
-    unitPostalCode: raw.unit?.zipCode,
+    // Endereço completo da unidade — campos planos confirmados com dado real
+    // (2026-07-23). unitNumber não populado: unitAddress já vem com o número
+    // concatenado ("RUA CATAO, Nº 757"), duplicaria no card/checkout.
+    unitAddress: raw.unitAddress,
+    unitDistrict: raw.unitDistrict,
+    unitPostalCode: raw.unitPostalCode,
     // Duração: usa durationMonths se vier; senão deriva de metadata.duracao
     // ("4 anos" → 48) pra renderizar o bloco "Período" igual aos cards Cogna.
     durationInMonths: raw.durationMonths ?? parseDuracaoToMonths(raw.metadata?.duracao),

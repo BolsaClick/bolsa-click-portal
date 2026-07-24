@@ -765,12 +765,6 @@ export default function EstacioCheckoutClient() {
                   </li>
                 )
               )}
-              {offer.academicLevel !== 'POS_GRADUACAO' && (
-                <li className="flex items-center gap-3 text-[13px] text-ink-700">
-                  <GraduationCap size={14} className="text-ink-300 flex-shrink-0" />
-                  Ingresso: {FORMA_INGRESSO_OPTIONS.find((o) => o.value === form.codFormaIngresso)?.label ?? '—'}
-                </li>
-              )}
             </ul>
           </aside>
         </div>

@@ -73,6 +73,9 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
       const athenaState = course.uf || course.unitState || ''
       if (athenaState) params.set('state', athenaState)
       if (course.academicLevel) params.set('academicLevel', course.academicLevel)
+      if (course.unitAddress) params.set('unitAddress', course.unitAddress)
+      if (course.unitDistrict) params.set('unitDistrict', course.unitDistrict)
+      if (course.unitPostalCode) params.set('unitPostalCode', course.unitPostalCode)
 
       localStorage.setItem('selectedCourse', JSON.stringify(course))
       window.location.href = `/checkout/estacio?${params.toString()}`
@@ -295,10 +298,20 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
             <span>{course.durationInMonths} meses</span>
           </div>
         )}
-        {course.city && (
-          <div className="flex items-center gap-2 text-ink-500 text-[13px]">
-            <MapPin size={13} className="flex-shrink-0" />
-            <span>{course.city}</span>
+        {(course.unitAddress || course.city) && (
+          <div className="flex items-start gap-2 text-ink-500 text-[13px]">
+            <MapPin size={13} className="mt-0.5 flex-shrink-0" />
+            <span className="line-clamp-1">
+              {course.unitAddress ? (
+                <>
+                  {course.unitAddress}
+                  {course.unitDistrict && ` — ${course.unitDistrict}`}
+                  {(course.unitCity || course.city) && ` — ${course.unitCity || course.city}`}
+                </>
+              ) : (
+                course.city
+              )}
+            </span>
           </div>
         )}
       </div>

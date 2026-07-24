@@ -57,6 +57,9 @@ interface RawOffer {
   uf?: string
   unitState?: string
   academicLevel?: string
+  unitAddress?: string
+  unitDistrict?: string
+  unitPostalCode?: string
 }
 
 function toShowcase(o: RawOffer): ShowcaseOffer | null {
@@ -82,6 +85,9 @@ function toShowcase(o: RawOffer): ShowcaseOffer | null {
           city: o.city || '',
           state: uf,
           academicLevel,
+          ...(o.unitAddress ? { unitAddress: o.unitAddress } : {}),
+          ...(o.unitDistrict ? { unitDistrict: o.unitDistrict } : {}),
+          ...(o.unitPostalCode ? { unitPostalCode: o.unitPostalCode } : {}),
         }).toString()}`
       : `/curso/resultado?${new URLSearchParams({
           c: course,

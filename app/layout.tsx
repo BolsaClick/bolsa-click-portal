@@ -1,4 +1,4 @@
-import { Metadata } from 'next'
+import { Metadata, Viewport } from 'next'
 import { Fraunces, Montserrat } from 'next/font/google'
 import Script from 'next/script'
 import { AnalyticsScripts } from './components/organisms/AnalyticsScripts'
@@ -116,6 +116,16 @@ export const metadata: Metadata = {
     copyright: seoSite.name,
     abstract: seoSite.description,
   },
+}
+
+// viewportFit: 'cover' habilita env(safe-area-inset-*) de verdade em iOS —
+// sem isso os insets sempre resolvem pra 0, mesmo com o CSS já usando
+// env(safe-area-inset-bottom) (ex.: BottomNav, VocationalTab).
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#ffffff',
 }
 
 const jsonLd = [
@@ -262,9 +272,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {/* Eclesiastes 3:1 — Tudo tem o seu tempo determinado, e há tempo para todo o propósito debaixo do céu. */}
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#ffffff" />
         <meta name="apple-mobile-web-app-title" content={seoSite.shortTitle} />
         <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="author" content={seoSite.name} />
         <meta name="publisher" content={seoSite.name} />

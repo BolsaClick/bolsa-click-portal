@@ -87,7 +87,7 @@ export default function ChatWidget() {
       {teaserVisible && !open && (
         <div
           role="status"
-          className="fixed bottom-24 right-4 z-[70] w-[min(260px,calc(100vw-2rem))] animate-slide-pulse rounded-2xl rounded-br-md border border-ink-100 bg-white p-3.5 pr-8 shadow-xl motion-reduce:animate-none sm:right-6"
+          className="fixed bottom-[calc(6rem+64px+env(safe-area-inset-bottom))] right-4 z-[70] w-[min(260px,calc(100vw-2rem))] animate-slide-pulse rounded-2xl rounded-br-md border border-ink-100 bg-white p-3.5 pr-8 shadow-xl motion-reduce:animate-none sm:bottom-24 sm:right-6"
         >
           <button
             type="button"
@@ -114,7 +114,7 @@ export default function ChatWidget() {
         onClick={open ? closeChat : openChat}
         aria-label={open ? 'Fechar chat de ajuda' : 'Abrir chat de ajuda com o Bob'}
         aria-expanded={open}
-        className="fixed bottom-5 right-4 z-[70] flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-bolsa-primary shadow-lg shadow-bolsa-primary/30 transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bolsa-primary motion-reduce:transition-none motion-reduce:hover:scale-100 sm:right-6"
+        className="fixed bottom-[calc(1.25rem+64px+env(safe-area-inset-bottom))] right-4 z-[70] flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-bolsa-primary shadow-lg shadow-bolsa-primary/30 transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bolsa-primary motion-reduce:transition-none motion-reduce:hover:scale-100 sm:bottom-5 sm:right-6"
       >
         {open ? (
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -136,7 +136,7 @@ export default function ChatWidget() {
       {badgeVisible && !open && (
         <span
           aria-hidden="true"
-          className="pointer-events-none fixed bottom-[3.85rem] right-[0.85rem] z-[71] flex h-5 w-5 sm:right-[1.35rem]"
+          className="pointer-events-none fixed bottom-[calc(3.85rem+64px+env(safe-area-inset-bottom))] right-[0.85rem] z-[71] flex h-5 w-5 sm:bottom-[3.85rem] sm:right-[1.35rem]"
         >
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-bolsa-secondary opacity-60 motion-reduce:animate-none" />
           <span className="relative inline-flex h-5 w-5 items-center justify-center rounded-full bg-bolsa-secondary text-[10px] font-bold text-white ring-2 ring-white">

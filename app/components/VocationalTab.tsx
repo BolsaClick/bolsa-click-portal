@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { Sparkles, X, ExternalLink, ChevronUp } from 'lucide-react'
+import { Sparkles, X, ExternalLink } from 'lucide-react'
 import { AIChat } from '@/app/(default)/teste-vocacional/_components/AIChat'
 
 const DISMISS_KEY = 'vocational-tab-dismissed-at'
@@ -118,50 +118,10 @@ export function VocationalTab() {
         </div>
       )}
 
-      {/* Bottom bar — MOBILE apenas.
-          z-[1005] > navbar (z-[1000]) por consistência (no mobile o navbar
-          provavelmente não sobrepõe, mas evita surpresa em viewports curtos). */}
-      {!open && (
-        <div
-          className="md:hidden fixed bottom-0 inset-x-0 z-[1005] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] animate-fade-in [will-change:opacity]"
-          role="region"
-          aria-label="Teste vocacional"
-        >
-          <div className="relative bg-bolsa-primary text-paper rounded-2xl shadow-[0_8px_30px_-5px_rgba(11,31,60,0.4)] flex items-center gap-3 pl-3 pr-2 py-2.5">
-            <span className="flex-shrink-0 w-9 h-9 rounded-full bg-bolsa-secondary flex items-center justify-center">
-              <Sparkles size={15} className="text-paper animate-vocational-pulse" />
-            </span>
-            <button
-              type="button"
-              onClick={() => setOpen(true)}
-              className="flex-1 min-w-0 text-left"
-            >
-              <p className="font-display text-[14px] font-semibold leading-tight">
-                Teste Vocacional com IA
-              </p>
-              <p className="font-mono text-[10px] tracking-[0.12em] uppercase text-paper/70 leading-tight mt-0.5">
-                Grátis · 3 min · sem CPF
-              </p>
-            </button>
-            <button
-              type="button"
-              onClick={() => setOpen(true)}
-              aria-label="Abrir teste vocacional"
-              className="flex-shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-full bg-paper/15 text-paper hover:bg-paper/25 transition-colors"
-            >
-              <ChevronUp size={16} />
-            </button>
-            <button
-              type="button"
-              onClick={handleDismiss}
-              aria-label="Esconder por 24 horas"
-              className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-ink-900 text-paper flex items-center justify-center shadow-md border border-paper/20"
-            >
-              <X size={12} />
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Sem trigger mobile — o banner flutuante (bottom bar) saiu pra dar
+          lugar ao BottomNav (app shell mobile, 2026-07-24). O teste
+          vocacional segue acessível no mobile pelo link do Footer e por URL
+          direta (/teste-vocacional); só perdeu o ponto de entrada flutuante. */}
 
       {/* Drawer/modal — bottom sheet no mobile, side drawer no desktop.
           z-[1010] > navbar (z-[1000]) pra cobrir tudo incluindo header sticky. */}

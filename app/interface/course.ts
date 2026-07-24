@@ -53,13 +53,13 @@ export interface Course {
   /** Desconto derivado de minPrice/maxPrice, persistido em favoritos */
   discount?: number
   /**
-   * Ofertas-irmãs da mesma vaga (unidade/curso/turno/modalidade) em forma de
-   * ingresso 2 (Transferência Externa) e/ou 3 (MSV Externa) — só ofertas
-   * YDUQS/Estácio. Cada forma de ingresso é uma oferta SEPARADA na Athena
-   * (offerId próprio), agrupadas client-side em `groupByIngressForm`
-   * (confirmado com dado real 2026-07-24). Formas 1/7/24 usam sempre
-   * `offerId`/`minPrice` acima (a oferta primária). Ausente = só a forma
-   * primária disponível pra essa vaga.
+   * Preço específico da forma de ingresso 2 (Transferência Externa), só
+   * ofertas YDUQS/Estácio — regra confirmada com a Estácio (2026-07-24):
+   * só as formas 2 e 3 têm preço próprio na API de ofertas; 1/7/24 sempre
+   * usam `minPrice` (o preço default acima). Contrato ainda NÃO implementado
+   * no athena-api — opcional, sem ele o checkout usa minPrice pra tudo.
    */
-  ingressFormOffers?: Partial<Record<2 | 3, { offerId: string; price: number }>>
+  priceForma2?: number
+  /** Preço específico da forma de ingresso 3 (MSV Externa) — ver priceForma2. */
+  priceForma3?: number
 }

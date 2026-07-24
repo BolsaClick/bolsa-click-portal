@@ -21,12 +21,6 @@ export interface AthenaOffer {
   /** uuid do Offer no catálogo da Athena (obrigatório para o checkout). */
   id?: string
   unitId?: string
-  /**
-   * uuid do curso no catálogo da Athena. Junto com unitId/shift/modality,
-   * forma a chave de agrupamento de ofertas-irmãs por forma de ingresso
-   * (ver `ingressGroupKey`) — confirmado com dado real 2026-07-24.
-   */
-  courseId?: string
   externalId?: string
   modality?: string
   shift?: string
@@ -34,6 +28,21 @@ export interface AthenaOffer {
   priceFrom?: number
   /** Mensalidade com desconto (preço "por"). */
   priceTo?: number
+  /**
+   * Preço com desconto pras formas de ingresso 2 (Transferência Externa) e 3
+   * (MSV Externa) — regra confirmada com a Estácio (2026-07-24): só essas 2
+   * têm preço próprio; formas 1/7/24 sempre usam `priceTo`/`priceFrom` acima,
+   * SEMPRE com o mesmo offerId da oferta primária (offerId não muda por
+   * forma de ingresso — só o codFormaIngresso enviado em AthenaOptions).
+   * Contrato implementado no athena-api (PR #9, athena-api), server-side:
+   * agrupa por formaIngressoGroupKey (codCampus+codCursoPai+codTurno+
+   * indModalidade+numSeqPeriodoAcademico) e anexa esses 2 campos na oferta
+   * primária. Validado contra 700 ofertas reais de produção. Opcional:
+   * enquanto ausente (PR ainda não mergeada), o checkout usa o preço
+   * default pra tudo (sem quebrar).
+   */
+  priceToForma2?: number
+  priceToForma3?: number
   durationMonths?: number | null
   status?: string
   course?: { name?: string; slug?: string; academicLevel?: string }
@@ -53,39 +62,15 @@ export interface AthenaOffer {
   unitAddress?: string
   unitDistrict?: string
   unitPostalCode?: string
-  /**
-   * Preenchido client-side por `groupByIngressForm` (NÃO vem da Athena) —
-   * ofertas-irmãs em forma de ingresso 2 e/ou 3 pra mesma vaga, quando
-   * existirem. Ausente = só a forma 1 (ou a única forma) está disponível.
-   */
-  ingressFormVariants?: Partial<Record<2 | 3, IngressFormVariant>>
   /** Metadados YDUQS — inscrevibilidade (codCurso==codCursoPai) + duração textual. */
   metadata?: {
     codCurso?: number
     codCursoPai?: number
     /** Duração textual da oferta, ex.: "4 anos", "18 meses", "8 semestres". */
     duracao?: string
-    /**
-     * Forma de ingresso desta entrada específica (1, 2 ou 3 — confirmado
-     * 2026-07-24, a Athena só devolve essas 3). Cada forma disponível pra
-     * uma vaga vem como uma oferta SEPARADA (id/offerId próprio), não como
-     * campo extra numa oferta só — ver `groupByIngressForm`.
-     */
-    codFormaIngresso?: number
     [key: string]: unknown
   }
   [key: string]: unknown
-}
-
-/**
- * Oferta "irmã" — mesma vaga (unidade/curso/turno/modalidade) que a oferta
- * primária, só que numa forma de ingresso diferente (2 ou 3). Guarda o
- * offerId próprio (precisa trocar na inscrição, não só o preço) e o preço.
- */
-export interface IngressFormVariant {
-  offerId: string
-  priceFrom?: number
-  priceTo?: number
 }
 
 export interface SearchAthenaOffersParams {
@@ -205,63 +190,6 @@ function num(v: number | null | undefined): number {
 }
 
 /**
- * Chave que identifica a mesma vaga (unidade + curso + turno + modalidade)
- * através de formas de ingresso diferentes. Confirmado com dado real
- * (2026-07-24, comparação forma 1 x 2 x 3 pra "Administração" em SP,
- * 354-357 pares): sem groupId explícito da Athena, mas essas 4 chaves batem
- * 100% dos pares testados. Equivale a codCampus+codCurso+codTurno+
- * indModalidade no dado bruto YDUQS.
- */
-function ingressGroupKey(raw: AthenaOffer): string {
-  return `${raw.unitId ?? ''}|${raw.courseId ?? ''}|${raw.shift ?? ''}|${raw.modality ?? ''}`
-}
-
-/**
- * Agrupa ofertas da mesma vaga que só diferem pela forma de ingresso
- * (metadata.codFormaIngresso 1, 2 ou 3 — cada forma vem como oferta
- * SEPARADA, com offerId próprio, não como campo extra numa oferta só).
- *
- * Retorna uma oferta por vaga (a "primária" — forma 1 se existir, senão a
- * primeira do grupo), com as formas 2/3 anexadas em `ingressFormVariants`
- * quando existirem pra essa vaga. Preço diverge da forma 1 numa minoria real
- * dos casos (~1,7% forma 2, 0% forma 3 na amostra) — por isso guardamos
- * offerId + preço próprios de cada variante, não só o preço.
- */
-function groupByIngressForm(offers: AthenaOffer[]): AthenaOffer[] {
-  const groups = new Map<string, AthenaOffer[]>()
-  for (const raw of offers) {
-    const key = ingressGroupKey(raw)
-    const list = groups.get(key)
-    if (list) list.push(raw)
-    else groups.set(key, [raw])
-  }
-
-  const result: AthenaOffer[] = []
-  for (const group of groups.values()) {
-    const byForm = new Map<number, AthenaOffer>()
-    for (const raw of group) {
-      const forma = raw.metadata?.codFormaIngresso
-      if (typeof forma === 'number' && !byForm.has(forma)) byForm.set(forma, raw)
-    }
-
-    const primary = byForm.get(1) ?? group[0]
-    const variants: Partial<Record<2 | 3, IngressFormVariant>> = {}
-    for (const forma of [2, 3] as const) {
-      const variant = byForm.get(forma)
-      if (!variant || variant === primary) continue
-      const offerId = variant.id || variant.externalId || ''
-      if (!offerId) continue
-      variants[forma] = { offerId, priceFrom: variant.priceFrom, priceTo: variant.priceTo }
-    }
-
-    result.push(
-      Object.keys(variants).length > 0 ? { ...primary, ingressFormVariants: variants } : primary,
-    )
-  }
-  return result
-}
-
-/**
  * Converte a duração textual da Athena ("4 anos", "18 meses", "8 semestres")
  * para meses — pra alimentar o bloco "Período" do card (consistência visual com
  * os cards Cogna, que sempre trazem duração).
@@ -336,25 +264,10 @@ export function normalizeAthenaOffer(raw: AthenaOffer): Course {
     // ("4 anos" → 48) pra renderizar o bloco "Período" igual aos cards Cogna.
     durationInMonths: raw.durationMonths ?? parseDuracaoToMonths(raw.metadata?.duracao),
     shiftOptions: shift ? [shift] : undefined,
-    // Ofertas-irmãs por forma de ingresso (2/3) — anexadas por
-    // `groupByIngressForm` em searchAthenaOffers, ausente = só forma 1/única
-    // disponível pra essa vaga.
-    ingressFormOffers: raw.ingressFormVariants
-      ? {
-          ...(raw.ingressFormVariants[2] && {
-            2: {
-              offerId: raw.ingressFormVariants[2].offerId,
-              price: num(raw.ingressFormVariants[2].priceTo) || num(raw.ingressFormVariants[2].priceFrom),
-            },
-          }),
-          ...(raw.ingressFormVariants[3] && {
-            3: {
-              offerId: raw.ingressFormVariants[3].offerId,
-              price: num(raw.ingressFormVariants[3].priceTo) || num(raw.ingressFormVariants[3].priceFrom),
-            },
-          }),
-        }
-      : undefined,
+    // Preço por forma de ingresso — ver comentário em AthenaOffer.priceToForma2/3.
+    // undefined enquanto o athena-api não implementar (checkout usa o default).
+    priceForma2: raw.priceToForma2 ? num(raw.priceToForma2) : undefined,
+    priceForma3: raw.priceToForma3 ? num(raw.priceToForma3) : undefined,
   }
 }
 
@@ -398,9 +311,7 @@ export async function searchAthenaOffers(
     // Sem filtro de inscrevibilidade (decisão do negócio): mostrar tudo que a
     // Athena retorna, inclusive ofertas com split de curso. Eventual INT004 é
     // tratado/exibido no checkout (/api/athena-checkout → EstacioCheckoutClient).
-    // Agrupa formas de ingresso 1/2/3 da mesma vaga numa oferta só antes de
-    // devolver — sem isso a mesma vaga apareceria até 3x na vitrine.
-    return groupByIngressForm(list)
+    return list
   } catch (error) {
     console.error('Erro ao buscar ofertas na Athena:', error)
     return []

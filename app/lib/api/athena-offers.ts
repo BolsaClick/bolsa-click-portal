@@ -28,6 +28,17 @@ export interface AthenaOffer {
   priceFrom?: number
   /** Mensalidade com desconto (preço "por"). */
   priceTo?: number
+  /**
+   * Preço com desconto pras formas de ingresso 2 (Transferência Externa) e 3
+   * (MSV Externa) — regra confirmada com a Estácio (2026-07-24): só essas 2
+   * têm preço próprio; formas 1/7/24 sempre usam `priceTo`/`priceFrom` acima.
+   * CONTRATO AINDA NÃO IMPLEMENTADO no athena-api (aguardando o Tech Lead
+   * Backend) — nomes de campo aqui são a proposta do front, ajustar se o
+   * contrato real vier diferente. Opcional: enquanto ausente, o checkout
+   * usa o preço default pra tudo (sem quebrar).
+   */
+  priceToForma2?: number
+  priceToForma3?: number
   durationMonths?: number | null
   status?: string
   course?: { name?: string; slug?: string; academicLevel?: string }
@@ -249,6 +260,10 @@ export function normalizeAthenaOffer(raw: AthenaOffer): Course {
     // ("4 anos" → 48) pra renderizar o bloco "Período" igual aos cards Cogna.
     durationInMonths: raw.durationMonths ?? parseDuracaoToMonths(raw.metadata?.duracao),
     shiftOptions: shift ? [shift] : undefined,
+    // Preço por forma de ingresso — ver comentário em AthenaOffer.priceToForma2/3.
+    // undefined enquanto o athena-api não implementar (checkout usa o default).
+    priceForma2: raw.priceToForma2 ? num(raw.priceToForma2) : undefined,
+    priceForma3: raw.priceToForma3 ? num(raw.priceToForma3) : undefined,
   }
 }
 

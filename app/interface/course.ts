@@ -52,4 +52,14 @@ export interface Course {
   enrolledCount?: number
   /** Desconto derivado de minPrice/maxPrice, persistido em favoritos */
   discount?: number
+  /**
+   * Preço específico da forma de ingresso 2 (Transferência Externa), só
+   * ofertas YDUQS/Estácio — regra confirmada com a Estácio (2026-07-24):
+   * só as formas 2 e 3 têm preço próprio na API de ofertas; 1/7/24 sempre
+   * usam `minPrice` (o preço default acima). Contrato ainda NÃO implementado
+   * no athena-api — opcional, sem ele o checkout usa minPrice pra tudo.
+   */
+  priceForma2?: number
+  /** Preço específico da forma de ingresso 3 (MSV Externa) — ver priceForma2. */
+  priceForma3?: number
 }

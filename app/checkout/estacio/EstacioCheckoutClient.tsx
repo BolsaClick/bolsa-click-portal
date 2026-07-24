@@ -138,6 +138,17 @@ export default function EstacioCheckoutClient() {
       unitAddress: searchParams.get('unitAddress') ?? '',
       unitDistrict: searchParams.get('unitDistrict') ?? '',
       unitPostalCode: searchParams.get('unitPostalCode') ?? '',
+      // Preço específico das formas de ingresso 2 (Transferência Externa) e 3
+      // (MSV Externa) — regra da Estácio (2026-07-24): só essas duas têm preço
+      // próprio na API de ofertas; formas 1/7/24 sempre usam o preço "price"
+      // (default) acima. Opcionais: enquanto o athena-api não mandar esses 2
+      // campos, o checkout cai graciosamente no preço único de sempre.
+      priceForma2: searchParams.get('priceForma2')
+        ? Number(searchParams.get('priceForma2'))
+        : undefined,
+      priceForma3: searchParams.get('priceForma3')
+        ? Number(searchParams.get('priceForma3'))
+        : undefined,
     }),
     [searchParams],
   )
@@ -147,6 +158,22 @@ export default function EstacioCheckoutClient() {
     city: searchParams.get('city') ?? '',
     state: searchParams.get('state') ?? '',
   }))
+
+  // Preço a exibir pra forma de ingresso selecionada (regra da Estácio,
+  // 2026-07-24): forma 2 e 3 usam preço próprio quando disponível; forma
+  // 1/7/24 (e 4/5/6, não cobertas pela regra — sem dado melhor, mesmo
+  // tratamento) usam o preço default. Sempre cai no preço único de "offer.price"
+  // quando o campo específico não vier (compatível com o contrato de hoje).
+  const displayPrice = useMemo(() => {
+    if (form.codFormaIngresso === 2 && offer.priceForma2 !== undefined) {
+      return offer.priceForma2
+    }
+    if (form.codFormaIngresso === 3 && offer.priceForma3 !== undefined) {
+      return offer.priceForma3
+    }
+    return offer.price
+  }, [form.codFormaIngresso, offer])
+
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [cepLoading, setCepLoading] = useState(false)
@@ -393,9 +420,11 @@ export default function EstacioCheckoutClient() {
 
       // GA4 (dataLayer/GTM) - generate_lead, paridade com o Lead do Meta acima.
       // value só quando a oferta traz preço (o Lead do Meta também não fixa valor).
+      // Usa displayPrice (preço da forma de ingresso escolhida), não offer.price
+      // fixo, pra CPL/ROAS refletirem o valor real que o candidato viu.
       pushDataLayerEvent('generate_lead', {
         currency: 'BRL',
-        ...(offer.price > 0 ? { value: offer.price } : {}),
+        ...(displayPrice > 0 ? { value: displayPrice } : {}),
       })
 
       const params = new URLSearchParams()
@@ -701,7 +730,7 @@ export default function EstacioCheckoutClient() {
               </h2>
             </div>
 
-            {offer.price > 0 && (
+            {displayPrice > 0 && (
               <div className="bg-paper-warm border border-hairline rounded-2xl p-5 mb-5">
                 <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 mb-2 block">
                   Mensalidade com bolsa
@@ -709,10 +738,17 @@ export default function EstacioCheckoutClient() {
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-[14px] text-ink-700 font-medium">R$</span>
                   <span className="font-display num-tabular text-[40px] font-bold text-bolsa-secondary leading-none">
-                    {offer.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {displayPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                   <span className="text-[12px] text-ink-500">/mês</span>
                 </div>
+                {(form.codFormaIngresso === 2 || form.codFormaIngresso === 3) &&
+                  displayPrice !== offer.price &&
+                  offer.price > 0 && (
+                    <p className="text-[11px] text-ink-400 mt-2 italic">
+                      Valor específico pra forma de ingresso escolhida
+                    </p>
+                  )}
                 <p className="text-[11px] text-ink-500 mt-3 italic">
                   Pago diretamente à instituição de ensino
                 </p>

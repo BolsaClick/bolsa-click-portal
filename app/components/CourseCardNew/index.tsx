@@ -135,9 +135,15 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
       if (course.unitAddress) params.set('unitAddress', course.unitAddress)
       if (course.unitDistrict) params.set('unitDistrict', course.unitDistrict)
       if (course.unitPostalCode) params.set('unitPostalCode', course.unitPostalCode)
-      // Preço por forma de ingresso (2/3) — opcional, ver Course.priceForma2/3.
-      if (course.priceForma2) params.set('priceForma2', String(course.priceForma2))
-      if (course.priceForma3) params.set('priceForma3', String(course.priceForma3))
+      // Ofertas-irmãs por forma de ingresso (2/3) — opcional, ver Course.ingressFormOffers.
+      if (course.ingressFormOffers?.[2]) {
+        params.set('ingress2OfferId', course.ingressFormOffers[2].offerId)
+        params.set('ingress2Price', String(course.ingressFormOffers[2].price))
+      }
+      if (course.ingressFormOffers?.[3]) {
+        params.set('ingress3OfferId', course.ingressFormOffers[3].offerId)
+        params.set('ingress3Price', String(course.ingressFormOffers[3].price))
+      }
 
       localStorage.setItem('selectedCourse', JSON.stringify(course))
       window.location.href = `/checkout/estacio?${params.toString()}`

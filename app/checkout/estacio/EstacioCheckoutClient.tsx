@@ -138,16 +138,19 @@ export default function EstacioCheckoutClient() {
       unitAddress: searchParams.get('unitAddress') ?? '',
       unitDistrict: searchParams.get('unitDistrict') ?? '',
       unitPostalCode: searchParams.get('unitPostalCode') ?? '',
-      // Preço específico das formas de ingresso 2 (Transferência Externa) e 3
-      // (MSV Externa) — regra da Estácio (2026-07-24): só essas duas têm preço
-      // próprio na API de ofertas; formas 1/7/24 sempre usam o preço "price"
-      // (default) acima. Opcionais: enquanto o athena-api não mandar esses 2
-      // campos, o checkout cai graciosamente no preço único de sempre.
-      priceForma2: searchParams.get('priceForma2')
-        ? Number(searchParams.get('priceForma2'))
+      // Ofertas-irmãs por forma de ingresso 2 (Transferência Externa) e 3
+      // (MSV Externa) — regra da Estácio (2026-07-24): cada forma de ingresso
+      // é uma OFERTA SEPARADA na Athena (offerId próprio, preço às vezes
+      // diferente — confirmado com dado real, ~1,7% dos casos pra forma 2).
+      // Formas 1/7/24 sempre usam offerId/price acima (a oferta primária).
+      // Opcionais: sem esses params, o checkout usa a oferta primária pra tudo.
+      ingress2OfferId: searchParams.get('ingress2OfferId') ?? '',
+      ingress2Price: searchParams.get('ingress2Price')
+        ? Number(searchParams.get('ingress2Price'))
         : undefined,
-      priceForma3: searchParams.get('priceForma3')
-        ? Number(searchParams.get('priceForma3'))
+      ingress3OfferId: searchParams.get('ingress3OfferId') ?? '',
+      ingress3Price: searchParams.get('ingress3Price')
+        ? Number(searchParams.get('ingress3Price'))
         : undefined,
     }),
     [searchParams],
@@ -159,17 +162,24 @@ export default function EstacioCheckoutClient() {
     state: searchParams.get('state') ?? '',
   }))
 
-  // Preço a exibir pra forma de ingresso selecionada (regra da Estácio,
-  // 2026-07-24): forma 2 e 3 usam preço próprio quando disponível; forma
-  // 1/7/24 (e 4/5/6, não cobertas pela regra — sem dado melhor, mesmo
-  // tratamento) usam o preço default. Sempre cai no preço único de "offer.price"
-  // quando o campo específico não vier (compatível com o contrato de hoje).
+  // Oferta efetiva pra forma de ingresso selecionada (regra da Estácio,
+  // 2026-07-24): cada forma de ingresso 2/3 é uma OFERTA SEPARADA na Athena
+  // (offerId + preço próprios) — troca as duas juntas, nunca só o preço.
+  // Forma 1/7/24 (e 4/5/6, não cobertas pela regra — sem dado melhor, mesmo
+  // tratamento) usa sempre a oferta primária. Sem os params de uma forma
+  // específica, cai graciosamente na oferta primária (contrato de hoje).
+  const effectiveOfferId = useMemo(() => {
+    if (form.codFormaIngresso === 2 && offer.ingress2OfferId) return offer.ingress2OfferId
+    if (form.codFormaIngresso === 3 && offer.ingress3OfferId) return offer.ingress3OfferId
+    return offer.offerId
+  }, [form.codFormaIngresso, offer])
+
   const displayPrice = useMemo(() => {
-    if (form.codFormaIngresso === 2 && offer.priceForma2 !== undefined) {
-      return offer.priceForma2
+    if (form.codFormaIngresso === 2 && offer.ingress2Price !== undefined) {
+      return offer.ingress2Price
     }
-    if (form.codFormaIngresso === 3 && offer.priceForma3 !== undefined) {
-      return offer.priceForma3
+    if (form.codFormaIngresso === 3 && offer.ingress3Price !== undefined) {
+      return offer.ingress3Price
     }
     return offer.price
   }, [form.codFormaIngresso, offer])
@@ -314,7 +324,10 @@ export default function EstacioCheckoutClient() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          offerId: offer.offerId,
+          // Oferta da forma de ingresso efetivamente escolhida (2/3 tem
+          // offerId próprio) - NUNCA a primária fixa, senão a inscrição vai
+          // pra oferta errada quando o candidato escolhe forma 2 ou 3.
+          offerId: effectiveOfferId,
           student: {
             name: form.name.trim(),
             cpf: form.cpf.replace(/\D/g, ''),
@@ -355,7 +368,7 @@ export default function EstacioCheckoutClient() {
       }
 
       trackEvent('estacio_enrollment_created', {
-        offer_id: offer.offerId,
+        offer_id: effectiveOfferId,
         course_name: offer.courseName,
         numero_inscricao: data?.numeroInscricao ?? undefined,
         already_enrolled: !!data?.alreadyEnrolled,
@@ -381,7 +394,7 @@ export default function EstacioCheckoutClient() {
           flow: 'estacio',
           brand: offer.brand,
           modality: offer.modality,
-          offerId: offer.offerId,
+          offerId: effectiveOfferId,
           courseName: offer.courseName,
           email: form.email.trim() || undefined,
           phone: form.mobile.replace(/\D/g, '') || undefined,
@@ -395,7 +408,7 @@ export default function EstacioCheckoutClient() {
         flow: 'estacio',
         brand: offer.brand,
         modality: offer.modality,
-        offerId: offer.offerId,
+        offerId: effectiveOfferId,
         courseName: offer.courseName,
       })
 
@@ -405,7 +418,7 @@ export default function EstacioCheckoutClient() {
         'Lead',
         {
           content_name: offer.courseName,
-          content_ids: offer.offerId ? [String(offer.offerId)] : undefined,
+          content_ids: effectiveOfferId ? [String(effectiveOfferId)] : undefined,
           content_type: 'product',
           currency: 'BRL',
         },

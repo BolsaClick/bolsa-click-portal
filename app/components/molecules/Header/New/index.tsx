@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuth } from '@/app/contexts/AuthContext'
-import { LogOut, Menu as MenuIcon, User, X } from 'lucide-react'
+import { LogOut, User } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import React, { useEffect, useRef, useState } from 'react'
@@ -10,7 +10,6 @@ import { Menu } from '../../Menu'
 const HeaderNew: React.FC = () => {
   const { user, logout } = useAuth()
   const [currentTheme, setCurrentTheme] = useState('bolsaclick')
-  const [menuOpen, setMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
 
@@ -35,19 +34,6 @@ const HeaderNew: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
-
-  // Lock body scroll when mobile drawer open
-  useEffect(() => {
-    if (menuOpen) {
-      const previous = document.body.style.overflow
-      document.body.style.overflow = 'hidden'
-      return () => {
-        document.body.style.overflow = previous
-      }
-    }
-  }, [menuOpen])
-
-  const toggleMenu = () => setMenuOpen((m) => !m)
 
   const handleLogout = async () => {
     await logout()
@@ -141,21 +127,16 @@ const HeaderNew: React.FC = () => {
         </div>
       </div>
 
-      {/* MOBILE BAR */}
+      {/* MOBILE TOP BAR — sem hambúrguer/drawer: bottom nav (Início/Buscar/
+          Favoritos/Conta) já cobre a navegação principal. Branding mínimo,
+          só o essencial. Itens que sumiram do menu (Graduação/Pós/
+          Profissionalizantes/Bolsas de Estudo) seguem linkados no Footer
+          (crawl equity preservada); Simulador/Carreiras/Ajuda/Cursos viraram
+          uma listinha em /minha-conta (tab "Conta" do bottom nav). */}
       <div className="flex lg:hidden items-center justify-between bg-white px-4 h-[64px]">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={toggleMenu}
-            className="p-2 -ml-2 text-ink-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-bolsa-secondary rounded-md"
-            aria-label="Abrir menu"
-            aria-expanded={menuOpen}
-          >
-            {menuOpen ? <X size={24} /> : <MenuIcon size={24} />}
-          </button>
-          <Link href="/" className="flex-shrink-0">
-            <Image src={logoColor} alt="Bolsa Click" width={108} height={36} priority className="h-[36px] w-auto" />
-          </Link>
-        </div>
+        <Link href="/" className="flex-shrink-0">
+          <Image src={logoColor} alt="Bolsa Click" width={108} height={36} priority className="h-[32px] w-auto" />
+        </Link>
         {!user && (
           <Link
             href="/cadastro"
@@ -164,103 +145,6 @@ const HeaderNew: React.FC = () => {
             Cadastre-se
           </Link>
         )}
-      </div>
-
-      {/* MOBILE DRAWER */}
-      <div
-        className={`lg:hidden fixed inset-0 z-[999] transition-all duration-300 ease-out ${
-          menuOpen ? 'visible' : 'invisible'
-        }`}
-        aria-hidden={!menuOpen}
-      >
-        <button
-          tabIndex={-1}
-          aria-label="Fechar menu"
-          className={`absolute inset-0 bg-ink-900/40 backdrop-blur-sm transition-opacity duration-300 ${
-            menuOpen ? 'opacity-100' : 'opacity-0'
-          }`}
-          onClick={toggleMenu}
-        />
-        <div
-          className={`relative z-10 bg-white h-full w-[88%] max-w-[400px] shadow-2xl transition-transform duration-300 ease-out flex flex-col ${
-            menuOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
-        >
-          <div className="flex justify-between items-center px-5 h-[64px] border-b border-hairline">
-            <Link href="/" onClick={toggleMenu}>
-              <Image src={logoColor} alt="Bolsa Click" width={108} height={36} className="h-[36px] w-auto" />
-            </Link>
-            <button onClick={toggleMenu} aria-label="Fechar menu" className="p-2 -mr-2 text-ink-900">
-              <X size={24} />
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto px-5 pt-2">
-            <Menu variant="mobile" onNavigate={toggleMenu} />
-
-            <div className="mt-8 pt-6 border-t border-hairline pb-8">
-              {user ? (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 px-1">
-                    {user.avatar ? (
-                      <Image
-                        src={user.avatar}
-                        alt={user.name || 'Avatar'}
-                        width={44}
-                        height={44}
-                        className="w-11 h-11 rounded-full object-cover"
-                        unoptimized
-                      />
-                    ) : (
-                      <div className="w-11 h-11 rounded-full bg-bolsa-primary text-white flex items-center justify-center">
-                        <User size={20} />
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <p className="font-semibold text-ink-900 truncate">{user.name || 'Usuário'}</p>
-                      <p className="text-sm text-ink-500 truncate">{user.email}</p>
-                    </div>
-                  </div>
-                  <Link
-                    href="/minha-conta"
-                    className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-paper-warm rounded-full text-ink-900 font-semibold text-[14px]"
-                    onClick={toggleMenu}
-                  >
-                    <User size={18} />
-                    Minha conta
-                  </Link>
-                  <button
-                    onClick={() => {
-                      handleLogout()
-                      toggleMenu()
-                    }}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-hairline rounded-full text-bolsa-secondary font-semibold text-[14px]"
-                  >
-                    <LogOut size={18} />
-                    Sair da conta
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <Link
-                    href="/cadastro"
-                    onClick={toggleMenu}
-                    className="flex items-center justify-center w-full px-4 py-3 bg-bolsa-secondary text-white rounded-full font-semibold text-[15px] hover:bg-bolsa-secondary/90 transition-colors"
-                  >
-                    Cadastre-se grátis
-                  </Link>
-                  <Link
-                    href="/login"
-                    onClick={toggleMenu}
-                    className="flex items-center justify-center w-full px-4 py-3 border border-ink-900 text-ink-900 rounded-full font-semibold text-[15px] hover:bg-ink-900 hover:text-white transition-colors"
-                  >
-                    Entrar
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
       </div>
     </header>
   )

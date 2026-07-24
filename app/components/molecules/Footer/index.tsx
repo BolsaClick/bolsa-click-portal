@@ -334,6 +334,11 @@ const Footer: React.FC = () => {
                   </Link>
                 </li>
                 <li>
+                  <Link href="/carreiras" className={linkClass}>
+                    Carreiras
+                  </Link>
+                </li>
+                <li>
                   <Link href="/central-de-ajuda/primeiros-passos" className={linkClass}>
                     Primeiros Passos
                   </Link>

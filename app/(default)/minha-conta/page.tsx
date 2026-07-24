@@ -14,6 +14,8 @@ import {
   Bell,
   Shield,
   Loader2,
+  Calculator,
+  Briefcase,
 } from 'lucide-react'
 import { useAuth } from '@/app/contexts/AuthContext'
 
@@ -150,6 +152,17 @@ export default function MinhaContaPage() {
     },
   ]
 
+  // Sem hambúrguer no mobile (bottom nav cobre Início/Buscar/Favoritos/Conta) —
+  // esses links do antigo menu não têm mais lugar próprio, viram uma listinha
+  // aqui. Mobile only: no desktop eles já estão na nav de topo (Menu/index.tsx).
+  // Central de Ajuda já tem o próprio link logo abaixo (bloco "Precisa de
+  // ajuda?") — não duplicar aqui.
+  const moreLinks = [
+    { icon: BookOpen, label: 'Todos os Cursos', href: '/cursos' },
+    { icon: Calculator, label: 'Simulador de Bolsa', href: '/simulador-de-bolsa' },
+    { icon: Briefcase, label: 'Carreiras', href: '/carreiras' },
+  ]
+
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12">
       <div className="max-w-4xl mx-auto px-4">
@@ -256,6 +269,25 @@ export default function MinhaContaPage() {
                 <h3 className="font-medium text-gray-900">{item.label}</h3>
                 <p className="text-sm text-gray-500">{item.description}</p>
               </div>
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            </Link>
+          ))}
+        </div>
+
+        {/* Mais — só mobile, substitui o que sumiu do menu hambúrguer */}
+        <div className="md:hidden bg-white rounded-2xl shadow-sm overflow-hidden mb-8">
+          {moreLinks.map((item, index) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors ${
+                index !== 0 ? 'border-t border-gray-100' : ''
+              }`}
+            >
+              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                <item.icon className="w-5 h-5 text-gray-600" />
+              </div>
+              <h3 className="flex-1 font-medium text-gray-900">{item.label}</h3>
               <ChevronRight className="w-5 h-5 text-gray-400" />
             </Link>
           ))}

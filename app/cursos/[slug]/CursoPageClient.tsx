@@ -386,11 +386,6 @@ export default function CursoPageClient({
                                   </span>
                                   <span className="text-[12px] text-ink-500">/mês</span>
                                 </div>
-                                {offer.maxPrice && offer.maxPrice !== offer.minPrice && (
-                                  <div className="text-[12px] text-ink-300 num-tabular mt-1">
-                                    até R$ {formatPrice(offer.maxPrice)}
-                                  </div>
-                                )}
                               </>
                             ) : (
                               <span className="text-[13px] text-ink-500">Consulte valores</span>

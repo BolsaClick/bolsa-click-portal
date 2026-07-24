@@ -600,27 +600,20 @@ export default function EstacioCheckoutClient() {
                   </p>
                 ) : (
                   <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      {FORMA_INGRESSO_OPTIONS.map((option) => (
-                        <label
-                          key={option.value}
-                          className="flex items-start gap-2.5 text-[14px] text-ink-700 py-1.5"
-                        >
-                          <input
-                            type="radio"
-                            name="codFormaIngresso"
-                            className="mt-0.5 accent-bolsa-secondary"
-                            checked={form.codFormaIngresso === option.value}
-                            onChange={() => set('codFormaIngresso', option.value)}
-                          />
-                          <span>
+                    <div>
+                      <label className={labelClass}>Como você vai ingressar?</label>
+                      <select
+                        className={inputClass}
+                        value={form.codFormaIngresso}
+                        onChange={(e) => set('codFormaIngresso', Number(e.target.value))}
+                      >
+                        {FORMA_INGRESSO_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
                             {option.label}
-                            {option.hint && (
-                              <span className="block text-[12px] text-ink-400">{option.hint}</span>
-                            )}
-                          </span>
-                        </label>
-                      ))}
+                            {option.hint ? ` — ${option.hint}` : ''}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     {form.codFormaIngresso === CODIGO_VESTIBULAR_ENEM && (

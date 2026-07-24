@@ -14,6 +14,11 @@ import {
   Bell,
   Shield,
   Loader2,
+  Calculator,
+  Briefcase,
+  HelpCircle,
+  LogIn,
+  UserPlus,
 } from 'lucide-react'
 import { useAuth } from '@/app/contexts/AuthContext'
 
@@ -36,11 +41,26 @@ export default function MinhaContaPage() {
   })
   const [loadingStats, setLoadingStats] = useState(true)
 
+  // Desktop não tem tab "Conta" no nav enquanto deslogado (mostra Entrar/
+  // Cadastre-se direto) — só chega aqui deslogado por URL direta, então
+  // mantém o redirect imediato pro login. Mobile agora tem uma tela própria
+  // deslogada (CTA de login + os links que sumiram do hambúrguer) — decisão
+  // do CEO: Footer sozinho era pouco descobrível pra maioria do tráfego
+  // mobile ser visitante deslogado.
+  const [isDesktop, setIsDesktop] = useState<boolean | null>(null)
   useEffect(() => {
-    if (!loading && !user) {
+    const mql = window.matchMedia('(min-width: 768px)')
+    setIsDesktop(mql.matches)
+    const onChange = (e: MediaQueryListEvent) => setIsDesktop(e.matches)
+    mql.addEventListener('change', onChange)
+    return () => mql.removeEventListener('change', onChange)
+  }, [])
+
+  useEffect(() => {
+    if (!loading && !user && isDesktop) {
       router.push('/login?redirect=/minha-conta')
     }
-  }, [user, loading, router])
+  }, [user, loading, isDesktop, router])
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -105,7 +125,7 @@ export default function MinhaContaPage() {
     }
   }
 
-  if (loading) {
+  if (loading || isDesktop === null) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-bolsa-primary" />
@@ -114,7 +134,9 @@ export default function MinhaContaPage() {
   }
 
   if (!user) {
-    return null
+    // Desktop: o useEffect acima já disparou o redirect pro /login.
+    if (isDesktop) return null
+    return <LoggedOutAccountScreen />
   }
 
   const menuItems = [
@@ -148,6 +170,17 @@ export default function MinhaContaPage() {
       description: 'Senha e autenticação',
       href: '/minha-conta/seguranca',
     },
+  ]
+
+  // Sem hambúrguer no mobile (bottom nav cobre Início/Buscar/Favoritos/Conta) —
+  // esses links do antigo menu não têm mais lugar próprio, viram uma listinha
+  // aqui. Mobile only: no desktop eles já estão na nav de topo (Menu/index.tsx).
+  // Central de Ajuda já tem o próprio link logo abaixo (bloco "Precisa de
+  // ajuda?") — não duplicar aqui.
+  const moreLinks = [
+    { icon: BookOpen, label: 'Todos os Cursos', href: '/cursos' },
+    { icon: Calculator, label: 'Simulador de Bolsa', href: '/simulador-de-bolsa' },
+    { icon: Briefcase, label: 'Carreiras', href: '/carreiras' },
   ]
 
   return (
@@ -261,6 +294,25 @@ export default function MinhaContaPage() {
           ))}
         </div>
 
+        {/* Mais — só mobile, substitui o que sumiu do menu hambúrguer */}
+        <div className="md:hidden bg-white rounded-2xl shadow-sm overflow-hidden mb-8">
+          {moreLinks.map((item, index) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors ${
+                index !== 0 ? 'border-t border-gray-100' : ''
+              }`}
+            >
+              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                <item.icon className="w-5 h-5 text-gray-600" />
+              </div>
+              <h3 className="flex-1 font-medium text-gray-900">{item.label}</h3>
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            </Link>
+          ))}
+        </div>
+
         {/* Logout */}
         <button
           onClick={handleLogout}
@@ -282,6 +334,72 @@ export default function MinhaContaPage() {
             Acesse nossa Central de Ajuda
           </Link>
         </p>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Tab "Conta" do bottom nav, deslogado, no mobile — em vez do redirect
+ * direto pro login (mantido no desktop): CTA de login/cadastro em destaque
+ * + os links que sumiram do hambúrguer (Simulador/Cursos/Carreiras/Ajuda).
+ * Decisão do CEO 2026-07-24: Footer sozinho era pouco descobrível pra
+ * maioria do tráfego mobile ser visitante deslogado.
+ */
+function LoggedOutAccountScreen() {
+  const links = [
+    { icon: BookOpen, label: 'Todos os Cursos', href: '/cursos' },
+    { icon: Calculator, label: 'Simulador de Bolsa', href: '/simulador-de-bolsa' },
+    { icon: Briefcase, label: 'Carreiras', href: '/carreiras' },
+    { icon: HelpCircle, label: 'Central de Ajuda', href: '/central-de-ajuda' },
+  ]
+
+  return (
+    <div className="min-h-screen bg-gray-50 pt-24 pb-12">
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="bg-gradient-to-br from-bolsa-primary to-blue-700 rounded-2xl p-6 text-white mb-8 text-center">
+          <div className="w-14 h-14 mx-auto rounded-full bg-white/20 flex items-center justify-center mb-3">
+            <User className="w-7 h-7" />
+          </div>
+          <h1 className="text-xl font-bold mb-1">Entre na sua conta</h1>
+          <p className="text-white/80 text-sm mb-5">
+            Acesse suas bolsas favoritas, matrículas e mais
+          </p>
+          <div className="space-y-2.5">
+            <Link
+              href="/cadastro"
+              className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-white text-bolsa-primary rounded-full font-semibold text-[15px] hover:bg-white/90 transition-colors"
+            >
+              <UserPlus size={18} />
+              Cadastre-se grátis
+            </Link>
+            <Link
+              href="/login"
+              className="flex items-center justify-center gap-2 w-full px-4 py-3 border border-white/40 text-white rounded-full font-semibold text-[15px] hover:bg-white/10 transition-colors"
+            >
+              <LogIn size={18} />
+              Entrar
+            </Link>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-8">
+          {links.map((item, index) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors ${
+                index !== 0 ? 'border-t border-gray-100' : ''
+              }`}
+            >
+              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                <item.icon className="w-5 h-5 text-gray-600" />
+              </div>
+              <h3 className="flex-1 font-medium text-gray-900">{item.label}</h3>
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
   )

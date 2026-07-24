@@ -32,13 +32,18 @@ export interface AthenaOffer {
   status?: string
   course?: { name?: string; slug?: string; academicLevel?: string }
   institution?: { name?: string; slug?: string; logo?: string | null }
-  unit?: { name?: string; city?: string; state?: string }
   /**
-   * Endereço da unidade — campos PLANOS na oferta (não aninhados em `unit`).
-   * Confirmado com dado real da Athena (2026-07-23): `unitAddress` já vem com
-   * rua + número concatenados (ex.: "RUA CATAO, Nº 757"), `unitDistrict` é o
-   * bairro (ex.: "LAPA"), `unitPostalCode` só dígitos (ex.: "05049000").
+   * Endereço da unidade: NA PRÁTICA vem aninhado em `unit.address`/
+   * `unit.neighborhood`/`unit.zipCode` — reconfirmado 2026-07-23 direto na API
+   * (20/20 ofertas reais amostradas, incluindo Polo Itaim Paulista) todas
+   * trazem só esse formato aninhado; nenhuma trouxe os campos planos
+   * `unitAddress`/`unitDistrict`/`unitPostalCode` no nível raiz da oferta
+   * (um commit anterior tinha assumido o formato plano com base num exemplo
+   * pontual — não reproduz na amostra atual). `normalizeAthenaOffer` lê os
+   * dois formatos (plano primeiro, aninhado como fallback) pra não quebrar
+   * de novo se a Athena mudar o contrato outra vez.
    */
+  unit?: { name?: string; city?: string; state?: string; address?: string; neighborhood?: string; zipCode?: string }
   unitAddress?: string
   unitDistrict?: string
   unitPostalCode?: string
@@ -230,12 +235,16 @@ export function normalizeAthenaOffer(raw: AthenaOffer): Course {
     unitState: raw.unit?.state,
     unitId: raw.unitId,
     unitName: raw.unit?.name,
-    // Endereço completo da unidade — campos planos confirmados com dado real
-    // (2026-07-23). unitNumber não populado: unitAddress já vem com o número
-    // concatenado ("RUA CATAO, Nº 757"), duplicaria no card/checkout.
-    unitAddress: raw.unitAddress,
-    unitDistrict: raw.unitDistrict,
-    unitPostalCode: raw.unitPostalCode,
+    // Endereço completo da unidade — na amostra real atual vem aninhado em
+    // `unit.address`/`unit.neighborhood`/`unit.zipCode` (20/20 ofertas
+    // verificadas em 2026-07-23, incluindo Polo Itaim Paulista); lê o campo
+    // plano primeiro só por tolerância, caso a Athena volte a mudar o
+    // contrato. unitNumber não populado: `unitAddress`/`unit.address` já vêm
+    // com o número concatenado ("RUA HUMBERTO PESCARINI 267"), duplicaria no
+    // card/checkout.
+    unitAddress: raw.unitAddress || raw.unit?.address,
+    unitDistrict: raw.unitDistrict || raw.unit?.neighborhood,
+    unitPostalCode: raw.unitPostalCode || raw.unit?.zipCode,
     // Duração: usa durationMonths se vier; senão deriva de metadata.duracao
     // ("4 anos" → 48) pra renderizar o bloco "Período" igual aos cards Cogna.
     durationInMonths: raw.durationMonths ?? parseDuracaoToMonths(raw.metadata?.duracao),

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/react'
 import {
   ArrowLeft,
   ArrowRight,
@@ -20,6 +21,7 @@ import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { pushDataLayerEvent } from '@/app/lib/analytics/gtag'
 import { createLead } from '@/app/lib/api/create-lead'
+import { titleCasePtBr } from '@/app/lib/utils/title-case'
 import {
   trackCheckoutViewed,
   trackCheckoutSubmitted,
@@ -65,9 +67,6 @@ interface FormState {
   codFormaIngresso: number
   graduationYear: string
   acceptTerms: boolean
-  acceptReceiveEmail: boolean
-  acceptReceiveSMS: boolean
-  acceptReceiveWhatsApp: boolean
 }
 
 const initialForm: FormState = {
@@ -90,9 +89,6 @@ const initialForm: FormState = {
   codFormaIngresso: 24,
   graduationYear: '',
   acceptTerms: false,
-  acceptReceiveEmail: false,
-  acceptReceiveSMS: false,
-  acceptReceiveWhatsApp: false,
 }
 
 const CODIGO_VESTIBULAR_ENEM = 7
@@ -101,9 +97,10 @@ const CODIGO_VESTIBULAR_ENEM = 7
  * Opções de forma de ingresso pra graduação — codFormaIngresso Estácio/YDUQS.
  * Nunca incluir o código 1 ("Vestibular" puro): a Estácio confirmou por
  * e-mail (2026-07-22) que esse código não deve ser mostrado nem enviado.
- * MSV Externa/Interna (3/5): rótulo mantido literal do glossário da Estácio —
- * significado exato ainda não confirmado com o parceiro, então não
- * reescrevemos pra uma frase amigável que possa estar errada.
+ * MSV = Matrícula Sem Vestibular para Segunda Graduação — pra quem já tem
+ * diploma de graduação e quer outro (confirmado pelo Rodrigo, 2026-07-23).
+ * Externa = diploma de outra instituição; Interna = diploma pela própria
+ * Estácio.
  */
 const FORMA_INGRESSO_OPTIONS: { value: number; label: string; hint?: string }[] = [
   { value: 24, label: 'Vestibular (Ingresso Simplificado)', hint: 'Recomendado' },
@@ -111,8 +108,8 @@ const FORMA_INGRESSO_OPTIONS: { value: number; label: string; hint?: string }[] 
   { value: 2, label: 'Transferência Externa', hint: 'Venho de outra faculdade' },
   { value: 4, label: 'Transferência Interna', hint: 'Já sou aluno Estácio' },
   { value: 6, label: 'Segundo Curso', hint: 'Já tenho graduação' },
-  { value: 3, label: 'MSV - Externa' },
-  { value: 5, label: 'MSV - Interna' },
+  { value: 3, label: 'MSV - Externa', hint: 'Segunda graduação, diploma de outra faculdade' },
+  { value: 5, label: 'MSV - Interna', hint: 'Segunda graduação, diploma pela própria Estácio' },
 ]
 
 /** Pós-graduação/técnico: forma de ingresso fixa, sem escolha do candidato. */
@@ -316,9 +313,11 @@ export default function EstacioCheckoutClient() {
               offer.academicLevel === 'POS_GRADUACAO'
                 ? CODIGO_INSCRICAO_POS_TECNICO
                 : form.codFormaIngresso,
-            acceptReceiveEmail: form.acceptReceiveEmail,
-            acceptReceiveSMS: form.acceptReceiveSMS,
-            acceptReceiveWhatsApp: form.acceptReceiveWhatsApp,
+            // Sem checkbox individual pro candidato (decisão do Rodrigo,
+            // 2026-07-23) — coberto pelo aceite geral dos termos.
+            acceptReceiveEmail: true,
+            acceptReceiveSMS: true,
+            acceptReceiveWhatsApp: true,
           },
         }),
       })
@@ -602,18 +601,45 @@ export default function EstacioCheckoutClient() {
                   <>
                     <div>
                       <label className={labelClass}>Como você vai ingressar?</label>
-                      <select
-                        className={inputClass}
+                      <Listbox
                         value={form.codFormaIngresso}
-                        onChange={(e) => set('codFormaIngresso', Number(e.target.value))}
+                        onChange={(value) => set('codFormaIngresso', value)}
                       >
-                        {FORMA_INGRESSO_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                            {option.hint ? ` — ${option.hint}` : ''}
-                          </option>
-                        ))}
-                      </select>
+                        <div className="relative">
+                          <ListboxButton
+                            className={`${inputClass} flex items-center justify-between gap-2 text-left`}
+                          >
+                            <span className="truncate">
+                              {FORMA_INGRESSO_OPTIONS.find((o) => o.value === form.codFormaIngresso)?.label}
+                            </span>
+                            <ChevronDown size={14} className="text-ink-400 flex-shrink-0" />
+                          </ListboxButton>
+                          <ListboxOptions
+                            anchor="bottom start"
+                            transition
+                            className="w-[var(--button-width)] z-20 mt-1 rounded-xl border border-hairline bg-white py-1 shadow-lg focus:outline-none transition duration-100 ease-in data-[closed]:opacity-0"
+                          >
+                            {FORMA_INGRESSO_OPTIONS.map((option) => (
+                              <ListboxOption
+                                key={option.value}
+                                value={option.value}
+                                className="group flex cursor-pointer items-center justify-between gap-3 px-3 py-2.5 data-[focus]:bg-paper-warm"
+                              >
+                                <span>
+                                  <span className="block text-[14px] text-ink-900">{option.label}</span>
+                                  {option.hint && (
+                                    <span className="block text-[12px] text-ink-400">{option.hint}</span>
+                                  )}
+                                </span>
+                                <Check
+                                  size={14}
+                                  className="invisible flex-shrink-0 text-bolsa-secondary group-data-[selected]:visible"
+                                />
+                              </ListboxOption>
+                            ))}
+                          </ListboxOptions>
+                        </div>
+                      </Listbox>
                     </div>
 
                     {form.codFormaIngresso === CODIGO_VESTIBULAR_ENEM && (
@@ -632,24 +658,6 @@ export default function EstacioCheckoutClient() {
                     onChange={(e) => set('acceptTerms', e.target.checked)} />
                   Li e aceito os termos e autorizo a realização da inscrição.
                 </label>
-
-                <div className="mt-3 space-y-2">
-                  <label className="flex items-start gap-2.5 text-[13px] text-ink-700">
-                    <input type="checkbox" className="mt-1 accent-bolsa-secondary" checked={form.acceptReceiveEmail}
-                      onChange={(e) => set('acceptReceiveEmail', e.target.checked)} />
-                    Aceito receber novidades e atualizações da inscrição por e-mail.
-                  </label>
-                  <label className="flex items-start gap-2.5 text-[13px] text-ink-700">
-                    <input type="checkbox" className="mt-1 accent-bolsa-secondary" checked={form.acceptReceiveSMS}
-                      onChange={(e) => set('acceptReceiveSMS', e.target.checked)} />
-                    Aceito receber novidades e atualizações da inscrição por SMS.
-                  </label>
-                  <label className="flex items-start gap-2.5 text-[13px] text-ink-700">
-                    <input type="checkbox" className="mt-1 accent-bolsa-secondary" checked={form.acceptReceiveWhatsApp}
-                      onChange={(e) => set('acceptReceiveWhatsApp', e.target.checked)} />
-                    Aceito receber novidades e atualizações da inscrição por WhatsApp.
-                  </label>
-                </div>
 
                 {error && (
                   <p className="mt-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3">
@@ -742,17 +750,19 @@ export default function EstacioCheckoutClient() {
                 <li className="flex items-start gap-3 text-[13px] text-ink-700">
                   <MapPin size={14} className="mt-0.5 text-ink-300 flex-shrink-0" />
                   <span>
-                    {offer.unitAddress}
-                    {offer.unitDistrict && ` — ${offer.unitDistrict}`}
-                    {(offer.city || offer.state) && (
-                      <>
-                        {' — '}
-                        {offer.city}
-                        {offer.city && offer.state ? ' — ' : ''}
-                        {offer.state}
-                      </>
-                    )}
-                    {offer.unitPostalCode && ` — CEP: ${offer.unitPostalCode}`}
+                    <span className="block font-medium text-ink-900">
+                      {titleCasePtBr(offer.unitAddress)}
+                    </span>
+                    <span className="block text-[12px] text-ink-500 mt-0.5">
+                      {[
+                        offer.unitDistrict && titleCasePtBr(offer.unitDistrict),
+                        offer.city && titleCasePtBr(offer.city),
+                        offer.state,
+                      ]
+                        .filter(Boolean)
+                        .join(' — ')}
+                      {offer.unitPostalCode && ` · CEP ${offer.unitPostalCode}`}
+                    </span>
                   </span>
                 </li>
               ) : (

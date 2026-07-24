@@ -607,7 +607,7 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
                 className="truncate"
                 title={
                   course.unitAddress
-                    ? `${capitalizeFirstLetter(course.unitAddress)}${course.unitNumber ? `, ${course.unitNumber}` : ''}${course.unitCity || course.city ? ` - ${course.unitCity || course.city}` : ''}${course.unitState || course.uf ? ` - ${course.unitState || course.uf}` : ''}${course.unitPostalCode ? ` - CEP: ${course.unitPostalCode}` : ''}`
+                    ? `${capitalizeFirstLetter(course.unitAddress)}${course.unitNumber ? `, ${course.unitNumber}` : ''}${course.unitDistrict ? ` - ${capitalizeFirstLetter(course.unitDistrict)}` : ''}${course.unitCity || course.city ? ` - ${capitalizeFirstLetter(course.unitCity || course.city || '')}` : ''}${course.unitState || course.uf ? ` - ${course.unitState || course.uf}` : ''}${course.unitPostalCode ? ` - CEP: ${course.unitPostalCode}` : ''}`
                     : course.unit
                       ? `${course.unit}${course.unitPostalCode ? ` - CEP: ${course.unitPostalCode}` : ''}`
                       : `${course.unitCity || course.city || ''}${course.unitCity || course.city ? ' - ' : ''}${course.unitState || course.uf || ''}${course.unitPostalCode ? ` - CEP: ${course.unitPostalCode}` : ''}`
@@ -617,7 +617,8 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
                   <>
                     {capitalizeFirstLetter(course.unitAddress)}
                     {course.unitNumber && `, ${course.unitNumber}`}
-                    {course.unitCity || course.city ? ` - ${course.unitCity || course.city}` : ''}
+                    {course.unitDistrict && ` - ${capitalizeFirstLetter(course.unitDistrict)}`}
+                    {course.unitCity || course.city ? ` - ${capitalizeFirstLetter(course.unitCity || course.city || '')}` : ''}
                     {course.unitState || course.uf ? ` - ${course.unitState || course.uf}` : ''}
                     {course.unitPostalCode && ` - CEP: ${course.unitPostalCode}`}
                   </>

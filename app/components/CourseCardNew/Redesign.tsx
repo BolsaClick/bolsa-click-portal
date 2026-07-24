@@ -1,4 +1,5 @@
 import { Course } from "@/app/interface/course"
+import { titleCasePtBr } from "@/app/lib/utils/title-case"
 import { postSearch } from "@/app/lib/api/post-search"
 import { useFavorites } from "@/app/lib/hooks/useFavorites"
 import { usePostHogTracking } from "@/app/lib/hooks/usePostHogTracking"
@@ -304,9 +305,9 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
             <span className="line-clamp-1">
               {course.unitAddress ? (
                 <>
-                  {course.unitAddress}
-                  {course.unitDistrict && ` — ${course.unitDistrict}`}
-                  {(course.unitCity || course.city) && ` — ${course.unitCity || course.city}`}
+                  {titleCasePtBr(course.unitAddress)}
+                  {course.unitDistrict && ` — ${titleCasePtBr(course.unitDistrict)}`}
+                  {(course.unitCity || course.city) && ` — ${titleCasePtBr(course.unitCity || course.city)}`}
                 </>
               ) : (
                 course.city

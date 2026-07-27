@@ -4,6 +4,14 @@
 const NOTEALY_API_URL = process.env.NOTEALY_API_URL || 'https://thanos.notealy.com/v1'
 const NOTEALY_API_TOKEN = process.env.NOTEALY_API_TOKEN
 
+/**
+ * Tag de site aplicada em TODO contato criado por este site, pra segmentar no
+ * CRM de qual marca o contato veio (espelha o `site_anhanguera` do
+ * bolsa-click-landings). Resolvida por NOME em runtime (get-or-create com
+ * cache) — sem UUID chumbado nem passo manual no painel.
+ */
+const SITE_TAG_NAME = 'site_bolsaclick'
+
 interface UpsertContactInput {
   name: string
   email?: string
@@ -52,6 +60,44 @@ async function notealyRequest<T>(path: string, body: unknown): Promise<T> {
   return data as T
 }
 
+// Cache em memória do id da tag de site — o processo resolve uma vez e reusa.
+// Falha (ex: token sem scope tags:*) também é cacheada pra não custar uma
+// request extra por upsert; nesse caso os contatos seguem sem a tag de site.
+let siteTagIdPromise: Promise<string | null> | null = null
+
+function resolveSiteTagId(): Promise<string | null> {
+  if (!siteTagIdPromise) {
+    siteTagIdPromise = (async () => {
+      const headers = { Authorization: `Bearer ${NOTEALY_API_TOKEN}` }
+      const listRes = await fetch(`${NOTEALY_API_URL}/tags`, { headers })
+      if (!listRes.ok) throw new Error(`GET /tags respondeu ${listRes.status}`)
+      const tags = (await listRes.json()) as Array<{ id: string; name: string }>
+      const found = tags.find((t) => t.name === SITE_TAG_NAME)
+      if (found) return found.id
+
+      const createRes = await fetch(`${NOTEALY_API_URL}/tags`, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: SITE_TAG_NAME }),
+      })
+      if (createRes.status === 409) {
+        // Corrida com outra instância — a tag acabou de nascer; relê a lista.
+        const retryRes = await fetch(`${NOTEALY_API_URL}/tags`, { headers })
+        if (!retryRes.ok) throw new Error(`GET /tags respondeu ${retryRes.status}`)
+        const retryTags = (await retryRes.json()) as Array<{ id: string; name: string }>
+        return retryTags.find((t) => t.name === SITE_TAG_NAME)?.id ?? null
+      }
+      if (!createRes.ok) throw new Error(`POST /tags respondeu ${createRes.status}`)
+      const created = (await createRes.json()) as { id: string }
+      return created.id
+    })().catch((error) => {
+      console.warn(`⚠️ Notealy: tag "${SITE_TAG_NAME}" indisponível — contatos seguem sem tag de site:`, error)
+      return null
+    })
+  }
+  return siteTagIdPromise
+}
+
 /**
  * Cria ou atualiza (upsert) um contato no Notealy. O upsert casa por
  * telefone → email → externalId, então enviamos email + externalId (CPF) como
@@ -75,7 +121,9 @@ export async function upsertNotealyContact(
   const phone = normalizePhone(input.phone)
   if (phone) payload.phone = phone
   if (input.cpf) payload.externalId = input.cpf
-  if (input.tagId) payload.tagIds = [input.tagId]
+  const siteTagId = await resolveSiteTagId()
+  const tagIds = [input.tagId, siteTagId].filter((t): t is string => Boolean(t))
+  if (tagIds.length) payload.tagIds = tagIds
   if (input.city) payload.city = input.city
   if (input.customFields) payload.customFields = input.customFields
 

@@ -1,7 +1,6 @@
 // app/(default)/layout.tsx ✅ CORRETO
 import HeaderNew from '../components/molecules/Header/New'
 import Footer from '../components/molecules/Footer'
-import ChatWidget from '../components/chat/ChatWidget'
 import BottomNav from '../components/BottomNav'
 
 export default function DefaultLayout({ children }: { children: React.ReactNode }) {
@@ -12,8 +11,8 @@ export default function DefaultLayout({ children }: { children: React.ReactNode 
       <HeaderNew />
       <main className="flex flex-1 flex-col">{children}</main>
       <Footer />
-      {/* Chat de suporte (Bob) — só no grupo (default); fora de /admin e /lp */}
-      <ChatWidget />
+      {/* Chat de suporte (Bob) removido por enquanto (Rodrigo, 2026-07-27) —
+          componente segue intacto em components/chat pra religar depois. */}
       <BottomNav />
     </div>
   )

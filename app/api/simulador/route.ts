@@ -157,6 +157,12 @@ export async function POST(request: NextRequest) {
       email: cleanEmail,
       phone: cleanPhone,
       tagId: NOTEALY_TAG_SIMULADOR,
+      city: body.cidade,
+      customFields: {
+        curso: cursoLabel || undefined,
+        modalidade: typeof modalidade === 'string' ? modalidade : undefined,
+        estado: body.estado,
+      },
     })
   } catch (error) {
     console.error('⚠️ Falha ao sincronizar com Notealy (simulador):', error)

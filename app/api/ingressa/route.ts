@@ -129,6 +129,10 @@ export async function POST(request: NextRequest) {
       name: cleanName,
       phone: cleanPhone,
       tagId: NOTEALY_TAG_INGRESSA,
+      customFields: {
+        curso: cursoName,
+        marca: typeof body.partnerName === 'string' ? body.partnerName : partnerSlug,
+      },
     })
   } catch (error) {
     console.error('⚠️ Notealy (ingressa) falhou:', error)

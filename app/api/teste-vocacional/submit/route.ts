@@ -235,6 +235,10 @@ export async function POST(request: NextRequest) {
       email: email.toLowerCase().trim(),
       phone: cleanPhone,
       tagId: process.env.NOTEALY_TAG_TESTE_VOCACIONAL,
+      customFields: {
+        cursos_recomendados: courseNames,
+        perfil_vocacional: profile.hollandCode,
+      },
     })
   } catch (error) {
     console.error('⚠️ Falha ao sincronizar com Notealy:', error)

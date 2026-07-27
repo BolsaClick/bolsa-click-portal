@@ -834,6 +834,10 @@ const isFormValidForPayment =
             email: data.email,
             phone: data.phone.replace(/\D/g, ''),
             cpf: data.cpf.replace(/\D/g, ''),
+            courseName: offerDetails?.course,
+            brand: offerDetails?.brand,
+            modalidade: offerDetails?.modality,
+            city: offerDetails?.unitCity,
           }),
         }).catch((e) => console.error('Notealy confirm falhou:', e))
 
@@ -849,6 +853,10 @@ const isFormValidForPayment =
               email: data.email,
               phone: data.phone.replace(/\D/g, ''),
               cpf: data.cpf.replace(/\D/g, ''),
+              courseName: offerDetails?.course,
+              brand: offerDetails?.brand,
+              modalidade: offerDetails?.modality,
+              city: offerDetails?.unitCity,
             }),
           }).catch((e) => console.error('Notealy pendente pagamento falhou:', e))
         }

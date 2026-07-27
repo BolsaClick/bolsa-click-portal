@@ -5,6 +5,37 @@ import ResultsSkeleton from './ResultsSkeleton'
 import { buildCourseNameForAPI } from './course-name'
 import type { ResultsCurrent } from './ResultsShell'
 
+// ─── Cache em memória da busca (só servidor) ─────────────────────────────────
+// Query fria contra Tartarus+Athena chegou a 30s+ de SSR (medido 2026-07-27);
+// com cache o segundo visitante da mesma busca recebe em ~0. Em memória de
+// propósito (processo Railway é longevo): controle fino da política — só entra
+// resultado SAUDÁVEL (com ofertas e sem fonte caída), pra nunca pinar um
+// "INDISPONÍVEL" transitório nem uma lista parcial por 5 minutos.
+const SEARCH_CACHE_TTL_MS = 5 * 60_000
+const SEARCH_CACHE_MAX = 300
+const searchCache = new Map<string, { value: ShowCoursesResult; expires: number }>()
+
+async function getShowFiltersCoursesCached(
+  ...args: Parameters<typeof getShowFiltersCourses>
+): Promise<ShowCoursesResult> {
+  const key = JSON.stringify(args)
+  const hit = searchCache.get(key)
+  if (hit && hit.expires > Date.now()) return hit.value
+
+  const value = (await getShowFiltersCourses(...args)) as ShowCoursesResult
+  const healthy =
+    (value?.data?.length ?? 0) > 0 &&
+    !(value as { failedSources?: unknown[] }).failedSources?.length
+  if (healthy) {
+    if (searchCache.size >= SEARCH_CACHE_MAX) {
+      const oldest = searchCache.keys().next().value
+      if (oldest !== undefined) searchCache.delete(oldest)
+    }
+    searchCache.set(key, { value, expires: Date.now() + SEARCH_CACHE_TTL_MS })
+  }
+  return value
+}
+
 /**
  * Server Component isolado só pra busca de ofertas — envolto em `<Suspense>`
  * por `page.tsx`, assim hero/filtros renderizam na hora e só este pedaço
@@ -29,7 +60,7 @@ export default async function SearchResultsData({ current }: { current: ResultsC
   let isError = false
 
   try {
-    showCourses = (await getShowFiltersCourses(
+    showCourses = await getShowFiltersCoursesCached(
       courseNameForAPI,
       cidade || undefined,
       estado || undefined,
@@ -37,7 +68,7 @@ export default async function SearchResultsData({ current }: { current: ResultsC
       normalizedNivel,
       1,
       20,
-    )) as ShowCoursesResult
+    )
   } catch (error) {
     console.error('Erro ao buscar cursos (resultado):', error)
     isError = true
@@ -54,7 +85,7 @@ export default async function SearchResultsData({ current }: { current: ResultsC
   let fallbackCourses: ShowCoursesResult | undefined
   if (shouldFetchFallback) {
     try {
-      fallbackCourses = (await getShowFiltersCourses(
+      fallbackCourses = await getShowFiltersCoursesCached(
         courseNameForAPI,
         cidade || undefined,
         estado || undefined,
@@ -62,7 +93,7 @@ export default async function SearchResultsData({ current }: { current: ResultsC
         normalizedNivel,
         1,
         12,
-      )) as ShowCoursesResult
+      )
     } catch (error) {
       console.error('Erro ao buscar fallback de modalidade (resultado):', error)
     }

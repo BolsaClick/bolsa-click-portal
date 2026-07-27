@@ -297,7 +297,11 @@ export async function searchAthenaOffers(
     if (params.academicLevel?.trim()) query.academicLevel = params.academicLevel.trim()
 
     // TODO(contrato): confirmar o path do endpoint de busca da Athena.
-    const response = await athena.get('api/offers', { params: query })
+    // Timeout de sanidade: o client `athena` não tem timeout global (o POST de
+    // inscrição pode legitimamente demorar), mas a BUSCA não pode segurar o
+    // SSR do resultado — medido 30s+ de streaming em query fria (2026-07-27)
+    // com esta chamada pendurada segurando o Promise.allSettled da busca.
+    const response = await athena.get('api/offers', { params: query, timeout: 15_000 })
 
     const data = response.data
     const list: AthenaOffer[] = Array.isArray(data)

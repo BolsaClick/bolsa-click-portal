@@ -41,6 +41,9 @@ export async function isServerFlagEnabled(key: string, fallback = false): Promis
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ api_key: apiKey, distinct_id: 'server-global' }),
       cache: 'no-store',
+      // Um kill switch não pode segurar a página que o consulta: PostHog lento
+      // → corta em 3s e cai no fallback (que já é o modo seguro de cada flag).
+      signal: AbortSignal.timeout(3_000),
     })
     if (!res.ok) throw new Error(`flags ${res.status}`)
     const data = await res.json()

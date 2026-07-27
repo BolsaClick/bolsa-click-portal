@@ -16,6 +16,27 @@ import { isServerFlagEnabled } from '@/app/lib/analytics/server-flags'
  * contrato chegar (ver TODO no normalize).
  */
 
+/** nomeTurno cru YDUQS → turno canônico (mesmos valores dos cards Cogna). */
+const YDUQS_TURNO_ALIASES: Record<string, string> = {
+  NOITE: 'NOTURNO',
+  NOTURNO: 'NOTURNO',
+  MANHA: 'MATUTINO',
+  'MANHÃ': 'MATUTINO',
+  MATUTINO: 'MATUTINO',
+  TARDE: 'VESPERTINO',
+  VESPERTINO: 'VESPERTINO',
+  INTEGRAL: 'INTEGRAL',
+  VIRTUAL: 'VIRTUAL',
+  EAD: 'VIRTUAL',
+  'A DISTANCIA': 'VIRTUAL',
+  'A DISTÂNCIA': 'VIRTUAL',
+}
+
+function resolveShiftFromMetadata(nomeTurno: unknown): string {
+  if (typeof nomeTurno !== 'string' || !nomeTurno.trim()) return ''
+  return YDUQS_TURNO_ALIASES[nomeTurno.trim().toUpperCase()] ?? ''
+}
+
 /** Oferta crua devolvida pela busca da Athena (contrato real — /api/offers). */
 export interface AthenaOffer {
   /** uuid do Offer no catálogo da Athena (obrigatório para o checkout). */
@@ -233,7 +254,12 @@ export function normalizeAthenaOffer(raw: AthenaOffer): Course {
   // priceTo = com desconto (preço "por"); priceFrom = sem desconto ("de").
   const minPrice = num(raw.priceTo) || num(raw.priceFrom)
   const maxPrice = num(raw.priceFrom) || minPrice
-  const shift = (raw.shift || '').toString()
+  // Turno: algumas ofertas chegam com shift null porque o nomeTurno cru da
+  // YDUQS usa aliases fora do enum ("NOITE", "MANHÃ") que o sync antigo não
+  // mapeava (corrigido lá, mas o catálogo só re-mapeia no próximo sync).
+  // Fallback: resolver aqui a partir do metadata.nomeTurno — o card sempre
+  // mostra o turno pros YDUQS (pedido do negócio, 2026-07-27).
+  const shift = (raw.shift || '').toString() || resolveShiftFromMetadata(raw.metadata?.nomeTurno)
 
   return {
     id: offerId || name,

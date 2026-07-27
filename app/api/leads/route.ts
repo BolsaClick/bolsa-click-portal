@@ -24,9 +24,10 @@ async function syncLeadToNotealy(params: {
       phone: params.phone,
       cpf: params.cpf,
       tagId: process.env.NOTEALY_TAG_LEAD,
+      // "marca" é o nome canônico entre sites e estágios (não "instituicao").
       customFields: {
         curso: params.courseName,
-        instituicao: params.institutionName,
+        marca: params.institutionName,
         modalidade: params.modalidade,
       },
     })

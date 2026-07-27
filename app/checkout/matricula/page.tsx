@@ -14,7 +14,6 @@ import {
   Clock,
   Check,
   ChevronDown,
-  X,
   Mail,
   Phone,
   Calendar,
@@ -132,7 +131,9 @@ function MatriculaContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { trackEvent, identifyUser, setUserProperties } = usePostHogTracking()
-  const { user, firebaseUser, loading: authLoading, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth()
+  // Auth só pra autofill de quem JÁ está logado no site — o checkout não pede
+  // login nem cria conta (a matrícula não precisa; era atrito no funil).
+  const { user, firebaseUser, loading: authLoading } = useAuth()
 
 
   const storedCheckoutParams = typeof window !== 'undefined'
@@ -143,15 +144,6 @@ function MatriculaContent() {
   const unitId = searchParams.get('unitId') || storedCheckoutParams?.unitId
   const modality = searchParams.get('modality') || storedCheckoutParams?.modality
   const shift = searchParams.get('shift') || storedCheckoutParams?.shift || 'VIRTUAL'
-
-  // Estados para login/registro no checkout
-  const [showAuthModal, setShowAuthModal] = useState(false)
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
-  const [authEmail, setAuthEmail] = useState('')
-  const [authPassword, setAuthPassword] = useState('')
-  const [authName, setAuthName] = useState('')
-  const [authError, setAuthError] = useState<string | null>(null)
-  const [isAuthLoading, setIsAuthLoading] = useState(false)
 
   const [expandedSections, setExpandedSections] = useState({
     dadosPessoais: true,
@@ -166,9 +158,6 @@ function MatriculaContent() {
   const [cpfValidationError, setCpfValidationError] = useState<string | null>(null)
   const [isValidatingCpf, setIsValidatingCpf] = useState(false)
   const [cpfValidationOk, setCpfValidationOk] = useState(false)
-  const [cpfExistsInDb, setCpfExistsInDb] = useState<boolean | null>(null)
-  const [cpfEmailHint, setCpfEmailHint] = useState<string | null>(null)
-  const [pendingCpfForRegistration, setPendingCpfForRegistration] = useState<string | null>(null)
   const [studentCreated, setStudentCreated] = useState(false)
   const [isCreatingStudent, setIsCreatingStudent] = useState(false)
   // Pós-graduação: método de pagamento e parcela (dia de vencimento fixo 10)
@@ -249,98 +238,6 @@ const isFormValidForPayment =
   }, [user, authLoading, setValue])
 
   // Funções de autenticação no checkout
-  const handleAuthWithGoogle = async () => {
-    setIsAuthLoading(true)
-    setAuthError(null)
-    try {
-      await signInWithGoogle()
-      setShowAuthModal(false)
-      toast.success('Login realizado com sucesso!')
-    } catch (error: unknown) {
-      const err = error as { message?: string }
-      setAuthError(err.message || 'Erro ao fazer login com Google')
-      toast.error('Erro ao fazer login com Google')
-    } finally {
-      setIsAuthLoading(false)
-    }
-  }
-
-  const handleAuthWithEmail = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsAuthLoading(true)
-    setAuthError(null)
-    try {
-      if (authMode === 'login') {
-        await signInWithEmail(authEmail, authPassword)
-        toast.success('Login realizado com sucesso!')
-      } else {
-        await signUpWithEmail(authEmail, authPassword, authName)
-        toast.success('Conta criada com sucesso!')
-      }
-      setShowAuthModal(false)
-      // Não limpar pendingCpfForRegistration aqui - será usado no useEffect abaixo
-    } catch (error: unknown) {
-      const err = error as { code?: string; message?: string }
-      let message = 'Erro ao processar'
-      if (err.code === 'auth/email-already-in-use') {
-        message = 'Este email já está em uso'
-      } else if (err.code === 'auth/invalid-email') {
-        message = 'Email inválido'
-      } else if (err.code === 'auth/weak-password') {
-        message = 'Senha muito fraca (mínimo 6 caracteres)'
-      } else if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
-        message = 'Email ou senha incorretos'
-      } else {
-        message = err.message || 'Erro ao processar'
-      }
-      setAuthError(message)
-      toast.error(message)
-    } finally {
-      setIsAuthLoading(false)
-    }
-  }
-
-  // Efeito para salvar CPF após login/registro
-  useEffect(() => {
-    const saveCpfAfterAuth = async () => {
-      if (user && firebaseUser && pendingCpfForRegistration && !user.cpf) {
-        try {
-          const idToken = await firebaseUser.getIdToken()
-          const formValues = getValues()
-
-          await fetch('/api/auth/profile', {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${idToken}`,
-            },
-            body: JSON.stringify({
-              cpf: pendingCpfForRegistration,
-              name: formValues.name || user.name,
-              phone: formValues.phone?.replace(/\D/g, '') || user.phone,
-            }),
-          })
-
-          console.log('✅ CPF salvo no perfil após autenticação')
-          setPendingCpfForRegistration(null)
-          setCpfExistsInDb(null)
-
-          // Atualizar o formulário se necessário
-          if (user.email && !formValues.email) {
-            setValue('email', user.email)
-          }
-          if (user.name && !formValues.name) {
-            setValue('name', user.name)
-          }
-        } catch (error) {
-          console.error('Erro ao salvar CPF após autenticação:', error)
-        }
-      }
-    }
-
-    saveCpfAfterAuth()
-  }, [user, firebaseUser, pendingCpfForRegistration, getValues, setValue])
-
   // Função para atualizar perfil do usuário no PostgreSQL
   const updateUserProfileInDB = async (data: FormSchema) => {
     if (!firebaseUser) return
@@ -1020,6 +917,17 @@ const isFormValidForPayment =
     } catch (error: unknown) {
       console.error('Erro ao criar matrícula:', error)
       const cognaMsg = getCognaErrorMessage(error)
+      // Sinal no funil: sem isso a falha era invisível no PostHog e só
+      // aparecia como re-submits (38 submits de 8 pessoas em jul/2026).
+      trackEvent('checkout_inscription_failed', {
+        course_id: offerDetails?.courseId,
+        course_name: offerDetails?.course,
+        brand: offerDetails?.brand,
+        modality: offerDetails?.modality,
+        dmh_source: offerDetails?.dmhSource?.source,
+        error_message: cognaMsg ?? (error instanceof Error ? error.message : String(error)),
+        cogna_known_error: cognaMsg != null,
+      })
       toast.error(cognaMsg ?? 'Erro ao finalizar matrícula. Entre em contato com o suporte.')
     }
   }
@@ -1414,37 +1322,6 @@ const isFormValidForPayment =
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
           {/* Coluna Esquerda - Formulário */}
           <div className="lg:col-span-7 bg-white border border-hairline rounded-2xl overflow-hidden shadow-[0_30px_60px_-40px_rgba(11,31,60,0.18)]">
-            {/* Mini-prompt de login (compacto, não bloqueia atenção) */}
-            {!user && !authLoading && (
-              <div className="px-6 py-3 border-b border-hairline bg-paper-warm/40 flex items-center justify-end gap-3 font-mono text-[11px] tracking-[0.12em] uppercase">
-                <span className="text-ink-500 normal-case tracking-normal">Já tem conta?</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAuthMode('login')
-                    setShowAuthModal(true)
-                  }}
-                  className="font-semibold text-ink-900 hover:text-bolsa-secondary transition-colors normal-case tracking-normal"
-                >
-                  Entrar
-                </button>
-                <span className="text-ink-300">·</span>
-                <button
-                  type="button"
-                  onClick={handleAuthWithGoogle}
-                  className="font-semibold text-ink-700 hover:text-ink-900 transition-colors inline-flex items-center gap-1.5 normal-case tracking-normal"
-                >
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                  </svg>
-                  Google
-                </button>
-              </div>
-            )}
-
             {/* Banner mostrando que está logado */}
             {user && (
               <div className="bg-paper-warm border-b border-hairline px-6 py-4">
@@ -1563,28 +1440,15 @@ const isFormValidForPayment =
                                     setIsValidatingCpf(true)
                                     setCpfValidationError(null)
                                     setCpfValidationOk(false)
-                                    setCpfExistsInDb(null)
-                                    setCpfEmailHint(null)
                                     try {
-                                      // 1. Verificar se CPF já existe no nosso banco de dados
+                                      // Consulta se o CPF já existe no banco — só alimenta o
+                                      // tracking; a matrícula não exige conta.
                                       const dbCheckResponse = await fetch('/api/auth/check-cpf', {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
                                         body: JSON.stringify({ cpf: cleanCpf }),
                                       })
                                       const dbCheckResult = await dbCheckResponse.json()
-
-                                      if (dbCheckResult.exists) {
-                                        // CPF já cadastrado no nosso banco
-                                        setCpfExistsInDb(true)
-                                        setCpfEmailHint(dbCheckResult.emailHint)
-                                        // Não bloquear, apenas informar
-                                        // O usuário será obrigado a fazer login depois
-                                      } else {
-                                        setCpfExistsInDb(false)
-                                        // Salvar CPF para pre-preencher no cadastro
-                                        setPendingCpfForRegistration(cleanCpf)
-                                      }
 
                                       setCpfValidationError(null)
                                       setCpfValidationOk(true)
@@ -1698,25 +1562,6 @@ const isFormValidForPayment =
                         />
                         {errors.cpf && <p className="text-red-500 text-xs mt-1">{errors.cpf.message}</p>}
                         {cpfValidationError && <p className="text-red-500 text-xs mt-1">{cpfValidationError}</p>}
-                        {/* Mensagem quando CPF já existe no nosso banco */}
-                        {cpfExistsInDb && !user && (
-                          <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
-                            <p className="text-xs text-blue-800">
-                              Este CPF já possui uma conta.
-                              {cpfEmailHint && <span> Email: {cpfEmailHint}</span>}
-                            </p>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setAuthMode('login')
-                                setShowAuthModal(true)
-                              }}
-                              className="mt-1 text-xs text-bolsa-primary font-medium hover:underline"
-                            >
-                              Fazer login (opcional)
-                            </button>
-                          </div>
-                        )}
                       </div>
                       <div>
                         <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">RG</label>
@@ -2351,144 +2196,6 @@ const isFormValidForPayment =
         </div>
       </div>
 
-      {/* Modal de Login/Registro */}
-      {showAuthModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="text-lg font-bold text-gray-900">
-                {authMode === 'login' ? 'Entrar na sua conta' : 'Criar nova conta'}
-              </h3>
-              <button
-                onClick={() => setShowAuthModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X size={18} className="text-gray-500" />
-              </button>
-            </div>
-            <div className="p-4 space-y-4">
-              {/* Login com Google */}
-              <button
-                type="button"
-                onClick={handleAuthWithGoogle}
-                disabled={isAuthLoading}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                <span className="font-medium">Continuar com Google</span>
-              </button>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">ou</span>
-                </div>
-              </div>
-
-              {/* Info do CPF que será vinculado */}
-              {pendingCpfForRegistration && (
-                <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                  <p className="text-xs text-blue-800">
-                    <strong>CPF:</strong> {pendingCpfForRegistration.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
-                  </p>
-                  <p className="text-xs text-blue-600 mt-1">
-                    Este CPF será vinculado à sua conta após o cadastro.
-                  </p>
-                </div>
-              )}
-
-              {/* Formulário de Email */}
-              <form onSubmit={handleAuthWithEmail} className="space-y-3">
-                {authMode === 'register' && (
-                  <div>
-                    <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Nome completo</label>
-                    <input
-                      type="text"
-                      value={authName}
-                      onChange={(e) => setAuthName(e.target.value)}
-                      placeholder="Seu nome"
-                      required
-                      className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                    />
-                  </div>
-                )}
-                <div>
-                  <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Email</label>
-                  <input
-                    type="email"
-                    value={authEmail}
-                    onChange={(e) => setAuthEmail(e.target.value)}
-                    placeholder="seu@email.com"
-                    required
-                    className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Senha</label>
-                  <input
-                    type="password"
-                    value={authPassword}
-                    onChange={(e) => setAuthPassword(e.target.value)}
-                    placeholder="Sua senha"
-                    required
-                    minLength={6}
-                    className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                  />
-                </div>
-
-                {authError && (
-                  <p className="text-red-500 text-xs">{authError}</p>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={isAuthLoading}
-                  className="w-full bg-bolsa-primary text-white py-3 rounded-xl font-semibold hover:bg-bolsa-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center"
-                >
-                  {isAuthLoading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    authMode === 'login' ? 'Entrar' : 'Criar conta'
-                  )}
-                </button>
-              </form>
-
-              <p className="text-center text-sm text-gray-600">
-                {authMode === 'login' ? (
-                  <>
-                    Não tem conta?{' '}
-                    <button
-                      type="button"
-                      onClick={() => setAuthMode('register')}
-                      className="text-bolsa-primary font-medium hover:underline"
-                    >
-                      Criar conta
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    Já tem conta?{' '}
-                    <button
-                      type="button"
-                      onClick={() => setAuthMode('login')}
-                      className="text-bolsa-primary font-medium hover:underline"
-                    >
-                      Entrar
-                    </button>
-                  </>
-                )}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

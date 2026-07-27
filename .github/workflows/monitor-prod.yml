@@ -1,0 +1,43 @@
+# Monitor sintético diário dos 3 sites em PRODUÇÃO (Playwright/Chromium).
+# Falhou o workflow = funil quebrado ou seletor envelhecido — investigar no
+# mesmo dia. Traces e screenshots ficam nos artifacts da run.
+name: monitor-prod
+
+on:
+  schedule:
+    # 07:00 América/São_Paulo (10:00 UTC) — antes do pico de tráfego do dia.
+    - cron: '0 10 * * *'
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: e2e/monitor
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Instalar dependências do monitor
+        run: npm ci
+
+      - name: Instalar Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Rodar smoke contra produção
+        run: npx playwright test
+
+      - name: Publicar relatório e traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monitor-prod-report
+          path: |
+            e2e/monitor/playwright-report
+            e2e/monitor/test-results
+          retention-days: 14

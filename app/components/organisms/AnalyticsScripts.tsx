@@ -43,12 +43,29 @@ const logScriptError = (label: string) => (event: unknown) => {
 
 export function AnalyticsScripts({ gtmId, ga4Id, facebookPixelIds, tiktokPixelId }: Props) {
   const { hydrated, isCategoryEnabled, versionKey } = useConsent()
+  const hasRenderedSinceHydration = useRef(false)
+
+  /**
+   * requestIdleCallback (usado pelo strategy="lazyOnload" do next/script) fica
+   * sufocado pelo browser com a aba em segundo plano — medido ao vivo em
+   * 25/07: disparos de 5ms a 44s+ de atraso, e a decisão de consentimento
+   * feita ao vivo pelo usuário nunca carrega os vendors dentro de uma janela
+   * útil. Distinção: consentimento que já vem pronto do localStorage na 1ª
+   * renderização pós-hidratação (visitante recorrente) mantém lazyOnload —
+   * preserva o ganho de CWV do commit 6b5f92d, já que aí ainda estamos na
+   * carga inicial. Mudança de consentimento DEPOIS da 1ª renderização (decisão
+   * tomada ao vivo, já bem depois do load) usa afterInteractive, que dispara
+   * no efeito de montagem sem depender de idle callback.
+   */
+  const isLiveConsentChange = hydrated && hasRenderedSinceHydration.current
+  if (hydrated) hasRenderedSinceHydration.current = true
 
   if (!hydrated) return null
 
   const analytics = isCategoryEnabled('analytics')
   const marketing = isCategoryEnabled('marketing')
   const pixels = facebookPixelIds ?? []
+  const scriptStrategy = isLiveConsentChange ? 'afterInteractive' : 'lazyOnload'
 
   return (
     <>
@@ -58,7 +75,7 @@ export function AnalyticsScripts({ gtmId, ga4Id, facebookPixelIds, tiktokPixelId
           <Script
             id="gtm-head"
             key={`gtm-${versionKey}`}
-            strategy="lazyOnload"
+            strategy={scriptStrategy}
             onError={logScriptError('GTM')}
           >
             {`
@@ -86,14 +103,14 @@ export function AnalyticsScripts({ gtmId, ga4Id, facebookPixelIds, tiktokPixelId
           <Script
             src={`https://www.googletagmanager.com/gtag/js?id=${ga4Id}`}
             key={`ga4-loader-${versionKey}`}
-            strategy="lazyOnload"
+            strategy={scriptStrategy}
             crossOrigin="anonymous"
             onError={logScriptError('GA4')}
           />
           <Script
             id="ga4"
             key={`ga4-init-${versionKey}`}
-            strategy="lazyOnload"
+            strategy={scriptStrategy}
             onError={logScriptError('GA4 init')}
           >
             {`
@@ -112,7 +129,7 @@ export function AnalyticsScripts({ gtmId, ga4Id, facebookPixelIds, tiktokPixelId
           <Script
             id="facebook-pixel"
             key={`fbq-${versionKey}`}
-            strategy="lazyOnload"
+            strategy={scriptStrategy}
             onError={logScriptError('Meta Pixel')}
           >
             {`
@@ -155,7 +172,7 @@ export function AnalyticsScripts({ gtmId, ga4Id, facebookPixelIds, tiktokPixelId
         <Script
           id="tiktok-pixel"
           key={`ttq-${versionKey}`}
-          strategy="lazyOnload"
+          strategy={scriptStrategy}
           onError={logScriptError('TikTok Pixel')}
         >
           {`
@@ -180,7 +197,7 @@ export function AnalyticsScripts({ gtmId, ga4Id, facebookPixelIds, tiktokPixelId
           key={`utmify-${versionKey}`}
           data-utmify-prevent-xcod-sck=""
           data-utmify-prevent-subids=""
-          strategy="lazyOnload"
+          strategy={scriptStrategy}
           crossOrigin="anonymous"
           onError={logScriptError('UTMify')}
         />

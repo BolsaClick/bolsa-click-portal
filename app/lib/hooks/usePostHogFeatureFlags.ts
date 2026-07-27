@@ -84,10 +84,13 @@ export function usePixEnabledFeatureFlag() {
 /**
  * Hook específico para feature flag de visibilidade do WhatsApp.
  * Controla a exibição de todos os elementos de WhatsApp (links, botões, widget, checkbox).
- * Padrão (true): WhatsApp visível. Configure rollout % no PostHog para controlar a porcentagem de usuários.
+ * Padrão (false, 2026-07-27): WhatsApp escondido — Rodrigo removeu o CTA em
+ * todo o site (foco no cadastro dentro do checkout até a página de sucesso;
+ * o Ads mostrava 42 conversões desviadas pro WhatsApp). Fail-closed também
+ * corrige o caso de o PostHog não responder a tempo (antes caía em "true").
  */
 export function useWhatsappFeatureFlag() {
-  const { flagValue } = usePostHogFeatureFlag('whatsapp_enabled', true)
+  const { flagValue } = usePostHogFeatureFlag('whatsapp_enabled', false)
   return flagValue as boolean
 }
 
@@ -113,7 +116,7 @@ export function useFeatureFlags() {
           'marketplace': posthog.isFeatureEnabled('marketplace') ?? false,
           'pix-before-enrollment': posthog.isFeatureEnabled('pix-before-enrollment') ?? false,
           'pix_enabled': posthog.isFeatureEnabled('pix_enabled') ?? true,
-          'whatsapp_enabled': posthog.isFeatureEnabled('whatsapp_enabled') ?? true,
+          'whatsapp_enabled': posthog.isFeatureEnabled('whatsapp_enabled') ?? false,
         }
         setFeatureFlags(flags)
         setIsFeatureFlagLoading(false)

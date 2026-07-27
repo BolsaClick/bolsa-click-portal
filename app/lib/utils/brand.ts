@@ -12,6 +12,7 @@ export function normalizeBrand(brand?: string): string {
   if (n.includes('pitagoras') || n.includes('pitágoras')) return 'Pitágoras'
   if (n.includes('unime')) return 'Unime'
   if (n.includes('estacio') || n.includes('estácio')) return 'Estácio'
+  if (n.includes('ibmec')) return 'IBMEC'
   if (n.includes('wyden')) return 'Wyden'
   return brand!
     .split(' ')

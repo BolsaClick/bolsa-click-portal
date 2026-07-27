@@ -19,3 +19,30 @@ export function normalizeBrand(brand?: string): string {
     .map((w) => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w))
     .join(' ')
 }
+
+/**
+ * Label normalizado → valor aceito pelo filtro `brands` do Tartarus (enum
+ * Cogna). Null = não é marca Cogna.
+ */
+const COGNA_BRAND_PARAM: Record<string, string> = {
+  Anhanguera: 'ANHANGUERA',
+  Unopar: 'UNOPAR',
+  'Pitágoras': 'PITAGORAS',
+  Unime: 'UNIME',
+}
+export function cognaBrandParam(label: string): string | null {
+  return COGNA_BRAND_PARAM[label] ?? null
+}
+
+/**
+ * Label normalizado → termo do filtro `brand` da Athena (substring do slug da
+ * instituição, sem acento). Null = não é marca YDUQS.
+ */
+const YDUQS_BRAND_SLUG: Record<string, string> = {
+  'Estácio': 'estacio',
+  IBMEC: 'ibmec',
+  Wyden: 'wyden',
+}
+export function yduqsBrandSlug(label: string): string | null {
+  return YDUQS_BRAND_SLUG[label] ?? null
+}

@@ -210,8 +210,13 @@ export default async function CursosPage({ searchParams }: Props) {
   const estado = typeof params.estado === 'string' ? params.estado : ''
   const modalidade = typeof params.modalidade === 'string' ? params.modalidade : ''
   const nivel = typeof params.nivel === 'string' ? params.nivel : 'GRADUACAO'
+  // Filtro de marca server-side (labels normalizados, separados por vírgula).
+  // Vive na URL pra busca no servidor poder restringir as FONTES — marcas
+  // caras/pequenas (IBMEC, Wyden) nunca chegam à página 1 na ordenação por
+  // preço, então filtrar só client-side não tinha o que mostrar.
+  const marcas = typeof params.marcas === 'string' ? params.marcas : ''
 
-  const current = { curso, cursoNomeCompleto, cidade, estado, modalidade, nivel }
+  const current = { curso, cursoNomeCompleto, cidade, estado, modalidade, nivel, marcas }
   const searchKey = `${curso}|${cursoNomeCompleto}|${cidade}|${estado}|${modalidade}|${normalizeAcademicLevel(nivel)}`
 
   const courseNameClean = curso ? removeCourseSuffix(curso) : ''
@@ -259,7 +264,10 @@ export default async function CursosPage({ searchParams }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
       />
-      <ResultsFilterProvider searchKey={searchKey}>
+      <ResultsFilterProvider
+        searchKey={searchKey}
+        initialBrands={marcas ? marcas.split(',').filter(Boolean) : []}
+      >
         <ResultsShell current={current}>
           <Suspense fallback={<ResultsSkeleton />}>
             <SearchResultsData current={current} />

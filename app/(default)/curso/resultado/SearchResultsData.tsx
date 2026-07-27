@@ -42,10 +42,11 @@ async function getShowFiltersCoursesCached(
  * espera as APIs (Tartarus/Athena), que podem levar vários segundos.
  */
 export default async function SearchResultsData({ current }: { current: ResultsCurrent }) {
-  const { curso, cursoNomeCompleto, cidade, estado, modalidade, nivel } = current
+  const { curso, cursoNomeCompleto, cidade, estado, modalidade, nivel, marcas } = current
 
   const courseNameForAPI = buildCourseNameForAPI(curso, cursoNomeCompleto)
   const normalizedNivel = normalizeAcademicLevel(nivel)
+  const selectedBrands = marcas ? marcas.split(',').filter(Boolean) : undefined
 
   // Mesma condição do client de antes: busca nacional imediata com curso
   // definido, OU cidade+estado (da URL ou já resolvidos pelo GeoRedirect).
@@ -68,6 +69,7 @@ export default async function SearchResultsData({ current }: { current: ResultsC
       normalizedNivel,
       1,
       20,
+      selectedBrands,
     )
   } catch (error) {
     console.error('Erro ao buscar cursos (resultado):', error)
@@ -93,6 +95,7 @@ export default async function SearchResultsData({ current }: { current: ResultsC
         normalizedNivel,
         1,
         12,
+        selectedBrands,
       )
     } catch (error) {
       console.error('Erro ao buscar fallback de modalidade (resultado):', error)
@@ -102,7 +105,7 @@ export default async function SearchResultsData({ current }: { current: ResultsC
   return (
     <SearchResultsView
       // Remonta (reseta paginação/estado local) a cada busca nova.
-      key={`${courseNameForAPI ?? ''}|${cidade}|${estado}|${modalidade}|${normalizedNivel}`}
+      key={`${courseNameForAPI ?? ''}|${cidade}|${estado}|${modalidade}|${normalizedNivel}|${marcas ?? ''}`}
       current={current}
       initialShowCourses={showCourses}
       initialIsError={isError}

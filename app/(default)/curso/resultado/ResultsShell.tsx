@@ -41,6 +41,8 @@ export interface ResultsCurrent {
   estado: string
   modalidade: string
   nivel: string
+  /** Labels de marca selecionados (separados por vírgula) — filtro server-side. */
+  marcas?: string
 }
 
 /**
@@ -70,6 +72,10 @@ export default function ResultsShell({
       estado?: string
       modalidade?: string
       nivel?: string
+      /** Só entra na URL quando passado explicitamente — qualquer outra
+       *  mudança de busca derruba o filtro de marca (mesma regra do reset
+       *  client-side por searchKey). */
+      marcas?: string
     }) => {
       const params = new URLSearchParams()
 
@@ -109,8 +115,9 @@ export default function ResultsShell({
       if (finalEstado) params.set('estado', finalEstado)
       if (finalModalidade) params.set('modalidade', finalModalidade)
       params.set('nivel', finalNivel)
+      if (newParams.marcas) params.set('marcas', newParams.marcas)
 
-      router.push(`/curso/resultado?${params.toString()}`)
+      router.push(`/curso/resultado?${params.toString()}`, { scroll: false })
     },
     [curso, cursoNomeCompleto, cidade, estado, modalidade, nivel, router],
   )
@@ -143,6 +150,14 @@ export default function ResultsShell({
   const handleBrandToggle = useCallback(
     (brand: string) => {
       toggleBrand(brand)
+      // Leva a seleção pra URL: a busca server-side restringe as FONTES por
+      // marca (Tartarus `brands`/Athena `brand`), senão marcas caras/pequenas
+      // (IBMEC, Wyden) nunca aparecem — a ordenação por preço as deixa fora
+      // da página 1 e o filtro client-side não tem o que mostrar.
+      const next = selectedBrands.includes(brand)
+        ? selectedBrands.filter((b) => b !== brand)
+        : [...selectedBrands, brand]
+      updateURL({ marcas: next.join(',') })
       trackEvent('course_filter_brand_changed', {
         brand,
         course_name: courseNameForAPI,
@@ -150,7 +165,7 @@ export default function ResultsShell({
         state: estado,
       })
     },
-    [toggleBrand, trackEvent, courseNameForAPI, cidade, estado],
+    [toggleBrand, selectedBrands, updateURL, trackEvent, courseNameForAPI, cidade, estado],
   )
 
   const handleModalityChange = useCallback(

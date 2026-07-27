@@ -79,6 +79,8 @@ export interface SearchAthenaOffersParams {
   state?: string
   modality?: string
   academicLevel?: string
+  /** Filtro de marca (substring do slug da instituição): "estacio", "ibmec", "wyden". */
+  brand?: string
 }
 
 /** Dados do aluno para a inscrição (CreateEnrollmentDto.student). */
@@ -295,6 +297,7 @@ export async function searchAthenaOffers(
     if (params.state?.trim()) query.state = params.state.trim()
     if (params.modality?.trim()) query.modality = params.modality.trim().toUpperCase()
     if (params.academicLevel?.trim()) query.academicLevel = params.academicLevel.trim()
+    if (params.brand?.trim()) query.brand = params.brand.trim().toLowerCase()
 
     // TODO(contrato): confirmar o path do endpoint de busca da Athena.
     // Timeout de sanidade: o client `athena` não tem timeout global (o POST de

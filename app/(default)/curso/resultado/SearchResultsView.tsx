@@ -71,11 +71,12 @@ export default function SearchResultsView({
   initialIsError: boolean
   initialFallbackCourses: ShowCoursesResult | undefined
 }) {
-  const { curso, cursoNomeCompleto, cidade, estado, modalidade, nivel } = current
+  const { curso, cursoNomeCompleto, cidade, estado, modalidade, nivel, marcas } = current
+  const brandsForAPI = marcas ? marcas.split(',').filter(Boolean) : undefined
   const { trackEvent } = usePostHogTracking()
   const router = useRouter()
   const { handleSubmit, setValue } = useForm()
-  const { viewMode, priceRange, selectedBrands, setAvailableBrands } = useResultsFilter()
+  const { viewMode, priceRange, selectedBrands, setAvailableBrands, availableBrands: publishedBrands } = useResultsFilter()
 
   const [currentPage, setCurrentPage] = useState(1)
   const [showCourses, setShowCourses] = useState(initialShowCourses)
@@ -106,6 +107,7 @@ export default function SearchResultsView({
         normalizedNivel,
         1,
         20,
+        brandsForAPI,
       )) as ShowCoursesResult
       setShowCourses(data)
 
@@ -121,6 +123,7 @@ export default function SearchResultsView({
             normalizedNivel,
             1,
             12,
+            brandsForAPI,
           )) as ShowCoursesResult
           setFallbackData(fb)
         } catch {
@@ -135,7 +138,8 @@ export default function SearchResultsView({
     } finally {
       setIsFetching(false)
     }
-  }, [courseNameForAPI, cidade, estado, modalidade, normalizedNivel, hasCourseFilter, hasModalityFilter])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseNameForAPI, cidade, estado, modalidade, normalizedNivel, hasCourseFilter, hasModalityFilter, marcas])
 
   // Track de conclusão/falha da busca — dispara no mount (dado já veio do
   // servidor) e de novo a cada retry bem-sucedido/malsucedido.
@@ -213,10 +217,21 @@ export default function SearchResultsView({
   }, [deduplicatedCourses])
 
   // Publica as marcas disponíveis pro FiltersPanel (que mora no shell, fora
-  // deste Suspense boundary) via contexto.
+  // deste Suspense boundary) via contexto. Com filtro de marca server-side
+  // ativo os dados só contêm as marcas filtradas, então a lista publicada
+  // preserva: marcas dos dados ∪ selecionadas ∪ lista anterior (veio da busca
+  // sem filtro) — senão as demais opções somem do painel e não dá pra trocar
+  // de marca. Guarda de igualdade evita ciclo de re-render via contexto.
   useEffect(() => {
-    setAvailableBrands(availableBrands)
-  }, [availableBrands, setAvailableBrands])
+    const union = new Set([
+      ...availableBrands,
+      ...selectedBrands,
+      ...(brandsForAPI?.length ? publishedBrands : []),
+    ])
+    const next = Array.from(union).sort((a, b) => a.localeCompare(b, 'pt-BR'))
+    if (next.join('|') !== publishedBrands.join('|')) setAvailableBrands(next)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableBrands, selectedBrands.join(','), publishedBrands, setAvailableBrands])
 
   const filteredByBrand = useMemo(() => {
     if (selectedBrands.length === 0) return deduplicatedCourses
@@ -224,9 +239,13 @@ export default function SearchResultsView({
   }, [deduplicatedCourses, selectedBrands])
 
   const filteredByPrice = useMemo(() => {
+    // Slider no teto (R$2000, o max do PriceRangeSlider) = "sem limite".
+    // Sem isso, ofertas premium (IBMEC R$3-5k, medicina/odonto) sumiam da
+    // lista SEM o usuário ter mexido no filtro — o default já cortava.
+    const upper = priceRange[1] >= 2000 ? Number.POSITIVE_INFINITY : priceRange[1]
     return filteredByBrand.filter((course: Course) => {
       const price = course.minPrice || 0
-      return price >= priceRange[0] && price <= priceRange[1]
+      return price >= priceRange[0] && price <= upper
     })
   }, [filteredByBrand, priceRange])
 

@@ -174,6 +174,21 @@ export default function EstacioCheckoutClient() {
     return offer.price
   }, [form.codFormaIngresso, offer])
 
+  // Forma 2 (Transferência Externa) e 3 (MSV Externa) só aparecem quando essa
+  // oferta específica tem preço próprio pra elas — sem isso, oferecer a opção
+  // sugeriria uma diferenciação de preço que não existe pra esse curso (Rodrigo,
+  // 2026-07-27). 24/7/4/5/6 ficam sempre visíveis: por design sempre usam o
+  // preço padrão da oferta, não dependem de dado por forma.
+  const visibleFormaIngressoOptions = useMemo(
+    () =>
+      FORMA_INGRESSO_OPTIONS.filter((option) => {
+        if (option.value === 2) return offer.priceForma2 !== undefined
+        if (option.value === 3) return offer.priceForma3 !== undefined
+        return true
+      }),
+    [offer.priceForma2, offer.priceForma3],
+  )
+
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [cepLoading, setCepLoading] = useState(false)
@@ -639,7 +654,7 @@ export default function EstacioCheckoutClient() {
                             className={`${inputClass} flex items-center justify-between gap-2 text-left`}
                           >
                             <span className="truncate">
-                              {FORMA_INGRESSO_OPTIONS.find((o) => o.value === form.codFormaIngresso)?.label}
+                              {visibleFormaIngressoOptions.find((o) => o.value === form.codFormaIngresso)?.label}
                             </span>
                             <ChevronDown size={14} className="text-ink-400 flex-shrink-0" />
                           </ListboxButton>
@@ -648,7 +663,7 @@ export default function EstacioCheckoutClient() {
                             transition
                             className="w-[var(--button-width)] z-20 mt-1 rounded-xl border border-hairline bg-white py-1 shadow-lg focus:outline-none transition duration-100 ease-in data-[closed]:opacity-0"
                           >
-                            {FORMA_INGRESSO_OPTIONS.map((option) => (
+                            {visibleFormaIngressoOptions.map((option) => (
                               <ListboxOption
                                 key={option.value}
                                 value={option.value}

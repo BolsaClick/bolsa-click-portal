@@ -385,6 +385,10 @@ export default function EstacioCheckoutClient() {
           email: form.email.trim(),
           phone: form.mobile.replace(/\D/g, ''),
           cpf: form.cpf.replace(/\D/g, ''),
+          courseName: offer.courseName,
+          brand: offer.brand,
+          modalidade: offer.modality,
+          city: offer.city,
         }),
       }).catch((confirmError) => console.error('Notealy confirm falhou:', confirmError))
 

@@ -123,6 +123,7 @@ export async function confirmPaidMatricula(
   const phoneDigits = tx.phone.replace(/\D/g, '')
 
   // 2) CRM Notealy — move o contato para o estágio "matriculado".
+  const offerDetails = blob?.marketplace?.offerDetails
   try {
     await upsertNotealyContact({
       name: tx.name,
@@ -130,6 +131,12 @@ export async function confirmPaidMatricula(
       phone: phoneDigits,
       cpf: cpfDigits,
       tagId: process.env.NOTEALY_TAG_MATRICULADO || process.env.NOTEALY_TAG_INSCRITO,
+      city: offerDetails?.unitCity,
+      customFields: {
+        curso: offerDetails?.course || blob?.utmify?.productName,
+        marca: offerDetails?.brand,
+        modalidade: offerDetails?.modality,
+      },
     })
   } catch (e) {
     console.error('❌ confirm: Notealy falhou', externalTransactionId, e)

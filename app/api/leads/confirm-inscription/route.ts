@@ -7,7 +7,7 @@ import { upsertNotealyContact } from '@/app/lib/api/notealy'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, phone, cpf } = body
+    const { name, email, phone, cpf, courseName, brand, modalidade, city } = body
 
     if (!name) {
       return NextResponse.json({ error: 'name is required' }, { status: 400 })
@@ -20,6 +20,12 @@ export async function POST(request: NextRequest) {
         phone: phone ? String(phone).replace(/\D/g, '') : undefined,
         cpf: cpf ? String(cpf).replace(/\D/g, '') : undefined,
         tagId: process.env.NOTEALY_TAG_INSCRITO,
+        city,
+        customFields: {
+          curso: courseName,
+          marca: brand,
+          modalidade,
+        },
       })
     } catch (notealyError) {
       console.error('⚠️ Notealy (estágio 2) falhou:', notealyError)

@@ -10,6 +10,9 @@ interface UpsertContactInput {
   phone?: string
   cpf?: string
   tagId?: string
+  city?: string
+  /** Metadado livre — curso, oferta, marca, modalidade, fonte etc. */
+  customFields?: Record<string, unknown>
 }
 
 interface SendEmailInput {
@@ -73,6 +76,8 @@ export async function upsertNotealyContact(
   if (phone) payload.phone = phone
   if (input.cpf) payload.externalId = input.cpf
   if (input.tagId) payload.tagIds = [input.tagId]
+  if (input.city) payload.city = input.city
+  if (input.customFields) payload.customFields = input.customFields
 
   const data = await notealyRequest<Record<string, unknown>>('/people', payload)
 

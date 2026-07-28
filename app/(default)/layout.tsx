@@ -2,6 +2,7 @@
 import HeaderNew from '../components/molecules/Header/New'
 import Footer from '../components/molecules/Footer'
 import BottomNav from '../components/BottomNav'
+import ResumeOfferBar from '../components/ResumeOfferBar'
 
 export default function DefaultLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -14,6 +15,9 @@ export default function DefaultLayout({ children }: { children: React.ReactNode 
       {/* Chat de suporte (Bob) removido por enquanto (Rodrigo, 2026-07-27) —
           componente segue intacto em components/chat pra religar depois. */}
       <BottomNav />
+      {/* "Mochila" de oferta — lembra a oferta em progresso; nunca renderiza
+          em /checkout/* (ver checagem de rota dentro do componente). */}
+      <ResumeOfferBar />
     </div>
   )
 }

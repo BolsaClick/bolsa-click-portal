@@ -9,17 +9,21 @@ import { trackTikTok } from "@/app/lib/analytics/ttq"
 import { Building2, Clock, Heart, MapPin, Star, Users, Lock } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
+import Link from "next/link"
 import { useState } from "react"
 import { toast } from "sonner"
 
 interface CourseCardProps {
   course: Course
   courseName: string
+  /** Slug de /cursos/[slug] quando o curso tem página de detalhe enriquecida (FeaturedCourse). */
+  detailSlug?: string
 }
 
 const CourseCardRedesign: React.FC<CourseCardProps> = ({
   course,
   courseName,
+  detailSlug,
 }) => {
   const { isFavorite, toggleFavorite } = useFavorites()
   const { trackEvent } = usePostHogTracking()
@@ -268,6 +272,28 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
       <h3 className="px-5 pb-3 text-[15px] font-bold text-ink-900 leading-snug line-clamp-2">
         {courseName || course.name}
       </h3>
+
+      {/* Link secundário pra quem ainda está em dúvida — não compete com o
+          CTA principal, só dá saída pra grade/carreira/FAQ do curso. Só
+          aparece quando há página enriquecida (FeaturedCourse). */}
+      {detailSlug && (
+        <Link
+          href={`/cursos/${detailSlug}`}
+          prefetch={false}
+          onClick={(e) => {
+            e.stopPropagation()
+            trackEvent('course_details_clicked', {
+              course_name: course.name,
+              brand: course.brand,
+              detail_slug: detailSlug,
+              design_version: 'redesign_v2',
+            })
+          }}
+          className="px-5 pb-3 block w-fit text-[12px] text-bolsa-primary hover:underline"
+        >
+          Ver detalhes do curso
+        </Link>
+      )}
 
       {/* SOCIAL PROOF: MEC + alunos */}
       <div className="px-5 pb-4 flex items-center gap-4">

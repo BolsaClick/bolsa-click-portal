@@ -1,4 +1,5 @@
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
+import { getFeaturedCourseSlugMap } from '@/app/lib/api/featured-course-slugs'
 import { normalizeAcademicLevel } from '@/app/lib/academic-level'
 import SearchResultsView, { type ShowCoursesResult } from './SearchResultsView'
 import ResultsSkeleton from './ResultsSkeleton'
@@ -60,6 +61,16 @@ export default async function SearchResultsData({ current }: { current: ResultsC
   let showCourses: ShowCoursesResult | undefined
   let isError = false
 
+  // Mapa nome→slug dos cursos enriquecidos (/cursos/[slug]), pro link "Ver
+  // detalhes do curso" no card. Busca em paralelo com a oferta — cache em
+  // memória (TTL 10min) deixa isso praticamente grátis na maioria das
+  // requests. Falha aqui não pode derrubar a página de resultado: cai pra {}
+  // e os cards simplesmente não mostram o link secundário.
+  const courseSlugMapPromise = getFeaturedCourseSlugMap().catch((error) => {
+    console.error('Erro ao buscar mapa de slugs de cursos (resultado):', error)
+    return {} as Record<string, string>
+  })
+
   try {
     showCourses = await getShowFiltersCoursesCached(
       courseNameForAPI,
@@ -75,6 +86,8 @@ export default async function SearchResultsData({ current }: { current: ResultsC
     console.error('Erro ao buscar cursos (resultado):', error)
     isError = true
   }
+
+  const courseSlugMap = await courseSlugMapPromise
 
   // Fallback automático: quando a busca exata vier vazia mas o usuário pediu
   // curso + cidade + modalidade, refazemos SEM a modalidade — mostra o mesmo
@@ -110,6 +123,7 @@ export default async function SearchResultsData({ current }: { current: ResultsC
       initialShowCourses={showCourses}
       initialIsError={isError}
       initialFallbackCourses={fallbackCourses}
+      courseSlugMap={courseSlugMap}
     />
   )
 }

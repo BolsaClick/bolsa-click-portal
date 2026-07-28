@@ -14,6 +14,7 @@ import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { normalizeAcademicLevel } from '@/app/lib/academic-level'
 import { titleCasePtBr } from '@/app/lib/utils/title-case'
 import { normalizeBrand } from '@/app/lib/utils/brand'
+import { normalizeCourseNameKey } from '@/app/lib/utils/course-name-key'
 import CourseCardNew from '@/app/components/CourseCardNew'
 import { Course } from '@/app/interface/course'
 import { useResultsFilter } from './ResultsFilterContext'
@@ -65,11 +66,13 @@ export default function SearchResultsView({
   initialShowCourses,
   initialIsError,
   initialFallbackCourses,
+  courseSlugMap,
 }: {
   current: ResultsCurrent
   initialShowCourses: ShowCoursesResult | undefined
   initialIsError: boolean
   initialFallbackCourses: ShowCoursesResult | undefined
+  courseSlugMap?: Record<string, string>
 }) {
   const { curso, cursoNomeCompleto, cidade, estado, modalidade, nivel, marcas } = current
   const brandsForAPI = marcas ? marcas.split(',').filter(Boolean) : undefined
@@ -261,6 +264,16 @@ export default function SearchResultsView({
 
   const fallbackCourses = useMemo(() => dedupeFallback(fallbackData, modalidade || ''), [fallbackData, modalidade])
 
+  // Link secundário "Ver detalhes do curso" (/cursos/[slug]) — só aparece
+  // quando o nome do curso da oferta casa com um FeaturedCourse enriquecido.
+  const getDetailSlug = useCallback(
+    (course: Course): string | undefined => {
+      if (!courseSlugMap || !course.name) return undefined
+      return courseSlugMap[normalizeCourseNameKey(course.name)]
+    },
+    [courseSlugMap],
+  )
+
   const onSubmit = (data: any) => {
     const params = new URLSearchParams()
     if (data.businessKey) params.set('groupId', data.businessKey)
@@ -448,6 +461,7 @@ export default function SearchResultsView({
                       setFormData={(name: string, value: unknown) => setValue(name, value)}
                       viewMode={viewMode}
                       triggerSubmit={handleSubmit(onSubmit)}
+                      detailSlug={getDetailSlug(course)}
                     />
                   </li>
                 ))}
@@ -498,6 +512,7 @@ export default function SearchResultsView({
                 setFormData={(name: string, value: unknown) => setValue(name, value)}
                 viewMode={viewMode}
                 triggerSubmit={handleSubmit(onSubmit)}
+                detailSlug={getDetailSlug(course)}
               />
             </li>
           ))}

@@ -9,6 +9,7 @@ import { trackTikTok } from "@/app/lib/analytics/ttq"
 import { getAcademicLevelLabel } from "@/app/lib/academic-level"
 import { Building2, Clock, Heart, MapPin } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 import { useState, useMemo } from "react"
 import { usePathname } from "next/navigation"
 import { toast } from "sonner"
@@ -22,6 +23,8 @@ interface CourseCardProps {
   triggerSubmit?: () => void
   viewMode: 'grid' | 'list';
   isPos?: boolean
+  /** Slug de /cursos/[slug] quando o curso tem página de detalhe enriquecida (FeaturedCourse). */
+  detailSlug?: string
 }
 
 type CourseInfo = {
@@ -34,7 +37,8 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
   course,
   viewMode,
   courseName,
-  isPos
+  isPos,
+  detailSlug
 }) => {
   const { featureFlags, isFeatureFlagLoading } = useFeatureFlags()
   const useRedesign = useMemo(
@@ -44,11 +48,11 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
 
   // Se feature flag está ativa, usar novo design
   if (useRedesign) {
-    return <CourseCardRedesign course={course} courseName={courseName} />
+    return <CourseCardRedesign course={course} courseName={courseName} detailSlug={detailSlug} />
   }
 
   // Caso contrário, manter design original
-  return <CourseCardOriginal course={course} viewMode={viewMode} courseName={courseName} isPos={isPos} />
+  return <CourseCardOriginal course={course} viewMode={viewMode} courseName={courseName} isPos={isPos} detailSlug={detailSlug} />
 }
 
 // Renomear componente original
@@ -56,7 +60,8 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
   course,
   viewMode,
   courseName,
-  isPos
+  isPos,
+  detailSlug
 }) => {
   const { isFavorite, toggleFavorite } = useFavorites()
   const pathname = usePathname()
@@ -420,6 +425,27 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
           >
             {courseParsed.name || course.name}
           </h3>
+
+          {/* Link secundário pra quem ainda está em dúvida — não compete com
+              o CTA principal (Inscreva-se), só dá saída pra grade/carreira/FAQ
+              do curso. Só aparece quando há página enriquecida (FeaturedCourse). */}
+          {detailSlug && (
+            <Link
+              href={`/cursos/${detailSlug}`}
+              prefetch={false}
+              onClick={(e) => {
+                e.stopPropagation()
+                trackEvent('course_details_clicked', {
+                  course_name: course.name,
+                  brand: course.brand,
+                  detail_slug: detailSlug,
+                })
+              }}
+              className="mt-0.5 inline-block w-fit text-[12px] text-bolsa-primary hover:underline"
+            >
+              Ver detalhes do curso
+            </Link>
+          )}
 
           {/* Grau • nível */}
           <div className="mt-1 flex min-h-[1.25rem] flex-wrap items-center gap-x-1.5 text-sm text-neutral-500">

@@ -34,7 +34,7 @@ import { formatCurrency } from '@/utils/fomartCurrency'
 import { toast } from 'sonner'
 // [CUPOM] import { validateCoupon } from '@/app/lib/api/get-coupon'
 import { createLead } from '@/app/lib/api/create-lead'
-import { createInscription, buildInscriptionPayload, getCognaErrorMessage } from '@/app/lib/api/create-inscription'
+import { createInscription, buildInscriptionPayload, getCognaErrorMessage, getCognaErrorDetails } from '@/app/lib/api/create-inscription'
 import { createMarketplaceInscription } from '@/app/lib/api/create-inscription-marketplace'
 import { validateVoucher, type ValidateVoucherResponse, type VoucherInstallment } from '@/app/lib/api/validate-voucher'
 import type { PosPaymentMethod, PosInstallment } from '@/app/lib/api/get-offer-details'
@@ -919,6 +919,7 @@ const isFormValidForPayment =
       const cognaMsg = getCognaErrorMessage(error)
       // Sinal no funil: sem isso a falha era invisível no PostHog e só
       // aparecia como re-submits (38 submits de 8 pessoas em jul/2026).
+      const errorDetails = getCognaErrorDetails(error)
       trackEvent('checkout_inscription_failed', {
         course_id: offerDetails?.courseId,
         course_name: offerDetails?.course,
@@ -927,6 +928,10 @@ const isFormValidForPayment =
         dmh_source: offerDetails?.dmhSource?.source,
         error_message: cognaMsg ?? (error instanceof Error ? error.message : String(error)),
         cogna_known_error: cognaMsg != null,
+        // Mensagens da Cogna são genéricas ("Não foi possível criar a
+        // inscrição") — a causa real vem no corpo/status da resposta.
+        error_status: errorDetails.status,
+        error_body: errorDetails.body,
       })
       toast.error(cognaMsg ?? 'Erro ao finalizar matrícula. Entre em contato com o suporte.')
     }

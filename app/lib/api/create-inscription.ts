@@ -63,6 +63,22 @@ export function getCognaErrorMessage(error: unknown): string | undefined {
 }
 
 /**
+ * Detalhe bruto do erro pra telemetria (checkout_inscription_failed): mensagens
+ * como "Não foi possível criar a inscrição" são genéricas — a causa real
+ * costuma estar no corpo/status da resposta. Trunca pra não estourar o evento.
+ */
+export function getCognaErrorDetails(error: unknown): { status?: number; body?: string } {
+  if (!isAxiosError(error)) return {}
+  let body: string | undefined
+  try {
+    body = JSON.stringify(error.response?.data)?.slice(0, 800)
+  } catch {
+    body = undefined
+  }
+  return { status: error.response?.status, body }
+}
+
+/**
  * Cria uma inscrição no Tartarus
  * @param inscriptionData - Dados da inscrição
  * @param promoterId - ID do promotor

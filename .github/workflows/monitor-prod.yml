@@ -41,3 +41,15 @@ jobs:
             e2e/monitor/playwright-report
             e2e/monitor/test-results
           retention-days: 14
+
+  # Preço do card vs preço do checkout (Cogna) — divergência = campo atolado.
+  price-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verificar preços card vs checkout
+        run: node e2e/monitor/price-check.mjs

@@ -161,11 +161,6 @@ function MatriculaContent() {
   const [cpfValidationOk, setCpfValidationOk] = useState(false)
   const [studentCreated, setStudentCreated] = useState(false)
   const [isCreatingStudent, setIsCreatingStudent] = useState(false)
-  // Desacoplado de studentCreated: /api/leads exige phone (diferente de
-  // /api/students, que trata phone como opcional). O estudante pode ser
-  // cadastrado antes do telefone existir; o lead (estágio 1 do CRM) só
-  // depois, quando o telefone estiver preenchido.
-  const [leadCreated, setLeadCreated] = useState(false)
   // Pós-graduação: método de pagamento e parcela (dia de vencimento fixo 10)
   const [posPaymentMethodType, setPosPaymentMethodType] = useState<string>('')
   const [posInstallmentId, setPosInstallmentId] = useState<string>('')
@@ -386,22 +381,20 @@ const isFormValidForPayment =
 
   // Função para tentar cadastrar o estudante quando necessário
   const tryCreateStudent = () => {
-    if ((studentCreated && leadCreated) || isCreatingStudent) {
+    if (studentCreated || isCreatingStudent) {
       return
     }
 
     const formValues = getValues()
 
-    // Verificar se os dados necessários estão preenchidos (phone é opcional
-    // pro /api/students, mas obrigatório pro /api/leads — ver abaixo)
+    // Verificar se os dados necessários estão preenchidos (phone é opcional)
     if (formValues.name && formValues.cpf && formValues.email) {
       handleCreateStudent()
     }
   }
 
   const handleCreateStudent = async () => {
-    // Verificar se os dados necessários estão preenchidos (phone é opcional
-    // só pro /api/students)
+    // Verificar se os dados necessários estão preenchidos (phone é opcional)
     const formValues = getValues()
 
     if (!formValues.name || !formValues.cpf || !formValues.email) {
@@ -409,88 +402,77 @@ const isFormValidForPayment =
       return
     }
 
-    const cleanCpf = formValues.cpf.replace(/\D/g, '')
-    const cleanPhone = formValues.phone ? formValues.phone.replace(/\D/g, '') : ''
-
-    // Já cadastrado como estudante e, se havia telefone disponível, também
-    // como lead — nada mais a fazer.
-    if (studentCreated && (leadCreated || !cleanPhone)) {
+    // Verificar se já foi cadastrado
+    if (studentCreated) {
       return
     }
 
     setIsCreatingStudent(true)
 
     try {
-      if (!studentCreated) {
-        const studentData: Record<string, unknown> = {
-          name: formValues.name,
-          cpf: cleanCpf,
-          email: formValues.email,
-          courseNames: [offerDetails?.course || ''],
-          courseId: offerDetails?.courseId,
-          courseName: offerDetails?.course,
-          institutionName: offerDetails?.brand,
-          modalidade: offerDetails?.modality,
-        }
-        // Só inclui phone se existir
-        if (cleanPhone) {
-          studentData.phone = cleanPhone
-        }
+      const cleanCpf = formValues.cpf.replace(/\D/g, '')
+      const cleanPhone = formValues.phone ? formValues.phone.replace(/\D/g, '') : ''
 
-        // Cadastrar no /api/students (salva local + envia para Elysium)
-        const studentResponse = await fetch('/api/students', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(studentData),
-        })
-
-        if (studentResponse.ok) {
-          const data = await studentResponse.json()
-          console.log('✅ Estudante cadastrado com sucesso:', data)
-          if (data.elysiumId) {
-            console.log('✅ Cadastrado também no Elysium:', data.elysiumId)
-          }
-        }
-
-        setStudentCreated(true)
+      const studentData: Record<string, unknown> = {
+        name: formValues.name,
+        cpf: cleanCpf,
+        email: formValues.email,
+        courseNames: [offerDetails?.course || ''],
+        courseId: offerDetails?.courseId,
+        courseName: offerDetails?.course,
+        institutionName: offerDetails?.brand,
+        modalidade: offerDetails?.modality,
+      }
+      // Só inclui phone se existir
+      if (cleanPhone) {
+        studentData.phone = cleanPhone
       }
 
-      // Estágio 1 do CRM (/api/leads) exige name+cpf+email+phone — diferente
-      // de /api/students, que aceita phone vazio. Só disparamos quando o
-      // telefone já estiver preenchido, senão o endpoint responde 400. Isso
-      // fica pendente até o usuário preencher o telefone; tryCreateStudent
-      // é re-chamado nos handlers de foco/blur dos campos de contato.
-      if (cleanPhone && !leadCreated) {
-        await createLead({
-          name: formValues.name,
-          cpf: cleanCpf,
-          email: formValues.email,
-          phone: cleanPhone,
-          courseNames: [offerDetails?.course || ''],
-          courseId: offerDetails?.courseId,
-          courseName: offerDetails?.course,
-          institutionName: offerDetails?.brand,
-          modalidade: offerDetails?.modality,
-        })
+      // Cadastrar no /api/students (salva local + envia para Elysium)
+      const studentResponse = await fetch('/api/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(studentData),
+      })
 
-        setLeadCreated(true)
-        console.log('✅ Lead cadastrado com sucesso')
-
-        // TikTok Pixel + Events API - SubmitForm (lead capture)
-        void trackTikTokDual(
-          'SubmitForm',
-          {
-            content_id: offerDetails?.courseId,
-            content_name: offerDetails?.course,
-            content_type: 'product',
-          },
-          {
-            email: formValues.email,
-            phone: cleanPhone,
-            externalId: cleanCpf,
-          },
-        )
+      if (studentResponse.ok) {
+        const data = await studentResponse.json()
+        console.log('✅ Estudante cadastrado com sucesso:', data)
+        if (data.elysiumId) {
+          console.log('✅ Cadastrado também no Elysium:', data.elysiumId)
+        }
       }
+
+      // Também cadastrar como lead (mantém compatibilidade)
+      await createLead({
+        name: formValues.name,
+        cpf: cleanCpf,
+        email: formValues.email,
+        phone: cleanPhone || '',
+        courseNames: [offerDetails?.course || ''],
+        courseId: offerDetails?.courseId,
+        courseName: offerDetails?.course,
+        institutionName: offerDetails?.brand,
+        modalidade: offerDetails?.modality,
+      })
+
+      // TikTok Pixel + Events API - SubmitForm (lead capture)
+      void trackTikTokDual(
+        'SubmitForm',
+        {
+          content_id: offerDetails?.courseId,
+          content_name: offerDetails?.course,
+          content_type: 'product',
+        },
+        {
+          email: formValues.email,
+          phone: cleanPhone || undefined,
+          externalId: cleanCpf,
+        },
+      )
+
+      setStudentCreated(true)
+      console.log('✅ Lead cadastrado com sucesso')
     } catch (error: unknown) {
       console.error('Erro ao cadastrar estudante:', error)
       // Não mostrar erro para o usuário, apenas logar

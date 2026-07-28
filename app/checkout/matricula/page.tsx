@@ -13,7 +13,6 @@ import {
   BookOpen,
   Clock,
   Check,
-  ChevronDown,
   Mail,
   Phone,
   Calendar,
@@ -146,11 +145,13 @@ function MatriculaContent() {
   const modality = searchParams.get('modality') || storedCheckoutParams?.modality
   const shift = searchParams.get('shift') || storedCheckoutParams?.shift || 'VIRTUAL'
 
-  const [expandedSections, setExpandedSections] = useState({
-    dadosPessoais: true,
-    contato: true,
-    pagamento: true,
-  })
+  // Wizard de 2 etapas: 1 = "Seus dados" (nome/email/telefone/CPF — onde o
+  // lead é capturado), 2 = "Finalizar inscrição" (endereço, RG, nascimento,
+  // gênero, ingresso/parcelas e o submit final). Mesmo <form> RHF o tempo
+  // todo — as etapas só mostram/escondem seções via conditional render;
+  // como shouldUnregister é false (default), os valores dos campos da etapa
+  // 1 continuam no state do RHF mesmo com a etapa 1 desmontada.
+  const [step, setStep] = useState<1 | 2>(1)
 
   // [CUPOM] Comentado para possível reativação futura
   // const [couponCode, setCouponCode] = useState('')
@@ -215,6 +216,16 @@ const isFormValidForPayment =
   !cpfValidationError &&
   Object.keys(errors).length === 0
 
+  // Gate do botão "Continuar" da etapa 1 — os mesmos 4 campos que capturam
+  // o lead (nome, email, telefone, CPF). Não depende de `errors` do RHF
+  // (mode de validação aqui é onSubmit, então `errors` só populam depois do
+  // primeiro submit) — mesmo raciocínio de `isFormValidForPayment` acima,
+  // com checagem de formato própria pra email/telefone.
+  const isStep1Valid =
+    !!watchedValues.name && watchedValues.name.trim().length >= 3 &&
+    !!watchedValues.email && /\S+@\S+\.\S+/.test(watchedValues.email) &&
+    !!watchedValues.phone && watchedValues.phone.replace(/\D/g, '').length === 11 &&
+    cpfValidationOk && !cpfValidationError
 
   // Pré-preencher formulário quando usuário estiver logado
   useEffect(() => {
@@ -371,10 +382,6 @@ const isFormValidForPayment =
       localStorage.setItem('selectedCourse', JSON.stringify(courseToSave))
     }
   }, [offerDetails, shift, modality])
-
-  const toggleSection = (section: keyof typeof expandedSections) => {
-    setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }))
-  }
 
   // Função para tentar cadastrar o estudante quando necessário
   const tryCreateStudent = () => {
@@ -1063,6 +1070,17 @@ const isFormValidForPayment =
 
   const yearOptions = Array.from({ length: 25 }, (_, i) => new Date().getFullYear() - i)
 
+  // Avança pra etapa 2 do wizard. Não submete nada — só troca a seção
+  // visível do form (nenhum dado é perdido, RHF mantém o state).
+  const handleContinueToStep2 = () => {
+    if (!isStep1Valid) return
+    setStep(2)
+    trackEvent('checkout_step2_reached', {
+      course_id: offerDetails?.courseId,
+      course_name: offerDetails?.course,
+    })
+  }
+
   if (isLoading) {
     // Optimistic preview: pull course name and price from the previously
     // viewed course in localStorage so the user sees the offer immediately
@@ -1371,15 +1389,28 @@ const isFormValidForPayment =
             )}
 
             <form onSubmit={handleSubmit(onSubmit)}>
-              {/* Dados do Aluno - Seção Expansível */}
-              <div className="border-b border-hairline">
-                <button
-                  type="button"
-                  onClick={() => toggleSection('dadosPessoais')}
-                  className="w-full px-6 py-5 text-left flex items-center justify-between hover:bg-paper-warm/40 transition-colors"
-                  aria-expanded={expandedSections.dadosPessoais}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
+              {/* Barra de progresso do wizard — "Etapa 1 de 2" / "2 de 2" */}
+              <div className="px-6 pt-5 pb-4 border-b border-hairline">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500">
+                    Etapa {step} de 2
+                  </span>
+                  <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-900 font-semibold">
+                    {step === 1 ? 'Seus dados' : 'Finalizar inscrição'}
+                  </span>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-paper-warm overflow-hidden">
+                  <div
+                    className="h-full bg-bolsa-secondary rounded-full transition-all duration-300"
+                    style={{ width: step === 1 ? '50%' : '100%' }}
+                  />
+                </div>
+              </div>
+
+              {/* ETAPA 1 — Seus dados (nome, email, telefone, CPF) */}
+              {step === 1 && (
+                <div className="px-6 pb-6 pt-5 space-y-4">
+                  <div className="flex items-center gap-3 min-w-0 mb-1">
                     <span className="flex h-8 w-8 items-center justify-center rounded-full bg-paper-warm text-ink-900 flex-shrink-0">
                       <User size={15} />
                     </span>
@@ -1388,330 +1419,344 @@ const isFormValidForPayment =
                         01 · Estudante
                       </span>
                       <h2 className="font-display text-[18px] text-ink-900 leading-tight">
-                        Dados do aluno
+                        Seus dados
                       </h2>
                     </div>
                   </div>
-                  <span
-                    aria-hidden="true"
-                    className={`flex-shrink-0 w-7 h-7 rounded-full border border-hairline flex items-center justify-center text-ink-500 transition-all ${
-                      expandedSections.dadosPessoais ? 'rotate-180 border-ink-900 text-ink-900' : ''
-                    }`}
-                  >
-                    <ChevronDown size={14} />
-                  </span>
-                </button>
-                {expandedSections.dadosPessoais && (
-                  <div className="px-6 pb-6 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
-                          <Mail size={14} className="inline mr-1" /> E-mail
-                        </label>
-                        <input
-                          type="email"
-                          {...register('email')}
-                          placeholder="seuemail@exemplo.com"
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        />
-                        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
-                      </div>
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Nome Completo</label>
-                        <input
-                          type="text"
-                          {...register('name')}
-                          placeholder="Ex: Rodrigo Silva"
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        />
-                        {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
-                      </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
+                        <Mail size={14} className="inline mr-1" /> E-mail
+                      </label>
+                      <input
+                        type="email"
+                        {...register('email')}
+                        placeholder="seuemail@exemplo.com"
+                        className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
+                      />
+                      {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">CPF</label>
-                        <Controller
-                          control={control}
-                          name="cpf"
-                          render={({ field }) => (
-                            <div>
-                              <div className="relative">
-                              <input
-                                value={field.value}
-                                onChange={(e) => {
-                                  const masked = e.target.value
-                                    .replace(/\D/g, '')
-                                    .replace(/(\d{3})(\d)/, '$1.$2')
-                                    .replace(/(\d{3})(\d)/, '$1.$2')
-                                    .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
-                                  field.onChange(masked)
-                                  if (cpfValidationOk) setCpfValidationOk(false)
-                                  if (cpfValidationError) setCpfValidationError(null)
-                                }}
-                                onBlur={async (e) => {
-                                  field.onBlur()
-                                  const cleanCpf = e.target.value.replace(/\D/g, '')
-                                  if (cleanCpf.length === 11 && validarCPF(cleanCpf)) {
-                                    setIsValidatingCpf(true)
-                                    setCpfValidationError(null)
-                                    setCpfValidationOk(false)
-                                    try {
-                                      // Consulta se o CPF já existe no banco — só alimenta o
-                                      // tracking; a matrícula não exige conta.
-                                      const dbCheckResponse = await fetch('/api/auth/check-cpf', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ cpf: cleanCpf }),
-                                      })
-                                      const dbCheckResult = await dbCheckResponse.json()
-
-                                      setCpfValidationError(null)
-                                      setCpfValidationOk(true)
-                                      toast.success('CPF validado com sucesso!')
-                                      trackEvent('cpf_validated', {
-                                        cpf_valid: true,
-                                        inscription_allowed: true,
-                                        cpf_exists_in_db: dbCheckResult.exists,
-                                        course_id: offerDetails?.courseId,
-                                        course_name: offerDetails?.course,
-                                      })
-
-                                      // Funil unificado — etapa 2: contato já
-                                      // preenchido + CPF validado. Identifica a
-                                      // pessoa no PostHog (tira do anonimato →
-                                      // habilita retargeting de quem NÃO concluir).
-                                      trackCheckoutIdentified(
-                                        trackEvent,
-                                        {
-                                          flow: 'matricula',
-                                          academicLevel: offerDetails?.academicLevel,
-                                          brand: offerDetails?.brand,
-                                          modality: offerDetails?.modality,
-                                          courseId: offerDetails?.courseId,
-                                          courseName: offerDetails?.course,
-                                          email: getValues('email') || undefined,
-                                          phone: getValues('phone') || undefined,
-                                          name: getValues('name') || undefined,
-                                        },
-                                        setUserProperties,
-                                      )
-
-                                      // Facebook Pixel + Conversions API - AddPaymentInfo (dados pessoais preenchidos + CPF validado)
-                                      void trackFbqDual(
-                                        'AddPaymentInfo',
-                                        {
-                                          content_name: offerDetails?.course,
-                                          content_ids: offerDetails?.courseId ? [String(offerDetails.courseId)] : undefined,
-                                          content_type: 'product',
-                                          value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
-                                          currency: 'BRL',
-                                        },
-                                        {
-                                          email: getValues('email') || undefined,
-                                          phone: getValues('phone') || undefined,
-                                          externalId: (getValues('cpf') || '').replace(/\D/g, '') || undefined,
-                                        },
-                                      )
-
-                                      // GA4 ecommerce (dataLayer/GTM) - add_payment_info, paridade com o AddPaymentInfo acima.
-                                      pushDataLayerEvent('add_payment_info', {
-                                        ecommerce: {
-                                          currency: 'BRL',
-                                          value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
-                                          items: [
-                                            {
-                                              item_id: offerDetails?.courseId ? String(offerDetails.courseId) : undefined,
-                                              item_name: offerDetails?.course,
-                                              item_brand: offerDetails?.brand,
-                                            },
-                                          ],
-                                        },
-                                      })
-
-                                      // TikTok Pixel - AddPaymentInfo
-                                      trackTikTok('AddPaymentInfo', {
-                                        content_id: offerDetails?.courseId,
-                                        content_name: offerDetails?.course,
-                                        content_type: 'product',
-                                        value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
-                                        currency: 'BRL',
-                                      })
-                                    } catch (error: unknown) {
-                                      console.error('Erro ao validar CPF:', error)
-                                      const axiosError = error as { response?: { data?: { message?: string } }; message?: string }
-                                      const errorMessage = axiosError.response?.data?.message || axiosError.message || 'Erro ao validar CPF. Tente novamente.'
-                                      setCpfValidationError(errorMessage)
-                                      toast.error(errorMessage)
-                                    } finally {
-                                      setIsValidatingCpf(false)
-                                    }
-                                  }
-                                }}
-                                placeholder="000.000.000-00"
-                                maxLength={14}
-                                className={`w-full px-3 py-2 pr-9 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary ${
-                                  cpfValidationError
-                                    ? 'border-red-500'
-                                    : cpfValidationOk
-                                      ? 'border-green-500'
-                                      : 'border-gray-300'
-                                }`}
-                              />
-                              <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
-                                {isValidatingCpf && (
-                                  <Loader2 size={16} className="text-bolsa-primary animate-spin" aria-label="Validando CPF" />
-                                )}
-                                {!isValidatingCpf && cpfValidationOk && (
-                                  <Check size={16} className="text-green-600" aria-label="CPF validado" />
-                                )}
-                              </div>
-                              </div>
-                              {isValidatingCpf && (
-                                <p className="text-blue-500 text-xs mt-1">Validando CPF...</p>
-                              )}
-                              {!isValidatingCpf && cpfValidationOk && (
-                                <p className="text-green-600 text-xs mt-1">CPF validado — você pode continuar.</p>
-                              )}
-                            </div>
-                          )}
-                        />
-                        {errors.cpf && <p className="text-red-500 text-xs mt-1">{errors.cpf.message}</p>}
-                        {cpfValidationError && <p className="text-red-500 text-xs mt-1">{cpfValidationError}</p>}
-                      </div>
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">RG</label>
-                        <input
-                          type="text"
-                          {...register('rg')}
-                          placeholder="Ex: 12.345.678-9"
-                          maxLength={15}
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        />
-                        {errors.rg && <p className="text-red-500 text-xs mt-1">{errors.rg.message}</p>}
-                      </div>
+                    <div>
+                      <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Nome Completo</label>
+                      <input
+                        type="text"
+                        {...register('name')}
+                        placeholder="Ex: Rodrigo Silva"
+                        className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
+                      />
+                      {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
-                          <Calendar size={14} className="inline mr-1" /> Data de Nascimento
-                        </label>
-                        <Controller
-                          name="birthDate"
-                          control={control}
-                          render={({ field }) => (
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
+                        <Phone size={14} className="inline mr-1" /> Telefone
+                      </label>
+                      <Controller
+                        control={control}
+                        name="phone"
+                        render={({ field }) => (
+                          <input
+                            value={field.value}
+                            onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                            onFocus={() => {
+                              // Tentar cadastrar quando o usuário focar no campo
+                              tryCreateStudent()
+                            }}
+                            onBlur={() => {
+                              // Tentar cadastrar quando o usuário sair do campo
+                              tryCreateStudent()
+                            }}
+                            placeholder="(00) 00000-0000"
+                            maxLength={15}
+                            className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
+                          />
+                        )}
+                      />
+                      {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
+                    </div>
+                    <div>
+                      <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">CPF</label>
+                      <Controller
+                        control={control}
+                        name="cpf"
+                        render={({ field }) => (
+                          <div>
+                            <div className="relative">
                             <input
                               value={field.value}
                               onChange={(e) => {
                                 const masked = e.target.value
                                   .replace(/\D/g, '')
-                                  .replace(/(\d{2})(\d)/, '$1-$2')
-                                  .replace(/(\d{2})-(\d{2})(\d)/, '$1-$2-$3')
-                                  .slice(0, 10)
+                                  .replace(/(\d{3})(\d)/, '$1.$2')
+                                  .replace(/(\d{3})(\d)/, '$1.$2')
+                                  .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
                                 field.onChange(masked)
+                                if (cpfValidationOk) setCpfValidationOk(false)
+                                if (cpfValidationError) setCpfValidationError(null)
                               }}
-                              placeholder="DD-MM-AAAA"
-                              maxLength={10}
-                              className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                            />
-                          )}
-                        />
-                        {errors.birthDate && <p className="text-red-500 text-xs mt-1">{errors.birthDate.message}</p>}
-                      </div>
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
-                          <GraduationCap size={14} className="inline mr-1" /> Ano de Conclusão
-                        </label>
-                        <select
-                          {...register('schoolYear')}
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        >
-                          <option value="">Selecione</option>
-                          {yearOptions.map((year) => (
-                            <option key={year} value={year}>{year}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Gênero</label>
-                        <select
-                          {...register('gender')}
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        >
-                          <option value="">Selecione</option>
-                          <option value="masculino">Masculino</option>
-                          <option value="feminino">Feminino</option>
-                          <option value="outro">Outro</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+                              onBlur={async (e) => {
+                                field.onBlur()
+                                const cleanCpf = e.target.value.replace(/\D/g, '')
+                                if (cleanCpf.length === 11 && validarCPF(cleanCpf)) {
+                                  setIsValidatingCpf(true)
+                                  setCpfValidationError(null)
+                                  setCpfValidationOk(false)
+                                  try {
+                                    // Consulta se o CPF já existe no banco — só alimenta o
+                                    // tracking; a matrícula não exige conta.
+                                    const dbCheckResponse = await fetch('/api/auth/check-cpf', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ cpf: cleanCpf }),
+                                    })
+                                    const dbCheckResult = await dbCheckResponse.json()
 
-              {/* Contato - Seção Expansível */}
-              <div className="border-b border-hairline">
-                <button
-                  type="button"
-                  onClick={() => {
-                    toggleSection('contato')
-                    if (!expandedSections.contato) {
-                      setTimeout(() => tryCreateStudent(), 100)
-                    }
-                  }}
-                  className="w-full px-6 py-5 text-left flex items-center justify-between hover:bg-paper-warm/40 transition-colors"
-                  aria-expanded={expandedSections.contato}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-paper-warm text-ink-900 flex-shrink-0">
-                      <MapPin size={15} />
-                    </span>
-                    <div className="min-w-0">
-                      <span className="font-mono num-tabular text-[10px] tracking-[0.22em] uppercase text-ink-500 mb-0.5 block">
-                        02 · Contato
-                      </span>
-                      <h2 className="font-display text-[18px] text-ink-900 leading-tight">
-                        Telefone e endereço
-                      </h2>
+                                    setCpfValidationError(null)
+                                    setCpfValidationOk(true)
+                                    toast.success('CPF validado com sucesso!')
+                                    trackEvent('cpf_validated', {
+                                      cpf_valid: true,
+                                      inscription_allowed: true,
+                                      cpf_exists_in_db: dbCheckResult.exists,
+                                      course_id: offerDetails?.courseId,
+                                      course_name: offerDetails?.course,
+                                    })
+
+                                    // Funil unificado — etapa 2: contato já
+                                    // preenchido + CPF validado. Identifica a
+                                    // pessoa no PostHog (tira do anonimato →
+                                    // habilita retargeting de quem NÃO concluir).
+                                    trackCheckoutIdentified(
+                                      trackEvent,
+                                      {
+                                        flow: 'matricula',
+                                        academicLevel: offerDetails?.academicLevel,
+                                        brand: offerDetails?.brand,
+                                        modality: offerDetails?.modality,
+                                        courseId: offerDetails?.courseId,
+                                        courseName: offerDetails?.course,
+                                        email: getValues('email') || undefined,
+                                        phone: getValues('phone') || undefined,
+                                        name: getValues('name') || undefined,
+                                      },
+                                      setUserProperties,
+                                    )
+
+                                    // Facebook Pixel + Conversions API - AddPaymentInfo (dados pessoais preenchidos + CPF validado)
+                                    void trackFbqDual(
+                                      'AddPaymentInfo',
+                                      {
+                                        content_name: offerDetails?.course,
+                                        content_ids: offerDetails?.courseId ? [String(offerDetails.courseId)] : undefined,
+                                        content_type: 'product',
+                                        value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
+                                        currency: 'BRL',
+                                      },
+                                      {
+                                        email: getValues('email') || undefined,
+                                        phone: getValues('phone') || undefined,
+                                        externalId: (getValues('cpf') || '').replace(/\D/g, '') || undefined,
+                                      },
+                                    )
+
+                                    // GA4 ecommerce (dataLayer/GTM) - add_payment_info, paridade com o AddPaymentInfo acima.
+                                    pushDataLayerEvent('add_payment_info', {
+                                      ecommerce: {
+                                        currency: 'BRL',
+                                        value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
+                                        items: [
+                                          {
+                                            item_id: offerDetails?.courseId ? String(offerDetails.courseId) : undefined,
+                                            item_name: offerDetails?.course,
+                                            item_brand: offerDetails?.brand,
+                                          },
+                                        ],
+                                      },
+                                    })
+
+                                    // TikTok Pixel - AddPaymentInfo
+                                    trackTikTok('AddPaymentInfo', {
+                                      content_id: offerDetails?.courseId,
+                                      content_name: offerDetails?.course,
+                                      content_type: 'product',
+                                      value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
+                                      currency: 'BRL',
+                                    })
+                                  } catch (error: unknown) {
+                                    console.error('Erro ao validar CPF:', error)
+                                    const axiosError = error as { response?: { data?: { message?: string } }; message?: string }
+                                    const errorMessage = axiosError.response?.data?.message || axiosError.message || 'Erro ao validar CPF. Tente novamente.'
+                                    setCpfValidationError(errorMessage)
+                                    toast.error(errorMessage)
+                                  } finally {
+                                    setIsValidatingCpf(false)
+                                  }
+                                }
+                              }}
+                              placeholder="000.000.000-00"
+                              maxLength={14}
+                              className={`w-full px-3 py-2 pr-9 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary ${
+                                cpfValidationError
+                                  ? 'border-red-500'
+                                  : cpfValidationOk
+                                    ? 'border-green-500'
+                                    : 'border-gray-300'
+                              }`}
+                            />
+                            <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
+                              {isValidatingCpf && (
+                                <Loader2 size={16} className="text-bolsa-primary animate-spin" aria-label="Validando CPF" />
+                              )}
+                              {!isValidatingCpf && cpfValidationOk && (
+                                <Check size={16} className="text-green-600" aria-label="CPF validado" />
+                              )}
+                            </div>
+                            </div>
+                            {isValidatingCpf && (
+                              <p className="text-blue-500 text-xs mt-1">Validando CPF...</p>
+                            )}
+                            {!isValidatingCpf && cpfValidationOk && (
+                              <p className="text-green-600 text-xs mt-1">CPF validado — você pode continuar.</p>
+                            )}
+                          </div>
+                        )}
+                      />
+                      {errors.cpf && <p className="text-red-500 text-xs mt-1">{errors.cpf.message}</p>}
+                      {cpfValidationError && <p className="text-red-500 text-xs mt-1">{cpfValidationError}</p>}
                     </div>
                   </div>
-                  <span
-                    aria-hidden="true"
-                    className={`flex-shrink-0 w-7 h-7 rounded-full border border-hairline flex items-center justify-center text-ink-500 transition-all ${
-                      expandedSections.contato ? 'rotate-180 border-ink-900 text-ink-900' : ''
-                    }`}
+
+                  <button
+                    type="button"
+                    onClick={handleContinueToStep2}
+                    disabled={!isStep1Valid}
+                    className="group w-full mt-2 inline-flex items-center justify-center gap-3 bg-bolsa-secondary text-white py-4 px-6 rounded-full font-semibold text-[15px] hover:bg-bolsa-secondary/90 disabled:bg-ink-300 disabled:cursor-not-allowed shadow-lg shadow-bolsa-secondary/25 hover:shadow-bolsa-secondary/40 transition-all duration-300"
                   >
-                    <ChevronDown size={14} />
-                  </span>
-                </button>
-                {expandedSections.contato && (
-                  <div className="px-6 pb-6 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
-                          <Phone size={14} className="inline mr-1" /> Telefone
-                        </label>
-                        <Controller
-                          control={control}
-                          name="phone"
-                          render={({ field }) => (
-                            <input
-                              value={field.value}
-                              onChange={(e) => field.onChange(formatPhone(e.target.value))}
-                              onFocus={() => {
-                                // Tentar cadastrar quando o usuário focar no campo
-                                tryCreateStudent()
-                              }}
-                              onBlur={() => {
-                                // Tentar cadastrar quando o usuário sair do campo
-                                tryCreateStudent()
-                              }}
-                              placeholder="(00) 00000-0000"
-                              maxLength={15}
-                              className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                            />
-                          )}
-                        />
-                        {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
+                    Continuar
+                    <ArrowRight
+                      size={16}
+                      className="transition-transform duration-300 group-hover:translate-x-1"
+                    />
+                  </button>
+                </div>
+              )}
+
+              {/* ETAPA 2 — Finalizar inscrição (RG, nascimento, gênero, endereço, ingresso/parcelas, submit) */}
+              {step === 2 && (
+                <>
+                  <div className="px-6 pt-5">
+                    <button
+                      type="button"
+                      onClick={() => setStep(1)}
+                      className="inline-flex items-center gap-1.5 font-mono text-[11px] tracking-[0.15em] uppercase text-ink-500 hover:text-ink-900 transition-colors"
+                    >
+                      <ArrowLeft size={12} />
+                      Voltar
+                    </button>
+                  </div>
+
+                  {/* Dados complementares */}
+                  <div className="border-b border-hairline">
+                    <div className="px-6 pt-4 pb-6 space-y-4">
+                      <div className="flex items-center gap-3 min-w-0 mb-1">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-paper-warm text-ink-900 flex-shrink-0">
+                          <User size={15} />
+                        </span>
+                        <div className="min-w-0">
+                          <span className="font-mono num-tabular text-[10px] tracking-[0.22em] uppercase text-ink-500 mb-0.5 block">
+                            02 · Dados
+                          </span>
+                          <h2 className="font-display text-[18px] text-ink-900 leading-tight">
+                            Dados complementares
+                          </h2>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">RG</label>
+                          <input
+                            type="text"
+                            {...register('rg')}
+                            placeholder="Ex: 12.345.678-9"
+                            maxLength={15}
+                            className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
+                          />
+                          {errors.rg && <p className="text-red-500 text-xs mt-1">{errors.rg.message}</p>}
+                        </div>
+                        <div>
+                          <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
+                            <Calendar size={14} className="inline mr-1" /> Data de Nascimento
+                          </label>
+                          <Controller
+                            name="birthDate"
+                            control={control}
+                            render={({ field }) => (
+                              <input
+                                value={field.value}
+                                onChange={(e) => {
+                                  const masked = e.target.value
+                                    .replace(/\D/g, '')
+                                    .replace(/(\d{2})(\d)/, '$1-$2')
+                                    .replace(/(\d{2})-(\d{2})(\d)/, '$1-$2-$3')
+                                    .slice(0, 10)
+                                  field.onChange(masked)
+                                }}
+                                placeholder="DD-MM-AAAA"
+                                maxLength={10}
+                                className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
+                              />
+                            )}
+                          />
+                          {errors.birthDate && <p className="text-red-500 text-xs mt-1">{errors.birthDate.message}</p>}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
+                            <GraduationCap size={14} className="inline mr-1" /> Ano de Conclusão
+                          </label>
+                          <select
+                            {...register('schoolYear')}
+                            className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
+                          >
+                            <option value="">Selecione</option>
+                            {yearOptions.map((year) => (
+                              <option key={year} value={year}>{year}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Gênero</label>
+                          <select
+                            {...register('gender')}
+                            className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
+                          >
+                            <option value="">Selecione</option>
+                            <option value="masculino">Masculino</option>
+                            <option value="feminino">Feminino</option>
+                            <option value="outro">Outro</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Endereço */}
+                  <div className="border-b border-hairline">
+                    <div className="px-6 pt-4 pb-6 space-y-4">
+                      <div className="flex items-center gap-3 min-w-0 mb-1">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-paper-warm text-ink-900 flex-shrink-0">
+                          <MapPin size={15} />
+                        </span>
+                        <div className="min-w-0">
+                          <span className="font-mono num-tabular text-[10px] tracking-[0.22em] uppercase text-ink-500 mb-0.5 block">
+                            03 · Endereço
+                          </span>
+                          <h2 className="font-display text-[18px] text-ink-900 leading-tight">
+                            Onde você mora
+                          </h2>
+                        </div>
                       </div>
                       <div>
                         <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">CEP</label>
@@ -1747,157 +1792,141 @@ const isFormValidForPayment =
                         />
                         {errors.cep && <p className="text-red-500 text-xs mt-1">{errors.cep.message}</p>}
                       </div>
-                    </div>
-                    <div>
-                      <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Endereço</label>
-                      <input
-                        type="text"
-                        {...register('address')}
-                        onFocus={() => {
-                          // Tentar cadastrar quando o usuário focar no campo
-                          tryCreateStudent()
-                        }}
-                        onBlur={() => {
-                          // Tentar cadastrar quando o usuário sair do campo
-                          tryCreateStudent()
-                        }}
-                        placeholder="Ex: Avenida Paulista"
-                        className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                      />
-                      {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>}
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Número</label>
+                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Endereço</label>
                         <input
                           type="text"
-                          {...register('addressNumber')}
-                          placeholder="1106"
+                          {...register('address')}
+                          onFocus={() => {
+                            // Tentar cadastrar quando o usuário focar no campo
+                            tryCreateStudent()
+                          }}
+                          onBlur={() => {
+                            // Tentar cadastrar quando o usuário sair do campo
+                            tryCreateStudent()
+                          }}
+                          placeholder="Ex: Avenida Paulista"
                           className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
                         />
-                        {errors.addressNumber && <p className="text-red-500 text-xs mt-1">{errors.addressNumber.message}</p>}
+                        {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>}
                       </div>
-                      <div className="col-span-2">
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Bairro</label>
-                        <input
-                          type="text"
-                          {...register('neighborhood')}
-                          placeholder="Ex: Centro"
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Cidade</label>
-                        <input
-                          type="text"
-                          {...register('city')}
-                          placeholder="Ex: São Paulo"
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        />
-                      </div>
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Estado</label>
-                        <input
-                          type="text"
-                          {...register('state')}
-                          placeholder="Ex: SP"
-                          maxLength={2}
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Tipo de Ingresso - Apenas para Graduação */}
-              {offerDetails.academicLevel === 'GRADUACAO' && (
-                <div className="border-t border-gray-100">
-                  <div className="p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <GraduationCap size={18} className="text-blue-600" />
-                      <div>
-                        <h2 className="text-base font-semibold text-gray-900">Forma de Ingresso</h2>
-                        <p className="text-xs text-gray-500">Selecione como deseja ingressar no curso</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedIngressType('ENEM')}
-                        className={`flex-1 p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                          selectedIngressType === 'ENEM'
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <span className="font-medium text-sm text-gray-900">ENEM</span>
-                            <p className="text-xs text-gray-500">Usar nota do ENEM</p>
-                          </div>
-                          {selectedIngressType === 'ENEM' && <Check size={18} className="text-blue-600" />}
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Número</label>
+                          <input
+                            type="text"
+                            {...register('addressNumber')}
+                            placeholder="1106"
+                            className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
+                          />
+                          {errors.addressNumber && <p className="text-red-500 text-xs mt-1">{errors.addressNumber.message}</p>}
                         </div>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedIngressType('VESTIBULAR')}
-                        className={`flex-1 p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                          selectedIngressType === 'VESTIBULAR'
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <span className="font-medium text-sm text-gray-900">Vestibular</span>
-                            <p className="text-xs text-gray-500">Fazer vestibular online</p>
-                          </div>
-                          {selectedIngressType === 'VESTIBULAR' && <Check size={18} className="text-blue-600" />}
+                        <div className="col-span-2">
+                          <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Bairro</label>
+                          <input
+                            type="text"
+                            {...register('neighborhood')}
+                            placeholder="Ex: Centro"
+                            className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
+                          />
                         </div>
-                      </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Cidade</label>
+                          <input
+                            type="text"
+                            {...register('city')}
+                            placeholder="Ex: São Paulo"
+                            className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
+                          />
+                        </div>
+                        <div>
+                          <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Estado</label>
+                          <input
+                            type="text"
+                            {...register('state')}
+                            placeholder="Ex: SP"
+                            maxLength={2}
+                            className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
 
-              {/* Forma de Pagamento - Seção Expansível */}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => toggleSection('pagamento')}
-                  className="w-full px-6 py-5 text-left flex items-center justify-between hover:bg-paper-warm/40 transition-colors"
-                  aria-expanded={expandedSections.pagamento}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-paper-warm text-ink-900 flex-shrink-0">
-                      <CreditCard size={15} />
-                    </span>
-                    <div className="min-w-0">
-                      <span className="font-mono num-tabular text-[10px] tracking-[0.22em] uppercase text-ink-500 mb-0.5 block">
-                        03 · Pagamento
-                      </span>
-                      <h2 className="font-display text-[18px] text-ink-900 leading-tight">
-                        Confirmar inscrição
-                      </h2>
+                  {/* Tipo de Ingresso - Apenas para Graduação */}
+                  {offerDetails.academicLevel === 'GRADUACAO' && (
+                    <div className="border-b border-gray-100">
+                      <div className="p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <GraduationCap size={18} className="text-blue-600" />
+                          <div>
+                            <h2 className="text-base font-semibold text-gray-900">Forma de Ingresso</h2>
+                            <p className="text-xs text-gray-500">Selecione como deseja ingressar no curso</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedIngressType('ENEM')}
+                            className={`flex-1 p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                              selectedIngressType === 'ENEM'
+                                ? 'border-blue-500 bg-blue-50'
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <span className="font-medium text-sm text-gray-900">ENEM</span>
+                                <p className="text-xs text-gray-500">Usar nota do ENEM</p>
+                              </div>
+                              {selectedIngressType === 'ENEM' && <Check size={18} className="text-blue-600" />}
+                            </div>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedIngressType('VESTIBULAR')}
+                            className={`flex-1 p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                              selectedIngressType === 'VESTIBULAR'
+                                ? 'border-blue-500 bg-blue-50'
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <span className="font-medium text-sm text-gray-900">Vestibular</span>
+                                <p className="text-xs text-gray-500">Fazer vestibular online</p>
+                              </div>
+                              {selectedIngressType === 'VESTIBULAR' && <Check size={18} className="text-blue-600" />}
+                            </div>
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <span
-                    aria-hidden="true"
-                    className={`flex-shrink-0 w-7 h-7 rounded-full border border-hairline flex items-center justify-center text-ink-500 transition-all ${
-                      expandedSections.pagamento ? 'rotate-180 border-ink-900 text-ink-900' : ''
-                    }`}
-                  >
-                    <ChevronDown size={14} />
-                  </span>
-                </button>
+                  )}
 
-                {expandedSections.pagamento && (
-                  <div className="px-6 pb-6 space-y-4">
-                    {/* Sem checkout: pós e profissionalizante mostram parcelas; graduação só botão */}
-                    {hasPaymentPlans ? (
+                  {/* Forma de Pagamento */}
+                  <div>
+                    <div className="px-6 pt-4 pb-2">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-paper-warm text-ink-900 flex-shrink-0">
+                          <CreditCard size={15} />
+                        </span>
+                        <div className="min-w-0">
+                          <span className="font-mono num-tabular text-[10px] tracking-[0.22em] uppercase text-ink-500 mb-0.5 block">
+                            04 · Pagamento
+                          </span>
+                          <h2 className="font-display text-[18px] text-ink-900 leading-tight">
+                            Confirmar inscrição
+                          </h2>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="px-6 pb-6 space-y-4">
+                      {/* Sem checkout: pós e profissionalizante mostram parcelas; graduação só botão */}
+                      {hasPaymentPlans ? (
                         <>
                           <label className="block text-xs font-medium text-gray-700">Método de pagamento</label>
                           <div className="flex flex-wrap gap-2">
@@ -2056,9 +2085,10 @@ const isFormValidForPayment =
                           </button>
                         </>
                       )}
+                    </div>
                   </div>
-                )}
-              </div>
+                </>
+              )}
             </form>
           </div>
 

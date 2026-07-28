@@ -400,7 +400,9 @@ export default function EstacioCheckoutClient() {
         already_enrolled: !!data?.alreadyEnrolled,
       })
 
-      // Notealy (estágio 2): marca o contato como "inscrito". Não-bloqueante.
+      // Notealy (estágio 2) + PostHog server-side (enrollment_completed_server):
+      // marca o contato como "inscrito" e mede a conversão real independente
+      // de consentimento de cookie. Não-bloqueante.
       fetch('/api/leads/confirm-inscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -410,9 +412,12 @@ export default function EstacioCheckoutClient() {
           phone: form.mobile.replace(/\D/g, ''),
           cpf: form.cpf.replace(/\D/g, ''),
           courseName: offer.courseName,
+          courseId: offer.offerId,
           brand: offer.brand,
           modalidade: offer.modality,
           city: offer.city,
+          source: 'YDUQS',
+          inscriptionId: data?.numeroInscricao,
         }),
       }).catch((confirmError) => console.error('Notealy confirm falhou:', confirmError))
 

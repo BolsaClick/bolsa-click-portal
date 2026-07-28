@@ -22,6 +22,8 @@ import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { pushDataLayerEvent } from '@/app/lib/analytics/gtag'
 import { createLead } from '@/app/lib/api/create-lead'
 import { titleCasePtBr } from '@/app/lib/utils/title-case'
+import { getPriceAnchor } from '@/app/lib/utils/price-anchor'
+import { formatCurrency } from '@/utils/fomartCurrency'
 import {
   trackCheckoutViewed,
   trackCheckoutSubmitted,
@@ -149,6 +151,15 @@ export default function EstacioCheckoutClient() {
       priceForma3: searchParams.get('priceForma3')
         ? Number(searchParams.get('priceForma3'))
         : undefined,
+      // Preço cheio ("de") e duração — pra ancoragem de preço (ver
+      // app/lib/utils/price-anchor.ts). Opcionais: quando o card não manda
+      // (ex.: oferta sem desconto real), o checkout mostra só o preço.
+      maxPrice: searchParams.get('maxPrice')
+        ? Number(searchParams.get('maxPrice'))
+        : undefined,
+      durationInMonths: searchParams.get('durationInMonths')
+        ? Number(searchParams.get('durationInMonths'))
+        : undefined,
     }),
     [searchParams],
   )
@@ -173,6 +184,19 @@ export default function EstacioCheckoutClient() {
     }
     return offer.price
   }, [form.codFormaIngresso, offer])
+
+  // Ancoragem de preço (riscado + % + economia total) só faz sentido pro
+  // preço default: offer.maxPrice é o "de" da forma padrão (1/7/24/4/5/6).
+  // Formas 2/3 têm preço próprio sem "de" correspondente — não inventamos
+  // desconto pra elas.
+  const priceAnchor = useMemo(() => {
+    if (displayPrice !== offer.price) return null
+    return getPriceAnchor({
+      from: offer.maxPrice,
+      to: offer.price,
+      durationMonths: offer.durationInMonths,
+    })
+  }, [displayPrice, offer])
 
   // Forma 2 (Transferência Externa) e 3 (MSV Externa) só aparecem quando essa
   // oferta específica tem preço próprio pra elas — sem isso, oferecer a opção
@@ -754,6 +778,16 @@ export default function EstacioCheckoutClient() {
                 <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 mb-2 block">
                   Mensalidade com bolsa
                 </span>
+                {priceAnchor && (
+                  <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span className="text-[12px] text-ink-300 line-through num-tabular">
+                      De {formatCurrency(offer.maxPrice!)}
+                    </span>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-bolsa-secondary text-white text-[10px] font-bold tracking-wide">
+                      −{priceAnchor.discountPct}%
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-[14px] text-ink-700 font-medium">R$</span>
                   <span className="font-display num-tabular text-[40px] font-bold text-bolsa-secondary leading-none">
@@ -761,6 +795,11 @@ export default function EstacioCheckoutClient() {
                   </span>
                   <span className="text-[12px] text-ink-500">/mês</span>
                 </div>
+                {priceAnchor?.totalSavings !== null && priceAnchor?.totalSavings !== undefined && (
+                  <p className="text-[11px] text-emerald-600 mt-1.5">
+                    Economize {formatCurrency(priceAnchor.totalSavings)} até o fim do curso
+                  </p>
+                )}
                 {(form.codFormaIngresso === 2 || form.codFormaIngresso === 3) &&
                   displayPrice !== offer.price &&
                   offer.price > 0 && (

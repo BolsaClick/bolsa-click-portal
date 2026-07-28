@@ -7,6 +7,8 @@ import { trackFbqDual } from "@/app/lib/analytics/fbq"
 import { pushDataLayerEvent } from "@/app/lib/analytics/gtag"
 import { trackTikTok } from "@/app/lib/analytics/ttq"
 import { getAcademicLevelLabel } from "@/app/lib/academic-level"
+import { getPriceAnchor } from "@/app/lib/utils/price-anchor"
+import { formatCurrency } from "@/utils/fomartCurrency"
 import { Building2, Clock, Heart, MapPin } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -143,6 +145,12 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
       // Preço por forma de ingresso (2/3) — opcional, ver Course.priceForma2/3.
       if (course.priceForma2) params.set('priceForma2', String(course.priceForma2))
       if (course.priceForma3) params.set('priceForma3', String(course.priceForma3))
+      // Preço cheio ("de") e duração — pra ancoragem de preço no checkout
+      // Estácio (ver app/lib/utils/price-anchor.ts). Opcionais: sem eles o
+      // checkout mostra só o preço, sem riscado/%.
+      if (typeof course.maxPrice === 'number') params.set('maxPrice', String(course.maxPrice))
+      const athenaDuration = course.durationInMonths ?? course.duration
+      if (typeof athenaDuration === 'number') params.set('durationInMonths', String(athenaDuration))
 
       localStorage.setItem('selectedCourse', JSON.stringify(course))
       window.location.href = `/checkout/estacio?${params.toString()}`
@@ -230,6 +238,21 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
       currency: 'BRL',
     })
 
+    // "Mochila" de oferta: lembra o curso escolhido pra poder mostrar a
+    // ResumeOfferBar se a pessoa sair do checkout sem terminar a matrícula.
+    // savedAt habilita a expiração de 7 dias (ver ResumeOfferBar).
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pendingCheckoutParams', JSON.stringify({
+        groupId: params.get('groupId') || undefined,
+        unitId: params.get('unitId') || undefined,
+        modality: params.get('modality') || undefined,
+        shift: params.get('shift') || undefined,
+        courseName: course.name,
+        price: course.minPrice,
+        savedAt: Date.now(),
+      }))
+    }
+
     // Redirecionar para checkout (pós e graduação usam a mesma página de matrícula)
     window.location.href = `/checkout/matricula?${params.toString()}`
   }
@@ -274,14 +297,11 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
 
 
   const courseParsed = parseCourseName(courseName || course.name);
-  const hasDiscount = Boolean(
-    course.minPrice > 0 &&
-    typeof course.maxPrice === 'number' &&
-    course.maxPrice > course.minPrice
-  )
-  const discountPercentage = hasDiscount
-    ? Math.floor((1 - course.minPrice / course.maxPrice!) * 100)
-    : 0
+  const priceAnchor = getPriceAnchor({
+    from: course.maxPrice,
+    to: course.minPrice,
+    durationMonths: course.durationInMonths ?? course.duration,
+  })
 
   // Função para determinar o turno baseado em shiftOptions
   const getShiftLabel = (shiftOptions?: string[]): string => {
@@ -565,17 +585,24 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
             itemScope
             itemType="https://schema.org/CourseInstance"
           >
-            {hasDiscount && (
-              <div className="mb-1.5 flex items-center gap-2 text-xs text-neutral-500">
-                <span>
-                  De{' '}
-                  <span className="line-through decoration-neutral-400">
-                    {course.maxPrice!.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            {priceAnchor && (
+              <div className="mb-1.5">
+                <div className="flex items-center gap-2 text-xs text-neutral-500">
+                  <span>
+                    De{' '}
+                    <span className="line-through decoration-neutral-400">
+                      {formatCurrency(course.maxPrice!)}
+                    </span>
                   </span>
-                </span>
-                <span className="rounded-full bg-rose-50 px-2 py-0.5 font-semibold text-bolsa-secondary">
-                  -{discountPercentage}%
-                </span>
+                  <span className="rounded-full bg-rose-50 px-2 py-0.5 font-semibold text-bolsa-secondary">
+                    -{priceAnchor.discountPct}%
+                  </span>
+                </div>
+                {priceAnchor.totalSavings !== null && (
+                  <p className="mt-0.5 text-[11px] text-emerald-600">
+                    Economize {formatCurrency(priceAnchor.totalSavings)} até o fim do curso
+                  </p>
+                )}
               </div>
             )}
             <div className="mb-3">

@@ -6,6 +6,8 @@ import { usePostHogTracking } from "@/app/lib/hooks/usePostHogTracking"
 import { trackFbqDual } from "@/app/lib/analytics/fbq"
 import { pushDataLayerEvent } from "@/app/lib/analytics/gtag"
 import { trackTikTok } from "@/app/lib/analytics/ttq"
+import { getPriceAnchor } from "@/app/lib/utils/price-anchor"
+import { formatCurrency } from "@/utils/fomartCurrency"
 import { Building2, Clock, Heart, MapPin, Star, Users, Lock } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
@@ -84,6 +86,12 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
       // Preço por forma de ingresso (2/3) — opcional, ver Course.priceForma2/3.
       if (course.priceForma2) params.set('priceForma2', String(course.priceForma2))
       if (course.priceForma3) params.set('priceForma3', String(course.priceForma3))
+      // Preço cheio ("de") e duração — pra ancoragem de preço no checkout
+      // Estácio (ver app/lib/utils/price-anchor.ts). Opcionais: sem eles o
+      // checkout mostra só o preço, sem riscado/%.
+      if (typeof course.maxPrice === 'number') params.set('maxPrice', String(course.maxPrice))
+      const athenaDuration = course.durationInMonths ?? course.duration
+      if (typeof athenaDuration === 'number') params.set('durationInMonths', String(athenaDuration))
 
       localStorage.setItem('selectedCourse', JSON.stringify(course))
       window.location.href = `/checkout/estacio?${params.toString()}`
@@ -146,6 +154,21 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
       currency: 'BRL',
     })
 
+    // "Mochila" de oferta: lembra o curso escolhido pra poder mostrar a
+    // ResumeOfferBar se a pessoa sair do checkout sem terminar a matrícula.
+    // savedAt habilita a expiração de 7 dias (ver ResumeOfferBar).
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pendingCheckoutParams', JSON.stringify({
+        groupId: params.get('groupId') || undefined,
+        unitId: params.get('unitId') || undefined,
+        modality: params.get('modality') || undefined,
+        shift: params.get('shift') || undefined,
+        courseName: course.name,
+        price: course.minPrice,
+        savedAt: Date.now(),
+      }))
+    }
+
     window.location.href = `/checkout/matricula?${params.toString()}`
   }
 
@@ -160,14 +183,12 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
     return '/assets/logo-bolsa-click-rosa.png'
   }
 
-  const hasDiscount = Boolean(
-    course.minPrice > 0 &&
-    typeof course.maxPrice === 'number' &&
-    course.maxPrice > course.minPrice
-  )
-  const discountPercentage = hasDiscount
-    ? Math.floor((1 - course.minPrice / course.maxPrice!) * 100)
-    : 0
+  const priceAnchor = getPriceAnchor({
+    from: course.maxPrice,
+    to: course.minPrice,
+    durationMonths: course.durationInMonths ?? course.duration,
+  })
+  const hasDiscount = priceAnchor !== null
 
   return (
     <article
@@ -198,7 +219,7 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
       {hasDiscount && (
         <div className="px-5 py-2 bg-emerald-50 border-b border-emerald-100 flex items-center gap-2">
           <span className="inline-block bg-emerald-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-            -{discountPercentage}%
+            -{priceAnchor?.discountPct}%
           </span>
           <span className="text-xs text-emerald-700 font-medium">
             Desconto real na mensalidade
@@ -351,17 +372,24 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
       {/* RODAPÉ: preço + CTA */}
       <div className="px-5 pb-5 pt-4 border-t border-ink-100">
         {/* Comparativo usa apenas os preços real e cheio retornados pela API */}
-        {hasDiscount && (
-          <div className="mb-1.5 flex items-center gap-2 text-xs text-ink-500">
-            <span>
-              De{' '}
-              <span className="line-through decoration-ink-300">
-                {course.maxPrice!.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+        {priceAnchor && (
+          <div className="mb-1.5">
+            <div className="flex items-center gap-2 text-xs text-ink-500">
+              <span>
+                De{' '}
+                <span className="line-through decoration-ink-300">
+                  {formatCurrency(course.maxPrice!)}
+                </span>
               </span>
-            </span>
-            <span className="rounded-full bg-rose-50 px-2 py-0.5 font-bold text-bolsa-secondary">
-              -{discountPercentage}%
-            </span>
+              <span className="rounded-full bg-rose-50 px-2 py-0.5 font-bold text-bolsa-secondary">
+                -{priceAnchor.discountPct}%
+              </span>
+            </div>
+            {priceAnchor.totalSavings !== null && (
+              <p className="mt-0.5 text-[11px] text-emerald-600">
+                Economize {formatCurrency(priceAnchor.totalSavings)} até o fim do curso
+              </p>
+            )}
           </div>
         )}
 

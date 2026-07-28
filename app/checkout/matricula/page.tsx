@@ -31,6 +31,7 @@ import { z } from 'zod'
 import { getCep } from '@/app/lib/api/get-cep'
 import { validarCPF } from '@/utils/cpf-validate'
 import { formatCurrency } from '@/utils/fomartCurrency'
+import { getPriceAnchor } from '@/app/lib/utils/price-anchor'
 import { toast } from 'sonner'
 // [CUPOM] import { validateCoupon } from '@/app/lib/api/get-coupon'
 import { createLead } from '@/app/lib/api/create-lead'
@@ -479,6 +480,15 @@ const isFormValidForPayment =
   }
 
   const monthlyFee = offerDetails?.montlyFeeTo || 0
+
+  // Ancoragem de preço (riscado + % + economia total até o fim do curso) —
+  // usa os preços reais da oferta (nunca inventa desconto). Duração vem de
+  // offerDetails.duration quando a API manda (Cogna).
+  const priceAnchor = getPriceAnchor({
+    from: offerDetails?.montlyFeeFrom,
+    to: monthlyFee,
+    durationMonths: offerDetails?.duration,
+  })
 
   const offerSource = offerDetails?.dmhSource?.source
   const isAthenasSource = offerSource === 'ATHENAS'
@@ -2117,6 +2127,11 @@ const isFormValidForPayment =
                       −{Math.round(((offerDetails.montlyFeeFrom - monthlyFee) / offerDetails.montlyFeeFrom) * 100)}%
                     </span>
                   </div>
+                  {priceAnchor?.totalSavings != null && (
+                    <p className="text-[11px] text-emerald-600 mt-1.5">
+                      Economize {formatCurrency(priceAnchor.totalSavings)} até o fim do curso
+                    </p>
+                  )}
                 </>
               ) : (
                 <div className="flex items-baseline gap-1.5">

@@ -9,6 +9,7 @@ import {
   buildAggregateRatingSchema,
 } from '@/app/lib/reviews'
 import { getInstitutionCourses } from '@/app/lib/api/get-institution-courses'
+import { getFeaturedCourseSlugMap } from '@/app/lib/api/featured-course-slugs'
 import FaculdadePageClient from './FaculdadePageClient'
 import { ReviewList } from './_components/ReviewList'
 import { ReviewForm } from './_components/ReviewForm'
@@ -93,9 +94,20 @@ export default async function FaculdadeDetailPage({
     notFound()
   }
 
+  // Mapa nome→slug dos cursos enriquecidos (/cursos/[slug]), pro link "Ver
+  // detalhes do curso" no card — mesmo padrão de SearchResultsData.tsx. Busca
+  // em paralelo com as ofertas da instituição; falha aqui não pode derrubar
+  // a página da faculdade: cai pra {} e os cards simplesmente não mostram o
+  // link secundário.
+  const courseSlugMapPromise = getFeaturedCourseSlugMap().catch((error) => {
+    console.error('Erro ao buscar mapa de slugs de cursos (faculdade):', error)
+    return {} as Record<string, string>
+  })
+
   const reviewSummary = await getInstitutionReviewSummary(institution.id)
   const aggregateRating = buildAggregateRatingSchema(reviewSummary)
   const institutionCourses = await getInstitutionCourses(institution.name)
+  const courseSlugMap = await courseSlugMapPromise
 
   // Conteúdo editorial único da marca (Fase 3). Null se a marca ainda não tem
   // conteúdo dedicado → template cai no fallback templado.
@@ -232,6 +244,7 @@ export default async function FaculdadeDetailPage({
         institution={institution}
         initialCourses={institutionCourses}
         brandContent={brandContent}
+        courseSlugMap={courseSlugMap}
       />
 
       {/* id="avaliacoes": âncora dos CTAs pós-matrícula (success pages) que

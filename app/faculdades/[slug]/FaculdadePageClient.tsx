@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import {
@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import CourseCardNew from '@/app/components/CourseCardNew'
 import { Course } from '@/app/interface/course'
+import { normalizeCourseNameKey } from '@/app/lib/utils/course-name-key'
 import type { InstitutionData } from '../_data/types'
 import type { BrandContent } from './_data/brand-content'
 
@@ -25,6 +26,8 @@ type Props = {
   institution: InstitutionData
   initialCourses: Course[]
   brandContent: BrandContent | null
+  /** Mapa nome→slug de cursos enriquecidos (/cursos/[slug]), pro link "Ver detalhes do curso" no card. */
+  courseSlugMap?: Record<string, string>
 }
 
 const modalityShortLabel: Record<string, string> = {
@@ -68,10 +71,20 @@ const modalityDetail: Record<string, { title: (n: string) => string; body: (n: s
   },
 }
 
-export default function FaculdadePageClient({ institution, initialCourses, brandContent }: Props) {
+export default function FaculdadePageClient({ institution, initialCourses, brandContent, courseSlugMap }: Props) {
   const [selectedModality, setSelectedModality] = useState<string>('')
   const [visibleCount, setVisibleCount] = useState(6)
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(0)
+
+  // Link secundário "Ver detalhes do curso" (/cursos/[slug]) — só aparece
+  // quando o nome do curso da oferta casa com um FeaturedCourse enriquecido.
+  const getDetailSlug = useCallback(
+    (course: Course): string | undefined => {
+      if (!courseSlugMap || !course.name) return undefined
+      return courseSlugMap[normalizeCourseNameKey(course.name)]
+    },
+    [courseSlugMap],
+  )
 
   const institutionCourses = useMemo(() => {
     if (!selectedModality) return initialCourses
@@ -469,6 +482,7 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
                           courseName={course.name || ''}
                           course={course}
                           viewMode="grid"
+                          detailSlug={getDetailSlug(course)}
                         />
                       </li>
                     ))}

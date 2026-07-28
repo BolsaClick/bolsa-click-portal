@@ -67,12 +67,15 @@ export default function SearchResultsView({
   initialIsError,
   initialFallbackCourses,
   courseSlugMap,
+  mecRatings,
 }: {
   current: ResultsCurrent
   initialShowCourses: ShowCoursesResult | undefined
   initialIsError: boolean
   initialFallbackCourses: ShowCoursesResult | undefined
   courseSlugMap?: Record<string, string>
+  /** Marca (chave slugificada) → nota MEC (1-5), pro selo de social proof no card. */
+  mecRatings?: Record<string, number>
 }) {
   const { curso, cursoNomeCompleto, cidade, estado, modalidade, nivel, marcas } = current
   const brandsForAPI = marcas ? marcas.split(',').filter(Boolean) : undefined
@@ -462,6 +465,7 @@ export default function SearchResultsView({
                       viewMode={viewMode}
                       triggerSubmit={handleSubmit(onSubmit)}
                       detailSlug={getDetailSlug(course)}
+                      mecRatings={mecRatings}
                     />
                   </li>
                 ))}
@@ -513,6 +517,7 @@ export default function SearchResultsView({
                 viewMode={viewMode}
                 triggerSubmit={handleSubmit(onSubmit)}
                 detailSlug={getDetailSlug(course)}
+                mecRatings={mecRatings}
               />
             </li>
           ))}

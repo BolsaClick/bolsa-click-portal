@@ -8,8 +8,9 @@ import { pushDataLayerEvent } from "@/app/lib/analytics/gtag"
 import { trackTikTok } from "@/app/lib/analytics/ttq"
 import { getAcademicLevelLabel } from "@/app/lib/academic-level"
 import { getPriceAnchor } from "@/app/lib/utils/price-anchor"
+import { brandMecKey } from "@/app/lib/utils/brand"
 import { formatCurrency } from "@/utils/fomartCurrency"
-import { Building2, Clock, Heart, MapPin } from "lucide-react"
+import { Building2, Clock, Heart, MapPin, ShieldCheck, Star } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useState, useMemo } from "react"
@@ -27,6 +28,8 @@ interface CourseCardProps {
   isPos?: boolean
   /** Slug de /cursos/[slug] quando o curso tem página de detalhe enriquecida (FeaturedCourse). */
   detailSlug?: string
+  /** Marca (chave slugificada via brandMecKey) → nota MEC (1-5). Sem o dado, o selo não aparece. */
+  mecRatings?: Record<string, number>
 }
 
 type CourseInfo = {
@@ -40,7 +43,8 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
   viewMode,
   courseName,
   isPos,
-  detailSlug
+  detailSlug,
+  mecRatings
 }) => {
   const { featureFlags, isFeatureFlagLoading } = useFeatureFlags()
   const useRedesign = useMemo(
@@ -50,11 +54,11 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
 
   // Se feature flag está ativa, usar novo design
   if (useRedesign) {
-    return <CourseCardRedesign course={course} courseName={courseName} detailSlug={detailSlug} />
+    return <CourseCardRedesign course={course} courseName={courseName} detailSlug={detailSlug} mecRatings={mecRatings} />
   }
 
   // Caso contrário, manter design original
-  return <CourseCardOriginal course={course} viewMode={viewMode} courseName={courseName} isPos={isPos} detailSlug={detailSlug} />
+  return <CourseCardOriginal course={course} viewMode={viewMode} courseName={courseName} isPos={isPos} detailSlug={detailSlug} mecRatings={mecRatings} />
 }
 
 // Renomear componente original
@@ -63,7 +67,8 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
   viewMode,
   courseName,
   isPos,
-  detailSlug
+  detailSlug,
+  mecRatings
 }) => {
   const { isFavorite, toggleFavorite } = useFavorites()
   const pathname = usePathname()
@@ -297,6 +302,9 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
 
 
   const courseParsed = parseCourseName(courseName || course.name);
+  // Nota MEC real da instituição (Institution.mecRating, 1-5) — sem o dado
+  // pro brand, undefined e o selo simplesmente não aparece (nunca inventa).
+  const mecRating = mecRatings?.[brandMecKey(course.brand)]
   const priceAnchor = getPriceAnchor({
     from: course.maxPrice,
     to: course.minPrice,
@@ -506,6 +514,14 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
             )}
           </div>
 
+          {/* Nota MEC real (Institution.mecRating) — só aparece com dado */}
+          {typeof mecRating === 'number' && (
+            <div className="mt-1 flex items-center gap-1" title={`Nota MEC: ${mecRating} de 5`}>
+              <Star size={13} className="text-amber-500" fill="currentColor" />
+              <span className="text-xs font-semibold text-neutral-700">Nota MEC {mecRating}</span>
+            </div>
+          )}
+
           {/* Chips: modalidade, turno, duração */}
           <div className="mt-3 flex min-h-[2rem] flex-wrap items-center gap-2">
             <span
@@ -656,6 +672,16 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
             >
               {needsShiftSelection() && !selectedShift ? 'Selecione o turno' : 'Inscreva-se'}
             </button>
+
+            {/* Trunfo universal: diferente de agregadores concorrentes, não
+                cobramos taxa de inscrição/pré-matrícula em nenhum trilho
+                (ver app/lib/checkout/matricula-charge.ts e
+                EstacioCheckoutClient — pagamento, quando existe, é sempre da
+                mensalidade contratada, direto com a instituição). */}
+            <p className="mt-2 flex items-center justify-center gap-1 text-[11px] text-neutral-400">
+              <ShieldCheck size={12} className="flex-shrink-0" />
+              Sem taxa de inscrição
+            </p>
 
             <div className="mt-3 flex items-center text-xs text-neutral-400">
               <MapPin size={14} className="mr-1.5 flex-shrink-0" />

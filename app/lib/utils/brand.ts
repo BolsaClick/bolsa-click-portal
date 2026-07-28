@@ -46,3 +46,20 @@ const YDUQS_BRAND_SLUG: Record<string, string> = {
 export function yduqsBrandSlug(label: string): string | null {
   return YDUQS_BRAND_SLUG[label] ?? null
 }
+
+/**
+ * Marca (raw, de qualquer fonte) → chave pra lookup no mapa de nota MEC
+ * (`getBrandMecRatings()`, indexado por `Institution.slug` e pelo nome
+ * normalizado). Passa primeiro por `normalizeBrand` pra agrupar as várias
+ * razões sociais YDUQS ("UNIVERSIDADE ESTÁCIO DE SÁ" → "Estácio"), depois
+ * slugifica igual ao `normalize()` de app/lib/brand-mec-ratings.ts. Client-safe
+ * (sem Prisma) — pode ser importado em componente 'use client'.
+ */
+export function brandMecKey(brand?: string): string {
+  return normalizeBrand(brand)
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}

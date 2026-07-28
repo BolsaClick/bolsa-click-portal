@@ -1,5 +1,6 @@
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { getFeaturedCourseSlugMap } from '@/app/lib/api/featured-course-slugs'
+import { getBrandMecRatings } from '@/app/lib/brand-mec-ratings'
 import { normalizeAcademicLevel } from '@/app/lib/academic-level'
 import SearchResultsView, { type ShowCoursesResult } from './SearchResultsView'
 import ResultsSkeleton from './ResultsSkeleton'
@@ -71,6 +72,14 @@ export default async function SearchResultsData({ current }: { current: ResultsC
     return {} as Record<string, string>
   })
 
+  // Nota MEC por marca (Institution.mecRating, real, cacheada 1h) — social
+  // proof no card. Mesmo tratamento de falha graciosa: sem o dado, os cards
+  // simplesmente não mostram o selo (nunca inventa nota).
+  const mecRatingsPromise = getBrandMecRatings().catch((error) => {
+    console.error('Erro ao buscar notas MEC (resultado):', error)
+    return {} as Record<string, number>
+  })
+
   try {
     showCourses = await getShowFiltersCoursesCached(
       courseNameForAPI,
@@ -88,6 +97,7 @@ export default async function SearchResultsData({ current }: { current: ResultsC
   }
 
   const courseSlugMap = await courseSlugMapPromise
+  const mecRatings = await mecRatingsPromise
 
   // Fallback automático: quando a busca exata vier vazia mas o usuário pediu
   // curso + cidade + modalidade, refazemos SEM a modalidade — mostra o mesmo
@@ -124,6 +134,7 @@ export default async function SearchResultsData({ current }: { current: ResultsC
       initialIsError={isError}
       initialFallbackCourses={fallbackCourses}
       courseSlugMap={courseSlugMap}
+      mecRatings={mecRatings}
     />
   )
 }

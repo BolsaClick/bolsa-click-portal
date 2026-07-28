@@ -7,8 +7,9 @@ import { trackFbqDual } from "@/app/lib/analytics/fbq"
 import { pushDataLayerEvent } from "@/app/lib/analytics/gtag"
 import { trackTikTok } from "@/app/lib/analytics/ttq"
 import { getPriceAnchor } from "@/app/lib/utils/price-anchor"
+import { brandMecKey } from "@/app/lib/utils/brand"
 import { formatCurrency } from "@/utils/fomartCurrency"
-import { Building2, Clock, Heart, MapPin, Star, Users, Lock } from "lucide-react"
+import { Building2, Clock, Heart, MapPin, Star, Users, Lock, ShieldCheck } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import Link from "next/link"
@@ -20,12 +21,15 @@ interface CourseCardProps {
   courseName: string
   /** Slug de /cursos/[slug] quando o curso tem página de detalhe enriquecida (FeaturedCourse). */
   detailSlug?: string
+  /** Marca (chave slugificada via brandMecKey) → nota MEC (1-5). Sem o dado, o selo não aparece. */
+  mecRatings?: Record<string, number>
 }
 
 const CourseCardRedesign: React.FC<CourseCardProps> = ({
   course,
   courseName,
   detailSlug,
+  mecRatings,
 }) => {
   const { isFavorite, toggleFavorite } = useFavorites()
   const { trackEvent } = usePostHogTracking()
@@ -189,6 +193,10 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
     durationMonths: course.durationInMonths ?? course.duration,
   })
   const hasDiscount = priceAnchor !== null
+  // Nota MEC real da instituição (Institution.mecRating, 1-5) — course.mecScore
+  // fica como fallback (campo do tipo, mas hoje nunca populado por nenhuma
+  // fonte); sem dado em nenhum dos dois, undefined e o selo não aparece.
+  const mecRating = course.mecScore ?? mecRatings?.[brandMecKey(course.brand)]
 
   return (
     <article
@@ -318,10 +326,10 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
 
       {/* SOCIAL PROOF: MEC + alunos */}
       <div className="px-5 pb-4 flex items-center gap-4">
-        {course.mecScore && (
-          <div className="flex items-center gap-1">
+        {typeof mecRating === 'number' && (
+          <div className="flex items-center gap-1" title={`Nota MEC: ${mecRating} de 5`}>
             <Star size={13} className="text-amber-500" fill="currentColor" />
-            <span className="text-sm font-bold text-ink-900">{course.mecScore.toFixed(1)}</span>
+            <span className="text-sm font-bold text-ink-900">{mecRating.toFixed(1)}</span>
             <span className="text-xs text-ink-500">MEC</span>
           </div>
         )}
@@ -429,6 +437,14 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
           <Lock size={15} strokeWidth={2.5} />
           {needsShiftSelection() && !selectedShift ? 'Selecione o turno' : 'Garantir Bolsa'}
         </button>
+
+        {/* Trunfo universal: diferente de agregadores concorrentes, não
+            cobramos taxa de inscrição/pré-matrícula em nenhum trilho (ver
+            app/lib/checkout/matricula-charge.ts e EstacioCheckoutClient). */}
+        <p className="mt-2 flex items-center justify-center gap-1 text-[11px] text-ink-400">
+          <ShieldCheck size={12} className="flex-shrink-0" />
+          Sem taxa de inscrição
+        </p>
 
         {/* Seletor de turno */}
         {needsShiftSelection() && course.shiftOptions && (

@@ -40,4 +40,23 @@ test.describe('bolsaclick.com.br', () => {
     await expect(page.locator('form').first()).toBeVisible({ timeout: 30_000 })
     await expect(page.locator('body')).toContainText(/CPF/i)
   })
+
+  test('filtro de marca (?marcas=) mostra só ofertas da marca selecionada', async ({ page }) => {
+    // O filtro de marca server-side (?marcas=) e as ofertas premium (fix do
+    // teto do slider) não podem regredir silenciosamente — se o roteamento
+    // por marca quebrar, a busca volta a misturar ofertas de outras
+    // instituições e o usuário perde a curadoria que pediu.
+    await page.goto(
+      `${BASE}/curso/resultado?cidade=Rio%20de%20Janeiro&estado=RJ&nivel=GRADUACAO&marcas=IBMEC`,
+      { waitUntil: 'domcontentloaded' },
+    )
+    const cards = page.locator('article')
+    await expect(cards.first()).toBeVisible({ timeout: 30_000 })
+
+    const cardsText = await cards.allInnerTexts()
+    expect(cardsText.length).toBeGreaterThan(0)
+    for (const text of cardsText) {
+      expect(text).toMatch(/ibmec/i)
+    }
+  })
 })

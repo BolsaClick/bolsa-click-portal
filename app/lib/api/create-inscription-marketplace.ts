@@ -50,6 +50,7 @@ export interface MarketplaceInscriptionPayload {
       id: number;
     };
     idTipoProva: number;
+    tipoIngresso: string;
   };
   dadosPessoais: {
     nome: string;
@@ -154,6 +155,11 @@ export async function createMarketplaceInscription(
           id: 141, // ID fixo do canal de vendas Bolsa Click
         },
         idTipoProva: 2, // Vestibular online
+        // Faltava no payload — o DTO do tartarus-bff (@IsString()) exige
+        // inscricao.tipoIngresso; sem ele a API respondia 400 "inscricao.
+        // tipoIngresso must be a string" (undefined). formData.ingressType já
+        // chega como 'ENEM' | 'VESTIBULAR' de quem chama esta função.
+        tipoIngresso: formData.ingressType,
       },
       dadosPessoais: {
         nome: formData.name,

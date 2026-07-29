@@ -21,6 +21,11 @@ import {
   UserPlus,
 } from 'lucide-react'
 import { useAuth } from '@/app/contexts/AuthContext'
+import {
+  AUTH_REDIRECT_TARGET,
+  PUBLIC_AUTH_ENTRYPOINTS_ENABLED,
+  PUBLIC_AUTH_ROUTES_ENABLED,
+} from '@/app/lib/auth/public-auth-visibility'
 
 interface Stats {
   enrollments: {
@@ -58,7 +63,13 @@ export default function MinhaContaPage() {
 
   useEffect(() => {
     if (!loading && !user && isDesktop) {
-      router.push('/login?redirect=/minha-conta')
+      // Com as rotas públicas de auth desligadas, /login redireciona pra home
+      // de qualquer jeito — ir direto evita o pulo duplo.
+      router.push(
+        PUBLIC_AUTH_ROUTES_ENABLED
+          ? '/login?redirect=/minha-conta'
+          : AUTH_REDIRECT_TARGET,
+      )
     }
   }, [user, loading, isDesktop, router])
 
@@ -357,6 +368,10 @@ function LoggedOutAccountScreen() {
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12">
       <div className="max-w-4xl mx-auto px-4">
+        {/* CTA de conta escondido enquanto PUBLIC_AUTH_ENTRYPOINTS_ENABLED for
+            false — a tela segue servindo os links úteis (Simulador/Cursos/
+            Carreiras/Ajuda). Ver app/lib/auth/public-auth-visibility.ts. */}
+        {PUBLIC_AUTH_ENTRYPOINTS_ENABLED && (
         <div className="bg-gradient-to-br from-bolsa-primary to-blue-700 rounded-2xl p-6 text-white mb-8 text-center">
           <div className="w-14 h-14 mx-auto rounded-full bg-white/20 flex items-center justify-center mb-3">
             <User className="w-7 h-7" />
@@ -382,6 +397,7 @@ function LoggedOutAccountScreen() {
             </Link>
           </div>
         </div>
+        )}
 
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-8">
           {links.map((item, index) => (

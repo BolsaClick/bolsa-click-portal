@@ -7,6 +7,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '@/app/contexts/AuthContext'
+import { PUBLIC_AUTH_ENTRYPOINTS_ENABLED } from '@/app/lib/auth/public-auth-visibility'
 
 export const Header = () => {
   const { user, loading, logout } = useAuth()
@@ -150,17 +151,21 @@ const logoColor = currentTheme === 'anhanguera'
                     )}
                   </div>
                 ) : (
-                  <Link
-                    href="/login"
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                      isScrolled
-                        ? 'bg-bolsa-primary text-white hover:bg-bolsa-primary/90'
-                        : 'bg-white text-bolsa-primary hover:bg-white/90'
-                    }`}
-                  >
-                    <User size={18} />
-                    Entrar
-                  </Link>
+                  // Escondido com PUBLIC_AUTH_ENTRYPOINTS_ENABLED = false
+                  // (ver app/lib/auth/public-auth-visibility.ts).
+                  PUBLIC_AUTH_ENTRYPOINTS_ENABLED && (
+                    <Link
+                      href="/login"
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                        isScrolled
+                          ? 'bg-bolsa-primary text-white hover:bg-bolsa-primary/90'
+                          : 'bg-white text-bolsa-primary hover:bg-white/90'
+                      }`}
+                    >
+                      <User size={18} />
+                      Entrar
+                    </Link>
+                  )
                 )}
               </>
             )}
@@ -231,6 +236,7 @@ const logoColor = currentTheme === 'anhanguera'
                   </button>
                 </div>
               ) : (
+                PUBLIC_AUTH_ENTRYPOINTS_ENABLED && (
                 <div className="space-y-3">
                   <Link
                     href="/login"
@@ -248,6 +254,7 @@ const logoColor = currentTheme === 'anhanguera'
                     Criar conta grátis
                   </Link>
                 </div>
+                )
               )}
             </div>
           )}

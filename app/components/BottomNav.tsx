@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, Search, Heart, User } from 'lucide-react'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
+import { PUBLIC_AUTH_ENTRYPOINTS_ENABLED } from '@/app/lib/auth/public-auth-visibility'
 
 interface NavItem {
   key: string
@@ -14,7 +15,7 @@ interface NavItem {
   matchPrefix?: string
 }
 
-const ITEMS: NavItem[] = [
+const ALL_ITEMS: NavItem[] = [
   { key: 'home', label: 'Início', href: '/', icon: Home },
   { key: 'buscar', label: 'Buscar', href: '/curso/resultado', icon: Search, matchPrefix: '/curso/resultado' },
   { key: 'favoritos', label: 'Favoritos', href: '/favoritos', icon: Heart, matchPrefix: '/favoritos' },
@@ -22,6 +23,19 @@ const ITEMS: NavItem[] = [
   // deslogado — não precisa de lógica de auth aqui, evita duplicar a regra.
   { key: 'conta', label: 'Conta', href: '/minha-conta', icon: User, matchPrefix: '/minha-conta' },
 ]
+
+// A aba "Conta" some enquanto PUBLIC_AUTH_ENTRYPOINTS_ENABLED for false — é o
+// ponto de entrada de conta mais exposto do site (83% do tráfego é mobile).
+// A rota /minha-conta segue viva por URL direta; ver
+// app/lib/auth/public-auth-visibility.ts.
+const ITEMS = ALL_ITEMS.filter(
+  (item) => PUBLIC_AUTH_ENTRYPOINTS_ENABLED || item.key !== 'conta',
+)
+
+const GRID_COLS: Record<number, string> = {
+  3: 'grid-cols-3',
+  4: 'grid-cols-4',
+}
 
 /**
  * Bottom tab bar — padrão de app nativo, só no mobile. Convive com o header
@@ -46,7 +60,7 @@ export default function BottomNav() {
       aria-label="Navegação principal"
       className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-hairline pb-[env(safe-area-inset-bottom)]"
     >
-      <ul className="grid grid-cols-4">
+      <ul className={`grid ${GRID_COLS[ITEMS.length] ?? 'grid-cols-4'}`}>
         {ITEMS.map((item) => {
           const active = isActive(item)
           const Icon = item.icon

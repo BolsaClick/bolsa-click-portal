@@ -1,11 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Course } from "@/app/interface/course"
-import { postSearch } from "@/app/lib/api/post-search"
 import { useFavorites } from "@/app/lib/hooks/useFavorites"
 import { usePostHogTracking } from "@/app/lib/hooks/usePostHogTracking"
-import { trackFbqDual } from "@/app/lib/analytics/fbq"
-import { pushDataLayerEvent } from "@/app/lib/analytics/gtag"
-import { trackTikTok } from "@/app/lib/analytics/ttq"
+import { useCourseSelection } from "@/app/lib/hooks/useCourseSelection"
+import { courseNeedsShiftSelection, resolveCourseModality } from "@/app/lib/checkout/course-destination"
 import { getAcademicLevelLabel } from "@/app/lib/academic-level"
 import { getPriceAnchor } from "@/app/lib/utils/price-anchor"
 import { brandMecKey } from "@/app/lib/utils/brand"
@@ -15,7 +13,6 @@ import Image from "next/image"
 import Link from "next/link"
 import { useState, useMemo } from "react"
 import { usePathname } from "next/navigation"
-import { toast } from "sonner"
 import { useFeatureFlags } from "@/app/lib/hooks/usePostHogFeatureFlags"
 import CourseCardRedesign from "./Redesign"
 
@@ -73,193 +70,28 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
   const { isFavorite, toggleFavorite } = useFavorites()
   const pathname = usePathname()
   const { trackEvent } = usePostHogTracking()
+  const { selectCourse } = useCourseSelection('resultado')
 
   // Estado para seleção de turno
   const [selectedShift, setSelectedShift] = useState<string>('')
 
   // Obter modalidade do curso (não precisa selecionar)
-  const courseModality = course.modality?.toUpperCase() || course.commercialModality?.toUpperCase() || ''
+  const courseModality = resolveCourseModality(course)
 
   // Verificar se precisa mostrar seletor de turno (não virtual e tem múltiplas opções)
-  const needsShiftSelection = () => {
-    // Só mostrar se tiver businessKey e unitId
-    if (!course.businessKey || !course.unitId) {
-      return false
-    }
+  const needsShiftSelection = () => courseNeedsShiftSelection(course)
 
-    // Não mostrar se for virtual
-    const isVirtual = course.shiftOptions?.some(s => s.toUpperCase() === 'VIRTUAL') ||
-      course.classShift?.toUpperCase() === 'VIRTUAL'
-    if (isVirtual) {
-      return false
-    }
-
-    // Só mostrar seletor se tiver MÚLTIPLOS turnos (mais de 1)
-    // Se tiver apenas 1 turno, não mostrar seletor, usar automaticamente
-    const hasMultipleShifts = course.shiftOptions && course.shiftOptions.length > 1
-
-    return hasMultipleShifts
-  }
-
+  // Destino + tracking vêm do hook compartilhado (useCourseSelection): mesmo
+  // comportamento aqui, no card das landings de SEO e na página de cidade.
   const handleClick = async () => {
-    // Se precisa selecionar turno mas ainda não selecionou
-    if (needsShiftSelection() && !selectedShift) {
-      toast.error('Por favor, selecione o turno')
-      trackEvent('course_card_click_blocked', {
-        reason: 'shift_not_selected',
-        course_id: course.id,
-        course_name: course.name,
-        course_brand: course.brand,
-        modality: courseModality,
+    await selectCourse(course, {
+      selectedShift,
+      extraProps: {
         view_mode: viewMode,
-      })
-      return
-    }
-
-    // Trilho YDUQS (Estácio via Athena): checkout por inscrição (não passa pelo /checkout/matricula).
-    if (course.source === 'YDUQS') {
-      trackEvent('course_selected', {
-        course_id: course.id,
-        course_name: course.name,
-        course_brand: course.brand,
-        academic_level: course.academicLevel,
-        modality: courseModality,
-        price: course.minPrice,
-        city: course.city,
-        state: course.uf || course.unitState,
-        source: 'YDUQS',
-        view_mode: viewMode,
-      })
-
-      const params = new URLSearchParams()
-      if (course.offerId) params.set('offerId', course.offerId)
-      if (course.name) params.set('courseName', course.name)
-      if (course.brand) params.set('brand', course.brand)
-      const athenaModality = courseModality || course.modality || course.commercialModality || ''
-      if (athenaModality) params.set('modality', athenaModality)
-      if (course.minPrice) params.set('price', String(course.minPrice))
-      if (course.city) params.set('city', course.city)
-      const athenaState = course.uf || course.unitState || ''
-      if (athenaState) params.set('state', athenaState)
-      if (course.academicLevel) params.set('academicLevel', course.academicLevel)
-      // Endereço da unidade — opcional, pro checkout mostrar onde fica
-      // (relevante pra presencial/semipresencial).
-      if (course.unitAddress) params.set('unitAddress', course.unitAddress)
-      if (course.unitDistrict) params.set('unitDistrict', course.unitDistrict)
-      if (course.unitPostalCode) params.set('unitPostalCode', course.unitPostalCode)
-      // Preço por forma de ingresso (2/3) — opcional, ver Course.priceForma2/3.
-      if (course.priceForma2) params.set('priceForma2', String(course.priceForma2))
-      if (course.priceForma3) params.set('priceForma3', String(course.priceForma3))
-      // Preço cheio ("de") e duração — pra ancoragem de preço no checkout
-      // Estácio (ver app/lib/utils/price-anchor.ts). Opcionais: sem eles o
-      // checkout mostra só o preço, sem riscado/%.
-      if (typeof course.maxPrice === 'number') params.set('maxPrice', String(course.maxPrice))
-      const athenaDuration = course.durationInMonths ?? course.duration
-      if (typeof athenaDuration === 'number') params.set('durationInMonths', String(athenaDuration))
-
-      localStorage.setItem('selectedCourse', JSON.stringify(course))
-      window.location.href = `/checkout/estacio?${params.toString()}`
-      return
-    }
-
-    // Enviar dados para o endpoint de search antes de redirecionar
-    if (course.id && course.unitId) {
-      try {
-        await postSearch(
-          String(course.id),
-          course.unitId,
-          course
-        )
-        // Não mostrar toast de sucesso para não atrapalhar o fluxo
-        // O erro já é logado internamente na função postSearch
-      } catch (error) {
-        // Erro já foi tratado dentro de postSearch, apenas continuar o fluxo
-        console.error('Erro ao enviar dados para search:', error)
-      }
-    }
-
-    // Construir URL com parâmetros essenciais para compartilhamento
-    const params = new URLSearchParams()
-
-    // Parâmetros obrigatórios: groupId (course.id), unitId, modality, shift
-    if (course.id) params.set('groupId', String(course.id))
-    if (course.unitId) params.set('unitId', course.unitId)
-
-    const finalModality = courseModality || course.modality || course.commercialModality || ''
-    if (finalModality) params.set('modality', finalModality)
-
-    // Usar turno selecionado, ou classShift, ou o único turno disponível (quando há apenas 1 opção)
-    const singleShift = course.shiftOptions && course.shiftOptions.length === 1 ? course.shiftOptions[0] : null
-    const finalShift = selectedShift || course.classShift || singleShift || ''
-    if (finalShift) params.set('shift', finalShift)
-
-    // Track course selection
-    trackEvent('course_selected', {
-      course_id: course.id,
-      course_name: course.name,
-      course_brand: course.brand,
-      academic_level: course.academicLevel,
-      modality: finalModality,
-      shift: finalShift,
-      price: course.minPrice,
-      city: course.city,
-      state: course.uf || course.unitState,
-      unit_id: course.unitId,
-      is_pos: isPos,
-      view_mode: viewMode,
-      is_favorite: isFavorite(course),
-    })
-
-    // Facebook Pixel + Conversions API - ViewContent (curso selecionado)
-    void trackFbqDual('ViewContent', {
-      content_name: course.name,
-      content_type: 'product',
-      content_ids: course.id ? [String(course.id)] : undefined,
-      value: course.minPrice || 0,
-      currency: 'BRL',
-    })
-
-    // GA4 ecommerce (dataLayer/GTM) - select_item, paridade com o ViewContent acima.
-    pushDataLayerEvent('select_item', {
-      ecommerce: {
-        currency: 'BRL',
-        value: course.minPrice || 0,
-        items: [
-          {
-            item_id: course.id ? String(course.id) : undefined,
-            item_name: course.name,
-            item_brand: course.brand,
-          },
-        ],
+        is_pos: isPos,
+        is_favorite: isFavorite(course),
       },
     })
-
-    // TikTok Pixel - ViewContent
-    trackTikTok('ViewContent', {
-      content_id: course.id,
-      content_name: course.name,
-      content_type: 'product',
-      value: course.minPrice || 0,
-      currency: 'BRL',
-    })
-
-    // "Mochila" de oferta: lembra o curso escolhido pra poder mostrar a
-    // ResumeOfferBar se a pessoa sair do checkout sem terminar a matrícula.
-    // savedAt habilita a expiração de 7 dias (ver ResumeOfferBar).
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('pendingCheckoutParams', JSON.stringify({
-        groupId: params.get('groupId') || undefined,
-        unitId: params.get('unitId') || undefined,
-        modality: params.get('modality') || undefined,
-        shift: params.get('shift') || undefined,
-        courseName: course.name,
-        price: course.minPrice,
-        savedAt: Date.now(),
-      }))
-    }
-
-    // Redirecionar para checkout (pós e graduação usam a mesma página de matrícula)
-    window.location.href = `/checkout/matricula?${params.toString()}`
   }
 
   const capitalizeFirstLetter = (text: string) => {

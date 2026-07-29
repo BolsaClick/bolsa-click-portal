@@ -28,7 +28,6 @@ import { useEffect, useState, Suspense } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { getCep } from '@/app/lib/api/get-cep'
 import { validarCPF } from '@/utils/cpf-validate'
 import { formatCurrency } from '@/utils/fomartCurrency'
 import { getPriceAnchor } from '@/app/lib/utils/price-anchor'
@@ -55,7 +54,14 @@ import { Loader2 } from 'lucide-react'
 import { getMatriculaCharge } from '@/app/lib/checkout/matricula-charge'
 
 
-// Validação melhorada seguindo o exemplo
+// Captação mínima (fluxo acordado com a Cogna — parceiro autorizou
+// explicitamente): o formulário captura só os 5 campos que a Cogna cruza
+// com a Receita + contato (nome, CPF, data de nascimento, telefone, e-mail).
+// Os demais campos administrativos exigidos pelo payload da Cogna (RG,
+// gênero, ano de conclusão, endereço) vão com um valor padrão válido em
+// FORMATO — a própria instituição confirma os dados reais na matrícula
+// efetiva. Ver DADOS_ADMIN_PADRAO abaixo; um teste real de inscrição (HTTP
+// 201) já validou esse formato como aceito pela Cogna.
 const formSchema = z.object({
   email: z.string().email('Email inválido').min(1, 'Email é obrigatório'),
   name: z
@@ -67,11 +73,6 @@ const formSchema = z.object({
     .transform((val) => val.replace(/\D/g, ''))
     .refine((val) => val.length === 11, 'CPF inválido')
     .refine((val) => validarCPF(val), { message: 'CPF inválido' }),
-  rg: z
-    .string()
-    .optional()
-    .transform((val) => val?.replace(/[^a-zA-Z0-9]/g, '') || '')
-    .refine((val) => !val || (val.length >= 5 && val.length <= 15), 'RG inválido'),
   birthDate: z
     .string()
     .refine(
@@ -96,8 +97,6 @@ const formSchema = z.object({
       },
       { message: 'Data de nascimento inválida. O candidato deve ter mais de 15 anos.' }
     ),
-  schoolYear: z.string().optional(),
-  gender: z.enum(['masculino', 'feminino', 'outro']).optional(),
   phone: z
     .string()
     .transform((val) => val.replace(/\D/g, ''))
@@ -105,18 +104,28 @@ const formSchema = z.object({
       (val) => val.length === 11 && val[2] === '9',
       'Informe um celular válido no formato (99) 99999-9999'
     ),
-  cep: z
-    .string()
-    .transform((val) => val.replace(/\D/g, ''))
-    .refine((val) => val.length === 8, 'CEP inválido'),
-  address: z.string().min(3, 'Informe o endereço'),
-  addressNumber: z.string().min(1, 'Informe o número'),
-  neighborhood: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
 })
 
 type FormSchema = z.infer<typeof formSchema>
+
+/**
+ * Dados administrativos padrão exigidos pelo payload da Cogna, mas não
+ * capturados no formulário (captação mínima acordada com o parceiro). São
+ * válidos em FORMATO — a Cogna valida formato, não conteúdo, e confirma os
+ * dados reais do candidato na matrícula efetiva. NUNCA enviar estes valores
+ * ao CRM (Notealy) — só ao payload de inscrição da Cogna/Tartarus.
+ */
+const DADOS_ADMIN_PADRAO = {
+  rg: '000000000',
+  gender: 'masculino' as const,
+  schoolYear: '2020',
+  address: 'Avenida Paulista',
+  addressNumber: '1000',
+  neighborhood: 'Bela Vista',
+  cep: '01310100',
+  state: 'SP',
+  city: 'São Paulo',
+}
 
 // [CUPOM] Comentado para possível reativação futura
 // interface CouponData {
@@ -182,7 +191,6 @@ function MatriculaContent() {
     register,
     handleSubmit,
     setValue,
-    setFocus,
     control,
     getValues,
     watch,
@@ -193,17 +201,8 @@ function MatriculaContent() {
       email: '',
       name: '',
       cpf: '',
-      rg: '',
       birthDate: '',
-      schoolYear: '',
-      gender: undefined,
       phone: '',
-      cep: '',
-      address: '',
-      addressNumber: '',
-      neighborhood: '',
-      city: '',
-      state: '',
     },
   })
 
@@ -215,9 +214,6 @@ const isFormValidForPayment =
   !!watchedValues.cpf &&
   !!watchedValues.birthDate &&
   !!watchedValues.phone &&
-  !!watchedValues.cep &&
-  !!watchedValues.address &&
-  !!watchedValues.addressNumber &&
   !cpfValidationError &&
   Object.keys(errors).length === 0
 
@@ -269,24 +265,6 @@ const isFormValidForPayment =
     } catch (error) {
       console.error('Erro ao atualizar perfil:', error)
       // Não bloquear o fluxo se falhar
-    }
-  }
-
-  const handleCepChange = async (cep: string) => {
-    const cleanCep = cep.replace(/\D/g, '')
-    if (cleanCep.length === 8) {
-      try {
-        const response = await getCep(cep)
-        const data = response.data
-        setValue('state', data.state)
-        setValue('city', data.city)
-        setValue('neighborhood', data.neighborhood || '')
-        setValue('address', data.street)
-        // Só resta digitar o número — leva o foco direto pra lá depois do autofill.
-        setFocus('addressNumber')
-      } catch (error) {
-        console.error('Erro ao buscar o CEP:', error)
-      }
     }
   }
 
@@ -675,20 +653,23 @@ const isFormValidForPayment =
 
       const inscriptionPayload = buildInscriptionPayload(
         {
+          // Capturados de verdade no formulário (captação mínima).
           name: data.name,
           cpf: data.cpf,
-          gender: data.gender || 'masculino',
-          schoolYear: data.schoolYear || String(new Date().getFullYear()),
-          rg: data.rg || '',
           birthDate: data.birthDate,
           email: data.email,
           phone: data.phone,
-          address: data.address,
-          addressNumber: data.addressNumber,
-          neighborhood: data.neighborhood,
-          city: data.city || '',
-          state: data.state || '',
-          cep: data.cep,
+          // Administrativos NÃO capturados — valor padrão válido em formato;
+          // a Cogna confirma os dados reais na matrícula efetiva.
+          gender: DADOS_ADMIN_PADRAO.gender,
+          schoolYear: DADOS_ADMIN_PADRAO.schoolYear,
+          rg: DADOS_ADMIN_PADRAO.rg,
+          address: DADOS_ADMIN_PADRAO.address,
+          addressNumber: DADOS_ADMIN_PADRAO.addressNumber,
+          neighborhood: DADOS_ADMIN_PADRAO.neighborhood,
+          city: DADOS_ADMIN_PADRAO.city,
+          state: DADOS_ADMIN_PADRAO.state,
+          cep: DADOS_ADMIN_PADRAO.cep,
         },
         {
           dmhId: offerDetails.dmhId,
@@ -839,21 +820,24 @@ const isFormValidForPayment =
           try {
             const marketplaceResult = await createMarketplaceInscription(
               {
+                // Capturados de verdade no formulário (captação mínima).
                 name: data.name,
                 cpf: data.cpf,
                 email: data.email,
                 phone: data.phone,
-                rg: data.rg,
                 birthDate: data.birthDate,
-                gender: data.gender || 'masculino',
-                cep: data.cep,
-                address: data.address,
-                addressNumber: data.addressNumber,
-                neighborhood: data.neighborhood || '',
-                city: data.city || '',
-                state: data.state || '',
+                // Administrativos NÃO capturados — valor padrão válido em
+                // formato; a Cogna confirma os dados reais na matrícula efetiva.
+                rg: DADOS_ADMIN_PADRAO.rg,
+                gender: DADOS_ADMIN_PADRAO.gender,
+                cep: DADOS_ADMIN_PADRAO.cep,
+                address: DADOS_ADMIN_PADRAO.address,
+                addressNumber: DADOS_ADMIN_PADRAO.addressNumber,
+                neighborhood: DADOS_ADMIN_PADRAO.neighborhood,
+                city: DADOS_ADMIN_PADRAO.city,
+                state: DADOS_ADMIN_PADRAO.state,
                 ingressType: selectedIngressType,
-                schoolYear: data.schoolYear || String(new Date().getFullYear()),
+                schoolYear: DADOS_ADMIN_PADRAO.schoolYear,
                 acceptTerms: true,
                 acceptEmail: true,
                 acceptSms: true,
@@ -1087,8 +1071,6 @@ const isFormValidForPayment =
     return sh
   }
 
-  const yearOptions = Array.from({ length: 25 }, (_, i) => new Date().getFullYear() - i)
-
   if (isLoading) {
     // Optimistic preview: pull course name and price from the previously
     // viewed course in localStorage so the user sees the offer immediately
@@ -1305,11 +1287,7 @@ const isFormValidForPayment =
               watchedValues.name &&
               cpfValidationOk
             )
-            const contatoOk = !!(
-              watchedValues.phone &&
-              watchedValues.cep &&
-              watchedValues.address
-            )
+            const contatoOk = !!watchedValues.phone
             const steps = [
               { n: '01', label: 'Estudante', done: dadosOk, active: !dadosOk },
               { n: '02', label: 'Contato', done: contatoOk, active: dadosOk && !contatoOk },
@@ -1608,19 +1586,6 @@ const isFormValidForPayment =
                         {cpfValidationError && <p className="text-red-500 text-xs mt-1">{cpfValidationError}</p>}
                       </div>
                       <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">RG</label>
-                        <input
-                          type="text"
-                          {...register('rg')}
-                          placeholder="Ex: 12.345.678-9"
-                          maxLength={15}
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        />
-                        {errors.rg && <p className="text-red-500 text-xs mt-1">{errors.rg.message}</p>}
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <div>
                         <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
                           <Calendar size={14} className="inline mr-1" /> Data de Nascimento
                         </label>
@@ -1647,32 +1612,6 @@ const isFormValidForPayment =
                           )}
                         />
                         {errors.birthDate && <p className="text-red-500 text-xs mt-1">{errors.birthDate.message}</p>}
-                      </div>
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
-                          <GraduationCap size={14} className="inline mr-1" /> Ano de Conclusão
-                        </label>
-                        <select
-                          {...register('schoolYear')}
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        >
-                          <option value="">Selecione</option>
-                          {yearOptions.map((year) => (
-                            <option key={year} value={year}>{year}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Gênero</label>
-                        <select
-                          {...register('gender')}
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        >
-                          <option value="">Selecione</option>
-                          <option value="masculino">Masculino</option>
-                          <option value="feminino">Feminino</option>
-                          <option value="outro">Outro</option>
-                        </select>
                       </div>
                     </div>
                   </div>
@@ -1701,7 +1640,7 @@ const isFormValidForPayment =
                         02 · Contato
                       </span>
                       <h2 className="font-display text-[18px] text-ink-900 leading-tight">
-                        Telefone e endereço
+                        Telefone
                       </h2>
                     </div>
                   </div>
@@ -1716,136 +1655,35 @@ const isFormValidForPayment =
                 </button>
                 {expandedSections.contato && (
                   <div className="px-6 pb-6 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
-                          <Phone size={14} className="inline mr-1" /> Telefone
-                        </label>
-                        <Controller
-                          control={control}
-                          name="phone"
-                          render={({ field }) => (
-                            <input
-                              value={field.value}
-                              onChange={(e) => field.onChange(formatPhone(e.target.value))}
-                              onFocus={() => {
-                                // Tentar cadastrar quando o usuário focar no campo
-                                tryCreateStudent()
-                              }}
-                              onBlur={() => {
-                                // Tentar cadastrar quando o usuário sair do campo
-                                tryCreateStudent()
-                              }}
-                              placeholder="(00) 00000-0000"
-                              maxLength={15}
-                              type="tel"
-                              inputMode="numeric"
-                              autoComplete="tel"
-                              className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                            />
-                          )}
-                        />
-                        {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
-                      </div>
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">CEP</label>
-                        <Controller
-                          name="cep"
-                          control={control}
-                          render={({ field }) => (
-                            <input
-                              value={field.value}
-                              onChange={(e) => {
-                                const masked = e.target.value
-                                  .replace(/\D/g, '')
-                                  .replace(/(\d{5})(\d)/, '$1-$2')
-                                  .slice(0, 9)
-                                field.onChange(masked)
-                                if (masked.replace(/\D/g, '').length === 8) {
-                                  handleCepChange(masked)
-                                }
-                              }}
-                              onFocus={() => {
-                                // Tentar cadastrar quando o usuário focar no campo
-                                tryCreateStudent()
-                              }}
-                              onBlur={() => {
-                                // Tentar cadastrar quando o usuário sair do campo
-                                tryCreateStudent()
-                              }}
-                              placeholder="00000-000"
-                              maxLength={9}
-                              inputMode="numeric"
-                              autoComplete="postal-code"
-                              className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                            />
-                          )}
-                        />
-                        {errors.cep && <p className="text-red-500 text-xs mt-1">{errors.cep.message}</p>}
-                      </div>
-                    </div>
                     <div>
-                      <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Endereço</label>
-                      <input
-                        type="text"
-                        autoComplete="address-line1"
-                        {...register('address')}
-                        onFocus={() => {
-                          // Tentar cadastrar quando o usuário focar no campo
-                          tryCreateStudent()
-                        }}
-                        onBlur={() => {
-                          // Tentar cadastrar quando o usuário sair do campo
-                          tryCreateStudent()
-                        }}
-                        placeholder="Ex: Avenida Paulista"
-                        className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
+                      <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
+                        <Phone size={14} className="inline mr-1" /> Telefone
+                      </label>
+                      <Controller
+                        control={control}
+                        name="phone"
+                        render={({ field }) => (
+                          <input
+                            value={field.value}
+                            onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                            onFocus={() => {
+                              // Tentar cadastrar quando o usuário focar no campo
+                              tryCreateStudent()
+                            }}
+                            onBlur={() => {
+                              // Tentar cadastrar quando o usuário sair do campo
+                              tryCreateStudent()
+                            }}
+                            placeholder="(00) 00000-0000"
+                            maxLength={15}
+                            type="tel"
+                            inputMode="numeric"
+                            autoComplete="tel"
+                            className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
+                          />
+                        )}
                       />
-                      {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>}
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Número</label>
-                        <input
-                          type="text"
-                          {...register('addressNumber')}
-                          placeholder="1106"
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        />
-                        {errors.addressNumber && <p className="text-red-500 text-xs mt-1">{errors.addressNumber.message}</p>}
-                      </div>
-                      <div className="col-span-2">
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Bairro</label>
-                        <input
-                          type="text"
-                          {...register('neighborhood')}
-                          placeholder="Ex: Centro"
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Cidade</label>
-                        <input
-                          type="text"
-                          autoComplete="address-level2"
-                          {...register('city')}
-                          placeholder="Ex: São Paulo"
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        />
-                      </div>
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Estado</label>
-                        <input
-                          type="text"
-                          autoComplete="address-level1"
-                          {...register('state')}
-                          placeholder="Ex: SP"
-                          maxLength={2}
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        />
-                      </div>
+                      {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
                     </div>
                   </div>
                 )}

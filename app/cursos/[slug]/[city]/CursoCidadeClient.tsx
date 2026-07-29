@@ -16,7 +16,8 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { FeaturedCourseData } from '../../_data/types'
 import { useConversionMirror } from '@/app/lib/analytics/track-conversion'
-import { getBrandLogo } from '@/app/lib/brand-logos'
+import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
+import LandingOfferCard from '../../_components/LandingOfferCard'
 
 interface CursoCidadeClientProps {
   cursoMetadata: FeaturedCourseData
@@ -74,6 +75,7 @@ export default function CursoCidadeClient({
   const [selectedModality, setSelectedModality] = useState<ModalityFilter>('TODAS')
   const router = useRouter()
   const mirror = useConversionMirror()
+  const { trackEvent } = usePostHogTracking()
 
   // ViewContent (curso×cidade), espelhado nos 3 vendors com o mesmo event_id.
   // Mesmo motivo da página do curso: entrada direta orgânica não passa pelo
@@ -136,9 +138,24 @@ export default function CursoCidadeClient({
         )
       : 0
 
-  const handleQueroEssaBolsa = () => {
-    if (courseOffers.length > 0 && offersRef.current) {
-      offersRef.current.scrollIntoView({ behavior: 'smooth' })
+  // CTA do hero/rodapé: antes só rolava (ou redirecionava) sem emitir nada.
+  const handleQueroEssaBolsa = (ctaPosition: 'hero' | 'footer') => {
+    const hasOffers = courseOffers.length > 0 && offersRef.current
+    trackEvent('course_hero_cta_clicked', {
+      course_slug: courseSlug,
+      course_name: cursoMetadata.name,
+      academic_level: cursoMetadata.nivel,
+      offer_count: courseOffers.length,
+      city: cityName,
+      state: cityState,
+      cta_position: ctaPosition,
+      action: hasOffers ? 'scroll_to_offers' : 'search_redirect',
+      entry_point: 'landing_seo',
+      page_type: 'course_city',
+    })
+
+    if (hasOffers) {
+      offersRef.current!.scrollIntoView({ behavior: 'smooth' })
     } else {
       router.push(
         `/curso/resultado?c=${cursoMetadata.apiCourseName}&nivel=${cursoMetadata.nivel}&cidade=${cityName}&estado=${cityState}`
@@ -148,12 +165,6 @@ export default function CursoCidadeClient({
 
   const handleSaibaMais = () => {
     infoSectionRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
-
-  const handleVerOferta = (offer: Course) => {
-    router.push(
-      `/curso/resultado?c=${cursoMetadata.apiCourseName}&nivel=${cursoMetadata.nivel}&modalidade=${offer.modality}&cidade=${cityName}&estado=${cityState}`
-    )
   }
 
   const tabs = [
@@ -210,7 +221,7 @@ export default function CursoCidadeClient({
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <button
-                onClick={handleQueroEssaBolsa}
+                onClick={() => handleQueroEssaBolsa('hero')}
                 className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-bolsa-secondary text-white font-semibold rounded-full hover:bg-bolsa-secondary/90 transition-colors text-[15px] shadow-lg shadow-bolsa-secondary/30"
               >
                 {courseOffers.length > 0
@@ -300,78 +311,23 @@ export default function CursoCidadeClient({
               </div>
             ) : (
               <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 items-stretch stagger-rise">
-                {filteredOffers.map((offer, idx) => {
-                  const hasPrice = offer.minPrice && offer.minPrice > 0
-                  const brandLogo = getBrandLogo(offer.brand)
-                  return (
-                    <li key={`${offer.id}-${idx}`} className="h-full">
-                      <button
-                        type="button"
-                        onClick={() => handleVerOferta(offer)}
-                        className="card-lift group flex flex-col h-full w-full text-left bg-white border border-hairline rounded-2xl p-5 md:p-6 hover:shadow-[0_20px_50px_-25px_rgba(11,31,60,0.25)] hover:border-ink-300"
-                      >
-                        <div className="flex items-start justify-between gap-3 mb-5">
-                          <div className="h-9 flex items-center min-w-0">
-                            {brandLogo ? (
-                              <Image
-                                src={brandLogo}
-                                alt={offer.brand || 'Faculdade Parceira'}
-                                width={120}
-                                height={36}
-                                className="h-9 w-auto object-contain"
-                                unoptimized
-                              />
-                            ) : (
-                              <span className="text-[14px] font-bold text-ink-900 line-clamp-2 leading-tight">
-                                {offer.brand || 'Faculdade Parceira'}
-                              </span>
-                            )}
-                          </div>
-                          <span className="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-bolsa-primary/5 text-bolsa-primary text-[11px] font-bold tracking-wide uppercase">
-                            {modalityLabel(offer.modality)}
-                          </span>
-                        </div>
-
-                        <h3 className="text-[17px] font-bold text-ink-900 leading-snug mb-3 group-hover:text-bolsa-secondary transition-colors line-clamp-2 min-h-[2.6em]">
-                          {cursoMetadata.fullName}
-                        </h3>
-
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-ink-500 mb-5">
-                          <span className="inline-flex items-center gap-1">
-                            <MapPin size={14} />
-                            {offer.unitCity && offer.unitState
-                              ? `${offer.unitCity} — ${offer.unitState}`
-                              : `${cityName} — ${cityState}`}
-                          </span>
-                        </div>
-
-                        <div className="mt-auto border-t border-hairline pt-4 flex items-end justify-between">
-                          <div>
-                            {hasPrice ? (
-                              <>
-                                <div className="text-[11px] text-ink-500 uppercase tracking-wide font-medium">
-                                  A partir de
-                                </div>
-                                <div className="flex items-baseline gap-1 mt-1">
-                                  <span className="text-[13px] text-ink-700 font-medium">R$</span>
-                                  <span className="font-display num-tabular text-3xl font-bold text-bolsa-secondary leading-none">
-                                    {formatPrice(offer.minPrice)}
-                                  </span>
-                                  <span className="text-[12px] text-ink-500">/mês</span>
-                                </div>
-                              </>
-                            ) : (
-                              <span className="text-[13px] text-ink-500">Consulte valores</span>
-                            )}
-                          </div>
-                          <span className="flex-shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full bg-ink-900 text-white group-hover:bg-bolsa-secondary transition-colors">
-                            →
-                          </span>
-                        </div>
-                      </button>
-                    </li>
-                  )
-                })}
+                {filteredOffers.map((offer, idx) => (
+                  <li key={`${offer.id}-${idx}`} className="h-full">
+                    <LandingOfferCard
+                      offer={offer}
+                      courseTitle={cursoMetadata.fullName}
+                      locationFallback={`${cityName} — ${cityState}`}
+                      trackingProps={{
+                        page_type: 'course_city',
+                        course_slug: courseSlug,
+                        city: cityName,
+                        state: cityState,
+                        offer_position: idx + 1,
+                        offer_count: filteredOffers.length,
+                      }}
+                    />
+                  </li>
+                ))}
               </ul>
             )}
             </div>
@@ -593,7 +549,7 @@ export default function CursoCidadeClient({
               sem complicação.
             </p>
             <button
-              onClick={handleQueroEssaBolsa}
+              onClick={() => handleQueroEssaBolsa('footer')}
               className="inline-flex items-center gap-3 px-8 py-4 bg-bolsa-secondary text-white font-semibold rounded-full hover:bg-bolsa-secondary/90 transition-colors text-[15px] shadow-lg shadow-bolsa-secondary/30"
             >
               Buscar bolsas em {cityName}

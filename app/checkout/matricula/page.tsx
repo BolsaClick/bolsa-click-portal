@@ -34,7 +34,7 @@ import { getPriceAnchor } from '@/app/lib/utils/price-anchor'
 import { toast } from 'sonner'
 // [CUPOM] import { validateCoupon } from '@/app/lib/api/get-coupon'
 import { createLead } from '@/app/lib/api/create-lead'
-import { createInscription, buildInscriptionPayload, getCognaErrorMessage, getCognaErrorDetails } from '@/app/lib/api/create-inscription'
+import { createInscription, buildInscriptionPayload, getCognaErrorMessage, getCognaErrorDetails, canCreateInscription } from '@/app/lib/api/create-inscription'
 import { createMarketplaceInscription } from '@/app/lib/api/create-inscription-marketplace'
 import { validateVoucher, type ValidateVoucherResponse, type VoucherInstallment } from '@/app/lib/api/validate-voucher'
 import type { PosPaymentMethod, PosInstallment } from '@/app/lib/api/get-offer-details'
@@ -168,6 +168,11 @@ function MatriculaContent() {
   const [cpfValidationError, setCpfValidationError] = useState<string | null>(null)
   const [isValidatingCpf, setIsValidatingCpf] = useState(false)
   const [cpfValidationOk, setCpfValidationOk] = useState(false)
+  // Trava de CPF já inscrito (Cogna, GET can-create-inscription). Guarda a
+  // mensagem amigável quando `inscriptionAllowed === false` — usada pra
+  // desabilitar o botão de envio e avisar o candidato. Falha de rede na
+  // checagem NÃO seta isso (fail-open, ver onBlur do CPF).
+  const [cpfInscriptionBlocked, setCpfInscriptionBlocked] = useState<string | null>(null)
   const [studentCreated, setStudentCreated] = useState(false)
   const [isCreatingStudent, setIsCreatingStudent] = useState(false)
   // Desacoplado de studentCreated: /api/leads exige phone (diferente de
@@ -215,6 +220,7 @@ const isFormValidForPayment =
   !!watchedValues.birthDate &&
   !!watchedValues.phone &&
   !cpfValidationError &&
+  !cpfInscriptionBlocked &&
   Object.keys(errors).length === 0
 
 
@@ -964,6 +970,14 @@ const isFormValidForPayment =
       return
     }
 
+    // Trava de CPF já inscrito na Cogna — defesa em profundidade (o botão já
+    // vem desabilitado nesse estado, mas o form pode ser submetido por
+    // outros meios, ex. Enter).
+    if (cpfInscriptionBlocked) {
+      toast.error(cpfInscriptionBlocked)
+      return
+    }
+
     if (!offerDetails) {
       toast.error('Detalhes da oferta não encontrados.')
       return
@@ -1453,6 +1467,7 @@ const isFormValidForPayment =
                                   field.onChange(masked)
                                   if (cpfValidationOk) setCpfValidationOk(false)
                                   if (cpfValidationError) setCpfValidationError(null)
+                                  if (cpfInscriptionBlocked) setCpfInscriptionBlocked(null)
                                 }}
                                 onBlur={async (e) => {
                                   field.onBlur()
@@ -1461,6 +1476,7 @@ const isFormValidForPayment =
                                     setIsValidatingCpf(true)
                                     setCpfValidationError(null)
                                     setCpfValidationOk(false)
+                                    setCpfInscriptionBlocked(null)
                                     try {
                                       // Consulta se o CPF já existe no banco — só alimenta o
                                       // tracking; a matrícula não exige conta.
@@ -1542,6 +1558,28 @@ const isFormValidForPayment =
                                         value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
                                         currency: 'BRL',
                                       })
+
+                                      // Trava de CPF já inscrito (Cogna): GET can-create-inscription.
+                                      // Isolada num try próprio — falha de rede/infra aqui NÃO bloqueia
+                                      // o candidato (fail-open); a Cogna valida de novo, com força, no
+                                      // create-inscription final.
+                                      if (offerDetails?.dmhId) {
+                                        try {
+                                          const inscriptionCheck = await canCreateInscription(cleanCpf, offerDetails.dmhId)
+                                          if (inscriptionCheck.inscriptionAllowed === false) {
+                                            const blockedMessage =
+                                              inscriptionCheck.message || 'Este CPF já possui uma inscrição ativa.'
+                                            setCpfInscriptionBlocked(blockedMessage)
+                                            toast.error(blockedMessage)
+                                            trackEvent('cpf_inscription_blocked', {
+                                              course_id: offerDetails?.courseId,
+                                              course_name: offerDetails?.course,
+                                            })
+                                          }
+                                        } catch (checkError: unknown) {
+                                          console.error('Erro ao verificar inscrição existente na Cogna (fail-open, não bloqueia):', checkError)
+                                        }
+                                      }
                                     } catch (error: unknown) {
                                       console.error('Erro ao validar CPF:', error)
                                       const axiosError = error as { response?: { data?: { message?: string } }; message?: string }
@@ -1557,7 +1595,7 @@ const isFormValidForPayment =
                                 maxLength={14}
                                 inputMode="numeric"
                                 className={`w-full px-3 py-2 pr-9 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary ${
-                                  cpfValidationError
+                                  cpfValidationError || cpfInscriptionBlocked
                                     ? 'border-red-500'
                                     : cpfValidationOk
                                       ? 'border-green-500'
@@ -1568,7 +1606,7 @@ const isFormValidForPayment =
                                 {isValidatingCpf && (
                                   <Loader2 size={16} className="text-bolsa-primary animate-spin" aria-label="Validando CPF" />
                                 )}
-                                {!isValidatingCpf && cpfValidationOk && (
+                                {!isValidatingCpf && cpfValidationOk && !cpfInscriptionBlocked && (
                                   <Check size={16} className="text-green-600" aria-label="CPF validado" />
                                 )}
                               </div>
@@ -1576,7 +1614,7 @@ const isFormValidForPayment =
                               {isValidatingCpf && (
                                 <p className="text-blue-500 text-xs mt-1">Validando CPF...</p>
                               )}
-                              {!isValidatingCpf && cpfValidationOk && (
+                              {!isValidatingCpf && cpfValidationOk && !cpfInscriptionBlocked && (
                                 <p className="text-green-600 text-xs mt-1">CPF validado — você pode continuar.</p>
                               )}
                             </div>
@@ -1584,6 +1622,7 @@ const isFormValidForPayment =
                         />
                         {errors.cpf && <p className="text-red-500 text-xs mt-1">{errors.cpf.message}</p>}
                         {cpfValidationError && <p className="text-red-500 text-xs mt-1">{cpfValidationError}</p>}
+                        {cpfInscriptionBlocked && <p className="text-red-500 text-xs mt-1">{cpfInscriptionBlocked}</p>}
                       </div>
                       <div>
                         <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
@@ -1887,7 +1926,7 @@ const isFormValidForPayment =
 
                           <button
                             type="submit"
-                            disabled={isSubmitting || !posInstallmentId}
+                            disabled={isSubmitting || !posInstallmentId || !!cpfInscriptionBlocked}
                             className="group w-full mt-4 inline-flex items-center justify-center gap-3 bg-bolsa-secondary text-white py-4 px-6 rounded-full font-semibold text-[15px] hover:bg-bolsa-secondary/90 disabled:bg-ink-300 disabled:cursor-not-allowed shadow-lg shadow-bolsa-secondary/25 hover:shadow-bolsa-secondary/40 transition-all duration-300"
                           >
                             {isSubmitting ? (

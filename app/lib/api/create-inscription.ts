@@ -48,6 +48,11 @@ export interface CreateInscriptionResponse {
   success?: boolean
 }
 
+export interface CanCreateInscriptionResponse {
+  inscriptionAllowed: boolean
+  message?: string
+}
+
 // Removida função mapDayToPortuguese - os dias devem ser enviados em inglês
 
 /**
@@ -107,6 +112,31 @@ export async function createInscription(
     console.error('Erro ao criar inscrição:', error)
     throw error
   }
+}
+
+/**
+ * Verifica na Cogna se o CPF já possui inscrição ativa para essa oferta,
+ * ANTES de criar a inscrição de fato — trava de duplicidade no checkout.
+ * `idDMH` é o mesmo id usado em `offers.firstOption.idDMH` no
+ * create-inscription (offerDetails.dmhId), não o idDmhElastic (esse é
+ * específico do marketplace ATHENAS, endpoint separado).
+ *
+ * Chamada pensada para "fail-open": deixe o caller decidir o que fazer se a
+ * request falhar (rede/timeout/5xx) — não travar o candidato por uma falha
+ * de infraestrutura numa pré-checagem. A Cogna valida de novo, com força,
+ * no próprio create-inscription.
+ */
+export async function canCreateInscription(
+  cpf: string,
+  idDMH: string,
+  system: string = 'DC'
+): Promise<CanCreateInscriptionResponse> {
+  const cleanCpf = cpf.replace(/\D/g, '')
+  const response = await tartarus.get<CanCreateInscriptionResponse>(
+    'cogna/courses/can-create-inscription',
+    { params: { cpf: cleanCpf, system, idDMH } }
+  )
+  return response.data
 }
 
 /**

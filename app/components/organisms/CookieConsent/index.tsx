@@ -11,6 +11,7 @@ export default function CookieConsent() {
   const { hydrated, hasDecision, categories, acceptAll, rejectAll, save } =
     useConsent()
   const [prefsOpen, setPrefsOpen] = useState(false)
+  const [forceHidden, setForceHidden] = useState(false)
 
   useEffect(() => {
     const open = () => setPrefsOpen(true)
@@ -18,21 +19,41 @@ export default function CookieConsent() {
     return () => window.removeEventListener(CONSENT_OPEN_EVENT, open)
   }, [])
 
-  if (!hydrated) return null
-
   const showBanner = !hasDecision && !prefsOpen
+
+  useEffect(() => {
+    if (showBanner) {
+      setForceHidden(false)
+      return
+    }
+    // A saída do banner anima via requestAnimationFrame (framer-motion), que o
+    // browser suspende por completo com a aba em segundo plano — sem esse
+    // fallback o banner some do AnimatePresence mas fica preso em tela
+    // indefinidamente. setTimeout ainda dispara (só com clamp) em aba oculta,
+    // ao contrário do rAF, então força o hard-hide bem depois da transição
+    // normal (300ms) já ter tido chance de terminar sozinha.
+    const timer = setTimeout(() => setForceHidden(true), 500)
+    return () => clearTimeout(timer)
+  }, [showBanner])
+
+  if (!hydrated) return null
 
   return (
     <>
-      <AnimatePresence>
-        {showBanner && (
-          <CookieBanner
-            onAcceptAll={acceptAll}
-            onReject={rejectAll}
-            onCustomize={() => setPrefsOpen(true)}
-          />
-        )}
-      </AnimatePresence>
+      <div
+        aria-hidden={!showBanner || undefined}
+        className={forceHidden ? 'invisible pointer-events-none' : undefined}
+      >
+        <AnimatePresence>
+          {showBanner && (
+            <CookieBanner
+              onAcceptAll={acceptAll}
+              onReject={rejectAll}
+              onCustomize={() => setPrefsOpen(true)}
+            />
+          )}
+        </AnimatePresence>
+      </div>
 
       <CookiePreferences
         open={prefsOpen}

@@ -29,6 +29,12 @@ type SetPersonPropsFn = (
   properties: Record<string, string | number | boolean | null | undefined>,
 ) => void
 
+// Assinatura compatível com o `identifyUser` do usePostHogTracking.
+type IdentifyFn = (
+  userId: string,
+  properties?: Record<string, string | number | boolean | null | undefined>,
+) => void
+
 /** Normaliza o nível acadêmico bruto da oferta para um valor estável de análise. */
 export function normalizeAcademicLevel(level?: string): string {
   const raw = (level || '').toUpperCase()
@@ -70,30 +76,90 @@ export function trackCheckoutViewed(track: TrackFn, ctx: CheckoutContext): void 
 }
 
 /**
- * Etapa 2 — o contato ficou identificável (email/telefone capturados).
- * Emite o evento com flags (nunca o valor cru) E, quando um setter é passado,
- * grava email/telefone/nome como person properties — é isto que tira a pessoa
- * do anonimato e habilita o retargeting de quem NÃO converteu.
+ * Etapa 2 — o contato ficou identificável (email/telefone/CPF capturados).
+ * Emite o evento com flags (nunca o valor cru) E, quando os setters são
+ * passados, promove a pessoa de anônima para identificada — é isto que
+ * habilita o retargeting de quem NÃO converteu.
+ *
+ * Com `cpf` + `identify`, o distinct_id passa a ser o CPF (só dígitos) já
+ * NESTE ponto do funil, e não apenas no sucesso da inscrição. A diferença é
+ * exatamente o buraco que cegou o time: quem falhava na Cogna nunca chegava ao
+ * identify e ficava preso a um distinct_id de device — evento de falha sem
+ * nome, sem CPF, impossível de reconciliar com o parceiro.
+ *
+ * O CPF é o mesmo id usado server-side (confirm-inscription /
+ * inscription-failed), então browser e servidor colapsam na MESMA person.
  */
 export function trackCheckoutIdentified(
   track: TrackFn,
-  ctx: CheckoutContext & { email?: string; phone?: string; name?: string },
+  ctx: CheckoutContext & { email?: string; phone?: string; name?: string; cpf?: string },
   setPersonProperties?: SetPersonPropsFn,
+  identify?: IdentifyFn,
 ): void {
   const hasEmail = !!ctx.email && ctx.email.includes('@')
   const hasPhone = !!ctx.phone && ctx.phone.replace(/\D/g, '').length >= 10
+  const cpfDigits = (ctx.cpf || '').replace(/\D/g, '')
+  const hasCpf = cpfDigits.length === 11
+
   track('checkout_identified', {
     ...baseProps(ctx),
     has_email: hasEmail,
     has_phone: hasPhone,
+    has_cpf: hasCpf,
   })
-  if (setPersonProperties && (hasEmail || hasPhone)) {
-    setPersonProperties({
-      email: hasEmail ? ctx.email : undefined,
-      phone: hasPhone ? ctx.phone!.replace(/\D/g, '') : undefined,
-      name: ctx.name || undefined,
-    })
+
+  const personProps = {
+    cpf: hasCpf ? cpfDigits : undefined,
+    email: hasEmail ? ctx.email : undefined,
+    phone: hasPhone ? ctx.phone!.replace(/\D/g, '') : undefined,
+    name: ctx.name || undefined,
   }
+
+  // identify já grava as person properties na mesma chamada — chamar os dois
+  // duplicaria o $set sem ganho.
+  if (identify && hasCpf) {
+    identify(cpfDigits, personProps)
+  } else if (setPersonProperties && (hasEmail || hasPhone)) {
+    setPersonProperties(personProps)
+  }
+}
+
+/**
+ * Reporta ao servidor uma inscrição RECUSADA pelo parceiro.
+ *
+ * Existe porque o equivalente client-side (`checkout_inscription_failed`) só
+ * dispara sob consentimento de cookie — que quase ninguém dá no checkout. Sem
+ * este caminho server-to-server, a recusa do parceiro era invisível: sobrava
+ * só o re-submit no log, sem quem tentou nem por quê.
+ *
+ * Best-effort e não-bloqueante por construção: telemetria nunca pode derrubar
+ * o checkout, e o endpoint sempre responde 200.
+ */
+export function reportInscriptionFailure(payload: {
+  flow: CheckoutFlow
+  cpf?: string
+  name?: string
+  email?: string
+  phone?: string
+  courseName?: string
+  courseId?: string | number
+  brand?: string
+  modalidade?: string
+  city?: string
+  source?: string
+  errorMessage?: string
+  errorStatus?: number
+  errorBody?: string
+  cognaKnownError?: boolean
+}): void {
+  // Sem CPF não há a quem amarrar a falha — evita request inútil.
+  if (!payload.cpf || payload.cpf.replace(/\D/g, '').length !== 11) return
+
+  void fetch('/api/leads/inscription-failed', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  }).catch((e) => console.error('Report de falha de inscrição não enviado:', e))
 }
 
 /** Etapa 3 — a inscrição foi enviada/criada (qualquer fluxo). */

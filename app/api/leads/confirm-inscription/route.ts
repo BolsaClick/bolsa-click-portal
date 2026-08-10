@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { upsertNotealyContact } from '@/app/lib/api/notealy'
+import {
+  upsertNotealyContact,
+  detachNotealyTagByName,
+  NOTEALY_TAG_INSCRICAO_RECUSADA,
+} from '@/app/lib/api/notealy'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
 
 // Estágio 2 do CRM Notealy: chamado quando a inscrição é confirmada.
@@ -31,7 +35,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      await upsertNotealyContact({
+      const contactId = await upsertNotealyContact({
         name,
         email,
         phone: phone ? String(phone).replace(/\D/g, '') : undefined,
@@ -44,6 +48,13 @@ export async function POST(request: NextRequest) {
           modalidade,
         },
       })
+
+      // Tentou antes e foi recusado, agora conseguiu: tira da lista de
+      // recuperação. Sem isto ele receberia "vimos que sua inscrição não deu
+      // certo" já matriculado. No-op para quem nunca falhou.
+      if (contactId) {
+        await detachNotealyTagByName(contactId, NOTEALY_TAG_INSCRICAO_RECUSADA)
+      }
     } catch (notealyError) {
       console.error('⚠️ Notealy (estágio 2) falhou:', notealyError)
     }
@@ -69,6 +80,19 @@ export async function POST(request: NextRequest) {
             host: request.headers.get('host') ?? null,
             inscription_id: inscriptionId ?? null,
             source_side: 'server',
+          },
+          // Dados de contato na PERSON (nunca no evento). Sem isto a person
+          // criada aqui tinha só o CPF como distinct_id — dava pra contar as
+          // inscrições, não pra saber quem eram nem reconciliar com o parceiro.
+          personProperties: {
+            cpf: cpfDigits,
+            name: name ?? undefined,
+            email: email ?? undefined,
+            phone: phone ? String(phone).replace(/\D/g, '') : undefined,
+            last_enrollment_status: 'succeeded',
+            last_enrollment_course: courseName ?? null,
+            last_enrollment_brand: brand ?? null,
+            last_inscription_id: inscriptionId ?? null,
           },
         })
       }

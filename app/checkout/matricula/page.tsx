@@ -47,6 +47,7 @@ import {
   trackCheckoutViewed,
   trackCheckoutIdentified,
   trackCheckoutSubmitted,
+  reportInscriptionFailure,
 } from '@/app/lib/analytics/checkout-funnel'
 import { formatPhone } from '@/utils/formatters'
 import { useAuth } from '@/app/contexts/AuthContext'
@@ -707,6 +708,32 @@ const isFormValidForPayment =
           dmhSource: offerDetails.dmhSource,
           idDmhElastic: offerDetails.idDmhElastic,
         })
+        // Falha ANTES da Cogna, e igualmente cara: o candidato preencheu tudo e
+        // não vira inscrição. Sem este report ela não aparecia em lugar nenhum
+        // (só console.error) e o funil contabilizava como abandono comum.
+        trackEvent('checkout_inscription_failed', {
+          course_id: offerDetails.courseId,
+          course_name: offerDetails.course,
+          brand: offerDetails.brand,
+          modality: offerDetails.modality,
+          dmh_source: offerDetails.dmhSource?.source,
+          error_message: 'oferta sem dmhId',
+          cogna_known_error: false,
+        })
+        reportInscriptionFailure({
+          flow: 'matricula',
+          cpf: data.cpf,
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          courseName: offerDetails.course,
+          courseId: offerDetails.courseId,
+          brand: offerDetails.brand,
+          modalidade: offerDetails.modality,
+          city: offerDetails.unitCity,
+          source: offerDetails.dmhSource?.source,
+          errorMessage: 'oferta sem dmhId',
+        })
         toast.error('Essa oferta não está disponível para inscrição no momento. Tente outra unidade ou volte mais tarde.')
         return
       }
@@ -959,6 +986,30 @@ const isFormValidForPayment =
         error_status: errorDetails.status,
         error_body: errorDetails.body,
       })
+
+      // Mesmo sinal, porém server-to-server: o trackEvent acima só existe se a
+      // pessoa aceitou o banner de cookie (quase ninguém no checkout aceita),
+      // então sozinho ele deixava a recusa da Cogna invisível — sem CPF, sem
+      // nome, sem motivo. Este report não depende de consent e é o que permite
+      // reconciliar as inscrições recusadas com o parceiro.
+      reportInscriptionFailure({
+        flow: 'matricula',
+        cpf: data.cpf,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        courseName: offerDetails?.course,
+        courseId: offerDetails?.courseId,
+        brand: offerDetails?.brand,
+        modalidade: offerDetails?.modality,
+        city: offerDetails?.unitCity,
+        source: offerDetails?.dmhSource?.source,
+        errorMessage: cognaMsg ?? (error instanceof Error ? error.message : String(error)),
+        errorStatus: errorDetails.status,
+        errorBody: errorDetails.body,
+        cognaKnownError: cognaMsg != null,
+      })
+
       toast.error(cognaMsg ?? 'Erro ao finalizar matrícula. Entre em contato com o suporte.')
     }
   }
@@ -1514,8 +1565,13 @@ const isFormValidForPayment =
                                           email: getValues('email') || undefined,
                                           phone: getValues('phone') || undefined,
                                           name: getValues('name') || undefined,
+                                          // CPF já validado neste ponto: vira o
+                                          // distinct_id AQUI, não só no sucesso —
+                                          // é o que faz a falha da Cogna ter dono.
+                                          cpf: cleanCpf,
                                         },
                                         setUserProperties,
+                                        identifyUser,
                                       )
 
                                       // Facebook Pixel + Conversions API - AddPaymentInfo (dados pessoais preenchidos + CPF validado)

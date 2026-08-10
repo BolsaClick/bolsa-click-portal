@@ -28,6 +28,7 @@ import {
   trackCheckoutViewed,
   trackCheckoutSubmitted,
   trackCheckoutIdentified,
+  reportInscriptionFailure,
 } from '@/app/lib/analytics/checkout-funnel'
 
 /** Máscaras simples (CPF / telefone / CEP). */
@@ -125,7 +126,7 @@ const labelClass =
 export default function EstacioCheckoutClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { trackEvent, setUserProperties } = usePostHogTracking()
+  const { trackEvent, setUserProperties, identifyUser } = usePostHogTracking()
 
   const offer = useMemo(
     () => ({
@@ -348,6 +349,27 @@ export default function EstacioCheckoutClient() {
       modalidade: offer.modality,
     }).catch((leadError) => console.error('Notealy lead falhou:', leadError))
 
+    // Funil unificado — etapa 2: identifica ANTES de enviar pra Estácio.
+    // Estava depois do sucesso, o que só identificava quem já tinha convertido:
+    // justamente quem a gente menos precisa rastrear. Aqui, quem falhar já sai
+    // do anonimato e o evento de falha nasce amarrado ao CPF.
+    trackCheckoutIdentified(
+      trackEvent,
+      {
+        flow: 'estacio',
+        brand: offer.brand,
+        modality: offer.modality,
+        offerId: offer.offerId,
+        courseName: offer.courseName,
+        email: form.email.trim() || undefined,
+        phone: form.mobile.replace(/\D/g, '') || undefined,
+        name: form.name.trim() || undefined,
+        cpf: form.cpf,
+      },
+      setUserProperties,
+      identifyUser,
+    )
+
     try {
       const res = await fetch('/api/athena-checkout', {
         method: 'POST',
@@ -421,24 +443,8 @@ export default function EstacioCheckoutClient() {
         }),
       }).catch((confirmError) => console.error('Notealy confirm falhou:', confirmError))
 
-      // Funil unificado — etapa 2 (fluxo Estácio): contato preenchido →
-      // identifica no PostHog antes do evento de inscrição (habilita retargeting).
-      trackCheckoutIdentified(
-        trackEvent,
-        {
-          flow: 'estacio',
-          brand: offer.brand,
-          modality: offer.modality,
-          offerId: offer.offerId,
-          courseName: offer.courseName,
-          email: form.email.trim() || undefined,
-          phone: form.mobile.replace(/\D/g, '') || undefined,
-          name: form.name.trim() || undefined,
-        },
-        setUserProperties,
-      )
-
       // Funil unificado — etapa 3 (fluxo Estácio): inscrição criada.
+      // (a etapa 2 / identificação agora acontece antes do envio, acima)
       trackCheckoutSubmitted(trackEvent, {
         flow: 'estacio',
         brand: offer.brand,
@@ -484,7 +490,36 @@ export default function EstacioCheckoutClient() {
       if (data?.dueDate) params.set('dueDate', String(data.dueDate))
       router.push(`/checkout/estacio/sucesso?${params.toString()}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao concluir a inscrição.')
+      const message = err instanceof Error ? err.message : 'Erro ao concluir a inscrição.'
+
+      // Este catch era 100% mudo: a inscrição na Estácio falhava, o candidato
+      // via a mensagem de erro na tela e sumia do funil sem deixar rastro
+      // nenhum — nem evento, nem CPF, nem motivo. Mesmo par de sinais do fluxo
+      // Cogna: evento no client (sob consent) + report server-side (sempre).
+      trackEvent('checkout_inscription_failed', {
+        flow: 'estacio',
+        course_name: offer.courseName,
+        offer_id: offer.offerId,
+        brand: offer.brand,
+        modality: offer.modality,
+        error_message: message,
+      })
+      reportInscriptionFailure({
+        flow: 'estacio',
+        cpf: form.cpf,
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.mobile,
+        courseName: offer.courseName,
+        courseId: offer.offerId,
+        brand: offer.brand,
+        modalidade: offer.modality,
+        city: offer.city,
+        source: 'YDUQS',
+        errorMessage: message,
+      })
+
+      setError(message)
       setSubmitting(false)
     }
   }

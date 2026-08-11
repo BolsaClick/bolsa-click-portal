@@ -122,8 +122,12 @@ export async function confirmPaidMatricula(
   const cpfDigits = tx.cpf.replace(/\D/g, '')
   const phoneDigits = tx.phone.replace(/\D/g, '')
 
-  // 2) CRM: estágio "matriculado" — o mais forte da precedência, então nenhum
-  // formulário preenchido depois consegue rebaixar quem já é aluno.
+  // 2) CRM: estágio "inscrito" + a data do pagamento da taxa.
+  //
+  // NÃO é "matriculado": pagar a taxa aqui não faz a pessoa ser aluna. Quem
+  // confirma a matrícula é o parceiro, e isso vai chegar por reconciliação
+  // (cron a construir). Marcar matriculado aqui inflaria o número e tiraria
+  // das campanhas de ativação justamente quem pagou e não se matriculou.
   const offerDetails = blob?.marketplace?.offerDetails
   try {
     await upsertCandidato({
@@ -135,7 +139,8 @@ export async function confirmPaidMatricula(
       courseName: offerDetails?.course || blob?.utmify?.productName,
       modality: offerDetails?.modality,
       city: offerDetails?.unitCity,
-      estagio: 'matriculado',
+      estagio: 'inscrito',
+      taxaPaga: new Date(),
     })
   } catch (e) {
     console.error('❌ confirm: Attio falhou', externalTransactionId, e)

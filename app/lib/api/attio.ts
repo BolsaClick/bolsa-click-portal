@@ -23,6 +23,17 @@ const ORIGEM_SITE = process.env.ATTIO_ORIGEM_SITE || 'bolsaclick'
  * um contato nunca regride. Sem isso, alguém que já se matriculou e depois
  * preenche um formulário de lead voltaria para "lead" e entraria em campanha
  * de captação já sendo aluno.
+ *
+ * IMPORTANTE — `matriculado` NÃO é gravado por nenhum fluxo do site. O máximo
+ * que o site sabe é `inscrito`: a inscrição foi criada no parceiro e, quando
+ * há taxa, ela foi paga aqui. Se a pessoa virou aluno de fato é o PARCEIRO que
+ * decide, e isso chega por reconciliação (cron a construir). Marcar
+ * `matriculado` no pagamento da taxa inflaria a matrícula e faria campanha de
+ * ativação deixar de fora quem pagou e não se matriculou — exatamente quem
+ * mais precisa ser contatado.
+ *
+ * O sinal de pagamento não se perde por isso: vive no atributo `taxa_paga`,
+ * que é um fato datado, não um estágio.
  */
 export const ESTAGIOS = [
   'lead',
@@ -58,6 +69,11 @@ export interface UpsertCandidatoInput {
   origemFluxo?: OrigemFluxo
   /** Texto bruto do parceiro quando a inscrição é recusada. */
   motivoRecusa?: string
+  /**
+   * Data do pagamento da taxa de matrícula NO SITE. Fato, não estágio — quem
+   * pagou continua `inscrito` até o parceiro confirmar a matrícula.
+   */
+  taxaPaga?: Date | string | null
   /** Id na tabela Lead do Postgres — ponte para reconciliação e backfill. */
   leadId?: string
   /** Atribuição de mídia paga. Ver app/lib/analytics/utm.ts. */
@@ -289,6 +305,7 @@ export async function upsertCandidato(input: UpsertCandidatoInput): Promise<stri
   set('origem_fluxo', input.origemFluxo)
   set('motivo_recusa', input.motivoRecusa?.slice(0, 800))
   set('lead_id', input.leadId)
+  set('taxa_paga', toDateString(input.taxaPaga))
   // UTMs só na PRIMEIRA gravação com valor: a atribuição pertence ao clique
   // que trouxe a pessoa. Se um retorno orgânico sobrescrevesse, toda matrícula
   // acabaria atribuída ao último toque e a mídia paga pareceria não converter.

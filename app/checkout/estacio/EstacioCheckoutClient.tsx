@@ -347,6 +347,26 @@ export default function EstacioCheckoutClient() {
       courseName: offer.courseName,
       institutionName: offer.brand,
       modalidade: offer.modality,
+      birthDate: form.birthDate || undefined,
+      source: 'checkout-estacio',
+      // O formulário da Estácio é o mais completo que temos — endereço, RG,
+      // gênero, ano de conclusão. Tudo isso ia só pra Athena e não ficava com
+      // a gente; sem coluna própria, vai em extraData.
+      extraData: {
+        rg: form.rg.trim() || undefined,
+        genero: form.gender || undefined,
+        ano_conclusao: form.graduationYear || undefined,
+        forma_ingresso: form.codFormaIngresso,
+        endereco: {
+          cep: form.zipCode.replace(/\D/g, '') || undefined,
+          logradouro: form.street.trim() || undefined,
+          numero: form.number.trim() || undefined,
+          bairro: form.neighborhood.trim() || undefined,
+          cidade: form.city.trim() || undefined,
+          estado: form.state.trim().toUpperCase() || undefined,
+        },
+        nivel: offer.academicLevel || undefined,
+      },
     }).catch((leadError) => console.error('Registro de lead falhou:', leadError))
 
     // Funil unificado — etapa 2: identifica ANTES de enviar pra Estácio.

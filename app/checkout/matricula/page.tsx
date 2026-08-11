@@ -455,6 +455,18 @@ const isFormValidForPayment =
           courseName: offerDetails?.course,
           institutionName: offerDetails?.brand,
           modalidade: offerDetails?.modality,
+          // Nascimento: pedido no formulário desde sempre, mas até 2026-08-11
+          // ia só no payload da Cogna e era descartado do nosso lado.
+          birthDate: formValues.birthDate,
+          source: 'checkout-matricula',
+          extraData: {
+            unidade: offerDetails?.unit,
+            cidade: offerDetails?.unitCity,
+            estado: offerDetails?.unitState,
+            turno: offerDetails?.shift,
+            nivel: offerDetails?.academicLevel,
+            oferta_source: offerDetails?.dmhSource?.source,
+          },
         })
 
         setLeadCreated(true)

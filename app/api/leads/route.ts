@@ -6,6 +6,60 @@ import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 // lead continua persistido na tabela Lead e enviado ao Meta CAPI abaixo — este
 // é o ponto onde o CRM novo entra.
 
+/**
+ * Normaliza a data de nascimento vinda dos formulários para um Date em UTC.
+ *
+ * Dois formatos chegam aqui e não dá pra assumir um só: o checkout de matrícula
+ * usa máscara própria e manda `DD-MM-YYYY`; o do Estácio usa `<input
+ * type="date">` e manda `YYYY-MM-DD`. Como ambos têm o mesmo formato de
+ * separador, distinguir pelo tamanho do primeiro grupo é o que evita gravar
+ * 11 de agosto como 8 de novembro.
+ *
+ * Sempre Date.UTC: `new Date(y, m, d)` cria meia-noite LOCAL, que no fuso do
+ * Brasil vira 03:00Z e, em qualquer conversão que trunque pra data local,
+ * pode voltar um dia.
+ */
+function parseBirthDate(value: unknown): Date | null {
+  if (typeof value !== 'string') return null
+  const parts = value.trim().split('-')
+  if (parts.length !== 3) return null
+
+  const [a, b, c] = parts
+  // YYYY-MM-DD quando o primeiro grupo tem 4 dígitos; senão DD-MM-YYYY.
+  const [year, month, day] =
+    a.length === 4 ? [Number(a), Number(b), Number(c)] : [Number(c), Number(b), Number(a)]
+
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return null
+  if (year < 1900 || year > new Date().getUTCFullYear()) return null
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null
+
+  const date = new Date(Date.UTC(year, month - 1, day))
+  // Rejeita data inexistente (31/02 etc.), que o Date "conserta" em silêncio.
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return null
+  }
+  return date
+}
+
+/**
+ * Junta o `extraData` novo ao que já existe, sem perder o que outra superfície
+ * gravou antes (ex.: as UTMs do ingressa quando a mesma pessoa depois passa
+ * pelo checkout).
+ */
+function mergeExtraData(
+  existing: unknown,
+  incoming: unknown,
+): Record<string, unknown> | undefined {
+  const base = existing && typeof existing === 'object' ? (existing as Record<string, unknown>) : {}
+  const next = incoming && typeof incoming === 'object' ? (incoming as Record<string, unknown>) : {}
+  if (Object.keys(next).length === 0) return undefined
+  return JSON.parse(JSON.stringify({ ...base, ...next }))
+}
+
 // Meta Conversions API — Lead server-side (não depende do pixel do browser).
 // Best-effort: nunca bloqueia o cadastro.
 async function sendLeadToMeta(params: {
@@ -61,6 +115,9 @@ export async function POST(request: NextRequest) {
       courseName,
       institutionName,
       modalidade,
+      birthDate,
+      extraData,
+      source,
     } = body
 
     if (!name || !cpf || !email || !phone) {
@@ -73,6 +130,7 @@ export async function POST(request: NextRequest) {
     // Limpar CPF e telefone
     const cleanCpf = cpf.replace(/\D/g, '')
     const cleanPhone = phone.replace(/\D/g, '')
+    const parsedBirthDate = parseBirthDate(birthDate)
 
     // Verificar se já existe um lead com este CPF e curso
     const existingLead = await prisma.lead.findFirst({
@@ -94,6 +152,14 @@ export async function POST(request: NextRequest) {
           courseName,
           institutionName,
           modalidade,
+          // Só sobrescreve quando veio dado novo — um fluxo que não pede
+          // nascimento (teste vocacional, simulador) não pode apagar o que o
+          // checkout já gravou.
+          ...(parsedBirthDate ? { birthDate: parsedBirthDate } : {}),
+          ...(mergeExtraData(existingLead.extraData, extraData)
+            ? { extraData: mergeExtraData(existingLead.extraData, extraData) }
+            : {}),
+          ...(source ? { source } : {}),
           updatedAt: new Date(),
         },
       })
@@ -126,6 +192,9 @@ export async function POST(request: NextRequest) {
         courseName,
         institutionName,
         modalidade,
+        ...(parsedBirthDate ? { birthDate: parsedBirthDate } : {}),
+        ...(mergeExtraData(null, extraData) ? { extraData: mergeExtraData(null, extraData) } : {}),
+        ...(source ? { source } : {}),
         status: 'NEW',
       },
     })

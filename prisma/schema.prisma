@@ -172,6 +172,10 @@ model Lead {
   cpf         String? // Opcional: leads de teste vocacional não pedem CPF
   email       String
   phone       String
+  // Data de nascimento: o formulário sempre pediu, mas até 2026-08-11 o dado
+  // era enviado só à Cogna/Athena e descartado do nosso lado. @db.Date porque
+  // é data pura — sem hora, sem fuso, sem risco de virar o dia na conversão.
+  birthDate   DateTime? @db.Date
   courseNames String[] // Cursos de interesse
 
   // Dados do curso (se disponível)

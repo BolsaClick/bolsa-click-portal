@@ -5,9 +5,20 @@ export interface CreateLeadRequest {
   phone: string
   courseNames?: string[]
   courseId?: string
-  courseName?: string
+  /** Marca da oferta (Anhanguera, Estácio, Unopar, IBMEC…) — segmentação no CRM. */
   institutionName?: string
+  courseName?: string
   modalidade?: string
+  /** `DD-MM-YYYY` (checkout de matrícula) ou `YYYY-MM-DD` (Estácio); o servidor normaliza. */
+  birthDate?: string
+  /**
+   * Campos que o candidato preenche mas que não têm coluna própria — endereço,
+   * RG, gênero, ano de conclusão. Antes iam só pro parceiro e sumiam do nosso
+   * lado. O servidor faz merge com o que já existir, não sobrescreve.
+   */
+  extraData?: Record<string, unknown>
+  /** Superfície de origem (ex.: `checkout-matricula`, `checkout-estacio`). */
+  source?: string
 }
 
 export interface CreateLeadResponse {

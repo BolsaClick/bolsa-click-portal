@@ -12,12 +12,30 @@ const NOTEALY_API_TOKEN = process.env.NOTEALY_API_TOKEN
  */
 const SITE_TAG_NAME = 'site_bolsaclick'
 
+/**
+ * Tag de estágio: a inscrição foi RECUSADA pelo parceiro (Cogna/Estácio).
+ * Diferente de `abandonou_checkout` — aqui a pessoa foi até o fim e quis se
+ * inscrever; quem barrou foi o parceiro. É a lista mais quente de recuperação
+ * que existe, e até 2026-08 ela simplesmente não era registrada em lugar
+ * nenhum: a recusa acontecia, o candidato via um toast de erro e sumia.
+ *
+ * Resolvida por NOME (não por env var) pelo mesmo motivo da tag de site: não
+ * exige passo manual no painel nem variável nova em cada ambiente.
+ */
+export const NOTEALY_TAG_INSCRICAO_RECUSADA = 'inscricao_recusada'
+
 interface UpsertContactInput {
   name: string
   email?: string
   phone?: string
   cpf?: string
   tagId?: string
+  /**
+   * Tags por NOME, resolvidas (get-or-create) em runtime. Preferir a `tagId`
+   * quando não houver um UUID já configurado por env — evita um passo manual
+   * no painel e uma variável de ambiente a mais por deploy.
+   */
+  tagNames?: string[]
   city?: string
   /** Metadado livre — curso, oferta, marca, modalidade, fonte etc. */
   customFields?: Record<string, unknown>
@@ -60,42 +78,46 @@ async function notealyRequest<T>(path: string, body: unknown): Promise<T> {
   return data as T
 }
 
-// Cache em memória do id da tag de site — o processo resolve uma vez e reusa.
-// Falha (ex: token sem scope tags:*) também é cacheada pra não custar uma
-// request extra por upsert; nesse caso os contatos seguem sem a tag de site.
-let siteTagIdPromise: Promise<string | null> | null = null
+// Cache em memória do id de cada tag resolvida por nome — o processo resolve
+// uma vez por nome e reusa. Falha (ex: token sem scope tags:*) também é
+// cacheada pra não custar uma request extra por upsert; nesse caso os contatos
+// seguem sem aquela tag, mas o upsert em si NÃO é perdido.
+const tagIdPromises = new Map<string, Promise<string | null>>()
 
-function resolveSiteTagId(): Promise<string | null> {
-  if (!siteTagIdPromise) {
-    siteTagIdPromise = (async () => {
-      const headers = { Authorization: `Bearer ${NOTEALY_API_TOKEN}` }
-      const listRes = await fetch(`${NOTEALY_API_URL}/tags`, { headers })
-      if (!listRes.ok) throw new Error(`GET /tags respondeu ${listRes.status}`)
-      const tags = (await listRes.json()) as Array<{ id: string; name: string }>
-      const found = tags.find((t) => t.name === SITE_TAG_NAME)
-      if (found) return found.id
+function resolveTagIdByName(name: string): Promise<string | null> {
+  const cached = tagIdPromises.get(name)
+  if (cached) return cached
 
-      const createRes = await fetch(`${NOTEALY_API_URL}/tags`, {
-        method: 'POST',
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: SITE_TAG_NAME }),
-      })
-      if (createRes.status === 409) {
-        // Corrida com outra instância — a tag acabou de nascer; relê a lista.
-        const retryRes = await fetch(`${NOTEALY_API_URL}/tags`, { headers })
-        if (!retryRes.ok) throw new Error(`GET /tags respondeu ${retryRes.status}`)
-        const retryTags = (await retryRes.json()) as Array<{ id: string; name: string }>
-        return retryTags.find((t) => t.name === SITE_TAG_NAME)?.id ?? null
-      }
-      if (!createRes.ok) throw new Error(`POST /tags respondeu ${createRes.status}`)
-      const created = (await createRes.json()) as { id: string }
-      return created.id
-    })().catch((error) => {
-      console.warn(`⚠️ Notealy: tag "${SITE_TAG_NAME}" indisponível — contatos seguem sem tag de site:`, error)
-      return null
+  const promise = (async () => {
+    const headers = { Authorization: `Bearer ${NOTEALY_API_TOKEN}` }
+    const listRes = await fetch(`${NOTEALY_API_URL}/tags`, { headers })
+    if (!listRes.ok) throw new Error(`GET /tags respondeu ${listRes.status}`)
+    const tags = (await listRes.json()) as Array<{ id: string; name: string }>
+    const found = tags.find((t) => t.name === name)
+    if (found) return found.id
+
+    const createRes = await fetch(`${NOTEALY_API_URL}/tags`, {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
     })
-  }
-  return siteTagIdPromise
+    if (createRes.status === 409) {
+      // Corrida com outra instância — a tag acabou de nascer; relê a lista.
+      const retryRes = await fetch(`${NOTEALY_API_URL}/tags`, { headers })
+      if (!retryRes.ok) throw new Error(`GET /tags respondeu ${retryRes.status}`)
+      const retryTags = (await retryRes.json()) as Array<{ id: string; name: string }>
+      return retryTags.find((t) => t.name === name)?.id ?? null
+    }
+    if (!createRes.ok) throw new Error(`POST /tags respondeu ${createRes.status}`)
+    const created = (await createRes.json()) as { id: string }
+    return created.id
+  })().catch((error) => {
+    console.warn(`⚠️ Notealy: tag "${name}" indisponível — contatos seguem sem ela:`, error)
+    return null
+  })
+
+  tagIdPromises.set(name, promise)
+  return promise
 }
 
 /**
@@ -121,8 +143,15 @@ export async function upsertNotealyContact(
   const phone = normalizePhone(input.phone)
   if (phone) payload.phone = phone
   if (input.cpf) payload.externalId = input.cpf
-  const siteTagId = await resolveSiteTagId()
-  const tagIds = [input.tagId, siteTagId].filter((t): t is string => Boolean(t))
+  // Todas as tags por nome (site + as pedidas pelo caller) resolvem em
+  // paralelo; cada uma que falhar vira null e é descartada, sem derrubar as
+  // outras nem o upsert.
+  const resolvedByName = await Promise.all(
+    [SITE_TAG_NAME, ...(input.tagNames ?? [])].map(resolveTagIdByName),
+  )
+  const tagIds = Array.from(
+    new Set([input.tagId, ...resolvedByName].filter((t): t is string => Boolean(t))),
+  )
   if (tagIds.length) payload.tagIds = tagIds
   if (input.city) payload.city = input.city
   if (input.customFields) payload.customFields = input.customFields
@@ -133,6 +162,36 @@ export async function upsertNotealyContact(
   const person = (data?.person ?? data?.data ?? data) as Record<string, unknown> | null
   const id = person?.id
   return typeof id === 'string' ? id : null
+}
+
+/**
+ * Remove uma tag (por NOME) de um contato. Best-effort: nunca lança.
+ *
+ * Existe para fechar o ciclo do estágio de recuperação. Sem isto, quem tem uma
+ * inscrição recusada e depois consegue se inscrever ficaria com
+ * `inscricao_recusada` E `inscrito` ao mesmo tempo — e entraria na campanha de
+ * recuperação já matriculado, que é a pior mensagem possível de mandar.
+ */
+export async function detachNotealyTagByName(
+  contactId: string,
+  tagName: string,
+): Promise<void> {
+  if (!NOTEALY_API_TOKEN) return
+  try {
+    const tagId = await resolveTagIdByName(tagName)
+    if (!tagId) return
+    const res = await fetch(`${NOTEALY_API_URL}/people/${contactId}/tags/${tagId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${NOTEALY_API_TOKEN}` },
+    })
+    // 404 = a pessoa não tinha a tag. É o caso comum (a maioria nunca falhou)
+    // e não é erro — só não havia nada a remover.
+    if (!res.ok && res.status !== 404) {
+      console.warn(`⚠️ Notealy: não removeu a tag "${tagName}" — ${res.status}`)
+    }
+  } catch (error) {
+    console.warn(`⚠️ Notealy: falha ao remover a tag "${tagName}":`, error)
+  }
 }
 
 /**

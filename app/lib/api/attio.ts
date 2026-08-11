@@ -85,17 +85,29 @@ function toE164(phone: string): string | null {
   return `+${digits}`
 }
 
-/** Opções válidas do select `marca` no Attio. Fora desta lista → "Outra". */
-const MARCAS: Record<string, string> = {
-  ANHANGUERA: 'Anhanguera',
-  ESTACIO: 'Estácio',
-  UNOPAR: 'Unopar',
-  PITAGORAS: 'Pitágoras',
-  IBMEC: 'IBMEC',
-  AMPLI: 'Ampli',
-  UNIME: 'UNIME',
-  UNIC: 'UNIC',
-}
+/**
+ * Marca canônica → opção do select `marca` no Attio.
+ *
+ * Casamento por SUBSTRING, não por igualdade: o catálogo grava o nome completo
+ * da unidade ("UNIVERSIDADE ESTÁCIO DE SÁ", "CENTRO UNIVERSITÁRIO ESTÁCIO DE
+ * RIBEIRÃO PRETO", "FACULDADE ESTÁCIO DO RIO GRANDE DO SUL"), não a rede. Com
+ * igualdade exata, as 14 variações de Estácio caíam todas em "Outra" e a
+ * segmentação por rede — que é o ponto do campo — deixava de existir.
+ *
+ * A ordem importa: o primeiro padrão que casar vence. UNIC vai por último
+ * porque é curto e aparece dentro de outros nomes.
+ */
+const MARCAS: Array<[string, string]> = [
+  ['ANHANGUERA', 'Anhanguera'],
+  ['ESTACIO', 'Estácio'],
+  ['UNOPAR', 'Unopar'],
+  ['PITAGORAS', 'Pitágoras'],
+  ['IBMEC', 'IBMEC'],
+  ['UNAES', 'UNAES'],
+  ['UNIME', 'UNIME'],
+  ['AMPLI', 'Ampli'],
+  ['UNIC', 'UNIC'],
+]
 
 /** Remove acento/caixa para casar "Estácio", "ESTACIO" e "estacio". */
 function normalizeKey(value: string): string {
@@ -106,9 +118,13 @@ function normalizeKey(value: string): string {
     .trim()
 }
 
-function toMarca(brand?: string): string | undefined {
+export function toMarca(brand?: string): string | undefined {
   if (!brand?.trim()) return undefined
-  return MARCAS[normalizeKey(brand)] ?? 'Outra'
+  const key = normalizeKey(brand)
+  for (const [padrao, marca] of MARCAS) {
+    if (key.includes(padrao)) return marca
+  }
+  return 'Outra'
 }
 
 function toModalidade(modality?: string): string | undefined {

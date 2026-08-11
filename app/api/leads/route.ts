@@ -1,38 +1,112 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
-import { upsertNotealyContact } from '@/app/lib/api/notealy'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
+import { upsertCandidato, type OrigemFluxo } from '@/app/lib/api/attio'
+import { utmFromRequest, utmFromBody, mergeUtm, type UtmParams } from '@/app/lib/analytics/utm'
 
-// Estágio 1 do CRM Notealy: cria/atualiza o contato com a tag de lead + curso/
-// instituição/modalidade em customFields. Best-effort — nunca bloqueia o
-// cadastro. O email de boas-vindas fica fora até o token ganhar o scope
-// email:send (basta voltar a chamar sendNotealyEmail aqui com
-// NOTEALY_TEMPLATE_WELCOME quando estiver pronto).
-async function syncLeadToNotealy(params: {
+const FLUXOS_CONHECIDOS = new Set<OrigemFluxo>([
+  'checkout-matricula',
+  'checkout-estacio',
+  'ingressa',
+  'simulador',
+  'teste-vocacional',
+])
+
+function toOrigemFluxo(source: unknown): OrigemFluxo | undefined {
+  return typeof source === 'string' && FLUXOS_CONHECIDOS.has(source as OrigemFluxo)
+    ? (source as OrigemFluxo)
+    : undefined
+}
+
+/**
+ * Normaliza a data de nascimento vinda dos formulários para um Date em UTC.
+ *
+ * Dois formatos chegam aqui e não dá pra assumir um só: o checkout de matrícula
+ * usa máscara própria e manda `DD-MM-YYYY`; o do Estácio usa `<input
+ * type="date">` e manda `YYYY-MM-DD`. Como ambos têm o mesmo formato de
+ * separador, distinguir pelo tamanho do primeiro grupo é o que evita gravar
+ * 11 de agosto como 8 de novembro.
+ *
+ * Sempre Date.UTC: `new Date(y, m, d)` cria meia-noite LOCAL, que no fuso do
+ * Brasil vira 03:00Z e, em qualquer conversão que trunque pra data local,
+ * pode voltar um dia.
+ */
+function parseBirthDate(value: unknown): Date | null {
+  if (typeof value !== 'string') return null
+  const parts = value.trim().split('-')
+  if (parts.length !== 3) return null
+
+  const [a, b, c] = parts
+  // YYYY-MM-DD quando o primeiro grupo tem 4 dígitos; senão DD-MM-YYYY.
+  const [year, month, day] =
+    a.length === 4 ? [Number(a), Number(b), Number(c)] : [Number(c), Number(b), Number(a)]
+
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return null
+  if (year < 1900 || year > new Date().getUTCFullYear()) return null
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null
+
+  const date = new Date(Date.UTC(year, month - 1, day))
+  // Rejeita data inexistente (31/02 etc.), que o Date "conserta" em silêncio.
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return null
+  }
+  return date
+}
+
+/**
+ * Junta o `extraData` novo ao que já existe, sem perder o que outra superfície
+ * gravou antes (ex.: as UTMs do ingressa quando a mesma pessoa depois passa
+ * pelo checkout).
+ */
+function mergeExtraData(
+  existing: unknown,
+  incoming: unknown,
+): Record<string, unknown> | undefined {
+  const base = existing && typeof existing === 'object' ? (existing as Record<string, unknown>) : {}
+  const next = incoming && typeof incoming === 'object' ? (incoming as Record<string, unknown>) : {}
+  if (Object.keys(next).length === 0) return undefined
+  return JSON.parse(JSON.stringify({ ...base, ...next }))
+}
+
+/**
+ * CRM (Attio). Best-effort por construção: o lead já está persistido na tabela
+ * Lead antes desta chamada, então uma falha aqui atrasa a sincronização mas
+ * nunca perde o contato.
+ */
+async function syncCandidato(params: {
+  leadId: string
   name: string
   email: string
   phone: string
   cpf: string
+  birthDate?: Date | null
   courseName?: string
   institutionName?: string
   modalidade?: string
+  source?: unknown
+  utm?: UtmParams
 }) {
   try {
-    await upsertNotealyContact({
+    await upsertCandidato({
+      phone: params.phone,
       name: params.name,
       email: params.email,
-      phone: params.phone,
       cpf: params.cpf,
-      tagId: process.env.NOTEALY_TAG_LEAD,
-      // "marca" é o nome canônico entre sites e estágios (não "instituicao").
-      customFields: {
-        curso: params.courseName,
-        marca: params.institutionName,
-        modalidade: params.modalidade,
-      },
+      birthDate: params.birthDate,
+      brand: params.institutionName,
+      courseName: params.courseName,
+      modality: params.modalidade,
+      estagio: 'lead',
+      origemFluxo: toOrigemFluxo(params.source),
+      leadId: params.leadId,
+      utm: params.utm,
     })
   } catch (error) {
-    console.error('⚠️ Notealy (estágio 1) falhou:', error)
+    console.error('⚠️ Attio (lead) falhou:', error)
   }
 }
 
@@ -91,6 +165,9 @@ export async function POST(request: NextRequest) {
       courseName,
       institutionName,
       modalidade,
+      birthDate,
+      extraData,
+      source,
     } = body
 
     if (!name || !cpf || !email || !phone) {
@@ -103,6 +180,10 @@ export async function POST(request: NextRequest) {
     // Limpar CPF e telefone
     const cleanCpf = cpf.replace(/\D/g, '')
     const cleanPhone = phone.replace(/\D/g, '')
+    const parsedBirthDate = parseBirthDate(birthDate)
+    // Explícito do client (localStorage da UTMify, sobrevive à navegação) tem
+    // prioridade; o referer preenche o que faltar.
+    const utm = mergeUtm(utmFromBody(body.utm), utmFromRequest(request))
 
     // Verificar se já existe um lead com este CPF e curso
     const existingLead = await prisma.lead.findFirst({
@@ -124,18 +205,30 @@ export async function POST(request: NextRequest) {
           courseName,
           institutionName,
           modalidade,
+          // Só sobrescreve quando veio dado novo — um fluxo que não pede
+          // nascimento (teste vocacional, simulador) não pode apagar o que o
+          // checkout já gravou.
+          ...(parsedBirthDate ? { birthDate: parsedBirthDate } : {}),
+          ...(mergeExtraData(existingLead.extraData, extraData)
+            ? { extraData: mergeExtraData(existingLead.extraData, extraData) }
+            : {}),
+          ...(source ? { source } : {}),
           updatedAt: new Date(),
         },
       })
 
-      await syncLeadToNotealy({
+      await syncCandidato({
+        leadId: updatedLead.id,
         name,
         email,
         phone: cleanPhone,
         cpf: cleanCpf,
+        birthDate: updatedLead.birthDate,
         courseName,
         institutionName,
         modalidade,
+        source: source ?? existingLead.source,
+        utm,
       })
 
       await sendLeadToMeta({
@@ -166,18 +259,25 @@ export async function POST(request: NextRequest) {
         courseName,
         institutionName,
         modalidade,
+        ...(parsedBirthDate ? { birthDate: parsedBirthDate } : {}),
+        ...(mergeExtraData(null, extraData) ? { extraData: mergeExtraData(null, extraData) } : {}),
+        ...(source ? { source } : {}),
         status: 'NEW',
       },
     })
 
-    await syncLeadToNotealy({
+    await syncCandidato({
+      leadId: lead.id,
       name,
       email,
       phone: cleanPhone,
       cpf: cleanCpf,
+      birthDate: lead.birthDate,
       courseName,
       institutionName,
       modalidade,
+      source,
+      utm,
     })
 
     await sendLeadToMeta({

@@ -21,6 +21,7 @@ import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { pushDataLayerEvent } from '@/app/lib/analytics/gtag'
 import { createLead } from '@/app/lib/api/create-lead'
+import { readUtmifyParams } from '@/app/lib/analytics/utmify-client'
 import { titleCasePtBr } from '@/app/lib/utils/title-case'
 import { getPriceAnchor } from '@/app/lib/utils/price-anchor'
 import { formatCurrency } from '@/utils/fomartCurrency'
@@ -336,7 +337,7 @@ export default function EstacioCheckoutClient() {
 
     setSubmitting(true)
 
-    // Notealy (estágio 1): cadastra o contato como lead sem bloquear a inscrição.
+    // Persiste o contato como lead (tabela Lead) sem bloquear a inscrição.
     void createLead({
       name: form.name.trim(),
       cpf: form.cpf.replace(/\D/g, ''),
@@ -347,7 +348,28 @@ export default function EstacioCheckoutClient() {
       courseName: offer.courseName,
       institutionName: offer.brand,
       modalidade: offer.modality,
-    }).catch((leadError) => console.error('Notealy lead falhou:', leadError))
+      birthDate: form.birthDate || undefined,
+      source: 'checkout-estacio',
+      utm: readUtmifyParams() as unknown as Record<string, string | null>,
+      // O formulário da Estácio é o mais completo que temos — endereço, RG,
+      // gênero, ano de conclusão. Tudo isso ia só pra Athena e não ficava com
+      // a gente; sem coluna própria, vai em extraData.
+      extraData: {
+        rg: form.rg.trim() || undefined,
+        genero: form.gender || undefined,
+        ano_conclusao: form.graduationYear || undefined,
+        forma_ingresso: form.codFormaIngresso,
+        endereco: {
+          cep: form.zipCode.replace(/\D/g, '') || undefined,
+          logradouro: form.street.trim() || undefined,
+          numero: form.number.trim() || undefined,
+          bairro: form.neighborhood.trim() || undefined,
+          cidade: form.city.trim() || undefined,
+          estado: form.state.trim().toUpperCase() || undefined,
+        },
+        nivel: offer.academicLevel || undefined,
+      },
+    }).catch((leadError) => console.error('Registro de lead falhou:', leadError))
 
     // Funil unificado — etapa 2: identifica ANTES de enviar pra Estácio.
     // Estava depois do sucesso, o que só identificava quem já tinha convertido:
@@ -422,9 +444,8 @@ export default function EstacioCheckoutClient() {
         already_enrolled: !!data?.alreadyEnrolled,
       })
 
-      // Notealy (estágio 2) + PostHog server-side (enrollment_completed_server):
-      // marca o contato como "inscrito" e mede a conversão real independente
-      // de consentimento de cookie. Não-bloqueante.
+      // PostHog server-side (enrollment_completed_server): mede a conversão
+      // real independente de consentimento de cookie. Não-bloqueante.
       fetch('/api/leads/confirm-inscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -441,7 +462,7 @@ export default function EstacioCheckoutClient() {
           source: 'YDUQS',
           inscriptionId: data?.numeroInscricao,
         }),
-      }).catch((confirmError) => console.error('Notealy confirm falhou:', confirmError))
+      }).catch((confirmError) => console.error('Confirmação de inscrição falhou:', confirmError))
 
       // Funil unificado — etapa 3 (fluxo Estácio): inscrição criada.
       // (a etapa 2 / identificação agora acontece antes do envio, acima)

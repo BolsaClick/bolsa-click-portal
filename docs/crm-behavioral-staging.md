@@ -1,55 +1,64 @@
-# CRM Notealy — estágio por comportamento
+# CRM — estágio por comportamento
 
-Objetivo: o estágio do contato no CRM (Notealy) reflete **o que a pessoa fez no
-produto**, não só o ponto de entrada. Foco no estágio que hoje não existe:
-**"abandonou checkout"** — alta intenção, não converteu — que é o público de
-retargeting.
+> **Status (2026-08-11):** a integração com o CRM anterior (Notealy) foi
+> removida do código em favor de uma troca de fornecedor. Este documento
+> descreve a **especificação** de estágios, que é independente de fornecedor —
+> a fonte dos estágios é o PostHog, não o CRM. Ao plugar o CRM novo, os pontos
+> de integração estão listados em "Onde o CRM entra".
 
-## Como o CRM funciona hoje
+Objetivo: o estágio do contato no CRM reflete **o que a pessoa fez no produto**,
+não só o ponto de entrada. Foco no estágio que não existe hoje: **"abandonou
+checkout"** — alta intenção, não converteu — que é o público de retargeting.
 
-- CRM = **Notealy**. Estágio = **tag** (`upsertNotealyContact({ ..., tagId })`,
-  casa por telefone→email→CPF). Ver `app/lib/api/notealy.ts`.
-- Tags aplicadas em **pontos de entrada** e **conversão**:
+## Onde o CRM entra
 
-| Momento | Onde | Tag |
+Todos os pontos abaixo já persistem o lead (tabela `Lead`) e/ou emitem evento
+no PostHog. O que saiu foi só a chamada ao CRM; os call sites seguem marcados
+em comentário.
+
+| Momento | Onde | Estágio |
 |---|---|---|
-| Preencheu form de lead | `app/api/leads/route.ts` | `NOTEALY_TAG_LEAD` |
-| Fez teste vocacional | `app/api/teste-vocacional/submit` | `NOTEALY_TAG_TESTE_VOCACIONAL` |
-| Usou simulador | `app/api/simulador` | `NOTEALY_TAG_SIMULADOR` |
-| Landing ingressa | `app/api/ingressa` | `NOTEALY_TAG_INGRESSA` |
-| Enviou inscrição | `app/api/leads/confirm-inscription` | `NOTEALY_TAG_INSCRITO` |
-| Matrícula paga | checkout confirm | `NOTEALY_TAG_MATRICULADO` |
+| Preencheu form de lead | `app/api/leads/route.ts` | lead |
+| Fez teste vocacional | `app/api/teste-vocacional/submit` | teste_vocacional |
+| Usou simulador | `app/api/simulador` | simulador |
+| Landing ingressa (mídia paga) | `app/api/ingressa` | lead_ingressa |
+| Enviou inscrição | `app/api/leads/confirm-inscription` | inscrito |
+| **Inscrição recusada pelo parceiro** | `app/api/leads/inscription-failed` | inscricao_recusada |
+| Matrícula paga | `app/lib/checkout/confirm-matricula.ts` | matriculado |
 
-**O que falta:** o estágio de **intenção sem conclusão** — quem chegou fundo no
-funil e parou. Ninguém taggeia isso hoje.
+`inscricao_recusada` é o estágio mais quente da lista: a pessoa preencheu tudo,
+apertou enviar e o parceiro barrou. Hoje ele sobrevive só como person property
+no PostHog (`last_enrollment_status = failed`, com `last_enrollment_error`).
 
 ## O estágio novo: `abandonou_checkout`
 
-Definição comportamental (fonte = PostHog): **validou CPF no checkout** (ou, após
-o PR #59, `checkout_identified`) **e não** atingiu página de sucesso, em 14 dias.
+Definição comportamental (fonte = PostHog): **validou CPF no checkout**
+(`checkout_identified`) **e não** atingiu página de sucesso, em 14 dias.
 
-- Materializado na **cohort PostHog `419066`** ("Abandonou checkout — identificado,
-  não converteu (14d)"). É recalculada sozinha.
-- Nova tag no CRM: **`NOTEALY_TAG_ABANDONO`** (adicionar ao env).
+Materializado na **cohort PostHog `419066`** ("Abandonou checkout — identificado,
+não converteu (14d)"). É recalculada sozinha.
 
-## Mapa completo comportamento → tag
+## Mapa completo comportamento → estágio
 
 ```
-Ponto de entrada (form/teste/simulador)          → lead / teste_vocacional / ...
-Chegou ao checkout e se identificou, SEM concluir → abandonou_checkout   ← NOVO
-Enviou inscrição                                  → inscrito
-Matrícula paga                                    → matriculado
+Ponto de entrada (form/teste/simulador/ingressa)   → lead / teste_vocacional / ...
+Chegou ao checkout e se identificou, SEM concluir  → abandonou_checkout
+Enviou inscrição e o parceiro recusou              → inscricao_recusada
+Enviou inscrição                                   → inscrito
+Matrícula paga                                     → matriculado
 ```
 
-Precedência: `matriculado > inscrito > abandonou_checkout > lead/entrada`. Um
-contato nunca deve regredir (só avança).
+Precedência: `matriculado > inscrito > inscricao_recusada > abandonou_checkout >
+lead/entrada`. Um contato nunca deve regredir (só avança) — e quem sai de
+`inscricao_recusada` para `inscrito` precisa **perder** o estágio anterior, ou
+receberá campanha de recuperação já matriculado.
 
 ## Mecanismo de sync (a construir, com aprovação)
 
-Um job agendado (padrão dos `scripts/`, ex.: `export-disparo-reativacao.ts`):
+Um job agendado (padrão dos `scripts/`):
 
 1. Lê os membros da cohort `419066` via PostHog (usa `POSTHOG_KEY_USER`).
-2. Para cada contato com email/telefone, faz **upsert no Notealy** com a tag
+2. Para cada contato com email/telefone, faz upsert no CRM com o estágio
    `abandonou_checkout`.
 3. Exporta a lista de retargeting (WhatsApp) — importável na ferramenta de disparo.
 
@@ -58,14 +67,13 @@ envia mensagens** — o disparo é decisão à parte, com opt-out ("responda SAI
 
 ## Dependências
 
-- **PR #59 (tracking) em produção:** hoje a identificação (email/telefone no
-  PostHog) só acontece após inscrição concluída. Com o #59, `checkout_identified`
-  grava o contato **no momento do CPF** → os abandonadores deixam de ser anônimos
-  e ficam retargetáveis. Sem isso, a cohort captura o comportamento mas a maioria
-  não tem email/telefone no PostHog.
-- **`NOTEALY_TAG_ABANDONO`** no env.
-- **Canal de retargeting:** WhatsApp (export CSV, já usado) e/ou email via template
-  Notealy (`sendNotealyEmail`).
+- **Tracking em produção:** a identificação (`checkout_identified` com CPF como
+  `distinct_id`) grava o contato no momento da validação do CPF → os
+  abandonadores deixam de ser anônimos e ficam retargetáveis. Sem isso, a
+  cohort captura o comportamento mas a maioria não tem email/telefone.
+- **CRM novo definido**, com credenciais e um endpoint de upsert idempotente
+  que case por telefone → email → CPF (o casamento por múltiplas chaves é o que
+  evita contato duplicado entre estágios).
 
 ## Privacidade / LGPD
 

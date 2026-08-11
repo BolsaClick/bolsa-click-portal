@@ -5,8 +5,9 @@ import {
   type ChatMessage,
   type Recommendation,
 } from '@/app/lib/teste-vocacional/openai'
-import { upsertNotealyContact } from '@/app/lib/api/notealy'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
+import { upsertCandidato } from '@/app/lib/api/attio'
+import { utmFromRequest } from '@/app/lib/analytics/utm'
 import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
 import {
   computeUserProfile,
@@ -228,20 +229,20 @@ export async function POST(request: NextRequest) {
     console.error('Falha ao criar Lead:', error)
   }
 
-  // 5) Notealy sync (best-effort)
+  // 5) CRM (best-effort — o Lead acima já garantiu o contato).
   try {
-    await upsertNotealyContact({
+    await upsertCandidato({
+      phone: cleanPhone,
       name: name.trim(),
       email: email.toLowerCase().trim(),
-      phone: cleanPhone,
-      tagId: process.env.NOTEALY_TAG_TESTE_VOCACIONAL,
-      customFields: {
-        cursos_recomendados: courseNames,
-        perfil_vocacional: profile.hollandCode,
-      },
+      courseName: courseNames[0],
+      estagio: 'lead',
+      origemFluxo: 'teste-vocacional',
+      leadId: leadId || undefined,
+      utm: utmFromRequest(request),
     })
   } catch (error) {
-    console.error('⚠️ Falha ao sincronizar com Notealy:', error)
+    console.error('⚠️ Attio (teste vocacional) falhou:', error)
   }
 
   // 6) Meta CAPI — Lead (best-effort)

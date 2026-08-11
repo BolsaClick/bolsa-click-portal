@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
-import { upsertNotealyContact } from '@/app/lib/api/notealy'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
-
-// Tag fixa do funil ingressa no Notealy (criada 2026-07-14). Hardcoded — não
-// depende de env.
-const NOTEALY_TAG_INGRESSA = '2efcf93c-f924-4b32-a3d0-37995d1b5d69'
+import { upsertCandidato } from '@/app/lib/api/attio'
+import { utmFromBody, utmFromRequest, mergeUtm } from '@/app/lib/analytics/utm'
 
 interface IngressaBody {
   name: string
@@ -123,19 +120,23 @@ export async function POST(request: NextRequest) {
     console.error('Falha ao criar Lead (ingressa):', error)
   }
 
-  // 2) Notealy (best-effort).
+  // 2) CRM (best-effort). Este é o fluxo que motivou casar por TELEFONE em vez
+  // de email: a landing de mídia paga capta só nome e WhatsApp, e no objeto
+  // `people` padrão do Attio (único atributo único = email) este lead ficaria
+  // sem chave de casamento.
   try {
-    await upsertNotealyContact({
-      name: cleanName,
+    await upsertCandidato({
       phone: cleanPhone,
-      tagId: NOTEALY_TAG_INGRESSA,
-      customFields: {
-        curso: cursoName,
-        marca: typeof body.partnerName === 'string' ? body.partnerName : partnerSlug,
-      },
+      name: cleanName,
+      brand: typeof body.partnerName === 'string' ? body.partnerName : partnerSlug,
+      courseName: cursoName || undefined,
+      estagio: 'lead',
+      origemFluxo: 'ingressa',
+      leadId: leadId || undefined,
+      utm: mergeUtm(utmFromBody(body.utm), utmFromRequest(request)),
     })
   } catch (error) {
-    console.error('⚠️ Notealy (ingressa) falhou:', error)
+    console.error('⚠️ Attio (ingressa) falhou:', error)
   }
 
   // 3) Meta CAPI (best-effort).

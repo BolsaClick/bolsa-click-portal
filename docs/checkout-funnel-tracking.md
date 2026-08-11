@@ -46,7 +46,7 @@ properties* (identificação), consistente com o `identifyUser` que já existia.
 
 - **Dashboard PostHog:** funil unificado + top páginas + origem de tráfego +
   retenção.
-- **Estágio no CRM (Notealy) por comportamento:** mapear
+- **Estágio no CRM por comportamento:** mapear
   `checkout_identified`/`submitted`/`converted` → tags (lead/inscrito/matriculado)
   e um estágio "abandonou" para retargeting.
 - **Retargeting de abandono** ("por que abandonou seu sonho de faculdade?") para

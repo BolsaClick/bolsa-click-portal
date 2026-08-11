@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
-import { upsertNotealyContact, NOTEALY_TAG_INSCRICAO_RECUSADA } from '@/app/lib/api/notealy'
+import { upsertCandidato, type OrigemFluxo } from '@/app/lib/api/attio'
 
 // Espelho de falha do /api/leads/confirm-inscription.
 //
@@ -53,32 +53,28 @@ export async function POST(request: NextRequest) {
 
     const phoneDigits = phone ? String(phone).replace(/\D/g, '') : undefined
 
-    // CRM — lista de recuperação. Quem chega aqui é o lead mais quente que
-    // existe: preencheu tudo, apertou enviar e foi recusado pelo parceiro. Sem
-    // esta tag ele ficava indistinguível de quem simplesmente desistiu no meio.
-    // Best-effort: falha no CRM não pode impedir a medição no PostHog abaixo.
-    if (name) {
+    // CRM: lista de recuperação. Quem chega aqui é o lead mais quente que
+    // existe — preencheu tudo, apertou enviar e foi recusado pelo parceiro.
+    // O motivo vai junto porque decide a abordagem: reinscrever noutra oferta
+    // (oferta encerrada) ou corrigir um dado (CPF/data inválida).
+    if (phoneDigits) {
       try {
-        await upsertNotealyContact({
+        await upsertCandidato({
+          phone: phoneDigits,
           name,
           email,
-          phone: phoneDigits,
           cpf: cpfDigits,
-          tagNames: [NOTEALY_TAG_INSCRICAO_RECUSADA],
+          brand,
+          courseName,
+          modality: modalidade,
           city,
-          customFields: {
-            curso: courseName,
-            marca: brand,
-            modalidade,
-            // Motivo da recusa junto do contato: é o que decide se a
-            // recuperação é reinscrever noutra oferta (oferta encerrada) ou
-            // corrigir um dado (CPF/data inválida).
-            motivo_recusa: errorMessage,
-            origem_recusa: flow ?? 'matricula',
-          },
+          estagio: 'inscricao_recusada',
+          motivoRecusa: typeof errorMessage === 'string' ? errorMessage : undefined,
+          origemFluxo:
+            flow === 'estacio' ? ('checkout-estacio' as OrigemFluxo) : ('checkout-matricula' as OrigemFluxo),
         })
-      } catch (notealyError) {
-        console.error('⚠️ Notealy (inscrição recusada) falhou:', notealyError)
+      } catch (attioError) {
+        console.error('⚠️ Attio (inscrição recusada) falhou:', attioError)
       }
     }
 

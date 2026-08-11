@@ -336,7 +336,7 @@ export default function EstacioCheckoutClient() {
 
     setSubmitting(true)
 
-    // Notealy (estágio 1): cadastra o contato como lead sem bloquear a inscrição.
+    // Persiste o contato como lead (tabela Lead) sem bloquear a inscrição.
     void createLead({
       name: form.name.trim(),
       cpf: form.cpf.replace(/\D/g, ''),
@@ -347,7 +347,7 @@ export default function EstacioCheckoutClient() {
       courseName: offer.courseName,
       institutionName: offer.brand,
       modalidade: offer.modality,
-    }).catch((leadError) => console.error('Notealy lead falhou:', leadError))
+    }).catch((leadError) => console.error('Registro de lead falhou:', leadError))
 
     // Funil unificado — etapa 2: identifica ANTES de enviar pra Estácio.
     // Estava depois do sucesso, o que só identificava quem já tinha convertido:
@@ -422,9 +422,8 @@ export default function EstacioCheckoutClient() {
         already_enrolled: !!data?.alreadyEnrolled,
       })
 
-      // Notealy (estágio 2) + PostHog server-side (enrollment_completed_server):
-      // marca o contato como "inscrito" e mede a conversão real independente
-      // de consentimento de cookie. Não-bloqueante.
+      // PostHog server-side (enrollment_completed_server): mede a conversão
+      // real independente de consentimento de cookie. Não-bloqueante.
       fetch('/api/leads/confirm-inscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -441,7 +440,7 @@ export default function EstacioCheckoutClient() {
           source: 'YDUQS',
           inscriptionId: data?.numeroInscricao,
         }),
-      }).catch((confirmError) => console.error('Notealy confirm falhou:', confirmError))
+      }).catch((confirmError) => console.error('Confirmação de inscrição falhou:', confirmError))
 
       // Funil unificado — etapa 3 (fluxo Estácio): inscrição criada.
       // (a etapa 2 / identificação agora acontece antes do envio, acima)

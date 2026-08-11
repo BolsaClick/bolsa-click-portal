@@ -5,7 +5,6 @@ import {
   type ChatMessage,
   type Recommendation,
 } from '@/app/lib/teste-vocacional/openai'
-import { upsertNotealyContact } from '@/app/lib/api/notealy'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
 import {
@@ -228,21 +227,9 @@ export async function POST(request: NextRequest) {
     console.error('Falha ao criar Lead:', error)
   }
 
-  // 5) Notealy sync (best-effort)
-  try {
-    await upsertNotealyContact({
-      name: name.trim(),
-      email: email.toLowerCase().trim(),
-      phone: cleanPhone,
-      tagId: process.env.NOTEALY_TAG_TESTE_VOCACIONAL,
-      customFields: {
-        cursos_recomendados: courseNames,
-        perfil_vocacional: profile.hollandCode,
-      },
-    })
-  } catch (error) {
-    console.error('⚠️ Falha ao sincronizar com Notealy:', error)
-  }
+  // 5) A sincronização com o CRM saiu daqui em 2026-08-11 (troca de
+  // fornecedor). O lead do teste vocacional segue na tabela Lead acima — é
+  // aqui que o CRM novo entra (cursos recomendados + código Holland do perfil).
 
   // 6) Meta CAPI — Lead (best-effort)
   if (leadId) {

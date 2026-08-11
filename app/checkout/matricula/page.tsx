@@ -52,7 +52,6 @@ import {
 import { formatPhone } from '@/utils/formatters'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { Loader2 } from 'lucide-react'
-import { getMatriculaCharge } from '@/app/lib/checkout/matricula-charge'
 
 
 // Captação mínima (fluxo acordado com a Cogna — parceiro autorizou
@@ -114,7 +113,7 @@ type FormSchema = z.infer<typeof formSchema>
  * capturados no formulário (captação mínima acordada com o parceiro). São
  * válidos em FORMATO — a Cogna valida formato, não conteúdo, e confirma os
  * dados reais do candidato na matrícula efetiva. NUNCA enviar estes valores
- * ao CRM (Notealy) — só ao payload de inscrição da Cogna/Tartarus.
+ * ao CRM — só ao payload de inscrição da Cogna/Tartarus.
  */
 const DADOS_ADMIN_PADRAO = {
   rg: '000000000',
@@ -507,7 +506,6 @@ const isFormValidForPayment =
   // O pagamento de verdade fica com a Cogna (payment-link deles, quando
   // integrado) — enquanto isso não existe, a inscrição é criada direto e o
   // aluno vai pra tela de sucesso sem pagar nada aqui.
-  const matriculaCharge = getMatriculaCharge(offerDetails)
 
   // Níveis que usam seleção de método de pagamento + voucher via Tartarus.
   // Graduação continua pagando direto na instituição (botão simples).
@@ -767,7 +765,7 @@ const isFormValidForPayment =
           phone: data.phone.replace(/\D/g, ''),
         })
 
-        // Notealy (estágio 2) + PostHog server-side (enrollment_completed_server):
+        // PostHog server-side (enrollment_completed_server):
         // marca o contato como "inscrito" e mede a conversão real independente
         // de consentimento de cookie. Não-bloqueante.
         fetch('/api/leads/confirm-inscription', {
@@ -786,27 +784,12 @@ const isFormValidForPayment =
             source: offerDetails?.dmhSource?.source,
             inscriptionId: response.id,
           }),
-        }).catch((e) => console.error('Notealy confirm falhou:', e))
+        }).catch((e) => console.error('Confirmação de inscrição falhou:', e))
 
-        // Notealy: graduação EAD/semi ATHENAS sem cobrança no site (decisão de
-        // negócio — a Cogna cobra depois via payment-link deles). Marca
-        // "Pendente Pagamento" pra diferenciar de quem já pagou. Não-bloqueante.
-        if (matriculaCharge.chargeable) {
-          fetch('/api/leads/pending-payment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: data.name,
-              email: data.email,
-              phone: data.phone.replace(/\D/g, ''),
-              cpf: data.cpf.replace(/\D/g, ''),
-              courseName: offerDetails?.course,
-              brand: offerDetails?.brand,
-              modalidade: offerDetails?.modality,
-              city: offerDetails?.unitCity,
-            }),
-          }).catch((e) => console.error('Notealy pendente pagamento falhou:', e))
-        }
+        // O marcador "Pendente Pagamento" saiu em 2026-08-11 junto com o CRM
+        // (troca de fornecedor). Ele distinguia a graduação EAD/semi ATHENAS,
+        // que por decisão de negócio não é cobrada no site — a Cogna cobra
+        // depois pelo payment-link dela. Sinal a reconstruir no CRM novo.
 
         // Atualizar perfil do usuário no PostgreSQL (se estiver logado)
         if (firebaseUser) {

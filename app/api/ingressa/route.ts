@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
-import { upsertNotealyContact } from '@/app/lib/api/notealy'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
-
-// Tag fixa do funil ingressa no Notealy (criada 2026-07-14). Hardcoded — não
-// depende de env.
-const NOTEALY_TAG_INGRESSA = '2efcf93c-f924-4b32-a3d0-37995d1b5d69'
 
 interface IngressaBody {
   name: string
@@ -123,20 +118,9 @@ export async function POST(request: NextRequest) {
     console.error('Falha ao criar Lead (ingressa):', error)
   }
 
-  // 2) Notealy (best-effort).
-  try {
-    await upsertNotealyContact({
-      name: cleanName,
-      phone: cleanPhone,
-      tagId: NOTEALY_TAG_INGRESSA,
-      customFields: {
-        curso: cursoName,
-        marca: typeof body.partnerName === 'string' ? body.partnerName : partnerSlug,
-      },
-    })
-  } catch (error) {
-    console.error('⚠️ Notealy (ingressa) falhou:', error)
-  }
+  // 2) A sincronização com o CRM saiu daqui em 2026-08-11 (troca de
+  // fornecedor). O lead de mídia paga segue na tabela Lead acima, no Meta CAPI
+  // e no PostHog — é aqui que o CRM novo entra.
 
   // 3) Meta CAPI (best-effort).
   if (leadId) {

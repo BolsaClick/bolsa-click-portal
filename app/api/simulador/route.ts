@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
-import { upsertNotealyContact } from '@/app/lib/api/notealy'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 
 interface SimuladorBody {
@@ -17,11 +16,6 @@ interface SimuladorBody {
   pessoas?: number
   elegibilidade?: unknown
 }
-
-// Tag fixa do funil "simulador-de-bolsa" no Notealy (criada em 2026-07-13).
-// Hardcoded de propósito — não depende de env var. Se um dia precisar trocar,
-// crie a nova tag no Notealy e atualize este ID.
-const NOTEALY_TAG_SIMULADOR = 'b9a1258a-8edf-489e-8a7d-917a87ce78cf'
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -150,23 +144,9 @@ export async function POST(request: NextRequest) {
     console.error('Falha ao criar Lead (simulador):', error)
   }
 
-  // 2) Notealy sync (best-effort).
-  try {
-    await upsertNotealyContact({
-      name: cleanName,
-      email: cleanEmail,
-      phone: cleanPhone,
-      tagId: NOTEALY_TAG_SIMULADOR,
-      city: body.cidade,
-      customFields: {
-        curso: cursoLabel || undefined,
-        modalidade: typeof modalidade === 'string' ? modalidade : undefined,
-        estado: body.estado,
-      },
-    })
-  } catch (error) {
-    console.error('⚠️ Falha ao sincronizar com Notealy (simulador):', error)
-  }
+  // 2) A sincronização com o CRM saiu daqui em 2026-08-11 (troca de
+  // fornecedor). O lead do simulador segue na tabela Lead acima, com cidade/
+  // estado/elegibilidade em extraData — é aqui que o CRM novo entra.
 
   // 3) Meta CAPI (best-effort).
   if (leadId) {

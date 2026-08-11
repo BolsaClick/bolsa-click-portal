@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import {
-  upsertNotealyContact,
-  detachNotealyTagByName,
-  NOTEALY_TAG_INSCRICAO_RECUSADA,
-} from '@/app/lib/api/notealy'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
 
-// Estágio 2 do CRM Notealy: chamado quando a inscrição é confirmada.
-// Atualiza (upsert) o contato com a tag "inscrito". Não envia email.
-// Best-effort — sempre responde 200 para não impactar o checkout.
+// Chamado quando a inscrição é confirmada.
 //
-// Também é o ponto de medição SERVER-SIDE de `enrollment_completed_server`
+// A sincronização com o CRM saiu daqui em 2026-08-11 (troca de fornecedor) —
+// este endpoint hoje existe só pela medição, e é aqui que o CRM novo entra.
+//
+// É o ponto de medição SERVER-SIDE de `enrollment_completed_server`
 // (PostHog): a matrícula (create-inscription 201) acontece de verdade, mas o
 // `enrollment_completed` do client só dispara se o PostHog já foi
 // inicializado — e ele é gated por consentimento de cookie (só inicializa
@@ -34,31 +30,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'name is required' }, { status: 400 })
     }
 
-    try {
-      const contactId = await upsertNotealyContact({
-        name,
-        email,
-        phone: phone ? String(phone).replace(/\D/g, '') : undefined,
-        cpf: cpf ? String(cpf).replace(/\D/g, '') : undefined,
-        tagId: process.env.NOTEALY_TAG_INSCRITO,
-        city,
-        customFields: {
-          curso: courseName,
-          marca: brand,
-          modalidade,
-        },
-      })
-
-      // Tentou antes e foi recusado, agora conseguiu: tira da lista de
-      // recuperação. Sem isto ele receberia "vimos que sua inscrição não deu
-      // certo" já matriculado. No-op para quem nunca falhou.
-      if (contactId) {
-        await detachNotealyTagByName(contactId, NOTEALY_TAG_INSCRICAO_RECUSADA)
-      }
-    } catch (notealyError) {
-      console.error('⚠️ Notealy (estágio 2) falhou:', notealyError)
-    }
-
     // PostHog server-side — best-effort, nunca bloqueia/derruba o fluxo de
     // matrícula. distinct_id = CPF (mesmo id usado no identifyUser do
     // client, pra permitir join do funil quando o consent existir).
@@ -77,6 +48,9 @@ export async function POST(request: NextRequest) {
             brand: brand ?? null,
             modality: modalidade ?? null,
             source: source ?? null,
+            // Cidade migrou pro evento: era enviada só ao CRM, e com a saída
+            // dele o dado se perderia.
+            city: city ?? null,
             host: request.headers.get('host') ?? null,
             inscription_id: inscriptionId ?? null,
             source_side: 'server',
@@ -102,7 +76,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('Error confirming inscription to Notealy:', error)
+    console.error('Error confirming inscription:', error)
     return NextResponse.json({ ok: false }, { status: 200 })
   }
 }

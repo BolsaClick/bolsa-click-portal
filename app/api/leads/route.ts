@@ -1,40 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
-import { upsertNotealyContact } from '@/app/lib/api/notealy'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 
-// Estágio 1 do CRM Notealy: cria/atualiza o contato com a tag de lead + curso/
-// instituição/modalidade em customFields. Best-effort — nunca bloqueia o
-// cadastro. O email de boas-vindas fica fora até o token ganhar o scope
-// email:send (basta voltar a chamar sendNotealyEmail aqui com
-// NOTEALY_TEMPLATE_WELCOME quando estiver pronto).
-async function syncLeadToNotealy(params: {
-  name: string
-  email: string
-  phone: string
-  cpf: string
-  courseName?: string
-  institutionName?: string
-  modalidade?: string
-}) {
-  try {
-    await upsertNotealyContact({
-      name: params.name,
-      email: params.email,
-      phone: params.phone,
-      cpf: params.cpf,
-      tagId: process.env.NOTEALY_TAG_LEAD,
-      // "marca" é o nome canônico entre sites e estágios (não "instituicao").
-      customFields: {
-        curso: params.courseName,
-        marca: params.institutionName,
-        modalidade: params.modalidade,
-      },
-    })
-  } catch (error) {
-    console.error('⚠️ Notealy (estágio 1) falhou:', error)
-  }
-}
+// A sincronização com o CRM saiu daqui em 2026-08-11 (troca de fornecedor). O
+// lead continua persistido na tabela Lead e enviado ao Meta CAPI abaixo — este
+// é o ponto onde o CRM novo entra.
 
 // Meta Conversions API — Lead server-side (não depende do pixel do browser).
 // Best-effort: nunca bloqueia o cadastro.
@@ -128,16 +98,6 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      await syncLeadToNotealy({
-        name,
-        email,
-        phone: cleanPhone,
-        cpf: cleanCpf,
-        courseName,
-        institutionName,
-        modalidade,
-      })
-
       await sendLeadToMeta({
         leadId: updatedLead.id,
         name,
@@ -168,16 +128,6 @@ export async function POST(request: NextRequest) {
         modalidade,
         status: 'NEW',
       },
-    })
-
-    await syncLeadToNotealy({
-      name,
-      email,
-      phone: cleanPhone,
-      cpf: cleanCpf,
-      courseName,
-      institutionName,
-      modalidade,
     })
 
     await sendLeadToMeta({

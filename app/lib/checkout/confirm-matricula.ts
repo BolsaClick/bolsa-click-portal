@@ -10,7 +10,6 @@ import {
   type MarketplaceInscriptionData,
 } from '@/app/lib/api/create-inscription-marketplace'
 import type { OfferDetails } from '@/app/lib/api/get-offer-details'
-import { upsertNotealyContact } from '@/app/lib/api/notealy'
 import { sendUtmifyOrder, paymentMethodToUtmify } from '@/app/lib/api/utmify'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
@@ -122,25 +121,9 @@ export async function confirmPaidMatricula(
   const cpfDigits = tx.cpf.replace(/\D/g, '')
   const phoneDigits = tx.phone.replace(/\D/g, '')
 
-  // 2) CRM Notealy — move o contato para o estágio "matriculado".
-  const offerDetails = blob?.marketplace?.offerDetails
-  try {
-    await upsertNotealyContact({
-      name: tx.name,
-      email: tx.email,
-      phone: phoneDigits,
-      cpf: cpfDigits,
-      tagId: process.env.NOTEALY_TAG_MATRICULADO || process.env.NOTEALY_TAG_INSCRITO,
-      city: offerDetails?.unitCity,
-      customFields: {
-        curso: offerDetails?.course || blob?.utmify?.productName,
-        marca: offerDetails?.brand,
-        modalidade: offerDetails?.modality,
-      },
-    })
-  } catch (e) {
-    console.error('❌ confirm: Notealy falhou', externalTransactionId, e)
-  }
+  // 2) O CRM saiu daqui em 2026-08-11 (troca de fornecedor). Era o ponto que
+  // movia o contato para o estágio "matriculado" — o estágio mais valioso do
+  // funil, e o que o CRM novo precisa reconquistar primeiro.
 
   // 3) UTMify — pedido pago (atribuição/Orders).
   try {

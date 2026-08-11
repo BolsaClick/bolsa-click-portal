@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
-import { upsertNotealyContact, NOTEALY_TAG_INSCRICAO_RECUSADA } from '@/app/lib/api/notealy'
 
 // Espelho de falha do /api/leads/confirm-inscription.
 //
@@ -53,35 +52,11 @@ export async function POST(request: NextRequest) {
 
     const phoneDigits = phone ? String(phone).replace(/\D/g, '') : undefined
 
-    // CRM — lista de recuperação. Quem chega aqui é o lead mais quente que
-    // existe: preencheu tudo, apertou enviar e foi recusado pelo parceiro. Sem
-    // esta tag ele ficava indistinguível de quem simplesmente desistiu no meio.
-    // Best-effort: falha no CRM não pode impedir a medição no PostHog abaixo.
-    if (name) {
-      try {
-        await upsertNotealyContact({
-          name,
-          email,
-          phone: phoneDigits,
-          cpf: cpfDigits,
-          tagNames: [NOTEALY_TAG_INSCRICAO_RECUSADA],
-          city,
-          customFields: {
-            curso: courseName,
-            marca: brand,
-            modalidade,
-            // Motivo da recusa junto do contato: é o que decide se a
-            // recuperação é reinscrever noutra oferta (oferta encerrada) ou
-            // corrigir um dado (CPF/data inválida).
-            motivo_recusa: errorMessage,
-            origem_recusa: flow ?? 'matricula',
-          },
-        })
-      } catch (notealyError) {
-        console.error('⚠️ Notealy (inscrição recusada) falhou:', notealyError)
-      }
-    }
-
+    // A lista de recuperação no CRM saiu daqui em 2026-08-11 (troca de
+    // fornecedor). Quem chega aqui segue sendo o lead mais quente que existe —
+    // preencheu tudo, apertou enviar e foi recusado pelo parceiro — mas por
+    // enquanto só a person do PostHog registra isso (last_enrollment_status =
+    // failed, coorte de recuperação). É aqui que o CRM novo entra.
     try {
       await capturePostHogServerEvent({
         event: 'enrollment_failed_server',

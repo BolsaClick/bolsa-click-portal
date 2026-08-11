@@ -60,6 +60,13 @@ export interface UpsertCandidatoInput {
   motivoRecusa?: string
   /** Id na tabela Lead do Postgres — ponte para reconciliação e backfill. */
   leadId?: string
+  /** Atribuição de mídia paga. Ver app/lib/analytics/utm.ts. */
+  utm?: {
+    utmSource?: string
+    utmMedium?: string
+    utmCampaign?: string
+    utmContent?: string
+  }
 }
 
 /**
@@ -132,26 +139,43 @@ async function attioFetch(path: string, init: RequestInit): Promise<Response> {
 }
 
 /**
- * Estágio atual do candidato, para não regredir. Custa um request a mais por
- * escrita que mexe em estágio — aceitável no nosso volume, e é o que impede a
- * pior mensagem possível ("complete sua inscrição" para quem já é aluno).
+ * Lê o registro existente para duas decisões que dependem do estado anterior:
+ * não regredir o estágio, e não sobrescrever a atribuição de primeiro toque.
+ *
+ * Custa um request a mais por escrita — aceitável no nosso volume, e é o que
+ * impede a pior mensagem possível ("complete sua inscrição" para quem já é
+ * aluno) e a distorção de atribuição que faria mídia paga parecer não
+ * converter.
  */
-async function getEstagioAtual(telefone: string): Promise<Estagio | null> {
+async function getExistente(
+  telefone: string,
+): Promise<{ estagio: Estagio | null; temUtm: boolean }> {
   try {
     const res = await attioFetch(`/objects/${OBJECT}/records/query`, {
       method: 'POST',
       body: JSON.stringify({ filter: { [MATCHING_ATTRIBUTE]: telefone }, limit: 1 }),
     })
-    if (!res.ok) return null
+    if (!res.ok) return { estagio: null, temUtm: false }
     const json = (await res.json()) as {
-      data?: Array<{ values?: { estagio?: Array<{ option?: { title?: string } }> } }>
+      data?: Array<{
+        values?: {
+          estagio?: Array<{ option?: { title?: string } }>
+          utm_source?: Array<{ value?: string }>
+          utm_campaign?: Array<{ value?: string }>
+        }
+      }>
     }
-    const atual = json.data?.[0]?.values?.estagio?.[0]?.option?.title
-    return atual && (ESTAGIOS as readonly string[]).includes(atual) ? (atual as Estagio) : null
+    const values = json.data?.[0]?.values
+    const atual = values?.estagio?.[0]?.option?.title
+    return {
+      estagio:
+        atual && (ESTAGIOS as readonly string[]).includes(atual) ? (atual as Estagio) : null,
+      temUtm: Boolean(values?.utm_source?.[0]?.value || values?.utm_campaign?.[0]?.value),
+    }
   } catch {
     // Falha na leitura não pode impedir a escrita: melhor gravar o estágio
     // novo do que perder o contato inteiro.
-    return null
+    return { estagio: null, temUtm: false }
   }
 }
 
@@ -181,9 +205,16 @@ export async function upsertCandidato(input: UpsertCandidatoInput): Promise<stri
     return null
   }
 
+  const temUtmNovo = Boolean(
+    input.utm?.utmSource || input.utm?.utmMedium || input.utm?.utmCampaign || input.utm?.utmContent,
+  )
   let estagio = input.estagio
-  if (estagio) {
-    estagio = estagioMaisForte(await getEstagioAtual(telefone), estagio)
+  let gravarUtm = temUtmNovo
+  if (estagio || temUtmNovo) {
+    const existente = await getExistente(telefone)
+    if (estagio) estagio = estagioMaisForte(existente.estagio, estagio)
+    // Primeiro toque vence: só grava UTM se o registro ainda não tiver uma.
+    gravarUtm = temUtmNovo && !existente.temUtm
   }
 
   const values: Record<string, unknown> = {
@@ -207,6 +238,15 @@ export async function upsertCandidato(input: UpsertCandidatoInput): Promise<stri
   set('origem_fluxo', input.origemFluxo)
   set('motivo_recusa', input.motivoRecusa?.slice(0, 800))
   set('lead_id', input.leadId)
+  // UTMs só na PRIMEIRA gravação com valor: a atribuição pertence ao clique
+  // que trouxe a pessoa. Se um retorno orgânico sobrescrevesse, toda matrícula
+  // acabaria atribuída ao último toque e a mídia paga pareceria não converter.
+  if (gravarUtm) {
+    set('utm_source', input.utm?.utmSource)
+    set('utm_medium', input.utm?.utmMedium)
+    set('utm_campaign', input.utm?.utmCampaign)
+    set('utm_content', input.utm?.utmContent)
+  }
 
   const res = await attioFetch(
     `/objects/${OBJECT}/records?matching_attribute=${MATCHING_ATTRIBUTE}`,

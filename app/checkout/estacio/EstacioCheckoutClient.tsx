@@ -21,6 +21,7 @@ import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { pushDataLayerEvent } from '@/app/lib/analytics/gtag'
 import { createLead } from '@/app/lib/api/create-lead'
+import { readUtmifyParams } from '@/app/lib/analytics/utmify-client'
 import { titleCasePtBr } from '@/app/lib/utils/title-case'
 import { getPriceAnchor } from '@/app/lib/utils/price-anchor'
 import { formatCurrency } from '@/utils/fomartCurrency'
@@ -349,6 +350,7 @@ export default function EstacioCheckoutClient() {
       modalidade: offer.modality,
       birthDate: form.birthDate || undefined,
       source: 'checkout-estacio',
+      utm: readUtmifyParams() as unknown as Record<string, string | null>,
       // O formulário da Estácio é o mais completo que temos — endereço, RG,
       // gênero, ano de conclusão. Tudo isso ia só pra Athena e não ficava com
       // a gente; sem coluna própria, vai em extraData.

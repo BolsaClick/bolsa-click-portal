@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 import { upsertCandidato, type OrigemFluxo } from '@/app/lib/api/attio'
+import { utmFromRequest, utmFromBody, mergeUtm, type UtmParams } from '@/app/lib/analytics/utm'
 
 const FLUXOS_CONHECIDOS = new Set<OrigemFluxo>([
   'checkout-matricula',
@@ -87,6 +88,7 @@ async function syncCandidato(params: {
   institutionName?: string
   modalidade?: string
   source?: unknown
+  utm?: UtmParams
 }) {
   try {
     await upsertCandidato({
@@ -101,6 +103,7 @@ async function syncCandidato(params: {
       estagio: 'lead',
       origemFluxo: toOrigemFluxo(params.source),
       leadId: params.leadId,
+      utm: params.utm,
     })
   } catch (error) {
     console.error('⚠️ Attio (lead) falhou:', error)
@@ -178,6 +181,9 @@ export async function POST(request: NextRequest) {
     const cleanCpf = cpf.replace(/\D/g, '')
     const cleanPhone = phone.replace(/\D/g, '')
     const parsedBirthDate = parseBirthDate(birthDate)
+    // Explícito do client (localStorage da UTMify, sobrevive à navegação) tem
+    // prioridade; o referer preenche o que faltar.
+    const utm = mergeUtm(utmFromBody(body.utm), utmFromRequest(request))
 
     // Verificar se já existe um lead com este CPF e curso
     const existingLead = await prisma.lead.findFirst({
@@ -222,6 +228,7 @@ export async function POST(request: NextRequest) {
         institutionName,
         modalidade,
         source: source ?? existingLead.source,
+        utm,
       })
 
       await sendLeadToMeta({
@@ -270,6 +277,7 @@ export async function POST(request: NextRequest) {
       institutionName,
       modalidade,
       source,
+      utm,
     })
 
     await sendLeadToMeta({

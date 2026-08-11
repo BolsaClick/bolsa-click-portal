@@ -19,6 +19,8 @@ export interface CreateLeadRequest {
   extraData?: Record<string, unknown>
   /** Superfície de origem (ex.: `checkout-matricula`, `checkout-estacio`). */
   source?: string
+  /** UTMs da UTMify (localStorage + URL). Atribuição de primeiro toque no CRM. */
+  utm?: Record<string, string | null>
 }
 
 export interface CreateLeadResponse {

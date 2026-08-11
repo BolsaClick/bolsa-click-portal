@@ -3,6 +3,7 @@ import { prisma } from '@/app/lib/prisma'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
 import { upsertCandidato } from '@/app/lib/api/attio'
+import { utmFromBody, utmFromRequest, mergeUtm } from '@/app/lib/analytics/utm'
 
 interface IngressaBody {
   name: string
@@ -132,6 +133,7 @@ export async function POST(request: NextRequest) {
       estagio: 'lead',
       origemFluxo: 'ingressa',
       leadId: leadId || undefined,
+      utm: mergeUtm(utmFromBody(body.utm), utmFromRequest(request)),
     })
   } catch (error) {
     console.error('⚠️ Attio (ingressa) falhou:', error)

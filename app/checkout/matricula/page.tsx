@@ -459,6 +459,10 @@ const isFormValidForPayment =
           // ia só no payload da Cogna e era descartado do nosso lado.
           birthDate: formValues.birthDate,
           source: 'checkout-matricula',
+          // UTMs do localStorage da UTMify: sobrevivem à navegação, então
+          // pegam o clique que trouxe a pessoa mesmo que ela tenha navegado
+          // pelo site antes de chegar no checkout.
+          utm: readUtmifyParams() as unknown as Record<string, string | null>,
           extraData: {
             unidade: offerDetails?.unit,
             cidade: offerDetails?.unitCity,

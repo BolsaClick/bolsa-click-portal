@@ -7,6 +7,7 @@ import {
 } from '@/app/lib/teste-vocacional/openai'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 import { upsertCandidato } from '@/app/lib/api/attio'
+import { utmFromRequest } from '@/app/lib/analytics/utm'
 import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
 import {
   computeUserProfile,
@@ -238,6 +239,7 @@ export async function POST(request: NextRequest) {
       estagio: 'lead',
       origemFluxo: 'teste-vocacional',
       leadId: leadId || undefined,
+      utm: utmFromRequest(request),
     })
   } catch (error) {
     console.error('⚠️ Attio (teste vocacional) falhou:', error)

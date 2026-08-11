@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 import { upsertCandidato } from '@/app/lib/api/attio'
+import { utmFromRequest } from '@/app/lib/analytics/utm'
 
 interface SimuladorBody {
   name: string
@@ -158,6 +159,7 @@ export async function POST(request: NextRequest) {
       estagio: 'lead',
       origemFluxo: 'simulador',
       leadId: leadId || undefined,
+      utm: utmFromRequest(request),
     })
   } catch (error) {
     console.error('⚠️ Attio (simulador) falhou:', error)

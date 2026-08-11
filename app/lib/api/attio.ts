@@ -70,19 +70,54 @@ export interface UpsertCandidatoInput {
 }
 
 /**
- * Telefone para E.164. O Attio normaliza internamente, mas mandar já no
- * formato canônico evita que "11999999999" e "+5511999999999" virem dois
- * registros — o que quebraria exatamente a garantia que a chave única existe
- * para dar.
+ * DDDs válidos no Brasil. Serve para rejeitar número digitado errado ANTES de
+ * mandar pro Attio: o atributo é `phone-number`, validado com libphonenumber, e
+ * um DDD inexistente volta 400 e derruba o upsert inteiro do candidato.
+ */
+const DDDS_VALIDOS = new Set([
+  11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 24, 27, 28,
+  31, 32, 33, 34, 35, 37, 38, 41, 42, 43, 44, 45, 46, 47, 48, 49,
+  51, 53, 54, 55, 61, 62, 63, 64, 65, 66, 67, 68, 69,
+  71, 73, 74, 75, 77, 79, 81, 82, 83, 84, 85, 86, 87, 88, 89,
+  91, 92, 93, 94, 95, 96, 97, 98, 99,
+])
+
+/**
+ * Telefone para E.164 (+55DDDNNNNNNNNN).
+ *
+ * Mandar já no formato canônico evita que "11999999999" e "+5511999999999"
+ * virem dois registros — o que quebraria exatamente a garantia que a chave
+ * única existe para dar.
+ *
+ * Repara o caso mais comum da base real: celular com 10 dígitos, salvo antes
+ * da obrigatoriedade do nono dígito (ou digitado sem ele). "6298554044" é
+ * DDD 62 + 98554044; sem o 9 inicial o número não é um celular válido e o
+ * Attio recusa com 400. Só reinsere quando o assinante começa em 6-9, que é a
+ * faixa de celular — fixo (2-5) com 10 dígitos continua legítimo.
+ *
+ * Retorna null quando não dá pra confiar no número: melhor pular o CRM e
+ * deixar o aviso no log do que gastar o request e receber 400.
  */
 function toE164(phone: string): string | null {
-  const digits = phone.replace(/\D/g, '')
+  let digits = phone.replace(/\D/g, '')
   if (!digits) return null
-  if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) return `+${digits}`
-  if (digits.length === 10 || digits.length === 11) return `+55${digits}`
-  // Fora dos formatos BR conhecidos: manda como veio em vez de descartar o
-  // lead, e deixa o Attio decidir.
-  return `+${digits}`
+
+  // Tira o DDI quando já veio junto, pra validar sempre a mesma coisa.
+  if (digits.length >= 12 && digits.startsWith('55')) digits = digits.slice(2)
+
+  // Celular sem o nono dígito: 10 no total e assinante começando na faixa móvel.
+  if (digits.length === 10 && /^[6-9]/.test(digits.slice(2))) {
+    digits = `${digits.slice(0, 2)}9${digits.slice(2)}`
+  }
+
+  if (digits.length !== 10 && digits.length !== 11) return null
+  if (!DDDS_VALIDOS.has(Number(digits.slice(0, 2)))) return null
+  // Número de 11 dígitos no Brasil é sempre celular, e celular sempre começa
+  // com 9 depois do DDD. Sem esta checagem, lixo como "55535455695" consome um
+  // request e volta 400 — o mesmo resultado, só que mais caro e barulhento.
+  if (digits.length === 11 && digits[2] !== '9') return null
+
+  return `+55${digits}`
 }
 
 /**

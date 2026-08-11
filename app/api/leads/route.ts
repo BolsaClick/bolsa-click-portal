@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
+import { upsertCandidato, type OrigemFluxo } from '@/app/lib/api/attio'
 
-// A sincronização com o CRM saiu daqui em 2026-08-11 (troca de fornecedor). O
-// lead continua persistido na tabela Lead e enviado ao Meta CAPI abaixo — este
-// é o ponto onde o CRM novo entra.
+const FLUXOS_CONHECIDOS = new Set<OrigemFluxo>([
+  'checkout-matricula',
+  'checkout-estacio',
+  'ingressa',
+  'simulador',
+  'teste-vocacional',
+])
+
+function toOrigemFluxo(source: unknown): OrigemFluxo | undefined {
+  return typeof source === 'string' && FLUXOS_CONHECIDOS.has(source as OrigemFluxo)
+    ? (source as OrigemFluxo)
+    : undefined
+}
 
 /**
  * Normaliza a data de nascimento vinda dos formulários para um Date em UTC.
@@ -58,6 +69,42 @@ function mergeExtraData(
   const next = incoming && typeof incoming === 'object' ? (incoming as Record<string, unknown>) : {}
   if (Object.keys(next).length === 0) return undefined
   return JSON.parse(JSON.stringify({ ...base, ...next }))
+}
+
+/**
+ * CRM (Attio). Best-effort por construção: o lead já está persistido na tabela
+ * Lead antes desta chamada, então uma falha aqui atrasa a sincronização mas
+ * nunca perde o contato.
+ */
+async function syncCandidato(params: {
+  leadId: string
+  name: string
+  email: string
+  phone: string
+  cpf: string
+  birthDate?: Date | null
+  courseName?: string
+  institutionName?: string
+  modalidade?: string
+  source?: unknown
+}) {
+  try {
+    await upsertCandidato({
+      phone: params.phone,
+      name: params.name,
+      email: params.email,
+      cpf: params.cpf,
+      birthDate: params.birthDate,
+      brand: params.institutionName,
+      courseName: params.courseName,
+      modality: params.modalidade,
+      estagio: 'lead',
+      origemFluxo: toOrigemFluxo(params.source),
+      leadId: params.leadId,
+    })
+  } catch (error) {
+    console.error('⚠️ Attio (lead) falhou:', error)
+  }
 }
 
 // Meta Conversions API — Lead server-side (não depende do pixel do browser).
@@ -164,6 +211,19 @@ export async function POST(request: NextRequest) {
         },
       })
 
+      await syncCandidato({
+        leadId: updatedLead.id,
+        name,
+        email,
+        phone: cleanPhone,
+        cpf: cleanCpf,
+        birthDate: updatedLead.birthDate,
+        courseName,
+        institutionName,
+        modalidade,
+        source: source ?? existingLead.source,
+      })
+
       await sendLeadToMeta({
         leadId: updatedLead.id,
         name,
@@ -197,6 +257,19 @@ export async function POST(request: NextRequest) {
         ...(source ? { source } : {}),
         status: 'NEW',
       },
+    })
+
+    await syncCandidato({
+      leadId: lead.id,
+      name,
+      email,
+      phone: cleanPhone,
+      cpf: cleanCpf,
+      birthDate: lead.birthDate,
+      courseName,
+      institutionName,
+      modalidade,
+      source,
     })
 
     await sendLeadToMeta({

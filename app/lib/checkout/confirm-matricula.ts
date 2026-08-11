@@ -13,6 +13,7 @@ import type { OfferDetails } from '@/app/lib/api/get-offer-details'
 import { sendUtmifyOrder, paymentMethodToUtmify } from '@/app/lib/api/utmify'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
+import { upsertCandidato } from '@/app/lib/api/attio'
 
 /**
  * Dados montados no checkout (cliente) e guardados em Transaction.metadata.confirm
@@ -121,9 +122,24 @@ export async function confirmPaidMatricula(
   const cpfDigits = tx.cpf.replace(/\D/g, '')
   const phoneDigits = tx.phone.replace(/\D/g, '')
 
-  // 2) O CRM saiu daqui em 2026-08-11 (troca de fornecedor). Era o ponto que
-  // movia o contato para o estágio "matriculado" — o estágio mais valioso do
-  // funil, e o que o CRM novo precisa reconquistar primeiro.
+  // 2) CRM: estágio "matriculado" — o mais forte da precedência, então nenhum
+  // formulário preenchido depois consegue rebaixar quem já é aluno.
+  const offerDetails = blob?.marketplace?.offerDetails
+  try {
+    await upsertCandidato({
+      phone: phoneDigits,
+      name: tx.name,
+      email: tx.email,
+      cpf: cpfDigits,
+      brand: offerDetails?.brand,
+      courseName: offerDetails?.course || blob?.utmify?.productName,
+      modality: offerDetails?.modality,
+      city: offerDetails?.unitCity,
+      estagio: 'matriculado',
+    })
+  } catch (e) {
+    console.error('❌ confirm: Attio falhou', externalTransactionId, e)
+  }
 
   // 3) UTMify — pedido pago (atribuição/Orders).
   try {

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
+import { upsertCandidato } from '@/app/lib/api/attio'
 
 // Chamado quando a inscrição é confirmada.
 //
-// A sincronização com o CRM saiu daqui em 2026-08-11 (troca de fornecedor) —
-// este endpoint hoje existe só pela medição, e é aqui que o CRM novo entra.
+// Faz duas coisas: move o candidato para o estágio "inscrito" no CRM (Attio)
+// e mede a conversão server-side.
 //
 // É o ponto de medição SERVER-SIDE de `enrollment_completed_server`
 // (PostHog): a matrícula (create-inscription 201) acontece de verdade, mas o
@@ -28,6 +29,27 @@ export async function POST(request: NextRequest) {
 
     if (!name) {
       return NextResponse.json({ error: 'name is required' }, { status: 400 })
+    }
+
+    // CRM: estágio "inscrito". A precedência no upsertCandidato faz este
+    // estágio SUBSTITUIR um "inscricao_recusada" anterior — é o que tira da
+    // lista de recuperação quem tentou de novo e conseguiu.
+    if (phone) {
+      try {
+        await upsertCandidato({
+          phone: String(phone),
+          name,
+          email,
+          cpf,
+          brand,
+          courseName,
+          modality: modalidade,
+          city,
+          estagio: 'inscrito',
+        })
+      } catch (attioError) {
+        console.error('⚠️ Attio (inscrito) falhou:', attioError)
+      }
     }
 
     // PostHog server-side — best-effort, nunca bloqueia/derruba o fluxo de

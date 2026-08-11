@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
+import { upsertCandidato } from '@/app/lib/api/attio'
 
 interface SimuladorBody {
   name: string
@@ -144,9 +145,23 @@ export async function POST(request: NextRequest) {
     console.error('Falha ao criar Lead (simulador):', error)
   }
 
-  // 2) A sincronização com o CRM saiu daqui em 2026-08-11 (troca de
-  // fornecedor). O lead do simulador segue na tabela Lead acima, com cidade/
-  // estado/elegibilidade em extraData — é aqui que o CRM novo entra.
+  // 2) CRM (best-effort — o Lead acima já garantiu o contato).
+  try {
+    await upsertCandidato({
+      phone: cleanPhone,
+      name: cleanName,
+      email: cleanEmail,
+      courseName: cursoLabel || undefined,
+      modality: typeof modalidade === 'string' ? modalidade : undefined,
+      city: body.cidade,
+      state: body.estado,
+      estagio: 'lead',
+      origemFluxo: 'simulador',
+      leadId: leadId || undefined,
+    })
+  } catch (error) {
+    console.error('⚠️ Attio (simulador) falhou:', error)
+  }
 
   // 3) Meta CAPI (best-effort).
   if (leadId) {

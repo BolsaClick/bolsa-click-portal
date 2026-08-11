@@ -6,6 +6,7 @@ import {
   type Recommendation,
 } from '@/app/lib/teste-vocacional/openai'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
+import { upsertCandidato } from '@/app/lib/api/attio'
 import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
 import {
   computeUserProfile,
@@ -227,9 +228,20 @@ export async function POST(request: NextRequest) {
     console.error('Falha ao criar Lead:', error)
   }
 
-  // 5) A sincronização com o CRM saiu daqui em 2026-08-11 (troca de
-  // fornecedor). O lead do teste vocacional segue na tabela Lead acima — é
-  // aqui que o CRM novo entra (cursos recomendados + código Holland do perfil).
+  // 5) CRM (best-effort — o Lead acima já garantiu o contato).
+  try {
+    await upsertCandidato({
+      phone: cleanPhone,
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      courseName: courseNames[0],
+      estagio: 'lead',
+      origemFluxo: 'teste-vocacional',
+      leadId: leadId || undefined,
+    })
+  } catch (error) {
+    console.error('⚠️ Attio (teste vocacional) falhou:', error)
+  }
 
   // 6) Meta CAPI — Lead (best-effort)
   if (leadId) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
+import { upsertCandidato, type OrigemFluxo } from '@/app/lib/api/attio'
 
 // Espelho de falha do /api/leads/confirm-inscription.
 //
@@ -52,11 +53,31 @@ export async function POST(request: NextRequest) {
 
     const phoneDigits = phone ? String(phone).replace(/\D/g, '') : undefined
 
-    // A lista de recuperação no CRM saiu daqui em 2026-08-11 (troca de
-    // fornecedor). Quem chega aqui segue sendo o lead mais quente que existe —
-    // preencheu tudo, apertou enviar e foi recusado pelo parceiro — mas por
-    // enquanto só a person do PostHog registra isso (last_enrollment_status =
-    // failed, coorte de recuperação). É aqui que o CRM novo entra.
+    // CRM: lista de recuperação. Quem chega aqui é o lead mais quente que
+    // existe — preencheu tudo, apertou enviar e foi recusado pelo parceiro.
+    // O motivo vai junto porque decide a abordagem: reinscrever noutra oferta
+    // (oferta encerrada) ou corrigir um dado (CPF/data inválida).
+    if (phoneDigits) {
+      try {
+        await upsertCandidato({
+          phone: phoneDigits,
+          name,
+          email,
+          cpf: cpfDigits,
+          brand,
+          courseName,
+          modality: modalidade,
+          city,
+          estagio: 'inscricao_recusada',
+          motivoRecusa: typeof errorMessage === 'string' ? errorMessage : undefined,
+          origemFluxo:
+            flow === 'estacio' ? ('checkout-estacio' as OrigemFluxo) : ('checkout-matricula' as OrigemFluxo),
+        })
+      } catch (attioError) {
+        console.error('⚠️ Attio (inscrição recusada) falhou:', attioError)
+      }
+    }
+
     try {
       await capturePostHogServerEvent({
         event: 'enrollment_failed_server',

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
+import { upsertCandidato } from '@/app/lib/api/attio'
 
 interface IngressaBody {
   name: string
@@ -118,9 +119,23 @@ export async function POST(request: NextRequest) {
     console.error('Falha ao criar Lead (ingressa):', error)
   }
 
-  // 2) A sincronização com o CRM saiu daqui em 2026-08-11 (troca de
-  // fornecedor). O lead de mídia paga segue na tabela Lead acima, no Meta CAPI
-  // e no PostHog — é aqui que o CRM novo entra.
+  // 2) CRM (best-effort). Este é o fluxo que motivou casar por TELEFONE em vez
+  // de email: a landing de mídia paga capta só nome e WhatsApp, e no objeto
+  // `people` padrão do Attio (único atributo único = email) este lead ficaria
+  // sem chave de casamento.
+  try {
+    await upsertCandidato({
+      phone: cleanPhone,
+      name: cleanName,
+      brand: typeof body.partnerName === 'string' ? body.partnerName : partnerSlug,
+      courseName: cursoName || undefined,
+      estagio: 'lead',
+      origemFluxo: 'ingressa',
+      leadId: leadId || undefined,
+    })
+  } catch (error) {
+    console.error('⚠️ Attio (ingressa) falhou:', error)
+  }
 
   // 3) Meta CAPI (best-effort).
   if (leadId) {

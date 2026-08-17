@@ -147,8 +147,37 @@ export async function POST(request: NextRequest) {
   // 4) PostHog (best-effort) — mídia paga por parceiro era invisível no funil:
   // o lead chegava ao Meta (Pixel+CAPI) mas nunca ao PostHog. Mesmo eventId do
   // CAPI em $insert_id; distinct_id = telefone (único identificador do fluxo).
+  //
+  // Além do `lead_submitted` legado, espelha `checkout_identified` +
+  // `checkout_submitted` — o MESMO vocabulário do funil de checkout principal
+  // (app/lib/analytics/checkout-funnel.ts) — pra o funil do ingressa ser
+  // comparável ao do bolsaclick.com.br. Isso É o espelho server-side: o
+  // PostHog do browser só dispara sob consentimento de cookie (quase ninguém
+  // aceita), então sem isto o funil client-only ficava cego pra maioria dos
+  // leads. `brand`/`flow` seguem o mesmo shape de `baseProps` no client.
+  const partnerName = typeof body.partnerName === 'string' ? body.partnerName : undefined
+  const flow = partnerSlug === 'estacio' ? 'estacio' : 'matricula'
   if (leadId) {
+    const funnelProps = {
+      flow,
+      brand: partnerName ?? partnerSlug,
+      course_name: cursoName ?? null,
+      source: 'ingressa',
+    }
     try {
+      await capturePostHogServerEvent({
+        event: 'checkout_identified',
+        distinctId: cleanPhone,
+        eventId: body.eventId ? `${body.eventId}_identified` : `ingressa_${leadId}_identified`,
+        properties: { ...funnelProps, has_phone: true, has_email: false },
+        personProperties: { name: cleanName, phone: cleanPhone },
+      })
+      await capturePostHogServerEvent({
+        event: 'checkout_submitted',
+        distinctId: cleanPhone,
+        eventId: body.eventId ? `${body.eventId}_submitted` : `ingressa_${leadId}_submitted`,
+        properties: funnelProps,
+      })
       await capturePostHogServerEvent({
         event: 'lead_submitted',
         distinctId: cleanPhone,
@@ -163,7 +192,7 @@ export async function POST(request: NextRequest) {
         },
       })
     } catch (error) {
-      console.error('⚠️ PostHog lead_submitted (ingressa) falhou:', error)
+      console.error('⚠️ PostHog (ingressa) falhou:', error)
     }
   }
 

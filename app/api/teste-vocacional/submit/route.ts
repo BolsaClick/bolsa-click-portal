@@ -8,6 +8,7 @@ import {
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 import { upsertCandidato } from '@/app/lib/api/attio'
 import { utmFromRequest } from '@/app/lib/analytics/utm'
+import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
 import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
 import {
   computeUserProfile,
@@ -181,6 +182,28 @@ export async function POST(request: NextRequest) {
       matchPercent: m.score,
       reasoning: 'Curso alinhado com seu perfil vocacional.',
     }))
+
+    // Alarme de degradação silenciosa.
+    //
+    // Este fallback protege o servidor (a rota nunca devolve 500), mas o
+    // candidato recebe a MESMA justificativa genérica que todo mundo — o teste
+    // vocacional deixa de ser personalizado sem nada indicar isso. Em agosto de
+    // 2026 ficou dias assim, por falta de crédito na OpenAI, e só foi
+    // descoberto por acaso.
+    //
+    // Server-side de propósito: o evento não pode depender de consentimento de
+    // cookie, senão justamente a falha fica invisível.
+    void capturePostHogServerEvent({
+      event: 'vocational_ai_fallback',
+      distinctId: cleanPhone,
+      properties: {
+        // Mensagem crua do provedor — é o que distingue falta de saldo
+        // (insufficient_quota) de chave inválida ou modelo sem acesso.
+        error_message: error instanceof Error ? error.message : String(error),
+        holland_code: profile.hollandCode,
+        source_side: 'server',
+      },
+    }).catch((e) => console.error('⚠️ PostHog (vocational_ai_fallback) falhou:', e))
   }
 
   const recommendations = sanitizeRecommendations(rawRecommendations, topSlugs)

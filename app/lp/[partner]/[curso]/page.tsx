@@ -55,11 +55,16 @@ function formatBRL(v: number): string {
  */
 async function fetchBrandCoursePrice(brandName: string, apiCourseName: string, nivel: string): Promise<number> {
   const brandKey = normalizeBrand(brandName)
+  // Bypass do kill switch `estacio_enabled` pra marca Estácio: este site
+  // inteiro é dedicado à Estácio, não pode ficar em branco se a flag (feita
+  // pra esconder Estácio do bolsaclick.com.br) for desligada. Ver doc em
+  // app/lib/api/athena-offers.ts.
+  const ignoreEstacioKillSwitch = brandKey === normalizeBrand('Estácio')
   const [tartarus, athena] = await Promise.all([
     getShowFiltersCourses(apiCourseName, undefined, undefined, undefined, nivel, 1, 60)
       .then((res) => (res?.data || []) as Course[])
       .catch(() => [] as Course[]),
-    searchAthenaOffers({ courseName: apiCourseName, academicLevel: nivel })
+    searchAthenaOffers({ courseName: apiCourseName, academicLevel: nivel, ignoreEstacioKillSwitch })
       .then((list) => list.map(normalizeAthenaOffer) as Course[])
       .catch(() => [] as Course[]),
   ])

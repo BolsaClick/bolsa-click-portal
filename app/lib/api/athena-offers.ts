@@ -102,6 +102,15 @@ export interface SearchAthenaOffersParams {
   academicLevel?: string
   /** Filtro de marca (substring do slug da instituição): "estacio", "ibmec", "wyden". */
   brand?: string
+  /**
+   * Ignora o kill switch `estacio_enabled` (ver comentário abaixo). Existe
+   * SÓ para o ingressa.digital/estacio: aquele site inteiro É a Estácio — não
+   * pode depender de uma flag desenhada pra esconder a Estácio do
+   * bolsaclick.com.br. Sem isso, desligar a flag pro marketplace principal
+   * apagava silenciosamente um site de mídia paga dedicado (2026-08-11).
+   * NUNCA usar em código que roda no bolsaclick.com.br/bolsamais.com.br.
+   */
+  ignoreEstacioKillSwitch?: boolean
 }
 
 /** Dados do aluno para a inscrição (CreateEnrollmentDto.student). */
@@ -313,7 +322,10 @@ export async function searchAthenaOffers(
   // flag PostHog `estacio_enabled` (0% = off, 100% = on) — sem redeploy.
   // Choke point único: some das buscas, vitrine, faculdades e city pages de uma
   // vez. Fallback `false` = se o PostHog cair, mantém escondida (falha segura).
-  if (!(await isServerFlagEnabled('estacio_enabled', false))) return []
+  // Bypass explícito via `ignoreEstacioKillSwitch` — ver doc na interface acima.
+  if (!params.ignoreEstacioKillSwitch && !(await isServerFlagEnabled('estacio_enabled', false))) {
+    return []
+  }
 
   try {
     const query: Record<string, string> = {}

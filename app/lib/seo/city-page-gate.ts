@@ -11,6 +11,28 @@
 export const MIN_OFFERS_TO_INDEX = 2
 
 /**
+ * Mínimo de ofertas pra SUBMETER a página no sitemap. Deliberadamente MAIOR que
+ * MIN_OFFERS_TO_INDEX — indexável e submetido são decisões diferentes.
+ *
+ * Por quê: com o limiar de indexação (2), o sitemap empurrava 14.587 URLs de
+ * curso×cidade num domínio com ~1.000 visitas/mês. O Google rastreia
+ * proporcionalmente à autoridade que percebe, e o resultado no Search Console
+ * era massa de "Descoberta — atualmente não indexada": ele via as URLs e
+ * decidia que não valia o rastreamento. Submeter menos concentra o crawl nas
+ * páginas que têm chance real de rankear.
+ *
+ * Em 5, o sitemap cai pra ~4.160 URLs (−71%). Medido no inventário real em
+ * 2026-08-17: 2 ofertas → 14.587 · 3 → 7.369 · 5 → 4.160 · 8 → 2.211 · 10 → 1.700.
+ *
+ * IMPORTANTE — isto NÃO desindexa nada. Página com 2-4 ofertas continua
+ * `index,follow` (o gate de runtime segue em MIN_OFFERS_TO_INDEX) e continua
+ * linkada internamente; ela só deixa de ser empurrada no sitemap. Se subir o
+ * gate de runtime junto, aí sim páginas que hoje rankeiam virariam noindex —
+ * não faça isso sem medir antes.
+ */
+export const MIN_OFFERS_TO_SUBMIT_SITEMAP = 5
+
+/**
  * Mínimo pra página de FACULDADE×cidade (marca). Threshold mais alto que o de
  * curso×cidade porque uma página de marca agrega VÁRIOS cursos — com poucas
  * ofertas ela é thin (nome da marca + cidade + 2-3 cursos), enquanto a de

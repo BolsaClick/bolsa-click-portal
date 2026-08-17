@@ -5,7 +5,6 @@ import {
   type CreateEnrollmentInput,
   type AthenaEnrollmentResponse,
 } from '@/app/lib/api/athena-offers'
-import { isServerFlagEnabled } from '@/app/lib/analytics/server-flags'
 
 /**
  * POST /api/athena-checkout — cria a inscrição Estácio na Athena (POST /api/enrollments)
@@ -13,19 +12,9 @@ import { isServerFlagEnabled } from '@/app/lib/analytics/server-flags'
  *
  * ATL016 (CPF já inscrito) é tratado como sucesso: a Athena devolve a inscrição/link existente.
  *
- * Mesmo kill switch de `searchAthenaOffers` (flag `estacio_enabled`): a busca some da
- * listagem, mas sem isso aqui a inscrição continuava aceitando POST direto (link
- * antigo/indexado) mesmo com a Estácio escondida — é esse buraco que fecha.
  */
 export async function POST(request: NextRequest) {
   try {
-    if (!(await isServerFlagEnabled('estacio_enabled', false))) {
-      return NextResponse.json(
-        { error: 'Inscrições Estácio temporariamente indisponíveis.' },
-        { status: 503 },
-      )
-    }
-
     const body = (await request.json()) as CreateEnrollmentInput
 
     // Validação mínima dos obrigatórios.

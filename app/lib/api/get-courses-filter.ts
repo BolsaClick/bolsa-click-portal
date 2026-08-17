@@ -3,6 +3,9 @@ import { getMostSearchedCourses } from "./get-most-searched-courses"
 import { normalizeAcademicLevel } from "../academic-level"
 import { normalizeBrand, cognaBrandParam, yduqsBrandSlug } from "../utils/brand"
 
+/** Marcas YDUQS consultadas quando o usuário não filtrou por marca. */
+const ALL_YDUQS_BRAND_SLUGS = ['estacio', 'ibmec', 'wyden']
+
 interface Course {
   modality?: string
   commercialModality?: string
@@ -202,7 +205,26 @@ async function fetchAthenaOffers(
    *  marca em paralelo, deduplicada por offerId. Vazio = sem filtro. */
   yduqsBrands: string[] = [],
 ): Promise<CourseWithPrices[]> {
-  const brandTerms: (string | undefined)[] = yduqsBrands.length ? yduqsBrands : [undefined]
+  // Sem filtro de marca, consultamos marca a marca em vez de uma consulta
+  // aberta — porque a consulta ABERTA é justamente a que quebra na Athena.
+  //
+  // Medido em 2026-08-17 (curso "Psicologia"):
+  //   sem brand          -> HTTP 500 em 10,7s
+  //   brand=estacio      -> 200 em 2,8s, 20 ofertas
+  //   brand=wyden        -> 200 em 1,9s, 20 ofertas
+  //   brand=ibmec        -> 200 em 0,2s, 0 ofertas
+  //
+  // O cliente tem timeout de 15s, então a consulta aberta estourava e o
+  // Promise.allSettled degradava em silêncio: a página de curso ficava só com
+  // ofertas Cogna e a Estácio sumia sem erro visível. Era o caso de
+  // /cursos/psicologia-bacharelado.
+  //
+  // MITIGAÇÃO, não correção: o 500 é um defeito do athena-api e está reportado.
+  // Quando ele for corrigido, dá pra voltar à consulta única — mas consultar
+  // por marca também paraleliza, então provavelmente não vale reverter.
+  const brandTerms: (string | undefined)[] = yduqsBrands.length
+    ? yduqsBrands
+    : ALL_YDUQS_BRAND_SLUGS
 
   // No servidor (SSR/RSC), chama a Athena direto — sem round-trip HTTP pra si
   // mesmo (e sem depender de uma URL relativa, que não existe fora do browser).

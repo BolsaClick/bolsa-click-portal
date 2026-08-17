@@ -91,13 +91,8 @@ export default async function PartnerLanding({
   }
 
   const indexable = isIndexable(partner)
-  // O kill switch `estacio_enabled` foi feito pra esconder a Estácio do
-  // bolsaclick.com.br — este site inteiro é dedicado a uma marca, então a
-  // marca Estácio aqui NUNCA pode depender dele (ver athena-offers.ts).
-  const ignoreEstacioKillSwitch = partner === 'estacio'
-
   const [courses, catalog] = await Promise.all([
-    getInstitutionCourses(inst.name, { ignoreEstacioKillSwitch }),
+    getInstitutionCourses(inst.name),
     // Catálogo completo do site (FeaturedCourse) pro dropdown "curso de
     // interesse" e pra resolver tipo de grau (Bacharelado/Licenciatura/
     // Tecnólogo) + slug de "ver detalhes" no grid de ofertas.

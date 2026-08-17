@@ -1,7 +1,6 @@
 import { athena } from './axios'
 import type { Course } from '@/app/interface/course'
 import { titleCasePtBr } from '@/app/lib/utils/title-case'
-import { isServerFlagEnabled } from '@/app/lib/analytics/server-flags'
 
 /**
  * Client da API Athena — segunda fonte de ofertas (roteia YDUQS/Estácio).
@@ -102,15 +101,6 @@ export interface SearchAthenaOffersParams {
   academicLevel?: string
   /** Filtro de marca (substring do slug da instituição): "estacio", "ibmec", "wyden". */
   brand?: string
-  /**
-   * Ignora o kill switch `estacio_enabled` (ver comentário abaixo). Existe
-   * SÓ para o ingressa.digital/estacio: aquele site inteiro É a Estácio — não
-   * pode depender de uma flag desenhada pra esconder a Estácio do
-   * bolsaclick.com.br. Sem isso, desligar a flag pro marketplace principal
-   * apagava silenciosamente um site de mídia paga dedicado (2026-08-11).
-   * NUNCA usar em código que roda no bolsaclick.com.br/bolsamais.com.br.
-   */
-  ignoreEstacioKillSwitch?: boolean
 }
 
 /** Dados do aluno para a inscrição (CreateEnrollmentDto.student). */
@@ -317,16 +307,12 @@ export async function searchAthenaOffers(
 ): Promise<AthenaOffer[]> {
   if (!process.env.ATHENA_BASE_URL) return []
 
-  // Kill switch de negócio (2026-07-17): Estácio/YDUQS fica ESCONDIDA no site
-  // por padrão (foco em tráfego pago + contratação de CMO). Toggle global pela
-  // flag PostHog `estacio_enabled` (0% = off, 100% = on) — sem redeploy.
-  // Choke point único: some das buscas, vitrine, faculdades e city pages de uma
-  // vez. Fallback `false` = se o PostHog cair, mantém escondida (falha segura).
-  // Bypass explícito via `ignoreEstacioKillSwitch` — ver doc na interface acima.
-  if (!params.ignoreEstacioKillSwitch && !(await isServerFlagEnabled('estacio_enabled', false))) {
-    return []
-  }
-
+  // O kill switch `estacio_enabled` (jul/2026) foi APOSENTADO em 2026-08-17:
+  // a Estácio é parceira permanente. Além de não fazer mais sentido, ele tinha
+  // um efeito colateral grave — como esta busca roda no BUILD das páginas
+  // estáticas de curso (revalidate 24h) e o fallback era `false`, qualquer
+  // instabilidade do PostHog durante o build congelava a Estácio fora do site
+  // por um dia inteiro, em silêncio. Foi exatamente o que aconteceu.
   try {
     const query: Record<string, string> = {}
     const courseName = cleanCourseNameForAthena(params.courseName)

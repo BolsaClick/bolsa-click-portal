@@ -9,6 +9,7 @@ export const BRAND_LOGOS: Record<string, string> = {
   UNAES: '/assets/logo-bolsa-click-rosa.png',
   ESTACIO: '/estacio-logo.png',
   WYDEN: '/assets/wyden.svg',
+  IBMEC: '/assets/logo-ibmec.svg',
 }
 
 /**

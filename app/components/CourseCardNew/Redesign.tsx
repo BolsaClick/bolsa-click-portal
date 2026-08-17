@@ -55,6 +55,7 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
     if (n.includes('unime')) return '/assets/logo-unime-p.png'
     if (n.includes('estacio') || n.includes('estácio')) return '/estacio-logo.png'
     if (n.includes('wyden')) return '/assets/wyden.svg'
+    if (n.includes('ibmec')) return '/assets/logo-ibmec.svg'
     return '/assets/logo-bolsa-click-rosa.png'
   }
 

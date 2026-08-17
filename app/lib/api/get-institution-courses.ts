@@ -41,26 +41,14 @@ async function fetchAllOffersByCourse(): Promise<Course[]> {
   return results.flat()
 }
 
-export interface GetInstitutionCoursesOptions {
-  /**
-   * Repassa o bypass do kill switch `estacio_enabled` pra `searchAthenaOffers`.
-   * Só o ingressa.digital/estacio deve passar `true` — ver doc em athena-offers.ts.
-   */
-  ignoreEstacioKillSwitch?: boolean
-}
-
 /**
  * Ofertas YDUQS (Estácio/Wyden) via Athena — fetch SERVER-SIDE (o merge padrão de
  * getShowFiltersCourses só roda no browser). Cobre o TOP_CURSOS e normaliza p/ Course.
  */
-async function fetchAthenaOffersByCourse(opts?: GetInstitutionCoursesOptions): Promise<Course[]> {
+async function fetchAthenaOffersByCourse(): Promise<Course[]> {
   const results = await Promise.all(
     TOP_CURSOS.map(curso =>
-      searchAthenaOffers({
-        courseName: curso.apiCourseName,
-        academicLevel: 'GRADUACAO',
-        ignoreEstacioKillSwitch: opts?.ignoreEstacioKillSwitch,
-      })
+      searchAthenaOffers({ courseName: curso.apiCourseName, academicLevel: 'GRADUACAO' })
         .then(list => list.map(normalizeAthenaOffer))
         .catch(error => {
           console.error(`[institution-courses] Athena falhou em ${curso.apiCourseName}:`, error)
@@ -74,18 +62,16 @@ async function fetchAthenaOffersByCourse(opts?: GetInstitutionCoursesOptions): P
 /**
  * Pra uma dada brand de faculdade, retorna 1 oferta por curso único (a mais barata).
  * Cobre todo o TOP_CURSOS (22) → diversidade real de cursos.
- * Cache 1h via unstable_cache. `opts` entra na key do cache automaticamente
- * (unstable_cache inclui os argumentos), então o bypass do ingressa nunca
- * "vaza" pro cache do bolsaclick.com.br (chave diferente).
+ * Cache 1h via unstable_cache.
  */
 export const getInstitutionCourses = unstable_cache(
-  async (brandName: string, opts?: GetInstitutionCoursesOptions): Promise<Course[]> => {
+  async (brandName: string): Promise<Course[]> => {
     const brandKey = normalizeBrand(brandName)
     const tartarusOffers = await fetchAllOffersByCourse()
     // Ofertas YDUQS (Estácio) vêm da Athena server-side. Sem isso, a página de
     // marca da Estácio ficava sem ofertas/preços e o AggregateOffer não era emitido.
     const athenaOffers = YDUQS_BRANDS.has(brandKey)
-      ? await fetchAthenaOffersByCourse(opts)
+      ? await fetchAthenaOffersByCourse()
       : []
     const allOffers = [...tartarusOffers, ...athenaOffers]
 

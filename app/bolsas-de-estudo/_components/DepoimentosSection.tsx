@@ -8,23 +8,12 @@ const PAGE_URL = `${SITE_URL}/bolsas-de-estudo`
 interface Props {
   /** Quantos depoimentos mostrar. Default 5. */
   limit?: number
-  /**
-   * Restringe a UMA instituição (prova social granular — mecânica validada em
-   * teardown de concorrente). Usado pelas landings de marca do ingressa
-   * (/lp/[partner]): numa página dedicada à Estácio, depoimento de outra
-   * faculdade parece atribuição errada. Omitido = agregado de todas (uso
-   * original em /bolsas-de-estudo).
-   */
-  institutionSlug?: string
 }
 
-async function getAggregatedReviews(limit: number, institutionSlug?: string) {
+async function getAggregatedReviews(limit: number) {
   try {
     const activeInstitutions = await prisma.institution.findMany({
-      where: {
-        isActive: true,
-        ...(institutionSlug ? { slug: institutionSlug } : {}),
-      },
+      where: { isActive: true },
       select: { id: true, name: true, slug: true },
     })
 
@@ -98,8 +87,8 @@ function formatDate(date: Date): string {
   return date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
 }
 
-export default async function DepoimentosSection({ limit = 5, institutionSlug }: Props) {
-  const { reviews, avgRating, total } = await getAggregatedReviews(limit, institutionSlug)
+export default async function DepoimentosSection({ limit = 5 }: Props) {
+  const { reviews, avgRating, total } = await getAggregatedReviews(limit)
 
   // Degradação graciosa: se DB ainda não tem reviews APPROVED, não renderiza nada.
   // Trust signal vazio é melhor que trust signal inventado (CLAUDE.md).

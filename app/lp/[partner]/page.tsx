@@ -3,23 +3,12 @@ import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { CheckCircle2, ShieldCheck, Clock, Star } from 'lucide-react'
 import { prisma } from '@/app/lib/prisma'
-import { getCurrentTheme } from '@/app/lib/themes'
 import { getInstitutionCourses } from '@/app/lib/api/get-institution-courses'
-import { normalizeCourseNameKey } from '@/app/lib/utils/course-name-key'
 import { BRAND_CONTENT } from '@/app/faculdades/[slug]/_data/brand-content'
-import DepoimentosSection from '@/app/bolsas-de-estudo/_components/DepoimentosSection'
 import { LeadForm } from './_components/LeadForm'
-import { OfferGrid } from './_components/OfferGrid'
-import type { OfferCardData } from './_components/OfferCard'
-import { PARTNERS, brandColorFor, isIndexable } from '../_shared/partners'
+import { PARTNERS, brandColorFor } from '../_shared/partners'
 
 export const revalidate = 3600
-
-const theme = getCurrentTheme()
-// O bolsaclick.com.br é sempre a fonte da "lista completa" (comparativo entre
-// TODAS as marcas) — link fixo, independente de em qual domínio o ingressa
-// está rodando.
-const BOLSACLICK_SITE_URL = 'https://www.bolsaclick.com.br'
 
 export async function generateStaticParams() {
   const insts = await prisma.institution.findMany({
@@ -39,32 +28,10 @@ export async function generateMetadata({
   const { partner } = await params
   const inst = await getInstitution(partner)
   if (!inst) return { title: 'Página não encontrada' }
-
-  const indexable = isIndexable(partner)
-  const title = `Bolsa de até 80% na ${inst.name} — Inscreva-se grátis`
-  const description = `Garanta sua bolsa de estudo na ${inst.fullName} com até 80% de desconto. Sem ENEM, sem nota de corte. Fale com nosso time e comece a estudar.`
-  const url = `${theme.siteUrl}/${partner}`
-
   return {
-    title,
-    description,
-    robots: indexable
-      ? { index: true, follow: true }
-      : { index: false, follow: false },
-    // Canonical só faz sentido pra página que participa do índice — evita
-    // apontar canonical pra uma URL que o próprio robots já bloqueia.
-    ...(indexable && { alternates: { canonical: url } }),
-    openGraph: indexable
-      ? {
-          title,
-          description,
-          url,
-          siteName: 'Bolsa Click',
-          type: 'website',
-          locale: 'pt_BR',
-          images: inst.imageUrl ? [{ url: inst.imageUrl, alt: inst.imageAlt || inst.name }] : undefined,
-        }
-      : undefined,
+    title: `Bolsa de até 80% na ${inst.name} — Inscreva-se grátis`,
+    description: `Garanta sua bolsa de estudo na ${inst.fullName} com até 80% de desconto. Sem ENEM, sem nota de corte. Fale com nosso time e comece a estudar.`,
+    robots: { index: false, follow: false },
   }
 }
 
@@ -77,8 +44,6 @@ function formatBRL(v: number): string {
   })
 }
 
-const COURSE_TYPES = new Set(['BACHARELADO', 'LICENCIATURA', 'TECNOLOGO'])
-
 export default async function PartnerLanding({
   params,
 }: {
@@ -90,83 +55,23 @@ export default async function PartnerLanding({
     notFound()
   }
 
-  const indexable = isIndexable(partner)
-  // O kill switch `estacio_enabled` foi feito pra esconder a Estácio do
-  // bolsaclick.com.br — este site inteiro é dedicado a uma marca, então a
-  // marca Estácio aqui NUNCA pode depender dele (ver athena-offers.ts).
-  const ignoreEstacioKillSwitch = partner === 'estacio'
-
   const [courses, catalog] = await Promise.all([
-    getInstitutionCourses(inst.name, { ignoreEstacioKillSwitch }),
-    // Catálogo completo do site (FeaturedCourse) pro dropdown "curso de
-    // interesse" e pra resolver tipo de grau (Bacharelado/Licenciatura/
-    // Tecnólogo) + slug de "ver detalhes" no grid de ofertas.
+    getInstitutionCourses(inst.name),
+    // Catálogo completo do site (FeaturedCourse) pro dropdown "curso de interesse"
+    // — todos os cursos, não só os do parceiro, pra o lead escolher exatamente.
     prisma.featuredCourse.findMany({
       where: { isActive: true },
-      select: { name: true, apiCourseName: true, fullName: true, slug: true, type: true },
+      select: { name: true },
       orderBy: { name: 'asc' },
     }),
   ])
-
-  // NOTA sobre o espelho server-side de "checkout_viewed": não dá pra emitir
-  // aqui (Server Component) porque a página é ISR (`revalidate = 3600`) — um
-  // capture() disparado no render só rodaria a cada regeneração de cache
-  // (~1x/hora), não a cada visita real. O mirror de verdade é o beacon
-  // fire-and-forget em LeadForm (useEffect de mount → POST /api/ingressa/view,
-  // sem gate de consentimento, roda no CLIENTE mas fora do SDK do PostHog).
-
   const brand = BRAND_CONTENT[partner]
   const brandColor = brandColorFor(partner)
   const courseOptions = Array.from(
     new Set(catalog.map((c) => c.name.trim()).filter(Boolean))
   )
 
-  // Mapa nome→{slug,type} do catálogo, pra casar com as ofertas vivas
-  // (Athena/Tartarus) e alimentar o grid: tipo de grau pro filtro da sidebar,
-  // slug pro link "Ver detalhes do curso".
-  const catalogByKey = new Map<string, { slug: string; type: string }>()
-  for (const c of catalog) {
-    for (const variant of [c.name, c.apiCourseName, c.fullName]) {
-      if (!variant) continue
-      const key = normalizeCourseNameKey(variant)
-      if (key && !catalogByKey.has(key)) catalogByKey.set(key, { slug: c.slug, type: c.type })
-    }
-  }
-
-  // Grid de ofertas: só do trilho YDUQS (Athena) — é o que traz unidade,
-  // turno e duração reais pra sustentar o card. Ofertas Tartarus (Cogna) sem
-  // esses campos ficam de fora do grid (mas ainda contam pro "a partir de"
-  // mais simples de baixo, como fallback).
-  const offerItems: OfferCardData[] = courses
-    .filter((c) => c.source === 'YDUQS' && Number(c.minPrice ?? 0) > 0)
-    .map((c) => {
-      const meta = catalogByKey.get(normalizeCourseNameKey(c.name))
-      return {
-        id: String(c.offerId || c.id),
-        name: c.name,
-        courseType: meta && COURSE_TYPES.has(meta.type) ? (meta.type as OfferCardData['courseType']) : null,
-        academicLevel: c.academicLevel,
-        modality: c.modality,
-        shift: c.shiftOptions?.[0],
-        durationMonths: c.durationInMonths,
-        minPrice: Number(c.minPrice),
-        maxPrice: typeof c.maxPrice === 'number' ? c.maxPrice : undefined,
-        unitName: c.unitName,
-        unitCity: c.unitCity,
-        unitState: c.unitState,
-        slug: meta?.slug,
-        offerId: c.offerId,
-        brand: c.brand,
-        unitAddress: c.unitAddress,
-        unitDistrict: c.unitDistrict,
-        unitPostalCode: c.unitPostalCode,
-        priceForma2: c.priceForma2,
-        priceForma3: c.priceForma3,
-      }
-    })
-
-  // Fallback simples (nome + preço) pra quando não há oferta YDUQS suficiente
-  // pro grid — mantém a seção "cursos com bolsa" funcionando pras outras marcas.
+  // Top cursos com preço real (ordenados pela mensalidade com bolsa).
   const topCourses = courses
     .filter((c) => Number(c.minPrice ?? 0) > 0)
     .map((c) => ({ name: String(c.name ?? '').trim(), minPrice: Number(c.minPrice) }))
@@ -180,84 +85,10 @@ export default async function PartnerLanding({
     'Inscrição gratuita e sem ENEM',
   ]
 
-  // FAQ curto e focado em CONFIANÇA/conversão — deliberadamente diferente do
-  // FAQ institucional de /faculdades/[slug] (que fala sobre a faculdade em
-  // si). Evita conteúdo duplicado entre os dois domínios (SEO) e responde a
-  // dúvida real de quem chega por anúncio: "isso é oficial? é seguro?".
-  const trustFaq = [
-    {
-      q: `O Bolsa Click é a própria ${inst.name}?`,
-      a: `Não. O Bolsa Click é uma plataforma parceira autorizada que intermedia bolsas de estudo com a ${inst.name} e outras instituições. A matrícula e a mensalidade são pagas direto pra ${inst.fullName}; o Bolsa Click não cobra nada do estudante pra isso.`,
-    },
-    {
-      q: `Preciso pagar alguma coisa pro Bolsa Click?`,
-      a: 'Não. O cadastro e a reserva da bolsa são gratuitos. O único valor pago é a mensalidade (já com desconto) direto pra instituição.',
-    },
-    {
-      q: `Em quanto tempo recebo uma resposta?`,
-      a: 'Nosso time normalmente entra em contato pelo WhatsApp em poucos minutos após o envio do formulário, em horário comercial.',
-    },
-  ]
-
-  const educationalOrgSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    '@id': `${theme.siteUrl}/${partner}#organization`,
-    name: 'Bolsa Click',
-    description: `Plataforma parceira autorizada de bolsas de estudo na ${inst.name}.`,
-    url: `${theme.siteUrl}/${partner}`,
-    ...(offerItems.length > 0 && {
-      makesOffer: {
-        '@type': 'AggregateOffer',
-        priceCurrency: 'BRL',
-        lowPrice: Math.min(...offerItems.map((o) => o.minPrice)),
-        offerCount: offerItems.length,
-        category: 'Bolsa de estudo',
-        availability: 'https://schema.org/InStock',
-        seller: { '@type': 'EducationalOrganization', name: inst.fullName },
-        description: `Mensalidades com bolsa de estudo na ${inst.name} a partir de R$ ${Math.min(...offerItems.map((o) => o.minPrice)).toFixed(0)}/mês.`,
-      },
-    }),
-  }
-
-  const faqSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: trustFaq.map((f) => ({
-      '@type': 'Question',
-      name: f.q,
-      acceptedAnswer: { '@type': 'Answer', text: f.a },
-    })),
-  }
-
-  const breadcrumbSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Início', item: theme.siteUrl },
-      { '@type': 'ListItem', position: 2, name: inst.name, item: `${theme.siteUrl}/${partner}` },
-    ],
-  }
-
   return (
     <>
-      {indexable && (
-        <>
-          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(educationalOrgSchema) }} />
-          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
-        </>
-      )}
-
-      {/* Barra de identificação — o hero usa cor/logo da ${inst.name}, então
-          esta linha deixa claro, acima da dobra, que quem capta o lead é o
-          Bolsa Click (parceiro autorizado), não a própria instituição. */}
-      <div className="bg-ink-900 text-white/90 text-center py-1.5 text-[11px] font-mono tracking-wide">
-        Bolsa Click · parceiro autorizado {inst.name}
-      </div>
-
       {/* HERO + FORM */}
-      <section id="top" className="relative overflow-hidden" style={{ backgroundColor: brandColor }}>
+      <section className="relative overflow-hidden" style={{ backgroundColor: brandColor }}>
         <div aria-hidden className="absolute -top-24 -right-32 w-[28rem] h-[28rem] rounded-full bg-white/10 blur-3xl" />
         <div className="container mx-auto px-4 py-10 md:py-16 relative">
           <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
@@ -279,13 +110,9 @@ export default async function PartnerLanding({
               <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-semibold text-white leading-[1.08] mb-4">
                 Bolsa de até <span className="underline decoration-white/40 decoration-[3px] underline-offset-4">80%</span> na {inst.name}
               </h1>
-              {/* Abertura GEO: resposta direta na 1ª frase (40-60 palavras),
-                  contexto depois — CLAUDE.md, padrão de abertura editorial. */}
               <p className="text-white/80 text-base md:text-lg leading-relaxed mb-6 max-w-xl">
-                Pra conseguir bolsa na {inst.name} sem ENEM e sem nota de corte, o caminho mais
-                rápido é se cadastrar grátis pelo Bolsa Click, parceiro autorizado: você compara
-                as ofertas com desconto de até 80%, escolhe curso e unidade, e fala direto com
-                nosso time pelo WhatsApp pra garantir a vaga antes de matricular na {inst.fullName}.
+                Estude na {inst.fullName} pagando muito menos. Sem ENEM, sem nota de corte,
+                inscrição grátis. Preencha e nosso time garante sua bolsa.
               </p>
               <ul className="flex flex-wrap gap-x-5 gap-y-2 text-white/85 text-sm">
                 {inst.mecRating ? (
@@ -321,47 +148,27 @@ export default async function PartnerLanding({
         </div>
       </section>
 
-      {/* GRID DE OFERTAS REAIS — nome, nível/modalidade/duração/turno, preço
-          de/por com economia total, unidade, CTA. Só quando há oferta YDUQS
-          o bastante pra sustentar os campos (ver comentário acima). */}
-      {offerItems.length > 0 ? (
+      {/* OFERTAS REAIS */}
+      {topCourses.length > 0 && (
         <section className="bg-white py-12 md:py-16 border-b border-hairline">
-          <div className="container mx-auto px-4 max-w-6xl">
+          <div className="container mx-auto px-4 max-w-4xl">
             <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900 mb-2">
               Cursos com bolsa na {inst.name}
             </h2>
-            <p className="text-ink-700 mb-6">Mensalidades reais com a bolsa já aplicada — de/por e economia total até o fim do curso.</p>
-            <OfferGrid
-              offers={offerItems}
-              partner={partner}
-              partnerName={inst.name}
-              brandColor={brandColor}
-              fullListHref={`${BOLSACLICK_SITE_URL}/faculdades/${partner}`}
-            />
+            <p className="text-ink-700 mb-6">Mensalidades reais com a bolsa já aplicada — a partir de:</p>
+            <ul className="grid sm:grid-cols-2 gap-3">
+              {topCourses.map((c) => (
+                <li key={c.name} className="flex items-center justify-between gap-4 bg-paper border border-hairline rounded-lg px-4 py-3">
+                  <span className="font-display text-ink-900 truncate">{c.name}</span>
+                  <span className="font-display text-ink-900 whitespace-nowrap text-sm">
+                    a partir de <strong>{formatBRL(c.minPrice)}</strong>
+                    <span className="text-ink-500">/mês</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
-      ) : (
-        topCourses.length > 0 && (
-          <section className="bg-white py-12 md:py-16 border-b border-hairline">
-            <div className="container mx-auto px-4 max-w-4xl">
-              <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900 mb-2">
-                Cursos com bolsa na {inst.name}
-              </h2>
-              <p className="text-ink-700 mb-6">Mensalidades reais com a bolsa já aplicada — a partir de:</p>
-              <ul className="grid sm:grid-cols-2 gap-3">
-                {topCourses.map((c) => (
-                  <li key={c.name} className="flex items-center justify-between gap-4 bg-paper border border-hairline rounded-lg px-4 py-3">
-                    <span className="font-display text-ink-900 truncate">{c.name}</span>
-                    <span className="font-display text-ink-900 whitespace-nowrap text-sm">
-                      a partir de <strong>{formatBRL(c.minPrice)}</strong>
-                      <span className="text-ink-500">/mês</span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
-        )
       )}
 
       {/* POR QUE */}
@@ -378,29 +185,6 @@ export default async function PartnerLanding({
               </li>
             ))}
           </ul>
-        </div>
-      </section>
-
-      {/* PROVA SOCIAL — granular por instituição (mecânica de conversão do
-          teardown de concorrente). Some sozinha se não houver review
-          aprovada dessa instituição — trust signal vazio é melhor que
-          inventado (CLAUDE.md). */}
-      <DepoimentosSection limit={5} institutionSlug={partner} />
-
-      {/* FAQ de confiança */}
-      <section className="bg-white py-12 md:py-16 border-t border-hairline">
-        <div className="container mx-auto px-4 max-w-3xl">
-          <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900 mb-6">
-            Perguntas frequentes
-          </h2>
-          <dl className="space-y-5">
-            {trustFaq.map((f) => (
-              <div key={f.q} className="border-b border-hairline pb-5">
-                <dt className="font-display text-ink-900 font-semibold mb-1.5">{f.q}</dt>
-                <dd className="text-ink-700 text-sm leading-relaxed">{f.a}</dd>
-              </div>
-            ))}
-          </dl>
         </div>
       </section>
 

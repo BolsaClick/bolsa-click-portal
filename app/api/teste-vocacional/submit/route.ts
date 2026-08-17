@@ -48,19 +48,53 @@ function checkSubmitLimit(ip: string): boolean {
   return true
 }
 
+/**
+ * Casamento tolerante de slug entre o que a IA devolve e o que o matching
+ * espera.
+ *
+ * O repo tem DUAS convenções de slug pros mesmos 20 cursos: COURSE_PROFILES
+ * (usado por matchCourses, e portanto o que vai no prompt) usa "psicologia",
+ * enquanto TOP_CURSOS/catálogo usa "psicologia-bacharelado". A IA recebe o
+ * slug sem sufixo e devolve COM — ela "corrige" pro formato que reconhece.
+ *
+ * Sem normalizar, nenhuma recomendação casava: as 3 eram descartadas e
+ * substituídas pelo texto genérico do preenchimento abaixo. O efeito era
+ * pagar a chamada da OpenAI e jogar a resposta fora — invisível, porque a
+ * página continuava mostrando 3 cursos corretos (o matching determinístico
+ * acerta os cursos; só a justificativa personalizada se perdia).
+ *
+ * Tolerar aqui é mais robusto que ajustar o prompt: modelo de linguagem varia
+ * de resposta, e o código não deve quebrar por causa de um sufixo. Conferido
+ * que remover o sufixo não colide nenhum slug em nenhuma das duas listas.
+ */
+const DEGREE_SUFFIX = /-(bacharelado|licenciatura|tecnologo|tecnico)$/
+
+function baseSlug(slug: string): string {
+  return slug.trim().toLowerCase().replace(DEGREE_SUFFIX, '')
+}
+
 function sanitizeRecommendations(
   raw: Recommendation[],
   expectedSlugs: string[]
 ): Recommendation[] {
   const expectedSet = new Set(expectedSlugs)
+  // Índice normalizado → slug esperado. Exato tem prioridade; o normalizado só
+  // entra quando o exato não bate, pra não perder precisão se um dia as duas
+  // listas passarem a usar a mesma convenção.
+  const byBase = new Map<string, string>()
+  for (const s of expectedSlugs) byBase.set(baseSlug(s), s)
+
   const seen = new Set<string>()
   const valid: Recommendation[] = []
 
   for (const r of raw) {
-    if (!expectedSet.has(r.courseSlug) || seen.has(r.courseSlug)) continue
-    seen.add(r.courseSlug)
+    const slug = expectedSet.has(r.courseSlug)
+      ? r.courseSlug
+      : byBase.get(baseSlug(r.courseSlug ?? ''))
+    if (!slug || seen.has(slug)) continue
+    seen.add(slug)
     valid.push({
-      courseSlug: r.courseSlug,
+      courseSlug: slug,
       matchPercent: Math.max(50, Math.min(100, Math.round(r.matchPercent))),
       reasoning: String(r.reasoning).slice(0, 600),
     })

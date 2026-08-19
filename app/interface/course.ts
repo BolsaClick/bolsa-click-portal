@@ -32,6 +32,14 @@ export interface Course {
   unitName?: string
   unit?: string
   businessKey?: string
+  /**
+   * Forma de ingresso da linha de catálogo da oferta Estácio (1, 2 ou 3).
+   *
+   * A YDUQS procura a oferta por um conjunto de propriedades que inclui a forma
+   * de ingresso. Oferecer ao candidato uma forma sem linha correspondente faz a
+   * inscrição voltar MS004 — é a recusa mais comum do checkout da Estácio.
+   */
+  codFormaIngressoOferta?: number
   commercialModality?: string | null
   submodality?: string | null
   /** Pós-graduação: número de parcelas */

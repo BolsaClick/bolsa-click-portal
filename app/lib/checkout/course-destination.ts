@@ -118,6 +118,11 @@ export function buildCourseCheckoutDestination(
     if (course.unitAddress) params.set('unitAddress', course.unitAddress)
     if (course.unitDistrict) params.set('unitDistrict', course.unitDistrict)
     if (course.unitPostalCode) params.set('unitPostalCode', course.unitPostalCode)
+    // Forma de ingresso da linha de catálogo: o checkout deriva dela quais
+    // opções pode oferecer sem cair em MS004 na YDUQS.
+    if (course.codFormaIngressoOferta !== undefined) {
+      params.set('codFormaIngressoOferta', String(course.codFormaIngressoOferta))
+    }
     // Preço por forma de ingresso (2/3) — opcional, ver Course.priceForma2/3.
     if (course.priceForma2) params.set('priceForma2', String(course.priceForma2))
     if (course.priceForma3) params.set('priceForma3', String(course.priceForma3))

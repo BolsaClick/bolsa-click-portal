@@ -461,6 +461,13 @@ export default function EstacioCheckoutClient() {
           city: offer.city,
           source: 'YDUQS',
           inscriptionId: data?.numeroInscricao,
+          // Dados da cobrança, para o CRM conseguir recuperar quem não pagar.
+          // Diferente da Cogna, a Estácio devolve uma URL de verdade — e ela é
+          // opaca, não dá pra reconstruir a partir do número da inscrição.
+          // Se não guardarmos agora, ela se perde quando a aba fecha.
+          paymentUrl: data?.paymentUrl,
+          monthlyPrice: displayPrice,
+          enrollmentFee: data?.amount,
         }),
       }).catch((confirmError) => console.error('Confirmação de inscrição falhou:', confirmError))
 

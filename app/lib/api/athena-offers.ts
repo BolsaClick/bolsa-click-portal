@@ -41,6 +41,12 @@ function resolveShiftFromMetadata(nomeTurno: unknown): string {
 export interface AthenaOffer {
   /** uuid do Offer no catálogo da Athena (obrigatório para o checkout). */
   id?: string
+  /**
+   * Forma de ingresso da linha de catálogo desta oferta (1, 2 ou 3).
+   * O checkout usa isto para só oferecer formas que existem de fato — ver
+   * `metadata.codFormaIngresso`.
+   */
+  codFormaIngressoOferta?: number
   unitId?: string
   externalId?: string
   modality?: string
@@ -87,6 +93,15 @@ export interface AthenaOffer {
   metadata?: {
     codCurso?: number
     codCursoPai?: number
+    /**
+     * Forma de ingresso da LINHA de catálogo desta oferta (1, 2 ou 3).
+     *
+     * A Estácio só publica linhas para essas três formas. A YDUQS procura a
+     * oferta por um conjunto de propriedades que INCLUI a forma de ingresso —
+     * mandar uma forma sem linha correspondente devolve MS004 (oferta não
+     * encontrada), que é a recusa mais comum do checkout.
+     */
+    codFormaIngresso?: number
     /** Duração textual da oferta, ex.: "4 anos", "18 meses", "8 semestres". */
     duracao?: string
     [key: string]: unknown
@@ -341,6 +356,9 @@ export function normalizeAthenaOffer(raw: AthenaOffer): Course {
     // ("4 anos" → 48) pra renderizar o bloco "Período" igual aos cards Cogna.
     durationInMonths: raw.durationMonths ?? parseDuracaoToMonths(raw.metadata?.duracao),
     shiftOptions: shift ? [shift] : undefined,
+    // Forma de ingresso da linha de catálogo — define quais opções o checkout
+    // pode oferecer sem cair em MS004.
+    codFormaIngressoOferta: raw.metadata?.codFormaIngresso,
     // Preço por forma de ingresso — ver comentário em AthenaOffer.priceToForma2/3.
     // undefined enquanto o athena-api não implementar (checkout usa o default).
     priceForma2: raw.priceToForma2 ? num(raw.priceToForma2) : undefined,

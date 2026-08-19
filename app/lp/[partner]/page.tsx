@@ -160,6 +160,7 @@ export default async function PartnerLanding({
         unitAddress: c.unitAddress,
         unitDistrict: c.unitDistrict,
         unitPostalCode: c.unitPostalCode,
+        codFormaIngressoOferta: c.codFormaIngressoOferta,
         priceForma2: c.priceForma2,
         priceForma3: c.priceForma3,
       }

@@ -147,6 +147,11 @@ export default function EstacioCheckoutClient() {
       // próprio na API de ofertas; formas 1/7/24 sempre usam o preço "price"
       // (default) acima. Opcionais: enquanto o athena-api não mandar esses 2
       // campos, o checkout cai graciosamente no preço único de sempre.
+      // Forma de ingresso da LINHA de catálogo desta oferta (1, 2 ou 3). Define
+      // quais opções podem ser oferecidas — ver `formasSuportadas` abaixo.
+      codFormaIngressoOferta: searchParams.get('codFormaIngressoOferta')
+        ? Number(searchParams.get('codFormaIngressoOferta'))
+        : undefined,
       priceForma2: searchParams.get('priceForma2')
         ? Number(searchParams.get('priceForma2'))
         : undefined,
@@ -200,19 +205,47 @@ export default function EstacioCheckoutClient() {
     })
   }, [displayPrice, offer])
 
-  // Forma 2 (Transferência Externa) e 3 (MSV Externa) só aparecem quando essa
-  // oferta específica tem preço próprio pra elas — sem isso, oferecer a opção
-  // sugeriria uma diferenciação de preço que não existe pra esse curso (Rodrigo,
-  // 2026-07-27). 24/7/4/5/6 ficam sempre visíveis: por design sempre usam o
-  // preço padrão da oferta, não dependem de dado por forma.
+  /**
+   * Formas de ingresso que ESTA oferta suporta de verdade.
+   *
+   * A YDUQS não busca a oferta por id — ela busca por um conjunto de
+   * propriedades que INCLUI a forma de ingresso. Oferecer uma forma sem linha
+   * de catálogo correspondente devolve MS004 ("oferta não encontrada") e a
+   * inscrição morre.
+   *
+   * O catálogo da Estácio só publica linhas para as formas 1, 2 e 3. As formas
+   * 24 (Simplificado) e 7 (ENEM) não são linhas próprias: a YDUQS as resolve
+   * como a família {1,7,24} sobre a linha de forma 1. Já 4, 5 e 6 são enviados
+   * literalmente e não têm linha nenhuma — nas duas tentativas com 6, as duas
+   * falharam com MS004.
+   *
+   * Até 2026-08-19 esta lista assumia que 24/7/4/5/6 estavam sempre
+   * disponíveis. Para uma oferta publicada só como Transferência Externa
+   * (forma 2), o candidato aceitava o padrão 24 e caía em MS004 — 7 de 8 casos
+   * medidos. Agora a lista parte da forma da própria oferta.
+   *
+   * Sem o parâmetro (link antigo, já indexado) assume-se a forma 1, que é o
+   * comportamento anterior — não vale quebrar quem chega por um link velho.
+   */
+  const formasSuportadas = useMemo(() => {
+    const base = offer.codFormaIngressoOferta ?? 1
+    const formas = new Set<number>()
+    if (base === 1) {
+      formas.add(24)
+      formas.add(CODIGO_VESTIBULAR_ENEM)
+    } else {
+      formas.add(base)
+    }
+    // 2 e 3 entram quando o catálogo mandou preço próprio pra elas — é a prova
+    // de que a linha existe para este grupo de oferta.
+    if (offer.priceForma2 !== undefined) formas.add(2)
+    if (offer.priceForma3 !== undefined) formas.add(3)
+    return formas
+  }, [offer.codFormaIngressoOferta, offer.priceForma2, offer.priceForma3])
+
   const visibleFormaIngressoOptions = useMemo(
-    () =>
-      FORMA_INGRESSO_OPTIONS.filter((option) => {
-        if (option.value === 2) return offer.priceForma2 !== undefined
-        if (option.value === 3) return offer.priceForma3 !== undefined
-        return true
-      }),
-    [offer.priceForma2, offer.priceForma3],
+    () => FORMA_INGRESSO_OPTIONS.filter((option) => formasSuportadas.has(option.value)),
+    [formasSuportadas],
   )
 
   const [submitting, setSubmitting] = useState(false)
@@ -264,6 +297,16 @@ export default function EstacioCheckoutClient() {
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }))
+
+  // O padrão do formulário é 24, que vale para a maioria das ofertas mas não
+  // para todas: numa linha de catálogo publicada só como Transferência Externa
+  // (forma 2), enviar 24 devolve MS004 e a inscrição morre. Quando o padrão não
+  // está entre as formas suportadas, cai na primeira que a oferta aceita.
+  useEffect(() => {
+    if (visibleFormaIngressoOptions.length === 0) return
+    if (formasSuportadas.has(form.codFormaIngresso)) return
+    setForm((prev) => ({ ...prev, codFormaIngresso: visibleFormaIngressoOptions[0].value }))
+  }, [formasSuportadas, visibleFormaIngressoOptions, form.codFormaIngresso])
 
   // Autofill de endereço via ViaCEP ao completar o CEP (8 dígitos).
   const handleCepBlur = async () => {

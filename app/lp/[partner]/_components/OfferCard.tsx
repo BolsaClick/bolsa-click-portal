@@ -35,6 +35,7 @@ export interface OfferCardData {
   unitAddress?: string
   unitDistrict?: string
   unitPostalCode?: string
+  codFormaIngressoOferta?: number
   priceForma2?: number
   priceForma3?: number
 }
@@ -109,6 +110,10 @@ export function buildEstacioCheckoutHref(o: OfferCardData): string {
   if (o.unitAddress) params.set('unitAddress', o.unitAddress)
   if (o.unitDistrict) params.set('unitDistrict', o.unitDistrict)
   if (o.unitPostalCode) params.set('unitPostalCode', o.unitPostalCode)
+  // Forma de ingresso da linha de catálogo: o checkout deriva dela quais
+  // opções pode oferecer sem cair em MS004 na YDUQS.
+  if (o.codFormaIngressoOferta !== undefined)
+    params.set('codFormaIngressoOferta', String(o.codFormaIngressoOferta))
   if (o.priceForma2) params.set('priceForma2', String(o.priceForma2))
   if (o.priceForma3) params.set('priceForma3', String(o.priceForma3))
   if (typeof o.maxPrice === 'number') params.set('maxPrice', String(o.maxPrice))

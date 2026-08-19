@@ -25,7 +25,15 @@ import { upsertCandidato } from '@/app/lib/api/attio'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, phone, cpf, courseName, courseId, brand, modalidade, city, source, inscriptionId } = body
+    const {
+      name, email, phone, cpf, courseName, courseId, brand, modalidade, city, source,
+      inscriptionId,
+      // Dados da inscrição no parceiro. Até 2026-08-19 o `inscriptionId` chegava
+      // aqui e era usado só para deduplicar o evento do PostHog — o CRM ficava
+      // sem ele, e quem não pagasse não tinha como entrar numa régua de
+      // recuperação, porque não havia chave para consultar a cobrança.
+      businessKey, paymentUrl, shift, monthlyPrice, enrollmentFee,
+    } = body
 
     if (!name) {
       return NextResponse.json({ error: 'name is required' }, { status: 400 })
@@ -46,6 +54,16 @@ export async function POST(request: NextRequest) {
           modality: modalidade,
           city,
           estagio: 'inscrito',
+          inscriptionId,
+          businessKey,
+          paymentUrl,
+          shift,
+          monthlyPrice,
+          enrollmentFee,
+          // A inscrição acabou de ser criada, então "agora" é a data correta —
+          // e é ela que define a janela de cobrança: 91% paga no mesmo dia e
+          // 100% até o sétimo.
+          inscribedAt: new Date(),
         })
       } catch (attioError) {
         console.error('⚠️ Attio (inscrito) falhou:', attioError)

@@ -799,6 +799,12 @@ const isFormValidForPayment =
             city: offerDetails?.unitCity,
             source: offerDetails?.dmhSource?.source,
             inscriptionId: response.id,
+            // Turno e valores da oferta: sem eles a mensagem de recuperação
+            // não consegue dizer o que a pessoa está prestes a perder
+            // ("R$ 108,38 em Nutrição, no polo X"), que é o que faz ela voltar.
+            shift: offerDetails?.shift,
+            monthlyPrice: offerDetails?.montlyFeeTo,
+            enrollmentFee: offerDetails?.subscriptionValue,
           }),
         }).catch((e) => console.error('Confirmação de inscrição falhou:', e))
 

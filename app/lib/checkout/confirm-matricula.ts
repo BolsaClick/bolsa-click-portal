@@ -141,6 +141,19 @@ export async function confirmPaidMatricula(
       city: offerDetails?.unitCity,
       estagio: 'inscrito',
       taxaPaga: new Date(),
+      // Número da inscrição no parceiro: é a chave que permite consultar o
+      // pagamento depois e cobrar quem ficar pelo caminho.
+      //
+      // `business_key` fica de fora de propósito. O `offerDetails.businessKey`
+      // é a chave da OFERTA, não da inscrição — a da inscrição tem o formato
+      // CPF_<cpf>_OFFER_..._TIMESTAMP_... e só existe na resposta do parceiro.
+      // Mandar a da oferta aqui encheria o campo com um valor que o endpoint
+      // de cobrança recusa, e o erro só apareceria na hora de cobrar.
+      inscriptionId: (results.inscriptionId as string | null) ?? undefined,
+      shift: offerDetails?.shift,
+      monthlyPrice: offerDetails?.montlyFeeTo,
+      enrollmentFee: offerDetails?.subscriptionValue,
+      inscribedAt: new Date(),
     })
   } catch (e) {
     console.error('❌ confirm: Attio falhou', externalTransactionId, e)

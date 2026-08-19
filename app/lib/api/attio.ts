@@ -76,6 +76,31 @@ export interface UpsertCandidatoInput {
   taxaPaga?: Date | string | null
   /** Id na tabela Lead do Postgres — ponte para reconciliação e backfill. */
   leadId?: string
+  /**
+   * Id da inscrição no parceiro: `idOrigin` na Cogna, `numeroInscricao` na
+   * YDUQS. É a chave da cobrança — sem ele não dá pra consultar pagamento nem
+   * regerar o meio de pagamento depois, e a pessoa some da régua de
+   * recuperação. O checkout sempre tem esse número em mãos no sucesso; até
+   * 2026-08-19 ele era descartado.
+   */
+  inscriptionId?: string | number | null
+  /** Chave composta da inscrição na Cogna, exigida pelo endpoint de cobrança. */
+  businessKey?: string | null
+  /**
+   * URL de cobrança do parceiro. Só existe para Estácio/YDUQS: a Cogna não
+   * devolve link (o endpoint entrega o PDF do boleto, e PIX e cartão não são
+   * suportados). Para Anhanguera, a área do candidato se monta a partir do
+   * `numero_inscricao`.
+   */
+  paymentUrl?: string | null
+  /** Turno da oferta contratada (NOTURNO, MATUTINO, VIRTUAL…). */
+  shift?: string | null
+  /** Mensalidade JÁ com a bolsa aplicada. */
+  monthlyPrice?: number | string | null
+  /** Taxa de matrícula cobrada pelo parceiro. */
+  enrollmentFee?: number | string | null
+  /** Data em que a inscrição foi criada no parceiro. */
+  inscribedAt?: Date | string | null
   /** Atribuição de mídia paga. Ver app/lib/analytics/utm.ts. */
   utm?: {
     utmSource?: string
@@ -185,6 +210,22 @@ function toModalidade(modality?: string): string | undefined {
   if (key.includes('EAD') || key.includes('DISTANCIA') || key.includes('VIRTUAL')) return 'EAD'
   if (key.includes('PRESENCIAL')) return 'Presencial'
   return undefined
+}
+
+/**
+ * Preço para número, aceitando as duas formas que o catálogo devolve: number
+ * (Athena/YDUQS) e string com vírgula decimal (Tartarus/Cogna, "108,38").
+ *
+ * O atributo no Attio é `number` e recusa string — mandar "108,38" derruba o
+ * upsert INTEIRO do candidato com 400, não só o campo de preço. Por isso o que
+ * não vira número vira undefined em vez de seguir adiante.
+ */
+function toNumber(value?: number | string | null): number | undefined {
+  if (value === null || value === undefined || value === '') return undefined
+  if (typeof value === 'number') return Number.isFinite(value) ? value : undefined
+  const limpo = value.trim().replace(/[R$\s]/g, '').replace(/\./g, '').replace(',', '.')
+  const n = Number(limpo)
+  return Number.isFinite(n) ? n : undefined
 }
 
 function toDateString(value?: string | Date | null): string | undefined {
@@ -306,6 +347,16 @@ export async function upsertCandidato(input: UpsertCandidatoInput): Promise<stri
   set('motivo_recusa', input.motivoRecusa?.slice(0, 800))
   set('lead_id', input.leadId)
   set('taxa_paga', toDateString(input.taxaPaga))
+  // Dados da inscrição no parceiro. São o que permite cobrar depois: sem o
+  // número não há como consultar pagamento, e sem valor a mensagem de
+  // recuperação não consegue dizer o que a pessoa está prestes a perder.
+  set('numero_inscricao', input.inscriptionId ? String(input.inscriptionId) : undefined)
+  set('business_key', input.businessKey)
+  set('link_pagamento', input.paymentUrl)
+  set('turno', input.shift)
+  set('valor_mensalidade', toNumber(input.monthlyPrice))
+  set('valor_matricula', toNumber(input.enrollmentFee))
+  set('inscrito_em', toDateString(input.inscribedAt))
   // UTMs só na PRIMEIRA gravação com valor: a atribuição pertence ao clique
   // que trouxe a pessoa. Se um retorno orgânico sobrescrevesse, toda matrícula
   // acabaria atribuída ao último toque e a mídia paga pareceria não converter.

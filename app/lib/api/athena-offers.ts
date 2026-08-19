@@ -187,7 +187,21 @@ interface AthenaCobranca {
 
 /** Resposta crua de POST /api/enrollments. */
 export interface AthenaEnrollmentResponse {
+  /**
+   * Status LOCAL da inscrição no athena-api: `SENT`, `FAILED`,
+   * `WAITING_PROVIDER_ADAPTER`, `PENDING_PROVIDER`.
+   *
+   * Importa muito: quando a YDUQS recusa, o athena-api NÃO estoura — ele
+   * captura o erro, grava `FAILED` e devolve 200 com este campo. Quem só olha
+   * o código HTTP conclui que deu certo.
+   */
   status?: string
+  /** Detalhe da recusa do parceiro. Presente quando `status` é FAILED. */
+  providerError?: {
+    message?: string
+    data?: { message?: string; errorCode?: string; statusCode?: number }
+    [key: string]: unknown
+  }
   numeroInscricao?: string
   providerEnrollmentId?: string
   providerResponse?: {
@@ -215,6 +229,32 @@ export interface AthenaCheckoutResult {
   dueDate: string | null
   /** true quando o CPF já estava inscrito (ATL016) — tratamos como sucesso. */
   alreadyEnrolled: boolean
+  /** Status local do athena-api. Só `SENT` significa que a instituição aceitou. */
+  status: string | null
+  /** Código do parceiro quando recusa (MS004 oferta inexistente, MS002 validação, ATL016 já inscrito). */
+  errorCode: string | null
+  /** Mensagem técnica do parceiro. Serve para log — nunca para a tela do candidato. */
+  providerMessage: string | null
+}
+
+/**
+ * A instituição aceitou a inscrição?
+ *
+ * Não basta o HTTP 200: o athena-api responde 200 mesmo quando a YDUQS recusa
+ * (ver `status` acima). Sem esta checagem o candidato via tela de sucesso sem
+ * link de pagamento, entrava no CRM como inscrito e ainda contava como
+ * conversão — medido em 2026-08-19: 16 das 23 inscrições dos últimos 30 dias
+ * eram recusas apresentadas como sucesso.
+ *
+ * ATL016 (CPF já inscrito) conta como aceite: a inscrição existe, é a mesma
+ * pessoa voltando.
+ */
+export function isEnrollmentAccepted(r: AthenaCheckoutResult): boolean {
+  if (r.alreadyEnrolled) return true
+  if (r.status && r.status !== 'SENT') return false
+  // Sem status (contrato antigo), cai no sinal observável: uma inscrição aceita
+  // sempre traz o número ou a cobrança.
+  return Boolean(r.numeroInscricao || r.paymentUrl || r.pixCode)
 }
 
 function num(v: number | null | undefined): number {
@@ -407,6 +447,9 @@ export function extractCheckoutResult(
     null
   const code = (data.providerResponse?.code || '').toUpperCase()
 
+  const erro = data.providerError
+  const errorCode = erro?.data?.errorCode || code || null
+
   return {
     numeroInscricao:
       data.providerResponse?.numeroInscricao ||
@@ -417,6 +460,9 @@ export function extractCheckoutResult(
     pixCode: cobranca?.pix || null,
     amount: cobranca?.valorLiquido || cobranca?.valorBruto || null,
     dueDate: cobranca?.dataVencimento || null,
-    alreadyEnrolled: code === 'ATL016',
+    alreadyEnrolled: code === 'ATL016' || errorCode === 'ATL016',
+    status: data.status || null,
+    errorCode,
+    providerMessage: erro?.data?.message || erro?.message || null,
   }
 }

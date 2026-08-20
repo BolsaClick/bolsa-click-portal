@@ -1,4 +1,5 @@
 import { Course } from "@/app/interface/course"
+import { hasInstallmentPlan } from '@/app/components/v2/course-offer'
 import { titleCasePtBr } from "@/app/lib/utils/title-case"
 import { useFavorites } from "@/app/lib/hooks/useFavorites"
 import { usePostHogTracking } from "@/app/lib/hooks/usePostHogTracking"
@@ -287,16 +288,12 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
         {/* Preço atual */}
         <div className="mb-4">
           <p className="text-[11px] text-ink-500 uppercase tracking-widest font-medium mb-1">
-            {course.academicLevel === 'POS_GRADUACAO' &&
-            typeof course.totalInstallment === 'number' &&
-            typeof course.minInstallmentValue === 'number'
+            {hasInstallmentPlan(course)
               ? 'até'
               : 'a partir de'}
           </p>
           <p className="text-2xl font-black text-bolsa-primary leading-none">
-            {course.academicLevel === 'POS_GRADUACAO' &&
-            typeof course.totalInstallment === 'number' &&
-            typeof course.minInstallmentValue === 'number' ? (
+            {hasInstallmentPlan(course) ? (
               <span>{course.totalInstallment}x {course.minInstallmentValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
             ) : (
               <span>

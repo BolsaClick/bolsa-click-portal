@@ -140,10 +140,25 @@ export function offerResultHref(offer: CourseOffer): string {
   return `/curso/resultado?${params.toString()}`
 }
 
-/** Pós com parcelamento explícito no payload */
-export function hasInstallmentPlan(offer: CourseOffer): boolean {
+/**
+ * A oferta é vendida parcelada, e não por mensalidade?
+ *
+ * Vale para pós-graduação e para os cursos profissionalizantes: nos dois o
+ * preço do catálogo é o TOTAL do curso, pago em N parcelas — não um valor
+ * mensal recorrente como na graduação. Mostrar o total cheio nesses casos
+ * assusta sem necessidade (R$ 1.183,20 em vez de 6x de R$ 209,52), e ainda
+ * vinha rotulado como "/mês", o que é simplesmente errado.
+ */
+export function hasInstallmentPlan<
+  T extends {
+    academicLevel?: string | null
+    totalInstallment?: number | null
+    minInstallmentValue?: number | null
+  },
+>(offer: T): offer is T & { totalInstallment: number; minInstallmentValue: number } {
   return (
-    offer.academicLevel === 'POS_GRADUACAO' &&
+    (offer.academicLevel === 'POS_GRADUACAO' ||
+      offer.academicLevel === 'CURSO_PROFISSIONALIZANTE') &&
     typeof offer.totalInstallment === 'number' &&
     typeof offer.minInstallmentValue === 'number'
   )

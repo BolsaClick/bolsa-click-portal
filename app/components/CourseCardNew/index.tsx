@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Course } from "@/app/interface/course"
+import { hasInstallmentPlan } from '@/app/components/v2/course-offer'
 import { useFavorites } from "@/app/lib/hooks/useFavorites"
 import { usePostHogTracking } from "@/app/lib/hooks/usePostHogTracking"
 import { useCourseSelection } from "@/app/lib/hooks/useCourseSelection"
@@ -467,9 +468,7 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
             )}
             <div className="mb-3">
               <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-neutral-500">
-                {course.academicLevel === 'POS_GRADUACAO' &&
-                  typeof course.totalInstallment === 'number' &&
-                  typeof course.minInstallmentValue === 'number'
+                {hasInstallmentPlan(course)
                   ? 'Até'
                   : 'A partir de'}
               </span>
@@ -479,9 +478,7 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
                 itemScope
                 itemType="https://schema.org/Offer"
               >
-                {course.academicLevel === 'POS_GRADUACAO' &&
-                  typeof course.totalInstallment === 'number' &&
-                  typeof course.minInstallmentValue === 'number' ? (
+                {hasInstallmentPlan(course) ? (
                   <span itemProp="price">
                     {course.totalInstallment}x de{' '}
                     {course.minInstallmentValue.toLocaleString('pt-BR', {

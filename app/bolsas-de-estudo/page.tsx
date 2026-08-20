@@ -21,8 +21,23 @@ const SITE_URL = 'https://www.bolsaclick.com.br'
 // Datas de freshness pra Article schema + UI. Atualizar manualmente quando
 // fizer revisão editorial significativa do pillar (regra do roadmap M3/M5).
 const DATE_PUBLISHED = '2025-08-12'
-const DATE_MODIFIED = '2026-06-11'
-const DATE_MODIFIED_LABEL = '11 de junho de 2026'
+/**
+ * Tamanho do catálogo, para os claims numéricos da página.
+ *
+ * NÃO usar `TOP_CURSOS.length` para isso: aquilo é uma lista editorial curada
+ * de 20 cursos em destaque, e usá-la como "quantos cursos temos" fazia a
+ * página que disputa o head term anunciar 20 cursos — subvendendo o catálogo
+ * inteiro e parecendo um site pequeno para quem compara resultados.
+ *
+ * Medido em 2026-08-20 via `GET /api/courses?academicLevel=` nos três níveis:
+ * 190 graduação + 861 pós + 44 profissionalizantes = 1.093 nomes distintos.
+ * Publicamos "1.000+" porque é verificável e resiste ao catálogo variar.
+ * Refazer a medição antes de subir o número.
+ */
+const CURSOS_NO_CATALOGO = '1.000+'
+
+const DATE_MODIFIED = '2026-08-20'
+const DATE_MODIFIED_LABEL = '20 de agosto de 2026'
 
 // Autor real nomeado (E-E-A-T): Person verificável > Organization genérica.
 // sameAs: adicionar URL do LinkedIn pessoal quando disponível (1 linha).
@@ -40,7 +55,7 @@ export const metadata: Metadata = {
   // anexa a marca uma vez. Repetir gerava "... | Bolsa Click | Bolsa Click" (92
   // chars, truncado no SERP). Título enxuto e front-loaded no head term.
   title: 'Bolsas de Estudo até 80%: Compare Faculdades e Preços',
-  description: `Compare bolsas de estudo de até 80% em cursos de graduação, pós e tecnólogos. ${BRAZILIAN_CITIES.length} cidades, faculdades reconhecidas pelo MEC, EAD e presencial. ProUni, FIES e bolsa própria.`,
+  description: `Compare bolsas de estudo de até 80% em graduação, pós e tecnólogo. ${BRAZILIAN_CITIES.length} cidades, faculdades reconhecidas pelo MEC. ProUni, FIES e bolsa própria.`,
   keywords: [
     'bolsa de estudo',
     'bolsas de estudo',
@@ -65,9 +80,23 @@ export const metadata: Metadata = {
     siteName: 'Bolsa Click',
     locale: 'pt_BR',
     type: 'website',
+    // Sem isto a página ficava SEM og:image: declarar `openGraph` aqui
+    // substitui o objeto do layout raiz inteiro, não faz merge campo a campo.
+    // Todo compartilhamento (WhatsApp, Facebook, LinkedIn) saía sem preview —
+    // e o twitter:card abaixo promete `summary_large_image`, prometendo uma
+    // imagem que não existia.
+    images: [
+      {
+        url: `${SITE_URL}/assets/og-image-bolsaclick.png`,
+        width: 1200,
+        height: 630,
+        alt: 'Bolsas de estudo de até 80% em faculdades reconhecidas pelo MEC — Bolsa Click',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
+    images: [`${SITE_URL}/assets/og-image-bolsaclick.png`],
     site: '@bolsaclick',
     title: 'Bolsas de Estudo no Brasil — Bolsa Click',
     description: `Encontre cursos com até 80% de desconto em ${BRAZILIAN_CITIES.length} cidades.`,
@@ -475,7 +504,7 @@ export default async function BolsasDeEstudoHubPage() {
     '@type': 'Dataset',
     '@id': `${pageUrl}#bolsa-catalog`,
     name: 'Catálogo Bolsa Click — Bolsas de Estudo no Brasil 2026',
-    description: `Catálogo first-party de bolsas de estudo no Brasil em 2026: ${TOP_CURSOS.length}+ cursos de graduação, pós e tecnólogos cobertos em ${institutions.length} faculdades parceiras reconhecidas pelo MEC, com ofertas em ${BRAZILIAN_CITIES.length} cidades brasileiras. Dados atualizados em tempo real via API do catálogo, refletindo mensalidades, percentuais de bolsa, modalidades (EAD, presencial, semipresencial) e cobertura geográfica reais.`,
+    description: `Catálogo first-party de bolsas de estudo no Brasil em 2026: ${CURSOS_NO_CATALOGO} cursos de graduação, pós e tecnólogos cobertos em ${institutions.length} faculdades parceiras reconhecidas pelo MEC, com ofertas em ${BRAZILIAN_CITIES.length} cidades brasileiras. Dados atualizados em tempo real via API do catálogo, refletindo mensalidades, percentuais de bolsa, modalidades (EAD, presencial, semipresencial) e cobertura geográfica reais.`,
     url: pageUrl,
     license: 'https://creativecommons.org/licenses/by/4.0/',
     creator: {
@@ -623,7 +652,7 @@ export default async function BolsasDeEstudoHubPage() {
             </time>
           </p>
           <div className="mt-8 flex flex-wrap gap-6 font-mono text-[12px] tracking-[0.16em] uppercase text-ink-500">
-            <span><strong className="text-ink-900 num-tabular">{TOP_CURSOS.length}+</strong> cursos</span>
+            <span><strong className="text-ink-900 num-tabular">{CURSOS_NO_CATALOGO}</strong> cursos</span>
             <span><strong className="text-ink-900 num-tabular">{institutions.length}</strong> faculdades</span>
             <span><strong className="text-ink-900 num-tabular">{BRAZILIAN_CITIES.length}</strong> cidades</span>
             <span><strong className="text-ink-900 num-tabular">até 80%</strong> de desconto</span>

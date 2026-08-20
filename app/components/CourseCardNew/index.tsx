@@ -175,6 +175,11 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
     if (n.includes('estacio') || n.includes('estácio')) return '/estacio-logo.png'
     if (n.includes('wyden')) return '/assets/wyden.svg'
     if (n.includes('ibmec')) return '/assets/logo-ibmec.svg'
+    // UNIC, como a UNAES, é da família Anhanguera e não tem logo próprio
+    // aqui (decisão do Rodrigo, 2026-08-20). Fica por ÚLTIMO de propósito:
+    // 'unic' é curto e casaria dentro de nomes de outras marcas se viesse
+    // antes — as marcas YDUQS chegam como nome completo da unidade.
+    if (n.includes('unic')) return '/assets/logo-anhanguera-bolsa-click.svg'
     return '/assets/logo-bolsa-click-rosa.png'
   }
 

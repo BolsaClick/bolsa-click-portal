@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { X } from 'lucide-react'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { formatCurrency } from '@/utils/fomartCurrency'
+import { hasInstallmentPlan } from '@/app/components/v2/course-offer'
 
 const STORAGE_KEY = 'pendingCheckoutParams'
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000 // 7 dias
@@ -17,6 +18,14 @@ interface PendingCheckoutParams {
   shift?: string
   courseName?: string
   price?: number
+  /**
+   * Nível e parcelamento, gravados junto pelo card. Ausentes nos registros
+   * salvos antes de 2026-08-20 — a barra então cai no formato antigo, o que é
+   * aceitável porque a mochila expira em 7 dias e se renova sozinha.
+   */
+  academicLevel?: string
+  totalInstallment?: number
+  minInstallmentValue?: number
   savedAt?: number
 }
 
@@ -111,11 +120,18 @@ export default function ResumeOfferBar() {
         <div className="min-w-0 flex-1">
           <p className="truncate text-[12px] font-medium text-ink-500">Continue de onde parou</p>
           <p className="truncate text-[13px] font-bold text-ink-900">{pending.courseName}</p>
-          {typeof pending.price === 'number' && pending.price > 0 && (
+          {hasInstallmentPlan(pending) ? (
             <p className="text-[12px] text-bolsa-secondary font-semibold">
-              {formatCurrency(pending.price)}
-              <span className="text-[11px] font-normal text-ink-500">/mês</span>
+              {pending.totalInstallment}x de {formatCurrency(pending.minInstallmentValue)}
             </p>
+          ) : (
+            typeof pending.price === 'number' &&
+            pending.price > 0 && (
+              <p className="text-[12px] text-bolsa-secondary font-semibold">
+                {formatCurrency(pending.price)}
+                <span className="text-[11px] font-normal text-ink-500">/mês</span>
+              </p>
+            )
           )}
         </div>
         <Link

@@ -154,6 +154,12 @@ export function useCourseSelection(entryPoint: CourseEntryPoint) {
                 shift: destination.params.get('shift') || undefined,
                 courseName: course.name,
                 price: course.minPrice,
+                // Nível e parcelamento: sem eles a barra não tem como saber se
+                // `price` é mensalidade (graduação) ou o total do curso (pós e
+                // profissionalizante) — e escrevia "/mês" nos três casos.
+                academicLevel: course.academicLevel,
+                totalInstallment: course.totalInstallment,
+                minInstallmentValue: course.minInstallmentValue,
                 savedAt: Date.now(),
               }),
             )

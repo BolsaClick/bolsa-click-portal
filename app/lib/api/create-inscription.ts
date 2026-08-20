@@ -162,6 +162,8 @@ export function buildInscriptionPayload(
   offerDetails: {
     dmhId?: string
     businessKey?: string
+    /** Fonte do catálogo vinda no topo do detalhe da oferta (ATHENAS, COSMOS…). */
+    source?: string
     dmhSource?: {
       businessKey?: string
       source?: string
@@ -229,7 +231,12 @@ export function buildInscriptionPayload(
                 : ['VESTIBULAR'],
         },
       },
-      offerSource: offerDetails.dmhSource?.source || 'ATHENAS',
+      // Fonte do catálogo. O `dmhSource` é nulo em todo o catálogo COSMOS
+      // (100% dos profissionalizantes), e sem o fallback abaixo a inscrição
+      // saía declarada como ATHENAS — informação errada, já que a própria
+      // oferta responde `source: "COSMOS"`. O padrão ATHENAS fica por último,
+      // para não mudar o comportamento de quem não manda fonte nenhuma.
+      offerSource: offerDetails.dmhSource?.source || offerDetails.source || 'ATHENAS',
       ...(paymentMethod && { paymentMethod }),
     },
     personalData: {

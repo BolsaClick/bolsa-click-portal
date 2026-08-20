@@ -162,6 +162,12 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
   const renderUniversityImage = (universityName: string) => {
     // Match por substring: marcas YDUQS vêm como nome completo (ex.: "UNIVERSIDADE ESTÁCIO DE SÁ").
     const n = (universityName || '').toLowerCase()
+    // UNAES é a marca que a Cogna usa em todo o catálogo profissionalizante
+    // (COSMOS) — 2.000 ofertas, país inteiro. Faz parte da família Anhanguera
+    // e não tem logo próprio no repositório, então usa o da Anhanguera
+    // (decisão do Rodrigo, 2026-08-20). Vem ANTES do teste de 'anhanguera'
+    // só por clareza de leitura; as duas strings não colidem.
+    if (n.includes('unaes')) return '/assets/logo-anhanguera-bolsa-click.svg'
     if (n.includes('anhanguera')) return '/assets/logo-anhanguera-bolsa-click.svg'
     if (n.includes('unopar')) return '/assets/logo-unopar.svg'
     if (n.includes('pitagoras') || n.includes('pitágoras')) return '/assets/logo-pitagoras.svg'

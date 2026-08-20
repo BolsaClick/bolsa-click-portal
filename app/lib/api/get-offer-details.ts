@@ -66,6 +66,12 @@ export interface OfferDetailsResponse {
   dmhId: string
   businessKey: string
   idDmhElastic: string | null
+  /**
+   * Fonte do catálogo na Cogna (`ATHENAS`, `COSMOS`…). Vem no TOPO da resposta,
+   * e é a única indicação confiável quando `dmhSource` é nulo — o que acontece
+   * em todo o catálogo profissionalizante.
+   */
+  source?: string
   dmhSource: unknown | null
   /** Tipos de ingresso (ex.: ["ISENTO_VESTIBULAR"] para pós). Se a API enviar mais de um, virão aqui. */
   ingressType?: string[]
@@ -102,6 +108,12 @@ export interface OfferDetails {
     startHour: string
     endHour: string
   }>
+  /**
+   * Fonte do catálogo na Cogna: `ATHENAS`, `COSMOS`… Vem no topo da resposta e
+   * é a única indicação confiável para as ofertas cujo `dmhSource` é nulo —
+   * caso de 100% dos cursos profissionalizantes (COSMOS).
+   */
+  source?: string
   dmhSource?: {
     businessKey?: string
     source?: string
@@ -181,6 +193,10 @@ function mapOfferDetailsResponse(
     dmhId: response.dmhId,
     businessKey: response.businessKey, // businessKey vem diretamente do objeto principal
     schedules: response.schedules,
+    // Fonte do catálogo. Até 2026-08-20 só era lida de dentro de `dmhSource`;
+    // quando ele vem nulo (todo o catálogo COSMOS/profissionalizante) a
+    // informação se perdia e a inscrição saía declarada como ATHENAS.
+    source: response.source,
     dmhSource: response.dmhSource ? {
       businessKey: (response.dmhSource as { businessKey?: string })?.businessKey,
       source: (response.dmhSource as { source?: string })?.source,

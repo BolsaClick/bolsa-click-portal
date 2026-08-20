@@ -5,21 +5,8 @@ import { Suspense, useEffect, useRef, useState } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
 import type { PostHog } from "posthog-js"
 import { useConsent } from "./ConsentProvider"
+import { whenIdle } from '@/app/lib/utils/when-idle'
 
-// Defere init pra reduzir INP: PostHog é carregado dinamicamente e
-// inicializado em requestIdleCallback (não compete com hidratação no
-// main thread). Reduz INP > 200ms reportado em 96 URLs no GSC.
-function whenIdle(cb: () => void): void {
-  if (typeof window === "undefined") return
-  const win = window as typeof window & {
-    requestIdleCallback?: (cb: () => void, opts?: { timeout?: number }) => number
-  }
-  if (typeof win.requestIdleCallback === "function") {
-    win.requestIdleCallback(cb, { timeout: 5000 })
-  } else {
-    setTimeout(cb, 1)
-  }
-}
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   const { hydrated, isCategoryEnabled } = useConsent()

@@ -80,23 +80,17 @@ export const metadata: Metadata = {
     siteName: 'Bolsa Click',
     locale: 'pt_BR',
     type: 'website',
-    // Sem isto a página ficava SEM og:image: declarar `openGraph` aqui
-    // substitui o objeto do layout raiz inteiro, não faz merge campo a campo.
-    // Todo compartilhamento (WhatsApp, Facebook, LinkedIn) saía sem preview —
-    // e o twitter:card abaixo promete `summary_large_image`, prometendo uma
-    // imagem que não existia.
-    images: [
-      {
-        url: `${SITE_URL}/assets/og-image-bolsaclick.png`,
-        width: 1200,
-        height: 630,
-        alt: 'Bolsas de estudo de até 80% em faculdades reconhecidas pelo MEC — Bolsa Click',
-      },
-    ],
+    // A imagem vem de `opengraph-image.tsx` (convenção de arquivo do Next, que
+    // tem precedência sobre `images` daqui). Declarar as duas coisas só criaria
+    // dois donos para o mesmo og:image.
+    //
+    // O que NÃO pode voltar: `openGraph` sem imagem alguma. Declarar este objeto
+    // substitui o do layout raiz inteiro — não faz merge campo a campo —, e a
+    // página ficava sem preview em WhatsApp, Facebook e LinkedIn enquanto o
+    // twitter:card abaixo prometia `summary_large_image`.
   },
   twitter: {
     card: 'summary_large_image',
-    images: [`${SITE_URL}/assets/og-image-bolsaclick.png`],
     site: '@bolsaclick',
     title: 'Bolsas de Estudo no Brasil — Bolsa Click',
     description: `Encontre cursos com até 80% de desconto em ${BRAZILIAN_CITIES.length} cidades.`,

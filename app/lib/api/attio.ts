@@ -87,10 +87,12 @@ export interface UpsertCandidatoInput {
   /** Chave composta da inscrição na Cogna, exigida pelo endpoint de cobrança. */
   businessKey?: string | null
   /**
-   * URL de cobrança do parceiro. Só existe para Estácio/YDUQS: a Cogna não
-   * devolve link (o endpoint entrega o PDF do boleto, e PIX e cartão não são
-   * suportados). Para Anhanguera, a área do candidato se monta a partir do
-   * `numero_inscricao`.
+   * URL de cobrança do parceiro.
+   *
+   * Estácio/YDUQS: vem pronta na criação da inscrição.
+   * Cogna/Anhanguera: desde 2026-08-24 vem do `payment-link` chamado SEM
+   * `method` (`{ checkoutUrl }`, com PIX/cartão/boleto na mesma página). Com
+   * `method` explícito a API ainda recusa PIX e CARD, e BOLETO devolve PDF.
    */
   paymentUrl?: string | null
   /** Turno da oferta contratada (NOTURNO, MATUTINO, VIRTUAL…). */

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
 import { upsertCandidato } from '@/app/lib/api/attio'
+import { prewarmPaymentLink } from '@/app/lib/api/cogna-payment-link'
 
 // Chamado quando a inscrição é confirmada.
 //
@@ -37,6 +38,14 @@ export async function POST(request: NextRequest) {
 
     if (!name) {
       return NextResponse.json({ error: 'name is required' }, { status: 400 })
+    }
+
+    // Começa a gerar o link de pagamento AGORA, sem bloquear a resposta.
+    // O endpoint da Cogna leva de 0,9s a 37s; disparando aqui, a descida corre
+    // enquanto o candidato ainda está indo para a tela de sucesso, e lá ele
+    // encontra o resultado pronto no cache em vez de esperar do zero.
+    if (inscriptionId && /^\d+$/.test(String(inscriptionId))) {
+      prewarmPaymentLink(inscriptionId)
     }
 
     // CRM: estágio "inscrito". A precedência no upsertCandidato faz este

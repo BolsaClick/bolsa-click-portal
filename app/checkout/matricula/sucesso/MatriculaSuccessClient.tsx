@@ -9,6 +9,7 @@ import { formatCurrency } from '@/utils/fomartCurrency'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { trackTikTokDual } from '@/app/lib/analytics/ttq'
 import { trackEnrollmentConverted } from '@/app/lib/analytics/checkout-funnel'
+import PaymentLinkCard from './PaymentLinkCard'
 
 export default function MatriculaSuccessClient() {
   const searchParams = useSearchParams()
@@ -16,6 +17,7 @@ export default function MatriculaSuccessClient() {
   const monthlyFeeParam = searchParams.get('monthlyFee')
   const paymentMethod = searchParams.get('paymentMethod')
   const installmentDescription = searchParams.get('installmentDescription')
+  const inscriptionId = searchParams.get('inscriptionId')
   const confettiCanvasRef = useRef<HTMLCanvasElement>(null)
   const { trackEvent } = usePostHogTracking()
 
@@ -107,14 +109,20 @@ export default function MatriculaSuccessClient() {
     ? 'https://kroton.platosedu.io/v2/lms/login'
     : 'https://www.anhanguera.com/area-do-candidato/login'
 
-  // Abre automaticamente o portal em nova aba quando a página carregar
+  // Abre automaticamente o portal em nova aba quando a página carregar.
+  //
+  // Suspenso quando há pagamento pendente: abrir a tela de login da instituição
+  // 1s depois do carregamento rouba o foco da aba exatamente do botão "Pagar
+  // agora", que é o que fecha a matrícula. O acesso ao portal continua
+  // disponível no botão abaixo.
   useEffect(() => {
+    if (inscriptionId) return
     const timer = setTimeout(() => {
       window.open(portalUrl, '_blank')
     }, 1000)
 
     return () => clearTimeout(timer)
-  }, [portalUrl])
+  }, [portalUrl, inscriptionId])
 
   const handleAccessPortal = () => {
     window.open(portalUrl, '_blank')
@@ -149,6 +157,10 @@ export default function MatriculaSuccessClient() {
 
         {/* Content */}
         <div className="p-6 space-y-6">
+          {inscriptionId && (
+            <PaymentLinkCard inscriptionId={inscriptionId} onEvent={trackEvent} />
+          )}
+
           {(course || isGraduacao || isPos) && (
             <div className="border border-gray-200 rounded-lg p-4 space-y-3 animate-fade-in animation-delay-200 hover:shadow-md transition-shadow duration-300">
               <h3 className="font-medium">Detalhes da Inscrição</h3>
@@ -207,8 +219,15 @@ export default function MatriculaSuccessClient() {
               Próximos Passos
             </h4>
             <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
+              {/* Com o link de pagamento na tela, mandar "pagar dentro da
+                  universidade" contradiz o botão logo acima e manda a pessoa
+                  embora justamente na hora de pagar. */}
+              {inscriptionId ? (
+                <li>Pague a taxa pelo botão acima para garantir sua vaga</li>
+              ) : (
+                <li>Realize o pagamento dentro da universidade para confirmar sua matrícula</li>
+              )}
               <li>Acesse o portal do candidato para acompanhar sua inscrição</li>
-              <li>Realize o pagamento dentro da universidade para confirmar sua matrícula</li>
               <li>Verifique seu e-mail para mais informações</li>
               <li>Entre em contato com a instituição se tiver dúvidas</li>
             </ul>

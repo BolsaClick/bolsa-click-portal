@@ -18,14 +18,6 @@ export default function MatriculaSuccessClient() {
   const paymentMethod = searchParams.get('paymentMethod')
   const installmentDescription = searchParams.get('installmentDescription')
   const inscriptionId = searchParams.get('inscriptionId')
-  // Campanha (pagamento próprio, SÓ campanha.anhangueracursos.com.br): setado
-  // por app/checkout/matricula/page.tsx quando a matrícula já foi cobrada no
-  // nosso gateway (Elysium) em vez de ficar pendente pra Cogna. Sem isto a
-  // pessoa veria "pague dentro da universidade" logo depois de já ter pago.
-  const paidViaGateway = searchParams.get('paidViaGateway') === '1'
-  const paidAmountCentsParam = searchParams.get('paidAmountCents')
-  const paidAmountCents = paidAmountCentsParam ? Number(paidAmountCentsParam) : null
-  const hasPaidAmount = paidAmountCents != null && !Number.isNaN(paidAmountCents)
   const confettiCanvasRef = useRef<HTMLCanvasElement>(null)
   const { trackEvent } = usePostHogTracking()
 
@@ -41,7 +33,6 @@ export default function MatriculaSuccessClient() {
       installment_description: installmentDescription || undefined,
       is_graduacao: isGraduacao,
       is_pos: isPos,
-      paid_via_gateway: paidViaGateway,
     })
 
     // Funil unificado — etapa 4: conversão final (sinal confiável na página de
@@ -170,7 +161,7 @@ export default function MatriculaSuccessClient() {
             <PaymentLinkCard inscriptionId={inscriptionId} onEvent={trackEvent} />
           )}
 
-          {(course || isGraduacao || isPos || paidViaGateway) && (
+          {(course || isGraduacao || isPos) && (
             <div className="border border-gray-200 rounded-lg p-4 space-y-3 animate-fade-in animation-delay-200 hover:shadow-md transition-shadow duration-300">
               <h3 className="font-medium">Detalhes da Inscrição</h3>
               <div className="grid grid-cols-2 gap-2 text-sm">
@@ -203,15 +194,6 @@ export default function MatriculaSuccessClient() {
                     </span>
                   </>
                 )}
-
-                {paidViaGateway && hasPaidAmount && (
-                  <>
-                    <span className="text-gray-500">Valor pago:</span>
-                    <span className="font-medium text-green-700">
-                      {formatCurrency((paidAmountCents ?? 0) / 100)}
-                    </span>
-                  </>
-                )}
               </div>
             </div>
           )}
@@ -226,9 +208,7 @@ export default function MatriculaSuccessClient() {
                   Inscrição realizada e garantida com desconto!
                 </h4>
                 <p className="text-sm text-green-700 mt-1">
-                  {paidViaGateway
-                    ? 'Sua inscrição foi realizada e o pagamento da taxa já está confirmado — sua vaga está garantida. Você receberá um e-mail com os próximos passos e informações importantes.'
-                    : 'Sua inscrição foi realizada com sucesso e você garantiu seu desconto. Para confirmar sua matrícula, você precisará realizar o pagamento dentro da universidade. Você receberá um e-mail com os próximos passos e informações importantes.'}
+                  Sua inscrição foi realizada com sucesso e você garantiu seu desconto. Para confirmar sua matrícula, você precisará realizar o pagamento dentro da universidade. Você receberá um e-mail com os próximos passos e informações importantes.
                 </p>
               </div>
             </div>
@@ -244,8 +224,6 @@ export default function MatriculaSuccessClient() {
                   embora justamente na hora de pagar. */}
               {inscriptionId ? (
                 <li>Realize o pagamento acima para garantir sua vaga</li>
-              ) : paidViaGateway ? (
-                <li>Pagamento confirmado — não há nada pendente</li>
               ) : (
                 <li>Realize o pagamento dentro da universidade para confirmar sua matrícula</li>
               )}

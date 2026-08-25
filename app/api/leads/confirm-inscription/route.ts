@@ -3,7 +3,6 @@ import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
 import { upsertCandidato } from '@/app/lib/api/attio'
 import { prewarmPaymentLink } from '@/app/lib/api/cogna-payment-link'
 import { sendKourioEmail } from '@/app/lib/kourio'
-import { isCampanhaAnhangueraHost } from '@/app/lib/campanha/host'
 
 // E-mail de recuperação de pagamento — best-effort, nunca bloqueia/derruba o
 // fluxo de inscrição. Manda o link durável de pagamento (gera checkout fresco
@@ -95,15 +94,6 @@ export async function POST(request: NextRequest) {
     // CRM: estágio "inscrito". A precedência no upsertCandidato faz este
     // estágio SUBSTITUIR um "inscricao_recusada" anterior — é o que tira da
     // lista de recuperação quem tentou de novo e conseguiu.
-    //
-    // Origem: chamada direta do browser (não é webhook/proxy), então o header
-    // `host` reflete o domínio real de quem está inscrevendo. Só o host de
-    // campanha (teste A/B de pagamento próprio, mesmo deploy do
-    // anhanguera-cursos) recebe um `origem_site` distinto — todo o resto usa
-    // o padrão do deploy (`ATTIO_ORIGEM_SITE`), sem mudança de comportamento.
-    const origemSite = isCampanhaAnhangueraHost(request.headers.get('host'))
-      ? 'landing_anhanguera'
-      : undefined
     if (phone) {
       try {
         await upsertCandidato({
@@ -116,7 +106,6 @@ export async function POST(request: NextRequest) {
           modality: modalidade,
           city,
           estagio: 'inscrito',
-          origemSite,
           inscriptionId,
           businessKey,
           paymentUrl,

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isCampanhaAnhangueraHost } from "./app/lib/campanha/host";
 
 const IS_WARMUP =
   process.env.NEXT_PUBLIC_THEME === "bolsamais" &&
@@ -40,20 +39,6 @@ function publicRedirectUrl(request: NextRequest): URL {
 export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const host = (request.headers.get("host") || "").split(":")[0];
-
-  // ─── campanha.anhangueracursos.com.br (teste A/B de pagamento próprio) ──────
-  // MESMO deploy/tema do anhanguera-cursos, sem nenhuma reescrita de rota — só
-  // um domínio extra apontado pro mesmo serviço. Todo o comportamento distinto
-  // (pagamento no nosso gateway, origem `landing_anhanguera` no Attio) mora nos
-  // componentes/rotas de API que checam `isCampanhaAnhangueraHost`, não aqui.
-  // O único ajuste no nível de middleware é `noindex`: o conteúdo é idêntico
-  // ao anhanguera-cursos, e indexar os dois duplicaria a mesma página pro
-  // Google — este domínio existe só pra receber tráfego de mídia paga.
-  if (isCampanhaAnhangueraHost(host)) {
-    const response = NextResponse.next();
-    response.headers.set("X-Robots-Tag", "noindex, nofollow");
-    return response;
-  }
 
   // ─── Domínio ingressa.digital (landings de conversão / mídia paga) ───────────
   // ingressa.digital/{parceiro} → reescreve (URL limpa) pra /lp/{parceiro}.

@@ -2,6 +2,42 @@ import { NextRequest, NextResponse } from 'next/server'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
 import { upsertCandidato } from '@/app/lib/api/attio'
 import { prewarmPaymentLink } from '@/app/lib/api/cogna-payment-link'
+import { sendKourioEmail } from '@/app/lib/kourio'
+
+// E-mail de recuperação de pagamento — best-effort, nunca bloqueia/derruba o
+// fluxo de inscrição. Manda o link durável de pagamento (gera checkout fresco
+// da Cogna no clique) pra quem se inscreveu mas ainda não pagou a taxa.
+function sendRecoveryEmail(input: {
+  email: string
+  name: string
+  courseName?: string
+  inscriptionId: string | number
+}) {
+  const paymentUrl = `https://www.bolsaclick.com.br/pagar/${input.inscriptionId}`
+  const firstName = input.name.trim().split(/\s+/)[0] || input.name
+  const courseLabel = input.courseName ? ` em ${input.courseName}` : ''
+  const subject = input.courseName
+    ? `Falta só o pagamento da sua inscrição em ${input.courseName}`
+    : 'Falta só o pagamento da sua inscrição'
+
+  const html = `
+    <div style="font-family: Arial, Helvetica, sans-serif; max-width: 480px; margin: 0 auto; color: #1a1a1a;">
+      <p>Oi, ${firstName}!</p>
+      <p>Sua inscrição${courseLabel} foi registrada, mas ainda falta um passo: o pagamento da taxa de inscrição.</p>
+      <p style="text-align: center; margin: 32px 0;">
+        <a href="${paymentUrl}" style="background:#2f6feb;color:#ffffff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;">
+          Concluir pagamento
+        </a>
+      </p>
+      <p>Ou copie e cole este link no navegador:<br/>${paymentUrl}</p>
+    </div>
+  `.trim()
+  const text = `Oi, ${firstName}! Sua inscrição${courseLabel} foi registrada, mas falta o pagamento da taxa de inscrição. Conclua aqui: ${paymentUrl}`
+
+  sendKourioEmail({ to: input.email, subject, html, text }).catch((kourioError) => {
+    console.error('⚠️ Kourio (recuperação de pagamento) falhou:', kourioError)
+  })
+}
 
 // Chamado quando a inscrição é confirmada.
 //
@@ -46,6 +82,13 @@ export async function POST(request: NextRequest) {
     // encontra o resultado pronto no cache em vez de esperar do zero.
     if (inscriptionId && /^\d+$/.test(String(inscriptionId))) {
       prewarmPaymentLink(inscriptionId, cpf)
+    }
+
+    // Email de recuperação (Kourio) — best-effort, dispara em paralelo, não
+    // bloqueia a resposta. Só quando há email e inscriptionId (sem eles não
+    // há pra quem mandar nem link de pagamento pra montar).
+    if (email && inscriptionId) {
+      sendRecoveryEmail({ email, name, courseName, inscriptionId })
     }
 
     // CRM: estágio "inscrito". A precedência no upsertCandidato faz este

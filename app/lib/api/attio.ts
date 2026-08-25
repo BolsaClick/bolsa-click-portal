@@ -67,6 +67,16 @@ export interface UpsertCandidatoInput {
   state?: string
   estagio?: Estagio
   origemFluxo?: OrigemFluxo
+  /**
+   * Override do `origem_site` de deploy (`ATTIO_ORIGEM_SITE`, fixo por
+   * serviço Railway). Existe porque um mesmo deploy pode responder por mais
+   * de um host — hoje só `campanha.anhangueracursos.com.br` (teste A/B de
+   * pagamento próprio, mesmo build do anhanguera-cursos) — e sem isto os dois
+   * hosts cairiam no mesmo valor de origem, tornando impossível medir o
+   * teste separado do site normal. Quem chama decide o valor a partir do
+   * HOST da requisição (nunca de env, que é fixo pro deploy inteiro).
+   */
+  origemSite?: string
   /** Texto bruto do parceiro quando a inscrição é recusada. */
   motivoRecusa?: string
   /**
@@ -344,7 +354,7 @@ export async function upsertCandidato(input: UpsertCandidatoInput): Promise<stri
   set('cidade', input.city?.trim())
   set('estado', input.state?.trim())
   set('estagio', estagio)
-  set('origem_site', ORIGEM_SITE)
+  set('origem_site', input.origemSite || ORIGEM_SITE)
   set('origem_fluxo', input.origemFluxo)
   set('motivo_recusa', input.motivoRecusa?.slice(0, 800))
   set('lead_id', input.leadId)

@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     // enquanto o candidato ainda está indo para a tela de sucesso, e lá ele
     // encontra o resultado pronto no cache em vez de esperar do zero.
     if (inscriptionId && /^\d+$/.test(String(inscriptionId))) {
-      prewarmPaymentLink(inscriptionId)
+      prewarmPaymentLink(inscriptionId, cpf)
     }
 
     // CRM: estágio "inscrito". A precedência no upsertCandidato faz este

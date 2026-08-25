@@ -937,9 +937,11 @@ const isFormValidForPayment =
         // Id da inscrição no parceiro: é com ele que a tela de sucesso gera o
         // link de pagamento da Cogna (passo 7). Sem ele o candidato termina o
         // fluxo sem nenhum caminho para pagar — que era o comportamento até
-        // 2026-08-24. Só graduação: pós/profissionalizante paga por outro
-        // fluxo, com plano escolhido no próprio checkout.
-        if (response.id && !hasPlans) {
+        // 2026-08-24. Vale para graduação E pós: nos dois a inscrição é criada
+        // com `response.id`, e o payment-link gera o checkout. A diferença fica
+        // na tela de sucesso — pós embuti em iframe (kroton.platosedu.io),
+        // graduação abre em nova aba (pay.anhanguera.com bloqueia embed).
+        if (response.id) {
           params.set('inscriptionId', String(response.id))
         }
         if (!hasPlans) {

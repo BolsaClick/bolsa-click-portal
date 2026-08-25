@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const inscriptionId = body?.inscriptionId
+    const cpf = typeof body?.cpf === 'string' ? body.cpf : undefined
 
     // Só dígitos: o id vem da resposta de criação da Cogna e é sempre numérico.
     // Barra tentativa de usar esta rota para varrer inscrições alheias.
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'inscriptionId inválido' }, { status: 400 })
     }
 
-    const result = await resolvePaymentLinkCached(inscriptionId)
+    const result = await resolvePaymentLinkCached(inscriptionId, cpf)
 
     if (result.status === 'ok') {
       // CRM best-effort: nunca deixar o candidato sem link por causa do Attio.

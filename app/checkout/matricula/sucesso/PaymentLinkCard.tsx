@@ -10,11 +10,25 @@ import { CreditCard, Loader2, QrCode, ShieldCheck } from 'lucide-react'
  * caminho de pagamento — e matrícula só vira receita quando é paga. Este card
  * é a metade que faltava do funil.
  *
- * O link abre em nova aba em vez de iframe: a Cogna autorizou o embed
- * comercialmente, mas o `pay.anhanguera.com` responde com
- * `Content-Security-Policy: frame-ancestors 'self'`, que bloqueia. Quando eles
- * liberarem nosso domínio, trocar o botão por um <iframe> aqui é suficiente.
+ * Embed vs. nova aba depende do HOST do checkout, testado em 2026-08-25:
+ *  - Pós/profissionalizante → `kroton.platosedu.io`: permite embed, então
+ *    mostramos o checkout num iframe, sem o candidato sair do site.
+ *  - Graduação → `pay.anhanguera.com`: responde `frame-ancestors 'self'` e o
+ *    navegador recusa o embed (a página ainda tem um reCAPTCHA invisível de CPF
+ *    antes do pagamento). Cai no botão "Pagar agora", em nova aba.
+ * Se a Cogna liberar o embed de graduação, basta somar o host à allowlist.
  */
+
+/** Hosts cujo checkout pode ser embutido em iframe (respondem sem frame-ancestors restritivo). */
+const EMBEDDABLE_HOSTS = ['kroton.platosedu.io']
+
+function isEmbeddable(url: string): boolean {
+  try {
+    return EMBEDDABLE_HOSTS.includes(new URL(url).host)
+  } catch {
+    return false
+  }
+}
 
 type State =
   | { kind: 'loading' }
@@ -109,6 +123,40 @@ export default function PaymentLinkCard({
         <p className="text-sm text-amber-800 mt-1">
           Assim que ficar pronto enviamos por e-mail e WhatsApp. Sua inscrição já
           está registrada — nada se perde.
+        </p>
+      </div>
+    )
+  }
+
+  // Checkout embutido: pós/profissionalizante (kroton.platosedu.io permite embed).
+  // O candidato paga sem sair da tela de sucesso.
+  if (state.kind === 'ready' && isEmbeddable(state.url)) {
+    return (
+      <div className="rounded-lg border-2 border-bolsa-primary/30 bg-bolsa-primary/[0.04] p-4">
+        <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+          <h3 className="font-semibold text-gray-900">Falta só o pagamento</h3>
+          <a
+            href={state.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => onEventRef.current?.('payment_link_opened_newtab')}
+            className="text-xs text-bolsa-primary underline underline-offset-2"
+          >
+            Abrir em nova aba
+          </a>
+        </div>
+        <div className="overflow-hidden rounded-lg border border-ink-100 bg-white">
+          <iframe
+            src={state.url}
+            title="Pagamento"
+            className="w-full"
+            style={{ height: 900, border: 0 }}
+            allow="payment"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+        </div>
+        <p className="mt-3 text-xs text-gray-500">
+          Pagamento processado diretamente pela instituição.
         </p>
       </div>
     )

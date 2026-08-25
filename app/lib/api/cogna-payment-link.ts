@@ -71,6 +71,35 @@ export async function getPartnerInscription(
   }
 }
 
+/**
+ * Fallback: acha a inscrição na LISTAGEM filtrando por CPF e casando o id.
+ *
+ * Existe porque o endpoint de detalhe (`inscriptions/{id}`) volta VAZIO para
+ * algumas inscrições que a listagem, essa sim, traz com `businessKey`
+ * preenchido (observado em pós). A listagem aceita `search` por CPF e devolve
+ * `data[].inscription.{id,businessKey}`, então recuperamos a chave por aqui
+ * quando o detalhe falha. Sem CPF não há como filtrar — retorna null.
+ */
+export async function getPartnerInscriptionFromList(
+  cpf: string,
+  inscriptionId: string | number
+): Promise<PartnerInscription | null> {
+  const digits = String(cpf).replace(/\D/g, '')
+  if (digits.length !== 11) return null
+  try {
+    const { data } = await tartarus.get<{ data?: PartnerInscription[] }>(
+      'cogna/courses/inscriptions',
+      { params: { search: digits, size: 50 }, timeout: 20_000 }
+    )
+    const wanted = String(inscriptionId)
+    return (
+      data?.data?.find((r) => String(r?.inscription?.id ?? '') === wanted) ?? null
+    )
+  } catch {
+    return null
+  }
+}
+
 /** Mensagem de erro real vinda da Cogna (o Tartarus repassa em `cognaError`). */
 function cognaMessage(error: unknown): string | undefined {
   if (!isAxiosError(error)) return undefined
@@ -139,14 +168,22 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
  */
 export async function resolvePaymentLink(
   inscriptionId: string | number,
-  { attempts = 3, baseDelayMs = 900 }: { attempts?: number; baseDelayMs?: number } = {}
+  {
+    attempts = 3,
+    baseDelayMs = 900,
+    cpf,
+  }: { attempts?: number; baseDelayMs?: number; cpf?: string } = {}
 ): Promise<PaymentLinkResult> {
   let last: PaymentLinkResult = { status: 'pending' }
 
   for (let attempt = 0; attempt < attempts; attempt++) {
     if (attempt > 0) await sleep(baseDelayMs * 2 ** (attempt - 1))
 
-    const inscription = await getPartnerInscription(inscriptionId)
+    let inscription = await getPartnerInscription(inscriptionId)
+    // Detalhe volta vazio para algumas inscrições — cai na listagem por CPF.
+    if (!inscription?.inscription?.businessKey && cpf) {
+      inscription = (await getPartnerInscriptionFromList(cpf, inscriptionId)) ?? inscription
+    }
     const businessKey = inscription?.inscription?.businessKey
 
     // Ainda sem chave: é a corrida da geração, não um erro.
@@ -197,7 +234,8 @@ function pruneCache(now: number) {
 
 /** Igual a `resolvePaymentLink`, mas reaproveitando descidas em andamento. */
 export function resolvePaymentLinkCached(
-  inscriptionId: string | number
+  inscriptionId: string | number,
+  cpf?: string
 ): Promise<PaymentLinkResult> {
   const key = String(inscriptionId)
   const now = Date.now()
@@ -206,7 +244,7 @@ export function resolvePaymentLinkCached(
   const cached = cache.get(key)
   if (cached) return cached.promise
 
-  const promise = resolvePaymentLink(inscriptionId).then((result) => {
+  const promise = resolvePaymentLink(inscriptionId, { cpf }).then((result) => {
     // Só vale guardar desfecho definitivo. `pending` é a corrida da geração da
     // chave e `error` pode ser o 500 intermitente — nos dois casos a próxima
     // tentativa precisa refazer, senão o cache congela a falha.
@@ -230,8 +268,8 @@ export function resolvePaymentLinkCached(
  * ainda está sendo redirecionado, em vez de começar só quando ele chega na tela
  * de sucesso e encara o "gerando".
  */
-export function prewarmPaymentLink(inscriptionId: string | number): void {
-  void resolvePaymentLinkCached(inscriptionId).catch(() => {
+export function prewarmPaymentLink(inscriptionId: string | number, cpf?: string): void {
+  void resolvePaymentLinkCached(inscriptionId, cpf).catch(() => {
     // best-effort: o erro reaparece (e é tratado) na chamada de verdade
   })
 }

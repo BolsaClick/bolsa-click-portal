@@ -223,7 +223,7 @@ export default function MatriculaSuccessClient() {
                   universidade" contradiz o botão logo acima e manda a pessoa
                   embora justamente na hora de pagar. */}
               {inscriptionId ? (
-                <li>Pague a taxa pelo botão acima para garantir sua vaga</li>
+                <li>Realize o pagamento acima para garantir sua vaga</li>
               ) : (
                 <li>Realize o pagamento dentro da universidade para confirmar sua matrícula</li>
               )}

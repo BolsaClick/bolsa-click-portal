@@ -35,8 +35,12 @@ import { toast } from 'sonner'
 // [CUPOM] import { validateCoupon } from '@/app/lib/api/get-coupon'
 import { createLead } from '@/app/lib/api/create-lead'
 import { createInscription, buildInscriptionPayload, getCognaErrorMessage, getCognaErrorDetails, canCreateInscription } from '@/app/lib/api/create-inscription'
-import { createMarketplaceInscription } from '@/app/lib/api/create-inscription-marketplace'
+import { createMarketplaceInscription, type MarketplaceInscriptionData } from '@/app/lib/api/create-inscription-marketplace'
 import { validateVoucher, type ValidateVoucherResponse, type VoucherInstallment } from '@/app/lib/api/validate-voucher'
+import { getMatriculaCharge } from '@/app/lib/checkout/matricula-charge'
+import type { MatriculaConfirmBlob } from '@/app/lib/checkout/confirm-matricula'
+import { isCampanhaAnhangueraHostClient } from '@/app/lib/campanha/host'
+import MatriculaPayment from './MatriculaPayment'
 import type { PosPaymentMethod, PosInstallment } from '@/app/lib/api/get-offer-details'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { useMarketplaceFeatureFlag } from '@/app/lib/hooks/usePostHogFeatureFlags'
@@ -192,6 +196,17 @@ function MatriculaContent() {
   const [voucherInstallments, setVoucherInstallments] = useState<VoucherInstallment[]>([])
   // Graduação: tipo de ingresso (ENEM ou VESTIBULAR)
   const [selectedIngressType, setSelectedIngressType] = useState<'ENEM' | 'VESTIBULAR'>('VESTIBULAR')
+
+  // Teste A/B de pagamento próprio: SÓ em campanha.anhangueracursos.com.br
+  // (mesmo deploy/tema do anhanguera-cursos, ver app/lib/campanha/host.ts).
+  // Começa `false` (igual ao servidor, que não conhece o host do browser) e
+  // só vira `true` depois de montar no cliente — evita mismatch de hidratação
+  // entre o HTML do servidor e o do browser. Fora desse host isto nunca muda,
+  // e nenhum comportamento do checkout é afetado.
+  const [isCampanhaHost, setIsCampanhaHost] = useState(false)
+  useEffect(() => {
+    setIsCampanhaHost(isCampanhaAnhangueraHostClient())
+  }, [])
 
   const {
     register,
@@ -525,11 +540,24 @@ const isFormValidForPayment =
   // Cobrança da matrícula no checkout transparente: DESATIVADA (decisão de
   // negócio) para graduação EAD/semipresencial de ofertas ATHENAS — a Cogna
   // dobrou a comissão nesse segmento, mas exige que o pagamento NÃO seja
-  // coletado no nosso site. `chargeable` aqui só sinaliza "é esse segmento";
-  // não é mais usado para decidir se cobra (ver onSubmit e o JSX da seção 03).
-  // O pagamento de verdade fica com a Cogna (payment-link deles, quando
-  // integrado) — enquanto isso não existe, a inscrição é criada direto e o
-  // aluno vai pra tela de sucesso sem pagar nada aqui.
+  // coletado no nosso site. `chargeable` aqui só sinaliza "é esse segmento".
+  // Fora do host de campanha, o pagamento de verdade continua com a Cogna
+  // (payment-link deles, na tela de sucesso) e a inscrição é criada direto —
+  // ver onSubmit e o JSX da seção 03.
+  //
+  // EXCEÇÃO — campanha.anhangueracursos.com.br (teste A/B de pagamento
+  // próprio, 2026-08): pra este host, e só pra este host, `chargeable` VOLTA
+  // a decidir se cobra: em vez do link da Cogna, mostramos <MatriculaPayment>
+  // (nosso gateway via Elysium/Asaas/AbacatePay) na própria seção 03. A
+  // inscrição na Cogna continua sendo criada — só a cobrança muda de lugar.
+  const matriculaCharge = getMatriculaCharge(offerDetails)
+  const useOwnGatewayPayment = isCampanhaHost && matriculaCharge.chargeable
+  // Mesma trava de segurança que createInscriptionAfterPayment aplica antes
+  // de chamar a Cogna (offerDetails.dmhId ausente = payload inválido). Aqui
+  // importa ainda mais: sem isto, <MatriculaPayment> cobraria a pessoa com
+  // `confirm.inscriptionPayload` vazio, e confirmPaidMatricula pularia a
+  // inscrição ("no_blob") — cobrança sem matrícula do outro lado.
+  const ownGatewayOfferAvailable = useOwnGatewayPayment && Boolean(offerDetails?.dmhId)
 
   // Níveis que usam seleção de método de pagamento + voucher via Tartarus.
   // Graduação continua pagando direto na instituição (botão simples).
@@ -658,6 +686,96 @@ const isFormValidForPayment =
       setVoucherMessage('Erro ao validar voucher. Tente novamente.')
     } finally {
       setVoucherValidating(false)
+    }
+  }
+
+  // ─── Pagamento próprio (SÓ campanha.anhangueracursos.com.br) ──────────────
+  //
+  // Monta o MESMO payload que `createInscriptionAfterPayment` (abaixo) monta
+  // pra chamar a Cogna — só que aqui NÃO chama nada agora. O objeto vira o
+  // `metadata.confirm` de <MatriculaPayment>, persistido em
+  // `Transaction.metadata` na criação da cobrança (/api/checkout). Quem
+  // efetivamente cria a inscrição na Cogna é `confirmPaidMatricula`
+  // (app/lib/checkout/confirm-matricula.ts), DEPOIS que o pagamento no nosso
+  // gateway (Elysium/Asaas/AbacatePay) é confirmado — via webhook (aba
+  // fechada) ou via /api/payments/confirm (polling do <MatriculaPayment>).
+  //
+  // Fora do host de campanha esta função nunca é chamada — o fluxo normal
+  // (inscrição imediata, sem cobrança) em createInscriptionAfterPayment
+  // continua 100% intocado.
+  const buildOwnGatewayConfirmBlob = (data: FormSchema): MatriculaConfirmBlob | null => {
+    if (!offerDetails || !offerDetails.dmhId) return null
+
+    const inscriptionPayload = buildInscriptionPayload(
+      {
+        name: data.name,
+        cpf: data.cpf,
+        birthDate: data.birthDate,
+        email: data.email,
+        phone: data.phone,
+        gender: DADOS_ADMIN_PADRAO.gender,
+        schoolYear: DADOS_ADMIN_PADRAO.schoolYear,
+        rg: DADOS_ADMIN_PADRAO.rg,
+        address: DADOS_ADMIN_PADRAO.address,
+        addressNumber: DADOS_ADMIN_PADRAO.addressNumber,
+        neighborhood: DADOS_ADMIN_PADRAO.neighborhood,
+        city: DADOS_ADMIN_PADRAO.city,
+        state: DADOS_ADMIN_PADRAO.state,
+        cep: DADOS_ADMIN_PADRAO.cep,
+      },
+      {
+        dmhId: offerDetails.dmhId,
+        businessKey: offerDetails.businessKey,
+        dmhSource: offerDetails.dmhSource,
+        academicLevel: offerDetails.academicLevel,
+        // Graduação (único nível chargeable — ver getMatriculaCharge): usar o
+        // tipo de ingresso selecionado (ENEM ou VESTIBULAR).
+        ingressType: [selectedIngressType],
+        schedules: offerDetails.schedules,
+        shift: offerDetails.shift,
+      }
+    )
+
+    // Marketplace ATHENAS: mesmo critério do fluxo normal
+    // (createInscriptionAfterPayment). O kill switch `marketplace_enabled` é
+    // checado de novo do lado servidor (confirm-matricula.ts) na hora de
+    // efetivar — incluir aqui é seguro mesmo com a flag off.
+    const marketplace: MatriculaConfirmBlob['marketplace'] =
+      isAthenasSource && offerDetails.idDmhElastic
+        ? {
+            data: {
+              name: data.name,
+              cpf: data.cpf,
+              email: data.email,
+              phone: data.phone,
+              birthDate: data.birthDate,
+              rg: DADOS_ADMIN_PADRAO.rg,
+              gender: DADOS_ADMIN_PADRAO.gender,
+              cep: DADOS_ADMIN_PADRAO.cep,
+              address: DADOS_ADMIN_PADRAO.address,
+              addressNumber: DADOS_ADMIN_PADRAO.addressNumber,
+              neighborhood: DADOS_ADMIN_PADRAO.neighborhood,
+              city: DADOS_ADMIN_PADRAO.city,
+              state: DADOS_ADMIN_PADRAO.state,
+              ingressType: selectedIngressType,
+              schoolYear: DADOS_ADMIN_PADRAO.schoolYear,
+              acceptTerms: true,
+              acceptEmail: true,
+              acceptSms: true,
+              acceptWhatsapp: true,
+            } satisfies MarketplaceInscriptionData,
+            offerDetails,
+          }
+        : null
+
+    return {
+      inscriptionPayload,
+      marketplace,
+      utmify: {
+        productId: String(offerDetails.courseId ?? offerDetails.dmhId ?? 'matricula'),
+        productName: offerDetails.course || 'Matrícula',
+        tracking: readUtmifyParams(),
+      },
     }
   }
 
@@ -1041,7 +1159,55 @@ const isFormValidForPayment =
     }
   }
 
+  // Chamado por <MatriculaPayment onPaid> — SÓ existe no host de campanha.
+  // A esta altura o pagamento já está confirmado no Elysium e
+  // `confirmPaidMatricula` já rodou (o <MatriculaPayment> aguarda o POST em
+  // /api/payments/confirm antes de chamar onPaid) — ou seja, a inscrição na
+  // Cogna já foi tentada do lado servidor. O client não recebe de volta o id
+  // da inscrição (o endpoint retorna só ok/status, de propósito — ver
+  // confirm-matricula.ts), então a tela de sucesso aqui NÃO tenta o link de
+  // pagamento próprio da Cogna (que exigiria esse id): quem pagou aqui já
+  // pagou, não há mais nada pra cobrar.
+  const handleOwnGatewayPaid = () => {
+    trackEvent('enrollment_completed', {
+      course_id: offerDetails?.courseId,
+      course_name: offerDetails?.course,
+      brand: offerDetails?.brand,
+      modality: offerDetails?.modality,
+      shift: offerDetails?.shift,
+      amount_paid: matriculaCharge.amountInCents / 100,
+      own_gateway: true,
+    })
+
+    const params = new URLSearchParams()
+    params.set('transactionId', `BC-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`)
+    if (offerDetails?.course) params.set('course', offerDetails.course)
+    params.set('paidViaGateway', '1')
+    params.set('paidAmountCents', String(matriculaCharge.amountInCents))
+
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('pendingTransactionId')
+      localStorage.removeItem('pendingFormData')
+      localStorage.removeItem('pendingPosPaymentMethod')
+      localStorage.removeItem('pendingCheckoutParams')
+    }
+
+    router.push(`/checkout/matricula/sucesso?${params.toString()}`)
+  }
+
   const onSubmit = async (data: FormSchema) => {
+    // Campanha (pagamento próprio): quem cria a inscrição é
+    // confirmPaidMatricula, disparado pelo <MatriculaPayment> DEPOIS do
+    // pagamento — nunca este submit. Esta trava só existe pro caso raro de o
+    // form ser submetido por outro meio (Enter num campo) enquanto o widget
+    // de pagamento está na tela; sem ela, cairia em createInscriptionAfterPayment
+    // e criaria a inscrição SEM cobrar — o próprio bug que este host existe
+    // pra testar a correção.
+    if (useOwnGatewayPayment) {
+      toast.error('Finalize o pagamento no quadro acima para concluir sua matrícula.')
+      return
+    }
+
     // Validar CPF antes de prosseguir
     if (cpfValidationError) {
       toast.error('Por favor, corrija o CPF antes de continuar.')
@@ -2028,6 +2194,50 @@ const isFormValidForPayment =
                             )}
                           </button>
                         </>
+                      ) : useOwnGatewayPayment ? (
+                        // Campanha (pagamento próprio) — SÓ campanha.anhangueracursos.com.br.
+                        // Fora deste host `useOwnGatewayPayment` é sempre false e este ramo
+                        // nunca renderiza; o botão simples acima continua o comportamento
+                        // padrão do anhanguera-cursos, intocado.
+                        !ownGatewayOfferAvailable ? (
+                          <p className="rounded-xl border border-dashed border-ink-300/60 bg-paper px-4 py-3 text-[13px] text-ink-500">
+                            Essa oferta não está disponível para inscrição no momento. Tente outra unidade ou volte mais tarde.
+                          </p>
+                        ) : (
+                        <MatriculaPayment
+                          amountInCents={matriculaCharge.amountInCents}
+                          customer={{
+                            name: watchedValues.name || '',
+                            cpf: watchedValues.cpf || '',
+                            email: watchedValues.email || '',
+                            phone: watchedValues.phone || '',
+                            postalCode: DADOS_ADMIN_PADRAO.cep,
+                            addressNumber: DADOS_ADMIN_PADRAO.addressNumber,
+                          }}
+                          description={`Matrícula - ${offerDetails.course || 'Curso'}`}
+                          metadata={{
+                            courseId: offerDetails.courseId,
+                            courseName: offerDetails.course,
+                            institutionName: offerDetails.brand,
+                            // Distingue este host no CRM (ver app/lib/api/attio.ts) —
+                            // lido em confirm-matricula.ts na hora de gravar "inscrito".
+                            origemSite: 'landing_anhanguera',
+                            confirm: buildOwnGatewayConfirmBlob({
+                              name: watchedValues.name || '',
+                              cpf: watchedValues.cpf || '',
+                              email: watchedValues.email || '',
+                              phone: watchedValues.phone || '',
+                              birthDate: watchedValues.birthDate || '',
+                            }),
+                          }}
+                          formReady={isFormValidForPayment}
+                          onRequireData={() => {
+                            toast.error('Preencha seus dados pessoais e de contato antes de pagar.')
+                            void handleSubmit(() => {})()
+                          }}
+                          onPaid={handleOwnGatewayPaid}
+                        />
+                        )
                       ) : (
                         <>
                           <p className="text-sm text-gray-600">

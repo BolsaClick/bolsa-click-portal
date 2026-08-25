@@ -3,6 +3,7 @@ import { prisma } from '@/app/lib/prisma'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 import { upsertCandidato, type OrigemFluxo } from '@/app/lib/api/attio'
 import { utmFromRequest, utmFromBody, mergeUtm, type UtmParams } from '@/app/lib/analytics/utm'
+import { isCampanhaAnhangueraHost } from '@/app/lib/campanha/host'
 
 const FLUXOS_CONHECIDOS = new Set<OrigemFluxo>([
   'checkout-matricula',
@@ -89,6 +90,8 @@ async function syncCandidato(params: {
   modalidade?: string
   source?: unknown
   utm?: UtmParams
+  /** Override de origem — ver `isCampanhaAnhangueraHost` no caller. */
+  origemSite?: string
 }) {
   try {
     await upsertCandidato({
@@ -102,6 +105,7 @@ async function syncCandidato(params: {
       modality: params.modalidade,
       estagio: 'lead',
       origemFluxo: toOrigemFluxo(params.source),
+      origemSite: params.origemSite,
       leadId: params.leadId,
       utm: params.utm,
     })
@@ -184,6 +188,13 @@ export async function POST(request: NextRequest) {
     // Explícito do client (localStorage da UTMify, sobrevive à navegação) tem
     // prioridade; o referer preenche o que faltar.
     const utm = mergeUtm(utmFromBody(body.utm), utmFromRequest(request))
+    // Chamada direta do browser (não é webhook/proxy) — o header `host`
+    // reflete o domínio real de quem está preenchendo o formulário. Só o host
+    // de campanha (teste A/B de pagamento próprio, mesmo deploy do
+    // anhanguera-cursos) recebe origem distinta.
+    const origemSite = isCampanhaAnhangueraHost(request.headers.get('host'))
+      ? 'landing_anhanguera'
+      : undefined
 
     // Verificar se já existe um lead com este CPF e curso
     const existingLead = await prisma.lead.findFirst({
@@ -229,6 +240,7 @@ export async function POST(request: NextRequest) {
         modalidade,
         source: source ?? existingLead.source,
         utm,
+        origemSite,
       })
 
       await sendLeadToMeta({
@@ -278,6 +290,7 @@ export async function POST(request: NextRequest) {
       modalidade,
       source,
       utm,
+      origemSite,
     })
 
     await sendLeadToMeta({

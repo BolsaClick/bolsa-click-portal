@@ -926,6 +926,7 @@ const isFormValidForPayment =
         // ID de transação único para evitar duplicação de conversões no GTM
         params.set('transactionId', `BC-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`)
 
+
         if (offerDetails.course) {
           params.set('course', offerDetails.course)
         }
@@ -933,6 +934,16 @@ const isFormValidForPayment =
         const hasPlans =
           (level === 'POS_GRADUACAO' || level === 'CURSO_PROFISSIONALIZANTE')
           && (offerDetails.paymentMethods?.length ?? 0) > 0
+        // Id da inscrição no parceiro: é com ele que a tela de sucesso gera o
+        // link de pagamento da Cogna (passo 7). Sem ele o candidato termina o
+        // fluxo sem nenhum caminho para pagar — que era o comportamento até
+        // 2026-08-24. Vale para graduação E pós: nos dois a inscrição é criada
+        // com `response.id`, e o payment-link gera o checkout. A diferença fica
+        // na tela de sucesso — pós embuti em iframe (kroton.platosedu.io),
+        // graduação abre em nova aba (pay.anhanguera.com bloqueia embed).
+        if (response.id) {
+          params.set('inscriptionId', String(response.id))
+        }
         if (!hasPlans) {
           // Graduação (ou nível sem planos retornados): mensalidade direto à instituição
           params.set('monthlyFee', String(monthlyFee))

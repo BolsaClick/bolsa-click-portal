@@ -39,6 +39,17 @@ export async function POST(request: NextRequest) {
       const phone = result.personalData?.phone
       if (phone) {
         try {
+          // `paymentUrl` fica DE FORA de propósito para a Cogna.
+          //
+          // O `checkoutUrl` expira em ~30 minutos ("sua sessão expira em
+          // 29:54" na própria tela; links gerados há 1h respondem
+          // `400 Link expirado ou inválido`). Gravá-lo no CRM faria a régua de
+          // recuperação mandar, horas depois, um link morto — pior do que não
+          // mandar nada, porque o candidato clica e vê erro.
+          //
+          // O que persiste é a `businessKey`: com ela o link é REGERADO na hora
+          // do disparo. Para Estácio/YDUQS o `link_pagamento` continua válido,
+          // porque lá a URL não expira assim.
           await upsertCandidato({
             phone: String(phone),
             name: result.personalData?.name ?? '',
@@ -46,7 +57,6 @@ export async function POST(request: NextRequest) {
             cpf: result.personalData?.cpf,
             inscriptionId,
             businessKey: result.businessKey,
-            paymentUrl: result.checkoutUrl,
           })
         } catch (attioError) {
           console.error('⚠️ Attio (link de pagamento) falhou:', attioError)

@@ -82,8 +82,7 @@ export default async function OGImage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
           <div style={{ height: 6, width: 72, background: ACCENT }} />
           <div style={{ fontSize: 30, color: INK, opacity: 0.75 }}>
-            1.000+ cursos · {BRAZILIAN_CITIES.length} cidades · faculdades
-            reconhecidas pelo MEC
+            {`1.000+ cursos · ${BRAZILIAN_CITIES.length} cidades · faculdades reconhecidas pelo MEC`}
           </div>
         </div>
       </div>

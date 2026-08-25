@@ -12,6 +12,11 @@ import { tartarus } from './axios'
  *    opções (PIX, cartão e boleto) na mesma página. É a única forma de o
  *    candidato ver o QR do PIX, então é sempre assim que chamamos.
  *
+ * ⚠️ **O `checkoutUrl` expira em ~30 minutos** (a própria tela mostra um
+ * contador de sessão; links de 1h atrás respondem `400 Link expirado ou
+ * inválido`). Nunca persistir essa URL para uso posterior — guardar a
+ * `businessKey` e REGERAR o link no momento do envio.
+ *
  * O `businessKey` da INSCRIÇÃO (`CPF_..._OFFER_..._TIMESTAMP_...`) não é o mesmo
  * que o da OFERTA e **não volta na criação** — a Cogna gera depois. Por isso a
  * resolução tem retry: entre criar a inscrição e a chave existir há uma corrida.

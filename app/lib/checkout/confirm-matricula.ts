@@ -143,12 +143,6 @@ export async function confirmPaidMatricula(
   // (cron a construir). Marcar matriculado aqui inflaria o número e tiraria
   // das campanhas de ativação justamente quem pagou e não se matriculou.
   const offerDetails = blob?.marketplace?.offerDetails
-  // Origem: gravada no `metadata` de nível superior no momento do checkout
-  // (client conhece o host; o webhook do gateway, não — ele chega do lado do
-  // Elysium, não do navegador da pessoa). Hoje só existe um valor não-padrão:
-  // `landing_anhanguera`, setado por app/checkout/matricula/page.tsx quando o
-  // checkout roda em campanha.anhangueracursos.com.br.
-  const origemSite = typeof metadata.origemSite === 'string' ? metadata.origemSite : undefined
   try {
     await upsertCandidato({
       phone: phoneDigits,
@@ -160,7 +154,6 @@ export async function confirmPaidMatricula(
       modality: offerDetails?.modality,
       city: offerDetails?.unitCity,
       estagio: 'inscrito',
-      origemSite,
       taxaPaga: new Date(),
       // Número da inscrição no parceiro: é a chave que permite consultar o
       // pagamento depois e cobrar quem ficar pelo caminho.

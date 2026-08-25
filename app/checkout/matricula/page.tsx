@@ -39,6 +39,7 @@ import { createMarketplaceInscription } from '@/app/lib/api/create-inscription-m
 import { validateVoucher, type ValidateVoucherResponse, type VoucherInstallment } from '@/app/lib/api/validate-voucher'
 import type { PosPaymentMethod, PosInstallment } from '@/app/lib/api/get-offer-details'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
+import { useMarketplaceFeatureFlag } from '@/app/lib/hooks/usePostHogFeatureFlags'
 import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { pushDataLayerEvent } from '@/app/lib/analytics/gtag'
 import { trackTikTok, trackTikTokDual } from '@/app/lib/analytics/ttq'
@@ -514,6 +515,13 @@ const isFormValidForPayment =
   const offerSource = offerDetails?.dmhSource?.source
   const isAthenasSource = offerSource === 'ATHENAS'
 
+  // Kill switch (decisão de negócio, 2026-08): createMarketplaceInscription
+  // duplicava a inscrição na Cogna para ofertas ATHENAS (uma via
+  // createInscription normal + outra via marketplace, canalVendas.id=141).
+  // Nasce OFF — flag 'marketplace_enabled' no PostHog, mesmo nome usado no
+  // lado servidor (confirm-matricula.ts). Religa subindo a flag pra 100%.
+  const marketplaceEnabled = useMarketplaceFeatureFlag()
+
   // Cobrança da matrícula no checkout transparente: DESATIVADA (decisão de
   // negócio) para graduação EAD/semipresencial de ofertas ATHENAS — a Cogna
   // dobrou a comissão nesse segmento, mas exige que o pagamento NÃO seja
@@ -854,68 +862,71 @@ const isFormValidForPayment =
 
         // Para ofertas ATHENAS, criar inscrição no marketplace
         if (isAthenasSource && offerDetails?.idDmhElastic) {
-          console.log('📝 Criando inscrição no marketplace ATHENAS...')
-          try {
-            const marketplaceResult = await createMarketplaceInscription(
-              {
-                // Capturados de verdade no formulário (captação mínima).
-                name: data.name,
-                cpf: data.cpf,
-                email: data.email,
-                phone: data.phone,
-                birthDate: data.birthDate,
-                // Administrativos NÃO capturados — valor padrão válido em
-                // formato; a Cogna confirma os dados reais na matrícula efetiva.
-                rg: DADOS_ADMIN_PADRAO.rg,
-                gender: DADOS_ADMIN_PADRAO.gender,
-                cep: DADOS_ADMIN_PADRAO.cep,
-                address: DADOS_ADMIN_PADRAO.address,
-                addressNumber: DADOS_ADMIN_PADRAO.addressNumber,
-                neighborhood: DADOS_ADMIN_PADRAO.neighborhood,
-                city: DADOS_ADMIN_PADRAO.city,
-                state: DADOS_ADMIN_PADRAO.state,
-                ingressType: selectedIngressType,
-                schoolYear: DADOS_ADMIN_PADRAO.schoolYear,
-                acceptTerms: true,
-                acceptEmail: true,
-                acceptSms: true,
-                acceptWhatsapp: true,
-              },
-              offerDetails
-            )
+          // Kill switch (decisão de negócio, 2026-08): createMarketplaceInscription
+          // está DESATIVADA — ela duplicava a inscrição na Cogna para ofertas
+          // ATHENAS (uma via createInscription normal, acima, + outra via
+          // marketplace/canalVendas.id=141). Nasce OFF; religa subindo a flag
+          // PostHog 'marketplace_enabled' pra 100% (mesma flag do lado servidor,
+          // em confirm-matricula.ts). NÃO apagar createMarketplaceInscription
+          // nem o endpoint — só parar de chamar enquanto a flag está off.
+          if (marketplaceEnabled) {
+            console.log('📝 Criando inscrição no marketplace ATHENAS...')
+            try {
+              const marketplaceResult = await createMarketplaceInscription(
+                {
+                  // Capturados de verdade no formulário (captação mínima).
+                  name: data.name,
+                  cpf: data.cpf,
+                  email: data.email,
+                  phone: data.phone,
+                  birthDate: data.birthDate,
+                  // Administrativos NÃO capturados — valor padrão válido em
+                  // formato; a Cogna confirma os dados reais na matrícula efetiva.
+                  rg: DADOS_ADMIN_PADRAO.rg,
+                  gender: DADOS_ADMIN_PADRAO.gender,
+                  cep: DADOS_ADMIN_PADRAO.cep,
+                  address: DADOS_ADMIN_PADRAO.address,
+                  addressNumber: DADOS_ADMIN_PADRAO.addressNumber,
+                  neighborhood: DADOS_ADMIN_PADRAO.neighborhood,
+                  city: DADOS_ADMIN_PADRAO.city,
+                  state: DADOS_ADMIN_PADRAO.state,
+                  ingressType: selectedIngressType,
+                  schoolYear: DADOS_ADMIN_PADRAO.schoolYear,
+                  acceptTerms: true,
+                  acceptEmail: true,
+                  acceptSms: true,
+                  acceptWhatsapp: true,
+                },
+                offerDetails
+              )
 
-            if (marketplaceResult.success) {
-              console.log('✅ Inscrição no marketplace ATHENAS criada com sucesso')
-              // ATUALIZAÇÃO (decisão de negócio): graduação EAD/semi ATHENAS não
-              // cobra mais no site, então esse ramo agora roda para TODAS as
-              // ofertas ATHENAS com idDmhElastic, não só as raras não-chargeable
-              // (histórico: antes disso, o submit retornava cedo em
-              // `matriculaCharge.chargeable` e a inscrição marketplace vinha de
-              // `confirmPaidMatricula`, pós-pagamento — isso não existe mais
-              // pra este segmento).
-              trackEvent('marketplace_inscription_created', {
-                course_id: offerDetails.courseId,
-                course_name: offerDetails.course,
-                idDmhElastic: offerDetails.idDmhElastic,
-              })
-
-              // Funil unificado — etapa 3 (ramo graduação/ATHENAS).
-              // Cobre o ponto cego: `marketplace_inscription_created` disparava
-              // ~1x/90d; `checkout_submitted` dá o sinal confiável do envio.
-              trackCheckoutSubmitted(trackEvent, {
-                flow: 'matricula',
-                academicLevel: offerDetails.academicLevel,
-                brand: offerDetails.brand,
-                modality: offerDetails.modality,
-                courseId: offerDetails.courseId,
-                courseName: offerDetails.course,
-              })
-            } else {
-              console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceResult.error)
+              if (marketplaceResult.success) {
+                console.log('✅ Inscrição no marketplace ATHENAS criada com sucesso')
+                trackEvent('marketplace_inscription_created', {
+                  course_id: offerDetails.courseId,
+                  course_name: offerDetails.course,
+                  idDmhElastic: offerDetails.idDmhElastic,
+                })
+              } else {
+                console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceResult.error)
+              }
+            } catch (marketplaceError) {
+              console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceError)
             }
-          } catch (marketplaceError) {
-            console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceError)
           }
+
+          // Funil unificado — etapa 3 (ramo graduação/ATHENAS). Fica FORA do
+          // gate acima de propósito: o candidato enviou o checkout independente
+          // de a chamada ao marketplace estar ligada ou não — não queremos que
+          // desativar o marketplace crie um ponto cego no funil de conversão.
+          trackCheckoutSubmitted(trackEvent, {
+            flow: 'matricula',
+            academicLevel: offerDetails.academicLevel,
+            brand: offerDetails.brand,
+            modality: offerDetails.modality,
+            courseId: offerDetails.courseId,
+            courseName: offerDetails.course,
+          })
         }
 
         // Montar params para a página de sucesso antes de limpar o localStorage

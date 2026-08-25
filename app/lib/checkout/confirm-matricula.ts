@@ -14,6 +14,7 @@ import { sendUtmifyOrder, paymentMethodToUtmify } from '@/app/lib/api/utmify'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
 import { upsertCandidato } from '@/app/lib/api/attio'
+import { isServerFlagEnabled } from '@/app/lib/analytics/server-flags'
 
 /**
  * Dados montados no checkout (cliente) e guardados em Transaction.metadata.confirm
@@ -103,15 +104,28 @@ export async function confirmPaidMatricula(
       console.error('❌ confirm: inscrição falhou', externalTransactionId, e)
     }
 
+    // Kill switch (decisão de negócio, 2026-08): createMarketplaceInscription
+    // está DESATIVADA — ela duplicava a inscrição na Cogna para ofertas
+    // ATHENAS (uma via createInscription, logo acima, + outra via
+    // marketplace/canalVendas.id=141). Nasce OFF; religa subindo a flag
+    // PostHog 'marketplace_enabled' pra 100% (mesma flag do lado cliente, em
+    // useMarketplaceFeatureFlag / checkout/matricula/page.tsx). NÃO apagar
+    // createMarketplaceInscription nem o endpoint — só parar de chamar
+    // enquanto a flag está off.
     if (blob.marketplace?.data && blob.marketplace.offerDetails) {
-      try {
-        const m = await createMarketplaceInscription(
-          blob.marketplace.data,
-          blob.marketplace.offerDetails
-        )
-        results.marketplace = m.success
-      } catch (e) {
-        console.error('❌ confirm: marketplace ATHENAS falhou', externalTransactionId, e)
+      const marketplaceEnabled = await isServerFlagEnabled('marketplace_enabled', false)
+      if (marketplaceEnabled) {
+        try {
+          const m = await createMarketplaceInscription(
+            blob.marketplace.data,
+            blob.marketplace.offerDetails
+          )
+          results.marketplace = m.success
+        } catch (e) {
+          console.error('❌ confirm: marketplace ATHENAS falhou', externalTransactionId, e)
+        }
+      } else {
+        results.marketplaceSkipped = 'flag_off'
       }
     }
   } else {

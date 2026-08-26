@@ -1,0 +1,98 @@
+<!--
+  Artigo de referência: padrão de marcação e voz pra qualquer post gerado
+  pela skill /blog-post. NÃO é roteado (não existe em app/blog/*), só
+  treina o agente no contrato de HTML esperado por BlogPostClient.tsx
+  (classe `prose prose-lg`, ver app/blog/[slug]/BlogPostClient.tsx).
+
+  Metadados de exemplo (isto é o payload que iria pro POST
+  /api/agents/blog/posts, NÃO um arquivo real, só ilustra o shape):
+
+  {
+    "slug": "como-funciona-o-prouni",
+    "title": "Como Funciona o ProUni: Guia Completo Pra Conseguir Bolsa",
+    "excerpt": "Entenda os critérios, o cronograma e o passo a passo do ProUni pra conseguir bolsa integral ou parcial em faculdade particular.",
+    "metaTitle": "Como Funciona o ProUni: Guia Completo Pra Conseguir Bolsa",
+    "metaDescription": "Veja como funciona o ProUni: quem pode participar, nota mínima, cronograma de inscrição e como usar a nota do ENEM pra garantir bolsa integral ou parcial.",
+    "keywords": ["como funciona o prouni", "prouni", "bolsa prouni", "inscrição prouni", "nota de corte prouni"],
+    "author": "Mariana Fonseca",
+    "categorySlug": "bolsas-de-estudo",
+    "tags": ["prouni", "bolsa de estudo", "enem"],
+    "readingTimeMinutes": 7
+  }
+
+  Contrato de tags (o que BlogPostClient.tsx estiliza via `prose`):
+    <p>            texto corrido
+    <h2 id="...">  seção principal. [slug]/page.tsx já injeta id automático
+                   via regex se você esquecer, mas é melhor já vir com id
+                   kebab-case do próprio texto do heading
+    <h3>           subseção dentro de um H2
+    <ul>/<li>      lista não ordenada
+    <ol>/<li>      lista ordenada (passo a passo)
+    <strong>       ênfase (nunca <b>)
+    <blockquote>   callout/destaque, já tem estilo próprio (borda colorida,
+                   fundo levemente diferente). Usar pra 1 dado importante
+                   ou resumo curto, não pra parágrafo comum
+-->
+
+<p>O ProUni oferece bolsa integral ou parcial (50%) em faculdades particulares pra quem fez o ENEM e tem renda familiar dentro do limite do programa. A inscrição é gratuita, feita pelo site do MEC em duas chamadas por ano, e a nota de corte varia por curso e instituição. Veja o passo a passo completo abaixo.</p>
+
+<h2 id="quem-pode-participar-do-prouni">Quem pode participar do ProUni</h2>
+
+<p>O programa é do governo federal e tem regras fixas de elegibilidade, publicadas todo ano pelo MEC. Pra concorrer, você precisa atender <strong>todos</strong> os critérios abaixo, não só um deles:</p>
+
+<ul>
+  <li>Ter feito o ENEM no ano da inscrição e tirado nota acima de zero na redação</li>
+  <li>Ter cursado o ensino médio completo em escola pública, ou como bolsista integral em escola particular</li>
+  <li>Renda familiar mensal per capita de até 3 salários mínimos (bolsa integral) ou o mesmo teto pra bolsa parcial, com faixas específicas por modalidade</li>
+  <li>Não ter diploma de curso superior (é pra primeira graduação)</li>
+</ul>
+
+<p>Professores da rede pública sem graduação também têm uma via específica de inscrição, com regras próprias de pontuação. Essa via não exige a mesma faixa de renda das demais modalidades, porque o objetivo do programa nesse caso é a formação do professor, não só o critério socioeconômico.</p>
+
+<h2 id="como-funciona-a-nota-de-corte">Como funciona a nota de corte</h2>
+
+<p>A nota de corte do ProUni não é fixa: ela varia por curso, turno, instituição e cidade, porque depende de quantos candidatos concorrem à mesma vaga naquele ciclo. Cursos com mais procura, como Medicina ou Direito, costumam ter corte mais alto. Cursos EAD ou com menos concorrência tendem a ter corte mais acessível, e mudam de um semestre pro outro conforme o número de inscritos.</p>
+
+<h3>O que pesa na nota final</h3>
+
+<p>A nota usada é a média das 5 provas do ENEM (Linguagens, Matemática, Ciências Humanas, Ciências da Natureza e Redação), sem peso diferenciado por padrão, salvo quando a instituição define peso próprio pra um curso específico. Zerar a redação elimina o candidato da concorrência, independente da nota nas demais provas.</p>
+
+<blockquote>Dica prática: o sistema do ProUni permite escolher até 2 opções de curso na inscrição. Coloque a opção mais concorrida primeiro. Se não passar nela, o sistema tenta automaticamente a segunda opção antes de te eliminar do processo.</blockquote>
+
+<h2 id="passo-a-passo-da-inscricao">Passo a passo da inscrição</h2>
+
+<ol>
+  <li>Acesse o portal oficial do ProUni com o mesmo CPF usado no ENEM</li>
+  <li>Escolha até 2 opções de curso e instituição, em qualquer cidade do país</li>
+  <li>Confira se atende aos critérios de renda e histórico escolar antes de confirmar</li>
+  <li>Acompanhe o resultado da chamada na data divulgada pelo MEC</li>
+  <li>Se for pré-selecionado, entregue a documentação comprobatória no prazo</li>
+  <li>Se não for chamado na primeira chamada, fique atento à lista de espera e à segunda chamada</li>
+</ol>
+
+<h2 id="documentos-necessarios-para-comprovar-a-bolsa">Documentos necessários pra comprovar a bolsa</h2>
+
+<p>Depois de pré-selecionado, a faculdade solicita a documentação que comprova o que foi declarado na inscrição. É nessa etapa que boa parte dos candidatos perde a vaga por não reunir os papéis a tempo, então vale organizar tudo antes mesmo do resultado sair:</p>
+
+<ul>
+  <li>Documento de identidade e CPF do candidato e dos membros da família que compõem a renda</li>
+  <li>Comprovante de residência atualizado</li>
+  <li>Histórico escolar do ensino médio, mostrando a rede (pública ou bolsista integral em particular)</li>
+  <li>Comprovantes de renda de todos os integrantes do grupo familiar informado na inscrição</li>
+</ul>
+
+<p>Quem não tem carteira assinada ou renda formal costuma apresentar declaração de próprio punho, mas cada faculdade pode pedir documentos complementares, então vale conferir a lista exata no ato da matrícula. Reunir tudo com antecedência, antes mesmo do resultado da chamada sair, evita perder o prazo por falta de um documento específico.</p>
+
+<h2 id="prouni-integral-ou-parcial-qual-a-diferenca">ProUni integral ou parcial: qual a diferença</h2>
+
+<p>A bolsa integral cobre 100% da mensalidade e é destinada a quem tem renda familiar per capita de até 1,5 salário mínimo. A bolsa parcial cobre 50% e vale pra quem tem renda per capita entre 1,5 e 3 salários mínimos. Em ambos os casos, o valor restante, quando houver, é de responsabilidade do estudante, e a faculdade pode oferecer desconto adicional sobre a parte não coberta pelo programa, dependendo da instituição.</p>
+
+<h2 id="o-que-fazer-se-nao-for-chamado">O que fazer se não for chamado</h2>
+
+<p>Não ser chamado na primeira rodada não significa estar fora do processo. O MEC libera uma lista de espera e, em seguida, uma segunda chamada regular, que redistribui as vagas que sobraram de quem desistiu ou não comprovou a documentação a tempo. Muitos candidatos entram justamente nessas etapas seguintes, então vale continuar acompanhando o cronograma oficial em vez de assumir que a vaga já era.</p>
+
+<h2 id="prouni-vale-a-pena-comparado-a-outras-formas-de-bolsa">ProUni vale a pena comparado a outras formas de bolsa</h2>
+
+<p>O ProUni é gratuito e não exige pagamento de mensalidade na modalidade integral, o que faz dele a opção mais vantajosa financeiramente quando você se encaixa nos critérios de renda e consegue nota de corte suficiente. Fora do ProUni, faculdades parceiras do Bolsa Click oferecem <strong>bolsas próprias de até 80% de desconto</strong>, sem nota de corte e sem depender só da renda familiar, o que amplia a chance de quem não se enquadra no programa federal ou não conseguiu nota suficiente na chamada.</p>
+
+<p>Se você já fez o ENEM e quer comparar as duas rotas antes de decidir, dá pra <a href="/curso/resultado?nivel=GRADUACAO">buscar bolsas de graduação direto no Bolsa Click</a> e ver o valor real da mensalidade com desconto nas faculdades parceiras da sua cidade. Também vale conferir o <a href="/bolsas-de-estudo">guia completo de bolsas de estudo</a> pra entender todas as modalidades disponíveis, incluindo FIES e bolsa direta.</p>

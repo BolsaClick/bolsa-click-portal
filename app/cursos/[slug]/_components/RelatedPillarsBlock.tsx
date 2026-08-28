@@ -48,7 +48,7 @@ function getPillarsForCourse(slug: string, name: string): PillarLink[] {
       href: '/bolsas/saude',
       category: 'Pillar — Área da Saúde',
       title: 'Bolsas em faculdades de saúde',
-      description: `Veja todos os cursos de saúde com bolsa de até 80% — Psicologia, Enfermagem, Fisioterapia, Nutrição e mais.`,
+      description: `Veja todos os cursos de saúde com bolsa de até 78% — Psicologia, Enfermagem, Fisioterapia, Nutrição e mais.`,
       icon: Stethoscope,
     })
   }

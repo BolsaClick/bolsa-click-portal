@@ -10,7 +10,7 @@ const pageUrl = `${SITE_URL}/simulador-de-bolsa`
 export const metadata: Metadata = {
   title: 'Simulador de Bolsa de Estudo Grátis — Calcule ProUni, FIES e Descontos',
   description:
-    'Simule sua bolsa de estudo em 1 minuto: informe curso, cidade, nota do ENEM e renda e descubra se você se qualifica pra ProUni, FIES ou SISU — além de bolsas próprias de até 80% sem nota de corte. Grátis e sem CPF.',
+    'Simule sua bolsa de estudo em 1 minuto: informe curso, cidade, nota do ENEM e renda e descubra se você se qualifica pra ProUni, FIES ou SISU — além de bolsas próprias de até 78% sem nota de corte. Grátis e sem CPF.',
   keywords: [
     'simulador de bolsa',
     'simulador de bolsa de estudo',
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Simulador de Bolsa de Estudo Grátis — Bolsa Click',
     description:
-      'Calcule sua bolsa em 1 minuto: ProUni, FIES, SISU e bolsas próprias de até 80% de desconto, sem nota de corte.',
+      'Calcule sua bolsa em 1 minuto: ProUni, FIES, SISU e bolsas próprias de até 78% de desconto, sem nota de corte.',
     url: pageUrl,
     siteName: 'Bolsa Click',
     locale: 'pt_BR',
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@bolsaclick',
     title: 'Simulador de Bolsa de Estudo Grátis',
-    description: '1 minuto pra descobrir sua bolsa: ProUni, FIES e descontos de até 80%.',
+    description: '1 minuto pra descobrir sua bolsa: ProUni, FIES e descontos de até 78%.',
   },
 }
 
@@ -58,12 +58,12 @@ const faqItems = [
   {
     question: 'Qual a nota mínima do ENEM pra conseguir bolsa?',
     answer:
-      'Pra ProUni e FIES, a regra é média de pelo menos 450 pontos nas cinco áreas do ENEM e nota de redação acima de zero. Para bolsas próprias de faculdades parceiras não há nota de corte — o desconto depende só da oferta ativa e pode chegar a 80%.',
+      'Pra ProUni e FIES, a regra é média de pelo menos 450 pontos nas cinco áreas do ENEM e nota de redação acima de zero. Para bolsas próprias de faculdades parceiras não há nota de corte — o desconto depende só da oferta ativa e pode chegar a 78%.',
   },
   {
     question: 'Preciso ter feito o ENEM pra usar o simulador?',
     answer:
-      'Não. Se você não fez o ENEM, o simulador te direciona direto pras bolsas próprias das faculdades parceiras, que não exigem nota de corte nem comprovação de renda. Muitas chegam a 80% de desconto na mensalidade, principalmente no EAD.',
+      'Não. Se você não fez o ENEM, o simulador te direciona direto pras bolsas próprias das faculdades parceiras, que não exigem nota de corte nem comprovação de renda. Muitas chegam a 78% de desconto na mensalidade, principalmente no EAD.',
   },
   {
     question: 'Como o simulador calcula a renda pra ProUni e FIES?',
@@ -90,7 +90,7 @@ const webAppSchema = {
   operatingSystem: 'Web',
   url: pageUrl,
   description:
-    'Simulador gratuito de bolsa de estudo. Estima elegibilidade a ProUni, FIES e SISU com base em nota do ENEM e renda, e mostra ofertas reais de bolsa própria de até 80% de desconto.',
+    'Simulador gratuito de bolsa de estudo. Estima elegibilidade a ProUni, FIES e SISU com base em nota do ENEM e renda, e mostra ofertas reais de bolsa própria de até 78% de desconto.',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'BRL' },
   inLanguage: 'pt-BR',
 }
@@ -142,7 +142,7 @@ export default function SimuladorDeBolsaPage() {
             Pra simular sua bolsa de estudo, informe o curso, a cidade, a nota do
             ENEM e a renda da família: em segundos o simulador estima se você se
             qualifica pra <strong>ProUni, FIES ou SISU</strong> e mostra bolsas
-            próprias de faculdades parceiras com <strong>até 80% de desconto</strong>,
+            próprias de faculdades parceiras com <strong>até 78% de desconto</strong>,
             sem nota de corte.
           </p>
           <ul className="flex flex-wrap gap-x-3 gap-y-1.5 font-mono text-[10px] md:text-[12px] tracking-[0.14em] uppercase text-ink-500">
@@ -214,7 +214,7 @@ export default function SimuladorDeBolsaPage() {
             </li>
             <li>
               <strong>Bolsa própria</strong>: descontos das faculdades parceiras,
-              que chegam a até 80% e não exigem nota de corte nem comprovação de
+              que chegam a até 78% e não exigem nota de corte nem comprovação de
               renda. É o caminho mais rápido pra quem não fez o ENEM.
             </li>
           </ul>

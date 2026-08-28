@@ -36,7 +36,7 @@ export const dynamic = 'force-dynamic'
  * (docs/MASCOTES.md; máx. 1 mascote por dobra).
  *
  * Claims: apenas os aprovados — 6 redes parceiras, 280+ cidades com polos,
- * +1.000 estudantes, até 80% de desconto, a partir de R$ 99/mês.
+ * +1.000 estudantes, até 78% de desconto, a partir de R$ 99/mês.
  */
 
 const DEMO_CARD_HREF = '/checkout/matricula?preview=home-v3'
@@ -45,7 +45,7 @@ const COUNTERS = [
   { value: '6', label: 'redes parceiras' },
   { value: '280+', label: 'cidades com polos' },
   { value: '+1.000', label: 'estudantes' },
-  { value: 'até 80%', label: 'de desconto' },
+  { value: 'até 78%', label: 'de desconto' },
 ] as const
 
 const CATEGORIES = [
@@ -91,7 +91,7 @@ const FAQ = [
     a: 'Não. Buscar, comparar e se inscrever pelo Bolsa Click é grátis. Você só paga a faculdade — já com a bolsa aplicada na mensalidade.',
   },
   {
-    q: 'Como funciona o desconto de até 80%?',
+    q: 'Como funciona o desconto de até 78%?',
     a: 'As bolsas vêm de parcerias com as instituições. O percentual varia por curso, polo e modalidade, e o "De/Por" que você vê é sempre calculado da tabela de preço sem bolsa da própria faculdade — nunca um número inventado.',
   },
   {
@@ -152,7 +152,7 @@ export default async function HomeV3PreviewPage() {
               <span className="whitespace-nowrap">
                 com{' '}
                 <span className="relative inline-block bg-bolsa-secondary px-2 py-0.5 text-white [clip-path:polygon(7px_0,100%_0,100%_100%,7px_100%,0_50%)]">
-                  até 80%
+                  até 78%
                 </span>
               </span>{' '}
               de bolsa

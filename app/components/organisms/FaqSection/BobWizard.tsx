@@ -22,7 +22,7 @@ import Mascot from '@/app/components/v2/mascot/Mascot'
 
 const IDLE_BUBBLES = [
   'Parece que você tá procurando uma bolsa! Posso ajudar? ✨',
-  'Pergunte sem medo — bolsa de até 80% não é magia, é real.',
+  'Pergunte sem medo — bolsa de até 78% não é magia, é real.',
   'Abre uma pergunta aí que eu conjuro a resposta. 🪄',
   'Dica do mago: sem nota de corte, sem ENEM obrigatório.',
 ]

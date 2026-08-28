@@ -120,8 +120,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = `${institution.name} em ${cityData.name}/${cityData.state} - Cursos, Bolsas e Polos`
   const description = hasOffers
-    ? `${offers.length} cursos da ${institution.fullName} em ${cityData.name}/${cityData.state} com bolsa de até 80%. Compare mensalidades e inscreva-se grátis pelo Bolsa Click.`
-    : `Bolsas de estudo na ${institution.fullName} com até 80% de desconto. Veja unidades e cursos disponíveis pelo Bolsa Click.`
+    ? `${offers.length} cursos da ${institution.fullName} em ${cityData.name}/${cityData.state} com bolsa de até 78%. Compare mensalidades e inscreva-se grátis pelo Bolsa Click.`
+    : `Bolsas de estudo na ${institution.fullName} com até 78% de desconto. Veja unidades e cursos disponíveis pelo Bolsa Click.`
 
   return {
     title,
@@ -268,7 +268,7 @@ export default async function InstitutionCityPage({ params }: Props) {
       question: `Quanto custa estudar na ${institution.name} em ${cityData.name}?`,
       answer: hasOffers && courses[0]?.minPrice > 0
         ? `Na ${institution.name} em ${cityData.name}, as mensalidades com bolsa começam a partir de R$ ${courses[0].minPrice.toFixed(0)}/mês, dependendo do curso e modalidade.`
-        : `Os valores variam por curso. Pelo Bolsa Click, as bolsas da ${institution.name} podem chegar a até 80% de desconto.`,
+        : `Os valores variam por curso. Pelo Bolsa Click, as bolsas da ${institution.name} podem chegar a até 78% de desconto.`,
     },
     {
       question: `A ${institution.name} tem cursos EAD em ${cityData.name}?`,
@@ -278,7 +278,7 @@ export default async function InstitutionCityPage({ params }: Props) {
     },
     {
       question: `Como conseguir bolsa na ${institution.name} em ${cityData.name}?`,
-      answer: `Escolha um curso acima, confirme a oferta da unidade em ${cityData.name}, e finalize a inscrição grátis pelo Bolsa Click — bolsas de até 80% no ato.`,
+      answer: `Escolha um curso acima, confirme a oferta da unidade em ${cityData.name}, e finalize a inscrição grátis pelo Bolsa Click — bolsas de até 78% no ato.`,
     },
   ]
 
@@ -322,7 +322,7 @@ export default async function InstitutionCityPage({ params }: Props) {
               </h1>
               <p className="text-lg text-ink-700 max-w-3xl">
                 {hasOffers
-                  ? `${courses.length} cursos da ${institution.fullName} disponíveis com bolsa de até 80% em ${cityData.name}.`
+                  ? `${courses.length} cursos da ${institution.fullName} disponíveis com bolsa de até 78% em ${cityData.name}.`
                   : `Estamos atualizando as ofertas da ${institution.name} para ${cityData.name}. Cadastre-se e seja notificado.`}
               </p>
               {institution.mecRating && (

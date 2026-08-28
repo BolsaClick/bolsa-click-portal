@@ -5,7 +5,7 @@ const faqs = [
   {
     question: 'Como funcionam as bolsas de estudo do Bolsa Click?',
     answer:
-      'O Bolsa Click conecta você a bolsas de estudo de até 80% de desconto. Basta buscar por curso, cidade e modalidade. Depois, compare os preços e se cadastre grátis para garantir sua bolsa em faculdade.',
+      'O Bolsa Click conecta você a bolsas de estudo de até 78% de desconto em Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. Basta buscar por curso, cidade e modalidade. Depois, compare os preços e se cadastre grátis, sem taxa de adesão.',
   },
   {
     question: 'As bolsas de estudo são gratuitas?',
@@ -23,14 +23,14 @@ const faqs = [
       'Não. No Bolsa Click, você não precisa de nota do ENEM para conseguir sua bolsa de estudo. Basta se cadastrar, escolher o curso e garantir seu desconto.',
   },
   {
-    question: 'A bolsa vale para todo o curso?',
+    question: 'Por quanto tempo vale a bolsa?',
     answer:
-      'Sim. As bolsas de estudo do Bolsa Click valem do primeiro ao último semestre. Você paga a mensalidade com desconto durante toda a graduação ou pós-graduação.',
+      'O percentual e a duração seguem o contrato da faculdade da oferta escolhida. Cadastro no Bolsa Click é grátis, sem taxa de adesão. Confira as condições de cada oferta no catálogo antes de matricular.',
   },
   {
     question: 'Existem bolsas EAD disponíveis?',
     answer:
-      'Sim. Temos milhares de bolsas EAD com descontos de até 80%. Os cursos a distância possuem diploma reconhecido pelo MEC, igual ao presencial. Estude de casa, no seu ritmo.',
+      'Sim. Temos milhares de bolsas EAD com descontos de até 78%. Os cursos a distância possuem diploma reconhecido pelo MEC, igual ao presencial. Estude de casa, no seu ritmo.',
   },
 ]
 

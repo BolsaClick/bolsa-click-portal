@@ -184,7 +184,7 @@ export default function CursosPageClient({ courses }: CursosPageClientProps) {
             </h1>
             <p className="text-white/80 text-base md:text-lg max-w-2xl leading-relaxed mb-9">
               Bacharelado, licenciatura ou tecnólogo — nas maiores redes de ensino do país.
-              Descontos de até 80%, sem ENEM, sem fila e com diploma reconhecido pelo MEC.
+              Descontos de até 78%, sem ENEM, sem fila e com diploma reconhecido pelo MEC.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <button
@@ -227,7 +227,7 @@ export default function CursosPageClient({ courses }: CursosPageClientProps) {
             </div>
             <div className="px-4 py-8 md:py-10 text-center">
               <div className="font-display num-tabular text-3xl md:text-4xl text-ink-900 leading-none">
-                até 80%
+                até 78%
               </div>
               <div className="text-[12px] md:text-[13px] text-ink-500 mt-2 leading-snug">
                 de desconto em bolsas

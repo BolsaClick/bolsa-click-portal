@@ -67,7 +67,7 @@ export const metadata: Metadata = {
     'faculdades com desconto',
     'faculdade com desconto',
     'bolsa para faculdade',
-    'bolsa de estudo até 80%',
+    'bolsa de estudo até 78%',
     'bolsa de estudo online',
     'bolsa de estudo EAD',
     'bolsa de estudo presencial',
@@ -152,14 +152,14 @@ const jsonLd = [
     alternateName: seoSite.alternateNames,
     ...(business.legalName && { legalName: business.legalName }),
     ...(business.cnpj && { taxID: business.cnpj, vatID: business.cnpj }),
-    description: 'Plataforma brasileira de bolsas de estudo com até 80% de desconto em faculdades e universidades. Graduação, pós-graduação, cursos técnicos e EAD.',
+    description: 'Plataforma brasileira de bolsas de estudo com até 78% de desconto em faculdades e universidades. Graduação, pós-graduação, cursos técnicos e EAD.',
     url: theme.siteUrl,
     logo: seoSite.logo,
     image: theme.ogImage,
     naics: '611710',
     industry: 'Educação Superior',
     knowsAbout: ['bolsas de estudo', 'educação superior', 'faculdades', 'graduação', 'pós-graduação', 'EAD'],
-    slogan: 'Bolsas de estudo com até 80% de desconto',
+    slogan: 'Bolsas de estudo com até 78% de desconto',
     // Banda anual (YYYY) — schema.org aceita; evita data inventada (CLAUDE.md).
     // Atualizar quando data exata de constituição estiver disponível em env.
     foundingDate: '2024',
@@ -215,7 +215,7 @@ const jsonLd = [
   {
     '@context': 'https://schema.org',
     '@type': 'EducationalOccupationalProgram',
-    name: 'Bolsas de estudo com até 80% de desconto',
+    name: 'Bolsas de estudo com até 78% de desconto',
     // Schema.org: aceita "online" | "onsite" | "blended" (NOT "presencial"/"semipresencial").
     educationalProgramMode: ['online', 'onsite', 'blended'],
     occupationalCredentialAwarded: [
@@ -239,7 +239,7 @@ const jsonLd = [
         '@type': 'Country',
         name: 'Brasil',
       },
-      description: 'Inscreva-se gratuitamente para obter bolsas de estudo em universidades e escolas com até 80% de desconto.',
+      description: 'Inscreva-se gratuitamente para obter bolsas de estudo em universidades e escolas com até 78% de desconto.',
     },
   },
 ]

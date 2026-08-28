@@ -161,8 +161,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const priceSuffix = lowPrice > 0 ? ` — de R$${lowPrice.toFixed(0)}/mês` : ''
   const titleSuffix =
     (lowPrice > 0
-      ? [priceSuffix, ' com bolsa de até 80%', ' com bolsa', '']
-      : [' com bolsa de até 80%', ' com bolsa', '']
+      ? [priceSuffix, ' com bolsa de até 78%', ' com bolsa', '']
+      : [' com bolsa de até 78%', ' com bolsa', '']
     ).find(
       (s) => titleBase.length + s.length + brandSuffixLen <= 60
     ) ?? ''
@@ -176,14 +176,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   let description =
     [
       lowPrice > 0 &&
-        `Bolsa de estudo para ${curso.name} em ${cityUf}${priceText}, com até 80% de desconto. Faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`,
-      `Bolsa de estudo para ${curso.name} em ${cityUf} com até 80% de desconto. Faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`,
-      `Bolsa de até 80% para ${curso.name} em ${cityUf}, no EAD ou presencial, em faculdades com nota MEC. Inscrição grátis.`,
-      `Bolsa de até 80% para ${curso.name} em ${cityData.name}, no EAD ou presencial. Inscrição grátis.`,
+        `Bolsa de estudo para ${curso.name} em ${cityUf}${priceText}, com até 78% de desconto. Faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`,
+      `Bolsa de estudo para ${curso.name} em ${cityUf} com até 78% de desconto. Faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`,
+      `Bolsa de até 78% para ${curso.name} em ${cityUf}, no EAD ou presencial, em faculdades com nota MEC. Inscrição grátis.`,
+      `Bolsa de até 78% para ${curso.name} em ${cityData.name}, no EAD ou presencial. Inscrição grátis.`,
     ]
       .filter((d): d is string => Boolean(d))
       .find((d) => d.length <= 155) ??
-    `Bolsa de até 80% para ${curso.name} em ${cityData.name}, no EAD ou presencial. Inscrição grátis.`
+    `Bolsa de até 78% para ${curso.name} em ${cityData.name}, no EAD ou presencial. Inscrição grátis.`
   const brandedCopy = buildBrandedCourseCopy({
     name: curso.name,
     fullName: curso.fullName,
@@ -508,8 +508,8 @@ export default async function CursoCidadePage({ params }: Props) {
               acceptedAnswer: {
                 '@type': 'Answer',
                 text: lowPrice > 0
-                  ? `Em ${cityData.name}-${cityData.state}, o curso de ${cursoMetadata.name} pode ser encontrado a partir de R$ ${lowPrice.toFixed(2)} por mês com bolsa pelo Bolsa Click, com descontos de até 80%.`
-                  : `O Bolsa Click oferece bolsas de até 80% de desconto para ${cursoMetadata.name} em ${cityData.name}. Cadastre-se grátis para ver as ofertas.`,
+                  ? `Em ${cityData.name}-${cityData.state}, o curso de ${cursoMetadata.name} pode ser encontrado a partir de R$ ${lowPrice.toFixed(2)} por mês com bolsa pelo Bolsa Click, com descontos de até 78%.`
+                  : `O Bolsa Click oferece bolsas de até 78% de desconto para ${cursoMetadata.name} em ${cityData.name}. Cadastre-se grátis para ver as ofertas.`,
               },
             },
             {

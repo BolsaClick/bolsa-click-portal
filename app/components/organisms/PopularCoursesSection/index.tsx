@@ -2,17 +2,17 @@ import Link from 'next/link'
 import Container from '../../atoms/Container'
 
 const cursosPopulares = [
-  { nome: 'Administração', slug: 'administracao', desc: '80%' },
+  { nome: 'Administração', slug: 'administracao', desc: '78%' },
   { nome: 'Direito', slug: 'direito', desc: '75%' },
   { nome: 'Enfermagem', slug: 'enfermagem', desc: '70%' },
-  { nome: 'Psicologia', slug: 'psicologia', desc: '80%' },
-  { nome: 'Pedagogia', slug: 'pedagogia', desc: '80%' },
+  { nome: 'Psicologia', slug: 'psicologia', desc: '78%' },
+  { nome: 'Pedagogia', slug: 'pedagogia', desc: '78%' },
   { nome: 'Educação Física', slug: 'educacao-fisica', desc: '75%' },
-  { nome: 'Ciências Contábeis', slug: 'ciencias-contabeis', desc: '80%' },
+  { nome: 'Ciências Contábeis', slug: 'ciencias-contabeis', desc: '78%' },
   { nome: 'Engenharia Civil', slug: 'engenharia-civil', desc: '70%' },
   { nome: 'Nutrição', slug: 'nutricao', desc: '75%' },
   { nome: 'Fisioterapia', slug: 'fisioterapia', desc: '70%' },
-  { nome: 'ADS', slug: 'analise-e-desenvolvimento-de-sistemas', desc: '80%' },
+  { nome: 'ADS', slug: 'analise-e-desenvolvimento-de-sistemas', desc: '78%' },
   { nome: 'Biomedicina', slug: 'biomedicina', desc: '70%' },
 ]
 

@@ -6,7 +6,7 @@ export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'Blog - Dicas de Bolsas de Estudo, ENEM, Vestibular e Carreira',
-  description: 'Artigos sobre bolsas de estudo, ENEM, vestibular, carreira, faculdades e dicas para conseguir sua bolsa com até 80% de desconto. Conteúdo atualizado pela equipe Bolsa Click.',
+  description: 'Artigos sobre bolsas de estudo, ENEM, vestibular, carreira, faculdades e dicas para conseguir sua bolsa com até 78% de desconto. Conteúdo atualizado pela equipe Bolsa Click.',
   keywords: [
     'blog bolsa de estudo',
     'dicas enem',

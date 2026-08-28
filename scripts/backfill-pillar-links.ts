@@ -20,13 +20,13 @@ const LIMIT = Number(process.argv.find((a) => a.startsWith('LIMIT='))?.split('='
 // Frases-ponte (educação/faculdade → bolsa) com âncora variada. Rotacionadas por
 // índice pra dar variedade natural de anchor text.
 const CTA_VARIANTS: string[] = [
-  'Antes de se matricular, vale comparar as <a href="/bolsas-de-estudo">bolsas de estudo disponíveis</a> — os descontos chegam a 80%.',
+  'Antes de se matricular, vale comparar as <a href="/bolsas-de-estudo">bolsas de estudo disponíveis</a> — os descontos chegam a 78%.',
   'E na hora de custear a faculdade, veja o <a href="/bolsas-de-estudo">guia de bolsas de estudo</a> pra encontrar a melhor oferta.',
-  'Depois de decidir o caminho, confira as <a href="/bolsas-de-estudo">bolsas de estudo de até 80%</a> em faculdades parceiras.',
+  'Depois de decidir o caminho, confira as <a href="/bolsas-de-estudo">bolsas de estudo de até 78%</a> em faculdades parceiras.',
   'Pra viabilizar a graduação, dá pra <a href="/bolsas-de-estudo">comparar bolsas de estudo</a> sem nota de corte e sem ENEM.',
   'Quando decidir onde estudar, as <a href="/bolsas-de-estudo">bolsas de estudo no Bolsa Click</a> reduzem bastante a mensalidade.',
   'Vale também olhar as <a href="/bolsas-de-estudo">ofertas de bolsa de estudo</a> disponíveis antes de fechar a matrícula.',
-  'E pra pagar menos na faculdade, veja como funcionam as <a href="/bolsas-de-estudo">bolsas de estudo</a> de até 80%.',
+  'E pra pagar menos na faculdade, veja como funcionam as <a href="/bolsas-de-estudo">bolsas de estudo</a> de até 78%.',
   'Se o próximo passo é a faculdade, compare as <a href="/bolsas-de-estudo">bolsas de estudo</a> em mais de 280 cidades.',
 ]
 

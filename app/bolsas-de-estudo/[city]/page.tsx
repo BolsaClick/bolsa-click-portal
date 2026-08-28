@@ -113,7 +113,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const brandSuffixLen = ' | Bolsa Click'.length
   const titleBase = `Bolsas de Estudo em ${cityData.name}`
   const titleSuffix =
-    [`/${cityData.state} — até 80% de desconto`, ' — até 80% de desconto', ' — até 80%', ''].find(
+    [`/${cityData.state} — até 78% de desconto`, ' — até 78% de desconto', ' — até 78%', ''].find(
       (s) => titleBase.length + s.length + brandSuffixLen <= 60
     ) ?? ''
   const title = `${titleBase}${titleSuffix}`
@@ -124,8 +124,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const minOfferPrice = offerPrices.length > 0 ? Math.min(...offerPrices) : 0
   const priceText = minOfferPrice > 0 ? ` a partir de R$${minOfferPrice.toFixed(0)}/mês` : ''
   const description = hasOffers
-    ? `${offers.length} cursos com bolsa em ${cityData.name}/${cityData.state}${priceText}. Até 80% de desconto em faculdades reconhecidas pelo MEC. Inscrição grátis.`
-    : `Bolsas de estudo em ${cityData.name}/${cityData.state} com até 80% de desconto. Faculdades parceiras reconhecidas pelo MEC. Inscrição grátis.`
+    ? `${offers.length} cursos com bolsa em ${cityData.name}/${cityData.state}${priceText}. Até 78% de desconto em faculdades reconhecidas pelo MEC. Inscrição grátis.`
+    : `Bolsas de estudo em ${cityData.name}/${cityData.state} com até 78% de desconto. Faculdades parceiras reconhecidas pelo MEC. Inscrição grátis.`
 
   return {
     title,
@@ -258,7 +258,7 @@ export default async function CityHubPage({ params }: Props) {
   const faqItems = [
     {
       question: `Quanto custa bolsa de estudo em ${cityData.name}?`,
-      answer: `Em ${cityData.name}/${cityData.state}, as bolsas pelo Bolsa Click podem chegar a até 80% de desconto na mensalidade. Os valores variam conforme curso e faculdade — compare as ofertas acima.`,
+      answer: `Em ${cityData.name}/${cityData.state}, as bolsas pelo Bolsa Click podem chegar a até 78% de desconto na mensalidade. Os valores variam conforme curso e faculdade — compare as ofertas acima.`,
     },
     {
       question: `Quantas faculdades oferecem bolsas em ${cityData.name}?`,
@@ -269,7 +269,7 @@ export default async function CityHubPage({ params }: Props) {
     {
       question: `Quais cursos têm bolsa em ${cityData.name}?`,
       answer: courses.length > 0
-        ? `Cursos como ${courses.slice(0, 6).map(c => c.name).join(', ')} estão entre os mais procurados em ${cityData.name}, todos com bolsa de até 80%.`
+        ? `Cursos como ${courses.slice(0, 6).map(c => c.name).join(', ')} estão entre os mais procurados em ${cityData.name}, todos com bolsa de até 78%.`
         : `Oferecemos bolsas para mais de 100 cursos de graduação e pós em todo o Brasil. Cadastre-se gratuitamente para ver as opções em ${cityData.name}.`,
     },
     {
@@ -302,7 +302,7 @@ export default async function CityHubPage({ params }: Props) {
           </h1>
           <p className="text-lg text-ink-700 max-w-3xl">
             {offers.length > 0
-              ? `${offers.length} ofertas ativas em ${cityInstitutions.length || 'várias'} faculdades parceiras na cidade. Bolsas de até 80% em cursos de graduação. Compare e se inscreva grátis.`
+              ? `${offers.length} ofertas ativas em ${cityInstitutions.length || 'várias'} faculdades parceiras na cidade. Bolsas de até 78% em cursos de graduação. Compare e se inscreva grátis.`
               : `Estamos atualizando as ofertas para ${cityData.name}. Enquanto isso, cadastre-se e seja avisado assim que novas bolsas forem liberadas na cidade.`}
           </p>
         </div>
@@ -352,7 +352,7 @@ export default async function CityHubPage({ params }: Props) {
                   </span>
                 ))}
                 . Veja a lista completa abaixo, compare os valores e finalize a inscrição
-                gratuitamente — a bolsa vale durante todo o curso.
+                gratuitamente. Cadastro grátis, sem taxa de adesão.
               </p>
             )}
           </div>
@@ -419,7 +419,7 @@ export default async function CityHubPage({ params }: Props) {
                   >
                     <span className="block font-display text-lg text-ink-900">{inst.fullName}</span>
                     <span className="block font-mono text-[11px] text-ink-500 mt-1">
-                      {inst.mecRating ? `Nota MEC ${inst.mecRating}` : 'Bolsas de até 80%'}
+                      {inst.mecRating ? `Nota MEC ${inst.mecRating}` : 'Bolsas de até 78%'}
                     </span>
                   </Link>
                 </li>

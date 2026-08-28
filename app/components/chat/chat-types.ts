@@ -127,13 +127,13 @@ export const CHAT_FAQ: ChatFaqEntry[] = [
   {
     question: 'Como funciona a bolsa?',
     answer:
-      'Você busca o curso, escolhe a oferta com desconto — as bolsas chegam a 80% — e se inscreve 100% online, sem fila e sem sorteio. O desconto vale até o fim do curso. 😉',
+      'Você busca o curso, escolhe a oferta com desconto — as bolsas chegam a 78% — e se inscreve 100% online, sem fila e sem sorteio. O desconto vale até o fim do curso. 😉',
     cta: { label: 'Buscar minha bolsa', href: '/descubra-sua-bolsa' },
   },
   {
     question: 'Quais faculdades são parceiras?',
     answer:
-      'Trabalhamos com as maiores redes de ensino do Brasil — Anhanguera, Estácio, Unopar, Pitágoras e Unime, entre outras — todas reconhecidas pelo MEC, com polos em mais de 280 cidades.',
+      'Trabalhamos com as maiores redes de ensino do Brasil — Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden, entre outras — todas reconhecidas pelo MEC, com polos em mais de 280 cidades.',
     cta: { label: 'Ver faculdades parceiras', href: '/faculdades' },
   },
   {

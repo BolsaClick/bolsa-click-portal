@@ -30,7 +30,7 @@ const defaults: Record<SiteKey, Omit<SeoSiteConfig, 'indexingEnabled'>> = {
     name: 'Bolsa Click',
     shortTitle: 'Bolsa Click',
     alternateNames: ['BolsaClick', 'Bolsa Click Brasil', 'bolsaclick.com.br'],
-    title: 'Bolsa Click | Bolsas de Estudo com até 80% de Desconto',
+    title: 'Bolsa Click | Bolsas de Estudo com até 78% de Desconto',
     description: 'Bolsas de estudo para graduação, pós-graduação, cursos técnicos e EAD. Compare opções e faça sua inscrição grátis.',
     siteUrl: 'https://www.bolsaclick.com.br',
     host: 'www.bolsaclick.com.br',

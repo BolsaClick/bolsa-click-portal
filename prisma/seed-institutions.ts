@@ -8,7 +8,7 @@ const institutions = [
     name: 'Anhanguera',
     shortName: 'ANHANGUERA',
     fullName: 'Universidade Anhanguera',
-    description: 'A Anhanguera é uma das maiores instituições de ensino superior do Brasil, pertencente ao grupo Cogna Educação. Com mais de 70 polos de ensino presencial e EAD espalhados pelo país, oferece cursos de graduação, pós-graduação e extensão com mensalidades acessíveis e bolsas de estudo de até 80%.',
+    description: 'A Anhanguera é uma das maiores instituições de ensino superior do Brasil, pertencente ao grupo Cogna Educação. Com mais de 70 polos de ensino presencial e EAD espalhados pelo país, oferece cursos de graduação, pós-graduação e extensão com mensalidades acessíveis e bolsas de estudo de até 78%.',
     longDescription: `A Anhanguera foi fundada em 1994 em Leme, interior de São Paulo, e desde então se consolidou como uma das maiores e mais reconhecidas instituições de ensino superior do Brasil. Atualmente faz parte do grupo Cogna Educação (antiga Kroton), o maior grupo educacional privado do país.
 
 Com mais de 70 unidades presenciais e centenas de polos de educação a distância (EAD), a Anhanguera está presente em todas as regiões do Brasil, oferecendo acesso ao ensino superior para milhões de estudantes. A instituição conta com mais de 500 mil alunos matriculados em seus diversos programas acadêmicos.
@@ -17,7 +17,7 @@ A Anhanguera oferece cursos de graduação (bacharelado, licenciatura e tecnólo
 
 A instituição é reconhecida pelo MEC com nota institucional 3, o que demonstra sua qualidade de ensino. Além disso, a Anhanguera investe em metodologias de ensino inovadoras, como aulas interativas, laboratórios virtuais e parcerias com empresas para estágios e empregabilidade.
 
-Entre os principais diferenciais da Anhanguera estão: mensalidades acessíveis, bolsas de estudo de até 80% de desconto, ampla rede de polos presenciais e EAD, canal de empregabilidade exclusivo para alunos, e diploma reconhecido pelo MEC em todo o território nacional.`,
+Entre os principais diferenciais da Anhanguera estão: mensalidades acessíveis, bolsas de estudo de até 78% de desconto, ampla rede de polos presenciais e EAD, canal de empregabilidade exclusivo para alunos, e diploma reconhecido pelo MEC em todo o território nacional.`,
     founded: 1994,
     type: 'PRIVADA' as const,
     campusCount: 70,
@@ -32,7 +32,7 @@ Entre os principais diferenciais da Anhanguera estão: mensalidades acessíveis,
     highlights: [
       'Pertence ao grupo Cogna, maior grupo educacional privado do Brasil',
       'Mais de 70 polos presenciais em todo o país',
-      'Bolsas de estudo de até 80% de desconto',
+      'Bolsas de estudo de até 78% de desconto',
       'Canal de empregabilidade exclusivo para alunos',
       'Metodologias de ensino inovadoras com laboratórios virtuais',
       'Diploma reconhecido pelo MEC em todo o Brasil',
@@ -46,8 +46,8 @@ Entre os principais diferenciais da Anhanguera estão: mensalidades acessíveis,
       'anhanguera graduação', 'anhanguera pós-graduação',
       'anhanguera mensalidade', 'anhanguera desconto',
     ],
-    metaTitle: 'Faculdade Anhanguera - Bolsas de Estudo com até 80% de Desconto | Bolsa Click',
-    metaDescription: 'Encontre bolsas de estudo na faculdade Anhanguera com até 80% de desconto. Cursos de graduação, pós-graduação e EAD. Mais de 70 polos em todo o Brasil. Inscreva-se grátis!',
+    metaTitle: 'Faculdade Anhanguera - Bolsas de Estudo com até 78% de Desconto | Bolsa Click',
+    metaDescription: 'Encontre bolsas de estudo na faculdade Anhanguera com até 78% de desconto. Cursos de graduação, pós-graduação e EAD. Mais de 70 polos em todo o Brasil. Inscreva-se grátis!',
     isActive: true,
     order: 1,
   },
@@ -80,7 +80,7 @@ Os principais diferenciais da Unopar são: liderança em EAD no Brasil, 750+ pol
     highlights: [
       'Maior rede de EAD do Brasil com 750+ polos presenciais',
       'Pioneira em educação a distância no país',
-      'Mensalidades acessíveis com bolsas de até 80%',
+      'Mensalidades acessíveis com bolsas de até 78%',
       'Aulas ao vivo via satélite com interação em tempo real',
       'Tutoria personalizada e material didático digital incluso',
       'Flexibilidade de horários ideal para quem trabalha',
@@ -113,7 +113,7 @@ O portfólio acadêmico da Pitágoras cobre as principais áreas do conhecimento
 
 Reconhecida pelo MEC, a Pitágoras adota uma metodologia que combina aulas presenciais, atividades online e laboratórios práticos, com material didático digital incluso e tutoria de apoio nos polos EAD. A instituição também investe em programas de estágio e empregabilidade através de parcerias com empresas em todo o país.
 
-Entre os diferenciais da Faculdade Pitágoras estão: tradição de mais de 50 anos em educação, ampla rede de unidades em Minas Gerais e no Nordeste, polos EAD em centenas de cidades, mensalidades acessíveis com bolsas de estudo de até 80% de desconto, e diploma reconhecido pelo MEC em todo o território nacional.`,
+Entre os diferenciais da Faculdade Pitágoras estão: tradição de mais de 50 anos em educação, ampla rede de unidades em Minas Gerais e no Nordeste, polos EAD em centenas de cidades, mensalidades acessíveis com bolsas de estudo de até 78% de desconto, e diploma reconhecido pelo MEC em todo o território nacional.`,
     founded: 1966,
     type: 'PRIVADA' as const,
     campusCount: null,
@@ -130,7 +130,7 @@ Entre os diferenciais da Faculdade Pitágoras estão: tradição de mais de 50 a
       'Pertence ao grupo Cogna, maior grupo educacional privado do Brasil',
       'Forte presença em Minas Gerais e no Nordeste',
       'Polos EAD em centenas de cidades brasileiras',
-      'Bolsas de estudo de até 80% de desconto',
+      'Bolsas de estudo de até 78% de desconto',
       'Diploma reconhecido pelo MEC em todo o Brasil',
     ],
     logoUrl: '/assets/logo-pitagoras.svg',
@@ -142,8 +142,8 @@ Entre os diferenciais da Faculdade Pitágoras estão: tradição de mais de 50 a
       'pitagoras graduação', 'pitagoras pós-graduação',
       'pitagoras mensalidade', 'pitagoras minas gerais',
     ],
-    metaTitle: 'Faculdade Pitágoras - Bolsas de Estudo com até 80% de Desconto | Bolsa Click',
-    metaDescription: 'Encontre bolsas de estudo na Faculdade Pitágoras com até 80% de desconto. Tradição de mais de 50 anos, polos em MG e no Nordeste. EAD e presencial. Inscreva-se grátis!',
+    metaTitle: 'Faculdade Pitágoras - Bolsas de Estudo com até 78% de Desconto | Bolsa Click',
+    metaDescription: 'Encontre bolsas de estudo na Faculdade Pitágoras com até 78% de desconto. Tradição de mais de 50 anos, polos em MG e no Nordeste. EAD e presencial. Inscreva-se grátis!',
     isActive: true,
     order: 3,
   },
@@ -238,10 +238,53 @@ Os principais diferenciais da Estácio incluem: mais de 50 anos de tradição em
       'estacio graduação', 'estacio pós-graduação',
       'estacio mensalidade', 'estacio rio de janeiro',
     ],
-    metaTitle: 'Faculdade Estácio - Bolsas de Estudo com até 80% de Desconto | Bolsa Click',
+    metaTitle: 'Faculdade Estácio - Bolsas de Estudo com até 78% de Desconto | Bolsa Click',
     metaDescription: 'Encontre bolsas de estudo na Faculdade Estácio com descontos exclusivos. Nota 4 no MEC, mais de 50 anos de tradição. 100+ campus pelo Brasil. Inscreva-se grátis!',
     isActive: true,
     order: 6,
+  },
+  {
+    slug: 'wyden',
+    name: 'Wyden',
+    shortName: 'WYDEN',
+    fullName: 'Wyden',
+    description:
+      'A Wyden é a marca de centros universitários do grupo YDUQS, o mesmo grupo da Estácio. No Bolsa Click você compara bolsas de graduação EAD e presencial da rede, com diploma reconhecido pelo MEC. Cadastro grátis, sem taxa de adesão.',
+    longDescription: `A Wyden é a marca de centros universitários do grupo YDUQS, um dos maiores grupos de educação superior do Brasil (o mesmo grupo da Estácio). No catálogo do Bolsa Click a rede aparece com ofertas de graduação em EAD e presencial.
+
+Os valores, o percentual de bolsa e a nota MEC de cada curso variam por unidade e modalidade. Confira o De/Por de cada oferta no catálogo e o reconhecimento do curso no e-MEC antes de matricular.
+
+O cadastro no Bolsa Click é grátis, sem taxa de adesão. A matrícula, as regras e eventuais taxas seguem o contrato da instituição.`,
+    founded: null,
+    type: 'PRIVADA' as const,
+    campusCount: null,
+    studentCount: null,
+    coursesOffered: null,
+    headquartersCity: null,
+    headquartersState: null,
+    mecRating: null,
+    emecLink: 'https://emec.mec.gov.br/',
+    modalities: ['EAD', 'PRESENCIAL'],
+    academicLevels: ['GRADUACAO', 'POS_GRADUACAO'],
+    highlights: [
+      'Marca de centros universitários do grupo YDUQS, o mesmo da Estácio',
+      'Ofertas de graduação EAD e presencial no catálogo do Bolsa Click',
+      'Cursos reconhecidos pelo MEC — confira o curso específico no e-MEC',
+      'Bolsas de até 78% conforme a oferta do catálogo',
+      'Cadastro grátis, sem taxa de adesão',
+    ],
+    logoUrl: '/assets/wyden.svg',
+    imageUrl: '',
+    imageAlt: 'Logo da Wyden',
+    keywords: [
+      'wyden', 'faculdade wyden', 'wyden ead', 'wyden bolsa',
+      'wyden cursos', 'wyden yduqs', 'centro universitário wyden',
+    ],
+    metaTitle: 'Faculdade Wyden - Bolsas de Estudo com até 78% de Desconto | Bolsa Click',
+    metaDescription:
+      'Bolsas de estudo na Wyden (grupo YDUQS) com até 78% de desconto. Graduação EAD e presencial reconhecida pelo MEC. Cadastro grátis, sem taxa de adesão.',
+    isActive: true,
+    order: 4,
   },
   {
     slug: 'ibmec',

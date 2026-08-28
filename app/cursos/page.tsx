@@ -3,8 +3,8 @@ import { prisma } from '@/app/lib/prisma'
 import CursosPageClient from './CursosPageClient'
 
 export const metadata: Metadata = {
-  title: 'Cursos com bolsa de até 80% de desconto',
-  description: 'Bolsas de estudo de até 80% nos cursos mais procurados de graduação, tecnólogo e licenciatura, no EAD ou presencial. Inscrição grátis.',
+  title: 'Cursos com bolsa de até 78% de desconto',
+  description: 'Bolsas de estudo de até 78% nos cursos mais procurados de graduação, tecnólogo e licenciatura, no EAD ou presencial. Inscrição grátis.',
   keywords: [
     'cursos com bolsa',
     'cursos graduação',
@@ -23,8 +23,8 @@ export const metadata: Metadata = {
     canonical: 'https://www.bolsaclick.com.br/cursos',
   },
   openGraph: {
-    title: 'Cursos com Bolsa de Estudo de até 80% | Bolsa Click',
-    description: 'Descubra os cursos mais procurados com bolsas de estudo de até 80% de desconto. Graduação, Tecnólogo e Licenciatura.',
+    title: 'Cursos com Bolsa de Estudo de até 78% | Bolsa Click',
+    description: 'Descubra os cursos mais procurados com bolsas de estudo de até 78% de desconto. Graduação, Tecnólogo e Licenciatura.',
     url: 'https://www.bolsaclick.com.br/cursos',
     siteName: 'Bolsa Click',
     locale: 'pt_BR',
@@ -41,8 +41,8 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     site: '@bolsaclick',
-    title: 'Cursos com Bolsa de Estudo de até 80% | Bolsa Click',
-    description: 'Descubra os cursos mais procurados com bolsas de estudo de até 80% de desconto.',
+    title: 'Cursos com Bolsa de Estudo de até 78% | Bolsa Click',
+    description: 'Descubra os cursos mais procurados com bolsas de estudo de até 78% de desconto.',
     images: ['https://www.bolsaclick.com.br/assets/og-image-bolsaclick.png'],
   },
 }
@@ -84,7 +84,7 @@ const collectionPageSchema = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
   name: 'Cursos com Bolsa de Estudo',
-  description: 'Descubra os cursos mais procurados com bolsas de estudo de até 80% de desconto em diversas áreas do conhecimento.',
+  description: 'Descubra os cursos mais procurados com bolsas de estudo de até 78% de desconto em diversas áreas do conhecimento.',
   url: `${SITE_URL}/cursos`,
   provider: {
     '@type': 'Organization',

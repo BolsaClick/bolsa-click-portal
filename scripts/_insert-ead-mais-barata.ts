@@ -33,7 +33,7 @@ const metaTitle = 'Faculdade EAD mais barata em 2026: mensalidade baixa + bolsa'
 const metaDescription =
   'Faculdade EAD mais barata: mensalidade com bolsa a partir de R$ 108,39, cursos mais em conta e como conferir o reconhecimento no MEC antes de matricular.'
 const excerpt =
-  'A faculdade EAD mais barata combina mensalidade já menor que a presencial com bolsa própria de até 85%. Veja os cursos mais em conta, faixas de preço reais e como conferir o MEC antes de matricular.'
+  'A faculdade EAD mais barata combina mensalidade já menor que a presencial com bolsa própria de até 78%. Veja os cursos mais em conta, faixas de preço reais e como conferir o MEC antes de matricular.'
 const keywords = [
   'faculdade ead mais barata',
   'faculdade a distancia barata',
@@ -62,7 +62,7 @@ const content = `
 <h2>Como a bolsa de estudo derruba a mensalidade</h2>
 <p>Mesmo a mensalidade EAD, que já é baixa, pode cair ainda mais com bolsa. Existem dois caminhos principais, e vale conhecer os dois no <a href="/bolsas-de-estudo">guia completo de bolsas de estudo</a> antes de decidir:</p>
 <ul>
-<li><strong>Bolsa própria da faculdade parceira:</strong> desconto aplicado direto na mensalidade, que pode chegar a 85% em cursos EAD, sem precisar de nota de corte do ENEM.</li>
+<li><strong>Bolsa própria da faculdade parceira:</strong> desconto aplicado direto na mensalidade, que pode chegar a 78% em cursos EAD, sem precisar de nota de corte do ENEM.</li>
 <li><strong>ProUni:</strong> programa federal que oferece bolsa de 50% ou 100% para quem fez o ENEM com pelo menos 450 pontos, estudou em escola pública (ou bolsista em particular) e atende ao critério de renda.</li>
 </ul>
 <p>Na prática, é a bolsa própria que costuma transformar uma mensalidade cheia de algo entre <strong>R$ 262,64 e R$ 284,62</strong> em um valor a partir de <strong>R$ 108,39 por mês</strong>. O desconto vale enquanto você mantém a matrícula ativa e as condições do contrato.</p>
@@ -101,7 +101,7 @@ const content = `
 <h2>EAD x presencial: quanto você economiza</h2>
 <p>A diferença de custo entre as duas modalidades costuma ser grande, principalmente quando entra a bolsa. O EAD parte de uma mensalidade base menor e ainda permite descontos maiores; o presencial tende a ter desconto mais modesto sobre um valor cheio mais alto.</p>
 <ul>
-<li><strong>EAD:</strong> mensalidade base menor + bolsa própria de até 85%, chegando a valores a partir de R$ 108,39 por mês.</li>
+<li><strong>EAD:</strong> mensalidade base menor + bolsa própria de até 78%, chegando a valores a partir de R$ 108,39 por mês.</li>
 <li><strong>Presencial:</strong> mensalidade cheia mais alta e bolsa própria normalmente na faixa de 30% a 70%.</li>
 </ul>
 <p>O presencial ainda faz sentido em cursos muito práticos — como os da área da saúde — em que o contato no laboratório é diário. Para a maioria das graduações de gestão, tecnologia e licenciatura, o EAD entrega o mesmo diploma reconhecido pagando bem menos.</p>

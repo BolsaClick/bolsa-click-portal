@@ -23,7 +23,7 @@ export const runtime = 'nodejs' // lê o logo do disco
 export const contentType = 'image/png'
 export const size = { width: 1200, height: 630 }
 export const alt =
-  'Bolsas de estudo de até 80% em faculdades reconhecidas pelo MEC — Bolsa Click'
+  'Bolsas de estudo de até 78% em faculdades reconhecidas pelo MEC — Bolsa Click'
 
 const PAPER = '#F4EFE5'
 const INK = '#0B1F3C'
@@ -75,7 +75,7 @@ export default async function OGImage() {
               letterSpacing: '-0.02em',
             }}
           >
-            de até 80%
+            de até 78%
           </div>
         </div>
 

@@ -363,7 +363,7 @@ return {
     `Acesse o link abaixo para ver os valores com desconto e finalizar sua matrícula:\n\n` +
     `👉 ${checkoutUrl}\n\n` +
     `✅ Inscrição 100% gratuita\n` +
-    `✅ Bolsas de até 80% de desconto\n` +
+    `✅ Bolsas de até 78% de desconto\n` +
     `✅ Processo 100% online\n\n` +
     `Se precisar de ajuda durante o processo, é só me chamar! 😊`
 };
@@ -438,8 +438,8 @@ Você é a assistente virtual do Bolsa Click, plataforma de bolsas de estudo que
 - Use emojis com moderação (1-2 por mensagem)
 
 ## Sobre o Bolsa Click
-- Plataforma que conecta estudantes a bolsas de estudo de até 80% de desconto
-- Parceria principal com Anhanguera, Unopar e Unime (Grupo Cogna)
+- Plataforma que conecta estudantes a bolsas de estudo de até 78% de desconto
+- Parceria com Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden
 - Oferece cursos de Graduação (Bacharelado, Licenciatura, Tecnólogo) e Pós-Graduação
 - Modalidades: EAD, Presencial e Semipresencial
 - Inscrição 100% gratuita pelo site
@@ -626,8 +626,8 @@ model WhatsappMemory {
 ```
 👤 Usuário: Oi, boa tarde!
 🤖 Ana: Boa tarde! 😊 Sou a Ana, assistente virtual do Bolsa Click.
-         Aqui você encontra bolsas de até 80% em faculdades como
-         Anhanguera, Unopar e Unime.
+         Aqui você encontra bolsas de até 78% em faculdades como
+         Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden.
          Como posso te ajudar hoje?
 
 👤 Usuário: Quero saber sobre o curso de Administração EAD
@@ -763,7 +763,7 @@ Salve o conteúdo abaixo como arquivo `.json` e importe no n8n via **Menu → Im
         "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=SUBSTITUIR_GEMINI_API_KEY",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [{ \"text\": \"Você é a Ana, assistente virtual do Bolsa Click. Tom amigável e profissional. Use formatação WhatsApp (*negrito*, _itálico_). Mensagens curtas (máx 3 parágrafos). Sempre termine com pergunta ou CTA.\\n\\nSobre o Bolsa Click: plataforma de bolsas de estudo com até 80% OFF. Parceiras: Anhanguera, Unopar, Unime. Cursos de Graduação e Pós. Modalidades: EAD, Presencial, Semipresencial. Site: bolsaclick.com.br\\n\\nEstágio atual: {{ $json.stage }}\\nNome do usuário: {{ $json.userName }}\\nDados coletados: {{ JSON.stringify($json.leadData) }}\\n\\nHistórico:\\n{{ $json.history }}\\n\\nMensagem do usuário: {{ $json.text }}\\n\\nResponda em JSON com: intent (BUSCAR_CURSO, INFO_ACADEMICA, CAPTURAR_LEAD, CHECKOUT, TRANSFERIR_HUMANO, CONVERSA_GERAL), response (texto para enviar), courseQuery (se buscar curso), leadData (dados coletados), stage (greeting, browsing, interested, collecting_data, checkout, support, handoff)\" }]\n    }\n  ],\n  \"generationConfig\": {\n    \"temperature\": 0.7,\n    \"maxOutputTokens\": 1024,\n    \"responseMimeType\": \"application/json\"\n  }\n}",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [{ \"text\": \"Você é a Ana, assistente virtual do Bolsa Click. Tom amigável e profissional. Use formatação WhatsApp (*negrito*, _itálico_). Mensagens curtas (máx 3 parágrafos). Sempre termine com pergunta ou CTA.\\n\\nSobre o Bolsa Click: plataforma de bolsas de estudo com até 78% OFF. Parceiras: Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. Cursos de Graduação e Pós. Modalidades: EAD, Presencial, Semipresencial. Site: bolsaclick.com.br\\n\\nEstágio atual: {{ $json.stage }}\\nNome do usuário: {{ $json.userName }}\\nDados coletados: {{ JSON.stringify($json.leadData) }}\\n\\nHistórico:\\n{{ $json.history }}\\n\\nMensagem do usuário: {{ $json.text }}\\n\\nResponda em JSON com: intent (BUSCAR_CURSO, INFO_ACADEMICA, CAPTURAR_LEAD, CHECKOUT, TRANSFERIR_HUMANO, CONVERSA_GERAL), response (texto para enviar), courseQuery (se buscar curso), leadData (dados coletados), stage (greeting, browsing, interested, collecting_data, checkout, support, handoff)\" }]\n    }\n  ],\n  \"generationConfig\": {\n    \"temperature\": 0.7,\n    \"maxOutputTokens\": 1024,\n    \"responseMimeType\": \"application/json\"\n  }\n}",
         "options": {
           "timeout": 15000
         }

@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { getShowCourses } from '@/app/lib/api/get-courses'
 import { getLocalities } from '@/app/lib/api/get-localites'
 import { ACADEMIC_LEVEL, isProfissionalizanteLevel } from '@/app/lib/academic-level'
+import { brazilCityStateOrNull } from '@/app/lib/geo/brazil-location'
 
 interface FiltersPanelProps {
   city: string
@@ -68,7 +69,12 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
     }
     
     if (city && state) {
-      const newCityValue = `${city} - ${state}`
+      const allowed = brazilCityStateOrNull(city, state)
+      if (!allowed) {
+        if (searchCity) setSearchCity('')
+        return
+      }
+      const newCityValue = `${allowed.city} - ${allowed.state}`
       if (searchCity !== newCityValue) {
         setSearchCity(newCityValue)
         cityInitializedRef.current = true
@@ -249,10 +255,12 @@ const FiltersPanel: React.FC<FiltersPanelProps> = React.memo(({
 
   // Handler para seleção de cidade
   const handleCitySelect = useCallback((option: { city: string; state: string }) => {
+    const allowed = brazilCityStateOrNull(option.city, option.state)
+    if (!allowed) return
     isUserTypingCityRef.current = false // Resetar flag ao selecionar
-    setSearchCity(`${option.city} - ${option.state}`)
+    setSearchCity(`${allowed.city} - ${allowed.state}`)
     setIsCityDropdownOpen(false)
-    onCitySelect(option.city, option.state)
+    onCitySelect(allowed.city, allowed.state)
     
     // Manter foco no input
     setTimeout(() => {

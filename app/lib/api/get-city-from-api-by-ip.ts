@@ -1,4 +1,4 @@
-import { isBrazilianUf } from '@/app/lib/geo/brazil-location'
+import { brazilCityStateOrNull } from '@/app/lib/geo/brazil-location'
 import { getLocationByIP } from './get-location-by-ip'
 import { getLocalities } from './get-localites'
 
@@ -14,9 +14,10 @@ export interface CityFromAPI {
 export async function getCityFromOurAPIByIP(): Promise<CityFromAPI | null> {
   try {
     const location = await getLocationByIP()
-    if (!location?.city?.trim() || !isBrazilianUf(location.region)) return null
+    const fromIp = brazilCityStateOrNull(location?.city, location?.region)
+    if (!fromIp) return null
 
-    const response = await getLocalities(location.city.trim())
+    const response = await getLocalities(fromIp.city)
     const list = response?.data
     if (!Array.isArray(list) || list.length === 0) {
       // Unknown to our Brazilian localities catalog — do not write the raw IP city
@@ -24,27 +25,21 @@ export async function getCityFromOurAPIByIP(): Promise<CityFromAPI | null> {
       return null
     }
 
-    const regionUpper = (location.region || '').toUpperCase().trim()
+    const regionUpper = fromIp.state
     const matchByState = list.find(
       (item: { city?: string; state?: string }) =>
         (item.state || '').toUpperCase().trim() === regionUpper
     )
-    if (matchByState?.city && matchByState.state && isBrazilianUf(matchByState.state)) {
-      return { city: matchByState.city, state: matchByState.state }
-    }
+    const matched = brazilCityStateOrNull(matchByState?.city, matchByState?.state)
+    if (matched) return matched
 
     const first = list[0]
-    if (first?.city && first?.state && isBrazilianUf(first.state)) {
-      return { city: first.city, state: first.state }
-    }
-    return null
+    return brazilCityStateOrNull(first?.city, first?.state)
   } catch (error) {
     console.error('Erro ao obter cidade da API por IP:', error)
     try {
       const fallback = await getLocationByIP()
-      if (fallback?.city && isBrazilianUf(fallback.region)) {
-        return { city: fallback.city, state: fallback.region }
-      }
+      return brazilCityStateOrNull(fallback?.city, fallback?.region)
     } catch {
       // ignore
     }

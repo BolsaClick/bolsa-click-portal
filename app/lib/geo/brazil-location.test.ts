@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
+  brazilCityStateOrNull,
   brazilianLocationOrNull,
   convertStateToUf,
   isBrazilCountry,
   isBrazilianUf,
+  isForbiddenGeoCity,
 } from './brazil-location'
 
 describe('brazilianLocationOrNull', () => {
@@ -81,6 +83,38 @@ describe('brazilianLocationOrNull', () => {
       }),
       null,
     )
+  })
+
+  it('rejects Washington even when UF was mapped to DF', () => {
+    assert.equal(
+      brazilianLocationOrNull({
+        city: 'Washington',
+        region: 'DF',
+        countryCode: 'BR',
+      }),
+      null,
+    )
+  })
+})
+
+describe('brazilCityStateOrNull (form / URL write gate)', () => {
+  it('accepts Belo Horizonte / MG', () => {
+    assert.deepEqual(brazilCityStateOrNull('Belo Horizonte', 'MG'), {
+      city: 'Belo Horizonte',
+      state: 'MG',
+    })
+  })
+
+  it('rejects Washington / DC so Pedagogia+BH cannot pick it up', () => {
+    assert.equal(brazilCityStateOrNull('Washington', 'DC'), null)
+    assert.equal(brazilCityStateOrNull('Washington', 'DF'), null)
+    assert.equal(isForbiddenGeoCity('Washington - DC'), true)
+  })
+
+  it('rejects empty city or missing UF', () => {
+    assert.equal(brazilCityStateOrNull('', 'MG'), null)
+    assert.equal(brazilCityStateOrNull('Belo Horizonte', ''), null)
+    assert.equal(brazilCityStateOrNull('BH', null), null)
   })
 })
 

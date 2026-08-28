@@ -277,3 +277,20 @@ body {
     transform: none;
   }
 }
+
+/* Cookie banner on mobile is position:fixed and covers checkout step 02/03
+   CTAs. When the banner is visible, inscription pages get extra padding so
+   those buttons stay above the overlay. Desktop uses a corner card. */
+html.cookie-banner-visible [data-checkout-inscription] {
+  padding-bottom: 22rem;
+}
+@media (min-width: 768px) {
+  html.cookie-banner-visible [data-checkout-inscription] {
+    padding-bottom: 0;
+  }
+}
+
+.checkout-step-cta {
+  position: relative;
+  z-index: 1200;
+}

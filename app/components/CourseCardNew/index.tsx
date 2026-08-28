@@ -4,7 +4,7 @@ import { hasInstallmentPlan } from '@/app/components/v2/course-offer'
 import { useFavorites } from "@/app/lib/hooks/useFavorites"
 import { usePostHogTracking } from "@/app/lib/hooks/usePostHogTracking"
 import { useCourseSelection } from "@/app/lib/hooks/useCourseSelection"
-import { courseNeedsShiftSelection, resolveCourseModality } from "@/app/lib/checkout/course-destination"
+import { courseNeedsShiftSelection, resolveCourseModality, buildCourseCheckoutDestination } from "@/app/lib/checkout/course-destination"
 import { getAcademicLevelLabel } from "@/app/lib/academic-level"
 import { getPriceAnchor } from "@/app/lib/utils/price-anchor"
 import { brandMecKey } from "@/app/lib/utils/brand"
@@ -94,6 +94,9 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
       },
     })
   }
+
+  const destination = buildCourseCheckoutDestination(course, selectedShift)
+  const shiftBlocked = needsShiftSelection() && !selectedShift
 
   const capitalizeFirstLetter = (text: string) => {
     if (!text) return ''
@@ -497,22 +500,30 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
               </span>
             </div>
 
-            <button
-              onClick={handleClick}
-              disabled={needsShiftSelection() && !selectedShift}
+            <a
+              href={destination.href}
+              onClick={(e) => {
+                if (shiftBlocked) {
+                  e.preventDefault()
+                  return
+                }
+                e.preventDefault()
+                void handleClick()
+              }}
+              aria-disabled={shiftBlocked || undefined}
               title={
-                needsShiftSelection() && !selectedShift
+                shiftBlocked
                   ? "Selecione o turno"
                   : "Avançar para matrícula"
               }
               aria-label="Avançar para matrícula"
-              className={`w-full rounded-lg py-3 px-4 font-semibold transition-all duration-300 ${needsShiftSelection() && !selectedShift
-                  ? 'cursor-not-allowed bg-gray-300 text-white'
+              className={`block w-full rounded-lg py-3 px-4 font-semibold text-center transition-all duration-300 ${shiftBlocked
+                  ? 'cursor-not-allowed bg-gray-300 text-white pointer-events-none'
                   : 'bg-emerald-500 text-white hover:bg-emerald-600 hover:shadow-lg'
                 }`}
             >
-              {needsShiftSelection() && !selectedShift ? 'Selecione o turno' : 'Inscreva-se'}
-            </button>
+              {shiftBlocked ? 'Selecione o turno' : 'Inscreva-se'}
+            </a>
 
             {/* Trunfo universal: diferente de agregadores concorrentes, não
                 cobramos taxa de inscrição/pré-matrícula em nenhum trilho

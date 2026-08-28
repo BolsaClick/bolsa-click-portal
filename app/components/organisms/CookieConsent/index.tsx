@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
 import { useConsent } from '../../providers/ConsentProvider'
 import { CONSENT_OPEN_EVENT } from '@/app/lib/consent/storage'
+import { isInscriptionRoute } from '@/app/lib/consent/inscription-route'
 import { CookieBanner } from './CookieBanner'
 import { CookiePreferences } from './CookiePreferences'
 
@@ -14,11 +15,11 @@ export default function CookieConsent() {
     useConsent()
   const [prefsOpen, setPrefsOpen] = useState(false)
 
-  // Fixed banner (z-[1100], full-width on mobile) sits on top of the inscription
-  // form CTA. Hide it on checkout so the 3-step form is completable; accept /
-  // refuse / customize still work on every other route, and the preferences
-  // modal can still be opened via CONSENT_OPEN_EVENT.
-  const hideBannerOnRoute = pathname.startsWith('/checkout')
+  // Fixed banner (z-[1100], full-width on mobile) sits on top of the
+  // inscription form CTAs. Hide on every checkout/matricula rail — not only
+  // /checkout/estacio. Accept / refuse / customize still work elsewhere.
+  const hideBannerOnRoute = isInscriptionRoute(pathname)
+  const showBanner = hydrated && !hasDecision && !prefsOpen && !hideBannerOnRoute
 
   useEffect(() => {
     const open = () => setPrefsOpen(true)
@@ -26,9 +27,15 @@ export default function CookieConsent() {
     return () => window.removeEventListener(CONSENT_OPEN_EVENT, open)
   }, [])
 
-  if (!hydrated) return null
+  useEffect(() => {
+    const root = document.documentElement
+    root.classList.toggle('cookie-banner-visible', showBanner)
+    return () => {
+      root.classList.remove('cookie-banner-visible')
+    }
+  }, [showBanner])
 
-  const showBanner = !hasDecision && !prefsOpen && !hideBannerOnRoute
+  if (!hydrated) return null
 
   return (
     <>

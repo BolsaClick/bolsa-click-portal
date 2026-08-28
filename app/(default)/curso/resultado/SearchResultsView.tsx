@@ -15,6 +15,7 @@ import { normalizeAcademicLevel } from '@/app/lib/academic-level'
 import { titleCasePtBr } from '@/app/lib/utils/title-case'
 import { normalizeBrand } from '@/app/lib/utils/brand'
 import { normalizeCourseNameKey } from '@/app/lib/utils/course-name-key'
+import { brazilCityStateOrNull } from '@/app/lib/geo/brazil-location'
 import CourseCardNew from '@/app/components/CourseCardNew'
 import { Course } from '@/app/interface/course'
 import { useResultsFilter } from './ResultsFilterContext'
@@ -484,8 +485,11 @@ export default function SearchResultsView({
                       modalidade === 'PRESENCIAL' ? 'SEMIPRESENCIAL' : modalidade === 'SEMIPRESENCIAL' ? 'EAD' : 'PRESENCIAL'
                     const params = new URLSearchParams()
                     if (curso) params.set('c', curso)
-                    params.set('cidade', cidade)
-                    params.set('estado', estado)
+                    const allowed = brazilCityStateOrNull(cidade, estado)
+                    if (allowed) {
+                      params.set('cidade', allowed.city)
+                      params.set('estado', allowed.state)
+                    }
                     params.set('modalidade', other)
                     params.set('nivel', normalizedNivel)
                     router.push(`/curso/resultado?${params.toString()}`)

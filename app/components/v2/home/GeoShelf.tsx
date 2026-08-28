@@ -18,6 +18,7 @@
 import { useQuery } from '@tanstack/react-query'
 
 import { useGeoLocation } from '@/app/context/GeoLocationContext'
+import { brazilCityStateOrNull } from '@/app/lib/geo/brazil-location'
 
 import { titleCase } from '../course-offer'
 import CourseShelf, { CourseShelfSkeleton } from './CourseShelf'
@@ -30,9 +31,10 @@ export default function GeoShelf({ cardHref }: { cardHref?: string }) {
   const geo = useGeoLocation()
 
   // O contexto resolve com city (sucesso ou default de bot/erro) ou error.
-  const geoResolved = Boolean(geo.city || geo.error)
-  const userCity = geo.city?.trim() || null
-  const userState = (geo.state || geo.region || '').trim() || null
+  const allowed = brazilCityStateOrNull(geo.city, geo.state || geo.region)
+  const geoResolved = Boolean(allowed || geo.error)
+  const userCity = allowed?.city ?? null
+  const userState = allowed?.state ?? null
 
   const query = useQuery({
     queryKey: ['v2-geo-shelf', userCity, userState],

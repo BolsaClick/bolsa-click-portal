@@ -1,5 +1,6 @@
 'use client'
 import { useGeoLocation } from '../../../context/GeoLocationContext'
+import { brazilCityStateOrNull } from '@/app/lib/geo/brazil-location'
 
 const GeoLocation = () => {
   const { city, region, state, town, error } = useGeoLocation()
@@ -7,12 +8,13 @@ const GeoLocation = () => {
   // Usar city/region (novo) ou town/state (compatibilidade)
   const displayCity = city || town
   const displayState = region || state
+  const allowed = brazilCityStateOrNull(displayCity, displayState)
 
   return (
     <div>
-      {displayCity && displayState ? (
+      {allowed ? (
         <span>
-          {displayCity} - {displayState}
+          {allowed.city} - {allowed.state}
         </span>
       ) : error ? (
         <p>{error}</p>

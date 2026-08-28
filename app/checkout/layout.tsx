@@ -9,9 +9,10 @@ export const metadata: Metadata = {
 export default function CheckoutLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-    
       <SecureHeader/>
-      {children}
+      <div data-checkout-inscription className="max-md:pb-52">
+        {children}
+      </div>
       <SecureFooter/>
     </>
   )

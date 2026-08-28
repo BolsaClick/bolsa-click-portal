@@ -1,9 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { getShowcaseOffers } from '../lib/api/get-showcase-offers'
 import {
   ArrowRight,
   GraduationCap,
@@ -15,9 +14,12 @@ import {
 } from 'lucide-react'
 import { FeaturedCourseListItem } from './_data/types'
 import { courseTypeLabel } from '../lib/courseTypeLabel'
+import { DISCOUNT_CEILING_PCT } from '../lib/copy/claims'
+import type { ShowcaseOffer } from '../lib/api/get-showcase-offers'
 
 interface CursosPageClientProps {
   courses: FeaturedCourseListItem[]
+  featuredOffers: ShowcaseOffer[]
 }
 
 type TypeKey = 'TODOS' | 'BACHARELADO' | 'LICENCIATURA' | 'TECNOLOGO'
@@ -36,17 +38,7 @@ const PARTNERS = [
   { name: 'Unime', src: '/assets/logo-unime-p.png' },
 ]
 
-type Offer = {
-  course: string
-  institution: string
-  logo: string
-  modality: 'EAD' | 'PRESENCIAL' | 'SEMIPRESENCIAL'
-  city: string
-  uf: string
-  finalPrice: number
-  originalPrice: number
-  href: string
-}
+type Offer = ShowcaseOffer
 
 // Desconto DERIVADO dos preços, nunca hardcoded. floor: o % exibido
 // nunca é maior que o desconto real (transparência).
@@ -54,42 +46,6 @@ const discountPct = (o: Offer) =>
   o.originalPrice > o.finalPrice && o.finalPrice > 0
     ? Math.floor((1 - o.finalPrice / o.originalPrice) * 100)
     : 0
-
-const FEATURED_OFFERS: Offer[] = [
-  {
-    course: 'Pedagogia',
-    institution: 'Pitágoras',
-    logo: '/assets/logo-pitagoras.svg',
-    modality: 'EAD',
-    city: 'Belo Horizonte',
-    uf: 'MG',
-    finalPrice: 119,
-    originalPrice: 950,
-    href: '/curso/resultado?c=pedagogia&nivel=GRADUACAO&modalidade=EAD',
-  },
-  {
-    course: 'Administração',
-    institution: 'Unopar',
-    logo: '/assets/logo-unopar.svg',
-    modality: 'EAD',
-    city: 'Curitiba',
-    uf: 'PR',
-    finalPrice: 99.99,
-    originalPrice: 1290,
-    href: '/curso/resultado?c=administracao&nivel=GRADUACAO&modalidade=EAD',
-  },
-  {
-    course: 'Análise e Desenvolvimento de Sistemas',
-    institution: 'Anhanguera',
-    logo: '/assets/logo-anhanguera-bolsa-click.svg',
-    modality: 'EAD',
-    city: 'Recife',
-    uf: 'PE',
-    finalPrice: 109,
-    originalPrice: 1100,
-    href: '/curso/resultado?c=analise-e-desenvolvimento-de-sistemas&nivel=GRADUACAO&modalidade=EAD',
-  },
-]
 
 const formatPrice = (n: number) =>
   n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -107,28 +63,16 @@ const demandChip = (d: FeaturedCourseListItem['marketDemand']) => {
   return { label: 'Em ascensão', tone: 'bg-ink-100 text-ink-700' }
 }
 
-export default function CursosPageClient({ courses }: CursosPageClientProps) {
+export default function CursosPageClient({ courses, featuredOffers }: CursosPageClientProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedType, setSelectedType] = useState<TypeKey>('TODOS')
   const catalogRef = useRef<HTMLElement>(null)
 
-  // Vitrine "Ofertas em destaque": mescla Cogna + Estácio (Athena) dinamicamente.
-  // FEATURED_OFFERS é o fallback inicial (mantém algo renderizado no 1º paint / em falha).
-  const [featuredOffers, setFeaturedOffers] = useState<Offer[]>(FEATURED_OFFERS)
-
-  useEffect(() => {
-    let active = true
-    getShowcaseOffers(6)
-      .then((offers) => {
-        if (active && offers.length > 0) setFeaturedOffers(offers)
-      })
-      .catch(() => {
-        /* mantém o fallback */
-      })
-    return () => {
-      active = false
-    }
-  }, [])
+  // Só cards com De/Por reais e % ≤ teto 78%. Stubs 87/90/92 nunca entram.
+  const liveFeaturedOffers = featuredOffers.filter((o) => {
+    const pct = discountPct(o)
+    return pct > 0 && pct <= DISCOUNT_CEILING_PCT
+  })
 
   const counts = useMemo(
     () => ({
@@ -299,9 +243,23 @@ export default function CursosPageClient({ courses }: CursosPageClientProps) {
             </Link>
           </div>
 
-          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 items-stretch">
-            {featuredOffers.map((o) => (
-              <li key={`${o.course}-${o.institution}-${o.city}`} className="h-full">
+          {liveFeaturedOffers.length === 0 ? (
+            <div className="bg-white border border-hairline rounded-2xl p-10 text-center">
+              <p className="text-ink-500 text-[15px] mb-6">
+                Não conseguimos carregar as ofertas em destaque agora. Veja todas no catálogo.
+              </p>
+              <Link
+                href="/curso/resultado"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-bolsa-secondary text-white font-semibold rounded-full text-[14px] hover:bg-bolsa-secondary/90 transition-colors"
+              >
+                Ver todas as ofertas
+                <ArrowRight size={16} />
+              </Link>
+            </div>
+          ) : (
+            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 items-stretch">
+              {liveFeaturedOffers.map((o) => (
+                <li key={`${o.course}-${o.institution}-${o.city}-${o.uf}`} className="h-full">
                 <Link
                   href={o.href}
                   className="group flex flex-col h-full bg-white border border-hairline rounded-2xl p-5 md:p-6 hover:shadow-[0_20px_50px_-25px_rgba(11,31,60,0.25)] hover:border-ink-300 transition-all duration-300"
@@ -362,7 +320,8 @@ export default function CursosPageClient({ courses }: CursosPageClientProps) {
                 </Link>
               </li>
             ))}
-          </ul>
+            </ul>
+          )}
         </div>
       </section>
 

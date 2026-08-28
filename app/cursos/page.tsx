@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import { prisma } from '@/app/lib/prisma'
+import { getShowcaseOffers } from '@/app/lib/api/get-showcase-offers'
 import CursosPageClient from './CursosPageClient'
 
 export const metadata: Metadata = {
@@ -107,7 +108,7 @@ const collectionPageSchema = {
 }
 
 export default async function CursosPage() {
-  const courses = await getCourses()
+  const [courses, featuredOffers] = await Promise.all([getCourses(), getShowcaseOffers()])
 
   // ItemList habilita o rich result de carrossel de cursos no Google.
   // Estrutura "summary list": cada ListItem só com name + url, indicando
@@ -135,7 +136,7 @@ export default async function CursosPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchemas) }}
       />
-      <CursosPageClient courses={courses} />
+      <CursosPageClient courses={courses} featuredOffers={featuredOffers} />
     </>
   )
 }

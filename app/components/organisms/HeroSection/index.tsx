@@ -60,13 +60,13 @@ const Hero = async () => {
                   : 'font-display text-4xl md:text-5xl lg:text-6xl font-semibold text-white leading-[1.05] mb-4'
               }
             >
-              Bolsas de até <span className="text-bolsa-secondary">80%</span> nas{' '}
+              Bolsas de até <span className="text-bolsa-secondary">78%</span> nas{' '}
               <span className="text-bolsa-secondary">maiores redes de ensino</span> do Brasil
             </h1>
             {!hasBanners && (
               <p className="text-white/85 text-base md:text-lg max-w-2xl leading-relaxed mb-6">
                 Mensalidades a partir de R$99/mês em faculdades reconhecidas pelo MEC.
-                Sem ENEM, matrícula 100% online — compare grátis e inscreva-se em minutos.
+                Cadastro grátis, sem taxa de adesão. EAD ou presencial.
               </p>
             )}
             {/* Stats strip — densidade marketplace. Sempre visível, dá prova
@@ -86,7 +86,7 @@ const Hero = async () => {
               <span aria-hidden="true" className="text-white/30">·</span>
               <div className="flex items-baseline gap-1.5">
                 <dt className="sr-only">Desconto máximo</dt>
-                <dd className="font-semibold text-base md:text-lg">até 80%</dd>
+                <dd className="font-semibold text-base md:text-lg">até 78%</dd>
                 <span className="text-white/70 text-sm md:text-base">de desconto</span>
               </div>
               <span aria-hidden="true" className="text-white/30">·</span>

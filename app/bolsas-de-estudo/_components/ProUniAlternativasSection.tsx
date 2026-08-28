@@ -13,7 +13,7 @@ const ALTERNATIVAS: Alternativa[] = [
     numero: '01',
     titulo: 'Bolsa própria de faculdade parceira (sem ENEM)',
     descricao:
-      'Faculdades particulares parceiras negociam bolsas próprias de até 85% diretamente pelo Bolsa Click, sem nota de corte, sem critério de renda e com matrícula aberta o ano inteiro. O ingresso é via vestibular agendado online — resultado em horas — ou aproveitamento do histórico do ensino médio.',
+      'Faculdades particulares parceiras negociam bolsas próprias de até 78% diretamente pelo Bolsa Click, sem nota de corte, sem critério de renda e com matrícula aberta o ano inteiro. O ingresso é via vestibular agendado online — resultado em horas — ou aproveitamento do histórico do ensino médio.',
     quemAtende: 'Quem não tem ENEM válido ou não fechou critério de renda do ProUni',
     cta: { label: 'Ver ofertas com bolsa agora →', href: '/cursos' },
   },

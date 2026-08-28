@@ -41,8 +41,8 @@ export async function generateMetadata({
   if (!inst) return { title: 'Página não encontrada' }
 
   const indexable = isIndexable(partner)
-  const title = `Bolsa de até 80% na ${inst.name} — Inscreva-se grátis`
-  const description = `Garanta sua bolsa de estudo na ${inst.fullName} com até 80% de desconto. Sem ENEM, sem nota de corte. Fale com nosso time e comece a estudar.`
+  const title = `Bolsa de até 78% na ${inst.name} — Inscreva-se grátis`
+  const description = `Garanta sua bolsa de estudo na ${inst.fullName} com até 78% de desconto. Sem ENEM, sem nota de corte. Fale com nosso time e comece a estudar.`
   const url = `${theme.siteUrl}/${partner}`
 
   return {
@@ -172,7 +172,7 @@ export default async function PartnerLanding({
 
   const pontosFortes = brand?.valeAPena.pontosFortes ?? [
     'Diploma reconhecido pelo MEC',
-    'Bolsas de até 80% sem nota de corte',
+    'Bolsas de até 78% sem nota de corte',
     'Inscrição gratuita e sem ENEM',
   ]
 
@@ -273,14 +273,14 @@ export default async function PartnerLanding({
                 )}
               </div>
               <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-semibold text-white leading-[1.08] mb-4">
-                Bolsa de até <span className="underline decoration-white/40 decoration-[3px] underline-offset-4">80%</span> na {inst.name}
+                Bolsa de até <span className="underline decoration-white/40 decoration-[3px] underline-offset-4">78%</span> na {inst.name}
               </h1>
               {/* Abertura GEO: resposta direta na 1ª frase (40-60 palavras),
                   contexto depois — CLAUDE.md, padrão de abertura editorial. */}
               <p className="text-white/80 text-base md:text-lg leading-relaxed mb-6 max-w-xl">
                 Pra conseguir bolsa na {inst.name} sem ENEM e sem nota de corte, o caminho mais
                 rápido é se cadastrar grátis pelo Bolsa Click, parceiro autorizado: você compara
-                as ofertas com desconto de até 80%, escolhe curso e unidade, e fala direto com
+                as ofertas com desconto de até 78%, escolhe curso e unidade, e fala direto com
                 nosso time pelo WhatsApp pra garantir a vaga antes de matricular na {inst.fullName}.
               </p>
               <ul className="flex flex-wrap gap-x-5 gap-y-2 text-white/85 text-sm">
@@ -407,7 +407,7 @@ export default async function PartnerLanding({
             Sua bolsa na {inst.name} está esperando
           </h2>
           <p className="text-white/80 mb-7">
-            Preencha o formulário no topo e nosso time entra em contato pra garantir seu desconto de até 80%.
+            Preencha o formulário no topo e nosso time entra em contato pra garantir seu desconto de até 78%.
           </p>
           <a
             href="#top"

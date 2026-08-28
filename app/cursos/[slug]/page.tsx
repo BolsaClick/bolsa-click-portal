@@ -138,8 +138,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const priceSuffix = lowPrice > 0 ? ` — de R$${lowPrice.toFixed(0)}/mês` : ''
   const titleSuffix =
     (lowPrice > 0
-      ? [priceSuffix, ' com até 80% de desconto', ' de até 80%', '']
-      : [' com até 80% de desconto', ' de até 80%', '']
+      ? [priceSuffix, ' com até 78% de desconto', ' de até 78%', '']
+      : [' com até 78% de desconto', ' de até 78%', '']
     ).find(
       (s) => titleBase.length + s.length + brandSuffixLen <= 60
     ) ?? ''
@@ -153,13 +153,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   let description =
     [
       lowPrice > 0 &&
-        `Bolsa de estudo para ${curso.name}${priceText}, com até 80% de desconto. Faculdades reconhecidas pelo MEC, no EAD ou presencial. Inscrição grátis.`,
-      `Bolsa de estudo para ${curso.name} com até 80% de desconto em faculdades reconhecidas pelo MEC, no EAD ou presencial. Inscrição grátis.`,
-      `Bolsa de até 80% para ${curso.name} em faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`,
+        `Bolsa de estudo para ${curso.name}${priceText}, com até 78% de desconto. Faculdades reconhecidas pelo MEC, no EAD ou presencial. Inscrição grátis.`,
+      `Bolsa de estudo para ${curso.name} com até 78% de desconto em faculdades reconhecidas pelo MEC, no EAD ou presencial. Inscrição grátis.`,
+      `Bolsa de até 78% para ${curso.name} em faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`,
     ]
       .filter((d): d is string => Boolean(d))
       .find((d) => d.length <= 155) ??
-    `Bolsa de até 80% para ${curso.name} em faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`
+    `Bolsa de até 78% para ${curso.name} em faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`
 
   const brandedCopy = buildBrandedCourseCopy({
     name: curso.name,

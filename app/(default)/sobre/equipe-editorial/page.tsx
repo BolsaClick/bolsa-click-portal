@@ -223,7 +223,7 @@ export default function EquipeEditorialPage() {
               <div>
                 <h3 className="font-display text-lg text-ink-900 mb-2">4. Não vender o que não existe</h3>
                 <p className="text-ink-700 leading-relaxed">
-                  Trabalhamos com bolsas reais de até 80% negociadas com instituições parceiras. Não
+                  Trabalhamos com bolsas reais de até 78% negociadas com instituições parceiras. Não
                   prometemos vagas em universidade pública, descontos impossíveis ou diploma sem
                   estudo. O que falamos no site, podemos comprovar.
                 </p>

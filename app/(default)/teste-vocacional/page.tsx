@@ -456,7 +456,7 @@ export default function TesteVocacionalPage() {
           <p>
             O lado prático: o resultado se conecta diretamente com nosso{' '}
             <Link href="/bolsas-de-estudo">catálogo de bolsas</Link>, então depois de
-            descobrir os cursos ideais você já consegue ver as ofertas reais com até 80%
+            descobrir os cursos ideais você já consegue ver as ofertas reais com até 78%
             de desconto.
           </p>
         </div>

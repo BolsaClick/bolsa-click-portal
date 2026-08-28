@@ -99,7 +99,7 @@ hoje há zero.** Você não "ganha o argumento" sozinho contra plataformas com 1
 - Base: Ahrefs (dez/2025, 75k marcas) — menções de marca correlacionam **~3× mais** com visibilidade em IA do que backlinks.
 
 ## Inconsistência factual (corrigir já)
-Home diz **"até 80%"**; central de ajuda (`/central-de-ajuda/primeiros-passos/bolsa-parcial-integral`) diz **"até 95%"**. Fontes que se contradizem perdem confiança das IAs. Padronizar o número-âncora em todo o site.
+Home diz **"até 78%"**; central de ajuda (`/central-de-ajuda/primeiros-passos/bolsa-parcial-integral`) diz **"até 95%"**. Fontes que se contradizem perdem confiança das IAs. Padronizar o número-âncora em todo o site.
 
 ## Top 5 de maior impacto (delta vs 25/mai)
 1. **Corpus "é confiável / como funciona / é seguro"** — páginas próprias respondendo de frente as queries de confiança (que as IAs respondem), com `Organization` schema + dados verificáveis. (ALTÍSSIMO)
@@ -112,7 +112,7 @@ Home diz **"até 80%"**; central de ajuda (`/central-de-ajuda/primeiros-passos/b
 A pillar usa **HowTo** (linha 20 acima). HowTo foi **deprecado como rich result do Google (set/2023)** — não prejudica, mas não gera mais resultado rico; mantê-lo só vale pelo benefício de leitura por IA, não por Google.
 
 ## Quick wins (semana)
-1. Padronizar desconto-âncora (80% vs 95%) site-wide.
+1. Padronizar desconto-âncora (78% vs 95%) site-wide.
 2. `ChatGPT-User` explícito no `app/robots.ts`.
 3. Reivindicar Reclame Aqui + página LinkedIn da empresa.
 4. `Organization.sameAs` com os perfis assim que criados.

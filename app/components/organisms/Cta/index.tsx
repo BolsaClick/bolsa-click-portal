@@ -16,7 +16,7 @@ const cards = [
   {
     number: '03',
     label: 'Desconto',
-    title: 'Até 80% de bolsa.',
+    title: 'Até 78% de bolsa.',
     description: 'Compare ofertas entre faculdades e descubra a que cabe no seu bolso.',
   },
 ]

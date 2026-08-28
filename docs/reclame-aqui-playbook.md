@@ -35,7 +35,7 @@ nome público.
 **Descrição do perfil (texto-base, alinhado ao vocabulário aprovado):**
 > O Bolsa Click é um marketplace brasileiro de bolsas de estudo que conecta
 > estudantes às maiores redes de ensino do país (Anhanguera, Estácio, Unopar,
-> Pitágoras, Ampli e Unime), com descontos de até 80% e inscrição gratuita.
+> Pitágoras, Unime e Wyden), com descontos de até 78% e inscrição gratuita.
 > Não cobramos taxa de inscrição, cadastro ou qualquer valor antecipado — o
 > estudante paga apenas a mensalidade, já com desconto, diretamente à
 > faculdade. CNPJ 57.554.723/0001-50, em operação desde 2024.

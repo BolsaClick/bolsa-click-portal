@@ -137,7 +137,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const canonicalUrl = `${theme.siteUrl}/comparar/${a}-vs-${b}`
 
   const title = `${instA.name} vs ${instB.name}: Qual a Melhor Faculdade?`
-  const description = `Compare ${instA.fullName} e ${instB.fullName}: nota MEC, modalidades, polos, cursos e bolsas. Veja qual faculdade combina mais com seu perfil e estude com até 80% de desconto.`
+  const description = `Compare ${instA.fullName} e ${instB.fullName}: nota MEC, modalidades, polos, cursos e bolsas. Veja qual faculdade combina mais com seu perfil e estude com até 78% de desconto.`
 
   return {
     title,
@@ -323,7 +323,7 @@ export default async function CompareInstitutionsPage({ params }: Props) {
     },
     {
       question: `Como conseguir bolsa de estudo na ${instA.name} ou na ${instB.name}?`,
-      answer: `O Bolsa Click oferece bolsas de até 80% nas duas faculdades. Escolha o curso desejado, compare as ofertas das duas instituições lado a lado e finalize a inscrição grátis. O desconto vale durante todo o curso enquanto você mantém a matrícula ativa.`,
+      answer: `O Bolsa Click oferece bolsas de até 78% nas duas faculdades. Escolha o curso desejado, compare as ofertas das duas instituições lado a lado e finalize a inscrição grátis. Cadastro grátis, sem taxa de adesão. O percentual e a duração seguem o contrato da oferta.`,
     },
   ]
 
@@ -359,7 +359,7 @@ export default async function CompareInstitutionsPage({ params }: Props) {
           <p className="text-lg text-ink-700 max-w-3xl">
             Comparativo lado a lado entre {instA.fullName} e {instB.fullName}: nota MEC,
             modalidades, polos, cursos e tudo o que importa pra decidir. Ambas com bolsa
-            de até 80% pelo Bolsa Click.
+            de até 78% pelo Bolsa Click.
           </p>
         </div>
       </header>
@@ -485,7 +485,7 @@ export default async function CompareInstitutionsPage({ params }: Props) {
             quem prioriza <strong>{instA.mecRating && instB.mecRating ? (instA.mecRating >= instB.mecRating ? 'nota institucional MEC' : 'cobertura presencial')  : 'cobertura nacional'}</strong> tende a se identificar mais com a {instA.mecRating && instB.mecRating && instA.mecRating >= instB.mecRating ? instA.name : instA.campusCount && instB.campusCount && instA.campusCount >= instB.campusCount ? instA.name : instB.name}.
           </p>
           <p className="text-ink-700 leading-relaxed mt-3">
-            Pelo Bolsa Click, as duas faculdades oferecem bolsas de até 80% — então o
+            Pelo Bolsa Click, as duas faculdades oferecem bolsas de até 78% — então o
             custo costuma se equilibrar. Recomendamos comparar as ofertas do curso
             específico que você quer fazer, na cidade onde planeja estudar (ou no formato
             EAD se preferir flexibilidade).

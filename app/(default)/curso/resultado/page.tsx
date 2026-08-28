@@ -86,12 +86,12 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   // Se não houver curso selecionado, usar título genérico "Buscar cursos"
   // Nota: O layout principal adiciona " | Bolsa Click" automaticamente via template
   const title = hasCourseSelected
-    ? `Bolsa de Estudo em ${courseName} - Faculdades ${modalidadeFormatted}${locationText} com até 80% de Desconto`
+    ? `Bolsa de Estudo em ${courseName} - Faculdades ${modalidadeFormatted}${locationText} com até 78% de Desconto`
     : 'Bolsa de Estudo em Faculdades | Buscar Cursos'
 
   const description = hasCourseSelected
-    ? `Encontre bolsa de estudo em ${courseName} (${modalidadeFormatted})${locationText}. Desconto em faculdade de até 80% nas principais instituições do Brasil. Compare preços e garanta sua bolsa. Cadastre-se grátis!`
-    : 'Busque e compare bolsas de estudo em faculdades de todo Brasil. Desconto em faculdade de até 80% para graduação, pós-graduação e cursos técnicos. Cadastre-se grátis!'
+    ? `Encontre bolsa de estudo em ${courseName} (${modalidadeFormatted})${locationText}. Desconto em faculdade de até 78% nas principais instituições do Brasil. Compare preços e garanta sua bolsa. Cadastre-se grátis!`
+    : 'Busque e compare bolsas de estudo em faculdades de todo Brasil. Desconto em faculdade de até 78% para graduação, pós-graduação e cursos técnicos. Cadastre-se grátis!'
 
   // Construir URL canônica auto-referencial e normalizada
   // Normalização: sempre usar 'c' limpo e 'cn' separado (se aplicável)

@@ -18,7 +18,7 @@ import { getBrandLogo } from '@/app/lib/brand-logos'
 const STATS = [
   { value: '10k+', label: 'Cursos de pós-graduação' },
   { value: '+500', label: 'Faculdades parceiras' },
-  { value: 'até 80%', label: 'de desconto em bolsas' },
+  { value: 'até 78%', label: 'de desconto em bolsas' },
   { value: '6 a 18', label: 'meses de duração' },
 ]
 
@@ -88,7 +88,7 @@ const FAQ = [
   },
   {
     q: 'Como funciona a bolsa do Bolsa Click?',
-    a: 'Você busca o curso, compara descontos de até 80% entre faculdades parceiras, escolhe a melhor oferta e se inscreve grátis. Sem ENEM, sem prova de seleção.',
+    a: 'Você busca o curso, compara descontos de até 78% entre faculdades parceiras, escolhe a melhor oferta e se inscreve grátis. Sem ENEM, sem prova de seleção.',
   },
 ]
 

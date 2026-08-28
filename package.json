@@ -12,7 +12,8 @@
     "bolsamais": "env-cmd -f .env.bolsamais next dev",
     "seo:audit": "node scripts/seo-audit.mjs",
     "seo:audit:remote": "node scripts/seo-audit.mjs",
-    "seed:institutions": "tsx prisma/seed-institutions.ts"
+    "seed:institutions": "tsx prisma/seed-institutions.ts",
+    "lock:copy-claims": "tsx scripts/lock-copy-claims.ts"
   },
   "prisma": {
     "seed": "tsx scripts/seed.ts"

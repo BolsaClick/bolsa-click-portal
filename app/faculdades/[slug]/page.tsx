@@ -49,12 +49,12 @@ export async function generateMetadata({
 
   // Strip any trailing "| Bolsa Click" baked into DB metaTitle so the root
   // metadata template (`%s | Bolsa Click`) doesn't double the suffix.
-  const rawTitle = institution.metaTitle || `Faculdade ${institution.name} - Bolsas de Estudo com até 80% de Desconto`
+  const rawTitle = institution.metaTitle || `Faculdade ${institution.name} - Bolsas de Estudo com até 78% de Desconto`
   const cleanTitle = rawTitle.replace(/\s*\|\s*Bolsa Click\s*$/i, '').trim()
   const title = `${cleanTitle} | ${theme.shortTitle}`
   const description =
     institution.metaDescription ||
-    `Encontre bolsas de estudo na faculdade ${institution.name} com até 80% de desconto. ${institution.description}`
+    `Encontre bolsas de estudo na faculdade ${institution.name} com até 78% de desconto. ${institution.description}`
 
   return {
     title: { absolute: title },
@@ -167,7 +167,7 @@ export default async function FaculdadeDetailPage({
     },
     {
       q: `Como conseguir bolsa de estudo na Faculdade ${institution.name}?`,
-      a: `Para conseguir bolsa de estudo na Faculdade ${institution.name}, basta acessar o Bolsa Click, buscar pelo curso desejado, escolher a melhor oferta e se inscrever gratuitamente. As bolsas podem chegar a até 80% de desconto.`,
+      a: `Para conseguir bolsa de estudo na Faculdade ${institution.name}, basta acessar o Bolsa Click, buscar pelo curso desejado, escolher a melhor oferta e se inscrever gratuitamente. As bolsas podem chegar a até 78% de desconto.`,
     },
     {
       q: `Quais cursos a Faculdade ${institution.name} oferece?`,
@@ -179,7 +179,7 @@ export default async function FaculdadeDetailPage({
     },
     {
       q: `Quanto custa estudar na Faculdade ${institution.name}?`,
-      a: `Os valores das mensalidades na Faculdade ${institution.name} variam de acordo com o curso e a modalidade escolhida. Pelo Bolsa Click, você encontra bolsas de estudo com descontos de até 80% nas mensalidades, tornando o ensino superior muito mais acessível.`,
+      a: `Os valores das mensalidades na Faculdade ${institution.name} variam de acordo com o curso e a modalidade escolhida. Pelo Bolsa Click, você encontra bolsas de estudo com descontos de até 78% nas mensalidades, tornando o ensino superior muito mais acessível.`,
     },
     {
       q: `A Faculdade ${institution.name} tem cursos EAD?`,

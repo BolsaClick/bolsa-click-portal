@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 const heroTexts = [
   {
     course: 'Administração',
-    discount: '80%',
+    discount: '78%',
     institution: 'Anhanguera',
   },
   {

@@ -208,7 +208,7 @@ export default function CursoPageClient({
           <div className="max-w-4xl mx-auto text-center flex flex-col items-center">
             <h1 className="font-display text-4xl md:text-5xl lg:text-[64px] font-semibold text-white leading-[1.05] mb-5">
               Bolsa de {cursoMetadata.name}{' '}
-              <span className="italic text-white/85">com até 80% de desconto</span>
+              <span className="italic text-white/85">com até 78% de desconto</span>
             </h1>
             <p className="text-white/80 text-base md:text-lg max-w-2xl leading-relaxed mb-8">
               {cursoMetadata.description}
@@ -468,7 +468,7 @@ export default function CursoPageClient({
               <span className="italic text-white/85">{cursoMetadata.name}?</span>
             </h2>
             <p className="text-white/75 text-[15px] md:text-base leading-relaxed mb-8 max-w-xl mx-auto">
-              Bolsas de estudo de até 80% nas maiores redes de ensino do país. Cadastro grátis,
+              Bolsas de estudo de até 78% nas maiores redes de ensino do país. Cadastro grátis,
               sem ENEM, sem complicação.
             </p>
             <button

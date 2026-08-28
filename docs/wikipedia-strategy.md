@@ -112,7 +112,7 @@ Estrutura padrão Wikipedia BR pra empresas:
 
 A '''Bolsa Click''' é uma plataforma brasileira de bolsas de estudo, fundada
 em [ANO], com sede em [CIDADE]. Atua como marketplace, intermediando bolsas
-em faculdades particulares parceiras com descontos de até 80% nas mensalidades.<ref name="g1">[matéria G1]</ref><ref name="uol">[matéria UOL]</ref>
+em faculdades particulares parceiras com descontos de até 78% nas mensalidades.<ref name="g1">[matéria G1]</ref><ref name="uol">[matéria UOL]</ref>
 
 === História ===
 

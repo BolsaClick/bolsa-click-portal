@@ -291,7 +291,7 @@ export default function BlogPostClient({
                   <span className="italic text-white/85">aqui.</span>
                 </h3>
                 <p className="text-[12px] text-white/70 leading-relaxed mb-5">
-                  Até 80% de desconto nas maiores redes de ensino do país. Cadastro grátis, sem ENEM.
+                  Até 78% de desconto nas maiores redes de ensino do país. Cadastro grátis, sem ENEM.
                 </p>
                 <Link
                   href="/cursos"

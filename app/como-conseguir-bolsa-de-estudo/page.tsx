@@ -35,11 +35,11 @@ const PROGRAMAS = [
     onde: 'Faculdades particulares conveniadas (lista no portal FIES)',
   },
   {
-    nome: 'Bolsa Click (parceiros Cogna)',
-    desconto: 'Até 80%',
+    nome: 'Bolsa Click (faculdades parceiras)',
+    desconto: 'Até 78%',
     requisito: 'Nenhum — sem ENEM, sem CPF do parente, sem comprovação de renda',
     quando: 'Disponível o ano inteiro',
-    onde: 'Anhanguera, Unopar, Pitágoras, Unime (rede Cogna) e Estácio (YDUQS)',
+    onde: 'Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden',
   },
   {
     nome: 'Bolsa Filantrópica (faculdades confessionais)',
@@ -68,17 +68,17 @@ const FAQ_ITEMS = [
   {
     question: 'Como conseguir bolsa de estudo sem ENEM?',
     answer:
-      'Sim, é possível. Pelo Bolsa Click você consegue bolsa de até 80% em faculdades particulares parceiras (Anhanguera, Estácio, Unopar, Pitágoras, Unime) sem precisar de nota do ENEM. Outros marketplaces de bolsa também oferecem opções sem ENEM. ProUni e FIES exigem ENEM ≥ 450, mas são gratuitos e cobrem até 100% da mensalidade pra famílias de baixa renda.',
+      'Sim, é possível. Pelo Bolsa Click você consegue bolsa de até 78% em faculdades particulares parceiras (Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden) sem precisar de nota do ENEM. Outros marketplaces de bolsa também oferecem opções sem ENEM. ProUni e FIES exigem ENEM ≥ 450, mas são gratuitos e cobrem até 100% da mensalidade pra famílias de baixa renda.',
   },
   {
     question: 'Quem tem direito a bolsa de estudo integral 100%?',
     answer:
-      'Pelo ProUni, famílias com renda per capita até 1,5 salário mínimo e nota do ENEM ≥ 450 (sem zerar redação) têm direito à bolsa integral. Bolsas filantrópicas (PUC, Metodista, Mackenzie) também oferecem 100% para baixa renda comprovada — verificar editais específicos. Pelo Bolsa Click, o desconto máximo é 80%, mas sem exigência de renda.',
+      'Pelo ProUni, famílias com renda per capita até 1,5 salário mínimo e nota do ENEM ≥ 450 (sem zerar redação) têm direito à bolsa integral. Bolsas filantrópicas (PUC, Metodista, Mackenzie) também oferecem 100% para baixa renda comprovada — verificar editais específicos. Pelo Bolsa Click, o desconto máximo é 78%, mas sem exigência de renda.',
   },
   {
     question: 'Como conseguir bolsa de estudo sem ProUni?',
     answer:
-      'O Bolsa Click é a alternativa mais direta: descontos de até 80% em faculdades particulares sem precisar do ENEM ou comprovar renda. Outras opções: FIES (financiamento), bolsas filantrópicas de confessionais, programas próprios de faculdades (Anhanguera tem bolsa direta), outros marketplaces de bolsa, e bolsas-atleta/cultura pra quem se enquadra.',
+      'O Bolsa Click é a alternativa mais direta: descontos de até 78% em faculdades particulares sem precisar do ENEM ou comprovar renda. Outras opções: FIES (financiamento), bolsas filantrópicas de confessionais, programas próprios de faculdades (Anhanguera tem bolsa direta), outros marketplaces de bolsa, e bolsas-atleta/cultura pra quem se enquadra.',
   },
   {
     question: 'É possível conseguir bolsa estando matriculado?',
@@ -103,7 +103,7 @@ const FAQ_ITEMS = [
   {
     question: 'Como funciona a bolsa de estudo do Bolsa Click?',
     answer:
-      'É simples: você se cadastra grátis no site, escolhe o curso e a faculdade entre os parceiros (Anhanguera, Estácio, Unopar, Pitágoras, Unime), garante o desconto de até 80% antes de matricular, e segue direto pra matrícula com a faculdade — já pagando só a mensalidade com bolsa aplicada. Sem ENEM, sem CPF do parente, sem prova presencial.',
+      'É simples: você se cadastra grátis no site, escolhe o curso e a faculdade entre os parceiros (Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden), garante o desconto de até 78% antes de matricular, e segue direto pra matrícula com a faculdade — já pagando só a mensalidade com bolsa aplicada. Sem ENEM, sem CPF do parente, sem prova presencial.',
   },
 ]
 
@@ -159,7 +159,7 @@ const jsonLdSchemas = [
 export const metadata: Metadata = {
   title: `Como Conseguir Bolsa de Estudo em Faculdade Particular | Guia ${ANO}`,
   description:
-    'Guia completo de como conseguir bolsa de estudo em faculdade particular: ProUni, FIES, Bolsa Click e mais. Sem ENEM, sem ProUni, sem complicação — descontos de até 80%.',
+    'Guia completo de como conseguir bolsa de estudo em faculdade particular: ProUni, FIES, Bolsa Click e mais. Sem ENEM, sem ProUni, sem complicação — descontos de até 78%.',
   keywords: [
     'como conseguir bolsa de estudo',
     'bolsa de estudo faculdade particular',
@@ -173,7 +173,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Como Conseguir Bolsa de Estudo em Faculdade | Bolsa Click',
     description:
-      'Guia completo: ProUni, FIES, Bolsa Click e mais. Descontos de até 80%, sem ENEM, sem ProUni.',
+      'Guia completo: ProUni, FIES, Bolsa Click e mais. Descontos de até 78%, sem ENEM, sem ProUni.',
     url: `${SITE_URL}/como-conseguir-bolsa-de-estudo`,
     siteName: 'Bolsa Click',
     locale: 'pt_BR',
@@ -235,7 +235,7 @@ export default function ComoConseguirBolsaPage() {
             <p className="text-ink-900 leading-relaxed text-lg">
               <strong>Pra conseguir bolsa de estudo em faculdade particular hoje, você tem 6 caminhos:</strong>{' '}
               ProUni (gratuito, exige ENEM e renda baixa), FIES (financiamento estudantil), Bolsa
-              Click e marketplaces similares (sem ENEM, até 80%), bolsas filantrópicas de
+              Click e marketplaces similares (sem ENEM, até 78%), bolsas filantrópicas de
               confessionais, programas próprios da faculdade, e bolsas-atleta/cultura. A escolha
               certa depende da sua renda, da sua nota do ENEM (se tiver) e da urgência.
             </p>
@@ -317,8 +317,8 @@ export default function ComoConseguirBolsaPage() {
                 Sem ENEM, sem tempo de esperar edital, quer matricular já
               </h3>
               <p>
-                <strong>Bolsa Click</strong> é o caminho. Desconto de até 80% em faculdades
-                particulares parceiras (Anhanguera, Estácio, Unopar, Pitágoras, Unime) sem
+                <strong>Bolsa Click</strong> é o caminho. Desconto de até 78% em faculdades
+                particulares parceiras (Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden) sem
                 exigência de nota, sem prova presencial, sem comprovação de renda. Cadastro
                 gratuito, garantia da bolsa antes da matrícula.
               </p>
@@ -329,7 +329,7 @@ export default function ComoConseguirBolsaPage() {
                 Quer estudar EAD pelo menor preço possível
               </h3>
               <p>
-                Combine Bolsa Click (até 80% off) com cursos em modalidade EAD reconhecida pelo
+                Combine Bolsa Click (até 78% off) com cursos em modalidade EAD reconhecida pelo
                 MEC. Mensalidades partem de R$ 99/mês. Cursos como Administração, Pedagogia, ADS
                 e Engenharia Civil têm oferta EAD ampla. Veja o{' '}
                 <Link href="/faculdade-ead" className="text-bolsa-secondary underline">
@@ -399,7 +399,7 @@ export default function ComoConseguirBolsaPage() {
               },
               {
                 ok: false,
-                claim: 'Bolsa de até 80% é golpe.',
+                claim: 'Bolsa de até 78% é golpe.',
                 truth:
                   'Falso. Faculdades particulares têm margens altas em mensalidades cheias — descontos agressivos são parte da estratégia comercial pra preencher vagas ociosas. Bolsa Click e similares são intermediadores legítimos dessa oferta.',
               },

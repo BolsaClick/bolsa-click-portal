@@ -9,7 +9,7 @@ const jsonLdSchema = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
   name: 'Cursos de Graduação com Bolsa de Estudo',
-  description: 'Descubra cursos de graduação presenciais, EAD e semipresenciais com bolsas de estudo de até 80% em diversas áreas do conhecimento. Bacharelado, Licenciatura e Tecnólogo.',
+  description: 'Descubra cursos de graduação presenciais, EAD e semipresenciais com bolsas de estudo de até 78% em diversas áreas do conhecimento. Bacharelado, Licenciatura e Tecnólogo.',
   url: 'https://www.bolsaclick.com.br/graduacao',
   provider: {
     '@type': 'Organization',
@@ -42,8 +42,8 @@ const jsonLdSchema = {
 }
 
 export const metadata: Metadata = {
-  title: 'Bolsa de Estudo em Faculdades - Graduação com até 80% de Desconto',
-  description: 'Encontre bolsa de estudo em faculdades para graduação com até 80% de desconto. Desconto em faculdade para bacharelado, licenciatura e tecnólogo. Cadastre-se grátis!',
+  title: 'Bolsa de Estudo em Faculdades - Graduação com até 78% de Desconto',
+  description: 'Encontre bolsa de estudo em faculdades para graduação com até 78% de desconto. Desconto em faculdade para bacharelado, licenciatura e tecnólogo. Cadastre-se grátis!',
   keywords: [
     'bolsa de estudo graduação',
     'bolsa de estudos graduação',
@@ -77,8 +77,8 @@ export const metadata: Metadata = {
     canonical: 'https://www.bolsaclick.com.br/graduacao',
   },
   openGraph: {
-    title: 'Bolsa de Estudo em Faculdades - Graduação com até 80% de Desconto',
-    description: 'Encontre bolsa de estudo em faculdades para graduação. Desconto em faculdade de até 80% para bacharelado, licenciatura e tecnólogo. Cadastre-se grátis!',
+    title: 'Bolsa de Estudo em Faculdades - Graduação com até 78% de Desconto',
+    description: 'Encontre bolsa de estudo em faculdades para graduação. Desconto em faculdade de até 78% para bacharelado, licenciatura e tecnólogo. Cadastre-se grátis!',
     url: 'https://www.bolsaclick.com.br/graduacao',
     siteName: 'Bolsa Click',
     locale: 'pt_BR',
@@ -95,8 +95,8 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     site: '@bolsaclick',
-    title: 'Bolsa de Estudo em Faculdades - Graduação com até 80% de Desconto',
-    description: 'Graduação com bolsa de estudo? Encontre a sua na Bolsa Click. Desconto em faculdade de até 80%. Cadastre-se grátis!',
+    title: 'Bolsa de Estudo em Faculdades - Graduação com até 78% de Desconto',
+    description: 'Graduação com bolsa de estudo? Encontre a sua na Bolsa Click. Desconto em faculdade de até 78%. Cadastre-se grátis!',
     images: ['https://www.bolsaclick.com.br/assets/og-image-bolsaclick.png'],
   },
 };

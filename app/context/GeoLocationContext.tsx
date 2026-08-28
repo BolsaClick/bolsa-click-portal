@@ -42,15 +42,12 @@ export const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
           setState(location.state)
           setTown(location.city)
         } else {
+          // Foreign IP or lookup miss: keep city empty (placeholder on the form).
           setError('Não foi possível obter a localização.')
         }
       } catch (err) {
         console.error('Erro ao detectar localização por IP:', err)
         setError('Não foi possível obter a localização.')
-        setCity('São Paulo')
-        setRegion('SP')
-        setState('SP')
-        setTown('São Paulo')
       }
     }
 

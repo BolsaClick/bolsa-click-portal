@@ -1,3 +1,4 @@
+import { isBrazilianUf } from '@/app/lib/geo/brazil-location'
 import { getLocationByIP } from './get-location-by-ip'
 import { getLocalities } from './get-localites'
 
@@ -13,12 +14,14 @@ export interface CityFromAPI {
 export async function getCityFromOurAPIByIP(): Promise<CityFromAPI | null> {
   try {
     const location = await getLocationByIP()
-    if (!location?.city?.trim()) return null
+    if (!location?.city?.trim() || !isBrazilianUf(location.region)) return null
 
     const response = await getLocalities(location.city.trim())
     const list = response?.data
     if (!Array.isArray(list) || list.length === 0) {
-      return { city: location.city, state: location.region }
+      // Unknown to our Brazilian localities catalog — do not write the raw IP city
+      // (that path previously filled "Washington - DC" from US/cloud IPs).
+      return null
     }
 
     const regionUpper = (location.region || '').toUpperCase().trim()
@@ -26,22 +29,25 @@ export async function getCityFromOurAPIByIP(): Promise<CityFromAPI | null> {
       (item: { city?: string; state?: string }) =>
         (item.state || '').toUpperCase().trim() === regionUpper
     )
-    if (matchByState) {
-      return { city: matchByState.city || location.city, state: matchByState.state || location.region }
+    if (matchByState?.city && matchByState.state && isBrazilianUf(matchByState.state)) {
+      return { city: matchByState.city, state: matchByState.state }
     }
 
     const first = list[0]
-    return { city: first.city || location.city, state: first.state || location.region }
+    if (first?.city && first?.state && isBrazilianUf(first.state)) {
+      return { city: first.city, state: first.state }
+    }
+    return null
   } catch (error) {
     console.error('Erro ao obter cidade da API por IP:', error)
     try {
       const fallback = await getLocationByIP()
-      if (fallback) {
+      if (fallback?.city && isBrazilianUf(fallback.region)) {
         return { city: fallback.city, state: fallback.region }
       }
     } catch {
       // ignore
     }
-    return { city: 'São Paulo', state: 'SP' }
+    return null
   }
 }

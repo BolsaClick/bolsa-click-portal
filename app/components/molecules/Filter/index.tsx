@@ -12,6 +12,7 @@ import { getLocalities } from '@/app/lib/api/get-localites'
 import { ModalitySelect } from '../../atoms/ModalitySelect'
 import { GraduationCap, MapPin } from 'lucide-react'
 import { useGeoLocation } from '@/app/context/GeoLocationContext'
+import { isBrazilianUf } from '@/app/lib/geo/brazil-location'
 import { ACADEMIC_LEVEL } from '@/app/lib/academic-level'
 import { useLastSearch } from '@/app/lib/personalization/hooks'
 
@@ -88,9 +89,10 @@ const Filter = () => {
     },
   })
 
-  // Preencher cidade/estado padrão com a localização da API de cidades (por IP), igual ao filtro da home
+  // Preencher cidade/estado padrão só com UF brasileira. IP estrangeiro
+  // (Washington-DC, etc.) deixa o campo vazio com o placeholder "Digite uma cidade".
   useEffect(() => {
-    if (geoCity && geoState) {
+    if (geoCity && geoState && isBrazilianUf(geoState)) {
       setValue('city', { city: geoCity, state: geoState })
     }
   }, [geoCity, geoState, setValue])

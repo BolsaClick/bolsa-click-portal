@@ -1,77 +1,6 @@
-export interface LocationByIP {
-  city: string
-  region: string
-  country: string
-  countryCode: string
-  latitude?: number
-  longitude?: number
-}
+import { brazilianLocationOrNull, type BrazilianLocation } from '@/app/lib/geo/brazil-location'
 
-// Mapeamento de estados brasileiros para siglas UF
-const stateToUF: Record<string, string> = {
-  'Acre': 'AC',
-  'Alagoas': 'AL',
-  'Amapá': 'AP',
-  'Amazonas': 'AM',
-  'Bahia': 'BA',
-  'Ceará': 'CE',
-  'Distrito Federal': 'DF',
-  'Espírito Santo': 'ES',
-  'Goiás': 'GO',
-  'Maranhão': 'MA',
-  'Mato Grosso': 'MT',
-  'Mato Grosso do Sul': 'MS',
-  'Minas Gerais': 'MG',
-  'Pará': 'PA',
-  'Paraíba': 'PB',
-  'Paraná': 'PR',
-  'Pernambuco': 'PE',
-  'Piauí': 'PI',
-  'Rio de Janeiro': 'RJ',
-  'Rio Grande do Norte': 'RN',
-  'Rio Grande do Sul': 'RS',
-  'Rondônia': 'RO',
-  'Roraima': 'RR',
-  'Santa Catarina': 'SC',
-  'São Paulo': 'SP',
-  'Sergipe': 'SE',
-  'Tocantins': 'TO',
-  // Também aceitar siglas já no formato correto
-  'AC': 'AC', 'AL': 'AL', 'AP': 'AP', 'AM': 'AM', 'BA': 'BA',
-  'CE': 'CE', 'DF': 'DF', 'ES': 'ES', 'GO': 'GO', 'MA': 'MA',
-  'MT': 'MT', 'MS': 'MS', 'MG': 'MG', 'PA': 'PA', 'PB': 'PB',
-  'PR': 'PR', 'PE': 'PE', 'PI': 'PI', 'RJ': 'RJ', 'RN': 'RN',
-  'RS': 'RS', 'RO': 'RO', 'RR': 'RR', 'SC': 'SC', 'SP': 'SP',
-  'SE': 'SE', 'TO': 'TO',
-}
-
-// Função para converter nome do estado para sigla UF
-function convertStateToUF(stateName: string): string {
-  // Se já for uma sigla de 2 letras, retornar como está
-  if (stateName.length === 2 && /^[A-Z]{2}$/i.test(stateName)) {
-    return stateName.toUpperCase()
-  }
-  
-  // Tentar encontrar no mapeamento (case-insensitive)
-  const normalizedState = stateName.trim()
-  const found = Object.keys(stateToUF).find(
-    key => key.toLowerCase() === normalizedState.toLowerCase()
-  )
-  
-  if (found) {
-    return stateToUF[found]
-  }
-  
-  // Se não encontrar, retornar o valor original (pode ser uma sigla não mapeada)
-  return normalizedState.toUpperCase()
-}
-
-const DEFAULT_LOCATION: LocationByIP = {
-  city: 'São Paulo',
-  region: 'SP',
-  country: 'Brasil',
-  countryCode: 'BR',
-}
+export type LocationByIP = BrazilianLocation
 
 const fetchWithTimeout = async (url: string, ms = 4000): Promise<Response | null> => {
   if (typeof window === 'undefined' || typeof AbortController === 'undefined') {
@@ -96,23 +25,71 @@ const fetchWithTimeout = async (url: string, ms = 4000): Promise<Response | null
   }
 }
 
+function fromApiGeolocation(data: {
+  city?: unknown
+  region?: unknown
+  country?: unknown
+  countryCode?: unknown
+  latitude?: unknown
+  longitude?: unknown
+}): LocationByIP | null {
+  return brazilianLocationOrNull({
+    city: data.city,
+    region: data.region,
+    country: data.country,
+    countryCode: data.countryCode,
+    latitude: data.latitude,
+    longitude: data.longitude,
+  })
+}
+
+function fromIpapi(data: {
+  city?: unknown
+  region?: unknown
+  region_code?: unknown
+  country_name?: unknown
+  country_code?: unknown
+  latitude?: unknown
+  longitude?: unknown
+}): LocationByIP | null {
+  return brazilianLocationOrNull({
+    city: data.city,
+    region: data.region,
+    regionCode: data.region_code,
+    country: data.country_name,
+    countryCode: data.country_code,
+    latitude: data.latitude,
+    longitude: data.longitude,
+  })
+}
+
+function fromIpwho(data: {
+  city?: unknown
+  region?: unknown
+  region_code?: unknown
+  country?: unknown
+  country_code?: unknown
+  latitude?: unknown
+  longitude?: unknown
+}): LocationByIP | null {
+  return brazilianLocationOrNull({
+    city: data.city,
+    region: data.region,
+    regionCode: data.region_code,
+    country: data.country,
+    countryCode: data.country_code,
+    latitude: data.latitude,
+    longitude: data.longitude,
+  })
+}
+
 export async function getLocationByIP(): Promise<LocationByIP | null> {
   // 1) Endpoint local — sem CORS, sem adblocker, IP detectado no servidor
   try {
     const r = await fetchWithTimeout('/api/geolocation', 4500)
     if (r?.ok) {
-      const data = await r.json()
-      if (data?.city && data?.region) {
-        return {
-          city: String(data.city),
-          region: convertStateToUF(String(data.region)),
-          country: String(data.country ?? 'Brasil'),
-          countryCode: String(data.countryCode ?? 'BR'),
-          ...(typeof data.latitude === 'number' && typeof data.longitude === 'number'
-            ? { latitude: data.latitude, longitude: data.longitude }
-            : {}),
-        }
-      }
+      const loc = fromApiGeolocation(await r.json())
+      if (loc) return loc
     }
   } catch {
     /* tenta fallback externo */
@@ -122,21 +99,8 @@ export async function getLocationByIP(): Promise<LocationByIP | null> {
   try {
     const response = await fetchWithTimeout('https://ipapi.co/json/', 4000)
     if (response?.ok) {
-      const data = await response.json()
-      if (data?.city && (data?.region || data?.region_code)) {
-        const stateUF = data.region_code || convertStateToUF(data.region || 'SP')
-        const lat = typeof data.latitude === 'number' ? data.latitude : Number(data.latitude)
-        const lng = typeof data.longitude === 'number' ? data.longitude : Number(data.longitude)
-        return {
-          city: data.city,
-          region: stateUF,
-          country: data.country_name || 'Brasil',
-          countryCode: data.country_code || 'BR',
-          ...(Number.isFinite(lat) && Number.isFinite(lng)
-            ? { latitude: lat, longitude: lng }
-            : {}),
-        }
-      }
+      const loc = fromIpapi(await response.json())
+      if (loc) return loc
     }
   } catch {
     /* tenta próximo */
@@ -146,25 +110,14 @@ export async function getLocationByIP(): Promise<LocationByIP | null> {
   try {
     const response = await fetchWithTimeout('https://ipwho.is/', 4000)
     if (response?.ok) {
-      const data = await response.json()
-      if (data?.success && data?.city && (data?.region || data?.region_code)) {
-        const stateUF = data.region_code || convertStateToUF(data.region || 'SP')
-        const lat = typeof data.latitude === 'number' ? data.latitude : undefined
-        const lng = typeof data.longitude === 'number' ? data.longitude : undefined
-        return {
-          city: data.city,
-          region: stateUF,
-          country: data.country || 'Brasil',
-          countryCode: data.country_code || 'BR',
-          ...(lat != null && lng != null ? { latitude: lat, longitude: lng } : {}),
-        }
-      }
+      const loc = fromIpwho(await response.json())
+      if (loc) return loc
     }
   } catch {
-    /* fallback final */
+    /* sem localização brasileira */
   }
 
-  // 4) Default — sem console.error pra não poluir o console
-  return DEFAULT_LOCATION
+  // Foreign IP / lookup failure: leave the city field empty.
+  // Never default to a US city (Washington, DC is the common datacenter hit).
+  return null
 }
-

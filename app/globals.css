@@ -302,7 +302,8 @@ html.cookie-banner-visible [data-checkout-inscription] {
 html.on-inscription-route [aria-label="Aviso de cookies"],
 html.on-inscription-route #wati-whatsapp,
 html.on-inscription-route iframe[src*="clare.ai"],
-html.on-inscription-route iframe[src*="wati"] {
+html.on-inscription-route iframe[src*="wati"],
+html.on-inscription-route iframe[src*="whatsapp"] {
   display: none !important;
   pointer-events: none !important;
   visibility: hidden !important;

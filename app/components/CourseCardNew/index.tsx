@@ -501,7 +501,7 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
             </div>
 
             <a
-              href={destination.href}
+              href={destination.href || '/checkout/matricula'}
               onClick={(e) => {
                 if (shiftBlocked) {
                   e.preventDefault()

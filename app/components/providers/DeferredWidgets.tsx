@@ -2,6 +2,8 @@
 
 import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
+import { isInscriptionRoute } from '@/app/lib/consent/inscription-route'
 
 // Widgets não-críticos pro first paint / interatividade. Carregados com
 // ssr:false E só montados depois que o browser fica idle — assim sonner,
@@ -27,8 +29,9 @@ const ExitIntentModal = dynamic(() => import('../organisms/ExitIntentModal'), {
 })
 
 export function DeferredWidgets() {
+  const pathname = usePathname()
+  const onInscription = isInscriptionRoute(pathname)
   const [ready, setReady] = useState(false)
-  const [onInscription, setOnInscription] = useState(false)
 
   useEffect(() => {
     const win = window as typeof window & {
@@ -54,25 +57,19 @@ export function DeferredWidgets() {
     }
   }, [])
 
-  useEffect(() => {
-    const sync = () => {
-      const path = window.location.pathname.toLowerCase()
-      setOnInscription(path === '/checkout' || path.startsWith('/checkout/'))
-    }
-    sync()
-    window.addEventListener('popstate', sync)
-    return () => window.removeEventListener('popstate', sync)
-  }, [])
-
   if (!ready) return null
 
   return (
     <>
       <Toaster richColors position="top-right" />
-      {!onInscription ? <WatiWhatsappWidget /> : null}
-      <VocationalTab />
-      <CookieConsent />
-      {!onInscription ? <ExitIntentModal /> : null}
+      {onInscription ? null : (
+        <>
+          <WatiWhatsappWidget />
+          <VocationalTab />
+          <CookieConsent />
+          <ExitIntentModal />
+        </>
+      )}
     </>
   )
 }

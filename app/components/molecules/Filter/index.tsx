@@ -12,7 +12,7 @@ import { getLocalities } from '@/app/lib/api/get-localites'
 import { ModalitySelect } from '../../atoms/ModalitySelect'
 import { GraduationCap, MapPin } from 'lucide-react'
 import { useGeoLocation } from '@/app/context/GeoLocationContext'
-import { brazilCityStateOrNull } from '@/app/lib/geo/brazil-location'
+import { brazilCityStateOrNull, isForbiddenGeoCity } from '@/app/lib/geo/brazil-location'
 import { ACADEMIC_LEVEL } from '@/app/lib/academic-level'
 import { useLastSearch } from '@/app/lib/personalization/hooks'
 
@@ -232,16 +232,22 @@ const Filter = () => {
         : null
 
     if (typeof data.city === 'string' && data.city.trim()) {
-      const typed = normalizeOptionText(data.city)
-      const match = cityOptions.find((option: { city: string; state: string }) => {
-        const full = normalizeOptionText(`${option.city} - ${option.state}`)
-        const name = normalizeOptionText(option.city)
-        return full === typed || name === typed
-      })
-      selectedCity = match ? brazilCityStateOrNull(match.city, match.state) : null
-      if (!selectedCity) {
-        setCityError('Selecione uma cidade da lista')
-        return
+      if (isForbiddenGeoCity(data.city)) {
+        // ComboBox still showing "Washington - DC" as typed text — drop it.
+        setValue('city', { city: '', state: '' })
+        selectedCity = null
+      } else {
+        const typed = normalizeOptionText(data.city)
+        const match = cityOptions.find((option: { city: string; state: string }) => {
+          const full = normalizeOptionText(`${option.city} - ${option.state}`)
+          const name = normalizeOptionText(option.city)
+          return full === typed || name === typed
+        })
+        selectedCity = match ? brazilCityStateOrNull(match.city, match.state) : null
+        if (!selectedCity) {
+          setCityError('Selecione uma cidade da lista')
+          return
+        }
       }
     } else if (typeof data.city === 'object' && (data.city.city || data.city.state) && !selectedCity) {
       // Geo/ComboBox leaked DC/US — drop it instead of sending cidade=Washington.

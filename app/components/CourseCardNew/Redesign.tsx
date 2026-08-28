@@ -309,7 +309,7 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
 
         {/* CTA — cor do site: bolsa-secondary */}
         <a
-          href={destination.href}
+          href={destination.href || '/checkout/matricula'}
           onClick={(e) => {
             if (shiftBlocked) {
               e.preventDefault()

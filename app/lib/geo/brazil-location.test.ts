@@ -4,9 +4,11 @@ import {
   brazilCityStateOrNull,
   brazilianLocationOrNull,
   convertStateToUf,
+  hasForbiddenGeoQuery,
   isBrazilCountry,
   isBrazilianUf,
   isForbiddenGeoCity,
+  stripForbiddenGeoParams,
 } from './brazil-location'
 
 describe('brazilianLocationOrNull', () => {
@@ -115,6 +117,24 @@ describe('brazilCityStateOrNull (form / URL write gate)', () => {
     assert.equal(brazilCityStateOrNull('', 'MG'), null)
     assert.equal(brazilCityStateOrNull('Belo Horizonte', ''), null)
     assert.equal(brazilCityStateOrNull('BH', null), null)
+  })
+
+  it('strips Washington/DC from the query without touching BH-without-UF', () => {
+    assert.equal(hasForbiddenGeoQuery('Washington', 'DC'), true)
+    assert.equal(hasForbiddenGeoQuery('BH', ''), false)
+    assert.equal(hasForbiddenGeoQuery('Belo Horizonte', ''), false)
+
+    const dirty = new URLSearchParams(
+      'c=Pedagogia&cidade=Washington&estado=DC&nivel=GRADUACAO',
+    )
+    assert.equal(stripForbiddenGeoParams(dirty), true)
+    assert.equal(dirty.get('cidade'), null)
+    assert.equal(dirty.get('estado'), null)
+    assert.equal(dirty.get('c'), 'Pedagogia')
+
+    const bh = new URLSearchParams('c=Pedagogia&cidade=BH')
+    assert.equal(stripForbiddenGeoParams(bh), false)
+    assert.equal(bh.get('cidade'), 'BH')
   })
 })
 

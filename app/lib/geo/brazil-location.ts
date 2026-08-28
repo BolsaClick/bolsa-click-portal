@@ -123,6 +123,36 @@ export function isForbiddenGeoCity(city: string): boolean {
 export type BrazilCityState = { city: string; state: string }
 
 /**
+ * True when `cidade=` / `estado=` in the query is a US/datacenter leak
+ * (Washington/DC) or any non-Brazilian UF. Incomplete locations like
+ * "BH" without UF are NOT forbidden — callers must not replace them.
+ */
+export function hasForbiddenGeoQuery(
+  cidade?: string | null,
+  estado?: string | null,
+): boolean {
+  const c = (cidade ?? '').trim()
+  const s = (estado ?? '').trim()
+  if (!c && !s) return false
+  if (isForbiddenGeoCity(c)) return true
+  if (s && !isBrazilianUf(convertStateToUf(s))) return true
+  return false
+}
+
+/**
+ * Drop Washington/DC (and any non-BR UF) from a query string in place.
+ * Returns true when the params were mutated. Does not touch a city without UF.
+ */
+export function stripForbiddenGeoParams(params: URLSearchParams): boolean {
+  if (!hasForbiddenGeoQuery(params.get('cidade'), params.get('estado'))) {
+    return false
+  }
+  params.delete('cidade')
+  params.delete('estado')
+  return true
+}
+
+/**
  * Gate for every write of city+state into the form or URL.
  * Empty city, US/DC, and non-Brazilian UF → null (leave the field empty).
  */

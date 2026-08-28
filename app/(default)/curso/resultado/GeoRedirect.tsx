@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { brazilCityStateOrNull, convertStateToUf, isBrazilianUf, isForbiddenGeoCity } from '@/app/lib/geo/brazil-location'
+import {
+  brazilCityStateOrNull,
+  hasForbiddenGeoQuery,
+  stripForbiddenGeoParams,
+} from '@/app/lib/geo/brazil-location'
 import { isBot } from '@/app/lib/utils/is-bot'
 
 /**
@@ -15,8 +19,9 @@ import { isBot } from '@/app/lib/utils/is-bot'
  * "Mountain View, CA" vindas do datacenter do crawler).
  *
  * Write-path: this is the query-string injector that #87 missed. It must
- * never write Washington/DC, and must not overwrite a city the user already
- * put in the URL (e.g. BH without UF).
+ * never write Washington/DC, must not overwrite a city the user already
+ * put in the URL (e.g. BH without UF), and must not inject geo onto a
+ * course search that only has `cn=` (homepage Pedagogia chip).
  */
 export default function GeoRedirect({
   curso,
@@ -46,14 +51,15 @@ export default function GeoRedirect({
     const urlCidade = (fromWindow?.get('cidade') ?? cidade ?? '').trim()
     const urlEstado = (fromWindow?.get('estado') ?? estado ?? '').trim()
     const urlCurso = (fromWindow?.get('c') ?? curso ?? '').trim()
+    // Homepage Pedagogia chip is `?cn=Pedagogia` with no `c=` and no UF.
+    // Treat cn as a chosen course so geo cannot write cidade=Washington.
+    const urlCn = (fromWindow?.get('cn') ?? cursoNomeCompleto ?? '').trim()
 
     const allowedFromUrl = brazilCityStateOrNull(urlCidade, urlEstado)
 
     const stripForbiddenFromUrl = () => {
       if (!fromWindow) return
-      if (!fromWindow.has('cidade') && !fromWindow.has('estado')) return
-      fromWindow.delete('cidade')
-      fromWindow.delete('estado')
+      if (!stripForbiddenGeoParams(fromWindow)) return
       setLocationDetected(true)
       router.replace(`/curso/resultado?${fromWindow.toString()}`, { scroll: false })
     }
@@ -61,18 +67,14 @@ export default function GeoRedirect({
     // Valid BR city already in the URL: nothing to do.
     if (allowedFromUrl) return
 
-    const incomingForbidden =
-      isForbiddenGeoCity(urlCidade) ||
-      (Boolean(urlEstado) && !isBrazilianUf(convertStateToUf(urlEstado)))
-
     // Washington/DC (or any non-BR UF) in the query string: drop it.
     // BH without UF stays — do not replace with geo.
-    if (incomingForbidden) {
+    if (hasForbiddenGeoQuery(urlCidade, urlEstado)) {
       stripForbiddenFromUrl()
       return
     }
 
-    if (urlCidade || urlCurso) return
+    if (urlCidade || urlCurso || urlCn) return
 
     if (isBot()) {
       setLocationDetected(true)
@@ -88,6 +90,9 @@ export default function GeoRedirect({
           return
         }
         if ((current.get('cidade') ?? '').trim()) {
+          return
+        }
+        if ((current.get('c') ?? '').trim() || (current.get('cn') ?? '').trim()) {
           return
         }
       }

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { AnimatePresence } from 'framer-motion'
 import { useConsent } from '../../providers/ConsentProvider'
 import { CONSENT_OPEN_EVENT } from '@/app/lib/consent/storage'
 import { isInscriptionRoute } from '@/app/lib/consent/inscription-route'
@@ -15,9 +14,10 @@ export default function CookieConsent() {
     useConsent()
   const [prefsOpen, setPrefsOpen] = useState(false)
 
-  // Fixed banner (z-[1100], full-width on mobile) sits on top of the
-  // inscription form CTAs. Hide on every checkout/matricula rail — not only
-  // /checkout/estacio. Accept / refuse / customize still work elsewhere.
+  // Hide on every inscription rail — not only /checkout/estacio.
+  // Also trust window.location (mobile / error remounts can briefly report
+  // an empty usePathname while the URL is still /checkout/matricula).
+  // No AnimatePresence: the exit fade left a fixed overlay on top of step 02/03.
   const hideBannerOnRoute = isInscriptionRoute(pathname)
   const showBanner = hydrated && !hasDecision && !prefsOpen && !hideBannerOnRoute
 
@@ -39,15 +39,13 @@ export default function CookieConsent() {
 
   return (
     <>
-      <AnimatePresence>
-        {showBanner && (
-          <CookieBanner
-            onAcceptAll={acceptAll}
-            onReject={rejectAll}
-            onCustomize={() => setPrefsOpen(true)}
-          />
-        )}
-      </AnimatePresence>
+      {showBanner ? (
+        <CookieBanner
+          onAcceptAll={acceptAll}
+          onReject={rejectAll}
+          onCustomize={() => setPrefsOpen(true)}
+        />
+      ) : null}
 
       <CookiePreferences
         open={prefsOpen}

@@ -28,6 +28,7 @@ const ExitIntentModal = dynamic(() => import('../organisms/ExitIntentModal'), {
 
 export function DeferredWidgets() {
   const [ready, setReady] = useState(false)
+  const [onInscription, setOnInscription] = useState(false)
 
   useEffect(() => {
     const win = window as typeof window & {
@@ -53,15 +54,25 @@ export function DeferredWidgets() {
     }
   }, [])
 
+  useEffect(() => {
+    const sync = () => {
+      const path = window.location.pathname.toLowerCase()
+      setOnInscription(path === '/checkout' || path.startsWith('/checkout/'))
+    }
+    sync()
+    window.addEventListener('popstate', sync)
+    return () => window.removeEventListener('popstate', sync)
+  }, [])
+
   if (!ready) return null
 
   return (
     <>
       <Toaster richColors position="top-right" />
-      <WatiWhatsappWidget />
+      {!onInscription ? <WatiWhatsappWidget /> : null}
       <VocationalTab />
       <CookieConsent />
-      <ExitIntentModal />
+      {!onInscription ? <ExitIntentModal /> : null}
     </>
   )
 }

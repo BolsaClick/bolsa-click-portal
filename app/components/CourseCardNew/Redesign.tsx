@@ -315,7 +315,6 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
               e.preventDefault()
               return
             }
-            e.preventDefault()
             void handleClick()
           }}
           aria-disabled={shiftBlocked || undefined}

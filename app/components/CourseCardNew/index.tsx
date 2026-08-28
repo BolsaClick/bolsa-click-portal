@@ -507,7 +507,8 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
                   e.preventDefault()
                   return
                 }
-                e.preventDefault()
+                // Do not preventDefault: href is the enrollment URL. Tracking
+                // still runs; if JS is slow/broken the browser still navigates.
                 void handleClick()
               }}
               aria-disabled={shiftBlocked || undefined}

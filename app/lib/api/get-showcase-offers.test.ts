@@ -7,6 +7,7 @@ import {
   baseCourseName,
   discountFromPrices,
   pickShelfOffer,
+  tartarusBaseUrl,
 } from './get-showcase-offers'
 
 test('baseCourseName distinguishes Administração from Administração Pública', () => {
@@ -64,6 +65,60 @@ test('pickShelfOffer drops inflated stubs and Administração Pública', () => {
   assert.equal(picked.name, 'Administração - Bacharelado')
   assert.equal(picked.minPrice, 107.2)
   assert.equal(discountFromPrices(picked.minPrice!, picked.maxPrice!), 42)
+})
+
+test('tartarusBaseUrl falls back to the public API when env is missing', () => {
+  const prev = process.env.NEXT_PUBLIC_TARTARUS_API
+  delete process.env.NEXT_PUBLIC_TARTARUS_API
+  try {
+    assert.equal(tartarusBaseUrl(), 'https://tartarus-api.inovitdigital.com.br/api')
+  } finally {
+    if (prev === undefined) delete process.env.NEXT_PUBLIC_TARTARUS_API
+    else process.env.NEXT_PUBLIC_TARTARUS_API = prev
+  }
+})
+
+test('pickShelfOffer keeps Pedagogia semipresencial when there is no commercial EAD', () => {
+  const slot = CURSOS_FEATURED_SLOTS.find((s) => s.courseName === 'Pedagogia')!
+  const picked = pickShelfOffer(
+    [
+      {
+        name: 'Pedagogia - Licenciatura',
+        brand: 'ANHANGUERA',
+        minPrice: 179.28,
+        maxPrice: 332.22,
+        modality: 'EAD',
+        commercialModality: 'SEMIPRESENCIAL',
+        city: 'BELO HORIZONTE',
+        uf: 'MG',
+      },
+    ],
+    slot,
+  )
+  assert.ok(picked)
+  assert.equal(picked.commercialModality, 'SEMIPRESENCIAL')
+  assert.equal(discountFromPrices(picked.minPrice!, picked.maxPrice!), 46)
+})
+
+test('pickShelfOffer still returns a real offer when city is missing (national fallback)', () => {
+  const slot = CURSOS_FEATURED_SLOTS.find((s) => s.courseName === 'Administração')!
+  const picked = pickShelfOffer(
+    [
+      {
+        name: 'Administração - Bacharelado',
+        brand: 'UNOPAR',
+        minPrice: 107.2,
+        maxPrice: 186.67,
+        modality: 'EAD',
+        commercialModality: 'EAD',
+        city: 'SAO PAULO',
+        uf: 'SP',
+      },
+    ],
+    slot,
+  )
+  assert.ok(picked)
+  assert.equal(picked.city, 'SAO PAULO')
 })
 
 test('pickShelfOffer prefers requested EAD over semipresencial when both exist', () => {

@@ -1,5 +1,4 @@
 import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
-import { tartarus } from './axios'
 import { getBrandLogo } from '@/app/lib/brand-logos'
 import { normalizeBrand } from '@/app/lib/utils/brand'
 import { parseCourseName, titleCase } from '@/app/components/v2/course-offer'
@@ -7,14 +6,15 @@ import { parseCourseName, titleCase } from '@/app/components/v2/course-offer'
 /**
  * Vitrine "Ofertas em destaque" de /cursos.
  *
- * NÃO usa /offers/featured — esse endpoint devolve catálogo errado (cursos
- * livres UNAES, polos aleatórios). NÃO mescla Athena/Estácio. Cada card
- * ou vem de `cogna/courses/search` (Tartarus) com De/Por reais, ou some.
+ * NÃO usa /offers/featured (catálogo errado). NÃO mescla Athena. Cada card
+ * vem de `cogna/courses/search` com De/Por reais, ou some.
  *
- * Os stubs antigos (Pedagogia 119/950, Administração 99,99/1290, ADS
- * 109/1100) calculavam 87/90/92% no SSR — percentuais inventados, acima
- * do teto de 78% e acima do que a busca ao vivo devolve (Pedagogia BH
- * ~46% semipresencial; Administração Curitiba ~42% EAD).
+ * SSR: NÃO usar o axios `tartarus` aqui. `baseURL` é
+ * `process.env.NEXT_PUBLIC_TARTARUS_API` no load do módulo — se a env não
+ * estiver inlined no server bundle, axios chama `cogna/courses/search` como
+ * URL relativa e explode com `ERR_INVALID_URL` (visto no `next build`).
+ * `loadSlot` engolia o erro → prateleira vazia em produção. Fetch com base
+ * absoluta (fallback público) + cache ISR.
  */
 
 export type ShowcaseOffer = {
@@ -69,14 +69,22 @@ const CANONICAL_MODALITIES = new Set<ShowcaseOffer['modality']>([
   'SEMIPRESENCIAL',
 ])
 
-const SEARCH_TIMEOUT_MS = 8000
-const SEARCH_SIZE = 20
+const SEARCH_TIMEOUT_MS = 15_000
+const SEARCH_SIZE = 10
+const TARTARUS_FALLBACK = 'https://tartarus-api.inovitdigital.com.br/api'
+
+export function tartarusBaseUrl(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_TARTARUS_API?.trim().replace(/\/$/, '')
+  return fromEnv || TARTARUS_FALLBACK
+}
 
 type TartarusSearchOffer = {
   name?: string
   brand?: string
   minPrice?: number
   maxPrice?: number
+  priceWithDiscount?: number
+  priceWithoutDiscount?: number
   modality?: string
   commercialModality?: string
   city?: string
@@ -90,9 +98,7 @@ function stripDiacritics(s: string): string {
 
 /** "Administração - Bacharelado" → "administracao"; "Administração Pública" não casa. */
 export function baseCourseName(name: string): string {
-  return stripDiacritics(
-    parseCourseName(name).title,
-  )
+  return stripDiacritics(parseCourseName(name).title)
     .trim()
     .toLowerCase()
 }
@@ -102,24 +108,37 @@ export function discountFromPrices(min: number, max: number): number {
   return Math.floor((1 - min / max) * 100)
 }
 
+function offerPrices(offer: TartarusSearchOffer): { min: number; max: number } {
+  return {
+    min: Number(offer.minPrice ?? offer.priceWithDiscount ?? 0),
+    max: Number(offer.maxPrice ?? offer.priceWithoutDiscount ?? 0),
+  }
+}
+
 function isCanonicalModality(value: string | undefined): value is ShowcaseOffer['modality'] {
   const u = (value || '').toUpperCase()
   return CANONICAL_MODALITIES.has(u as ShowcaseOffer['modality'])
 }
 
+function cityKey(city: string | undefined): string {
+  return stripDiacritics(city || '').trim().toLowerCase()
+}
+
 /**
  * Escolhe 1 oferta real pro slot. Sem match honesto → null (o card some).
- * Prefere a modalidade pedida, depois o maior desconto ≤ teto 78%.
+ * Prefere a cidade do slot, depois a modalidade pedida, depois o maior
+ * desconto ≤ teto 78%. SEMIPRESENCIAL conta (Pedagogia BH não tem EAD comercial).
+ * Cidade é preferência, não filtro — empty state é pior que um De/Por real.
  */
 export function pickShelfOffer(
   offers: TartarusSearchOffer[],
   slot: CursosFeaturedSlot,
 ): TartarusSearchOffer | null {
   const want = baseCourseName(slot.courseName)
+  const wantCity = cityKey(slot.city)
   const ranked = offers
     .map((offer) => {
-      const min = Number(offer.minPrice ?? 0)
-      const max = Number(offer.maxPrice ?? 0)
+      const { min, max } = offerPrices(offer)
       const commercial = (offer.commercialModality || '').toUpperCase()
       const delivery = (offer.modality || '').toUpperCase()
       const modality = isCanonicalModality(commercial)
@@ -129,9 +148,10 @@ export function pickShelfOffer(
           : null
       const discount = discountFromPrices(min, max)
       const nameMatch = baseCourseName(offer.name || '') === want
+      const cityScore = wantCity && cityKey(offer.city) === wantCity ? 1 : 0
       const modalityScore =
         commercial === slot.modality ? 2 : delivery === slot.modality ? 1 : 0
-      return { offer, min, max, modality, discount, nameMatch, modalityScore }
+      return { offer, min, modality, discount, nameMatch, cityScore, modalityScore }
     })
     .filter(
       (row) =>
@@ -142,6 +162,7 @@ export function pickShelfOffer(
     )
 
   ranked.sort((a, b) => {
+    if (b.cityScore !== a.cityScore) return b.cityScore - a.cityScore
     if (b.modalityScore !== a.modalityScore) return b.modalityScore - a.modalityScore
     if (b.discount !== a.discount) return b.discount - a.discount
     return a.min - b.min
@@ -151,8 +172,7 @@ export function pickShelfOffer(
 }
 
 function toShowcase(offer: TartarusSearchOffer, slot: CursosFeaturedSlot): ShowcaseOffer | null {
-  const min = Number(offer.minPrice ?? 0)
-  const max = Number(offer.maxPrice ?? 0)
+  const { min, max } = offerPrices(offer)
   const discount = discountFromPrices(min, max)
   if (discount <= 0 || discount > DISCOUNT_CEILING_PCT) return null
 
@@ -192,32 +212,53 @@ function toShowcase(offer: TartarusSearchOffer, slot: CursosFeaturedSlot): Showc
   }
 }
 
-function serializeParams(params: Record<string, string | number | string[]>): string {
+function serializeQuery(params: Record<string, string | number>): string {
   const searchParams = new URLSearchParams()
   Object.entries(params).forEach(([key, value]) => {
-    if (Array.isArray(value)) value.forEach((item) => searchParams.append(key, String(item)))
-    else if (value !== null && value !== undefined) searchParams.append(key, String(value))
+    if (value !== null && value !== undefined && String(value).trim() !== '') {
+      searchParams.append(key, String(value))
+    }
   })
   return searchParams.toString()
 }
 
+async function searchTartarus(params: Record<string, string | number>): Promise<TartarusSearchOffer[]> {
+  const url = `${tartarusBaseUrl()}/cogna/courses/search?${serializeQuery(params)}`
+  const res = await fetch(url, {
+    headers: { Accept: 'application/json' },
+    next: { revalidate: 3600 },
+    signal: AbortSignal.timeout(SEARCH_TIMEOUT_MS),
+  })
+  if (!res.ok) {
+    throw new Error(`Tartarus search HTTP ${res.status}`)
+  }
+  const json = (await res.json()) as { data?: TartarusSearchOffer[] }
+  return Array.isArray(json?.data) ? json.data : []
+}
+
 async function searchSlot(slot: CursosFeaturedSlot): Promise<TartarusSearchOffer[]> {
-  const params: Record<string, string | number | string[]> = {
+  const base = {
     page: 1,
     size: SEARCH_SIZE,
-    academicLevel: [slot.academicLevel],
+    academicLevel: slot.academicLevel,
     courseName: slot.courseName,
-    city: slot.city,
-    state: slot.state,
+  }
+  // Cogna guarda cidade em maiúsculas sem acento (SAO PAULO, BELO HORIZONTE).
+  const city = stripDiacritics(slot.city).toUpperCase()
+
+  try {
+    const local = await searchTartarus({ ...base, city, state: slot.state })
+    if (local.length > 0) return local
+  } catch (error) {
+    console.error(
+      `[cursos featured] busca com cidade falhou "${slot.courseName}" (${city}/${slot.state}):`,
+      error,
+    )
   }
 
-  const { data } = await tartarus.get<{ data?: TartarusSearchOffer[] }>('cogna/courses/search', {
-    params,
-    paramsSerializer: serializeParams,
-    timeout: SEARCH_TIMEOUT_MS,
-  })
-
-  return Array.isArray(data?.data) ? data.data : []
+  // Mesmo padrão da vitrine /graduacao (sem cidade) — devolve De/Por real
+  // em vez de empty state quando o filtro local 429/vazio.
+  return searchTartarus(base)
 }
 
 async function loadSlot(slot: CursosFeaturedSlot): Promise<ShowcaseOffer | null> {

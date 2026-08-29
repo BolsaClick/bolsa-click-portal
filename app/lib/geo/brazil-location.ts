@@ -95,6 +95,80 @@ export function isBrazilianUf(region: string): boolean {
   return BRAZILIAN_UF.has(region.trim().toUpperCase())
 }
 
+function foldAscii(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+}
+
+/**
+ * US datacenter / crawler cities that must never land in the homepage ComboBox
+ * or in `cidade=` / `estado=` — even if a caller mapped the UF to DF/SP.
+ */
+export function isForbiddenGeoCity(city: string): boolean {
+  const n = foldAscii(city)
+  if (!n) return false
+  return (
+    n === 'washington' ||
+    n.startsWith('washington ') ||
+    n.includes('washington dc') ||
+    n === 'district of columbia' ||
+    n === 'mountain view' ||
+    n === 'ashburn'
+  )
+}
+
+export type BrazilCityState = { city: string; state: string }
+
+/**
+ * True when `cidade=` / `estado=` in the query is a US/datacenter leak
+ * (Washington/DC) or any non-Brazilian UF. Incomplete locations like
+ * "BH" without UF are NOT forbidden — callers must not replace them.
+ */
+export function hasForbiddenGeoQuery(
+  cidade?: string | null,
+  estado?: string | null,
+): boolean {
+  const c = (cidade ?? '').trim()
+  const s = (estado ?? '').trim()
+  if (!c && !s) return false
+  if (isForbiddenGeoCity(c)) return true
+  if (s && !isBrazilianUf(convertStateToUf(s))) return true
+  return false
+}
+
+/**
+ * Drop Washington/DC (and any non-BR UF) from a query string in place.
+ * Returns true when the params were mutated. Does not touch a city without UF.
+ */
+export function stripForbiddenGeoParams(params: URLSearchParams): boolean {
+  if (!hasForbiddenGeoQuery(params.get('cidade'), params.get('estado'))) {
+    return false
+  }
+  params.delete('cidade')
+  params.delete('estado')
+  return true
+}
+
+/**
+ * Gate for every write of city+state into the form or URL.
+ * Empty city, US/DC, and non-Brazilian UF → null (leave the field empty).
+ */
+export function brazilCityStateOrNull(
+  city?: string | null,
+  state?: string | null,
+): BrazilCityState | null {
+  const c = (city ?? '').trim()
+  const s = (state ?? '').trim()
+  if (!c || !s) return null
+  if (isForbiddenGeoCity(c)) return null
+  const uf = convertStateToUf(s)
+  if (!isBrazilianUf(uf)) return null
+  return { city: c, state: uf }
+}
+
 /**
  * Accept a geo payload only when it is a real Brazilian city+UF.
  * Foreign IPs (Washington/DC, Mountain View/CA, etc.) return null — callers
@@ -102,7 +176,7 @@ export function isBrazilianUf(region: string): boolean {
  */
 export function brazilianLocationOrNull(input: RawGeoInput): BrazilianLocation | null {
   const city = String(input.city ?? '').trim()
-  if (!city) return null
+  if (!city || isForbiddenGeoCity(city)) return null
 
   const countryCode = String(input.countryCode ?? '').trim()
   const country = String(input.country ?? '').trim()

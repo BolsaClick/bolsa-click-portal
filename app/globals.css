@@ -277,3 +277,34 @@ body {
     transform: none;
   }
 }
+
+/* Cookie banner on mobile is position:fixed and covers checkout step 02/03
+   CTAs. When the banner is visible, inscription pages get extra padding so
+   those buttons stay above the overlay. Desktop uses a corner card. */
+html.cookie-banner-visible [data-checkout-inscription] {
+  padding-bottom: 22rem;
+}
+@media (min-width: 768px) {
+  html.cookie-banner-visible [data-checkout-inscription] {
+    padding-bottom: 0;
+  }
+}
+
+.checkout-step-cta {
+  position: relative;
+  z-index: 1200;
+}
+
+/* Layout-level kill switch: checkout layout sets html.on-inscription-route.
+   CookieConsent lives in the root DeferredWidgets (sibling, not descendant),
+   so this must hide by global selector. Covers /checkout/matricula errors
+   and mobile 375px where the banner is full-width over steps 02/03. */
+html.on-inscription-route [aria-label="Aviso de cookies"],
+html.on-inscription-route #wati-whatsapp,
+html.on-inscription-route iframe[src*="clare.ai"],
+html.on-inscription-route iframe[src*="wati"],
+html.on-inscription-route iframe[src*="whatsapp"] {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}

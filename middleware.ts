@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { stripForbiddenGeoParams } from "@/app/lib/geo/brazil-location";
 
 const IS_WARMUP =
   process.env.NEXT_PUBLIC_THEME === "bolsamais" &&
@@ -95,6 +96,16 @@ export function middleware(request: NextRequest) {
     target.search = "";
     target.searchParams.set("q", request.nextUrl.searchParams.get("q") || "");
     return NextResponse.redirect(target, 301);
+  }
+
+  // Datacenter geo leak (Washington/DC) must never reach the search API.
+  // 302 — not a 301 — so we don't freeze a stripped URL in crawler caches.
+  // Pedagogia + BH without UF is left intact (not a forbidden city/UF).
+  if (pathname === "/curso/resultado") {
+    const clean = publicRedirectUrl(request);
+    if (stripForbiddenGeoParams(clean.searchParams)) {
+      return seoResponse(NextResponse.redirect(clean, 302));
+    }
   }
 
   return seoResponse(NextResponse.next());

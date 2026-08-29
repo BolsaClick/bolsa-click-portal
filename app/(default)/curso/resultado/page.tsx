@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { Suspense } from 'react'
 import { ACADEMIC_LEVEL, isProfissionalizanteLevel, normalizeAcademicLevel } from '@/app/lib/academic-level'
+import { brazilCityStateOrNull } from '@/app/lib/geo/brazil-location'
 import { ResultsFilterProvider } from './ResultsFilterContext'
 import ResultsShell from './ResultsShell'
 import ResultsSkeleton from './ResultsSkeleton'
@@ -39,8 +40,11 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const params = await searchParams
   const curso = typeof params.c === 'string' ? params.c : ''
   const cursoNomeCompleto = typeof params.cn === 'string' ? params.cn : ''
-  const cidade = typeof params.cidade === 'string' ? params.cidade : ''
-  const estado = typeof params.estado === 'string' ? params.estado : ''
+  const cidadeRaw = typeof params.cidade === 'string' ? params.cidade : ''
+  const estadoRaw = typeof params.estado === 'string' ? params.estado : ''
+  const allowedLocation = brazilCityStateOrNull(cidadeRaw, estadoRaw)
+  const cidade = allowedLocation?.city ?? ''
+  const estado = allowedLocation?.state ?? ''
   const modalidade = typeof params.modalidade === 'string' ? params.modalidade : 'EAD'
   const nivel = typeof params.nivel === 'string' ? params.nivel : 'GRADUACAO'
 
@@ -206,8 +210,11 @@ export default async function CursosPage({ searchParams }: Props) {
   const params = await searchParams
   const curso = typeof params.c === 'string' ? params.c : ''
   const cursoNomeCompleto = typeof params.cn === 'string' ? params.cn : ''
-  const cidade = typeof params.cidade === 'string' ? params.cidade : ''
-  const estado = typeof params.estado === 'string' ? params.estado : ''
+  const cidadeRaw = typeof params.cidade === 'string' ? params.cidade : ''
+  const estadoRaw = typeof params.estado === 'string' ? params.estado : ''
+  const allowedLocation = brazilCityStateOrNull(cidadeRaw, estadoRaw)
+  const cidade = allowedLocation?.city ?? ''
+  const estado = allowedLocation?.state ?? ''
   const modalidade = typeof params.modalidade === 'string' ? params.modalidade : ''
   const nivel = typeof params.nivel === 'string' ? params.nivel : 'GRADUACAO'
   // Filtro de marca server-side (labels normalizados, separados por vírgula).

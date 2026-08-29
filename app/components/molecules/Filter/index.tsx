@@ -12,7 +12,7 @@ import { getLocalities } from '@/app/lib/api/get-localites'
 import { ModalitySelect } from '../../atoms/ModalitySelect'
 import { GraduationCap, MapPin } from 'lucide-react'
 import { useGeoLocation } from '@/app/context/GeoLocationContext'
-import { isBrazilianUf } from '@/app/lib/geo/brazil-location'
+import { brazilCityStateOrNull, isForbiddenGeoCity } from '@/app/lib/geo/brazil-location'
 import { ACADEMIC_LEVEL } from '@/app/lib/academic-level'
 import { useLastSearch } from '@/app/lib/personalization/hooks'
 
@@ -80,7 +80,7 @@ const Filter = () => {
     setValue('course', { id: '', name: '', slug: '' })
     setCourseError('')
   }
-  const { control, handleSubmit, watch, setValue } = useForm<FormValues>({
+  const { control, handleSubmit, watch, setValue, getValues } = useForm<FormValues>({
     defaultValues: {
       modalidade: 'EAD',
       levels: activeTab,
@@ -89,13 +89,23 @@ const Filter = () => {
     },
   })
 
-  // Preencher cidade/estado padrão só com UF brasileira. IP estrangeiro
-  // (Washington-DC, etc.) deixa o campo vazio com o placeholder "Digite uma cidade".
+  // Preencher cidade/estado só com localização brasileira. Nunca escrever
+  // Washington/DC (IP de datacenter) no ComboBox nem na query string — e não
+  // sobrescrever o que a pessoa já digitou (ex.: BH sem UF).
   useEffect(() => {
-    if (geoCity && geoState && isBrazilianUf(geoState)) {
-      setValue('city', { city: geoCity, state: geoState })
-    }
-  }, [geoCity, geoState, setValue])
+    const allowed = brazilCityStateOrNull(geoCity, geoState)
+    if (!allowed) return
+
+    const current = getValues('city')
+    const alreadyChosen =
+      typeof current === 'object' &&
+      current &&
+      brazilCityStateOrNull(current.city, current.state)
+    if (alreadyChosen) return
+    if (typeof current === 'string' && current.trim()) return
+
+    setValue('city', { city: allowed.city, state: allowed.state })
+  }, [geoCity, geoState, setValue, getValues])
 
   const { data: graduationCourses } = useQuery({
     queryFn: () => getShowCourses(academicLevelMap.graduacao),
@@ -216,16 +226,40 @@ const Filter = () => {
       return
     }
 
-    if (typeof data.city !== 'object' || !data.city.city || !data.city.state) {
-      setCityError('Selecione uma cidade da lista')
-      return
+    let selectedCity =
+      typeof data.city === 'object'
+        ? brazilCityStateOrNull(data.city.city, data.city.state)
+        : null
+
+    if (typeof data.city === 'string' && data.city.trim()) {
+      if (isForbiddenGeoCity(data.city)) {
+        // ComboBox still showing "Washington - DC" as typed text — drop it.
+        setValue('city', { city: '', state: '' })
+        selectedCity = null
+      } else {
+        const typed = normalizeOptionText(data.city)
+        const match = cityOptions.find((option: { city: string; state: string }) => {
+          const full = normalizeOptionText(`${option.city} - ${option.state}`)
+          const name = normalizeOptionText(option.city)
+          return full === typed || name === typed
+        })
+        selectedCity = match ? brazilCityStateOrNull(match.city, match.state) : null
+        if (!selectedCity) {
+          setCityError('Selecione uma cidade da lista')
+          return
+        }
+      }
+    } else if (typeof data.city === 'object' && (data.city.city || data.city.state) && !selectedCity) {
+      // Geo/ComboBox leaked DC/US — drop it instead of sending cidade=Washington.
+      setValue('city', { city: '', state: '' })
+      selectedCity = null
     }
 
     setCourseError('')
     setCityError('')
 
-    const city = data.city.city
-    const state = data.city.state
+    const city = selectedCity?.city ?? ''
+    const state = selectedCity?.state ?? ''
     const courseNameClean = selectedCourse.name ? removeCourseSuffix(selectedCourse.name) : ''
 
     // Construir URL com parâmetros - 'c' sempre primeiro se existir
@@ -245,9 +279,11 @@ const Filter = () => {
       }
     }
     
-    // Adicionar os outros parâmetros
-    params.push(`cidade=${encodeURIComponent(city)}`);
-    params.push(`estado=${encodeURIComponent(state)}`);
+    // Cidade é opcional (EAD / busca nacional). Nunca escrever DC/US.
+    if (city && state) {
+      params.push(`cidade=${encodeURIComponent(city)}`);
+      params.push(`estado=${encodeURIComponent(state)}`);
+    }
     
     // Garantir que a modalidade está no formato correto (EAD, PRESENCIAL, SEMIPRESENCIAL)
     const modalidadeFormatada = convertModalityToAPI(data.modalidade)

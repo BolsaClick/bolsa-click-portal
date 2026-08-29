@@ -4,7 +4,7 @@ import { titleCasePtBr } from "@/app/lib/utils/title-case"
 import { useFavorites } from "@/app/lib/hooks/useFavorites"
 import { usePostHogTracking } from "@/app/lib/hooks/usePostHogTracking"
 import { useCourseSelection } from "@/app/lib/hooks/useCourseSelection"
-import { courseNeedsShiftSelection, resolveCourseModality } from "@/app/lib/checkout/course-destination"
+import { courseNeedsShiftSelection, resolveCourseModality, buildCourseCheckoutDestination } from "@/app/lib/checkout/course-destination"
 import { getPriceAnchor } from "@/app/lib/utils/price-anchor"
 import { brandMecKey } from "@/app/lib/utils/brand"
 import { formatCurrency } from "@/utils/fomartCurrency"
@@ -47,6 +47,9 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
       extraProps: { design_version: 'redesign_v2' },
     })
   }
+
+  const destination = buildCourseCheckoutDestination(course, selectedShift)
+  const shiftBlocked = needsShiftSelection() && !selectedShift
 
   const renderUniversityImage = (universityName: string) => {
     const n = (universityName || '').toLowerCase()
@@ -305,18 +308,25 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
         </div>
 
         {/* CTA — cor do site: bolsa-secondary */}
-        <button
-          onClick={handleClick}
-          disabled={needsShiftSelection() && !selectedShift}
+        <a
+          href={destination.href || '/checkout/matricula'}
+          onClick={(e) => {
+            if (shiftBlocked) {
+              e.preventDefault()
+              return
+            }
+            void handleClick()
+          }}
+          aria-disabled={shiftBlocked || undefined}
           className={`w-full py-3 px-4 rounded-xl font-bold text-sm tracking-wide transition-all duration-200 flex items-center justify-center gap-2 ${
-            needsShiftSelection() && !selectedShift
-              ? 'bg-ink-100 text-ink-500 cursor-not-allowed'
+            shiftBlocked
+              ? 'bg-ink-100 text-ink-500 cursor-not-allowed pointer-events-none'
               : 'bg-bolsa-secondary hover:brightness-95 text-white active:scale-[.98] shadow-sm'
           }`}
         >
           <Lock size={15} strokeWidth={2.5} />
-          {needsShiftSelection() && !selectedShift ? 'Selecione o turno' : 'Garantir Bolsa'}
-        </button>
+          {shiftBlocked ? 'Selecione o turno' : 'Garantir Bolsa'}
+        </a>
 
         {/* Trunfo universal: diferente de agregadores concorrentes, não
             cobramos taxa de inscrição/pré-matrícula em nenhum trilho (ver

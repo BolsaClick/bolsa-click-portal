@@ -5,6 +5,7 @@ import { MapPin, Building2, ArrowLeft, ListFilter, LayoutGrid, LayoutList, X } f
 import { useRouter } from 'next/navigation'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { normalizeAcademicLevel } from '@/app/lib/academic-level'
+import { brazilCityStateOrNull } from '@/app/lib/geo/brazil-location'
 import { titleCasePtBr } from '@/app/lib/utils/title-case'
 import FiltersPanel from './FiltersPanel'
 import GeoRedirect from './GeoRedirect'
@@ -99,6 +100,9 @@ export default function ResultsShell({
             ? newParams.estado.trim()
             : ''
           : estado || ''
+      const allowed = brazilCityStateOrNull(finalCidade, finalEstado)
+      const safeCidade = allowed?.city ?? ''
+      const safeEstado = allowed?.state ?? ''
       const finalModalidade =
         newParams.modalidade !== undefined
           ? newParams.modalidade && newParams.modalidade.trim()
@@ -111,8 +115,8 @@ export default function ResultsShell({
         params.set('c', finalC)
         if (finalCn) params.set('cn', finalCn)
       }
-      if (finalCidade) params.set('cidade', finalCidade)
-      if (finalEstado) params.set('estado', finalEstado)
+      if (safeCidade) params.set('cidade', safeCidade)
+      if (safeEstado) params.set('estado', safeEstado)
       if (finalModalidade) params.set('modalidade', finalModalidade)
       params.set('nivel', finalNivel)
       if (newParams.marcas) params.set('marcas', newParams.marcas)

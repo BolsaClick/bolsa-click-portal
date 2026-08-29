@@ -2010,7 +2010,7 @@ const isFormValidForPayment =
                           <button
                             type="submit"
                             disabled={isSubmitting || !posInstallmentId || !!cpfInscriptionBlocked}
-                            className="group w-full mt-4 inline-flex items-center justify-center gap-3 bg-bolsa-secondary text-white py-4 px-6 rounded-full font-semibold text-[15px] hover:bg-bolsa-secondary/90 disabled:bg-ink-300 disabled:cursor-not-allowed shadow-lg shadow-bolsa-secondary/25 hover:shadow-bolsa-secondary/40 transition-all duration-300"
+                            className="checkout-step-cta group w-full mt-4 inline-flex items-center justify-center gap-3 bg-bolsa-secondary text-white py-4 px-6 rounded-full font-semibold text-[15px] hover:bg-bolsa-secondary/90 disabled:bg-ink-300 disabled:cursor-not-allowed shadow-lg shadow-bolsa-secondary/25 hover:shadow-bolsa-secondary/40 transition-all duration-300"
                           >
                             {isSubmitting ? (
                               <span className="inline-flex items-center justify-center gap-2">
@@ -2036,7 +2036,7 @@ const isFormValidForPayment =
                           <button
                             type="submit"
                             disabled={isSubmitting || !isFormValidForPayment}
-                            className="group w-full inline-flex items-center justify-center gap-3 bg-bolsa-secondary text-white py-4 px-6 rounded-full font-semibold text-[15px] hover:bg-bolsa-secondary/90 disabled:bg-ink-300 disabled:cursor-not-allowed shadow-lg shadow-bolsa-secondary/25 hover:shadow-bolsa-secondary/40 transition-all duration-300"
+                            className="checkout-step-cta group w-full inline-flex items-center justify-center gap-3 bg-bolsa-secondary text-white py-4 px-6 rounded-full font-semibold text-[15px] hover:bg-bolsa-secondary/90 disabled:bg-ink-300 disabled:cursor-not-allowed shadow-lg shadow-bolsa-secondary/25 hover:shadow-bolsa-secondary/40 transition-all duration-300"
                           >
                             {isSubmitting ? (
                               <span className="inline-flex items-center justify-center gap-2">

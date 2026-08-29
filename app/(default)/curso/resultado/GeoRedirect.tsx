@@ -2,6 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import {
+  brazilCityStateOrNull,
+  hasForbiddenGeoQuery,
+  stripForbiddenGeoParams,
+} from '@/app/lib/geo/brazil-location'
 import { isBot } from '@/app/lib/utils/is-bot'
 
 /**
@@ -12,6 +17,11 @@ import { isBot } from '@/app/lib/utils/is-bot'
  *
  * Bots/crawlers NÃO passam por geolocalização (evita URLs indexadas com
  * "Mountain View, CA" vindas do datacenter do crawler).
+ *
+ * Write-path: this is the query-string injector that #87 missed. It must
+ * never write Washington/DC, must not overwrite a city the user already
+ * put in the URL (e.g. BH without UF), and must not inject geo onto a
+ * course search that only has `cn=` (homepage Pedagogia chip).
  */
 export default function GeoRedirect({
   curso,
@@ -32,9 +42,39 @@ export default function GeoRedirect({
   const [locationDetected, setLocationDetected] = useState(false)
 
   useEffect(() => {
-    // Já tem localização, ou já tem curso (busca nacional imediata): nada a fazer.
-    if ((cidade && estado) || (curso && curso.trim())) return
     if (locationDetected) return
+
+    const fromWindow =
+      typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search)
+        : null
+    const urlCidade = (fromWindow?.get('cidade') ?? cidade ?? '').trim()
+    const urlEstado = (fromWindow?.get('estado') ?? estado ?? '').trim()
+    const urlCurso = (fromWindow?.get('c') ?? curso ?? '').trim()
+    // Homepage Pedagogia chip is `?cn=Pedagogia` with no `c=` and no UF.
+    // Treat cn as a chosen course so geo cannot write cidade=Washington.
+    const urlCn = (fromWindow?.get('cn') ?? cursoNomeCompleto ?? '').trim()
+
+    const allowedFromUrl = brazilCityStateOrNull(urlCidade, urlEstado)
+
+    const stripForbiddenFromUrl = () => {
+      if (!fromWindow) return
+      if (!stripForbiddenGeoParams(fromWindow)) return
+      setLocationDetected(true)
+      router.replace(`/curso/resultado?${fromWindow.toString()}`, { scroll: false })
+    }
+
+    // Valid BR city already in the URL: nothing to do.
+    if (allowedFromUrl) return
+
+    // Washington/DC (or any non-BR UF) in the query string: drop it.
+    // BH without UF stays — do not replace with geo.
+    if (hasForbiddenGeoQuery(urlCidade, urlEstado)) {
+      stripForbiddenFromUrl()
+      return
+    }
+
+    if (urlCidade || urlCurso || urlCn) return
 
     if (isBot()) {
       setLocationDetected(true)
@@ -44,10 +84,15 @@ export default function GeoRedirect({
     const timeoutId = setTimeout(async () => {
       if (locationDetected) return
 
-      // Revalidar URL atual (pode ter atualizado após navegação da home).
       if (typeof window !== 'undefined') {
         const current = new URLSearchParams(window.location.search)
-        if ((current.get('cidade') ?? '').trim() && (current.get('estado') ?? '').trim()) {
+        if (brazilCityStateOrNull(current.get('cidade'), current.get('estado'))) {
+          return
+        }
+        if ((current.get('cidade') ?? '').trim()) {
+          return
+        }
+        if ((current.get('c') ?? '').trim() || (current.get('cn') ?? '').trim()) {
           return
         }
       }
@@ -56,8 +101,14 @@ export default function GeoRedirect({
         const params = new URLSearchParams(
           typeof window !== 'undefined' ? window.location.search : '',
         )
-        params.set('cidade', city)
-        params.set('estado', state)
+        const allowed = brazilCityStateOrNull(city, state)
+        if (!allowed) {
+          params.delete('cidade')
+          params.delete('estado')
+          return params
+        }
+        params.set('cidade', allowed.city)
+        params.set('estado', allowed.state)
         if (!params.has('c') && curso) params.set('c', curso)
         if (!params.has('cn') && cursoNomeCompleto) params.set('cn', cursoNomeCompleto)
         if (!params.has('nivel')) params.set('nivel', nivel)
@@ -68,16 +119,17 @@ export default function GeoRedirect({
       try {
         const { getCityFromOurAPIByIP } = await import('@/app/lib/api/get-city-from-api-by-ip')
         const location = await getCityFromOurAPIByIP()
-        if (!location) return
+        const allowed = brazilCityStateOrNull(location?.city, location?.state)
+        if (!allowed) return
 
         setLocationDetected(true)
-        router.replace(`/curso/resultado?${buildParams(location.city, location.state)}`, {
+        router.replace(`/curso/resultado?${buildParams(allowed.city, allowed.state)}`, {
           scroll: false,
         })
       } catch (error) {
         console.error('Erro ao detectar localização:', error)
         setLocationDetected(true)
-        router.replace(`/curso/resultado?${buildParams('São Paulo', 'SP')}`, { scroll: false })
+        // Foreign IP / lookup failure: leave city empty. Never invent SP or DC.
       }
     }, 350)
 

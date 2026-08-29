@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowRight, Clock } from 'lucide-react'
 import Container from '../../atoms/Container'
 import { useLastSearch, useVisitedCourses } from '@/app/lib/personalization/hooks'
+import { brazilCityStateOrNull } from '@/app/lib/geo/brazil-location'
 
 const buildResultadoUrl = (s: {
   course?: string
@@ -14,8 +15,11 @@ const buildResultadoUrl = (s: {
 }) => {
   const params = new URLSearchParams()
   if (s.course) params.set('c', s.course)
-  if (s.city) params.set('cidade', s.city)
-  if (s.state) params.set('estado', s.state)
+  const allowed = brazilCityStateOrNull(s.city, s.state)
+  if (allowed) {
+    params.set('cidade', allowed.city)
+    params.set('estado', allowed.state)
+  }
   if (s.modality) params.set('modalidade', s.modality)
   params.set('nivel', s.level ?? 'GRADUACAO')
   return `/curso/resultado?${params.toString()}`

@@ -516,6 +516,14 @@ model Banner {
   linkUrl   String? // Link opcional ao clicar no banner
   order     Int      @default(0)
   isActive  Boolean  @default(true)
+  // Segmentação por site: chaves de `SiteKey` (bolsaclick | bolsamais | anhanguera).
+  // Array VAZIO = exibe em todos os sites (compatível com os banners já
+  // cadastrados antes desse campo existir, que sempre apareceram em todo lugar).
+  targetSites String[] @default([])
+  // Período de vigência opcional. NULL em qualquer um dos dois lados = sem
+  // limite naquele lado (ex.: só `endsAt` = "exibir até tal data").
+  startsAt  DateTime?
+  endsAt    DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

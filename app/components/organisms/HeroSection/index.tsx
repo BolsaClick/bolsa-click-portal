@@ -1,22 +1,12 @@
-import { prisma } from '@/app/lib/prisma'
+import { getActiveBanners } from '@/app/lib/banners'
 import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 import HeroBannerSlider from './HeroBannerSlider'
 import Filter from '@/app/components/molecules/Filter'
 
 const Hero = async () => {
-  let banners: { id: string; title: string; subtitle: string | null; imageUrl: string; linkUrl: string | null }[] = []
+  let banners: Awaited<ReturnType<typeof getActiveBanners>> = []
   try {
-    banners = await prisma.banner.findMany({
-      where: { isActive: true },
-      orderBy: { order: 'asc' },
-      select: {
-        id: true,
-        title: true,
-        subtitle: true,
-        imageUrl: true,
-        linkUrl: true,
-      },
-    })
+    banners = await getActiveBanners()
   } catch {
     // Fallback to placeholder hero silently
   }
@@ -25,12 +15,16 @@ const Hero = async () => {
 
   return (
     <section aria-label="Seção principal de destaque" className="relative bg-paper w-full overflow-x-clip">
-      {/* SLIDE AREA — banner do CMS (desktop apenas, segue config original) */}
+      {/* SLIDE AREA — carrossel de banners do CMS. Visível em qualquer
+          viewport (mobile inclusive — 74% do tráfego): cada slide pede a
+          imagem no tamanho certo via `sizes` do next/image, então o celular
+          não baixa a imagem "desktop" inteira. */}
       {hasBanners && <HeroBannerSlider banners={banners} />}
 
       {/* H1 transacional — SEMPRE renderizado (mobile-first SEO).
-          Quando há banner ativo no desktop, ele aparece como compact hero
-          abaixo do slider. Sem banner, vira o hero completo com gradient. */}
+          Quando há banner ativo, ele aparece como compact hero abaixo do
+          slider (mobile + desktop). Sem banner, vira o hero completo com
+          gradient. */}
       <div
         className={
           hasBanners

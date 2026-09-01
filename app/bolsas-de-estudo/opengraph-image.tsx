@@ -1,8 +1,15 @@
-/* eslint-disable @next/next/no-img-element */
-import { readFile } from 'node:fs/promises'
-import path from 'node:path'
 import { ImageResponse } from 'next/og'
 import { BRAZILIAN_CITIES } from '@/app/lib/constants/brazilian-cities'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
+import {
+  OG_SIZE,
+  OG_CONTENT_TYPE,
+  OgCanvas,
+  OgLogoRow,
+  OgHeading,
+  OgFooterMeta,
+  getBolsaClickLogoDataUri,
+} from '@/app/lib/og/shared'
 
 /**
  * Imagem de compartilhamento da página que disputa o head term "bolsas de
@@ -14,78 +21,32 @@ import { BRAZILIAN_CITIES } from '@/app/lib/constants/brazilian-cities'
  * página cujo gargalo é autoridade e link, isso desperdiça cada divulgação.
  *
  * Gerada por código (e não um PNG estático) para os números acompanharem o
- * catálogo: a contagem de cidades vem da mesma fonte que a página usa.
+ * catálogo: a contagem de cidades vem da mesma fonte que a página usa, e o
+ * percentual vem do teto único de `app/lib/copy/claims.ts`.
  *
  * Convenção de arquivo do Next tem precedência sobre `metadata.openGraph.images`
  * — esta rota é a fonte de verdade da imagem desta página.
+ *
+ * Layout montado a partir de `app/lib/og/shared.tsx` — referência de padrão
+ * visual pra todas as demais imagens OG do site.
  */
 export const runtime = 'nodejs' // lê o logo do disco
-export const contentType = 'image/png'
-export const size = { width: 1200, height: 630 }
-export const alt =
-  'Bolsas de estudo de até 78% em faculdades reconhecidas pelo MEC — Bolsa Click'
-
-const PAPER = '#F4EFE5'
-const INK = '#0B1F3C'
-const ACCENT = '#f21d44'
+export const contentType = OG_CONTENT_TYPE
+export const size = OG_SIZE
+export const alt = `Bolsas de estudo de até ${DISCOUNT_CEILING_PCT}% em faculdades reconhecidas pelo MEC — Bolsa Click`
 
 export default async function OGImage() {
-  // Logo escuro sobre fundo claro. Lido do disco e embutido como data URI:
-  // ImageResponse não busca URL relativa, e uma absoluta dependeria do host
-  // estar de pé no momento da geração.
-  const logo = await readFile(
-    path.join(process.cwd(), 'public/assets/logo-bolsa-click-dark.png'),
-  )
-  const logoSrc = `data:image/png;base64,${logo.toString('base64')}`
+  const logoSrc = await getBolsaClickLogoDataUri()
 
   return new ImageResponse(
     (
-      <div
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          background: PAPER,
-          padding: '64px 72px',
-          fontFamily: 'sans-serif',
-        }}
-      >
-        <img src={logoSrc} alt="Bolsa Click" height={64} />
-
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div
-            style={{
-              fontSize: 88,
-              fontWeight: 700,
-              color: INK,
-              lineHeight: 1.05,
-              letterSpacing: '-0.02em',
-            }}
-          >
-            Bolsas de estudo
-          </div>
-          <div
-            style={{
-              fontSize: 88,
-              fontWeight: 700,
-              color: ACCENT,
-              lineHeight: 1.05,
-              letterSpacing: '-0.02em',
-            }}
-          >
-            de até 78%
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <div style={{ height: 6, width: 72, background: ACCENT }} />
-          <div style={{ fontSize: 30, color: INK, opacity: 0.75 }}>
-            {`1.000+ cursos · ${BRAZILIAN_CITIES.length} cidades · faculdades reconhecidas pelo MEC`}
-          </div>
-        </div>
-      </div>
+      <OgCanvas>
+        <OgLogoRow logoSrc={logoSrc} />
+        <OgHeading line1="Bolsas de estudo" line2={`de até ${DISCOUNT_CEILING_PCT}%`} size={88} />
+        <OgFooterMeta>
+          {`1.000+ cursos · ${BRAZILIAN_CITIES.length} cidades · faculdades reconhecidas pelo MEC`}
+        </OgFooterMeta>
+      </OgCanvas>
     ),
     size,
   )

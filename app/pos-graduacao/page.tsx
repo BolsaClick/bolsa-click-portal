@@ -2,8 +2,14 @@
 import { Metadata } from 'next'
 import PosGraduacaoClient from './PosGraduacaoClient';
 import { getVitrine } from '@/app/lib/api/get-vitrine'
+import { ogImageObject } from '@/app/lib/seo/schema-image'
 
 export const revalidate = 3600
+
+// Card gerado por código (opengraph-image.tsx nesta pasta) — precedência
+// sobre `openGraph.images` abaixo pro og:image; alimenta também
+// twitter:image e o ImageObject do schema.
+const OG_CARD_URL = 'https://www.bolsaclick.com.br/pos-graduacao/opengraph-image'
 
 const jsonLdSchema = {
   '@context': 'https://schema.org',
@@ -11,6 +17,7 @@ const jsonLdSchema = {
   name: 'Cursos de Pós-graduação com Bolsa de Estudo',
   description: 'Descubra cursos de pós-graduação presenciais, EAD e semipresenciais com bolsas de estudo de até 78% em diversas áreas do conhecimento. Especialização, MBA e Mestrado.',
   url: 'https://www.bolsaclick.com.br/pos-graduacao',
+  image: ogImageObject(OG_CARD_URL, 'Cursos de pós-graduação com bolsa de estudo de até 78% — Especialização e MBA — Bolsa Click'),
   provider: {
     '@type': 'Organization',
     name: 'Bolsa Click',
@@ -85,7 +92,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: 'https://www.bolsaclick.com.br/assets/og-image-bolsaclick.png',
+        url: OG_CARD_URL,
         width: 1200,
         height: 630,
         alt: 'Bolsas de Estudo para Pós-Graduação - Bolsa Click',
@@ -97,7 +104,7 @@ export const metadata: Metadata = {
     site: '@bolsaclick',
     title: 'Bolsa de Estudo em Faculdades - Pós-graduação com até 78% de Desconto',
     description: 'Pós-graduação com bolsa de estudo? Encontre a sua na Bolsa Click. Desconto em faculdade de até 78%. Cadastre-se grátis!',
-    images: ['https://www.bolsaclick.com.br/assets/og-image-bolsaclick.png'],
+    images: [OG_CARD_URL],
   },
 };
 

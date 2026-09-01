@@ -1,15 +1,16 @@
 import { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 import { cache } from 'react'
-import { unstable_cache } from 'next/cache'
 import { prisma } from '@/app/lib/prisma'
-import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { resolveCanonicalCourseSlug } from '@/app/lib/seo/slug-resolver'
 import { shouldIndexCityPage } from '@/app/lib/seo/city-page-gate'
 import { durationToIso8601 } from '@/app/lib/seo/schema-helpers'
 import { buildBrandedCourseCopy, canIndexBrandedCopy } from '@/app/lib/seo/branded-course-copy'
 import { absoluteUrl, publicRobots, seoSite } from '@/app/lib/seo/site-config'
-import { FeaturedCourseData } from '../../_data/types'
+import { ogImageObject } from '@/app/lib/seo/schema-image'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
+import { getCourseBySlug } from '../_data/course-lookup'
+import { getCityCourseOffers, priceRangeFromOffers } from './_data/city-offers'
 import { BRAZILIAN_CITIES, getCityBySlug } from '@/app/lib/constants/brazilian-cities'
 import {
   OffersComparisonTable,
@@ -31,69 +32,11 @@ type Props = {
 // ISR: Revalidar a cada 1 hora
 export const revalidate = 86400
 
-// Helper para buscar curso do banco de dados
-const getCourseBySlug = cache(async (slug: string): Promise<FeaturedCourseData | null> => {
-  try {
-    const course = await prisma.featuredCourse.findUnique({
-      where: {
-        slug,
-        isActive: true,
-      },
-    })
-    return course as FeaturedCourseData | null
-  } catch (error) {
-    console.error('Erro ao buscar curso do banco de dados:', error)
-    return null
-  }
-})
-
 // Não gerar páginas no build para evitar sobrecarregar o banco/API
 // Todas as city pages são geradas on-demand na primeira visita e cacheadas via ISR (1h)
 export async function generateStaticParams() {
   return []
 }
-
-// Busca ofertas de cidade. Retorna offers + flag fromFallback indicando se
-// caímos na busca nacional por falta de estoque local. unstable_cache persiste
-// o resultado da API tartarus por 10 min entre renders; react.cache deduplicar
-// dentro do mesmo request (generateMetadata + page component).
-const _getCityCourseOffersBase = unstable_cache(
-  async (
-    apiCourseName: string,
-    cityName: string,
-    stateUF: string,
-    nivel: string,
-  ) => {
-    try {
-      const cityResponse = await getShowFiltersCourses(
-        apiCourseName, cityName, stateUF, undefined, nivel, 1, 20
-      )
-      const cityOffers = cityResponse?.data || []
-      if (cityOffers.length > 0) {
-        return { offers: cityOffers, fromFallback: false }
-      }
-
-      const generalResponse = await getShowFiltersCourses(
-        apiCourseName, undefined, undefined, undefined, nivel, 1, 20
-      )
-      return { offers: generalResponse?.data || [], fromFallback: true }
-    } catch (error) {
-      console.error(`Erro ao buscar ofertas para ${apiCourseName} em ${cityName}:`, error)
-      try {
-        const fallbackResponse = await getShowFiltersCourses(
-          apiCourseName, undefined, undefined, undefined, nivel, 1, 20
-        )
-        return { offers: fallbackResponse?.data || [], fromFallback: true }
-      } catch {
-        return { offers: [], fromFallback: true }
-      }
-    }
-  },
-  ['city-course-offers'],
-  { revalidate: 600 },
-)
-
-const getCityCourseOffers = cache(_getCityCourseOffersBase)
 
 // Lê a contagem de ofertas PRECOMPUTADA (CityCourseOfferCache) — mesma fonte que
 // o sitemap usa pra decidir quais URLs emitir. A página passa a decidir
@@ -116,20 +59,6 @@ const getCachedOfferCount = cache(async (
     return null
   }
 })
-
-function priceRangeFromOffers(offers: unknown[]) {
-  const prices = (offers as { minPrice?: number; prices?: { withDiscount?: number } }[])
-    .map(o => o.minPrice || o.prices?.withDiscount || 0)
-    .filter(p => p > 0)
-  const maxPrices = (offers as { maxPrice?: number; prices?: { withoutDiscount?: number } }[])
-    .map(o => o.maxPrice || o.prices?.withoutDiscount || 0)
-    .filter(p => p > 0)
-  return {
-    lowPrice: prices.length > 0 ? Math.min(...prices) : 0,
-    highPrice: maxPrices.length > 0 ? Math.max(...maxPrices) : 0,
-    offerCount: offers.length,
-  }
-}
 
 // Gerar metadata dinâmica (SEO) com cidade
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -214,9 +143,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const shouldIndex = shouldIndexCityPage(offerCountForGate, trendScore)
   const canonical = shouldIndex ? pageUrl : nationalUrl
 
-  const imageUrl = curso.imageUrl.startsWith('http')
-    ? curso.imageUrl
-    : absoluteUrl(curso.imageUrl)
+  // Imagem gerada por código (opengraph-image.tsx nesta pasta) — mesma URL
+  // pro og:image (via convenção de arquivo, que tem precedência sobre
+  // `openGraph.images` aqui embaixo), pro twitter:image e pro `ImageObject`
+  // do schema.org, em vez da foto genérica de `curso.imageUrl`.
+  const ogCardUrl = absoluteUrl(`/cursos/${slug}/${citySlug}/opengraph-image`)
 
   return {
     title,
@@ -252,7 +183,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: 'website',
       images: [
         {
-          url: imageUrl,
+          url: ogCardUrl,
           width: 1200,
           height: 630,
           alt: `${curso.name} em ${cityData.name} - Bolsa Click`,
@@ -264,7 +195,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       site: '@bolsaclick',
       title,
       description,
-      images: [imageUrl],
+      images: [ogCardUrl],
     },
   }
 }
@@ -315,9 +246,9 @@ export default async function CursoCidadePage({ params }: Props) {
   const nivelLabel = cursoMetadata.nivel === 'GRADUACAO' ? 'Graduação' : 'Pós-graduação'
   const nivelHref = cursoMetadata.nivel === 'GRADUACAO' ? '/graduacao' : '/pos-graduacao'
   const pageUrl = `https://www.bolsaclick.com.br/cursos/${slug}/${citySlug}`
-  const imageUrl = cursoMetadata.imageUrl.startsWith('http')
-    ? cursoMetadata.imageUrl
-    : `https://www.bolsaclick.com.br${cursoMetadata.imageUrl}`
+  // ImageObject aponta pro card gerado por opengraph-image.tsx — mesma imagem
+  // do og:image/twitter:image, não a foto genérica de `cursoMetadata.imageUrl`.
+  const ogCardUrl = absoluteUrl(`/cursos/${slug}/${citySlug}/opengraph-image`)
 
   const prices = (courseOffers || [])
     .map((o: { minPrice?: number; prices?: { withDiscount?: number } }) => o.minPrice || o.prices?.withDiscount || 0)
@@ -378,7 +309,10 @@ export default async function CursoCidadePage({ params }: Props) {
       : new Date(cursoMetadata.updatedAt as string | number).toISOString(),
     inLanguage: 'pt-BR',
     url: pageUrl,
-    image: imageUrl,
+    image: ogImageObject(
+      ogCardUrl,
+      `${cursoMetadata.name} em ${cityData.name}-${cityData.state} com bolsa de estudo de até ${DISCOUNT_CEILING_PCT}% — Bolsa Click`,
+    ),
     locationCreated: {
       '@type': 'Place',
       address: { '@type': 'PostalAddress', addressLocality: cityData.name, addressRegion: cityData.state, addressCountry: 'BR' },

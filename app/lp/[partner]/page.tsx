@@ -11,7 +11,14 @@ import DepoimentosSection from '@/app/bolsas-de-estudo/_components/DepoimentosSe
 import { LeadForm } from './_components/LeadForm'
 import { OfferGrid } from './_components/OfferGrid'
 import type { OfferCardData } from './_components/OfferCard'
-import { PARTNERS, brandColorFor, isIndexable } from '../_shared/partners'
+import {
+  PARTNERS,
+  brandColorFor,
+  isIndexable,
+  institutionSlugFor,
+  academicLevelFor,
+  partnerCanonicalUrl,
+} from '../_shared/partners'
 import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 export const revalidate = 3600
@@ -23,11 +30,17 @@ const theme = getCurrentTheme()
 const BOLSACLICK_SITE_URL = 'https://www.bolsaclick.com.br'
 
 export async function generateStaticParams() {
+  // `PARTNERS` mistura partner ids "diretos" (slug da Institution == slug da
+  // URL) com variantes de conteúdo (`anhanguera-pos`, sem linha própria —
+  // ver institutionSlugFor). A query busca pela instituição REAL; o retorno
+  // preserva o partner id público.
+  const institutionSlugs = Array.from(new Set(PARTNERS.map(institutionSlugFor)))
   const insts = await prisma.institution.findMany({
-    where: { isActive: true, slug: { in: PARTNERS } },
+    where: { isActive: true, slug: { in: institutionSlugs } },
     select: { slug: true },
   })
-  return insts.map((i) => ({ partner: i.slug }))
+  const activeInstitutionSlugs = new Set(insts.map((i) => i.slug))
+  return PARTNERS.filter((p) => activeInstitutionSlugs.has(institutionSlugFor(p))).map((partner) => ({ partner }))
 }
 
 const getInstitution = (slug: string) => prisma.institution.findUnique({ where: { slug } })
@@ -38,13 +51,18 @@ export async function generateMetadata({
   params: Promise<{ partner: string }>
 }): Promise<Metadata> {
   const { partner } = await params
-  const inst = await getInstitution(partner)
+  const inst = await getInstitution(institutionSlugFor(partner))
   if (!inst) return { title: 'Página não encontrada' }
 
   const indexable = isIndexable(partner)
-  const title = `Bolsa de até ${DISCOUNT_CEILING_PCT}% na ${inst.name} — Inscreva-se grátis`
-  const description = `Garanta sua bolsa de estudo na ${inst.fullName} com até ${DISCOUNT_CEILING_PCT}% de desconto. Sem ENEM, sem nota de corte. Fale com nosso time e comece a estudar.`
-  const url = `${theme.siteUrl}/${partner}`
+  const isPos = academicLevelFor(partner) === 'POS_GRADUACAO'
+  const title = isPos
+    ? `Pós-graduação ${inst.name} com bolsa — Inscreva-se grátis`
+    : `Bolsa de até ${DISCOUNT_CEILING_PCT}% na ${inst.name} — Inscreva-se grátis`
+  const description = isPos
+    ? `Garanta sua bolsa em pós-graduação na ${inst.fullName} com até ${DISCOUNT_CEILING_PCT}% de desconto. Sem nota de corte. Fale com nosso time e comece a estudar.`
+    : `Garanta sua bolsa de estudo na ${inst.fullName} com até ${DISCOUNT_CEILING_PCT}% de desconto. Sem ENEM, sem nota de corte. Fale com nosso time e comece a estudar.`
+  const url = partnerCanonicalUrl(partner, theme.siteUrl)
 
   return {
     title,
@@ -86,20 +104,22 @@ export default async function PartnerLanding({
   params: Promise<{ partner: string }>
 }) {
   const { partner } = await params
-  const inst = await getInstitution(partner)
+  const inst = await getInstitution(institutionSlugFor(partner))
   if (!inst || !inst.isActive || !PARTNERS.includes(partner)) {
     notFound()
   }
 
   const indexable = isIndexable(partner)
+  const academicLevel = academicLevelFor(partner)
+  const isPos = academicLevel === 'POS_GRADUACAO'
   const [courses, catalog] = await Promise.all([
-    getInstitutionCourses(inst.name),
+    getInstitutionCourses(inst.name, { academicLevel }),
     // Catálogo completo do site (FeaturedCourse) pro dropdown "curso de
     // interesse" e pra resolver tipo de grau (Bacharelado/Licenciatura/
     // Tecnólogo) + slug de "ver detalhes" no grid de ofertas.
     prisma.featuredCourse.findMany({
       where: { isActive: true },
-      select: { name: true, apiCourseName: true, fullName: true, slug: true, type: true },
+      select: { name: true, apiCourseName: true, fullName: true, slug: true, type: true, nivel: true },
       orderBy: { name: 'asc' },
     }),
   ])
@@ -111,10 +131,14 @@ export default async function PartnerLanding({
   // fire-and-forget em LeadForm (useEffect de mount → POST /api/ingressa/view,
   // sem gate de consentimento, roda no CLIENTE mas fora do SDK do PostHog).
 
-  const brand = BRAND_CONTENT[partner]
+  const brand = BRAND_CONTENT[institutionSlugFor(partner)]
   const brandColor = brandColorFor(partner)
+  // Dropdown "curso de interesse": pra pós, restringe ao catálogo de pós (senão
+  // mistura nome de curso de graduação num site que só oferece pós). Demais
+  // parceiros mantêm o catálogo inteiro (comportamento de sempre).
+  const courseCatalog = isPos ? catalog.filter((c) => c.nivel === 'POS_GRADUACAO') : catalog
   const courseOptions = Array.from(
-    new Set(catalog.map((c) => c.name.trim()).filter(Boolean))
+    new Set(courseCatalog.map((c) => c.name.trim()).filter(Boolean))
   )
 
   // Mapa nome→{slug,type} do catálogo, pra casar com as ofertas vivas
@@ -196,13 +220,15 @@ export default async function PartnerLanding({
     },
   ]
 
+  const canonicalUrl = partnerCanonicalUrl(partner, theme.siteUrl)
+
   const educationalOrgSchema = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    '@id': `${theme.siteUrl}/${partner}#organization`,
+    '@id': `${canonicalUrl}#organization`,
     name: 'Bolsa Click',
     description: `Plataforma parceira autorizada de bolsas de estudo na ${inst.name}.`,
-    url: `${theme.siteUrl}/${partner}`,
+    url: canonicalUrl,
     ...(offerItems.length > 0 && {
       makesOffer: {
         '@type': 'AggregateOffer',
@@ -227,13 +253,19 @@ export default async function PartnerLanding({
     })),
   }
 
+  // Domínio dedicado a um único partner (ex.: pos.anhangueracursos.com.br):
+  // a própria raiz do site JÁ é esta página — "Início" e a página da marca
+  // são a mesma URL, então o breadcrumb tem 1 nível só.
+  const isDedicatedPartnerHost = canonicalUrl === theme.siteUrl || !canonicalUrl.startsWith(theme.siteUrl)
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Início', item: theme.siteUrl },
-      { '@type': 'ListItem', position: 2, name: inst.name, item: `${theme.siteUrl}/${partner}` },
-    ],
+    itemListElement: isDedicatedPartnerHost
+      ? [{ '@type': 'ListItem', position: 1, name: inst.name, item: canonicalUrl }]
+      : [
+          { '@type': 'ListItem', position: 1, name: 'Início', item: theme.siteUrl },
+          { '@type': 'ListItem', position: 2, name: inst.name, item: canonicalUrl },
+        ],
   }
 
   return (
@@ -274,15 +306,26 @@ export default async function PartnerLanding({
                 )}
               </div>
               <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-semibold text-white leading-[1.08] mb-4">
-                Bolsa de até <span className="underline decoration-white/40 decoration-[3px] underline-offset-4">{DISCOUNT_CEILING_PCT}%</span> na {inst.name}
+                {isPos ? (
+                  <>Pós-graduação {inst.name} com <span className="underline decoration-white/40 decoration-[3px] underline-offset-4">bolsa</span></>
+                ) : (
+                  <>Bolsa de até <span className="underline decoration-white/40 decoration-[3px] underline-offset-4">{DISCOUNT_CEILING_PCT}%</span> na {inst.name}</>
+                )}
               </h1>
               {/* Abertura GEO: resposta direta na 1ª frase (40-60 palavras),
                   contexto depois — CLAUDE.md, padrão de abertura editorial. */}
               <p className="text-white/80 text-base md:text-lg leading-relaxed mb-6 max-w-xl">
-                Pra conseguir bolsa na {inst.name} sem ENEM e sem nota de corte, o caminho mais
-                rápido é se cadastrar grátis pelo Bolsa Click, parceiro autorizado: você compara
-                as ofertas com desconto de até {DISCOUNT_CEILING_PCT}%, escolhe curso e unidade, e fala direto com
-                nosso time pelo WhatsApp pra garantir a vaga antes de matricular na {inst.fullName}.
+                {isPos ? (
+                  <>Pra conseguir bolsa em pós-graduação na {inst.name} sem nota de corte, o caminho mais
+                  rápido é se cadastrar grátis pelo Bolsa Click, parceiro autorizado: você compara
+                  as ofertas com desconto de até {DISCOUNT_CEILING_PCT}%, escolhe curso e modalidade, e fala direto com
+                  nosso time pelo WhatsApp pra garantir a vaga antes de matricular na {inst.fullName}.</>
+                ) : (
+                  <>Pra conseguir bolsa na {inst.name} sem ENEM e sem nota de corte, o caminho mais
+                  rápido é se cadastrar grátis pelo Bolsa Click, parceiro autorizado: você compara
+                  as ofertas com desconto de até {DISCOUNT_CEILING_PCT}%, escolhe curso e unidade, e fala direto com
+                  nosso time pelo WhatsApp pra garantir a vaga antes de matricular na {inst.fullName}.</>
+                )}
               </p>
               <ul className="flex flex-wrap gap-x-5 gap-y-2 text-white/85 text-sm">
                 {inst.mecRating ? (
@@ -325,7 +368,7 @@ export default async function PartnerLanding({
         <section className="bg-white py-12 md:py-16 border-b border-hairline">
           <div className="container mx-auto px-4 max-w-6xl">
             <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900 mb-2">
-              Cursos com bolsa na {inst.name}
+              {isPos ? `Cursos de pós-graduação com bolsa na ${inst.name}` : `Cursos com bolsa na ${inst.name}`}
             </h2>
             <p className="text-ink-700 mb-6">Mensalidades reais com a bolsa já aplicada — de/por e economia total até o fim do curso.</p>
             <OfferGrid
@@ -333,7 +376,7 @@ export default async function PartnerLanding({
               partner={partner}
               partnerName={inst.name}
               brandColor={brandColor}
-              fullListHref={`${BOLSACLICK_SITE_URL}/faculdades/${partner}`}
+              fullListHref={`${BOLSACLICK_SITE_URL}/faculdades/${institutionSlugFor(partner)}`}
             />
           </div>
         </section>
@@ -342,7 +385,7 @@ export default async function PartnerLanding({
           <section className="bg-white py-12 md:py-16 border-b border-hairline">
             <div className="container mx-auto px-4 max-w-4xl">
               <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900 mb-2">
-                Cursos com bolsa na {inst.name}
+                {isPos ? `Cursos de pós-graduação com bolsa na ${inst.name}` : `Cursos com bolsa na ${inst.name}`}
               </h2>
               <p className="text-ink-700 mb-6">Mensalidades reais com a bolsa já aplicada — a partir de:</p>
               <ul className="grid sm:grid-cols-2 gap-3">

@@ -58,6 +58,29 @@ export function middleware(request: NextRequest) {
     return seoResponse(NextResponse.next());
   }
 
+  // ─── Domínio pos.anhangueracursos.com.br (captação de PÓS Anhanguera) ─────
+  // Site dedicado a UMA marca/nível só (Anhanguera pós) — diferente do
+  // ingressa.digital (multi-parceiro, partner no 1º segmento da URL), aqui
+  // TODA a árvore de path pertence ao partner fixo `anhanguera-pos`:
+  // / → /lp/anhanguera-pos, /checkout → /lp/anhanguera-pos/checkout, etc.
+  if (
+    host === "pos.anhangueracursos.com.br" ||
+    host === "www.pos.anhangueracursos.com.br"
+  ) {
+    const passthrough =
+      pathname.startsWith("/api") ||
+      pathname.startsWith("/_next") ||
+      pathname.startsWith("/lp") ||
+      pathname.includes(".");
+    if (!passthrough) {
+      const url = request.nextUrl.clone();
+      url.pathname =
+        pathname === "/" ? "/lp/anhanguera-pos" : `/lp/anhanguera-pos${pathname}`;
+      return NextResponse.rewrite(url);
+    }
+    return seoResponse(NextResponse.next());
+  }
+
   // No bolsaclick.com.br, /lp/* não deve ser acessível (é do ingressa) → manda
   // pra página de marca equivalente.
   if (

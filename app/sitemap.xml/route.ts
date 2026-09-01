@@ -30,7 +30,11 @@ export const revalidate = 3600
  */
 function ingressaSitemap(): NextResponse {
   const base = 'https://ingressa.digital'
-  const urls = PARTNERS.filter(isIndexable)
+  // `anhanguera-pos` é indexável, mas mora em domínio PRÓPRIO
+  // (pos.anhangueracursos.com.br, ver middleware.ts) — incluir aqui geraria
+  // `ingressa.digital/anhanguera-pos`, uma URL que não existe (o partner só
+  // responde no domínio dedicado).
+  const urls = PARTNERS.filter((p) => isIndexable(p) && p !== 'anhanguera-pos')
     .map(
       (partner) => `  <url>
     <loc>${base}/${partner}</loc>

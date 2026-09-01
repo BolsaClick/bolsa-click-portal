@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { EDITORIAL_TEAM } from '@/app/lib/blog/editorial-team'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 
@@ -223,7 +224,7 @@ export default function EquipeEditorialPage() {
               <div>
                 <h3 className="font-display text-lg text-ink-900 mb-2">4. Não vender o que não existe</h3>
                 <p className="text-ink-700 leading-relaxed">
-                  Trabalhamos com bolsas reais de até 78% negociadas com instituições parceiras. Não
+                  Trabalhamos com bolsas reais de até {DISCOUNT_CEILING_PCT}% negociadas com instituições parceiras. Não
                   prometemos vagas em universidade pública, descontos impossíveis ou diploma sem
                   estudo. O que falamos no site, podemos comprovar.
                 </p>

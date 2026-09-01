@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import CourseCardNew from '@/app/components/CourseCardNew'
 import { Course } from '@/app/interface/course'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 import { normalizeCourseNameKey } from '@/app/lib/utils/course-name-key'
 import type { InstitutionData } from '../_data/types'
 import type { BrandContent } from './_data/brand-content'
@@ -114,7 +115,7 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
     },
     {
       q: `Como conseguir bolsa de estudo na ${institution.name}?`,
-      a: `Pelo Bolsa Click: busca o curso, escolhe a melhor oferta e se inscreve grátis. As bolsas chegam a 78% de desconto.`,
+      a: `Pelo Bolsa Click: busca o curso, escolhe a melhor oferta e se inscreve grátis. As bolsas chegam a ${DISCOUNT_CEILING_PCT}% de desconto.`,
     },
     {
       q: `Quais cursos a Faculdade ${institution.name} oferece?`,
@@ -132,7 +133,7 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
     },
     {
       q: `Quanto custa estudar na ${institution.name}?`,
-      a: `Os valores variam por curso e modalidade. Pelo Bolsa Click, você encontra bolsas com até 78% de desconto na mensalidade.`,
+      a: `Os valores variam por curso e modalidade. Pelo Bolsa Click, você encontra bolsas com até ${DISCOUNT_CEILING_PCT}% de desconto na mensalidade.`,
     },
     {
       q: `A ${institution.name} tem cursos EAD?`,
@@ -240,7 +241,7 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
             <p data-speakable="answer" className="text-white text-[16px] md:text-[18px] leading-relaxed max-w-3xl font-medium">
               Para conseguir bolsa de estudo na {institution.name}, busque o curso aqui no
               Bolsa Click, compare as ofertas e inscreva-se grátis — os descontos chegam a
-              até 78% nas mensalidades, em cursos {institution.modalities.includes('EAD') ? 'EAD e presenciais' : 'presenciais'} reconhecidos
+              até {DISCOUNT_CEILING_PCT}% nas mensalidades, em cursos {institution.modalities.includes('EAD') ? 'EAD e presenciais' : 'presenciais'} reconhecidos
               pelo MEC.
             </p>
 
@@ -342,7 +343,7 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
                     : ''}
                 </p>
                 <p>
-                  Pelo Bolsa Click você garante bolsa com até <strong>78% de desconto</strong> na {institution.name}.
+                  Pelo Bolsa Click você garante bolsa com até <strong>{DISCOUNT_CEILING_PCT}% de desconto</strong> na {institution.name}.
                   Cadastro grátis, sem ENEM, sem prova.
                 </p>
               </div>
@@ -584,7 +585,7 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
                     Bolsa na <span className="italic text-white/85">{institution.name}</span>
                   </h3>
                   <p className="text-white/70 text-[13px] mb-5 leading-relaxed">
-                    Encontre bolsas com até 78% de desconto. Cadastro grátis, sem ENEM.
+                    Encontre bolsas com até {DISCOUNT_CEILING_PCT}% de desconto. Cadastro grátis, sem ENEM.
                   </p>
                   <a
                     href="#ofertas"

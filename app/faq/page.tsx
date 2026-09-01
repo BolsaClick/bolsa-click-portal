@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 const PAGE_URL = `${SITE_URL}/faq`
@@ -50,7 +51,7 @@ const FAQ_GROUPS: FaqGroup[] = [
       {
         question: 'O que é o Bolsa Click?',
         answer:
-          'Bolsa Click é um marketplace de bolsas de estudo em faculdades particulares brasileiras. Reúne ofertas de bolsa direta (sem ENEM, sem nota de corte) negociadas com instituições parceiras como Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. Descontos de 25% a 78% em graduação, pós-graduação e cursos técnicos, com inscrição grátis o ano inteiro.',
+          `Bolsa Click é um marketplace de bolsas de estudo em faculdades particulares brasileiras. Reúne ofertas de bolsa direta (sem ENEM, sem nota de corte) negociadas com instituições parceiras como Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. Descontos de 25% a ${DISCOUNT_CEILING_PCT}% em graduação, pós-graduação e cursos técnicos, com inscrição grátis o ano inteiro.`,
       },
       {
         question: 'O Bolsa Click é confiável e seguro?',
@@ -86,7 +87,7 @@ const FAQ_GROUPS: FaqGroup[] = [
       {
         question: 'Qual o desconto máximo que consigo no Bolsa Click?',
         answer:
-          'Até 78% no catálogo atual, em EAD e presencial, conforme a oferta. O percentual varia por faculdade, curso e unidade. Cadastro grátis, sem taxa de adesão.',
+          `Até ${DISCOUNT_CEILING_PCT}% no catálogo atual, em EAD e presencial, conforme a oferta. O percentual varia por faculdade, curso e unidade. Cadastro grátis, sem taxa de adesão.`,
       },
       {
         question: 'Por quanto tempo vale a bolsa do Bolsa Click?',
@@ -122,7 +123,7 @@ const FAQ_GROUPS: FaqGroup[] = [
       {
         question: 'O que acontece se eu não conseguir ProUni nem FIES?',
         answer:
-          'Há 3 caminhos: (1) bolsa direta via Bolsa Click em faculdade particular parceira — sem ENEM, sem nota de corte, descontos de até 78% (sobretudo EAD); (2) bolsa permanência ou desconto de pontualidade da própria faculdade; (3) vestibular agendado para entrar sem ENEM. Veja todas as alternativas em /sem-enem.',
+          `Há 3 caminhos: (1) bolsa direta via Bolsa Click em faculdade particular parceira — sem ENEM, sem nota de corte, descontos de até ${DISCOUNT_CEILING_PCT}% (sobretudo EAD); (2) bolsa permanência ou desconto de pontualidade da própria faculdade; (3) vestibular agendado para entrar sem ENEM. Veja todas as alternativas em /sem-enem.`,
       },
     ],
   },
@@ -287,7 +288,7 @@ export default function FaqHubPage() {
         <div className="container mx-auto px-4 max-w-3xl">
           <p className="text-lg md:text-xl text-ink-900 font-medium leading-relaxed">
             O <strong>Bolsa Click</strong> é um marketplace de bolsas de estudo em faculdades
-            particulares brasileiras — descontos de 25% a 78% sem ENEM e sem nota de corte, com
+            particulares brasileiras — descontos de 25% a {DISCOUNT_CEILING_PCT}% sem ENEM e sem nota de corte, com
             inscrição grátis e matrícula online. Trabalhamos com as maiores redes de ensino do
             país, todas reconhecidas pelo MEC.
           </p>

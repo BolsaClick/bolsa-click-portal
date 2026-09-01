@@ -14,6 +14,7 @@
  * (evita oscilação do cache do Google entre crawls).
  */
 
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 import type { FeaturedCourseData } from '../../../_data/types'
 
 interface CityContext {
@@ -59,7 +60,7 @@ function buildOpeningParagraph(curso: FeaturedCourseData, cityName: string, city
   const areaList = pickAreaHighlights(curso.areas).join(', ')
   return (
     `Cursar ${curso.name} em ${cityName}, ${cityState}, é uma decisão estratégica para quem quer atuar em ${areaList}. ` +
-    `${cityName} faz parte do ${cityState}, ${stateLine}, e concentra faculdades parceiras com bolsa que reduzem em até 78% a mensalidade. ` +
+    `${cityName} faz parte do ${cityState}, ${stateLine}, e concentra faculdades parceiras com bolsa que reduzem em até ${DISCOUNT_CEILING_PCT}% a mensalidade. ` +
     `O curso de ${curso.fullName.toLowerCase()} tem duração média de ${curso.duration} e prepara o estudante para um mercado que paga, segundo o CAGED, entre ${curso.averageSalary} no Brasil.`
   )
 }
@@ -97,7 +98,7 @@ export function buildCityContext(curso: FeaturedCourseData, cityName: string, ci
 
   const whyHere = [
     `${cityName} é uma das ${cityState === 'DF' ? 'principais cidades' : `maiores cidades do ${cityState}`}, com presença consolidada de faculdades parceiras.`,
-    `Bolsas de até 78% para ${curso.name} reduzem a mensalidade significativamente em relação ao valor cheio.`,
+    `Bolsas de até ${DISCOUNT_CEILING_PCT}% para ${curso.name} reduzem a mensalidade significativamente em relação ao valor cheio.`,
     `Cadastro 100% gratuito — você compara ${curso.fullName.toLowerCase()} em ${cityName} sem compromisso.`,
     `Suporte humano via WhatsApp tira dúvidas sobre matrícula, documentação e início das aulas.`,
   ]

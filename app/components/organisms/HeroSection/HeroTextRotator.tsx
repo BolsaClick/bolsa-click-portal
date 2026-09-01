@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const heroTexts = [
   {
     course: 'Administração',
-    discount: '78%',
+    discount: `${DISCOUNT_CEILING_PCT}%`,
     institution: 'Anhanguera',
   },
   {

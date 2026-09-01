@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { prisma } from '@/app/lib/prisma'
 import { getCurrentTheme } from '@/app/lib/themes'
 import FaculdadesPageClient from './FaculdadesPageClient'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const theme = getCurrentTheme()
 
@@ -9,7 +10,7 @@ export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'Faculdades Parceiras com Bolsa de Estudo',
-  description: 'Conheça as faculdades parceiras do Bolsa Click. Encontre bolsas de estudo com até 78% de desconto em universidades reconhecidas pelo MEC em todo o Brasil.',
+  description: `Conheça as faculdades parceiras do Bolsa Click. Encontre bolsas de estudo com até ${DISCOUNT_CEILING_PCT}% de desconto em universidades reconhecidas pelo MEC em todo o Brasil.`,
   keywords: [
     'faculdades parceiras',
     'faculdades com bolsa de estudo',
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Faculdades Parceiras com Bolsa de Estudo | Bolsa Click',
-    description: 'Conheça as faculdades parceiras do Bolsa Click. Bolsas de estudo com até 78% de desconto em universidades reconhecidas pelo MEC.',
+    description: `Conheça as faculdades parceiras do Bolsa Click. Bolsas de estudo com até ${DISCOUNT_CEILING_PCT}% de desconto em universidades reconhecidas pelo MEC.`,
     url: `${theme.siteUrl}/faculdades`,
     siteName: theme.name,
     locale: 'pt_BR',
@@ -67,7 +68,7 @@ export default async function FaculdadesPage() {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
     name: 'Faculdades Parceiras com Bolsa de Estudo',
-    description: 'Conheça as faculdades parceiras do Bolsa Click com bolsas de estudo de até 78% de desconto.',
+    description: `Conheça as faculdades parceiras do Bolsa Click com bolsas de estudo de até ${DISCOUNT_CEILING_PCT}% de desconto.`,
     url: `${theme.siteUrl}/faculdades`,
     mainEntity: {
       '@type': 'ItemList',

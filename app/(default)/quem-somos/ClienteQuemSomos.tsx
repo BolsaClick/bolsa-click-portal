@@ -8,6 +8,7 @@ import Stats from './Stats';
 import Timeline from './Timeline';
 import Values from './Values';
 import CallToAction from './CallToAction';
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 export default function QuemSomosCliente() {
   return (
@@ -22,7 +23,7 @@ export default function QuemSomosCliente() {
             "url": "https://www.bolsaclick.com.br",
             "logo": "https://www.bolsaclick.com.br/assets/logo.png",
             "description":
-              "Plataforma educacional que conecta estudantes a bolsas de estudo com até 78% de desconto em universidades de todo o Brasil.",
+              `Plataforma educacional que conecta estudantes a bolsas de estudo com até ${DISCOUNT_CEILING_PCT}% de desconto em universidades de todo o Brasil.`,
             "sameAs": [
               "https://www.instagram.com/bolsaclick",
               "https://www.facebook.com/bolsaclick"

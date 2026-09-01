@@ -5,6 +5,7 @@ import CarreiraPageClient from './CarreiraPageClient'
 import { FeaturedCourseData } from '@/app/cursos/_data/types'
 import { courseTypeLabel } from '@/app/lib/courseTypeLabel'
 import { resolveCanonicalCourseSlug } from '@/app/lib/seo/slug-resolver'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 export const revalidate = 86400
 
@@ -66,7 +67,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       (s) => titleBase.length + s.length + brandSuffixLen <= 60
     ) ?? ''
   const title = `${titleBase}${titleSuffix}`
-  const description = `Carreira em ${profissao.name}: salário médio de ${profissao.averageSalary}, demanda ${profissao.marketDemand.toLowerCase()}, formação em ${profissao.duration}. Veja o que faz, áreas de atuação e qual faculdade fazer com bolsa de até 78%.`
+  const description = `Carreira em ${profissao.name}: salário médio de ${profissao.averageSalary}, demanda ${profissao.marketDemand.toLowerCase()}, formação em ${profissao.duration}. Veja o que faz, áreas de atuação e qual faculdade fazer com bolsa de até ${DISCOUNT_CEILING_PCT}%.`
   const pageUrl = `https://www.bolsaclick.com.br/carreiras/${slug}`
 
   const imageUrl = profissao.imageUrl.startsWith('http')
@@ -191,7 +192,7 @@ export default async function CarreiraPage({ params }: Props) {
           name: `Como se tornar um profissional de ${profissao.name}?`,
           acceptedAnswer: {
             '@type': 'Answer',
-            text: `Para atuar como ${profissao.name}, é necessário cursar ${profissao.fullName}, com duração de ${profissao.duration}. Pelo Bolsa Click, você pode encontrar bolsas de até 78% de desconto em faculdades parceiras.`,
+            text: `Para atuar como ${profissao.name}, é necessário cursar ${profissao.fullName}, com duração de ${profissao.duration}. Pelo Bolsa Click, você pode encontrar bolsas de até ${DISCOUNT_CEILING_PCT}% de desconto em faculdades parceiras.`,
           },
         },
         {

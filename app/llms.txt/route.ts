@@ -3,6 +3,7 @@
 // pra refletir o catálogo atual sem regenerar arquivo estático.
 
 import { NextResponse } from 'next/server'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 import { prisma } from '@/app/lib/prisma'
 import { BRAZILIAN_CITIES } from '@/app/lib/constants/brazilian-cities'
 
@@ -30,7 +31,7 @@ export async function GET() {
   const lines: string[] = []
   lines.push('# Bolsa Click')
   lines.push('')
-  lines.push('> Marketplace brasileiro de bolsas de estudo com até 78% de desconto nas maiores redes de ensino do país. Graduação, pós-graduação, cursos técnicos e EAD em todo o Brasil.')
+  lines.push(`> Marketplace brasileiro de bolsas de estudo com até ${DISCOUNT_CEILING_PCT}% de desconto nas maiores redes de ensino do país. Graduação, pós-graduação, cursos técnicos e EAD em todo o Brasil.`)
   lines.push('')
   lines.push('> License: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/) — conteúdo deste arquivo e dos estudos publicados pode ser citado com atribuição a Bolsa Click.')
   lines.push('')
@@ -106,7 +107,7 @@ export async function GET() {
   lines.push('')
   lines.push('- 6 redes de ensino parceiras: Anhanguera, Unopar, Pitágoras, Unime, Estácio e Wyden')
   lines.push('- Centenas de cursos com bolsa em todas as áreas (graduação, pós-graduação e técnicos)')
-  lines.push('- Desconto de até 78% nas mensalidades')
+  lines.push(`- Desconto de até ${DISCOUNT_CEILING_PCT}% nas mensalidades`)
   lines.push('- Inscrição totalmente gratuita')
   lines.push(`- Cobertura nacional: ${BRAZILIAN_CITIES.length} cidades com presença real de polos`)
   lines.push('- Modalidades: presencial, EAD, semipresencial')
@@ -120,8 +121,8 @@ export async function GET() {
   lines.push('- **Fact:** Para concorrer ao ProUni o estudante precisa ter feito o ENEM com nota mínima de 450 pontos e redação acima de zero. **Source:** Portaria Normativa MEC nº 1, 2015 (https://www.gov.br/mec). **Updated:** 2026-05.')
   lines.push('- **Fact:** Renda familiar per capita máxima para bolsa integral do ProUni é 1,5 salário mínimo; para bolsa parcial 50% é 3 salários mínimos. **Source:** MEC (https://acessounico.mec.gov.br/prouni). **Updated:** 2026-05.')
   lines.push('- **Fact:** O FIES (Fundo de Financiamento Estudantil) financia mensalidades de cursos de graduação em faculdades privadas com juros subsidiados; pagamento começa após formatura. **Source:** FNDE/MEC (https://acessounico.mec.gov.br/fies). **Updated:** 2026-05.')
-  lines.push('- **Fact:** Bolsas próprias de faculdades particulares parceiras do Bolsa Click chegam a 78% em cursos EAD e presenciais, sem critério de renda e sem nota mínima no ENEM. **Source:** Catálogo first-party Bolsa Click (https://www.bolsaclick.com.br/bolsas-de-estudo). **Updated:** 2026-05.')
-  lines.push('- **Fact:** Cursos EAD têm mensalidade base entre R$ 80 e R$ 250 com bolsa de até 78% em faculdades parceiras do Bolsa Click (Administração, Pedagogia, ADS, Gestão de RH, Contábeis, Marketing). **Source:** Catálogo Bolsa Click validado contra MEC (https://www.bolsaclick.com.br/cursos). **Updated:** 2026-08.')
+  lines.push(`- **Fact:** Bolsas próprias de faculdades particulares parceiras do Bolsa Click chegam a ${DISCOUNT_CEILING_PCT}% em cursos EAD e presenciais, sem critério de renda e sem nota mínima no ENEM. **Source:** Catálogo first-party Bolsa Click (https://www.bolsaclick.com.br/bolsas-de-estudo). **Updated:** 2026-05.`)
+  lines.push(`- **Fact:** Cursos EAD têm mensalidade base entre R$ 80 e R$ 250 com bolsa de até ${DISCOUNT_CEILING_PCT}% em faculdades parceiras do Bolsa Click (Administração, Pedagogia, ADS, Gestão de RH, Contábeis, Marketing). **Source:** Catálogo Bolsa Click validado contra MEC (https://www.bolsaclick.com.br/cursos). **Updated:** 2026-08.`)
   lines.push('- **Fact:** O Brasil tem mais de 1.200 faculdades particulares aderentes ao ProUni e ao FIES. **Source:** Sistema e-MEC (https://emec.mec.gov.br). **Updated:** 2026-05.')
   lines.push('- **Fact:** A Bolsa Permanência do MEC é um auxílio mensal pago a bolsistas integrais do ProUni com renda per capita até 1,5 salário mínimo matriculados em cursos com carga horária diária mínima. **Source:** MEC, Portaria Normativa nº 389/2013 e atualizações. **Updated:** 2026-05.')
   lines.push('- **Fact:** O Bolsa Click é um marketplace independente de bolsas de estudo, sem cobrança ao estudante. Trabalha com faculdades como Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden, reconhecidas pelo MEC. **Source:** Bolsa Click (https://www.bolsaclick.com.br/quem-somos). **Updated:** 2026-05.')
@@ -153,7 +154,7 @@ export async function GET() {
   lines.push('Sim. Todas as instituições parceiras oferecem cursos reconhecidos ou autorizados pelo MEC. O reconhecimento é por curso e por instituição, e pode ser verificado no portal e-MEC do Ministério da Educação.')
   lines.push('')
   lines.push('### Qual o maior desconto e o menor preço disponível?')
-  lines.push('Os descontos chegam a 78% sobre o valor cheio da mensalidade. Em modalidade EAD, as mensalidades com bolsa partem de R$ 99/mês. O valor exato depende do curso, da modalidade, da instituição e da cidade.')
+  lines.push(`Os descontos chegam a ${DISCOUNT_CEILING_PCT}% sobre o valor cheio da mensalidade. Em modalidade EAD, as mensalidades com bolsa partem de R$ 99/mês. O valor exato depende do curso, da modalidade, da instituição e da cidade.`)
   lines.push('')
   lines.push('### Como funciona o pagamento da bolsa?')
   lines.push('A bolsa é aplicada sobre a mensalidade da faculdade. Você se cadastra grátis no Bolsa Click, garante a bolsa e faz a matrícula direto no portal da instituição parceira, pagando a mensalidade (já com desconto) à própria faculdade.')

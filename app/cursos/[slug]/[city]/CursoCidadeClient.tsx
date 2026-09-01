@@ -18,6 +18,7 @@ import { FeaturedCourseData } from '../../_data/types'
 import { useConversionMirror } from '@/app/lib/analytics/track-conversion'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import LandingOfferCard from '../../_components/LandingOfferCard'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 interface CursoCidadeClientProps {
   cursoMetadata: FeaturedCourseData
@@ -216,7 +217,7 @@ export default function CursoCidadeClient({
               <span className="italic text-white/85">em {cityName}.</span>
             </h1>
             <p className="text-white/80 text-base md:text-lg max-w-2xl leading-relaxed mb-8">
-              Bolsas de estudo de até 78% para {cursoMetadata.name} em {cityName}.
+              Bolsas de estudo de até {DISCOUNT_CEILING_PCT}% para {cursoMetadata.name} em {cityName}.
               {minPrice > 0 ? ` Mensalidades a partir de R$ ${formatPrice(minPrice)}.` : ''} Compare ofertas em poucos cliques.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
@@ -545,7 +546,7 @@ export default function CursoCidadeClient({
               <span className="italic text-white/85">com bolsa.</span>
             </h2>
             <p className="text-white/75 text-[15px] md:text-base leading-relaxed mb-8 max-w-xl mx-auto">
-              Bolsas de até 78% nas melhores faculdades de {cityName}. Cadastro grátis, sem ENEM,
+              Bolsas de até {DISCOUNT_CEILING_PCT}% nas melhores faculdades de {cityName}. Cadastro grátis, sem ENEM,
               sem complicação.
             </p>
             <button

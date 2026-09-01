@@ -4,6 +4,7 @@ import { CheckCircle, Users, School, Award, TrendingUp } from 'lucide-react';
 import './style.css';
 import Image from 'next/image';
 import Link from 'next/link';
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const AboutSection: React.FC = () => {
   const [currentTheme, setCurrentTheme] = useState('bolsaclick')
@@ -24,7 +25,7 @@ const AboutSection: React.FC = () => {
   const quickStats = [
     { number: "6", label: "Redes de ensino parceiras", icon: <School size={24} /> },
     { number: "280+", label: "Cidades com polos", icon: <Users size={24} /> },
-    { number: "78%", label: "Desconto máximo", icon: <Award size={24} /> },
+    { number: `${DISCOUNT_CEILING_PCT}%`, label: "Desconto máximo", icon: <Award size={24} /> },
     { number: "98%", label: "Alunos recomendam", icon: <TrendingUp size={24} /> }
   ];
 
@@ -58,7 +59,7 @@ const AboutSection: React.FC = () => {
           </h2>
           <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed">
             O Bolsa Click é uma plataforma de bolsas de estudo em faculdades particulares.
-            Aqui você encontra descontos de até 78% em graduação, pós-graduação e cursos técnicos.
+            Aqui você encontra descontos de até {DISCOUNT_CEILING_PCT}% em graduação, pós-graduação e cursos técnicos.
             Trabalhamos com as maiores redes de ensino do país, com polos em mais de 280 cidades.
             Nossa missão é tornar o ensino superior acessível para todos.
           </p>

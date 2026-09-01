@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { ProgramHub } from '../_components/ProgramHub'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 
@@ -70,7 +71,7 @@ const faqItems = [
   },
   {
     question: 'Não passei no SISU. Quais opções tenho?',
-    answer: 'Você pode: (1) entrar na lista de espera da 1ª opção; (2) tentar a 2ª edição do SISU no meio do ano; (3) ir pelo PROUNI ou FIES em faculdade particular; (4) usar o Bolsa Click pra conseguir bolsa de até 78% direto com faculdades parceiras, sem critério de renda.',
+    answer: `Você pode: (1) entrar na lista de espera da 1ª opção; (2) tentar a 2ª edição do SISU no meio do ano; (3) ir pelo PROUNI ou FIES em faculdade particular; (4) usar o Bolsa Click pra conseguir bolsa de até ${DISCOUNT_CEILING_PCT}% direto com faculdades parceiras, sem critério de renda.`,
   },
   {
     question: 'Posso usar uma nota antiga do ENEM no SISU?',
@@ -186,7 +187,7 @@ export default function SisuPage() {
         </li>
         <li>
           Procurar bolsa direta no <Link href="/bolsas-de-estudo">Bolsa Click</Link> — sem
-          critério de renda, com descontos de até 78% nas mensalidades em faculdades
+          critério de renda, com descontos de até {DISCOUNT_CEILING_PCT}% nas mensalidades em faculdades
           parceiras. É o caminho mais flexível pra quem não conseguiu vaga pública e
           não se encaixa nas regras do PROUNI.
         </li>

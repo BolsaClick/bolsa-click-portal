@@ -14,11 +14,12 @@ import {
 } from 'lucide-react'
 import type { VitrineCourse } from '@/app/lib/api/get-vitrine'
 import { getBrandLogo } from '@/app/lib/brand-logos'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const STATS = [
   { value: '10k+', label: 'Cursos de pós-graduação' },
   { value: '+500', label: 'Faculdades parceiras' },
-  { value: 'até 78%', label: 'de desconto em bolsas' },
+  { value: `até ${DISCOUNT_CEILING_PCT}%`, label: 'de desconto em bolsas' },
   { value: '6 a 18', label: 'meses de duração' },
 ]
 
@@ -88,7 +89,7 @@ const FAQ = [
   },
   {
     q: 'Como funciona a bolsa do Bolsa Click?',
-    a: 'Você busca o curso, compara descontos de até 78% entre faculdades parceiras, escolhe a melhor oferta e se inscreve grátis. Sem ENEM, sem prova de seleção.',
+    a: `Você busca o curso, compara descontos de até ${DISCOUNT_CEILING_PCT}% entre faculdades parceiras, escolhe a melhor oferta e se inscreve grátis. Sem ENEM, sem prova de seleção.`,
   },
 ]
 

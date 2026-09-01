@@ -4,16 +4,18 @@
 // Bases verificáveis: 6 redes ativas (prisma.institution — Anhanguera,
 // Unopar, Pitágoras, Estácio, Unime, Wyden), polos em 283 cidades
 // (estudo Panorama Bolsa 2026), +1.000 estudantes beneficiados.
-// Teto 78%: vitrine home Publicidade e Propaganda presencial SP.
+// Teto de desconto: DISCOUNT_CEILING_PCT (app/lib/copy/claims.ts).
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
+
 export const stats = {
   bolsaclick: {
-    maxDiscount: 78,
+    maxDiscount: DISCOUNT_CEILING_PCT,
     citiesCount: '280+',
     studentsCount: '+1.000',
     partnersCount: '6',
   },
   anhanguera: {
-    maxDiscount: 78,
+    maxDiscount: DISCOUNT_CEILING_PCT,
     citiesCount: '280+',
     studentsCount: '+1.000',
     partnersCount: '6',

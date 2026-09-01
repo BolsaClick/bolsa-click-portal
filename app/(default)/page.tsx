@@ -17,6 +17,7 @@ import { courseAreaPose } from '../components/v2/mascot/course-area'
 import ReactiveCta, { reactiveClasses } from '../components/v2/ui/ReactiveCta'
 import { loadBlogPosts, loadShelf } from '../lib/home/vitrine'
 import { getCurrentTheme } from '../lib/themes'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 export const revalidate = 3600
 
@@ -26,7 +27,7 @@ const theme = getCurrentTheme()
 // autoridade do domínio e deve carregar o termo que queremos rankear.
 // Padrão atual (decisão 2026-07): "Bolsa de Estudo nas Maiores Redes de Ensino
 // do Brasil" — mantém o termo, DIFERENCIA o padrão da pillar /bolsas-de-estudo
-// (que usa 'Bolsas de Estudo até 78%: Compare...') e alinha com o H1 do hero.
+// (que usa "Bolsas de Estudo até 78%: Compare...") e alinha com o H1 do hero.
 // NÃO reverter pra title só de marca por medo de canibalizar /bolsas-de-estudo:
 // canibalização exige mesma INTENÇÃO + conteúdo, não só overlap de keyword. A
 // home é hub de marca (navegacional/institucional) e a pillar é ferramenta de
@@ -42,7 +43,7 @@ export const metadata: Metadata = {
   title: {
     absolute: 'Bolsa de Estudo nas Maiores Redes de Ensino do Brasil | Bolsa Click',
   },
-  description: 'Bolsa de estudo de até 78% em Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden, reconhecidas pelo MEC. Cadastro grátis, sem taxa de adesão. EAD ou presencial.',
+  description: `Bolsa de estudo de até ${DISCOUNT_CEILING_PCT}% em Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden, reconhecidas pelo MEC. Cadastro grátis, sem taxa de adesão. EAD ou presencial.`,
   keywords: [
     'bolsa de estudo',
     'bolsa de estudos',
@@ -57,7 +58,7 @@ export const metadata: Metadata = {
     'faculdades com desconto',
     'faculdade com desconto',
     'bolsa para faculdade',
-    'bolsa de estudo até 78%',
+    `bolsa de estudo até ${DISCOUNT_CEILING_PCT}%`,
     'bolsa de estudo online',
     'bolsa de estudo EAD',
     'bolsa de estudo presencial',
@@ -164,7 +165,7 @@ export default async function HomePage() {
         "name": "Como funcionam as bolsas de estudo do Bolsa Click?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "O Bolsa Click conecta estudantes a bolsas de estudo de até 78% de desconto nas maiores redes de ensino do Brasil — Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. Cadastro grátis, sem taxa de adesão. Você pode buscar por curso, cidade e modalidade, comparar preços e se cadastrar para garantir sua bolsa."
+          "text": `O Bolsa Click conecta estudantes a bolsas de estudo de até ${DISCOUNT_CEILING_PCT}% de desconto nas maiores redes de ensino do Brasil — Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. Cadastro grátis, sem taxa de adesão. Você pode buscar por curso, cidade e modalidade, comparar preços e se cadastrar para garantir sua bolsa.`
         }
       },
       {
@@ -220,7 +221,7 @@ export default async function HomePage() {
         "name": "Existem bolsas EAD disponíveis?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Sim! O Bolsa Click oferece milhares de bolsas EAD com descontos de até 78%. Os cursos a distância possuem diploma reconhecido pelo MEC, igual ao presencial. Estude de casa, no seu ritmo."
+          "text": `Sim! O Bolsa Click oferece milhares de bolsas EAD com descontos de até ${DISCOUNT_CEILING_PCT}%. Os cursos a distância possuem diploma reconhecido pelo MEC, igual ao presencial. Estude de casa, no seu ritmo.`
         }
       }
     ]

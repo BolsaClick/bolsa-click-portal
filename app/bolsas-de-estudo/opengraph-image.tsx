@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { ImageResponse } from 'next/og'
 import { BRAZILIAN_CITIES } from '@/app/lib/constants/brazilian-cities'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 /**
  * Imagem de compartilhamento da página que disputa o head term "bolsas de
@@ -23,7 +24,7 @@ export const runtime = 'nodejs' // lê o logo do disco
 export const contentType = 'image/png'
 export const size = { width: 1200, height: 630 }
 export const alt =
-  'Bolsas de estudo de até 78% em faculdades reconhecidas pelo MEC — Bolsa Click'
+  `Bolsas de estudo de até ${DISCOUNT_CEILING_PCT}% em faculdades reconhecidas pelo MEC — Bolsa Click`
 
 const PAPER = '#F4EFE5'
 const INK = '#0B1F3C'
@@ -75,7 +76,7 @@ export default async function OGImage() {
               letterSpacing: '-0.02em',
             }}
           >
-            de até 78%
+            de até {DISCOUNT_CEILING_PCT}%
           </div>
         </div>
 

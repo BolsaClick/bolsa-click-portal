@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 // Página de interceptação de intenção (GEO/E-E-A-T). Captura a versão GENÉRICA de
 // "como funciona [plataforma de bolsa] / desconto em faculdade" — sem citar concorrentes
@@ -123,7 +124,7 @@ export default function ComoFuncionaBolsaDeEstudo() {
           <p className="text-ink-700 leading-relaxed">
             Há dois grandes caminhos. A <strong>bolsa própria</strong> é o desconto negociado com a
             faculdade — normalmente sem exigir nota do ENEM nem critério de renda, com descontos que
-            chegam a 78% na mensalidade. Os <strong>programas federais</strong>, como{' '}
+            chegam a {DISCOUNT_CEILING_PCT}% na mensalidade. Os <strong>programas federais</strong>, como{' '}
             <Link href="/prouni" className="underline decoration-1 underline-offset-4">ProUni</Link> e{' '}
             <Link href="/fies" className="underline decoration-1 underline-offset-4">FIES</Link>, são
             geridos pelo MEC, exigem nota do ENEM e têm regras próprias de renda e seleção. São rotas

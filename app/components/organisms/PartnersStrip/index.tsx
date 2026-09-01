@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import { getTrustData } from '@/app/lib/trust'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const partners = [
   { name: 'Anhanguera', src: '/assets/logo-anhanguera-bolsa-click.svg', width: 160, height: 36 },
@@ -63,7 +64,7 @@ export default async function PartnersStrip() {
               <div className="text-[12px] text-ink-500 mt-1">{studentLabel.caption}</div>
             </div>
             <div>
-              <div className="font-display num-tabular text-3xl md:text-4xl text-bolsa-secondary">78%</div>
+              <div className="font-display num-tabular text-3xl md:text-4xl text-bolsa-secondary">{DISCOUNT_CEILING_PCT}%</div>
               <div className="text-[12px] text-ink-500 mt-1">desconto em bolsas</div>
             </div>
           </div>

@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { Heart, Stethoscope, Sparkles, ArrowRight } from 'lucide-react'
 import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 export const revalidate = 3600
 
@@ -48,7 +49,7 @@ const FAQ_ITEMS = [
   {
     question: 'Quanto custa faculdade de saúde com bolsa?',
     answer:
-      'Mensalidades variam por curso e unidade. Em parceiras do Bolsa Click (Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden), valores começam: Psicologia a partir de R$ 199/mês, Enfermagem R$ 299, Fisioterapia R$ 399, Nutrição R$ 299. Descontos chegam a 78% sobre o valor cheio.',
+      `Mensalidades variam por curso e unidade. Em parceiras do Bolsa Click (Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden), valores começam: Psicologia a partir de R$ 199/mês, Enfermagem R$ 299, Fisioterapia R$ 399, Nutrição R$ 299. Descontos chegam a ${DISCOUNT_CEILING_PCT}% sobre o valor cheio.`,
   },
 ]
 
@@ -58,7 +59,7 @@ const jsonLdSchemas = [
     '@type': 'CollectionPage',
     name: 'Bolsa de Estudo em Faculdades de Saúde',
     description:
-      'Bolsas de estudo em cursos da área da saúde com até 78% de desconto. Psicologia, Enfermagem, Fisioterapia, Nutrição, Biomedicina, Farmácia e mais. Inscrição grátis, sem ENEM.',
+      `Bolsas de estudo em cursos da área da saúde com até ${DISCOUNT_CEILING_PCT}% de desconto. Psicologia, Enfermagem, Fisioterapia, Nutrição, Biomedicina, Farmácia e mais. Inscrição grátis, sem ENEM.`,
     url: `${SITE_URL}/bolsas/saude`,
     provider: {
       '@type': 'EducationalOrganization',
@@ -88,9 +89,9 @@ const jsonLdSchemas = [
 ]
 
 export const metadata: Metadata = {
-  title: 'Bolsa de Estudo em Faculdade de Saúde | Até 78% de Desconto',
+  title: `Bolsa de Estudo em Faculdade de Saúde | Até ${DISCOUNT_CEILING_PCT}% de Desconto`,
   description:
-    'Bolsas em faculdades de saúde com até 78% de desconto: Psicologia, Enfermagem, Fisioterapia, Nutrição, Biomedicina, Farmácia e mais. Inscrição grátis, sem ENEM.',
+    `Bolsas em faculdades de saúde com até ${DISCOUNT_CEILING_PCT}% de desconto: Psicologia, Enfermagem, Fisioterapia, Nutrição, Biomedicina, Farmácia e mais. Inscrição grátis, sem ENEM.`,
   keywords: [
     'bolsa faculdade de saúde',
     'bolsa de estudo psicologia',
@@ -104,7 +105,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Bolsa de Estudo em Faculdade de Saúde | Bolsa Click',
     description:
-      'Bolsas em cursos de saúde com até 78% de desconto. Psicologia, Enfermagem, Fisioterapia, Nutrição e mais.',
+      `Bolsas em cursos de saúde com até ${DISCOUNT_CEILING_PCT}% de desconto. Psicologia, Enfermagem, Fisioterapia, Nutrição e mais.`,
     url: `${SITE_URL}/bolsas/saude`,
     siteName: 'Bolsa Click',
     locale: 'pt_BR',
@@ -140,7 +141,7 @@ export default function BolsasSaudePage() {
             </h1>
             <p className="text-white/80 text-base md:text-lg max-w-2xl mx-auto leading-relaxed mb-8">
               Compare bolsas nas maiores redes de ensino do país pra Psicologia, Enfermagem,
-              Fisioterapia, Nutrição e mais cursos da área da saúde. Descontos de até 78%.
+              Fisioterapia, Nutrição e mais cursos da área da saúde. Descontos de até {DISCOUNT_CEILING_PCT}%.
               Inscrição 100% gratuita, sem ENEM.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -187,7 +188,7 @@ export default function BolsasSaudePage() {
             <p>
               No Bolsa Click, você encontra bolsas em cursos de saúde nas principais redes de
               ensino particular do Brasil — Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden — com
-              descontos que chegam a 78% sobre o valor cheio da mensalidade.
+              descontos que chegam a {DISCOUNT_CEILING_PCT}% sobre o valor cheio da mensalidade.
             </p>
           </div>
         </div>

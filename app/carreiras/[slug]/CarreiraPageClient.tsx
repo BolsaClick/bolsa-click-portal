@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { FeaturedCourseData } from '@/app/cursos/_data/types'
 import { courseTypeLabel } from '@/app/lib/courseTypeLabel'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 interface Props {
   profissao: FeaturedCourseData
@@ -70,7 +71,7 @@ export default function CarreiraPageClient({ profissao, related }: Props) {
                 </div>
                 <div className="bg-white px-4 py-3">
                   <dt className="font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500">Bolsa até</dt>
-                  <dd className="mt-1 font-display num-tabular text-xl text-bolsa-secondary">78%</dd>
+                  <dd className="mt-1 font-display num-tabular text-xl text-bolsa-secondary">{DISCOUNT_CEILING_PCT}%</dd>
                 </div>
               </dl>
 
@@ -189,7 +190,7 @@ export default function CarreiraPageClient({ profissao, related }: Props) {
             Para atuar como <strong>{profissao.name}</strong>, é necessário cursar{' '}
             <strong>{profissao.fullName}</strong>, com duração de <strong>{profissao.duration}</strong>.
             Pelo Bolsa Click, você encontra a graduação nas maiores redes de ensino do país com{' '}
-            <strong>bolsa de até 78%</strong> nas modalidades presencial, EAD e semipresencial.
+            <strong>bolsa de até {DISCOUNT_CEILING_PCT}%</strong> nas modalidades presencial, EAD e semipresencial.
           </p>
           <Link
             href={`/cursos/${profissao.slug}`}
@@ -218,7 +219,7 @@ export default function CarreiraPageClient({ profissao, related }: Props) {
               },
               {
                 q: `Como se tornar um profissional de ${profissao.name}?`,
-                a: `Para atuar como ${profissao.name} no Brasil, o caminho principal é cursar a graduação em ${profissao.fullName}, com duração padrão de ${profissao.duration} conforme as Diretrizes Curriculares Nacionais (DCN) do MEC. O curso pode ser feito em modalidade presencial, EAD ou semipresencial — todas formam profissionais com diploma equivalente e mesma validade legal. As principais habilidades desenvolvidas durante a graduação são ${profissao.skills.slice(0, 3).join(', ')}. Pelo Bolsa Click, você encontra a graduação nas maiores redes de ensino do país com bolsa de até 78% sobre a mensalidade. A inscrição é gratuita e em algumas faculdades o ingresso é por vestibular agendado online (sem necessidade de ENEM), com resultado em até 48 horas e matrícula imediata após aprovação.`,
+                a: `Para atuar como ${profissao.name} no Brasil, o caminho principal é cursar a graduação em ${profissao.fullName}, com duração padrão de ${profissao.duration} conforme as Diretrizes Curriculares Nacionais (DCN) do MEC. O curso pode ser feito em modalidade presencial, EAD ou semipresencial — todas formam profissionais com diploma equivalente e mesma validade legal. As principais habilidades desenvolvidas durante a graduação são ${profissao.skills.slice(0, 3).join(', ')}. Pelo Bolsa Click, você encontra a graduação nas maiores redes de ensino do país com bolsa de até ${DISCOUNT_CEILING_PCT}% sobre a mensalidade. A inscrição é gratuita e em algumas faculdades o ingresso é por vestibular agendado online (sem necessidade de ENEM), com resultado em até 48 horas e matrícula imediata após aprovação.`,
               },
               {
                 q: `Como está o mercado de trabalho para ${profissao.name}?`,

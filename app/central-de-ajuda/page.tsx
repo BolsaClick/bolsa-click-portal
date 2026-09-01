@@ -3,12 +3,13 @@ import { HelpCategory } from '@/app/components/help/HelpCategory'
 import { ContactCTA } from '@/app/components/help/ContactCTA'
 import { getHelpCategories } from './_lib/data'
 import { renderIcon } from './_lib/icons'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const helpFaqItems = [
   {
     question: 'Como funcionam as bolsas de estudo do Bolsa Click?',
     answer:
-      'O Bolsa Click negocia descontos com faculdades parceiras e disponibiliza bolsas de até 78% sem nota de corte do ENEM. Você escolhe o curso e a modalidade, faz o cadastro grátis, garante a bolsa e segue direto para a matrícula com a instituição.',
+      `O Bolsa Click negocia descontos com faculdades parceiras e disponibiliza bolsas de até ${DISCOUNT_CEILING_PCT}% sem nota de corte do ENEM. Você escolhe o curso e a modalidade, faz o cadastro grátis, garante a bolsa e segue direto para a matrícula com a instituição.`,
   },
   {
     question: 'Preciso pagar alguma coisa pra usar o Bolsa Click?',

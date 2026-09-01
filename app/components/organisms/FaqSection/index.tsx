@@ -1,11 +1,12 @@
 import Container from '../../atoms/Container'
 import BobWizard from './BobWizard'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const faqs = [
   {
     question: 'Como funcionam as bolsas de estudo do Bolsa Click?',
     answer:
-      'O Bolsa Click conecta você a bolsas de estudo de até 78% de desconto em Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. Basta buscar por curso, cidade e modalidade. Depois, compare os preços e se cadastre grátis, sem taxa de adesão.',
+      `O Bolsa Click conecta você a bolsas de estudo de até ${DISCOUNT_CEILING_PCT}% de desconto em Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. Basta buscar por curso, cidade e modalidade. Depois, compare os preços e se cadastre grátis, sem taxa de adesão.`,
   },
   {
     question: 'As bolsas de estudo são gratuitas?',
@@ -30,7 +31,7 @@ const faqs = [
   {
     question: 'Existem bolsas EAD disponíveis?',
     answer:
-      'Sim. Temos milhares de bolsas EAD com descontos de até 78%. Os cursos a distância possuem diploma reconhecido pelo MEC, igual ao presencial. Estude de casa, no seu ritmo.',
+      `Sim. Temos milhares de bolsas EAD com descontos de até ${DISCOUNT_CEILING_PCT}%. Os cursos a distância possuem diploma reconhecido pelo MEC, igual ao presencial. Estude de casa, no seu ritmo.`,
   },
 ]
 

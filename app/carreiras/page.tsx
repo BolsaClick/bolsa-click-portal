@@ -2,12 +2,13 @@ import { Metadata } from 'next'
 import { prisma } from '@/app/lib/prisma'
 import CarreirasPageClient from './CarreirasPageClient'
 import { FeaturedCourseData } from '../cursos/_data/types'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'Carreiras e Profissões: Salário, Mercado e Como se Tornar',
-  description: 'Conheça profissões em alta, salários médios, mercado de trabalho e qual graduação fazer. Guia completo das principais carreiras no Brasil — com bolsa de estudo de até 78%.',
+  description: `Conheça profissões em alta, salários médios, mercado de trabalho e qual graduação fazer. Guia completo das principais carreiras no Brasil — com bolsa de estudo de até ${DISCOUNT_CEILING_PCT}%.`,
   keywords: [
     'profissões',
     'carreiras',
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Carreiras e Profissões | Bolsa Click',
-    description: 'Guia de profissões com salário médio, mercado e qual faculdade fazer. Bolsas de estudo de até 78% para cada carreira.',
+    description: `Guia de profissões com salário médio, mercado e qual faculdade fazer. Bolsas de estudo de até ${DISCOUNT_CEILING_PCT}% para cada carreira.`,
     url: 'https://www.bolsaclick.com.br/carreiras',
     siteName: 'Bolsa Click',
     locale: 'pt_BR',

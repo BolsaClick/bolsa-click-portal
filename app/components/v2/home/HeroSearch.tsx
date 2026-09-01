@@ -12,6 +12,7 @@
 import { Search } from 'lucide-react'
 import { useRef, useState } from 'react'
 
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 import ReactiveCta from '../ui/ReactiveCta'
 
 const LEVELS = [
@@ -63,7 +64,7 @@ export default function HeroSearch() {
       {/* faixa cupom do card de busca */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-dashed border-ink-300/70 bg-paper-warm px-5 py-3">
         <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-ink-700">
-          Bolsas de até 78%
+          Bolsas de até {DISCOUNT_CEILING_PCT}%
         </p>
         <span className="inline-flex items-center gap-1.5 bg-bolsa-secondary py-1 pl-3.5 pr-2.5 text-[12px] font-bold text-white [clip-path:polygon(9px_0,100%_0,100%_100%,9px_100%,0_50%)]">
           <span className="h-1.5 w-1.5 rounded-full bg-white/90" aria-hidden />

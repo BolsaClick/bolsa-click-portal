@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Calculator, Compass, ShieldCheck, Clock, Lock, ArrowRight, CheckCircle2 } from 'lucide-react'
 import { BRAZILIAN_CITIES } from '@/app/lib/constants/brazilian-cities'
 import { VisibleFaq } from '@/app/cursos/[slug]/_seo/CourseSeoSections'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.bolsaclick.com.br'
 const pageUrl = `${SITE_URL}/descubra-sua-bolsa`
@@ -11,7 +12,7 @@ const CITY_COUNT = BRAZILIAN_CITIES.length
 export const metadata: Metadata = {
   title: 'Descubra Sua Bolsa Ideal — Simulador e Teste Vocacional Grátis',
   description:
-    'Dois caminhos grátis pra descobrir sua bolsa: o simulador calcula seu desconto no ProUni, FIES e bolsas próprias de até 78%; o teste vocacional aponta o curso que combina com você. 2 minutos cada, sem CPF.',
+    `Dois caminhos grátis pra descobrir sua bolsa: o simulador calcula seu desconto no ProUni, FIES e bolsas próprias de até ${DISCOUNT_CEILING_PCT}%; o teste vocacional aponta o curso que combina com você. 2 minutos cada, sem CPF.`,
   keywords: [
     'descubra sua bolsa',
     'qual bolsa de estudo eu consigo',
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Descubra Sua Bolsa Ideal — Bolsa Click',
     description:
-      'Simule seu desconto ou descubra seu curso em 2 minutos. ProUni, FIES e bolsas próprias de até 78% de desconto, sem nota de corte.',
+      `Simule seu desconto ou descubra seu curso em 2 minutos. ProUni, FIES e bolsas próprias de até ${DISCOUNT_CEILING_PCT}% de desconto, sem nota de corte.`,
     url: pageUrl,
     siteName: 'Bolsa Click',
     locale: 'pt_BR',
@@ -44,7 +45,7 @@ const faqItems = [
   {
     question: 'Qual a diferença entre o simulador e o teste vocacional?',
     answer:
-      'O simulador de bolsa é pra quem já sabe o que quer estudar: você informa curso, cidade, nota do ENEM e renda, e ele estima em quais programas (ProUni, FIES, SISU) você se qualifica, além de mostrar bolsas próprias reais de até 78% no seu curso. O teste vocacional é pra quem ainda está em dúvida sobre qual curso fazer: por meio de perguntas sobre seus interesses, ele aponta as áreas e os cursos que mais combinam com o seu perfil.',
+      `O simulador de bolsa é pra quem já sabe o que quer estudar: você informa curso, cidade, nota do ENEM e renda, e ele estima em quais programas (ProUni, FIES, SISU) você se qualifica, além de mostrar bolsas próprias reais de até ${DISCOUNT_CEILING_PCT}% no seu curso. O teste vocacional é pra quem ainda está em dúvida sobre qual curso fazer: por meio de perguntas sobre seus interesses, ele aponta as áreas e os cursos que mais combinam com o seu perfil.`,
   },
   {
     question: 'Preciso pagar alguma coisa?',
@@ -100,7 +101,7 @@ const PATHS = [
     icon: Calculator,
     tag: 'Já sei o que quero estudar',
     title: 'Simular minha bolsa',
-    desc: 'Informe curso, cidade, nota do ENEM e renda. Descubra em quais programas você se qualifica (ProUni, FIES, SISU) e veja bolsas próprias reais de até 78% no seu curso.',
+    desc: `Informe curso, cidade, nota do ENEM e renda. Descubra em quais programas você se qualifica (ProUni, FIES, SISU) e veja bolsas próprias reais de até ${DISCOUNT_CEILING_PCT}% no seu curso.`,
     cta: 'Simular meu desconto',
     accent: 'bg-bolsa-primary',
     accentText: 'text-bolsa-primary',
@@ -148,7 +149,7 @@ export default function DescubraSuaBolsaPage() {
             </h1>
             <p className="text-white/80 text-base md:text-lg leading-relaxed max-w-2xl">
               Pra descobrir sua bolsa ideal você tem dois caminhos grátis: o <strong className="text-white">simulador</strong> calcula
-              seu desconto no ProUni, FIES e em bolsas próprias de até 78%; o <strong className="text-white">teste vocacional</strong> aponta
+              seu desconto no ProUni, FIES e em bolsas próprias de até {DISCOUNT_CEILING_PCT}%; o <strong className="text-white">teste vocacional</strong> aponta
               o curso que combina com você. Cada um leva 2 minutos e termina com ofertas reais de faculdades parceiras.
             </p>
             <ul className="flex flex-wrap gap-x-6 gap-y-2 mt-7 text-white/85 text-sm">
@@ -211,7 +212,7 @@ export default function DescubraSuaBolsaPage() {
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="grid sm:grid-cols-2 gap-x-10 gap-y-4">
             {[
-              'Bolsas próprias de até 78% sem nota de corte',
+              `Bolsas próprias de até ${DISCOUNT_CEILING_PCT}% sem nota de corte`,
               `Faculdades parceiras em ${CITY_COUNT}+ cidades`,
               'ProUni, FIES e SISU explicados com critérios oficiais',
               'Inscrição gratuita e sem comprovação de renda nas bolsas próprias',

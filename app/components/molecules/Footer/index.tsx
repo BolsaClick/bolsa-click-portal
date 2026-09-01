@@ -7,6 +7,7 @@ import { business } from '@/app/lib/constants/business';
 import { WhatsAppSocialIcon, WhatsAppPhoneLink } from './WhatsAppContactLink';
 import { ManageCookiesButton } from './ManageCookiesButton'
 import { ReclameAquiSeal } from './ReclameAquiSeal';
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const linkClass = 'text-neutral-300 text-sm hover:text-white transition-colors'
 
@@ -212,7 +213,7 @@ const Footer: React.FC = () => {
               className="brightness-0 invert"
             />
             <p className="text-neutral-400 text-sm leading-relaxed">
-              Marketplace de bolsas de estudo com até 78% de desconto nas maiores redes de ensino do Brasil — Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden.
+              Marketplace de bolsas de estudo com até {DISCOUNT_CEILING_PCT}% de desconto nas maiores redes de ensino do Brasil — Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden.
             </p>
             <div className="flex space-x-4 pt-2">
               <a

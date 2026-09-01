@@ -1,4 +1,5 @@
 import { prisma } from '@/app/lib/prisma'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 import HeroBannerSlider from './HeroBannerSlider'
 import Filter from '@/app/components/molecules/Filter'
 
@@ -60,7 +61,7 @@ const Hero = async () => {
                   : 'font-display text-4xl md:text-5xl lg:text-6xl font-semibold text-white leading-[1.05] mb-4'
               }
             >
-              Bolsas de até <span className="text-bolsa-secondary">78%</span> nas{' '}
+              Bolsas de até <span className="text-bolsa-secondary">{DISCOUNT_CEILING_PCT}%</span> nas{' '}
               <span className="text-bolsa-secondary">maiores redes de ensino</span> do Brasil
             </h1>
             {!hasBanners && (
@@ -86,7 +87,7 @@ const Hero = async () => {
               <span aria-hidden="true" className="text-white/30">·</span>
               <div className="flex items-baseline gap-1.5">
                 <dt className="sr-only">Desconto máximo</dt>
-                <dd className="font-semibold text-base md:text-lg">até 78%</dd>
+                <dd className="font-semibold text-base md:text-lg">até {DISCOUNT_CEILING_PCT}%</dd>
                 <span className="text-white/70 text-sm md:text-base">de desconto</span>
               </div>
               <span aria-hidden="true" className="text-white/30">·</span>

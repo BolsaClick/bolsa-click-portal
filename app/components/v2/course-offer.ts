@@ -141,6 +141,21 @@ export function offerResultHref(offer: CourseOffer): string {
 }
 
 /**
+ * `minPrice`/`maxPrice` (e `montlyFeeFrom`/`montlyFeeTo` no checkout) desse
+ * nível já são o TOTAL do curso (`priceWithDiscount`/`priceWithoutDiscount`
+ * no Tartarus/Cogna), não mensalidade — confirmado contra a API: pós e
+ * profissionalizante batem com esses campos, graduação (ATHENAS) tem
+ * minPrice/maxPrice na faixa de mensalidade mesmo.
+ *
+ * Usado pra decidir `priceIsTotal` em `getPriceAnchor`: multiplicar um total
+ * por `durationMonths` de novo infla "Economize" até igualar o "De" (bug
+ * real observado em card de pós, 2026-08).
+ */
+export function isTotalPriceLevel(academicLevel?: string | null): boolean {
+  return academicLevel === 'POS_GRADUACAO' || academicLevel === 'CURSO_PROFISSIONALIZANTE'
+}
+
+/**
  * A oferta é vendida parcelada, e não por mensalidade?
  *
  * Vale para pós-graduação e para os cursos profissionalizantes: nos dois o
@@ -157,8 +172,7 @@ export function hasInstallmentPlan<
   },
 >(offer: T): offer is T & { totalInstallment: number; minInstallmentValue: number } {
   return (
-    (offer.academicLevel === 'POS_GRADUACAO' ||
-      offer.academicLevel === 'CURSO_PROFISSIONALIZANTE') &&
+    isTotalPriceLevel(offer.academicLevel) &&
     typeof offer.totalInstallment === 'number' &&
     typeof offer.minInstallmentValue === 'number'
   )

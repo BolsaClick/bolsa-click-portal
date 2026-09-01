@@ -585,9 +585,18 @@ const isFormValidForPayment =
   // abaixo e `handleValidateVoucher`): o automático é o padrão, um voucher
   // manual válido o substitui, e um manual inválido/indisponível NÃO derruba
   // o automático já aplicado.
+  //
+  // DECISÃO DE NEGÓCIO (CEO, não limitação técnica): na pós, o campo só
+  // aparece com PIX ou Cartão Recorrente selecionados. A resposta real da
+  // Cogna traz desconto de voucher pro BOLETO também (mesmo % do PIX,
+  // `totalDiscont`/`discountPercentage` no payload) — a Cogna aceita, nós
+  // que optamos por não oferecer voucher em boleto/crédito comum na pós. Se
+  // um dia acharem isso "quebrado" e forem consertar: NÃO é bug, é escolha
+  // comercial. Mudar exige decisão de negócio, não só código.
+  const isPosVoucherPaymentType = posPaymentMethodType === 'PIX' || posPaymentMethodType === 'CREDITO_RECORRENCIA'
   const showVoucherField =
     offerDetails?.academicLevel === 'CURSO_PROFISSIONALIZANTE'
-    || offerDetails?.academicLevel === 'POS_GRADUACAO'
+    || (offerDetails?.academicLevel === 'POS_GRADUACAO' && isPosVoucherPaymentType)
 
   // Auto-selecionar boleto 18x para pós-graduação
   useEffect(() => {
@@ -685,6 +694,41 @@ const isFormValidForPayment =
     }
   }, [offerDetails, posInstallmentId, watchedCpf])
 
+  // Reage à troca de forma de pagamento na pós quando ela derruba o campo de
+  // voucher (ver `isPosVoucherPaymentType`/`showVoucherField`: só existe em
+  // PIX/Cartão Recorrente). Se um voucher MANUAL estava valendo e a pessoa
+  // muda pra boleto/crédito comum, esse desconto deixa de fazer sentido ali
+  // — escolhemos REVERTER pro automático (GALENA+15, sempre disponível na
+  // pós) em vez de BLOQUEAR a troca de forma de pagamento: travar a pessoa
+  // numa forma só pra não perder um voucher manual seria pior UX do que
+  // trocar por um desconto que ainda existe, com aviso claro do porquê.
+  // Nunca deixa a pessoa achando que o desconto manual "continua valendo"
+  // numa forma que nem mostra mais o campo.
+  useEffect(() => {
+    if (offerDetails?.academicLevel !== 'POS_GRADUACAO') return
+    if (voucherSource !== 'manual') return
+    if (isPosVoucherPaymentType) return
+    if (autoVoucherData) {
+      setVoucherCode(autoVoucherCode)
+      setVoucherValid(true)
+      setVoucherData(autoVoucherData)
+      setVoucherInstallments(autoVoucherInstallments)
+      setVoucherSource('auto')
+      setVoucherInputValue('')
+      setVoucherMessage('')
+      toast(`O voucher manual só vale com PIX ou Cartão Recorrente — voltamos para o desconto automático GALENA+15 nesta forma de pagamento.`)
+    } else {
+      setVoucherValid(false)
+      setVoucherData(null)
+      setVoucherInstallments([])
+      setVoucherSource(null)
+      setVoucherInputValue('')
+      setVoucherMessage('')
+      toast.error('O voucher aplicado não vale para essa forma de pagamento e foi removido.')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [posPaymentMethodType, offerDetails?.academicLevel])
+
   // [CUPOM] Funções de cupom comentadas para possível reativação futura
   // const applyCouponToMatricula = () => {
   //   if (!coupon) return baseMatricula
@@ -726,6 +770,16 @@ const isFormValidForPayment =
     return pm?.installments.find((i) => i.id === posInstallmentId)?.number
   }
 
+  // Rótulo curto de forma de pagamento, usado nas mensagens de voucher (o
+  // mesmo texto que já aparecia nos botões de forma de pagamento).
+  const voucherPaymentMethodLabel = (type: string): string =>
+    type === 'CREDITO' ? 'Crédito' : type === 'BOLETO' ? 'Boleto' : type === 'PIX' ? 'PIX' : type === 'CREDITO_RECORRENCIA' ? 'Cartão Recorrente' : type === 'VOUCHER' ? 'Voucher' : type
+
+  // As duas formas de pagamento que aceitam voucher manual na pós (ver
+  // `isPosVoucherPaymentType`/`showVoucherField` — decisão de negócio, não
+  // limitação técnica: a Cogna também dá desconto de voucher no boleto).
+  const VOUCHER_ELIGIBLE_PAYMENT_TYPES = ['PIX', 'CREDITO_RECORRENCIA']
+
   // Validação manual de voucher (campo digitado), Cosmos-only (pós e
   // profissionalizante). Feedback honesto por status HTTP, conforme a doc da
   // Cogna — nunca colapsa em "erro" genérico:
@@ -742,6 +796,18 @@ const isFormValidForPayment =
   // atualiza a mensagem do campo, deixando intacto o desconto já em vigor —
   // pra não derrubar o automático da pós por causa de uma tentativa manual
   // malsucedida.
+  //
+  // Achado em produção: um voucher (ex: INOVIT.26) pode devolver 200/isValid
+  // no teste direto da API mas 400 aqui — porque `paymentPlanId` na Cogna
+  // não é "a oferta", é UM PARCELAMENTO específico (ver doc: `paymentPlanId`
+  // = "ID do plano de pagamento"). Um voucher preso ao plano de 18x recusa
+  // (400) se validado contra o id do plano de 1x/6x/12x, mesmo sendo um
+  // código válido. Por isso, antes de declarar "inválido/expirado": se a
+  // 1ª tentativa (parcela hoje selecionada) falhar, tenta os outros
+  // parcelamentos disponíveis nas formas que aceitam voucher (PIX/Cartão
+  // Recorrente) até um aceitar. Se algum aceitar, a UI troca forma/parcela
+  // pra esse plano e avisa — em vez de deixar a pessoa adivinhando qual
+  // parcelamento faz o cupom funcionar.
   const handleValidateVoucher = async () => {
     const code = voucherInputValue.trim()
     if (!code) return
@@ -765,11 +831,40 @@ const isFormValidForPayment =
     setVoucherValidating(true)
     setVoucherMessage('')
     try {
-      const result = await validateVoucher(code, cpf, posInstallmentId)
+      let result = await validateVoucher(code, cpf, posInstallmentId)
+      let matchedType = posPaymentMethodType
+      let matchedInstallment: PosInstallment | undefined
 
-      if (result.status === 200 && (result.data?.isValid ?? false) && result.data) {
+      const isSuccess = (r: typeof result) => r.status === 200 && (r.data?.isValid ?? false) && !!r.data
+
+      // Só vale tentar outros parcelamentos quando a Cogna respondeu 400
+      // ("inválido/expirado/parâmetros ausentes" — inclui plano errado). Um
+      // 204 ("nenhum voucher pra este CPF") não depende de parcela: repetir
+      // com outro `paymentPlanId` não muda a resposta, só gasta chamadas.
+      if (result.status === 400) {
+        console.warn(
+          `Voucher "${code}" recusado no plano ${posInstallmentId} (${posPaymentMethodType}, ${selectedNumber ?? '?'}x) — tentando outros parcelamentos.`
+        )
+        const methods = (offerDetails?.paymentMethods as PosPaymentMethod[] | undefined) ?? []
+        const candidates = methods
+          .filter((pm) => VOUCHER_ELIGIBLE_PAYMENT_TYPES.includes(pm.type))
+          .flatMap((pm) => pm.installments.map((inst) => ({ type: pm.type, inst })))
+          .filter(({ inst }) => inst.id !== posInstallmentId)
+
+        for (const { type, inst } of candidates) {
+          const attempt = await validateVoucher(code, cpf, inst.id)
+          if (isSuccess(attempt)) {
+            result = attempt
+            matchedType = type
+            matchedInstallment = inst
+            break
+          }
+        }
+      }
+
+      if (isSuccess(result) && result.data) {
         const data = result.data
-        const matchingMethod = data.paymentMethods?.find((pm) => pm.type === posPaymentMethodType)
+        const matchingMethod = data.paymentMethods?.find((pm) => pm.type === matchedType)
           || data.paymentMethods?.[0]
         const newInstallments = matchingMethod?.installments ?? []
 
@@ -783,15 +878,24 @@ const isFormValidForPayment =
         setVoucherInstallments(newInstallments)
         setVoucherSource('manual')
 
+        // O voucher só validou num parcelamento diferente do selecionado —
+        // troca a forma/parcela pra essa, em vez de aplicar um desconto que
+        // não bate com o que está marcado na tela.
+        if (matchedInstallment) {
+          setPosPaymentMethodType(matchedType)
+          setPosInstallmentId(matchedInstallment.id)
+        }
+
         // Compara o desconto na mesma quantidade de parcelas, se os dois
         // lados tiverem dado pra comparar (a API não garante cobertura das
         // mesmas parcelas entre dois vouchers diferentes — quando não dá,
         // não inventamos comparação, só omitimos essa parte da mensagem).
-        const newPct = selectedNumber !== undefined
-          ? newInstallments.find((v) => v.number === selectedNumber)?.discountPercentage
+        const compareNumber = matchedInstallment ? matchedInstallment.number : selectedNumber
+        const newPct = compareNumber !== undefined
+          ? newInstallments.find((v) => v.number === compareNumber)?.discountPercentage
           : matchingMethod?.discountPercentage
-        const prevPct = previousCode && selectedNumber !== undefined
-          ? previousInstallments.find((v) => v.number === selectedNumber)?.discountPercentage
+        const prevPct = previousCode && compareNumber !== undefined && !matchedInstallment
+          ? previousInstallments.find((v) => v.number === compareNumber)?.discountPercentage
           : undefined
 
         const baseMsg = matchingMethod
@@ -799,6 +903,9 @@ const isFormValidForPayment =
           : 'Voucher aplicado!'
         const replacedMsg = previousCode
           ? ` Substituiu o cupom "${previousCode}" — só um cupom vale por vez.`
+          : ''
+        const switchedMsg = matchedInstallment
+          ? ` Esse voucher vale para ${matchedInstallment.number}x via ${voucherPaymentMethodLabel(matchedType)} — ajustamos a forma de pagamento e a parcela pra você.`
           : ''
 
         if (prevPct !== undefined && newPct !== undefined && prevPct !== newPct) {
@@ -810,15 +917,22 @@ const isFormValidForPayment =
           )
         } else {
           setVoucherMessageType('success')
-          setVoucherMessage(`${baseMsg}${replacedMsg}`)
+          setVoucherMessage(`${baseMsg}${replacedMsg}${switchedMsg}`)
         }
       } else if (result.status === 204) {
         setVoucherMessageType('error')
         setVoucherMessage('Nenhum voucher disponível para este CPF.')
       } else {
-        // 400 (ou 200 com isValid=false): inválido/expirado.
+        // 400 (ou 200 com isValid=false) em TODOS os parcelamentos tentados:
+        // agora sim, inválido/expirado. `result.data?.message` é texto que
+        // vem de fora (Tartarus/Cogna) — pode incluir detalhe técnico
+        // (endpoint, status HTTP) que nunca deve chegar pra quem usa. Loga
+        // pra depuração, mostra só uma mensagem nossa, amigável.
+        if (result.data?.message) {
+          console.error('Voucher recusado pela Cogna:', result.data.message)
+        }
         setVoucherMessageType('error')
-        setVoucherMessage(result.data?.message || 'Voucher inválido ou expirado.')
+        setVoucherMessage('Voucher inválido ou expirado.')
       }
     } catch (err) {
       console.error('Erro ao validar voucher manual:', err)
@@ -843,6 +957,35 @@ const isFormValidForPayment =
     setVoucherMessageType('success')
     setVoucherMessage('Desconto automático GALENA+15 restaurado.')
   }
+
+  // Dois destaques do voucher aplicado que hoje ficam invisíveis (só dá pra
+  // ver olhando linha a linha da tabela de parcelas). Sempre calculados a
+  // partir do que a API devolveu — nunca número fixo no código.
+
+  // 1ª parcela grátis: `installmentValue: 0`/`discountPercentage: 100` na
+  // parcela 1 do método hoje selecionado.
+  const voucherFirstInstallmentFree = voucherValid
+    ? voucherInstallments.find((i) => i.number === 1 && i.installmentValue === 0)
+    : undefined
+
+  // Cartão Recorrente costuma dar desconto maior que PIX no mesmo voucher
+  // (ver evidência: 29,17% x 19,72%). Compara os dois métodos que o campo de
+  // voucher realmente oferece na pós (PIX/Cartão Recorrente — decisão de
+  // negócio, ver `VOUCHER_ELIGIBLE_PAYMENT_TYPES`); só mostra quando o
+  // recorrente é de fato melhor E a pessoa não está nele já.
+  const voucherRecorrenteAdvantage = (() => {
+    if (!voucherValid || !voucherData?.paymentMethods?.length) return null
+    if (posPaymentMethodType === 'CREDITO_RECORRENCIA') return null
+    const recorrente = voucherData.paymentMethods.find((pm) => pm.type === 'CREDITO_RECORRENCIA')
+    const pix = voucherData.paymentMethods.find((pm) => pm.type === 'PIX')
+    if (!recorrente || !pix) return null
+    if (recorrente.totalValueWithDiscount >= pix.totalValueWithDiscount) return null
+    return {
+      economia: pix.totalValueWithDiscount - recorrente.totalValueWithDiscount,
+      recorrentePct: recorrente.discountPercentage,
+      pixPct: pix.discountPercentage,
+    }
+  })()
 
   // Função para criar a matrícula (inscrição direta, sem pagamento no checkout)
   const createInscriptionAfterPayment = async (data: FormSchema) => {
@@ -2210,8 +2353,27 @@ const isFormValidForPayment =
                             O valor da matrícula e das mensalidades será pago diretamente à instituição de ensino.
                           </p>
 
+                          {/* Dois argumentos de venda do voucher hoje aplicado (manual OU o
+                              GALENA+15 automático) que ficam escondidos na tabela de parcelas —
+                              fora do bloco do campo pra aparecer mesmo em BOLETO/Crédito, onde
+                              o campo manual não existe mas o GALENA+15 automático continua
+                              valendo. Valores sempre vindos da API, nunca fixos no código. */}
+                          {voucherFirstInstallmentFree && (
+                            <p className="text-xs mt-2 text-green-700 font-medium">
+                              🎉 1ª parcela sai de graça — R$ 0,00 (era {formatCurrency(voucherFirstInstallmentFree.originalInstallmentValue)}).
+                            </p>
+                          )}
+                          {voucherRecorrenteAdvantage && (
+                            <p className="text-xs mt-2 text-blue-700">
+                              💳 Pagando por <strong>Cartão Recorrente</strong> esse voucher rende mais: {voucherRecorrenteAdvantage.recorrentePct}%
+                              de desconto (contra {voucherRecorrenteAdvantage.pixPct}% no PIX) — economia de {formatCurrency(voucherRecorrenteAdvantage.economia)} no total.
+                            </p>
+                          )}
+
                           {/* Voucher — digitação manual liberada nos dois níveis Cosmos
-                              (pós e profissionalizante); graduação (ATHENAS) não tem esse campo. */}
+                              (pós e profissionalizante); graduação (ATHENAS) não tem esse campo.
+                              Na pós, só aparece com PIX/Cartão Recorrente selecionados — decisão
+                              de negócio, ver `isPosVoucherPaymentType`. */}
                           {showVoucherField && (
                           <div className="mt-4 p-3 border border-dashed border-gray-300 rounded-lg bg-gray-50">
                             <label className="block text-xs font-medium text-gray-700 mb-1">Possui um voucher?</label>

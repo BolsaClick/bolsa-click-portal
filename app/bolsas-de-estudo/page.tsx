@@ -15,6 +15,7 @@ import ProUniAlternativasSection from './_components/ProUniAlternativasSection'
 import TrustBadges from './_components/TrustBadges'
 import { CALENDARIO_2026, classifyEvents } from './_data/calendario-2026'
 import { OFF_TOPIC_NOINDEX_SLUGS } from '@/app/lib/blog/noindex-slugs'
+import { ogImageObject } from '@/app/lib/seo/schema-image'
 import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
@@ -416,6 +417,10 @@ export default async function BolsasDeEstudoHubPage() {
     dateModified: DATE_MODIFIED,
     inLanguage: 'pt-BR',
     isAccessibleForFree: true,
+    image: ogImageObject(
+      `${SITE_URL}/bolsas-de-estudo/opengraph-image`,
+      `Bolsas de estudo de até ${DISCOUNT_CEILING_PCT}% em faculdades reconhecidas pelo MEC — Bolsa Click`,
+    ),
     author: {
       '@type': 'Person',
       '@id': `${SITE_URL}/sobre/equipe-editorial#rodrigo-silverio`,

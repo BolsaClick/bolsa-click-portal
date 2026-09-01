@@ -190,6 +190,10 @@ function MatriculaContent() {
   const [voucherMessage, setVoucherMessage] = useState<string>('')
   const [voucherData, setVoucherData] = useState<ValidateVoucherResponse | null>(null)
   const [voucherInstallments, setVoucherInstallments] = useState<VoucherInstallment[]>([])
+  // Pós-graduação: true enquanto o voucher GALENA+15 (obrigatório, aplicado
+  // sozinho) está sendo validado/retentado — trava o botão de "Finalizar
+  // matrícula" pra não correr com a inscrição antes da consulta voltar.
+  const [posVoucherAutoValidating, setPosVoucherAutoValidating] = useState(false)
   // Graduação: tipo de ingresso (ENEM ou VESTIBULAR)
   const [selectedIngressType, setSelectedIngressType] = useState<'ENEM' | 'VESTIBULAR'>('VESTIBULAR')
 
@@ -556,7 +560,17 @@ const isFormValidForPayment =
     }
   }, [offerDetails])
 
-  // Auto-validar voucher GALENA+15 para pós-graduação
+  // Auto-validar voucher GALENA+15 para pós-graduação.
+  //
+  // Corrida de tempo original: essa validação é assíncrona e o botão de
+  // envio não esperava por ela. Se a request falhasse por rede, voltasse
+  // inválida, ou simplesmente não tivesse terminado ainda, o submit seguia
+  // sem `voucherCode`/`voucherData` — e a Cogna recusa com 400
+  // ("paymentMethod.voucher must be a string") porque `paymentMethod` foi
+  // enviado sem `voucher`. Aqui: (1) uma retentativa com backoff curto antes
+  // de desistir, em vez de engolir o erro em silêncio; (2) `posVoucherAutoValidating`
+  // fica true do início até o resultado final (sucesso ou falha após a
+  // retentativa), e o botão de submit trava enquanto isso (ver JSX do CTA).
   const watchedCpf = watchedValues.cpf
   useEffect(() => {
     if (!offerDetails || offerDetails.academicLevel !== 'POS_GRADUACAO') return
@@ -564,25 +578,53 @@ const isFormValidForPayment =
     const cpf = (watchedCpf || '').replace(/\D/g, '')
     if (cpf.length !== 11) return
 
-    const autoValidateVoucher = async () => {
+    let cancelled = false
+
+    const tryValidateOnce = async (): Promise<ValidateVoucherResponse | null> => {
       try {
         const result = await validateVoucher('GALENA+15', cpf, posInstallmentId)
-        const isValid = result.isValid ?? false
-        if (isValid) {
-          setVoucherCode('GALENA+15')
-          setVoucherValid(true)
-          setVoucherData(result)
-          const matchingMethod = result.paymentMethods?.find(pm => pm.type === 'BOLETO')
-            || result.paymentMethods?.[0]
-          if (matchingMethod) {
-            setVoucherInstallments(matchingMethod.installments)
-          }
-        }
+        return (result.isValid ?? false) ? result : null
       } catch (err) {
         console.error('Erro ao validar voucher GALENA+15:', err)
+        return null
       }
     }
+
+    const autoValidateVoucher = async () => {
+      setPosVoucherAutoValidating(true)
+      setVoucherValid(null)
+
+      let result = await tryValidateOnce()
+      if (!result && !cancelled) {
+        await new Promise((resolve) => setTimeout(resolve, 500))
+        if (cancelled) return
+        result = await tryValidateOnce()
+      }
+      if (cancelled) return
+
+      if (result) {
+        setVoucherCode('GALENA+15')
+        setVoucherValid(true)
+        setVoucherData(result)
+        const matchingMethod = result.paymentMethods?.find(pm => pm.type === 'BOLETO')
+          || result.paymentMethods?.[0]
+        if (matchingMethod) {
+          setVoucherInstallments(matchingMethod.installments)
+        }
+      } else {
+        // Esgotou a retentativa: marca como inválido pra travar o submit no
+        // onSubmit (ver checagem `pos_voucher_indisponivel`) em vez de deixar
+        // o payload seguir sem voucher pra Cogna recusar.
+        setVoucherValid(false)
+        setVoucherData(null)
+      }
+      setPosVoucherAutoValidating(false)
+    }
     autoValidateVoucher()
+
+    return () => {
+      cancelled = true
+    }
   }, [offerDetails, posInstallmentId, watchedCpf])
 
   // [CUPOM] Funções de cupom comentadas para possível reativação futura
@@ -1079,16 +1121,43 @@ const isFormValidForPayment =
         toast.error('Plano de pagamento inválido.')
         return
       }
+
+      const isPosGraduacao = offerDetails.academicLevel === 'POS_GRADUACAO'
+      const hasValidVoucher = !!(voucherCode.trim() && voucherValid && voucherData)
+
+      // Pós-graduação: o voucher GALENA+15 é obrigatório (aplicado sozinho, ver
+      // useEffect acima) e a Cogna exige `paymentMethod.voucher` como string
+      // sempre que `paymentMethod` é enviado. Sem voucher confirmado, não crie
+      // a inscrição — é a corrida de tempo do 400 relatado no PostHog.
+      if (isPosGraduacao && !hasValidVoucher) {
+        trackEvent('pos_voucher_indisponivel', {
+          course_id: offerDetails.courseId,
+          academic_level: offerDetails.academicLevel,
+          was_still_validating: posVoucherAutoValidating,
+        })
+        toast.error('Não conseguimos aplicar as condições da sua oferta agora. Tente novamente em instantes.')
+        return
+      }
+
       if (typeof window !== 'undefined') {
-        const pmData: { id: string; dueDay: string; voucher?: string; voucherId?: number } = { id: posInstallmentId, dueDay: '10' }
-        if (voucherCode.trim() && voucherValid && voucherData) {
-          pmData.voucher = voucherData.code || voucherCode.trim()
-          pmData.voucherId = voucherData.id
+        if (hasValidVoucher) {
+          const pmData: { id: string; dueDay: string; voucher: string; voucherId?: number } = {
+            id: posInstallmentId,
+            dueDay: '10',
+            voucher: voucherData!.code || voucherCode.trim(),
+            voucherId: voucherData!.id,
+          }
+          localStorage.setItem('pendingPosPaymentMethod', JSON.stringify(pmData))
+        } else {
+          // Profissionalizante sem voucher: o voucher é opcional aqui, mas a
+          // mesma API rejeita `paymentMethod` sem `voucher` (string obrigatória
+          // quando o campo existe). Não há confirmação no código de qual é o
+          // comportamento correto sem voucher — a opção conservadora é não
+          // mandar `paymentMethod` nenhum (ver createInscriptionAfterPayment,
+          // que trata a ausência dessa chave no localStorage como "sem
+          // paymentMethod"), em vez de arriscar o mesmo 400.
+          localStorage.removeItem('pendingPosPaymentMethod')
         }
-        localStorage.setItem(
-          'pendingPosPaymentMethod',
-          JSON.stringify(pmData)
-        )
       }
     }
 
@@ -2009,13 +2078,23 @@ const isFormValidForPayment =
 
                           <button
                             type="submit"
-                            disabled={isSubmitting || !posInstallmentId || !!cpfInscriptionBlocked}
+                            disabled={
+                              isSubmitting
+                              || !posInstallmentId
+                              || !!cpfInscriptionBlocked
+                              || (offerDetails?.academicLevel === 'POS_GRADUACAO' && posVoucherAutoValidating)
+                            }
                             className="checkout-step-cta group w-full mt-4 inline-flex items-center justify-center gap-3 bg-bolsa-secondary text-white py-4 px-6 rounded-full font-semibold text-[15px] hover:bg-bolsa-secondary/90 disabled:bg-ink-300 disabled:cursor-not-allowed shadow-lg shadow-bolsa-secondary/25 hover:shadow-bolsa-secondary/40 transition-all duration-300"
                           >
                             {isSubmitting ? (
                               <span className="inline-flex items-center justify-center gap-2">
                                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                                 Processando…
+                              </span>
+                            ) : offerDetails?.academicLevel === 'POS_GRADUACAO' && posVoucherAutoValidating ? (
+                              <span className="inline-flex items-center justify-center gap-2">
+                                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                Verificando condições…
                               </span>
                             ) : (
                               <>

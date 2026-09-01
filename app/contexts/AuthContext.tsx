@@ -1,9 +1,11 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { usePathname } from 'next/navigation'
 // `type` de propósito: importa só os tipos, sem puxar o SDK pro bundle.
 import type { User as FirebaseUser } from 'firebase/auth'
 import { whenIdle } from '@/app/lib/utils/when-idle'
+import { precisaCarregarAuthAutomaticamente } from '@/app/lib/auth/public-auth-visibility'
 
 /**
  * O SDK do Firebase (~100KB comprimidos) era importado estaticamente aqui, e
@@ -11,15 +13,30 @@ import { whenIdle } from '@/app/lib/utils/when-idle'
  * inicializava autenticação, mesmo com o login público escondido da navegação
  * desde julho de 2026. Quase ninguém loga; todo mundo pagava a conta.
  *
- * Agora o SDK vira um chunk separado, carregado quando o navegador fica ocioso
- * (ou antes, se alguém chamar uma ação de login). O comportamento não muda:
- * `onAuthStateChanged` continua rodando para todo mundo, só que depois da
- * hidratação em vez de competir com ela.
+ * Isso sobreviveu à troca pra import dinâmico (`import()` dentro de
+ * `whenIdle()`): o import dinâmico só adia QUANDO o download acontece, não
+ * SE ele acontece — e o efeito abaixo disparava `whenIdle()` incondicionalmente
+ * em todo mount do provider (que envolve o app/layout inteiro via
+ * ClientProviders), ou seja, em toda rota, mesmo com o login público
+ * escondido da navegação (PUBLIC_AUTH_ENTRYPOINTS_ENABLED = false, ver
+ * public-auth-visibility.ts). `carregarFirebaseAuth()` importa
+ * `firebase/config`, cujo `getAuth(app)` roda no topo do módulo — é essa
+ * chamada, ao rodar em toda visita, que dispara os requests pra
+ * firebaseapp.com/__/auth/iframe.js e apis.google.com medidos em
+ * /curso/resultado (27% do pageviews, TBT 580ms, Max Potential FID 270ms).
  *
- * Deliberadamente NÃO condicionamos o carregamento a "existe sessão salva?":
- * o Firebase persiste em IndexedDB na maioria dos navegadores, e um palpite
- * errado deixaria quem está logado aparecendo como deslogado. Adiar é seguro;
- * pular não seria.
+ * Agora o efeito só dispara quando `precisaCarregarAuthAutomaticamente`
+ * (app/lib/auth/public-auth-visibility.ts) diz que a ROTA precisa saber se
+ * tem sessão sem esperar clique — hoje: /minha-conta, /favoritos, /admin,
+ * /login, /cadastro, /recuperar-senha. Fora dessas rotas, o SDK só carrega
+ * sob ação explícita de login/cadastro (signInWithEmail etc., já lazy via
+ * exigirAuth() abaixo) — zero request de auth em página pública sem
+ * interação de login.
+ *
+ * Deliberadamente NÃO condicionamos o carregamento, DENTRO dessas rotas, a
+ * "existe sessão salva?": o Firebase persiste em IndexedDB na maioria dos
+ * navegadores, e um palpite errado deixaria quem está logado aparecendo
+ * como deslogado. Adiar por rota é seguro; adivinhar não seria.
  */
 type FirebaseAuthModule = typeof import('firebase/auth')
 type FirebaseConfigModule = typeof import('@/app/lib/firebase/config')
@@ -118,10 +135,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const pathname = usePathname()
+  // Trava monotônica: uma vez que a rota atual justifica carregar o
+  // Firebase automaticamente, continua justificando mesmo se o usuário
+  // navegar de volta pra uma rota pública (não desmonta o listener por
+  // troca de rota — só decide, uma vez, se chegou a hora de ligar).
+  const [needsAuthLoad, setNeedsAuthLoad] = useState(() =>
+    precisaCarregarAuthAutomaticamente(pathname)
+  )
+
+  useEffect(() => {
+    if (!needsAuthLoad && precisaCarregarAuthAutomaticamente(pathname)) {
+      setNeedsAuthLoad(true)
+    }
+  }, [pathname, needsAuthLoad])
+
   // Observar mudanças no estado de autenticação
   useEffect(() => {
     if (!isConfigured) {
       setLoading(false)
+      return
+    }
+
+    if (!needsAuthLoad) {
+      // Rota pública sem necessidade de auth automática: não baixa o SDK.
+      // `loading` fica `true` — consumidores (Header, checkout, ...) já
+      // tratam "ainda não sei se tem sessão" escondendo a UI dependente de
+      // auth em vez de travar, então isso é seguro mesmo indefinidamente.
       return
     }
 
@@ -154,7 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       cancelado = true
       unsubscribe?.()
     }
-  }, [isConfigured])
+  }, [isConfigured, needsAuthLoad])
 
   // Login com email e senha
   const signInWithEmail = async (email: string, password: string) => {

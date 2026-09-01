@@ -47,3 +47,40 @@ export const MINHA_CONTA_REDIRECT_ENABLED = false
 
 /** Pra onde vai quem bate numa rota de conta desligada. */
 export const AUTH_REDIRECT_TARGET = '/'
+
+/**
+ * Prefixos de rota que realmente precisam do Firebase inicializado no mount
+ * (sessão já pode existir; a rota precisa saber sem esperar um clique).
+ * Fora daqui, o SDK só carrega sob ação explícita (entrar/cadastrar — já
+ * lazy via exigirAuth() em AuthContext).
+ *
+ * /admin entra porque AdminLayoutContent (app/admin/layout.tsx) usa
+ * `useAuth()` pra decidir, no mount, se redireciona pro login — mesmo o
+ * admin tendo auth PRÓPRIA pras flags de visibilidade acima, ele reusa o
+ * AuthContext/Firebase, não o AdminAuthContext, pra autenticar de fato.
+ */
+const AUTH_REQUIRED_ROUTE_PREFIXES = [
+  '/minha-conta',
+  '/favoritos',
+  '/admin',
+  '/login',
+  '/cadastro',
+  '/recuperar-senha',
+] as const
+
+/**
+ * Decide se o AuthProvider deve inicializar o Firebase automaticamente ao
+ * montar nesta rota (ver app/contexts/AuthContext.tsx).
+ *
+ * Com PUBLIC_AUTH_ENTRYPOINTS_ENABLED ligado, o header volta a precisar
+ * saber em QUALQUER rota se tem sessão (pra mostrar "Minha Conta" x "Entrar")
+ * — nesse caso a rota deixa de importar. Enquanto os entrypoints estiverem
+ * escondidos, só as rotas acima carregam automaticamente.
+ */
+export function precisaCarregarAuthAutomaticamente(pathname: string | null): boolean {
+  if (PUBLIC_AUTH_ENTRYPOINTS_ENABLED) return true
+  if (!pathname) return false
+  return AUTH_REQUIRED_ROUTE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  )
+}

@@ -6,6 +6,7 @@ import {
   type CreateEnrollmentInput,
   type AthenaEnrollmentResponse,
 } from '@/app/lib/api/athena-offers'
+import { getEmailMxRejectionMessage } from '@/app/lib/validation/email-mx'
 
 /**
  * POST /api/athena-checkout — cria a inscrição Estácio na Athena (POST /api/enrollments)
@@ -57,6 +58,15 @@ export async function POST(request: NextRequest) {
         { error: 'É necessário aceitar os termos (options.acceptTerms)' },
         { status: 400 },
       )
+    }
+
+    // Domínio sem MX não recebe e-mail nenhum — erro comprovado, não
+    // suspeita. Fail-open embutido em getEmailMxRejectionMessage: só rejeita
+    // quando a consulta DNS PROVA que o domínio não tem MX; timeout/erro de
+    // rede deixa passar (ver app/lib/validation/email-mx.ts).
+    const mxRejection = await getEmailMxRejectionMessage(student.email)
+    if (mxRejection) {
+      return NextResponse.json({ error: mxRejection }, { status: 422 })
     }
 
     const result = await createAthenaEnrollment(body)

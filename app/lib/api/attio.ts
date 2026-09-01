@@ -11,6 +11,9 @@
 // dinheiro ficaria sem chave de casamento. Telefone é o único identificador
 // presente em TODAS as superfícies de captação, então é ele a chave.
 
+import { createHash } from 'node:crypto'
+import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
+
 const ATTIO_API = 'https://api.attio.com/v2'
 const OBJECT = 'candidatos'
 const MATCHING_ATTRIBUTE = 'telefone'
@@ -249,44 +252,67 @@ async function attioFetch(path: string, init: RequestInit): Promise<Response> {
 }
 
 /**
- * Lê o registro existente para duas decisões que dependem do estado anterior:
- * não regredir o estágio, e não sobrescrever a atribuição de primeiro toque.
+ * Lê o registro existente para as decisões que dependem do estado anterior:
+ * não regredir o estágio, não sobrescrever a atribuição de primeiro toque, e
+ * não deixar um CPF diferente sobrescrever a identidade de quem já estava
+ * gravado naquele telefone (ver `upsertCandidato`).
  *
  * Custa um request a mais por escrita — aceitável no nosso volume, e é o que
  * impede a pior mensagem possível ("complete sua inscrição" para quem já é
- * aluno) e a distorção de atribuição que faria mídia paga parecer não
- * converter.
+ * aluno), a distorção de atribuição que faria mídia paga parecer não
+ * converter, e a segunda pessoa apagando o cadastro da primeira.
  */
 async function getExistente(
   telefone: string,
-): Promise<{ estagio: Estagio | null; temUtm: boolean }> {
+): Promise<{ estagio: Estagio | null; temUtm: boolean; cpf: string | null; recordId: string | null }> {
   try {
     const res = await attioFetch(`/objects/${OBJECT}/records/query`, {
       method: 'POST',
       body: JSON.stringify({ filter: { [MATCHING_ATTRIBUTE]: telefone }, limit: 1 }),
     })
-    if (!res.ok) return { estagio: null, temUtm: false }
+    if (!res.ok) return { estagio: null, temUtm: false, cpf: null, recordId: null }
     const json = (await res.json()) as {
       data?: Array<{
+        id?: { record_id?: string }
         values?: {
           estagio?: Array<{ option?: { title?: string } }>
           utm_source?: Array<{ value?: string }>
           utm_campaign?: Array<{ value?: string }>
+          cpf?: Array<{ value?: string }>
         }
       }>
     }
-    const values = json.data?.[0]?.values
+    const record = json.data?.[0]
+    const values = record?.values
     const atual = values?.estagio?.[0]?.option?.title
+    const cpfExistente = values?.cpf?.[0]?.value?.replace(/\D/g, '') || null
     return {
       estagio:
         atual && (ESTAGIOS as readonly string[]).includes(atual) ? (atual as Estagio) : null,
       temUtm: Boolean(values?.utm_source?.[0]?.value || values?.utm_campaign?.[0]?.value),
+      cpf: cpfExistente || null,
+      recordId: record?.id?.record_id ?? null,
     }
   } catch {
     // Falha na leitura não pode impedir a escrita: melhor gravar o estágio
     // novo do que perder o contato inteiro.
-    return { estagio: null, temUtm: false }
+    return { estagio: null, temUtm: false, cpf: null, recordId: null }
   }
+}
+
+/**
+ * Mascara um telefone E.164 para log: mantém DDI+DDD e os 2 últimos dígitos,
+ * mascara o resto. Ex.: "+5511999999999" → "+5511*******99". Nunca logar o
+ * telefone completo de um candidato.
+ */
+function maskPhone(e164: string): string {
+  if (e164.length <= 7) return '***'
+  return `${e164.slice(0, 5)}${'*'.repeat(e164.length - 7)}${e164.slice(-2)}`
+}
+
+/** Hash curto e não-reversível do telefone — usado só como distinct_id anônimo no PostHog. */
+function hashTelefone(e164: string): string {
+  return createHash('sha256').update(e164).digest('hex').slice(0, 16)
 }
 
 function estagioMaisForte(a: Estagio | null, b: Estagio | null): Estagio | undefined {
@@ -315,16 +341,42 @@ export async function upsertCandidato(input: UpsertCandidatoInput): Promise<stri
     return null
   }
 
+  const cpfEntrada = input.cpf?.replace(/\D/g, '') || undefined
+
   const temUtmNovo = Boolean(
     input.utm?.utmSource || input.utm?.utmMedium || input.utm?.utmCampaign || input.utm?.utmContent,
   )
   let estagio = input.estagio
   let gravarUtm = temUtmNovo
-  if (estagio || temUtmNovo) {
+  // Colisão de identidade: outra pessoa com CPF diferente já usou este
+  // telefone. Não é regra de estágio/UTM, então precisa do próprio gatilho —
+  // sem isto, um upsert que só manda CPF (sem estagio/UTM novos) nunca
+  // buscaria o existente e sobrescreveria a identidade de quem já estava lá.
+  let colisaoCpf = false
+  if (estagio || temUtmNovo || cpfEntrada) {
     const existente = await getExistente(telefone)
     if (estagio) estagio = estagioMaisForte(existente.estagio, estagio)
     // Primeiro toque vence: só grava UTM se o registro ainda não tiver uma.
     gravarUtm = temUtmNovo && !existente.temUtm
+
+    if (cpfEntrada && existente.cpf && existente.cpf !== cpfEntrada) {
+      colisaoCpf = true
+      console.warn(
+        `⚠️ Attio: CPF divergente para o telefone ${maskPhone(telefone)} — provavelmente outra pessoa; identidade existente preservada`,
+      )
+      try {
+        await capturePostHogServerEvent({
+          event: 'attio_colisao_cpf_telefone',
+          // distinct_id anônimo (record_id do Attio, ou hash do telefone) —
+          // nunca telefone/CPF/e-mail em claro, nem como distinct_id nem
+          // como propriedade.
+          distinctId: existente.recordId ?? `tel-${hashTelefone(telefone)}`,
+          properties: { colisao: true },
+        })
+      } catch (posthogError) {
+        console.warn('⚠️ Attio: falha ao registrar colisão de CPF no PostHog', posthogError)
+      }
+    }
   }
 
   const values: Record<string, unknown> = {
@@ -334,9 +386,14 @@ export async function upsertCandidato(input: UpsertCandidatoInput): Promise<stri
     if (value !== undefined && value !== null && value !== '') values[key] = value
   }
 
-  set('nome', input.name?.trim())
-  set('email', input.email?.trim().toLowerCase())
-  set('cpf', input.cpf?.replace(/\D/g, '') || undefined)
+  // Em colisão, preserva a identidade já gravada: não sobrescreve nome,
+  // e-mail nem CPF. Os demais campos (curso, cidade, estágio...) seguem
+  // normalmente — são fatos do cadastro atual, não identidade.
+  if (!colisaoCpf) {
+    set('nome', input.name?.trim())
+    set('email', input.email?.trim().toLowerCase())
+    set('cpf', cpfEntrada)
+  }
   set('nascimento', toDateString(input.birthDate))
   set('marca', toMarca(input.brand))
   set('curso', input.courseName?.trim())

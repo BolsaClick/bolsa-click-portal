@@ -31,6 +31,7 @@ import {
   trackCheckoutIdentified,
   reportInscriptionFailure,
 } from '@/app/lib/analytics/checkout-funnel'
+import { suggestEmailCorrection } from '@/app/lib/validation/email-typo'
 
 /** Máscaras simples (CPF / telefone / CEP). */
 const maskCpf = (v: string) =>
@@ -297,6 +298,10 @@ export default function EstacioCheckoutClient() {
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }))
+
+  // Sugestão de digitação do e-mail — nunca bloqueia, só sugere (ver
+  // app/lib/validation/email-typo.ts).
+  const emailTypoSuggestion = form.email ? suggestEmailCorrection(form.email) : null
 
   // O padrão do formulário é 24, que vale para a maioria das ofertas mas não
   // para todas: numa linha de catálogo publicada só como Transferência Externa
@@ -685,6 +690,19 @@ export default function EstacioCheckoutClient() {
                     <label className={labelClass}><Mail size={12} className="inline mr-1" />E-mail</label>
                     <input type="email" className={inputClass} value={form.email}
                       onChange={(e) => set('email', e.target.value)} placeholder="seuemail@exemplo.com" />
+                    {emailTypoSuggestion && (
+                      <p className="text-amber-600 text-xs mt-1">
+                        Você quis dizer{' '}
+                        <button
+                          type="button"
+                          className="underline font-medium hover:text-amber-700"
+                          onClick={() => set('email', emailTypoSuggestion)}
+                        >
+                          {emailTypoSuggestion}
+                        </button>
+                        ?
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className={labelClass}>Celular</label>

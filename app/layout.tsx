@@ -173,6 +173,7 @@ const jsonLd = [
       'https://www.facebook.com/bolsaclickbrasil',
       'https://www.linkedin.com/company/bolsa-click',
       'https://x.com/bolsaclick',
+      'https://www.reclameaqui.com.br/empresa/bolsa-click/',
     ],
     areaServed: {
       '@type': 'Country',

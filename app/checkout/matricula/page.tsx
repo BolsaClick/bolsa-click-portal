@@ -186,12 +186,19 @@ function MatriculaContent() {
   // Pós-graduação: método de pagamento e parcela (dia de vencimento fixo 10)
   const [posPaymentMethodType, setPosPaymentMethodType] = useState<string>('')
   const [posInstallmentId, setPosInstallmentId] = useState<string>('')
+  // `voucherCode`/`voucherValid`/`voucherData`/`voucherInstallments` são o
+  // voucher ATUALMENTE APLICADO (seja o GALENA+15 automático da pós, seja um
+  // voucher digitado à mão que validou). `voucherInputValue` é só o texto do
+  // campo manual — desacoplado do aplicado pra digitar não apagar de cara um
+  // desconto já em vigor antes mesmo de clicar em Validar.
   const [voucherCode, setVoucherCode] = useState<string>('')
   const [voucherValidating, setVoucherValidating] = useState(false)
   const [voucherValid, setVoucherValid] = useState<boolean | null>(null)
   const [voucherMessage, setVoucherMessage] = useState<string>('')
+  const [voucherMessageType, setVoucherMessageType] = useState<'success' | 'error'>('error')
   const [voucherData, setVoucherData] = useState<ValidateVoucherResponse | null>(null)
   const [voucherInstallments, setVoucherInstallments] = useState<VoucherInstallment[]>([])
+  const [voucherInputValue, setVoucherInputValue] = useState<string>('')
   // Pós-graduação: true enquanto o voucher GALENA+15 (obrigatório, aplicado
   // sozinho) está sendo validado/retentado — trava o botão de "Finalizar
   // matrícula" pra não correr com a inscrição antes da consulta voltar.
@@ -550,9 +557,17 @@ const isFormValidForPayment =
       || offerDetails?.academicLevel === 'CURSO_PROFISSIONALIZANTE')
     && (offerDetails?.paymentMethods?.length ?? 0) > 0
 
-  // Campo de voucher digitado à mão: liberado somente no checkout profissionalizante.
-  // Pós-graduação continua com o voucher GALENA+15 aplicado automaticamente (sem campo manual).
-  const showVoucherField = offerDetails?.academicLevel === 'CURSO_PROFISSIONALIZANTE'
+  // Campo de voucher digitado à mão: liberado nos dois níveis Cosmos (pós e
+  // profissionalizante) — só essas ofertas suportam
+  // POST /api/v1/offers/validate-voucher na Cogna. Graduação é ATHENAS e não
+  // tem voucher; mostrar o campo lá prometeria o que a API não entrega.
+  // Na pós, o manual convive com o GALENA+15 automático (ver useEffect
+  // abaixo e `handleValidateVoucher`): o automático é o padrão, um voucher
+  // manual válido o substitui, e um manual inválido/indisponível NÃO derruba
+  // o automático já aplicado.
+  const showVoucherField =
+    offerDetails?.academicLevel === 'CURSO_PROFISSIONALIZANTE'
+    || offerDetails?.academicLevel === 'POS_GRADUACAO'
 
   // Auto-selecionar boleto 18x para pós-graduação
   useEffect(() => {
@@ -591,7 +606,10 @@ const isFormValidForPayment =
     const tryValidateOnce = async (): Promise<ValidateVoucherResponse | null> => {
       try {
         const result = await validateVoucher('GALENA+15', cpf, posInstallmentId)
-        return (result.isValid ?? false) ? result : null
+        if (result.status === 200 && (result.data?.isValid ?? false)) {
+          return result.data
+        }
+        return null
       } catch (err) {
         console.error('Erro ao validar voucher GALENA+15:', err)
         return null
@@ -666,46 +684,64 @@ const isFormValidForPayment =
   //     toast.success(...)
   //   } catch (err) { ... }
   // }
-  // Função para validar voucher
+  // Validação manual de voucher (campo digitado), Cosmos-only (pós e
+  // profissionalizante). Feedback honesto por status HTTP, conforme a doc da
+  // Cogna — nunca colapsa em "erro" genérico:
+  //   200 -> aplica e mostra o desconto (substitui o que estava aplicado antes,
+  //          inclusive o GALENA+15 automático da pós)
+  //   204 -> "nenhum voucher disponível pra este CPF" — NÃO mexe no que já
+  //          estava aplicado (mantém o GALENA+15 automático, se houver)
+  //   400 -> "inválido/expirado" — idem, preserva o que já estava aplicado
+  //   500/rede -> "não conseguimos validar agora" — idem, preserva
+  // Ou seja: só o caminho de sucesso (200) toca em voucherCode/voucherValid/
+  // voucherData/voucherInstallments. Todo caminho de falha só atualiza a
+  // mensagem do campo, deixando intacto o desconto já em vigor — pra não
+  // derrubar o automático da pós por causa de uma tentativa manual malsucedida.
   const handleValidateVoucher = async () => {
-    if (!voucherCode.trim()) return
+    const code = voucherInputValue.trim()
+    if (!code) return
     const cpf = (getValues('cpf') || '').replace(/\D/g, '')
-    if (!cpf) {
-      setVoucherValid(false)
-      setVoucherMessage('Preencha o CPF antes de validar o voucher.')
+    if (cpf.length !== 11) {
+      setVoucherMessageType('error')
+      setVoucherMessage('Preencha um CPF válido antes de validar o voucher.')
       return
     }
     if (!posInstallmentId) {
-      setVoucherValid(false)
-      setVoucherMessage('Selecione a parcela antes de validar o voucher.')
+      setVoucherMessageType('error')
+      setVoucherMessage('Selecione a forma de pagamento e a parcela antes de validar o voucher.')
       return
     }
     setVoucherValidating(true)
-    setVoucherValid(null)
     setVoucherMessage('')
-    setVoucherData(null)
-    setVoucherInstallments([])
     try {
-      const result = await validateVoucher(voucherCode.trim(), cpf, posInstallmentId)
-      const isValid = result.isValid ?? false
-      setVoucherValid(isValid)
-      if (isValid && result.paymentMethods?.length) {
-        setVoucherData(result)
-        // Pegar parcelas do método que bate com o selecionado
-        const matchingMethod = result.paymentMethods.find((pm) => pm.type === posPaymentMethodType)
-          || result.paymentMethods[0]
-        if (matchingMethod) {
-          setVoucherInstallments(matchingMethod.installments)
-          setVoucherMessage(`Voucher aplicado! ${matchingMethod.discountPercentage}% de desconto.`)
-        } else {
-          setVoucherMessage('Voucher válido!')
-        }
+      const result = await validateVoucher(code, cpf, posInstallmentId)
+
+      if (result.status === 200 && (result.data?.isValid ?? false) && result.data) {
+        const data = result.data
+        const matchingMethod = data.paymentMethods?.find((pm) => pm.type === posPaymentMethodType)
+          || data.paymentMethods?.[0]
+        setVoucherCode(code)
+        setVoucherValid(true)
+        setVoucherData(data)
+        setVoucherInstallments(matchingMethod?.installments ?? [])
+        setVoucherMessageType('success')
+        setVoucherMessage(
+          matchingMethod
+            ? `Voucher aplicado! ${matchingMethod.discountPercentage}% de desconto.`
+            : 'Voucher aplicado!'
+        )
+      } else if (result.status === 204) {
+        setVoucherMessageType('error')
+        setVoucherMessage('Nenhum voucher disponível para este CPF.')
       } else {
-        setVoucherMessage(result.message || 'Voucher inválido.')
+        // 400 (ou 200 com isValid=false): inválido/expirado.
+        setVoucherMessageType('error')
+        setVoucherMessage(result.data?.message || 'Voucher inválido ou expirado.')
       }
-    } catch {
-      setVoucherValid(false)
-      setVoucherMessage('Erro ao validar voucher. Tente novamente.')
+    } catch (err) {
+      console.error('Erro ao validar voucher manual:', err)
+      setVoucherMessageType('error')
+      setVoucherMessage('Não conseguimos validar agora, tente de novo.')
     } finally {
       setVoucherValidating(false)
     }
@@ -2071,28 +2107,36 @@ const isFormValidForPayment =
                             O valor da matrícula e das mensalidades será pago diretamente à instituição de ensino.
                           </p>
 
-                          {/* Voucher — digitação manual liberada somente no profissionalizante */}
+                          {/* Voucher — digitação manual liberada nos dois níveis Cosmos
+                              (pós e profissionalizante); graduação (ATHENAS) não tem esse campo. */}
                           {showVoucherField && (
                           <div className="mt-4 p-3 border border-dashed border-gray-300 rounded-lg bg-gray-50">
                             <label className="block text-xs font-medium text-gray-700 mb-2">Possui um voucher?</label>
+                            {/* Deixa claro qual desconto está valendo antes de a pessoa mexer no campo —
+                                relevante sobretudo na pós, onde o GALENA+15 já pode estar aplicado sozinho. */}
+                            {voucherValid && voucherCode && (
+                              <p className="text-xs text-gray-500 mb-2">
+                                {voucherCode === 'GALENA+15'
+                                  ? 'Desconto automático GALENA+15 já aplicado.'
+                                  : `Voucher ${voucherCode} aplicado.`}{' '}
+                                Quer usar outro código? Digite abaixo — se for válido, ele substitui o atual.
+                              </p>
+                            )}
                             <div className="flex gap-2">
                               <input
                                 type="text"
-                                value={voucherCode}
+                                value={voucherInputValue}
                                 onChange={(e) => {
-                                  setVoucherCode(e.target.value)
-                                  setVoucherValid(null)
+                                  setVoucherInputValue(e.target.value)
                                   setVoucherMessage('')
-                                  setVoucherData(null)
-                                  setVoucherInstallments([])
-                                                              }}
+                                }}
                                 placeholder="Digite o código do voucher"
                                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
                               />
                               <button
                                 type="button"
                                 onClick={handleValidateVoucher}
-                                disabled={voucherValidating || !voucherCode.trim()}
+                                disabled={voucherValidating || !voucherInputValue.trim()}
                                 className="px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                               >
                                 {voucherValidating ? (
@@ -2103,7 +2147,7 @@ const isFormValidForPayment =
                               </button>
                             </div>
                             {voucherMessage && (
-                              <p className={`text-xs mt-2 ${voucherValid ? 'text-green-600' : 'text-red-600'}`}>
+                              <p className={`text-xs mt-2 ${voucherMessageType === 'success' ? 'text-green-600' : 'text-red-600'}`}>
                                 {voucherMessage}
                               </p>
                             )}

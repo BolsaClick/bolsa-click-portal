@@ -24,7 +24,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState, useRef, Suspense } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -187,18 +187,38 @@ function MatriculaContent() {
   const [posPaymentMethodType, setPosPaymentMethodType] = useState<string>('')
   const [posInstallmentId, setPosInstallmentId] = useState<string>('')
   // `voucherCode`/`voucherValid`/`voucherData`/`voucherInstallments` são o
-  // voucher ATUALMENTE APLICADO (seja o GALENA+15 automático da pós, seja um
-  // voucher digitado à mão que validou). `voucherInputValue` é só o texto do
-  // campo manual — desacoplado do aplicado pra digitar não apagar de cara um
-  // desconto já em vigor antes mesmo de clicar em Validar.
+  // ÚNICO cupom ATUALMENTE APLICADO (seja o GALENA+15 automático da pós, seja
+  // um voucher digitado à mão que validou). Regra de negócio: só é possível
+  // usar UM cupom por inscrição — nunca dois somados. Por isso um voucher
+  // manual válido SUBSTITUI o que estava aplicado (nunca se soma a ele), e o
+  // payload de envio só tem espaço pra um `voucher`/`voucherId` (ver onSubmit).
+  // `voucherInputValue` é só o texto do campo manual — desacoplado do
+  // aplicado pra digitar não apagar de cara um desconto já em vigor antes
+  // mesmo de clicar em Validar.
   const [voucherCode, setVoucherCode] = useState<string>('')
   const [voucherValidating, setVoucherValidating] = useState(false)
   const [voucherValid, setVoucherValid] = useState<boolean | null>(null)
   const [voucherMessage, setVoucherMessage] = useState<string>('')
-  const [voucherMessageType, setVoucherMessageType] = useState<'success' | 'error'>('error')
+  const [voucherMessageType, setVoucherMessageType] = useState<'success' | 'warning' | 'error'>('error')
   const [voucherData, setVoucherData] = useState<ValidateVoucherResponse | null>(null)
   const [voucherInstallments, setVoucherInstallments] = useState<VoucherInstallment[]>([])
   const [voucherInputValue, setVoucherInputValue] = useState<string>('')
+  // Proveniência do cupom hoje aplicado — dirige a UI ("valendo: automático"
+  // vs "valendo: seu voucher X") e se mostra o botão de restaurar o automático.
+  const [voucherSource, setVoucherSource] = useState<'auto' | 'manual' | null>(null)
+  // Snapshot do GALENA+15 automático, guardado à parte pra sempre dar pra
+  // voltar pra ele depois de aplicar (e se arrepender de) um voucher manual —
+  // sem isso a única saída seria recarregar a página e perder o formulário.
+  const [autoVoucherCode, setAutoVoucherCode] = useState<string>('')
+  const [autoVoucherData, setAutoVoucherData] = useState<ValidateVoucherResponse | null>(null)
+  const [autoVoucherInstallments, setAutoVoucherInstallments] = useState<VoucherInstallment[]>([])
+  // Ref espelhando `voucherSource`, lida (sem entrar nas deps) pelo efeito de
+  // auto-validação abaixo: se o CPF mudar depois de uma escolha manual, o
+  // efeito não deve reverter essa escolha em silêncio.
+  const voucherSourceRef = useRef<'auto' | 'manual' | null>(null)
+  useEffect(() => {
+    voucherSourceRef.current = voucherSource
+  }, [voucherSource])
   // Pós-graduação: true enquanto o voucher GALENA+15 (obrigatório, aplicado
   // sozinho) está sendo validado/retentado — trava o botão de "Finalizar
   // matrícula" pra não correr com a inscrição antes da consulta voltar.
@@ -598,6 +618,12 @@ const isFormValidForPayment =
   useEffect(() => {
     if (!offerDetails || offerDetails.academicLevel !== 'POS_GRADUACAO') return
     if (!posInstallmentId) return
+    // Regra do cupom único: se a pessoa já escolheu um voucher manual, essa
+    // revalidação automática (disparada por edição do CPF, por ex.) NÃO pode
+    // reverter a escolha dela em silêncio. `voucherSourceRef` (não
+    // `voucherSource` em deps, de propósito, pra não reexecutar o efeito
+    // quando a fonte muda) resolve isso.
+    if (voucherSourceRef.current === 'manual') return
     const cpf = (watchedCpf || '').replace(/\D/g, '')
     if (cpf.length !== 11) return
 
@@ -629,14 +655,20 @@ const isFormValidForPayment =
       if (cancelled) return
 
       if (result) {
+        const matchingMethod = result.paymentMethods?.find(pm => pm.type === 'BOLETO')
+          || result.paymentMethods?.[0]
+        const installments = matchingMethod?.installments ?? []
         setVoucherCode('GALENA+15')
         setVoucherValid(true)
         setVoucherData(result)
-        const matchingMethod = result.paymentMethods?.find(pm => pm.type === 'BOLETO')
-          || result.paymentMethods?.[0]
-        if (matchingMethod) {
-          setVoucherInstallments(matchingMethod.installments)
-        }
+        setVoucherInstallments(installments)
+        setVoucherSource('auto')
+        // Snapshot separado do automático — sobrevive mesmo depois que um
+        // voucher manual substituir o `voucherCode`/`voucherData` acima,
+        // pra sempre dar pra restaurar (ver `handleRestoreAutoVoucher`).
+        setAutoVoucherCode('GALENA+15')
+        setAutoVoucherData(result)
+        setAutoVoucherInstallments(installments)
       } else {
         // Esgotou a retentativa: marca como inválido pra travar o submit no
         // onSubmit (ver checagem `pos_voucher_indisponivel`) em vez de deixar
@@ -684,19 +716,32 @@ const isFormValidForPayment =
   //     toast.success(...)
   //   } catch (err) { ... }
   // }
+  // Número da parcela (18x, 24x etc.) hoje selecionada — usado tanto pra
+  // achar a linha certa nas parcelas com desconto quanto pra comparar dois
+  // cupons pela mesma quantidade de parcelas.
+  const getSelectedInstallmentNumber = (): number | undefined => {
+    if (!offerDetails || !posInstallmentId) return undefined
+    const methods = offerDetails.paymentMethods as PosPaymentMethod[] | undefined
+    const pm = methods?.find((p) => p.type === posPaymentMethodType)
+    return pm?.installments.find((i) => i.id === posInstallmentId)?.number
+  }
+
   // Validação manual de voucher (campo digitado), Cosmos-only (pós e
   // profissionalizante). Feedback honesto por status HTTP, conforme a doc da
   // Cogna — nunca colapsa em "erro" genérico:
-  //   200 -> aplica e mostra o desconto (substitui o que estava aplicado antes,
-  //          inclusive o GALENA+15 automático da pós)
+  //   200 -> aplica e mostra o desconto. Regra do cupom único: SUBSTITUI o
+  //          que estava aplicado antes (inclusive o GALENA+15 automático da
+  //          pós) — nunca soma. Se der pra comparar o desconto na mesma
+  //          quantidade de parcelas, mostra se melhorou ou piorou.
   //   204 -> "nenhum voucher disponível pra este CPF" — NÃO mexe no que já
   //          estava aplicado (mantém o GALENA+15 automático, se houver)
   //   400 -> "inválido/expirado" — idem, preserva o que já estava aplicado
   //   500/rede -> "não conseguimos validar agora" — idem, preserva
   // Ou seja: só o caminho de sucesso (200) toca em voucherCode/voucherValid/
-  // voucherData/voucherInstallments. Todo caminho de falha só atualiza a
-  // mensagem do campo, deixando intacto o desconto já em vigor — pra não
-  // derrubar o automático da pós por causa de uma tentativa manual malsucedida.
+  // voucherData/voucherInstallments/voucherSource. Todo caminho de falha só
+  // atualiza a mensagem do campo, deixando intacto o desconto já em vigor —
+  // pra não derrubar o automático da pós por causa de uma tentativa manual
+  // malsucedida.
   const handleValidateVoucher = async () => {
     const code = voucherInputValue.trim()
     if (!code) return
@@ -711,6 +756,12 @@ const isFormValidForPayment =
       setVoucherMessage('Selecione a forma de pagamento e a parcela antes de validar o voucher.')
       return
     }
+    // Captura o que está valendo ANTES de sobrescrever — é a base da
+    // comparação "melhorou ou piorou" e do texto "substituiu o cupom X".
+    const previousCode = voucherValid && voucherData ? voucherCode : null
+    const previousInstallments = voucherValid && voucherData ? voucherInstallments : []
+    const selectedNumber = getSelectedInstallmentNumber()
+
     setVoucherValidating(true)
     setVoucherMessage('')
     try {
@@ -720,16 +771,47 @@ const isFormValidForPayment =
         const data = result.data
         const matchingMethod = data.paymentMethods?.find((pm) => pm.type === posPaymentMethodType)
           || data.paymentMethods?.[0]
+        const newInstallments = matchingMethod?.installments ?? []
+
+        // Regra do cupom único: um voucher manual válido SUBSTITUI o que
+        // estava aplicado — nunca soma. Só um cupom vai pro payload de envio
+        // (ver onSubmit: `voucher`/`voucherId` vêm sempre de `voucherData`,
+        // que a partir daqui é só o do voucher recém-validado).
         setVoucherCode(code)
         setVoucherValid(true)
         setVoucherData(data)
-        setVoucherInstallments(matchingMethod?.installments ?? [])
-        setVoucherMessageType('success')
-        setVoucherMessage(
-          matchingMethod
-            ? `Voucher aplicado! ${matchingMethod.discountPercentage}% de desconto.`
-            : 'Voucher aplicado!'
-        )
+        setVoucherInstallments(newInstallments)
+        setVoucherSource('manual')
+
+        // Compara o desconto na mesma quantidade de parcelas, se os dois
+        // lados tiverem dado pra comparar (a API não garante cobertura das
+        // mesmas parcelas entre dois vouchers diferentes — quando não dá,
+        // não inventamos comparação, só omitimos essa parte da mensagem).
+        const newPct = selectedNumber !== undefined
+          ? newInstallments.find((v) => v.number === selectedNumber)?.discountPercentage
+          : matchingMethod?.discountPercentage
+        const prevPct = previousCode && selectedNumber !== undefined
+          ? previousInstallments.find((v) => v.number === selectedNumber)?.discountPercentage
+          : undefined
+
+        const baseMsg = matchingMethod
+          ? `Voucher aplicado! ${matchingMethod.discountPercentage}% de desconto.`
+          : 'Voucher aplicado!'
+        const replacedMsg = previousCode
+          ? ` Substituiu o cupom "${previousCode}" — só um cupom vale por vez.`
+          : ''
+
+        if (prevPct !== undefined && newPct !== undefined && prevPct !== newPct) {
+          const melhorou = newPct > prevPct
+          setVoucherMessageType(melhorou ? 'success' : 'warning')
+          setVoucherMessage(
+            `${baseMsg}${replacedMsg} Desconto passou de ${prevPct}% para ${newPct}%`
+            + (melhorou ? ' — melhor que o anterior.' : ' — PIOR que o anterior. Prefere manter o de antes? Use "Voltar para o automático" abaixo.')
+          )
+        } else {
+          setVoucherMessageType('success')
+          setVoucherMessage(`${baseMsg}${replacedMsg}`)
+        }
       } else if (result.status === 204) {
         setVoucherMessageType('error')
         setVoucherMessage('Nenhum voucher disponível para este CPF.')
@@ -745,6 +827,21 @@ const isFormValidForPayment =
     } finally {
       setVoucherValidating(false)
     }
+  }
+
+  // Desfaz um cupom manual e restaura o GALENA+15 automático — a saída
+  // pedida pra quem aplicou um voucher manual e se arrependeu (ou ficou com
+  // desconto pior) sem precisar recarregar a página e perder o formulário.
+  const handleRestoreAutoVoucher = () => {
+    if (!autoVoucherData) return
+    setVoucherCode(autoVoucherCode)
+    setVoucherValid(true)
+    setVoucherData(autoVoucherData)
+    setVoucherInstallments(autoVoucherInstallments)
+    setVoucherSource('auto')
+    setVoucherInputValue('')
+    setVoucherMessageType('success')
+    setVoucherMessage('Desconto automático GALENA+15 restaurado.')
   }
 
   // Função para criar a matrícula (inscrição direta, sem pagamento no checkout)
@@ -1198,6 +1295,12 @@ const isFormValidForPayment =
 
       if (typeof window !== 'undefined') {
         if (hasValidVoucher) {
+          // Regra do cupom único: `voucher`/`voucherId` vêm sempre de um
+          // `voucherData` só — o automático (GALENA+15) OU o manual, nunca os
+          // dois juntos, porque `voucherData` é sempre sobrescrito por inteiro
+          // (nunca mesclado) tanto no useEffect de auto-validação quanto em
+          // `handleValidateVoucher`/`handleRestoreAutoVoucher`. Não existe
+          // caminho de código que monte um payload com dois vouchers.
           const pmData: { id: string; dueDay: string; voucher: string; voucherId?: number } = {
             id: posInstallmentId,
             dueDay: '10',
@@ -2111,15 +2214,22 @@ const isFormValidForPayment =
                               (pós e profissionalizante); graduação (ATHENAS) não tem esse campo. */}
                           {showVoucherField && (
                           <div className="mt-4 p-3 border border-dashed border-gray-300 rounded-lg bg-gray-50">
-                            <label className="block text-xs font-medium text-gray-700 mb-2">Possui um voucher?</label>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Possui um voucher?</label>
+                            {/* Regra do cupom único, sempre visível — a pessoa precisa saber
+                                ANTES de aplicar que um novo código troca o atual, não soma. */}
+                            <p className="text-[11px] text-gray-500 mb-2">
+                              Só é possível usar um cupom por inscrição. Validar um novo código aqui
+                              troca o cupom atualmente aplicado — nunca soma aos dois.
+                            </p>
                             {/* Deixa claro qual desconto está valendo antes de a pessoa mexer no campo —
                                 relevante sobretudo na pós, onde o GALENA+15 já pode estar aplicado sozinho. */}
                             {voucherValid && voucherCode && (
-                              <p className="text-xs text-gray-500 mb-2">
-                                {voucherCode === 'GALENA+15'
-                                  ? 'Desconto automático GALENA+15 já aplicado.'
-                                  : `Voucher ${voucherCode} aplicado.`}{' '}
-                                Quer usar outro código? Digite abaixo — se for válido, ele substitui o atual.
+                              <p className="text-xs text-gray-600 mb-2">
+                                Hoje está valendo:{' '}
+                                <strong>
+                                  {voucherCode === 'GALENA+15' ? 'desconto automático GALENA+15' : `voucher ${voucherCode}`}
+                                </strong>
+                                .
                               </p>
                             )}
                             <div className="flex gap-2">
@@ -2147,9 +2257,28 @@ const isFormValidForPayment =
                               </button>
                             </div>
                             {voucherMessage && (
-                              <p className={`text-xs mt-2 ${voucherMessageType === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                              <p
+                                className={`text-xs mt-2 ${
+                                  voucherMessageType === 'success'
+                                    ? 'text-green-600'
+                                    : voucherMessageType === 'warning'
+                                      ? 'text-amber-600'
+                                      : 'text-red-600'
+                                }`}
+                              >
                                 {voucherMessage}
                               </p>
+                            )}
+                            {/* Volta pro automático — a saída pra quem aplicou manual e se
+                                arrependeu (ou ficou com desconto pior), sem recarregar a página. */}
+                            {voucherSource === 'manual' && autoVoucherData && (
+                              <button
+                                type="button"
+                                onClick={handleRestoreAutoVoucher}
+                                className="mt-2 text-xs text-blue-600 underline hover:text-blue-800"
+                              >
+                                Voltar para o desconto automático (GALENA+15)
+                              </button>
                             )}
                           </div>
                           )}

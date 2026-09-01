@@ -25,6 +25,7 @@ import { getCourseReviewsAggregate } from '@/app/lib/get-course-reviews-aggregat
 import { getCurrentTheme } from '@/app/lib/themes'
 import { buildBrandedCourseCopy, canIndexBrandedCopy } from '@/app/lib/seo/branded-course-copy'
 import { absoluteUrl, publicRobots, seoSite } from '@/app/lib/seo/site-config'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -138,8 +139,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const priceSuffix = lowPrice > 0 ? ` — de R$${lowPrice.toFixed(0)}/mês` : ''
   const titleSuffix =
     (lowPrice > 0
-      ? [priceSuffix, ' com até 78% de desconto', ' de até 78%', '']
-      : [' com até 78% de desconto', ' de até 78%', '']
+      ? [priceSuffix, ` com até ${DISCOUNT_CEILING_PCT}% de desconto`, ` de até ${DISCOUNT_CEILING_PCT}%`, '']
+      : [` com até ${DISCOUNT_CEILING_PCT}% de desconto`, ` de até ${DISCOUNT_CEILING_PCT}%`, '']
     ).find(
       (s) => titleBase.length + s.length + brandSuffixLen <= 60
     ) ?? ''
@@ -153,13 +154,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   let description =
     [
       lowPrice > 0 &&
-        `Bolsa de estudo para ${curso.name}${priceText}, com até 78% de desconto. Faculdades reconhecidas pelo MEC, no EAD ou presencial. Inscrição grátis.`,
-      `Bolsa de estudo para ${curso.name} com até 78% de desconto em faculdades reconhecidas pelo MEC, no EAD ou presencial. Inscrição grátis.`,
-      `Bolsa de até 78% para ${curso.name} em faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`,
+        `Bolsa de estudo para ${curso.name}${priceText}, com até ${DISCOUNT_CEILING_PCT}% de desconto. Faculdades reconhecidas pelo MEC, no EAD ou presencial. Inscrição grátis.`,
+      `Bolsa de estudo para ${curso.name} com até ${DISCOUNT_CEILING_PCT}% de desconto em faculdades reconhecidas pelo MEC, no EAD ou presencial. Inscrição grátis.`,
+      `Bolsa de até ${DISCOUNT_CEILING_PCT}% para ${curso.name} em faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`,
     ]
       .filter((d): d is string => Boolean(d))
       .find((d) => d.length <= 155) ??
-    `Bolsa de até 78% para ${curso.name} em faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`
+    `Bolsa de até ${DISCOUNT_CEILING_PCT}% para ${curso.name} em faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`
 
   const brandedCopy = buildBrandedCourseCopy({
     name: curso.name,

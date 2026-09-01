@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft, ArrowRight, BookOpen, Clock } from 'lucide-react'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 interface BlogPostCard {
   id: string
@@ -205,7 +206,7 @@ export default function CategoryPageClient({ category, posts, otherCategories }:
               <span className="italic text-white/85">depois da leitura.</span>
             </h2>
             <p className="text-white/75 text-[15px] md:text-base leading-relaxed mb-8 max-w-xl mx-auto">
-              Bolsas de até 78% nas maiores redes de ensino do país. Cadastro grátis, sem ENEM.
+              Bolsas de até {DISCOUNT_CEILING_PCT}% nas maiores redes de ensino do país. Cadastro grátis, sem ENEM.
             </p>
             <Link
               href="/cursos"

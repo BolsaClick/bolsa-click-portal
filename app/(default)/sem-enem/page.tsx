@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { ProgramHub } from '../_components/ProgramHub'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 
@@ -11,9 +12,9 @@ const DATA_MODIFIED = '2026-08-28'
 export const revalidate = 86400
 
 export const metadata: Metadata = {
-  title: 'Faculdade sem ENEM — Como Entrar com Bolsa de até 78%',
+  title: `Faculdade sem ENEM — Como Entrar com Bolsa de até ${DISCOUNT_CEILING_PCT}%`,
   description:
-    'Saiba como entrar em uma faculdade reconhecida pelo MEC sem precisar da nota do ENEM. Vestibular agendado online, prova interna ou histórico do ensino médio — com bolsa de estudo de até 78% pelo Bolsa Click.',
+    `Saiba como entrar em uma faculdade reconhecida pelo MEC sem precisar da nota do ENEM. Vestibular agendado online, prova interna ou histórico do ensino médio — com bolsa de estudo de até ${DISCOUNT_CEILING_PCT}% pelo Bolsa Click.`,
   keywords: [
     'faculdade sem enem',
     'sem enem',
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: `${SITE_URL}/sem-enem` },
   openGraph: {
-    title: 'Faculdade sem ENEM — Como Entrar com Bolsa de até 78%',
+    title: `Faculdade sem ENEM — Como Entrar com Bolsa de até ${DISCOUNT_CEILING_PCT}%`,
     description:
       'Vestibular agendado, prova online ou histórico do ensino médio: existe caminho pra entrar em faculdade sem ENEM.',
     url: `${SITE_URL}/sem-enem`,
@@ -43,7 +44,7 @@ const faqItems = [
   {
     question: 'Como entrar na faculdade sem ENEM?',
     answer:
-      'É possível ingressar em uma faculdade brasileira sem fazer o ENEM por quatro caminhos principais. O primeiro é o vestibular agendado, oferecido por boa parte das instituições privadas — o estudante escolhe a data, faz a prova (geralmente online) e recebe o resultado em horas. O segundo é o vestibular tradicional da própria faculdade, com edital, calendário fechado e provas múltiplas. O terceiro é o uso do histórico do ensino médio, válido em algumas faculdades EAD que dispensam prova quando o aluno apresenta certificado de conclusão. O quarto é a transferência de curso, quando o estudante já cursou ao menos um semestre em outra instituição. Em todos os casos, a faculdade deve ser reconhecida pelo MEC e o diploma final tem a mesma validade legal de qualquer outra graduação. Pelo Bolsa Click, você compara faculdades parceiras com ingresso sem ENEM e garante bolsa de até 78%.',
+      `É possível ingressar em uma faculdade brasileira sem fazer o ENEM por quatro caminhos principais. O primeiro é o vestibular agendado, oferecido por boa parte das instituições privadas — o estudante escolhe a data, faz a prova (geralmente online) e recebe o resultado em horas. O segundo é o vestibular tradicional da própria faculdade, com edital, calendário fechado e provas múltiplas. O terceiro é o uso do histórico do ensino médio, válido em algumas faculdades EAD que dispensam prova quando o aluno apresenta certificado de conclusão. O quarto é a transferência de curso, quando o estudante já cursou ao menos um semestre em outra instituição. Em todos os casos, a faculdade deve ser reconhecida pelo MEC e o diploma final tem a mesma validade legal de qualquer outra graduação. Pelo Bolsa Click, você compara faculdades parceiras com ingresso sem ENEM e garante bolsa de até ${DISCOUNT_CEILING_PCT}%.`,
   },
   {
     question: 'Quais faculdades aceitam matrícula sem ENEM?',
@@ -58,7 +59,7 @@ const faqItems = [
   {
     question: 'É possível conseguir bolsa de estudo sem ENEM?',
     answer:
-      'Sim. As bolsas oferecidas pelo Bolsa Click são totalmente independentes do ENEM — descontos negociados diretamente com faculdades parceiras chegam a 78% das mensalidades, sem exigência de nota ou pontuação mínima. O modelo é simples: o estudante busca o curso desejado, compara ofertas (mensalidade com e sem bolsa, modalidade, polos disponíveis), faz inscrição gratuita e recebe o link de matrícula direto da faculdade. Diferente do PROUNI (que exige nota mínima de 450 no ENEM e renda familiar comprovada de até 1,5 salário mínimo per capita), as bolsas do Bolsa Click são abertas pra qualquer pessoa, sem critério de renda ou desempenho prévio. Quem tem nota de ENEM pode usar como diferencial em algumas faculdades, mas a maioria das ofertas no Bolsa Click depende apenas da disponibilidade de vagas com bolsa.',
+      `Sim. As bolsas oferecidas pelo Bolsa Click são totalmente independentes do ENEM — descontos negociados diretamente com faculdades parceiras chegam a ${DISCOUNT_CEILING_PCT}% das mensalidades, sem exigência de nota ou pontuação mínima. O modelo é simples: o estudante busca o curso desejado, compara ofertas (mensalidade com e sem bolsa, modalidade, polos disponíveis), faz inscrição gratuita e recebe o link de matrícula direto da faculdade. Diferente do PROUNI (que exige nota mínima de 450 no ENEM e renda familiar comprovada de até 1,5 salário mínimo per capita), as bolsas do Bolsa Click são abertas pra qualquer pessoa, sem critério de renda ou desempenho prévio. Quem tem nota de ENEM pode usar como diferencial em algumas faculdades, mas a maioria das ofertas no Bolsa Click depende apenas da disponibilidade de vagas com bolsa.`,
   },
   {
     question: 'Faculdades sem ENEM têm reconhecimento do MEC?',
@@ -77,9 +78,9 @@ export default function SemEnemPage() {
     <ProgramHub
       slug="sem-enem"
       title="Sem ENEM"
-      h1="Faculdade sem ENEM: como entrar com bolsa de até 78%"
+      h1={`Faculdade sem ENEM: como entrar com bolsa de até ${DISCOUNT_CEILING_PCT}%`}
       lede="Não fez o ENEM ou tirou nota baixa? Existe caminho. Veja como entrar em faculdade reconhecida pelo MEC via vestibular agendado, prova online ou histórico do ensino médio — com bolsa Bolsa Click."
-      articleSummary={`Guia completo pra entrar na faculdade sem ENEM em ${new Date().getFullYear()}: vestibular agendado online, prova interna, histórico do ensino médio, transferência. Inclui lista de faculdades parceiras com ingresso simplificado e bolsa de até 78%.`}
+      articleSummary={`Guia completo pra entrar na faculdade sem ENEM em ${new Date().getFullYear()}: vestibular agendado online, prova interna, histórico do ensino médio, transferência. Inclui lista de faculdades parceiras com ingresso simplificado e bolsa de até ${DISCOUNT_CEILING_PCT}%.`}
       datePublished={DATA_PUBLISHED}
       dateModified={DATA_MODIFIED}
       blogTerms={['sem enem', 'vestibular', 'sem prouni']}

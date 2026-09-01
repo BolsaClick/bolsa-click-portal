@@ -16,6 +16,7 @@ import ReadingProgress from '@/app/components/atoms/ReadingProgress'
 import TableOfContents, { TocItem } from '@/app/components/atoms/TableOfContents'
 import ShareButtons from '@/app/components/atoms/ShareButtons'
 import { getPersona, EDITORIAL_TEAM_ORG } from '@/app/lib/blog/editorial-team'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 interface BlogPost {
   id: string
@@ -291,7 +292,7 @@ export default function BlogPostClient({
                   <span className="italic text-white/85">aqui.</span>
                 </h3>
                 <p className="text-[12px] text-white/70 leading-relaxed mb-5">
-                  Até 78% de desconto nas maiores redes de ensino do país. Cadastro grátis, sem ENEM.
+                  Até {DISCOUNT_CEILING_PCT}% de desconto nas maiores redes de ensino do país. Cadastro grátis, sem ENEM.
                 </p>
                 <Link
                   href="/cursos"

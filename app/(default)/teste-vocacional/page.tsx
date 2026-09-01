@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { Sparkles, Clock, Lock, Zap } from 'lucide-react'
 import { VisibleFaq } from '@/app/cursos/[slug]/_seo/CourseSeoSections'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 import { AIChat } from './_components/AIChat'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.bolsaclick.com.br'
@@ -456,7 +457,7 @@ export default function TesteVocacionalPage() {
           <p>
             O lado prático: o resultado se conecta diretamente com nosso{' '}
             <Link href="/bolsas-de-estudo">catálogo de bolsas</Link>, então depois de
-            descobrir os cursos ideais você já consegue ver as ofertas reais com até 78%
+            descobrir os cursos ideais você já consegue ver as ofertas reais com até {DISCOUNT_CEILING_PCT}%
             de desconto.
           </p>
         </div>

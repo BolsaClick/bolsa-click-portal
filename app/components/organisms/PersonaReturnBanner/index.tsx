@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight, GraduationCap, Clock, Monitor } from 'lucide-react'
 import Container from '../../atoms/Container'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 // Section direcionada à persona "adulto retornando aos estudos":
 // parou a faculdade, sem ENEM, alto ceticismo, alta intenção de fechamento.
@@ -26,7 +27,7 @@ const PersonaReturnBanner = () => {
             </h2>
             <p className="text-white/85 text-base md:text-lg leading-relaxed mb-6 max-w-2xl">
               Faculdades parceiras em mais de 280 cidades aceitam histórico parcial e dispensam ENEM. Estude 100%
-              online, no seu ritmo, com diploma reconhecido pelo MEC e bolsa de até 78%.
+              online, no seu ritmo, com diploma reconhecido pelo MEC e bolsa de até {DISCOUNT_CEILING_PCT}%.
             </p>
 
             <ul className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 text-sm">

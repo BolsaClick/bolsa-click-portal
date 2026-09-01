@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { VisibleFaq } from '@/app/cursos/[slug]/_seo/CourseSeoSections'
 import { FontesConsultadas } from '@/app/components/seo/FontesConsultadas'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 const PAGE_URL = `${SITE_URL}/programas`
@@ -103,7 +104,7 @@ const PROGRAMAS: ProgramaCard[] = [
     nome: 'Faculdade sem ENEM',
     tipo: 'Ingresso',
     resumo:
-      'Quatro caminhos para entrar em faculdade reconhecida pelo MEC sem precisar da nota do ENEM: vestibular agendado, vestibular tradicional, histórico do ensino médio ou transferência. Bolsas de até 78% via Bolsa Click.',
+      `Quatro caminhos para entrar em faculdade reconhecida pelo MEC sem precisar da nota do ENEM: vestibular agendado, vestibular tradicional, histórico do ensino médio ou transferência. Bolsas de até ${DISCOUNT_CEILING_PCT}% via Bolsa Click.`,
     quando: 'Inscrição o ano inteiro',
     href: '/sem-enem',
   },
@@ -113,7 +114,7 @@ const FAQ_ITEMS = [
   {
     question: 'Qual programa de estudo é o melhor para mim?',
     answer:
-      'Depende de três fatores: sua renda familiar per capita, sua nota no ENEM e o tempo que você tem para esperar. ProUni vale mais para quem fecha o critério de renda (até 1,5 SM por pessoa) e tem ENEM bom — rende bolsa integral. SISU é a melhor opção para entrar em universidade pública (gratuita) com nota alta no ENEM. FIES funciona para quem aceita pagar a faculdade depois de formado, com juros subsidiados. Faculdade sem ENEM via Bolsa Click é o caminho mais rápido para quem não fez o ENEM ou não fecha critério de renda — descontos de até 78% sem nota de corte, com matrícula aberta o ano inteiro.',
+      `Depende de três fatores: sua renda familiar per capita, sua nota no ENEM e o tempo que você tem para esperar. ProUni vale mais para quem fecha o critério de renda (até 1,5 SM por pessoa) e tem ENEM bom — rende bolsa integral. SISU é a melhor opção para entrar em universidade pública (gratuita) com nota alta no ENEM. FIES funciona para quem aceita pagar a faculdade depois de formado, com juros subsidiados. Faculdade sem ENEM via Bolsa Click é o caminho mais rápido para quem não fez o ENEM ou não fecha critério de renda — descontos de até ${DISCOUNT_CEILING_PCT}% sem nota de corte, com matrícula aberta o ano inteiro.`,
   },
   {
     question: 'Posso usar ProUni e FIES juntos?',
@@ -123,7 +124,7 @@ const FAQ_ITEMS = [
   {
     question: 'Preciso do ENEM para todos os programas?',
     answer:
-      'Não. ProUni, FIES e SISU exigem ENEM 450+ com redação acima de zero. ENCCEJA é o próprio exame de certificação (não exige ENEM). Faculdade sem ENEM via vestibular agendado, prova interna ou histórico do ensino médio dispensa completamente o ENEM e ainda permite bolsa de até 78% nas parceiras Bolsa Click.',
+      `Não. ProUni, FIES e SISU exigem ENEM 450+ com redação acima de zero. ENCCEJA é o próprio exame de certificação (não exige ENEM). Faculdade sem ENEM via vestibular agendado, prova interna ou histórico do ensino médio dispensa completamente o ENEM e ainda permite bolsa de até ${DISCOUNT_CEILING_PCT}% nas parceiras Bolsa Click.`,
   },
   {
     question: `Quando abrem as inscrições dos programas federais em ${ANO}?`,
@@ -133,7 +134,7 @@ const FAQ_ITEMS = [
   {
     question: 'Como o Bolsa Click se relaciona com os programas federais?',
     answer:
-      'O Bolsa Click é um marketplace independente que negocia bolsas próprias diretamente com faculdades particulares parceiras (Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden). Funciona como alternativa ou complemento aos programas federais — não substitui o ProUni, FIES ou SISU. Vantagem: sem critério de renda, sem nota de corte, inscrição grátis o ano inteiro, descontos de 25% a 78% dependendo de curso e modalidade. Indicado especialmente para quem não fecha critério dos programas federais ou quer começar fora dos meses de inscrição oficial.',
+      `O Bolsa Click é um marketplace independente que negocia bolsas próprias diretamente com faculdades particulares parceiras (Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden). Funciona como alternativa ou complemento aos programas federais — não substitui o ProUni, FIES ou SISU. Vantagem: sem critério de renda, sem nota de corte, inscrição grátis o ano inteiro, descontos de 25% a ${DISCOUNT_CEILING_PCT}% dependendo de curso e modalidade. Indicado especialmente para quem não fecha critério dos programas federais ou quer começar fora dos meses de inscrição oficial.`,
   },
 ]
 
@@ -316,7 +317,7 @@ export default function ProgramasHubPage() {
             As <strong>bolsas próprias de faculdades particulares</strong>, negociadas
             diretamente via Bolsa Click, funcionam como alternativa ou complemento: sem critério
             de renda, sem nota de corte do ENEM, inscrição aberta o ano inteiro e descontos de
-            25% a 78% dependendo do curso e da modalidade. Indicadas especialmente para quem
+            25% a {DISCOUNT_CEILING_PCT}% dependendo do curso e da modalidade. Indicadas especialmente para quem
             não passou no ProUni, não tem ENEM válido, ou quer começar a estudar fora dos meses
             oficiais.
           </p>

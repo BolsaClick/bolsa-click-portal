@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { ProgramHub } from '../_components/ProgramHub'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 
@@ -74,7 +75,7 @@ const faqItems = [
   },
   {
     question: 'Recebi o certificado do ENCCEJA. Como entro em faculdade com bolsa?',
-    answer: 'Com o certificado em mãos, três caminhos: (1) fazer ENEM e tentar PROUNI ou SISU; (2) prestar processo seletivo da faculdade direto; (3) usar o Bolsa Click para encontrar bolsa de até 78% nas faculdades parceiras — sem precisar de ENEM em muitas ofertas.',
+    answer: `Com o certificado em mãos, três caminhos: (1) fazer ENEM e tentar PROUNI ou SISU; (2) prestar processo seletivo da faculdade direto; (3) usar o Bolsa Click para encontrar bolsa de até ${DISCOUNT_CEILING_PCT}% nas faculdades parceiras — sem precisar de ENEM em muitas ofertas.`,
   },
 ]
 
@@ -168,7 +169,7 @@ export default function EnccejaPage() {
         <li>
           <strong>Buscar bolsa direta no Bolsa Click</strong>: em muitas ofertas das
           faculdades parceiras, o certificado do ENCCEJA já basta para se inscrever — sem
-          ENEM, sem vestibular. Bolsas de até 78% direto pela <Link href="/bolsas-de-estudo">
+          ENEM, sem vestibular. Bolsas de até {DISCOUNT_CEILING_PCT}% direto pela <Link href="/bolsas-de-estudo">
           nossa plataforma</Link>.
         </li>
       </ol>

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Container from '../../atoms/Container'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const sections = [
   {
@@ -7,14 +8,14 @@ const sections = [
     label: 'EAD',
     title: 'Bolsas para estudar de casa',
     body:
-      'Estude no seu ritmo, com aulas online e diploma reconhecido pelo MEC. Bolsas de até 78% nas melhores faculdades do Brasil.',
+      `Estude no seu ritmo, com aulas online e diploma reconhecido pelo MEC. Bolsas de até ${DISCOUNT_CEILING_PCT}% nas melhores faculdades do Brasil.`,
   },
   {
     number: '02',
     label: 'Presencial',
     title: 'Faculdade perto de você',
     body:
-      'Compare preços entre instituições da sua cidade. Bolsas de até 78% também no presencial, conforme a oferta do catálogo.',
+      `Compare preços entre instituições da sua cidade. Bolsas de até ${DISCOUNT_CEILING_PCT}% também no presencial, conforme a oferta do catálogo.`,
   },
   {
     number: '03',
@@ -28,7 +29,7 @@ const sections = [
     label: 'Pós',
     title: 'Especialização e MBA com desconto',
     body:
-      'Descontos de até 78% em pós-graduação lato sensu. Cursos de 6 a 18 meses, online ou presencial, ideais pra avançar na carreira.',
+      `Descontos de até ${DISCOUNT_CEILING_PCT}% em pós-graduação lato sensu. Cursos de 6 a 18 meses, online ou presencial, ideais pra avançar na carreira.`,
   },
 ]
 

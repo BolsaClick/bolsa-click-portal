@@ -19,10 +19,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { CHAT_OPEN_EVENT } from '@/app/components/chat/chat-types'
 import Mascot from '@/app/components/v2/mascot/Mascot'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const IDLE_BUBBLES = [
   'Parece que você tá procurando uma bolsa! Posso ajudar? ✨',
-  'Pergunte sem medo — bolsa de até 78% não é magia, é real.',
+  `Pergunte sem medo — bolsa de até ${DISCOUNT_CEILING_PCT}% não é magia, é real.`,
   'Abre uma pergunta aí que eu conjuro a resposta. 🪄',
   'Dica do mago: sem nota de corte, sem ENEM obrigatório.',
 ]

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { useAdmin } from '@/app/contexts/AdminAuthContext'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 import Image from 'next/image'
 
 interface Banner {
@@ -345,7 +346,7 @@ export default function AdminBannersPage() {
                     setForm((prev) => ({ ...prev, title: e.target.value }))
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bolsa-primary focus:border-transparent"
-                  placeholder="Ex: Administração com 78% OFF"
+                  placeholder={`Ex: Administração com ${DISCOUNT_CEILING_PCT}% OFF`}
                   required
                 />
               </div>

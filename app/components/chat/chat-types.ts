@@ -6,6 +6,8 @@
  * dados do lead não ficam em localStorage indefinidamente).
  */
 
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
+
 export interface ChatLead {
   name: string
   phone: string
@@ -127,7 +129,7 @@ export const CHAT_FAQ: ChatFaqEntry[] = [
   {
     question: 'Como funciona a bolsa?',
     answer:
-      'Você busca o curso, escolhe a oferta com desconto — as bolsas chegam a 78% — e se inscreve 100% online, sem fila e sem sorteio. O desconto vale até o fim do curso. 😉',
+      `Você busca o curso, escolhe a oferta com desconto — as bolsas chegam a ${DISCOUNT_CEILING_PCT}% — e se inscreve 100% online, sem fila e sem sorteio. O desconto vale até o fim do curso. 😉`,
     cta: { label: 'Buscar minha bolsa', href: '/descubra-sua-bolsa' },
   },
   {

@@ -26,6 +26,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { PrismaClient } from '@prisma/client'
 import axios from 'axios'
+import { DISCOUNT_CEILING_PCT } from '../app/lib/copy/claims'
 
 // ============================================================
 // ARGS
@@ -711,12 +712,27 @@ const FORBIDDEN_BRANDS: RegExp[] = [
   /\bampli\b/i,
 ]
 
-/** Teto de desconto travado. 80/85/92 republicam claim velha. */
-const FORBIDDEN_CEILING: RegExp[] = [
-  /\b80\s*%/,
-  /\b85\s*%/,
-  /\b92\s*%/,
-]
+/**
+ * Teto de desconto travado (DISCOUNT_CEILING_PCT, hoje 78%). Sinaliza
+ * qualquer "N%" acima do teto quando aparece perto de "desconto"/"bolsa"
+ * (não só o trio 80/85/92 já visto em produção). Contexto de ±40 chars
+ * evita falso-positivo em percentuais que não são desconto de mensalidade
+ * (ex.: "financia 100% da mensalidade", "até 40% das aulas online").
+ * Deriva do canon em app/lib/copy/claims.ts.
+ */
+function findForbiddenCeilingPct(text: string): string | null {
+  const rx = /(\d{1,3})\s*%/g
+  let m: RegExpExecArray | null
+  while ((m = rx.exec(text))) {
+    const n = parseInt(m[1], 10)
+    if (n <= DISCOUNT_CEILING_PCT) continue
+    const start = Math.max(0, m.index - 40)
+    const end = Math.min(text.length, m.index + m[0].length + 40)
+    const window = text.slice(start, end)
+    if (/desconto|bolsa/i.test(window)) return m[0]
+  }
+  return null
+}
 
 // ============================================================
 // SYSTEM PROMPT (cacheado)
@@ -736,7 +752,7 @@ REGRAS INEGOCIÁVEIS:
    - Qualquer outro agregador concorrente de bolsas
    Se precisar comparar, use termos genéricos ("plataformas agregadoras", "outros sites de bolsa") sem nomes.
 
-3. ANTI-HALLUCINATION — para valores monetários (preços, mensalidades, R$), use APENAS números que apareçam no array "allowedPrices" do DATA_BLOCK. Está PROIBIDO inventar mensalidades, médias ou faixas que não estejam ali. Se "allowedPrices" estiver vazio, NÃO cite nenhum preço específico no texto — fale qualitativamente ("mensalidades acessíveis", "valores que variam conforme a instituição"). Para nota MEC, salário, % de bolsa e duração, use APENAS valores do DATA_BLOCK. Se um dado não estiver presente, omita. Se isNationalFallback=true, mencione no texto que os preços são médias nacionais. TETO DE DESCONTO: o máximo citável é 78%. É PROIBIDO escrever 80%, 85% ou 92%. As 6 redes nomeáveis: Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. NÃO cite Ampli. NÃO prometa "matrícula em 5 min" nem "bolsa vale o curso inteiro" como absoluto; use "Cadastro grátis, sem taxa de adesão".
+3. ANTI-HALLUCINATION — para valores monetários (preços, mensalidades, R$), use APENAS números que apareçam no array "allowedPrices" do DATA_BLOCK. Está PROIBIDO inventar mensalidades, médias ou faixas que não estejam ali. Se "allowedPrices" estiver vazio, NÃO cite nenhum preço específico no texto — fale qualitativamente ("mensalidades acessíveis", "valores que variam conforme a instituição"). Para nota MEC, salário, % de bolsa e duração, use APENAS valores do DATA_BLOCK. Se um dado não estiver presente, omita. Se isNationalFallback=true, mencione no texto que os preços são médias nacionais. TETO DE DESCONTO: o máximo citável é ${DISCOUNT_CEILING_PCT}%. É PROIBIDO escrever qualquer percentual de desconto/bolsa acima disso (ex.: 80%, 85%, 92% já foram usados por engano e estão banidos). As 6 redes nomeáveis: Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. NÃO cite Ampli. NÃO prometa "matrícula em 5 min" nem "bolsa vale o curso inteiro" como absoluto; use "Cadastro grátis, sem taxa de adesão".
 
 4. FONTES EXTERNAS CITÁVEIS (apenas quando relevante, citar por nome sem URL):
    - .gov.br: MEC, INEP, e-MEC, IBGE, CAGED, CBO
@@ -1124,9 +1140,10 @@ function validatePost(post: GeneratedPost, _arch: Archetype, dataBlock: DataBloc
       return { ok: false, reason: `Menção a concorrente/marca proibida: ${rx.source}` }
     }
   }
-  for (const rx of FORBIDDEN_CEILING) {
-    if (rx.test(content) || rx.test(post.title) || rx.test(post.excerpt) || rx.test(post.metaDescription ?? '')) {
-      return { ok: false, reason: `Teto de desconto fora do canon (78%): ${rx.source}` }
+  for (const field of [content, post.title, post.excerpt, post.metaDescription ?? '']) {
+    const hit = findForbiddenCeilingPct(field)
+    if (hit) {
+      return { ok: false, reason: `Teto de desconto fora do canon (${DISCOUNT_CEILING_PCT}%): ${hit}` }
     }
   }
 

@@ -10,6 +10,7 @@ import type { Course } from '@/app/interface/course'
 import { BRAND_CONTENT } from '@/app/faculdades/[slug]/_data/brand-content'
 import { LeadForm } from '../_components/LeadForm'
 import { isPartner, brandColorFor } from '../../_shared/partners'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 export const revalidate = 3600
 
@@ -75,8 +76,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const [inst, course] = await Promise.all([getInstitution(partner), getCourse(curso)])
   if (!inst || !course) return { title: 'Página não encontrada', robots: { index: false, follow: false } }
   return {
-    title: `Bolsa em ${course.name} na ${inst.name} — até 78% de desconto`,
-    description: `Garanta sua bolsa em ${course.name} na ${inst.fullName} com até 78% de desconto. Sem ENEM, sem nota de corte, inscrição grátis. Fale com nosso time.`,
+    title: `Bolsa em ${course.name} na ${inst.name} — até ${DISCOUNT_CEILING_PCT}% de desconto`,
+    description: `Garanta sua bolsa em ${course.name} na ${inst.fullName} com até ${DISCOUNT_CEILING_PCT}% de desconto. Sem ENEM, sem nota de corte, inscrição grátis. Fale com nosso time.`,
     robots: { index: false, follow: false },
   }
 }
@@ -108,7 +109,7 @@ export default async function PartnerCourseLanding({ params }: Props) {
   const brand = BRAND_CONTENT[partner]
   const pontosFortes = brand?.valeAPena.pontosFortes ?? [
     'Diploma reconhecido pelo MEC',
-    'Bolsas de até 78% sem nota de corte',
+    `Bolsas de até ${DISCOUNT_CEILING_PCT}% sem nota de corte`,
     'Inscrição gratuita e sem ENEM',
   ]
 
@@ -138,7 +139,7 @@ export default async function PartnerCourseLanding({ params }: Props) {
                 Bolsa em <span className="underline decoration-white/40 decoration-[3px] underline-offset-4">{course.name}</span> na {inst.name}
               </h1>
               <p className="text-white/80 text-base md:text-lg leading-relaxed mb-6 max-w-xl">
-                Estude {course.name} na {inst.fullName} pagando muito menos. Bolsa de até 78%, sem ENEM,
+                Estude {course.name} na {inst.fullName} pagando muito menos. Bolsa de até {DISCOUNT_CEILING_PCT}%, sem ENEM,
                 sem nota de corte, inscrição grátis. Preencha e nosso time garante sua vaga.
               </p>
               <ul className="flex flex-wrap gap-x-5 gap-y-2 text-white/85 text-sm">
@@ -205,7 +206,7 @@ export default async function PartnerCourseLanding({ params }: Props) {
             Sua bolsa em {course.name} está esperando
           </h2>
           <p className="text-white/80 mb-7">
-            Preencha o formulário no topo e nosso time entra em contato pra garantir seu desconto de até 78%.
+            Preencha o formulário no topo e nosso time entra em contato pra garantir seu desconto de até {DISCOUNT_CEILING_PCT}%.
           </p>
           <a
             href="#top"

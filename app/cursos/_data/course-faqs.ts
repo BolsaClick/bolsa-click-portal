@@ -2,6 +2,8 @@
 // pra evitar "repetitive structure" do QRG Sept 2025 (thin content classifier).
 // Pros cursos não listados, o page faz fallback pro template genérico.
 
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
+
 export interface CourseFaqEntry {
   question: string
   answer: string
@@ -27,7 +29,7 @@ export const COURSE_FAQS: Record<string, CourseFaqEntry[]> = {
     {
       question: 'Quanto custa Psicologia com bolsa pelo Bolsa Click?',
       answer:
-        'As mensalidades de Psicologia com bolsa pelo Bolsa Click começam a partir de R$ 199/mês em faculdades parceiras como Anhanguera, Unopar e Pitágoras, com descontos de até 78% sobre o valor cheio. O percentual exato depende da unidade e do turno escolhido.',
+        `As mensalidades de Psicologia com bolsa pelo Bolsa Click começam a partir de R$ 199/mês em faculdades parceiras como Anhanguera, Unopar e Pitágoras, com descontos de até ${DISCOUNT_CEILING_PCT}% sobre o valor cheio. O percentual exato depende da unidade e do turno escolhido.`,
     },
   ],
 
@@ -50,7 +52,7 @@ export const COURSE_FAQS: Record<string, CourseFaqEntry[]> = {
     {
       question: 'Quanto custa Direito em faculdade particular com bolsa?',
       answer:
-        'Em faculdades particulares parceiras do Bolsa Click, Direito com bolsa começa a partir de R$ 399/mês em unidades como Anhanguera e Pitágoras, com descontos de até 78% sobre a mensalidade integral. Pra concorrer, basta cadastro gratuito.',
+        `Em faculdades particulares parceiras do Bolsa Click, Direito com bolsa começa a partir de R$ 399/mês em unidades como Anhanguera e Pitágoras, com descontos de até ${DISCOUNT_CEILING_PCT}% sobre a mensalidade integral. Pra concorrer, basta cadastro gratuito.`,
     },
   ],
 
@@ -73,7 +75,7 @@ export const COURSE_FAQS: Record<string, CourseFaqEntry[]> = {
     {
       question: 'Quanto custa Enfermagem com bolsa pelo Bolsa Click?',
       answer:
-        'Mensalidades de Enfermagem com bolsa começam a partir de R$ 299/mês em faculdades parceiras como Anhanguera, Unopar e Pitágoras, com descontos de até 78%. O valor varia por unidade, turno e modalidade (presencial/semipresencial).',
+        `Mensalidades de Enfermagem com bolsa começam a partir de R$ 299/mês em faculdades parceiras como Anhanguera, Unopar e Pitágoras, com descontos de até ${DISCOUNT_CEILING_PCT}%. O valor varia por unidade, turno e modalidade (presencial/semipresencial).`,
     },
   ],
 
@@ -96,7 +98,7 @@ export const COURSE_FAQS: Record<string, CourseFaqEntry[]> = {
     {
       question: 'Quanto custa Administração com bolsa pelo Bolsa Click?',
       answer:
-        'Mensalidades de Administração com bolsa começam a partir de R$ 149/mês em modalidade EAD em faculdades parceiras como Anhanguera e Unopar. Descontos chegam a 78% sobre o valor cheio.',
+        `Mensalidades de Administração com bolsa começam a partir de R$ 149/mês em modalidade EAD em faculdades parceiras como Anhanguera e Unopar. Descontos chegam a ${DISCOUNT_CEILING_PCT}% sobre o valor cheio.`,
     },
   ],
 
@@ -119,7 +121,7 @@ export const COURSE_FAQS: Record<string, CourseFaqEntry[]> = {
     {
       question: 'Quanto custa Pedagogia EAD com bolsa?',
       answer:
-        'Mensalidades de Pedagogia EAD com bolsa começam a partir de R$ 99/mês em faculdades parceiras do Bolsa Click. Descontos podem chegar a 78% sobre o valor cheio, dependendo da unidade.',
+        `Mensalidades de Pedagogia EAD com bolsa começam a partir de R$ 99/mês em faculdades parceiras do Bolsa Click. Descontos podem chegar a ${DISCOUNT_CEILING_PCT}% sobre o valor cheio, dependendo da unidade.`,
     },
   ],
 
@@ -142,7 +144,7 @@ export const COURSE_FAQS: Record<string, CourseFaqEntry[]> = {
     {
       question: 'Quanto custa Educação Física com bolsa?',
       answer:
-        'Mensalidades começam a partir de R$ 199/mês em faculdades parceiras como Anhanguera, Pitágoras e Unime, com descontos de até 78% pelo Bolsa Click. Valores variam por modalidade (Licenciatura ou Bacharelado) e turno.',
+        `Mensalidades começam a partir de R$ 199/mês em faculdades parceiras como Anhanguera, Pitágoras e Unime, com descontos de até ${DISCOUNT_CEILING_PCT}% pelo Bolsa Click. Valores variam por modalidade (Licenciatura ou Bacharelado) e turno.`,
     },
   ],
 
@@ -165,7 +167,7 @@ export const COURSE_FAQS: Record<string, CourseFaqEntry[]> = {
     {
       question: 'Quanto custa Engenharia Civil com bolsa?',
       answer:
-        'Mensalidades começam a partir de R$ 399/mês em faculdades parceiras do Bolsa Click. Em modalidade EAD reconhecida pelo MEC, valores podem ser ainda menores. Descontos de até 78% sobre o valor cheio.',
+        `Mensalidades começam a partir de R$ 399/mês em faculdades parceiras do Bolsa Click. Em modalidade EAD reconhecida pelo MEC, valores podem ser ainda menores. Descontos de até ${DISCOUNT_CEILING_PCT}% sobre o valor cheio.`,
     },
   ],
 
@@ -188,7 +190,7 @@ export const COURSE_FAQS: Record<string, CourseFaqEntry[]> = {
     {
       question: 'Quanto custa Fisioterapia com bolsa?',
       answer:
-        'Mensalidades começam a partir de R$ 399/mês em faculdades parceiras como Anhanguera e Pitágoras. Descontos chegam a 78% pelo Bolsa Click — valor exato depende da unidade e do turno.',
+        `Mensalidades começam a partir de R$ 399/mês em faculdades parceiras como Anhanguera e Pitágoras. Descontos chegam a ${DISCOUNT_CEILING_PCT}% pelo Bolsa Click — valor exato depende da unidade e do turno.`,
     },
   ],
 
@@ -211,7 +213,7 @@ export const COURSE_FAQS: Record<string, CourseFaqEntry[]> = {
     {
       question: 'Quanto custa Nutrição com bolsa?',
       answer:
-        'Mensalidades começam a partir de R$ 299/mês em faculdades parceiras como Anhanguera e Pitágoras, com bolsas de até 78% pelo Bolsa Click.',
+        `Mensalidades começam a partir de R$ 299/mês em faculdades parceiras como Anhanguera e Pitágoras, com bolsas de até ${DISCOUNT_CEILING_PCT}% pelo Bolsa Click.`,
     },
   ],
 
@@ -234,7 +236,7 @@ export const COURSE_FAQS: Record<string, CourseFaqEntry[]> = {
     {
       question: 'Quanto custa Odontologia com bolsa pelo Bolsa Click?',
       answer:
-        'Odontologia é um dos cursos com mensalidade mais alta por exigir laboratórios e clínica-escola, mas a bolsa pelo Bolsa Click chega a 78% sobre o valor cheio. O preço exato varia por faculdade parceira, unidade e turno — confira os valores reais nas ofertas listadas nesta página antes de se inscrever (cadastro gratuito).',
+        `Odontologia é um dos cursos com mensalidade mais alta por exigir laboratórios e clínica-escola, mas a bolsa pelo Bolsa Click chega a ${DISCOUNT_CEILING_PCT}% sobre o valor cheio. O preço exato varia por faculdade parceira, unidade e turno — confira os valores reais nas ofertas listadas nesta página antes de se inscrever (cadastro gratuito).`,
     },
   ],
 
@@ -280,7 +282,7 @@ export const COURSE_FAQS: Record<string, CourseFaqEntry[]> = {
     {
       question: 'Quanto custa ADS com bolsa?',
       answer:
-        'Mensalidades de ADS começam a partir de R$ 99/mês em modalidade EAD em faculdades parceiras do Bolsa Click como Anhanguera e Unopar. Bolsas de até 78% sobre o valor cheio.',
+        `Mensalidades de ADS começam a partir de R$ 99/mês em modalidade EAD em faculdades parceiras do Bolsa Click como Anhanguera e Unopar. Bolsas de até ${DISCOUNT_CEILING_PCT}% sobre o valor cheio.`,
     },
   ],
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 // Página de confiança (GEO/E-E-A-T). Responde de frente as queries "é confiável /
 // é seguro / como funciona / é grátis" — exatamente o tipo de pergunta que IAs
@@ -102,7 +103,7 @@ export default function BolsaClickEConfiavel() {
             <strong>Sim, o Bolsa Click é confiável.</strong> O cadastro é 100% gratuito, você só
             paga a mensalidade já com desconto — e diretamente à faculdade, nunca à plataforma — e
             todas as instituições parceiras são reconhecidas pelo MEC. Você compara as bolsas antes
-            de decidir e a economia chega a 78%.
+            de decidir e a economia chega a {DISCOUNT_CEILING_PCT}%.
           </p>
         </div>
       </section>

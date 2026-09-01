@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { elysium } from '@/app/lib/api/axios'
+import { withAdminAuth, isAuthError } from '@/app/lib/middleware/admin-auth'
 
 interface ElysiumCoupon {
   id: string
@@ -22,6 +23,9 @@ type Props = {
 
 // GET - Buscar cupom por ID no Elysium
 export async function GET(request: NextRequest, { params }: Props) {
+  const auth = await withAdminAuth(request, ['dashboard'])
+  if (isAuthError(auth)) return auth
+
   try {
     const { id } = await params
 
@@ -53,6 +57,9 @@ export async function GET(request: NextRequest, { params }: Props) {
 
 // PUT - Atualizar cupom no Elysium
 export async function PUT(request: NextRequest, { params }: Props) {
+  const auth = await withAdminAuth(request, ['dashboard'])
+  if (isAuthError(auth)) return auth
+
   try {
     const { id } = await params
     const body = await request.json()
@@ -120,6 +127,9 @@ export async function PUT(request: NextRequest, { params }: Props) {
 
 // DELETE - Deletar cupom no Elysium
 export async function DELETE(request: NextRequest, { params }: Props) {
+  const auth = await withAdminAuth(request, ['dashboard'])
+  if (isAuthError(auth)) return auth
+
   try {
     const { id } = await params
 

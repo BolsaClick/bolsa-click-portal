@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
+import { withAdminAuth, isAuthError } from '@/app/lib/middleware/admin-auth'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -7,6 +8,9 @@ type Props = {
 
 // GET - Buscar transação por ID
 export async function GET(request: NextRequest, { params }: Props) {
+  const auth = await withAdminAuth(request, ['users'])
+  if (isAuthError(auth)) return auth
+
   try {
     const { id } = await params
 
@@ -33,6 +37,9 @@ export async function GET(request: NextRequest, { params }: Props) {
 
 // PATCH - Atualizar status da transação
 export async function PATCH(request: NextRequest, { params }: Props) {
+  const auth = await withAdminAuth(request, ['users'])
+  if (isAuthError(auth)) return auth
+
   try {
     const { id } = await params
     const body = await request.json()

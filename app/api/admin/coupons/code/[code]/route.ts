@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { elysium } from '@/app/lib/api/axios'
+import { withAdminAuth, isAuthError } from '@/app/lib/middleware/admin-auth'
 
 interface ElysiumCoupon {
   id: string
@@ -22,6 +23,9 @@ type Props = {
 
 // GET - Buscar cupom por código no Elysium
 export async function GET(request: NextRequest, { params }: Props) {
+  const auth = await withAdminAuth(request, ['dashboard'])
+  if (isAuthError(auth)) return auth
+
   try {
     const { code } = await params
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { elysium } from '@/app/lib/api/axios'
+import { withAdminAuth, isAuthError } from '@/app/lib/middleware/admin-auth'
 
 interface ElysiumCoupon {
   id: string
@@ -17,7 +18,10 @@ interface ElysiumCoupon {
 }
 
 // GET - Listar todos os cupons do Elysium
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = await withAdminAuth(request, ['dashboard'])
+  if (isAuthError(auth)) return auth
+
   try {
     console.log('📥 Buscando cupons do Elysium...')
 
@@ -41,6 +45,9 @@ export async function GET() {
 
 // POST - Criar novo cupom no Elysium
 export async function POST(request: NextRequest) {
+  const auth = await withAdminAuth(request, ['dashboard'])
+  if (isAuthError(auth)) return auth
+
   try {
     const body = await request.json()
     const {

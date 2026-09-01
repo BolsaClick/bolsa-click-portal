@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
+import { withAdminAuth, isAuthError } from '@/app/lib/middleware/admin-auth'
 
 // POST - Criar nova transação
 export async function POST(request: NextRequest) {
+  const auth = await withAdminAuth(request, ['users'])
+  if (isAuthError(auth)) return auth
+
   try {
     const body = await request.json()
     const {
@@ -91,6 +95,9 @@ export async function POST(request: NextRequest) {
 
 // GET - Listar transações (com filtros opcionais)
 export async function GET(request: NextRequest) {
+  const auth = await withAdminAuth(request, ['users'])
+  if (isAuthError(auth)) return auth
+
   try {
     const { searchParams } = new URL(request.url)
     const cpf = searchParams.get('cpf')

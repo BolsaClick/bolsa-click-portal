@@ -34,6 +34,8 @@ import { getPriceAnchor } from '@/app/lib/utils/price-anchor'
 import { toast } from 'sonner'
 // [CUPOM] import { validateCoupon } from '@/app/lib/api/get-coupon'
 import { createLead } from '@/app/lib/api/create-lead'
+import { validateEmailDeliverability } from '@/app/lib/api/validate-email'
+import { suggestEmailCorrection } from '@/app/lib/validation/email-typo'
 import { createInscription, buildInscriptionPayload, getCognaErrorMessage, getCognaErrorDetails, canCreateInscription } from '@/app/lib/api/create-inscription'
 import { createMarketplaceInscription } from '@/app/lib/api/create-inscription-marketplace'
 import { validateVoucher, type ValidateVoucherResponse, type VoucherInstallment } from '@/app/lib/api/validate-voucher'
@@ -217,6 +219,12 @@ function MatriculaContent() {
   })
 
   const watchedValues = watch()
+
+  // Sugestão de digitação do e-mail — nunca bloqueia, só sugere (ver
+  // app/lib/validation/email-typo.ts). Recalcula a cada troca do campo.
+  const emailTypoSuggestion = watchedValues.email
+    ? suggestEmailCorrection(watchedValues.email)
+    : null
 
 const isFormValidForPayment =
   !!watchedValues.email &&
@@ -1103,6 +1111,19 @@ const isFormValidForPayment =
       return
     }
 
+    // Domínio sem MX não recebe e-mail nenhum — erro comprovado, não
+    // suspeita. A criação da inscrição (Cogna, via Tartarus) acontece direto
+    // do browser mais abaixo, sem passar pela nossa API — esta é a checagem
+    // de servidor que gateia o cadastro antes disso. Fail-open embutido: só
+    // bloqueia quando a consulta DNS PROVA que o domínio não tem MX; timeout
+    // ou erro de rede deixa passar (ver app/lib/validation/email-mx.ts e
+    // app/lib/api/validate-email.ts).
+    const emailCheck = await validateEmailDeliverability(data.email)
+    if (!emailCheck.ok) {
+      toast.error(emailCheck.error ?? 'Não conseguimos validar esse e-mail. Confira se está correto.')
+      return
+    }
+
     // Pós e Profissionalizante: validar parcela selecionada e salvar no localStorage
     if (hasPaymentPlans) {
       if (!posInstallmentId) {
@@ -1581,6 +1602,19 @@ const isFormValidForPayment =
                           className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
                         />
                         {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+                        {!errors.email && emailTypoSuggestion && (
+                          <p className="text-amber-600 text-xs mt-1">
+                            Você quis dizer{' '}
+                            <button
+                              type="button"
+                              className="underline font-medium hover:text-amber-700"
+                              onClick={() => setValue('email', emailTypoSuggestion, { shouldValidate: true })}
+                            >
+                              {emailTypoSuggestion}
+                            </button>
+                            ?
+                          </p>
+                        )}
                       </div>
                       <div>
                         <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Nome Completo</label>

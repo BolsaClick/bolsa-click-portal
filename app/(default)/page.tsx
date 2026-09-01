@@ -18,10 +18,16 @@ import ReactiveCta, { reactiveClasses } from '../components/v2/ui/ReactiveCta'
 import { loadBlogPosts, loadShelf } from '../lib/home/vitrine'
 import { getCurrentTheme } from '../lib/themes'
 import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
+import { seoSite } from '../lib/seo/site-config'
 
 export const revalidate = 3600
 
 const theme = getCurrentTheme()
+// Card gerado por código (opengraph-image.tsx nesta pasta). Desenhado pro
+// tema bolsaclick (ver nota em app/lib/og/shared.tsx); nos outros temas
+// (mesmo repo, NEXT_PUBLIC_THEME) mantém o fallback estático `theme.ogImage`
+// pra não vazar a marca Bolsa Click pro og:image/twitter:image deles.
+const ogCardUrl = seoSite.key === 'bolsaclick' ? `${theme.siteUrl}/opengraph-image` : theme.ogImage
 
 // Title lidera com o head-term "bolsa de estudo" — a home é a página de maior
 // autoridade do domínio e deve carregar o termo que queremos rankear.
@@ -81,7 +87,7 @@ export const metadata: Metadata = {
     siteName: theme.name,
     images: [
       {
-        url: theme.ogImage,
+        url: ogCardUrl,
         width: 1200,
         height: 630,
         alt: theme.name,
@@ -95,7 +101,7 @@ export const metadata: Metadata = {
     site: theme.twitter,
     title: theme.title,
     description: theme.description,
-    images: [theme.ogImage],
+    images: [ogCardUrl],
   },
   icons: {
     icon: theme.favicon,

@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import { Suspense } from 'react'
 import { ACADEMIC_LEVEL, isProfissionalizanteLevel, normalizeAcademicLevel } from '@/app/lib/academic-level'
 import { brazilCityStateOrNull } from '@/app/lib/geo/brazil-location'
+import { capitalizeText, removeCourseSuffix, extractCourseSuffix } from '@/app/lib/seo/course-search-params'
 import { ResultsFilterProvider } from './ResultsFilterContext'
 import ResultsShell from './ResultsShell'
 import ResultsSkeleton from './ResultsSkeleton'
@@ -15,23 +16,6 @@ const ESTADOS_BRASIL = new Set([
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG',
   'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
 ])
-
-function capitalizeText(text: string) {
-  return text
-    .toLowerCase()
-    .replace(/(^\w{1})|(\s+\w{1})/g, (match) => match.toUpperCase())
-}
-
-function removeCourseSuffix(name: string) {
-  return name
-    .replace(/ - (Bacharelado|Licenciatura|Tecn[oó]logo)$/i, '')
-    .trim()
-}
-
-function extractCourseSuffix(name: string): string | null {
-  const match = name.match(/ - (Bacharelado|Licenciatura|Tecn[oó]logo)$/i)
-  return match ? match[1] : null
-}
 
 type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -128,6 +112,14 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   // Normalizada para evitar múltiplas URLs apontando para o mesmo conteúdo
   const canonicalUrl = `https://www.bolsaclick.com.br/curso/resultado?${canonicalParams.toString()}`
 
+  // Imagem de compartilhamento: página mais visitada do site, mas dirigida
+  // por query string (não segmento de rota) — `opengraph-image.tsx` só
+  // recebe `params`, nunca `searchParams`, então a convenção de arquivo não
+  // dá conta aqui. Uma Route Handler comum (não a convenção de metadata) lê
+  // a mesma query e gera a imagem sob demanda. Reaproveita `canonicalParams`
+  // — a imagem reflete exatamente o que a URL canônica descreve.
+  const ogImageUrl = `https://www.bolsaclick.com.br/api/og/resultado?${canonicalParams.toString()}`
+
   const keywords = [
     courseName && `bolsa de estudo ${courseName}`,
     courseName && `bolsa de estudos ${courseName}`,
@@ -197,12 +189,23 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
       siteName: 'Bolsa Click',
       locale: 'pt_BR',
       type: 'website',
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: hasCourseSelected
+            ? `Bolsa de estudo em ${courseName}${locationText} — Bolsa Click`
+            : 'Bolsa de estudo em faculdades — Bolsa Click',
+        },
+      ],
     },
     twitter: {
       card: 'summary_large_image',
       site: '@bolsaclick',
       title,
       description,
+      images: [ogImageUrl],
     },
   }
 }

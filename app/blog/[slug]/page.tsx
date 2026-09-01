@@ -6,6 +6,8 @@ import Breadcrumb from '@/app/components/atoms/Breadcrumb'
 import { extractFaqFromHtml } from '@/app/lib/seo/extract-faq'
 import { getPersona, personaAtId, EDITORIAL_TEAM_ORG } from '@/app/lib/blog/editorial-team'
 import { isOffTopicNoindex } from '@/app/lib/blog/noindex-slugs'
+import { ogImageObject } from '@/app/lib/seo/schema-image'
+import { getPostBySlug } from './_data/post-lookup'
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -46,20 +48,6 @@ function extractTocItems(html: string): { id: string; text: string; level: numbe
     })
   }
   return items
-}
-
-async function getPostBySlug(slug: string) {
-  try {
-    return await prisma.blogPost.findUnique({
-      where: { slug, isActive: true, publishedAt: { not: null } },
-      include: {
-        categories: { select: { id: true, title: true, slug: true } },
-      },
-    })
-  } catch (error) {
-    console.error('Error fetching blog post:', error)
-    return null
-  }
 }
 
 async function getRelatedPosts(categoryIds: string[], currentId: string) {
@@ -117,10 +105,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const rawTitle = post.metaTitle || post.title
   const title = rawTitle.replace(/\s*\|\s*Bolsa Click\s*$/i, '').trim()
   const description = post.metaDescription || post.excerpt
-  const rawMetaImage = post.featuredImage || 'https://www.bolsaclick.com.br/assets/logo-bolsa-click-rosa.png'
-  const imageUrl = rawMetaImage.startsWith('http')
-    ? rawMetaImage
-    : `https://www.bolsaclick.com.br${rawMetaImage.startsWith('/') ? '' : '/'}${rawMetaImage}`
+  // Card de marca gerado por código (opengraph-image.tsx nesta pasta) —
+  // substitui o antigo fallback pra `post.featuredImage` (imagem solta do CMS,
+  // às vezes ausente e caindo no logo genérico) por um card consistente com o
+  // resto do site, com o título real do post. `post.featuredImage` continua
+  // usado no corpo do artigo — só o compartilhamento social/schema muda.
+  const imageUrl = `https://www.bolsaclick.com.br/blog/${slug}/opengraph-image`
 
   return {
     title,
@@ -144,21 +134,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       authors: [post.author],
       section: firstCategory?.title,
       tags: post.tags,
-      images: imageUrl ? [
+      images: [
         {
           url: imageUrl,
           width: 1200,
           height: 630,
-          alt: post.imageAlt || post.title,
+          alt: post.title,
         },
-      ] : [],
+      ],
     },
     twitter: {
       card: 'summary_large_image',
       site: '@bolsaclick',
       title,
       description,
-      images: imageUrl ? [imageUrl] : [],
+      images: [imageUrl],
     },
   }
 }
@@ -187,10 +177,9 @@ export default async function BlogPostPage({ params }: Props) {
   const textContent = post.content.replace(/<[^>]*>/g, '')
   const wordCount = textContent.split(/\s+/).filter(Boolean).length
 
-  const rawImage = post.featuredImage || 'https://www.bolsaclick.com.br/assets/og-image-bolsaclick.png'
-  const imageUrl = rawImage.startsWith('http')
-    ? rawImage
-    : `https://www.bolsaclick.com.br${rawImage.startsWith('/') ? '' : '/'}${rawImage}`
+  // Mesmo card gerado por opengraph-image.tsx usado no og:image/twitter:image
+  // (ver generateMetadata acima) — dado estruturado e preview social batem.
+  const ogCardUrl = `https://www.bolsaclick.com.br/blog/${slug}/opengraph-image`
   const firstCategory = post.categories[0]
 
   // articleBody plain text (sem HTML) pra LLMs extraírem passagens citáveis
@@ -232,7 +221,7 @@ export default async function BlogPostPage({ params }: Props) {
       '@type': 'BlogPosting',
       headline: post.title,
       description: post.excerpt,
-      image: [imageUrl],
+      image: [ogImageObject(ogCardUrl, post.title)],
       datePublished: post.publishedAt?.toISOString(),
       dateModified: post.updatedAt.toISOString(),
       author: authorSchema,

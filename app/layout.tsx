@@ -12,6 +12,7 @@ import { business } from './lib/constants/business'
 import { DISCOUNT_CEILING_PCT } from './lib/copy/claims'
 import { getCurrentTheme } from './lib/themes'
 import { publicRobots, seoSite } from './lib/seo/site-config'
+import { ogImageObject } from './lib/seo/schema-image'
 
 // font-display: optional reduz CLS — se a fonte web não carregar dentro de
 // ~100ms, fica com o fallback definitivamente (sem reflow tardio). Trade-off:
@@ -40,6 +41,10 @@ const fraunces = Fraunces({
 })
 
 const theme = getCurrentTheme()
+// Mesmo card gerado por opengraph-image.tsx da home usado no og:image/
+// twitter:image de app/(default)/page.tsx — ver nota lá sobre o guard por
+// tema (o card é desenhado pro bolsaclick).
+const ogCardUrl = seoSite.key === 'bolsaclick' ? `${theme.siteUrl}/opengraph-image` : theme.ogImage
 
 const gtmId = process.env.NEXT_PUBLIC_GTM_ID || ''
 const ga4Id = process.env.NEXT_PUBLIC_GA4_ID || ''
@@ -156,7 +161,7 @@ const jsonLd = [
     description: `Plataforma brasileira de bolsas de estudo com até ${DISCOUNT_CEILING_PCT}% de desconto em faculdades e universidades. Graduação, pós-graduação, cursos técnicos e EAD.`,
     url: theme.siteUrl,
     logo: seoSite.logo,
-    image: theme.ogImage,
+    image: ogImageObject(ogCardUrl, `${seoSite.name}: bolsas de estudo de até ${DISCOUNT_CEILING_PCT}% em faculdades reconhecidas pelo MEC`),
     naics: '611710',
     industry: 'Educação Superior',
     knowsAbout: ['bolsas de estudo', 'educação superior', 'faculdades', 'graduação', 'pós-graduação', 'EAD'],

@@ -29,6 +29,24 @@ export interface CourseOffer {
    * O preview não define default.
    */
   notaMec?: number
+  /**
+   * Identificadores da oferta, só usados pra montar o link direto de
+   * checkout (offerCheckoutHref) — espelham app/interface/course.ts Course.
+   * Sem eles o card cai pro link de resultado (ver offerCheckoutHref).
+   */
+  id?: number | string
+  unitId?: string
+  businessKey?: string
+  /** uuid do Offer no catálogo da Athena — só no trilho `source === 'YDUQS'`. */
+  offerId?: string
+  classShift?: string
+  unitState?: string
+  unitAddress?: string
+  unitDistrict?: string
+  unitPostalCode?: string
+  codFormaIngressoOferta?: number
+  priceForma2?: number
+  priceForma3?: number
 }
 
 export const formatBRL = (value: number): string =>
@@ -111,7 +129,15 @@ export function titleCase(text: string): string {
     .replace(/^./, (c) => c.toUpperCase())
 }
 
-/** Mesmo mapa de logos do card atual (assets já existentes em /public). */
+/**
+ * Mesmo mapa de logos do card atual (assets já existentes em /public).
+ *
+ * Duplicado de app/lib/brand-logos.ts (BRAND_LOGOS/getBrandLogo) — mesmo
+ * problema resolvido em três outros pontos por bcd6b3d ("feat(marcas): logo
+ * do IBMEC nos cards de oferta"): esse card (v2, vitrine da home) é um
+ * QUARTO ponto que ficou de fora e continuou caindo no fallback rosa
+ * genérico pro IBMEC. Manter a lista sincronizada com BRAND_LOGOS.
+ */
 export function brandLogoSrc(brand: string): string {
   const n = (brand || '').toLowerCase()
   if (n.includes('anhanguera')) return '/assets/logo-anhanguera-bolsa-click.svg'
@@ -120,6 +146,7 @@ export function brandLogoSrc(brand: string): string {
   if (n.includes('unime')) return '/assets/logo-unime-p.png'
   if (n.includes('estacio') || n.includes('estácio')) return '/estacio-logo.png'
   if (n.includes('wyden')) return '/assets/wyden.svg'
+  if (n.includes('ibmec')) return '/assets/logo-ibmec.svg'
   return '/assets/logo-bolsa-click-rosa.png'
 }
 
@@ -138,6 +165,71 @@ export function offerResultHref(offer: CourseOffer): string {
   if (offer.city) params.set('cidade', offer.city)
   if (offer.uf) params.set('estado', offer.uf)
   return `/curso/resultado?${params.toString()}`
+}
+
+/**
+ * Link REAL pro checkout, com a oferta do card já resolvida — decisão CEO:
+ * "Garantir bolsa" na vitrine da home deve ir direto pro checkout, não pra
+ * listagem intermediária. Listagem é o maior vazamento medido do funil de
+ * SEO (81% não reclicam na oferta depois de cair numa lista); repetir esse
+ * padrão aqui custaria o mesmo.
+ *
+ * Espelha a construção de URL de app/components/CourseCardNew/index.tsx
+ * (handleClick) pros dois trilhos de checkout existentes:
+ * - `source === 'YDUQS'` (Estácio via Athena): /checkout/estacio, com
+ *   offerId — a Estácio identifica a oferta pelo offerId (já inclui turno
+ *   e unidade), então NÃO manda `shift` (o card também não envia lá).
+ * - default (Cogna/Tartarus): /checkout/matricula, com groupId (=id) +
+ *   unitId + modality. `shift` é acrescentado pelo próprio card
+ *   (CourseCardV2) quando o turno é obrigatório e foi escolhido, ou quando
+ *   há um único turno não-virtual (auto-seleção) — nunca aqui, porque esta
+ *   função não sabe qual turno a pessoa escolheu.
+ *
+ * Sem o identificador mínimo da oferta (offerId no trilho Estácio, id no
+ * trilho Cogna) cai pro link de resultado: nunca manda o candidato pra um
+ * checkout que não vai conseguir casar a oferta.
+ */
+export function offerCheckoutHref(offer: CourseOffer): string {
+  const modality = offer.commercialModality || offer.modality
+
+  if (offer.source === 'YDUQS') {
+    if (!offer.offerId) return offerResultHref(offer)
+
+    const params = new URLSearchParams()
+    params.set('offerId', offer.offerId)
+    params.set('courseName', offer.name)
+    if (offer.brand) params.set('brand', offer.brand)
+    if (modality) params.set('modality', modality)
+    params.set('price', String(offer.minPrice))
+    if (offer.city) params.set('city', offer.city)
+    const state = offer.uf || offer.unitState
+    if (state) params.set('state', state)
+    if (offer.academicLevel) params.set('academicLevel', offer.academicLevel)
+    // Endereço da unidade — opcional, pro checkout mostrar onde fica
+    // (relevante pra presencial/semipresencial).
+    if (offer.unitAddress) params.set('unitAddress', offer.unitAddress)
+    if (offer.unitDistrict) params.set('unitDistrict', offer.unitDistrict)
+    if (offer.unitPostalCode) params.set('unitPostalCode', offer.unitPostalCode)
+    // Forma de ingresso da linha de catálogo: o checkout deriva dela quais
+    // opções pode oferecer sem cair em MS004 na YDUQS.
+    if (offer.codFormaIngressoOferta !== undefined)
+      params.set('codFormaIngressoOferta', String(offer.codFormaIngressoOferta))
+    if (offer.priceForma2) params.set('priceForma2', String(offer.priceForma2))
+    if (offer.priceForma3) params.set('priceForma3', String(offer.priceForma3))
+    // Preço cheio ("de") e duração — pra ancoragem de preço no checkout.
+    if (typeof offer.maxPrice === 'number') params.set('maxPrice', String(offer.maxPrice))
+    if (typeof offer.durationInMonths === 'number')
+      params.set('durationInMonths', String(offer.durationInMonths))
+    return `/checkout/estacio?${params.toString()}`
+  }
+
+  if (!offer.id) return offerResultHref(offer)
+
+  const params = new URLSearchParams()
+  params.set('groupId', String(offer.id))
+  if (offer.unitId) params.set('unitId', offer.unitId)
+  if (modality) params.set('modality', modality)
+  return `/checkout/matricula?${params.toString()}`
 }
 
 /**

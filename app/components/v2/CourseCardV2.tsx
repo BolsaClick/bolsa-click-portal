@@ -61,6 +61,10 @@ export default function CourseCardV2({ offer, href, ctaLabel = 'Garantir bolsa',
   )
   const needsShiftChoice = selectableShifts.length > 1
   const ctaBlocked = needsShiftChoice && !selectedShift
+  // Turno único não-virtual (ex.: presencial só de manhã): não há escolha
+  // pra fazer, mas o checkout precisa do valor mesmo assim — sem ele, o
+  // /checkout/matricula usa 'VIRTUAL' como default e distorce a oferta.
+  const singleShift = selectableShifts.length === 1 ? selectableShifts[0] : null
 
   const degree = degreeLabel(offer.academicDegree) ?? parsed.degreeFromName ?? null
   const level = academicLevelLabel(offer.academicLevel)
@@ -70,8 +74,9 @@ export default function CourseCardV2({ offer, href, ctaLabel = 'Garantir bolsa',
       ? offer.maxPrice - offer.minPrice
       : null
 
-  const finalHref = selectedShift
-    ? `${href}${href.includes('?') ? '&' : '?'}shift=${encodeURIComponent(selectedShift)}`
+  const shiftToSend = selectedShift || singleShift
+  const finalHref = shiftToSend
+    ? `${href}${href.includes('?') ? '&' : '?'}shift=${encodeURIComponent(shiftToSend)}`
     : href
 
   const locationLine = [

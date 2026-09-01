@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Course } from "@/app/interface/course"
-import { hasInstallmentPlan } from '@/app/components/v2/course-offer'
+import { hasInstallmentPlan, isTotalPriceLevel } from '@/app/components/v2/course-offer'
 import { useFavorites } from "@/app/lib/hooks/useFavorites"
 import { usePostHogTracking } from "@/app/lib/hooks/usePostHogTracking"
 import { useCourseSelection } from "@/app/lib/hooks/useCourseSelection"
@@ -141,10 +141,16 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
   // Nota MEC real da instituição (Institution.mecRating, 1-5) — sem o dado
   // pro brand, undefined e o selo simplesmente não aparece (nunca inventa).
   const mecRating = mecRatings?.[brandMecKey(course.brand)]
+  // Pós-graduação e profissionalizante: minPrice/maxPrice já são o TOTAL do
+  // curso (priceWithDiscount/priceWithoutDiscount no Tartarus), não
+  // mensalidade — a economia é a diferença simples, sem multiplicar por
+  // duração de novo (isso inflava "Economize" até igualar o "De"). Graduação
+  // continua mensal, então mantém a multiplicação por duração.
   const priceAnchor = getPriceAnchor({
     from: course.maxPrice,
     to: course.minPrice,
     durationMonths: course.durationInMonths ?? course.duration,
+    priceIsTotal: isTotalPriceLevel(course.academicLevel),
   })
 
   // Função para determinar o turno baseado em shiftOptions
@@ -471,9 +477,7 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
             )}
             <div className="mb-3">
               <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-neutral-500">
-                {hasInstallmentPlan(course)
-                  ? 'Até'
-                  : 'A partir de'}
+                A partir de
               </span>
               <span
                 className="mt-0.5 block text-[26px] font-bold leading-none text-emerald-500"
@@ -481,13 +485,19 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
                 itemScope
                 itemType="https://schema.org/Offer"
               >
+                {/* Pós/profissionalizante: mostra a parcela como mensalidade
+                    ("R$ X/mês"), sem afirmar o número de parcelas — o
+                    parcelamento real (Nx) fica pro checkout, que tem o dado
+                    do plano de pagamento (decisão do CEO, 2026-09). Evita a
+                    contradição de "18x R$134,10" (R$2.413,80) somar mais que
+                    o preço riscado "De" (que é o TOTAL do curso). */}
                 {hasInstallmentPlan(course) ? (
                   <span itemProp="price">
-                    {course.totalInstallment}x de{' '}
                     {course.minInstallmentValue.toLocaleString('pt-BR', {
                       style: 'currency',
                       currency: 'BRL',
                     })}
+                    <span className="text-sm font-semibold text-neutral-500">/mês</span>
                   </span>
                 ) : (
                   <span itemProp="price">

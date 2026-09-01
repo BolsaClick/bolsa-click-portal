@@ -1,5 +1,5 @@
 import { Course } from "@/app/interface/course"
-import { hasInstallmentPlan } from '@/app/components/v2/course-offer'
+import { hasInstallmentPlan, isTotalPriceLevel } from '@/app/components/v2/course-offer'
 import { titleCasePtBr } from "@/app/lib/utils/title-case"
 import { useFavorites } from "@/app/lib/hooks/useFavorites"
 import { usePostHogTracking } from "@/app/lib/hooks/usePostHogTracking"
@@ -74,10 +74,16 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
     return '/assets/logo-bolsa-click-rosa.png'
   }
 
+  // Pós-graduação e profissionalizante: minPrice/maxPrice já são o TOTAL do
+  // curso (priceWithDiscount/priceWithoutDiscount no Tartarus), não
+  // mensalidade — a economia é a diferença simples, sem multiplicar por
+  // duração de novo (isso inflava "Economize" até igualar o "De"). Graduação
+  // continua mensal, então mantém a multiplicação por duração.
   const priceAnchor = getPriceAnchor({
     from: course.maxPrice,
     to: course.minPrice,
     durationMonths: course.durationInMonths ?? course.duration,
+    priceIsTotal: isTotalPriceLevel(course.academicLevel),
   })
   const hasDiscount = priceAnchor !== null
   // Nota MEC real da instituição (Institution.mecRating, 1-5) — course.mecScore
@@ -117,7 +123,9 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
             -{priceAnchor?.discountPct}%
           </span>
           <span className="text-xs text-emerald-700 font-medium">
-            Desconto real na mensalidade
+            {isTotalPriceLevel(course.academicLevel)
+              ? 'Desconto real no valor total do curso'
+              : 'Desconto real na mensalidade'}
           </span>
         </div>
       )}
@@ -291,13 +299,18 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
         {/* Preço atual */}
         <div className="mb-4">
           <p className="text-[11px] text-ink-500 uppercase tracking-widest font-medium mb-1">
-            {hasInstallmentPlan(course)
-              ? 'até'
-              : 'a partir de'}
+            a partir de
           </p>
           <p className="text-2xl font-black text-bolsa-primary leading-none">
+            {/* Pós/profissionalizante: parcela como mensalidade ("R$ X/mês"),
+                sem afirmar o número de parcelas — o parcelamento real (Nx)
+                fica pro checkout, que tem o dado do plano de pagamento
+                (decisão do CEO, 2026-09). */}
             {hasInstallmentPlan(course) ? (
-              <span>{course.totalInstallment}x {course.minInstallmentValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+              <span>
+                {course.minInstallmentValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                <span className="text-sm font-semibold text-ink-500">/mês</span>
+              </span>
             ) : (
               <span>
                 {(course.minPrice ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}

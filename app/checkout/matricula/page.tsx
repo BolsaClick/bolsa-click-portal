@@ -31,6 +31,7 @@ import { z } from 'zod'
 import { validarCPF } from '@/utils/cpf-validate'
 import { formatCurrency } from '@/utils/fomartCurrency'
 import { getPriceAnchor } from '@/app/lib/utils/price-anchor'
+import { isTotalPriceLevel } from '@/app/components/v2/course-offer'
 import { toast } from 'sonner'
 // [CUPOM] import { validateCoupon } from '@/app/lib/api/get-coupon'
 import { createLead } from '@/app/lib/api/create-lead'
@@ -542,13 +543,22 @@ const isFormValidForPayment =
 
   const monthlyFee = offerDetails?.montlyFeeTo || 0
 
+  // Pós-graduação e profissionalizante: montlyFeeFrom/montlyFeeTo (apesar do
+  // nome) vêm de priceWithoutDiscount/priceWithDiscount — já são o TOTAL do
+  // curso, não mensalidade (confirmado contra o Tartarus/Cogna). Graduação
+  // (ATHENAS) é a única onde esses campos são mesmo mensalidade.
+  const offerIsTotalPriceLevel = isTotalPriceLevel(offerDetails?.academicLevel)
+
   // Ancoragem de preço (riscado + % + economia total até o fim do curso) —
   // usa os preços reais da oferta (nunca inventa desconto). Duração vem de
-  // offerDetails.duration quando a API manda (Cogna).
+  // offerDetails.duration quando a API manda (Cogna). priceIsTotal evita
+  // multiplicar um total por duração de novo (isso inflava "Economize" até
+  // igualar o "De" — bug real visto neste painel, 2026-08/09).
   const priceAnchor = getPriceAnchor({
     from: offerDetails?.montlyFeeFrom,
     to: monthlyFee,
     durationMonths: offerDetails?.duration,
+    priceIsTotal: offerIsTotalPriceLevel,
   })
 
   const offerSource = offerDetails?.dmhSource?.source
@@ -724,6 +734,18 @@ const isFormValidForPayment =
     const methods = offerDetails.paymentMethods as PosPaymentMethod[] | undefined
     const pm = methods?.find((p) => p.type === posPaymentMethodType)
     return pm?.installments.find((i) => i.id === posInstallmentId)?.number
+  }
+
+  // Parcela completa (não só o número) hoje selecionada — usada pro bloco de
+  // preço da sidebar reagir à escolha de parcelas (ver "Bloco de preço"
+  // abaixo). Sem voucher, é o único jeito de saber o valor real da
+  // mensalidade que a pessoa vai pagar: `montlyFeeTo` é o TOTAL do curso
+  // (ver `offerIsTotalPriceLevel`), não o valor da parcela escolhida.
+  const getSelectedInstallment = (): PosInstallment | undefined => {
+    if (!offerDetails || !posInstallmentId) return undefined
+    const methods = offerDetails.paymentMethods as PosPaymentMethod[] | undefined
+    const pm = methods?.find((p) => p.type === posPaymentMethodType)
+    return pm?.installments.find((i) => i.id === posInstallmentId)
   }
 
   // Validação manual de voucher (campo digitado), Cosmos-only (pós e
@@ -1400,7 +1422,15 @@ const isFormValidForPayment =
       ? (() => {
           try {
             const raw = localStorage.getItem('selectedCourse')
-            return raw ? JSON.parse(raw) as { name?: string; brand?: string; minPrice?: number } : null
+            return raw
+              ? JSON.parse(raw) as {
+                  name?: string
+                  brand?: string
+                  minPrice?: number
+                  academicLevel?: string
+                  minInstallmentValue?: number
+                }
+              : null
           } catch {
             return null
           }
@@ -1499,22 +1529,35 @@ const isFormValidForPayment =
               </div>
 
               {cachedCourse?.minPrice ? (
-                <div className="bg-paper-warm border border-hairline rounded-2xl p-5 mb-5">
-                  <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 mb-2 block">
-                    Mensalidade com bolsa
-                  </span>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-[14px] text-ink-700 font-medium">R$</span>
-                    <span className="font-display num-tabular text-[40px] font-bold text-bolsa-secondary leading-none">
-                      {cachedCourse.minPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
-                    <span className="text-[12px] text-ink-500">/mês</span>
-                  </div>
-                  <p className="text-[11px] text-ink-500 mt-3 italic inline-flex items-center gap-2">
-                    <span className="inline-block w-2 h-2 rounded-full bg-bolsa-secondary animate-pulse" />
-                    Confirmando valores com a instituição…
-                  </p>
-                </div>
+                (() => {
+                  // Preview otimista (localStorage) de pós/profissionalizante:
+                  // cachedCourse.minPrice é o TOTAL do curso, não mensalidade
+                  // (mesmo campo de app/components/v2/course-offer.ts). Sem a
+                  // parcela em cache, não afirma "/mês" sobre um total.
+                  const isTotal = isTotalPriceLevel(cachedCourse.academicLevel)
+                  const showMonthly = !isTotal || typeof cachedCourse.minInstallmentValue === 'number'
+                  const displayValue = isTotal && typeof cachedCourse.minInstallmentValue === 'number'
+                    ? cachedCourse.minInstallmentValue
+                    : cachedCourse.minPrice
+                  return (
+                    <div className="bg-paper-warm border border-hairline rounded-2xl p-5 mb-5">
+                      <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 mb-2 block">
+                        {isTotal && !showMonthly ? 'Valor total do curso' : 'Mensalidade com bolsa'}
+                      </span>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-[14px] text-ink-700 font-medium">R$</span>
+                        <span className="font-display num-tabular text-[40px] font-bold text-bolsa-secondary leading-none">
+                          {displayValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                        {showMonthly && <span className="text-[12px] text-ink-500">/mês</span>}
+                      </div>
+                      <p className="text-[11px] text-ink-500 mt-3 italic inline-flex items-center gap-2">
+                        <span className="inline-block w-2 h-2 rounded-full bg-bolsa-secondary animate-pulse" />
+                        Confirmando valores com a instituição…
+                      </p>
+                    </div>
+                  )
+                })()
               ) : (
                 <div className="bg-paper-warm border border-hairline rounded-2xl p-5 mb-5">
                   <SkeletonBlock className="h-3 w-32 mb-3" />
@@ -2363,7 +2406,9 @@ const isFormValidForPayment =
             {/* Bloco de preço */}
             <div className="bg-paper-warm border border-hairline rounded-2xl p-5 mb-5 relative overflow-hidden">
               <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 mb-2 block">
-                Mensalidade com bolsa
+                {offerIsTotalPriceLevel && !(voucherValid && voucherInstallments.length > 0) && !getSelectedInstallment()
+                  ? 'Valor total do curso'
+                  : 'Mensalidade com bolsa'}
               </span>
 
               {voucherValid && voucherInstallments.length > 0 ? (
@@ -2395,7 +2440,46 @@ const isFormValidForPayment =
                     </>
                   )
                 })()
-              ) : !(voucherValid && voucherInstallments.length > 0) && offerDetails?.montlyFeeFrom && offerDetails.montlyFeeFrom > monthlyFee ? (
+              ) : offerIsTotalPriceLevel ? (
+                /* Pós/profissionalizante sem voucher: montlyFeeTo é o TOTAL
+                   do curso (não mensalidade — ver offerIsTotalPriceLevel).
+                   Antes de escolher a parcela, mostra o total honesto (sem
+                   "/mês"). Depois de escolher, reage à seleção e mostra a
+                   mensalidade REAL daquela parcela (installmentValue) — não
+                   ficava mais parado em montlyFeeTo quando a pessoa trocava
+                   de parcela (bug relatado no checkout, 2026-09). O
+                   De/-%/Economize compara o TOTAL cheio x TOTAL com bolsa —
+                   sempre correto, independente da parcela escolhida. */
+                (() => {
+                  const selectedInstallment = getSelectedInstallment()
+                  return (
+                    <>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-[14px] text-ink-700 font-medium">R$</span>
+                        <span className="font-display num-tabular text-[40px] font-bold text-bolsa-secondary leading-none">
+                          {(selectedInstallment ? selectedInstallment.installmentValue : monthlyFee).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                        {selectedInstallment && <span className="text-[12px] text-ink-500">/mês</span>}
+                      </div>
+                      {priceAnchor && (
+                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <span className="text-[12px] text-ink-300 line-through num-tabular">
+                            De {formatCurrency(offerDetails?.montlyFeeFrom || 0)}
+                          </span>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-bolsa-secondary text-white text-[10px] font-bold tracking-wide">
+                            −{priceAnchor.discountPct}%
+                          </span>
+                        </div>
+                      )}
+                      {priceAnchor?.totalSavings != null && (
+                        <p className="text-[11px] text-emerald-600 mt-1.5">
+                          Economize {formatCurrency(priceAnchor.totalSavings)} até o fim do curso
+                        </p>
+                      )}
+                    </>
+                  )
+                })()
+              ) : offerDetails?.montlyFeeFrom && offerDetails.montlyFeeFrom > monthlyFee ? (
                 <>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-[14px] text-ink-700 font-medium">R$</span>

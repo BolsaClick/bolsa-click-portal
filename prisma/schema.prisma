@@ -507,14 +507,19 @@ model InstitutionMaxDiscountCache {
   /** Chave de marca normalizada (normalizeBrand → slug): "anhanguera", "ibmec", ... */
   brand          String   @unique
   /**
-   * Maior desconto % medido nas ofertas de graduação da marca, já truncado
-   * no teto editorial (DISCOUNT_CEILING_PCT, claims.ts) por segurança extra
-   * — a leitura também aplica o teto, mas gravar já truncado evita que um
-   * consumidor futuro desta tabela esqueça de aplicar o teto. 0 é um valor
-   * LEGÍTIMO (ex.: IBMEC) — só é gravado quando sampleSize comprova que não
-   * é um zero de falha (ver script).
+   * Maior desconto % medido nas ofertas de graduação da marca — BRUTO, sem
+   * nenhum teto editorial aplicado (renomeado de `maxDiscountPct` em
+   * 2026-09-02: o nome antigo, combinado com o comentário "já truncado",
+   * fez o script gravar `Math.min(x, DISCOUNT_CEILING_PCT)` — quando
+   * DISCOUNT_CEILING_PCT subiu de 78 pra 80 (claims.ts), os valores
+   * persistidos ficaram travados em 78 até alguém reprocessar. O teto
+   * pertence à LEITURA (getBrandDiscountState/getDisplayDiscountPct em
+   * app/lib/utils/institution-discount.ts), não à gravação — assim, mudar a
+   * constante vale pro site inteiro sem reprocessar dado nenhum. 0 é um
+   * valor LEGÍTIMO (ex.: IBMEC) — só é gravado quando sampleSize comprova
+   * que não é um zero de falha (ver script).
    */
-  maxDiscountPct     Int
+  maxDiscountPctRaw  Int
   /** Nº de ofertas com desconto > 0 encontradas na medição (informativo). */
   offersWithDiscount Int      @default(0)
   /**

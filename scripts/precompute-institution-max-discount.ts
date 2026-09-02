@@ -7,6 +7,15 @@
  * nunca deriva no render (ver o comentário do model em prisma/schema.prisma
  * pro histórico dos 2 reverts que motivaram este script).
  *
+ * Grava o valor BRUTO medido (`maxDiscountPctRaw`), SEM aplicar
+ * DISCOUNT_CEILING_PCT aqui — o teto editorial é responsabilidade exclusiva
+ * da LEITURA (getBrandDiscountState/getDisplayDiscountPct em
+ * app/lib/utils/institution-discount.ts). Truncar na gravação já causou um
+ * bug real: quando o teto subiu de 78% pra 80% (claims.ts), os valores
+ * persistidos ficaram travados em 78 até o reprocessamento manual. Truncar
+ * só na leitura faz uma mudança na constante valer pro site inteiro sem
+ * reprocessar nada.
+ *
  * REGRA INEGOCIÁVEL (requisito 1 da tarefa): se a medição de uma marca teve
  * QUALQUER falha de busca (exceção após retries) OU colheu amostra menor que
  * MIN_SAMPLE_TO_WRITE, o upsert daquela marca é PULADO — o registro anterior
@@ -29,9 +38,11 @@
  *
  * Fontes: Tartarus (Cogna: anhanguera/unopar/pitagoras/unime) via
  * `cogna/courses/search?brands=X`; Athena (YDUQS: estacio/wyden/ibmec) via
- * `searchAthenaOffers({ brand })` — mesma rota "uma consulta por marca" já
- * validada em get-courses-filter.ts (a consulta ABERTA sem brand é a que
- * quebra na Athena).
+ * `GET api/offers?brand=X` — mesma rota "uma consulta por marca" já validada
+ * em get-courses-filter.ts (a consulta ABERTA sem brand é a que quebra na
+ * Athena). Chamada direto no client `athena` (não via `searchAthenaOffers`,
+ * que engole erro e devolve `[]` — ver comentário de `fetchAthenaCourseBrand`
+ * abaixo pro porquê isso importa aqui).
  *
  * USO:
  *   node --env-file=.env node_modules/.bin/tsx scripts/precompute-institution-max-discount.ts
@@ -40,11 +51,10 @@
  *   ... --delay=500               ms entre chamadas HTTP (default 400)
  */
 import { PrismaClient } from '@prisma/client'
-import { tartarus } from '../app/lib/api/axios'
-import { searchAthenaOffers, normalizeAthenaOffer } from '../app/lib/api/athena-offers'
+import { tartarus, athena } from '../app/lib/api/axios'
+import { cleanCourseNameForAthena, normalizeAthenaOffer, type AthenaOffer } from '../app/lib/api/athena-offers'
 import { normalizeBrand, cognaBrandParam, yduqsBrandSlug } from '../app/lib/utils/brand'
 import { getPriceAnchor } from '../app/lib/utils/price-anchor'
-import { DISCOUNT_CEILING_PCT } from '../app/lib/copy/claims'
 import { TOP_CURSOS } from '../app/cursos/_data/cursos'
 
 const prisma = new PrismaClient()
@@ -155,19 +165,44 @@ async function fetchCognaCourseBrand(
   }
 }
 
-/** Uma chamada Athena (YDUQS), UM curso × UMA marca — via `brand`, a rota
- *  validada (a consulta aberta sem brand é a que quebra na Athena). */
+/**
+ * Uma chamada Athena (YDUQS), UM curso × UMA marca — via `brand`, a rota
+ * validada (a consulta aberta sem brand é a que quebra na Athena).
+ *
+ * NÃO usa `searchAthenaOffers` (app/lib/api/athena-offers.ts): aquela função
+ * é feita pro SSR ao vivo do site, onde engolir erro e devolver `[]` é o
+ * comportamento certo (não pode derrubar a página). Aqui é o oposto — um
+ * `[]` que veio de um 500/timeout escondido é exatamente a falha que a
+ * REGRA INEGOCIÁVEL deste script precisa enxergar. Descoberto na prática:
+ * rodando o reprocessamento (2026-09-02), a Athena devolveu 500 em ~70% das
+ * chamadas de Estácio, mas `searchAthenaOffers` engoliu todas — o script
+ * quase gravou um valor com amostra severamente degradada e `failed: false`.
+ * Chama o client `athena` diretamente (mesmo padrão de `fetchCognaCourseBrand`
+ * acima) pra que a exceção real chegue até aqui e conte pro streak de aborto.
+ */
 async function fetchAthenaCourseBrand(
   courseName: string,
   yduqsBrand: string,
 ): Promise<{ offers: RawOffer[]; failed: boolean }> {
   totalCalls++
+  if (!process.env.ATHENA_BASE_URL) {
+    console.error('    ✗ Athena falhou: ATHENA_BASE_URL não configurado')
+    return { offers: [], failed: true }
+  }
   try {
-    const list = await searchAthenaOffers({
-      courseName,
-      academicLevel: 'GRADUACAO',
-      brand: yduqsBrand,
-    })
+    const query: Record<string, string> = { academicLevel: 'GRADUACAO', brand: yduqsBrand.toLowerCase() }
+    const cleanedName = cleanCourseNameForAthena(courseName)
+    if (cleanedName) query.courseName = cleanedName
+
+    const response = await athena.get('api/offers', { params: query, timeout: 15_000 })
+    const data = response.data
+    const list: AthenaOffer[] = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.data)
+        ? data.data
+        : Array.isArray(data?.offers)
+          ? data.offers
+          : []
     return { offers: list.map(normalizeAthenaOffer) as RawOffer[], failed: false }
   } catch (err) {
     console.error(`    ✗ Athena falhou (${courseName} / ${yduqsBrand}):`, (err as Error).message)
@@ -182,7 +217,8 @@ function offerDiscountPct(o: RawOffer): number {
 
 interface BrandMeasurement {
   brandSlug: BrandSlug
-  maxDiscountPct: number
+  /** Bruto, sem teto — ver comentário do topo do arquivo. */
+  maxDiscountPctRaw: number
   offersWithDiscount: number
   sampleSize: number
   hadFailure: boolean
@@ -196,7 +232,7 @@ async function measureBrand(brandSlug: BrandSlug): Promise<BrandMeasurement> {
 
   let sampleSize = 0
   let offersWithDiscount = 0
-  let maxDiscountPct = 0
+  let maxDiscountPctRaw = 0
   let hadFailure = false
 
   const cursos = COURSE_LIMIT ? TOP_CURSOS.slice(0, COURSE_LIMIT) : TOP_CURSOS
@@ -237,7 +273,7 @@ async function measureBrand(brandSlug: BrandSlug): Promise<BrandMeasurement> {
     for (const o of brandOffers) {
       const pct = offerDiscountPct(o)
       if (pct > 0) offersWithDiscount++
-      if (pct > maxDiscountPct) maxDiscountPct = pct
+      if (pct > maxDiscountPctRaw) maxDiscountPctRaw = pct
     }
 
     if (consecutiveBadCalls >= ABORT_ON_CONSECUTIVE_BAD_CALLS) {
@@ -254,7 +290,9 @@ async function measureBrand(brandSlug: BrandSlug): Promise<BrandMeasurement> {
 
   return {
     brandSlug,
-    maxDiscountPct: Math.min(maxDiscountPct, DISCOUNT_CEILING_PCT),
+    // Bruto — SEM Math.min(..., DISCOUNT_CEILING_PCT). O teto é aplicado só
+    // na leitura (ver comentário do topo do arquivo).
+    maxDiscountPctRaw,
     offersWithDiscount,
     sampleSize,
     hadFailure,
@@ -275,7 +313,7 @@ async function main() {
     if (aborted) {
       report.push({
         brandSlug,
-        maxDiscountPct: 0,
+        maxDiscountPctRaw: 0,
         offersWithDiscount: 0,
         sampleSize: 0,
         hadFailure: true,
@@ -297,7 +335,7 @@ async function main() {
         : 'PRESERVE (amostra baixa)'
 
     console.log(
-      `  desconto máx: ${m.maxDiscountPct}%  |  amostra: ${m.sampleSize} ofertas (${m.offersWithDiscount} com desconto)  |  falha: ${m.hadFailure}  →  ${action}`,
+      `  desconto máx (bruto): ${m.maxDiscountPctRaw}%  |  amostra: ${m.sampleSize} ofertas (${m.offersWithDiscount} com desconto)  |  falha: ${m.hadFailure}  →  ${action}`,
     )
 
     if (trustworthy && !DRY_RUN) {
@@ -305,12 +343,12 @@ async function main() {
         where: { brand: brandSlug },
         create: {
           brand: brandSlug,
-          maxDiscountPct: m.maxDiscountPct,
+          maxDiscountPctRaw: m.maxDiscountPctRaw,
           offersWithDiscount: m.offersWithDiscount,
           sampleSize: m.sampleSize,
         },
         update: {
-          maxDiscountPct: m.maxDiscountPct,
+          maxDiscountPctRaw: m.maxDiscountPctRaw,
           offersWithDiscount: m.offersWithDiscount,
           sampleSize: m.sampleSize,
           measuredAt: new Date(),
@@ -322,12 +360,12 @@ async function main() {
   }
 
   console.log('\n─── resumo ───')
-  console.log('marca'.padEnd(12), 'ação'.padEnd(26), 'desconto'.padEnd(10), 'amostra'.padEnd(10), 'c/desconto')
+  console.log('marca'.padEnd(12), 'ação'.padEnd(26), 'bruto'.padEnd(10), 'amostra'.padEnd(10), 'c/desconto')
   for (const r of report) {
     console.log(
       r.brandSlug.padEnd(12),
       r.action.padEnd(26),
-      `${r.maxDiscountPct}%`.padEnd(10),
+      `${r.maxDiscountPctRaw}%`.padEnd(10),
       String(r.sampleSize).padEnd(10),
       String(r.offersWithDiscount),
     )

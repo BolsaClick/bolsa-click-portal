@@ -42,7 +42,7 @@ const getBrandDiscountRow = cache(async (brandSlug: string) => {
   try {
     return await prisma.institutionMaxDiscountCache.findUnique({
       where: { brand: brandSlug },
-      select: { maxDiscountPct: true, sampleSize: true },
+      select: { maxDiscountPctRaw: true, sampleSize: true },
     })
   } catch {
     return null

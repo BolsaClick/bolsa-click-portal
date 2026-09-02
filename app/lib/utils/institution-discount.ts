@@ -16,9 +16,13 @@ import { DISCOUNT_CEILING_PCT } from '../copy/claims'
 export const MIN_SAMPLE_FOR_RELIABLE_READ = 20
 
 /** Formato mínimo que a leitura precisa do registro persistido (Prisma
- *  devolve mais campos, mas só estes entram na decisão). */
+ *  devolve mais campos, mas só estes entram na decisão).
+ *  `maxDiscountPctRaw` é o valor BRUTO medido pelo script — SEM nenhum teto
+ *  editorial aplicado. O teto (DISCOUNT_CEILING_PCT) é aplicado só aqui, na
+ *  leitura (`getBrandDiscountState`), pra que mudar a constante valha pro
+ *  site inteiro sem reprocessar dado nenhum. */
 export interface PersistedBrandDiscount {
-  maxDiscountPct: number
+  maxDiscountPctRaw: number
   sampleSize: number
 }
 
@@ -34,7 +38,9 @@ export type BrandDiscountState =
  * schema.prisma pro histórico de por que isso importa).
  *
  * - HAS_DISCOUNT: há registro confiável (amostra suficiente) com desconto
- *   real > 0 — mostra o número da própria marca, truncado no teto editorial.
+ *   real > 0 — mostra o número da própria marca, truncado no teto editorial
+ *   AQUI (único ponto do fluxo que aplica DISCOUNT_CEILING_PCT — o valor
+ *   persistido é bruto; ver PersistedBrandDiscount).
  * - NO_DISCOUNT: há registro confiável com desconto 0 — evidência POSITIVA
  *   (o script só grava isto quando mediu amostra suficiente e sem falhas).
  *   Único estado que autoriza a copy "não tem bolsa própria ativa hoje"
@@ -51,8 +57,8 @@ export function getBrandDiscountState(
   if (!row || row.sampleSize < MIN_SAMPLE_FOR_RELIABLE_READ) {
     return { kind: 'UNKNOWN' }
   }
-  if (row.maxDiscountPct > 0) {
-    return { kind: 'HAS_DISCOUNT', pct: Math.min(row.maxDiscountPct, DISCOUNT_CEILING_PCT) }
+  if (row.maxDiscountPctRaw > 0) {
+    return { kind: 'HAS_DISCOUNT', pct: Math.min(row.maxDiscountPctRaw, DISCOUNT_CEILING_PCT) }
   }
   return { kind: 'NO_DISCOUNT' }
 }

@@ -1,8 +1,10 @@
 import { Metadata } from 'next'
 import { Suspense } from 'react'
+import { headers } from 'next/headers'
 import { ACADEMIC_LEVEL, isProfissionalizanteLevel, normalizeAcademicLevel } from '@/app/lib/academic-level'
 import { brazilCityStateOrNull } from '@/app/lib/geo/brazil-location'
 import { capitalizeText, removeCourseSuffix, extractCourseSuffix } from '@/app/lib/seo/course-search-params'
+import { isMobileUserAgent } from '@/app/lib/utils/is-mobile-ua'
 import { ResultsFilterProvider } from './ResultsFilterContext'
 import ResultsShell from './ResultsShell'
 import ResultsSkeleton from './ResultsSkeleton'
@@ -212,6 +214,15 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
 export default async function CursosPage({ searchParams }: Props) {
   const params = await searchParams
+  // Palpite de "é desktop?" por User-Agent — decide se o servidor já manda o
+  // FiltersPanel (pesado: 2 useQuery + vários useEffect) dentro do <aside>.
+  // No celular real ele nasce ausente e nunca é montado/hidratado à toa (o
+  // <aside> continua escondido por CSS via `hidden lg:block`, mas hoje
+  // renderizava o painel inteiro mesmo assim). No desktop nasce presente,
+  // IDÊNTICO ao HTML de hoje. `useIsDesktopViewport` corrige no cliente via
+  // matchMedia se o UA for ambíguo — ver ResultsShell.tsx.
+  const requestHeaders = await headers()
+  const initialIsDesktop = !isMobileUserAgent(requestHeaders.get('user-agent'))
   const curso = typeof params.c === 'string' ? params.c : ''
   const cursoNomeCompleto = typeof params.cn === 'string' ? params.cn : ''
   const cidadeRaw = typeof params.cidade === 'string' ? params.cidade : ''
@@ -279,7 +290,7 @@ export default async function CursosPage({ searchParams }: Props) {
         searchKey={searchKey}
         initialBrands={marcas ? marcas.split(',').filter(Boolean) : []}
       >
-        <ResultsShell current={current}>
+        <ResultsShell current={current} initialIsDesktop={initialIsDesktop}>
           <Suspense fallback={<ResultsSkeleton />}>
             <SearchResultsData current={current} />
           </Suspense>

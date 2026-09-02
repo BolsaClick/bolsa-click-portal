@@ -92,6 +92,16 @@ const CEILING_WIDTH_PX = 1680
  * deliberado: pra uma arte muito mais estreita que o teto (ex.: um 4:5
  * retrato num desktop largo), os controles não colam nas bordas exatas da
  * imagem — ver ressalva no relatório da task.
+ *
+ * CONTIDO, não sangrado (decisão de produto, 2026-09, referência: home do
+ * Quero Bolsa): a faixa não toca mais a borda da viewport. O contêiner
+ * externo (`mx-auto w-full max-w-screen-lg px-4 sm:px-6 lg:px-8`) é o MESMO
+ * container padrão do resto do site (`app/(default)/page.tsx`), pra alinhar
+ * com o card de busca e as seções abaixo. Dentro dele, a matemática de
+ * orçamento de altura/largura por proporção (acima) continua idêntica — o
+ * `min(100%, ...)` da largura de cada slide agora resolve `100%` como o
+ * espaço já com margem, então nunca precisa de alteração. A única mudança
+ * é estética: cantos arredondados (`rounded-2xl`) na caixa de cada slide.
  */
 export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
   const trackRef = useRef<HTMLDivElement>(null)
@@ -183,7 +193,7 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
           não `fixed` — já ocupa espaço próprio no fluxo do documento, então
           nenhuma compensação manual é necessária aqui. */}
       <div
-        className="relative w-full"
+        className="relative mx-auto w-full max-w-screen-lg px-4 sm:px-6 lg:px-8"
         role="region"
         aria-roledescription="carrossel"
         aria-label="Banners promocionais"
@@ -217,7 +227,7 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
             const paddingTopPct = (banner.height / banner.width) * 100
             const image = (
               <div
-                className="relative mx-auto overflow-hidden bg-gray-100"
+                className="relative mx-auto overflow-hidden rounded-2xl bg-gray-100"
                 style={{ width: boxWidthCss }}
               >
                 <div style={{ paddingTop: `${paddingTopPct}%` }} />

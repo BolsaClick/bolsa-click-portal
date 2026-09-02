@@ -96,8 +96,16 @@ const Hero = async () => {
 
       {/* FILTER — abaixo do hero/banner, flutuando por cima da borda inferior
           da imagem (-mt) pra costurar visualmente o bloco de imagem+texto
-          com o card de busca. */}
-      <div className="relative z-20 -mt-10 md:-mt-14 pb-16 md:pb-20">
+          com o card de busca. Overlap pequeno de propósito (12px/16px, era
+          40px/56px): o carrossel (ver HeroBannerSlider) já garante que a
+          base da peça — chamada e cupom — fica sempre intacta e visível;
+          qualquer overlap maior voltaria a cobrir exatamente essa área (o
+          motivo original desse fix). O valor ainda é suficiente pra
+          costurar visualmente os dois blocos (cantos arredondados do card
+          "encaixando" sob a imagem), só que sem virar sobreposição de
+          conteúdo. Ver o comentário no HeroBannerSlider sobre o `bottom`
+          das bolinhas, que precisa ficar sempre acima deste valor. */}
+      <div className="relative z-20 -mt-3 md:-mt-4 pb-16 md:pb-20">
         <Filter />
       </div>
     </section>

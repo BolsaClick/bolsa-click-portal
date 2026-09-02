@@ -37,15 +37,44 @@ const RESUME_AFTER_INTERACTION_MS = 9000
  * - **Nenhuma biblioteca de carrossel**: só `next/image` + scroll-snap +
  *   IntersectionObserver, todos nativos da plataforma.
  *
- * CLS: a altura da faixa é fixa por breakpoint (reservada antes de qualquer
- * imagem carregar), então nada empurra o layout quando a imagem chega.
+ * Proporção 3:1 (não altura fixa por breakpoint): as artes são peças
+ * publicitárias largas, com a chamada e o cupom perto da base. Altura fixa
+ * (o esquema antigo, `h-[380px] sm:h-[440px] md:h-[480px] lg:h-[560px]`)
+ * força a arte a esticar/cortar pra caber num espaço alto — e quem some é
+ * exatamente essa base. `aspect-[3/1]` acompanha a largura real da tela: a
+ * arte aparece inteira, do tamanho certo, em qualquer largura.
  *
- * Mobile: renderiza em qualquer viewport (74% do tráfego é mobile). O que
- * antes protegia o celular de baixar o banner "de desktop" era esconder o
- * componente inteiro (`hidden md:block`); agora cada imagem é pedida em
- * `sizes="100vw"`, então o próprio `next/image` serve, pelo srcset, um
- * recorte proporcional à viewport real — o celular nunca baixa o arquivo
- * pensado pra 1920px.
+ * Teto de altura (560px) **e** de largura (560×3 = 1680px), travados juntos:
+ * sem teto, um monitor de 2560px viraria 853px de altura — a dobra inteira
+ * só banner. Travar SÓ a altura (deixando a largura em 100%) faria a caixa
+ * ficar proporcionalmente mais larga que 3:1 acima do teto, crescendo sem
+ * limite em monitores maiores — quanto mais larga a caixa fica em relação à
+ * imagem, mais o `object-cover` precisa cortar pra cobrir os dois eixos.
+ * Travando largura e altura juntos na mesma proporção, a caixa nunca fica
+ * mais larga que 3:1 em nenhum breakpoint — acima do teto ela só para de
+ * crescer (1680×560, centralizada, com o `bg-gray-100` como fundo nas
+ * laterais) — então o corte do `object-cover`, quando existe, fica com um
+ * teto previsível em vez de aumentar indefinidamente em monitores ultrawide.
+ *
+ * `object-bottom` (não `object-top`, como no código antigo): as artes
+ * cadastradas hoje não são desenhadas em 3:1 nativamente (a peça real da
+ * Anhanguera, por ex., é ~1,9:1) — então mesmo com a caixa travada em 3:1,
+ * sobra verticalmente e o `object-cover` corta uma faixa. `object-top`
+ * ancorava no topo e sacrificava a base — exatamente o bug original (o
+ * "OFERTA ESPECIAL" e o cupom, que ficam embaixo, sumiam). `object-bottom`
+ * ancora na base: o que é cortado é sempre o topo (logo/cabeçalho da peça),
+ * nunca a chamada e o cupom.
+ *
+ * CLS: `aspect-[3/1]` + os dois tetos são só CSS estático — a altura da
+ * faixa é conhecida antes de qualquer imagem carregar, então nada empurra o
+ * layout quando ela chega.
+ *
+ * Mobile: mesma arte, mesma proporção 3:1 (74% do tráfego é mobile).
+ * Numa tela de 390px isso dá ~130px de altura — pequeno, mas honesto: não
+ * corta o texto da peça nem esconde o banner de quem está no celular. Não
+ * existe arte vertical ainda; essa é uma decisão consciente do dono do
+ * produto (não inventar recorte), não uma limitação técnica — o caminho
+ * definitivo é uma arte vertical dedicada (4:5) quando existir.
  *
  * Sem overlay de texto: os banners cadastrados são peças publicitárias que
  * já trazem título e oferta próprios (ex.: "AINDA DÁ TEMPO / Ganhe 15%...").
@@ -55,8 +84,11 @@ const RESUME_AFTER_INTERACTION_MS = 9000
  *
  * Bolinhas de paginação: ficam ancoradas perto do fundo da imagem, mas com
  * `bottom` maior que o quanto o card do Filter sobe por cima da imagem
- * (`-mt-10 md:-mt-14` no HeroSection, ou seja 40px/56px de overlap) — senão
- * ficam escondidas atrás do card.
+ * (`-mt-3 md:-mt-4` no HeroSection, ou seja 12px/16px de overlap) — senão
+ * ficam escondidas atrás do card. O overlap é bem menor que o antigo
+ * (40px/56px): com a arte inteira visível (sem corte vertical), qualquer
+ * overlap cobre conteúdo real da peça — e num banner mobile de ~130px de
+ * altura, 40px já era quase 1/3 da imagem.
  */
 export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
   const trackRef = useRef<HTMLDivElement>(null)
@@ -151,7 +183,7 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
           uma faixa clara (bg-paper da section pai) entre o menu e o banner;
           o pedido é o banner encostar direto no header. */}
       <div
-        className="relative w-full bg-gray-100 h-[380px] sm:h-[440px] md:h-[480px] lg:h-[560px]"
+        className="relative w-full max-w-[1680px] mx-auto bg-gray-100 aspect-[3/1] max-h-[560px]"
         role="region"
         aria-roledescription="carrossel"
         aria-label="Banners promocionais"
@@ -173,7 +205,13 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
                   src={banner.imageUrl}
                   alt={banner.title}
                   fill
-                  className="object-cover object-center md:object-top"
+                  className="object-cover object-bottom"
+                  // `object-bottom`, não `object-top`: qualquer corte vertical
+                  // do `object-cover` (ver comentário do componente) sacrifica
+                  // o topo da peça, nunca a base — onde fica a chamada e o
+                  // cupom. Era o inverso disso (`object-top`) que causava o
+                  // bug original.
+                  //
                   // Toda imagem é renderizada em 100vw — o `sizes` avisa o
                   // next/image que a largura pedida deve seguir a viewport
                   // real, então no celular ele busca no srcset um recorte bem
@@ -238,11 +276,13 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
               <ChevronRight size={20} />
             </button>
 
-            {/* bottom-12/md:bottom-16 (48px/64px) fica sempre acima do quanto
-                o card do Filter sobe por cima da imagem (-mt-10/-mt-14 =
-                40px/56px de overlap no HeroSection) — as bolinhas nunca
-                ficam escondidas atrás do card. */}
-            <div className="absolute bottom-12 left-0 right-0 z-[5] flex justify-center space-x-2 md:bottom-16">
+            {/* bottom-5/md:bottom-6 (20px/24px) fica sempre acima do quanto
+                o card do Filter sobe por cima da imagem (-mt-3/-mt-4 =
+                12px/16px de overlap no HeroSection) — as bolinhas nunca
+                ficam escondidas atrás do card. Valores bem menores que os
+                antigos (48px/64px sobre 40px/56px) porque num banner mobile
+                de ~130px de altura eles precisam caber sem comer a arte. */}
+            <div className="absolute bottom-5 left-0 right-0 z-[5] flex justify-center space-x-2 md:bottom-6">
               {banners.map((_, index) => (
                 <button
                   key={index}

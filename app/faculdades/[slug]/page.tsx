@@ -14,7 +14,7 @@ import FaculdadePageClient from './FaculdadePageClient'
 import { ReviewList } from './_components/ReviewList'
 import { ReviewForm } from './_components/ReviewForm'
 import { BRAND_CONTENT } from './_data/brand-content'
-import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
+import { getInstitutionMaxDiscountPct } from '@/app/lib/utils/institution-discount'
 
 const theme = getCurrentTheme()
 
@@ -48,14 +48,25 @@ export async function generateMetadata({
     }
   }
 
-  // Strip any trailing "| Bolsa Click" baked into DB metaTitle so the root
-  // metadata template (`%s | Bolsa Click`) doesn't double the suffix.
-  const rawTitle = institution.metaTitle || `Faculdade ${institution.name} - Bolsas de Estudo com até ${DISCOUNT_CEILING_PCT}% de Desconto`
+  // Desconto REAL da marca (não o teto global) — mesmas ofertas que a página
+  // carrega para o corpo/schema. Decide se título/descrição podem prometer
+  // bolsa (anti-hallucination: claim de % nunca pode vir descolado do dado).
+  const institutionCoursesForMeta = await getInstitutionCourses(institution.name)
+  const maxDiscountPct = getInstitutionMaxDiscountPct(institutionCoursesForMeta)
+
+  // Título/descrição só citam bolsa/desconto quando o desconto real é > 0, e
+  // sempre com o número da própria marca — nunca o metaTitle/metaDescription
+  // fixos do seed (que podem citar um % genérico) nem o teto do catálogo.
+  const rawTitle =
+    maxDiscountPct > 0
+      ? `Faculdade ${institution.name} - Bolsas de Estudo com até ${maxDiscountPct}% de Desconto`
+      : `Faculdade ${institution.name}${institution.mecRating ? ` - Nota ${institution.mecRating} no MEC` : ''} - Cursos e Mensalidades`
   const cleanTitle = rawTitle.replace(/\s*\|\s*Bolsa Click\s*$/i, '').trim()
   const title = `${cleanTitle} | ${theme.shortTitle}`
   const description =
-    institution.metaDescription ||
-    `Encontre bolsas de estudo na faculdade ${institution.name} com até ${DISCOUNT_CEILING_PCT}% de desconto. ${institution.description}`
+    maxDiscountPct > 0
+      ? `Encontre bolsas de estudo na faculdade ${institution.name} com até ${maxDiscountPct}% de desconto. ${institution.description}`
+      : `Veja os cursos, mensalidades reais e nota MEC da faculdade ${institution.name}. ${institution.description}`
 
   return {
     title: { absolute: title },
@@ -110,9 +121,18 @@ export default async function FaculdadeDetailPage({
   const institutionCourses = await getInstitutionCourses(institution.name)
   const courseSlugMap = await courseSlugMapPromise
 
+  // Desconto REAL da marca, derivado das ofertas que a própria página carrega
+  // — nunca o teto global do catálogo. Guia toda a copy de bolsa abaixo
+  // (schema, header, corpo), incluindo o conteúdo único por marca (Fase 3).
+  const maxDiscountPct = getInstitutionMaxDiscountPct(institutionCourses)
+
   // Conteúdo editorial único da marca (Fase 3). Null se a marca ainda não tem
-  // conteúdo dedicado → template cai no fallback templado.
-  const brandContent = BRAND_CONTENT[institution.slug] ?? null
+  // conteúdo dedicado, OU se ela não tem desconto real hoje — o passo a passo
+  // "como conseguir bolsa" fica sem sentido pra quem não tem bolsa pra
+  // oferecer; nesse caso cai no fallback templado (que já é honesto sobre
+  // desconto zero).
+  const brandContent =
+    maxDiscountPct > 0 ? BRAND_CONTENT[institution.slug]?.(maxDiscountPct) ?? null : null
 
   // Faixa de preço REAL das ofertas (anti-hallucination: só preços vindos da API,
   // nunca inventado). Alimenta AggregateOffer pra rich result + citabilidade em IA.
@@ -168,7 +188,10 @@ export default async function FaculdadeDetailPage({
     },
     {
       q: `Como conseguir bolsa de estudo na Faculdade ${institution.name}?`,
-      a: `Para conseguir bolsa de estudo na Faculdade ${institution.name}, basta acessar o Bolsa Click, buscar pelo curso desejado, escolher a melhor oferta e se inscrever gratuitamente. As bolsas podem chegar a até ${DISCOUNT_CEILING_PCT}% de desconto.`,
+      a:
+        maxDiscountPct > 0
+          ? `Para conseguir bolsa de estudo na Faculdade ${institution.name}, basta acessar o Bolsa Click, buscar pelo curso desejado, escolher a melhor oferta e se inscrever gratuitamente. As bolsas podem chegar a até ${maxDiscountPct}% de desconto.`
+          : `Hoje as ofertas de graduação da Faculdade ${institution.name} listadas no Bolsa Click não têm desconto — a mensalidade exibida é o valor cheio da instituição. Você pode comparar com outras faculdades parceiras que têm bolsa própria ativa.`,
     },
     {
       q: `Quais cursos a Faculdade ${institution.name} oferece?`,
@@ -180,7 +203,10 @@ export default async function FaculdadeDetailPage({
     },
     {
       q: `Quanto custa estudar na Faculdade ${institution.name}?`,
-      a: `Os valores das mensalidades na Faculdade ${institution.name} variam de acordo com o curso e a modalidade escolhida. Pelo Bolsa Click, você encontra bolsas de estudo com descontos de até ${DISCOUNT_CEILING_PCT}% nas mensalidades, tornando o ensino superior muito mais acessível.`,
+      a:
+        maxDiscountPct > 0
+          ? `Os valores das mensalidades na Faculdade ${institution.name} variam de acordo com o curso e a modalidade escolhida. Pelo Bolsa Click, você encontra bolsas de estudo com descontos de até ${maxDiscountPct}% nas mensalidades, tornando o ensino superior muito mais acessível.`
+          : `Os valores das mensalidades na Faculdade ${institution.name} variam de acordo com o curso e a modalidade escolhida. Hoje essas mensalidades são o valor cheio da instituição, sem desconto — confira os preços reais de cada curso na seção de ofertas acima.`,
     },
     {
       q: `A Faculdade ${institution.name} tem cursos EAD?`,
@@ -246,6 +272,7 @@ export default async function FaculdadeDetailPage({
         initialCourses={institutionCourses}
         brandContent={brandContent}
         courseSlugMap={courseSlugMap}
+        maxDiscountPct={maxDiscountPct}
       />
 
       {/* id="avaliacoes": âncora dos CTAs pós-matrícula (success pages) que

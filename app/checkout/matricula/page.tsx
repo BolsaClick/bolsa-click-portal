@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { getOfferDetails, OfferDetails } from '@/app/lib/api/get-offer-details'
+import type { OfferDetails } from '@/app/lib/api/get-offer-details'
 import Skeleton from '@/app/components/atoms/Skeleton'
 import {
   ArrowLeft,
@@ -37,9 +37,20 @@ import { toast } from 'sonner'
 import { createLead } from '@/app/lib/api/create-lead'
 import { validateEmailDeliverability } from '@/app/lib/api/validate-email'
 import { suggestEmailCorrection } from '@/app/lib/validation/email-typo'
-import { createInscription, buildInscriptionPayload, getCognaErrorMessage, getCognaErrorDetails, canCreateInscription } from '@/app/lib/api/create-inscription'
-import { createMarketplaceInscription } from '@/app/lib/api/create-inscription-marketplace'
-import { validateVoucher, type ValidateVoucherResponse, type VoucherInstallment } from '@/app/lib/api/validate-voucher'
+import { buildInscriptionPayload, getCognaErrorMessage, getCognaErrorDetails } from '@/app/lib/api/create-inscription'
+import type { ValidateVoucherResponse, VoucherInstallment } from '@/app/lib/api/validate-voucher'
+// As 5 chamadas abaixo saíam direto do navegador pro Tartarus, sem
+// autenticação (achado 3.1.6 do SECURITY_AUDIT.md — CRITICAL). Agora passam
+// por rotas /api/checkout/matricula/* (server-side); estes wrappers têm a
+// MESMA assinatura e retorno das funções antigas — só a chamada de rede
+// mudou de lugar, nenhuma lógica deste arquivo muda.
+import {
+  getOfferDetails,
+  canCreateInscription,
+  createInscription,
+  createMarketplaceInscription,
+  validateVoucher,
+} from '@/app/lib/api/checkout-client'
 import type { PosPaymentMethod, PosInstallment } from '@/app/lib/api/get-offer-details'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { useMarketplaceFeatureFlag } from '@/app/lib/hooks/usePostHogFeatureFlags'

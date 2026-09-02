@@ -1,13 +1,23 @@
 /**
  * Canon de claims públicas do Bolsa Click.
  *
- * Teto 78%: vitrine home (Publicidade e Propaganda presencial SP,
- * Anhanguera Campus Marte) De R$ 1.497,92 → R$ 316 = 78% (Math.floor).
- * Mesma oferta no funil `/curso/resultado` com De/Por equivalentes e CTA
- * "Inscreva-se" ativo. Não republicar 80, 85 ou 92.
+ * Teto 80%: Farmácia - Bacharelado presencial, Unime (unidade Lauro de
+ * Freitas/BA, UN944908) De R$ 1.622,99 → R$ 194,00 = 88% (Math.floor),
+ * verificado ao vivo em 2026-09-02 direto na API (cogna/courses/search) e
+ * reproduzido no funil `/curso/resultado?c=Farmácia&cn=Bacharelado&
+ * cidade=Lauro+de+Freitas&estado=BA&modalidade=PRESENCIAL&nivel=GRADUACAO`
+ * com De/Por e badge "-88%" idênticos. CTA "Inscreva-se" ativo: o endpoint
+ * de checkout (`cogna/courses/details`) responde com businessKey/dmhId reais
+ * para essa oferta+unidade. A mesma unidade tem outros 12 cursos de
+ * bacharelado entre 70% e 88% (Educação Física 80%, Psicologia 79%,
+ * Medicina Veterinária 78%, ...) — cluster real, não curso isolado, mas
+ * concentrado numa marca/cidade só: Anhanguera não passou de 78% e Estácio
+ * não passou de 70% em graduação presencial na amostra verificada. Teto
+ * travado em 80, com margem abaixo do máximo observado. Não republicar 85,
+ * 88 ou 92.
  */
 
-export const DISCOUNT_CEILING_PCT = 78
+export const DISCOUNT_CEILING_PCT = 80
 
 export const DISCOUNT_CEILING_LABEL = `até ${DISCOUNT_CEILING_PCT}%` as const
 

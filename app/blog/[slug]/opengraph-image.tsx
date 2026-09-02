@@ -5,7 +5,6 @@ import {
   OgCanvas,
   OgLogoRow,
   OgKicker,
-  OgHeading,
   OgFooterMeta,
   OgNotFoundFrame,
   getBolsaClickLogoDataUri,

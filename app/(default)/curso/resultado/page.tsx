@@ -5,6 +5,8 @@ import { ACADEMIC_LEVEL, isProfissionalizanteLevel, normalizeAcademicLevel } fro
 import { brazilCityStateOrNull } from '@/app/lib/geo/brazil-location'
 import { capitalizeText, removeCourseSuffix, extractCourseSuffix } from '@/app/lib/seo/course-search-params'
 import { isMobileUserAgent } from '@/app/lib/utils/is-mobile-ua'
+import { getFeaturedCourseSlugByNameAndLevel } from '@/app/lib/api/featured-course-slugs'
+import { getCityByNameAndState } from '@/app/lib/constants/brazilian-cities'
 import { ResultsFilterProvider } from './ResultsFilterContext'
 import ResultsShell from './ResultsShell'
 import ResultsSkeleton from './ResultsSkeleton'
@@ -110,9 +112,38 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   canonicalParams.set('modalidade', modalidade)
   canonicalParams.set('nivel', normalizeAcademicLevel(nivel))
   
-  // URL canônica auto-referencial: sempre aponta para a própria página com www
-  // Normalizada para evitar múltiplas URLs apontando para o mesmo conteúdo
-  const canonicalUrl = `https://www.bolsaclick.com.br/curso/resultado?${canonicalParams.toString()}`
+  // URL canônica auto-referencial (fallback): aponta para a própria página com
+  // www, normalizada pra evitar múltiplas URLs apontando pro mesmo conteúdo.
+  const selfCanonicalUrl = `https://www.bolsaclick.com.br/curso/resultado?${canonicalParams.toString()}`
+
+  // DUPLICAÇÃO CURSO×CIDADE (porta em query string vs porta em caminho):
+  // quando c+cidade+estado mapeiam pra um curso e uma cidade que existem no
+  // catálogo, essa busca é o MESMO conteúdo da página em caminho
+  // /cursos/[slug]/[city] — que já aplica o gate de qualidade
+  // (shouldIndexCityPage, em app/lib/seo/city-page-gate.ts) e decide sozinha
+  // se indexa a si mesma ou canonicaliza pra nacional. Por isso apontamos o
+  // canonical PRA FORA (pra lá) em vez de manter auto-referencial: migra o
+  // sinal de ranking pra URL correta em vez de simplesmente descartá-lo.
+  //
+  // NÃO troque isso por noindex "pra simplificar" — foi decisão deliberada:
+  // noindex faria o tráfego orgânico que já aponta pra essa URL em query
+  // string simplesmente sumir; canonical faz ele migrar. Ver o diagnóstico de
+  // ~21k páginas não indexadas por esse motivo (duplicação sem canonical
+  // cruzada entre as duas portas).
+  //
+  // Quando curso ou cidade não existem no catálogo (ou faltam parâmetros),
+  // NÃO inventamos slug: mantém o canonical auto-referencial de sempre.
+  let canonicalUrl = selfCanonicalUrl
+  if (shouldIndex) {
+    const resolvedNivel = normalizeAcademicLevel(nivel)
+    const [pathCourseSlug, cityData] = await Promise.all([
+      getFeaturedCourseSlugByNameAndLevel(curso, resolvedNivel),
+      Promise.resolve(getCityByNameAndState(cidade, estado)),
+    ])
+    if (pathCourseSlug && cityData) {
+      canonicalUrl = `https://www.bolsaclick.com.br/cursos/${pathCourseSlug}/${cityData.slug}`
+    }
+  }
 
   // Imagem de compartilhamento: página mais visitada do site, mas dirigida
   // por query string (não segmento de rota) — `opengraph-image.tsx` só

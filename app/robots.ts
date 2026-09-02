@@ -10,6 +10,8 @@ const PRIVATE_PATHS = [
   '/minha-conta/',
   '/favoritos',
   '/recuperar-senha',
+  // Rotas de preview interno — não são conteúdo público, não devem ser rastreadas.
+  '/dev/',
 ]
 
 // `/api/og/` gera a imagem de compartilhamento de `/curso/resultado` (a

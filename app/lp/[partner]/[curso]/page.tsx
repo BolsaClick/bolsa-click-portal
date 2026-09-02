@@ -106,7 +106,10 @@ export default async function PartnerCourseLanding({ params }: Props) {
     courseOptions.unshift(course.name)
   }
 
-  const brand = BRAND_CONTENT[partner]
+  // Landing paga fora do escopo desta mudança (mantém o teto global de
+  // sempre) — BRAND_CONTENT virou fábrica parametrizada pelo desconto real
+  // pra /faculdades/[slug]; aqui só corrige o tipo, chamando com o teto.
+  const brand = BRAND_CONTENT[partner]?.(DISCOUNT_CEILING_PCT)
   const pontosFortes = brand?.valeAPena.pontosFortes ?? [
     'Diploma reconhecido pelo MEC',
     `Bolsas de até ${DISCOUNT_CEILING_PCT}% sem nota de corte`,

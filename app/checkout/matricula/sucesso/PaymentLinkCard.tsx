@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { CreditCard, Loader2, QrCode, ShieldCheck } from 'lucide-react'
+import { trackCheckoutError } from '@/app/lib/analytics/checkout-funnel'
 
 /**
  * Passo 7 da integração com a Cogna: apresentar o pagamento na tela de sucesso.
@@ -80,8 +81,12 @@ export default function PaymentLinkCard({
             return
           }
           // 202: a chave ainda não foi gerada pela Cogna. Vale repetir.
-        } catch {
-          // rede instável: cai no retry
+        } catch (error) {
+          // rede instável: cai no retry — mas era mudo pro PostHog, sem
+          // nenhum sinal de quanto o link de pagamento (passo 7) falha.
+          if (onEventRef.current) {
+            trackCheckoutError(onEventRef.current, 'payment_link_fetch', error)
+          }
         }
 
         const delay = RETRY_DELAYS_MS[attempt]

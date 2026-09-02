@@ -3,7 +3,12 @@
 import { useEffect, useState } from 'react'
 import { CheckCircle2, Loader2 } from 'lucide-react'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
-import { trackCheckoutViewed, trackCheckoutIdentified, trackCheckoutSubmitted } from '@/app/lib/analytics/checkout-funnel'
+import {
+  trackCheckoutViewed,
+  trackCheckoutIdentified,
+  trackCheckoutSubmitted,
+  trackCheckoutError,
+} from '@/app/lib/analytics/checkout-funnel'
 import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { trackTikTokDual } from '@/app/lib/analytics/ttq'
 import { pushDataLayerEvent } from '@/app/lib/analytics/gtag'
@@ -67,6 +72,11 @@ export function LeadForm({ partner, partnerName, courses, accentColor = '#023e73
   useEffect(() => {
     trackCheckoutViewed(trackEvent, {
       flow: flowFor(partner),
+      // Distingue este lead form (pré-checkout, todas as marcas do ingressa)
+      // do checkout de verdade que a pessoa completa depois — mesmo quando
+      // `flow` os agrupa (ex: 'matricula' cobre tanto este form quanto o
+      // checkout Cogna de app/checkout/matricula/page.tsx).
+      checkoutFlow: 'ingressa_lead_form',
       brand: partnerName,
       courseName: curso || defaultCurso || undefined,
       source: 'ingressa',
@@ -103,7 +113,15 @@ export function LeadForm({ partner, partnerName, courses, accentColor = '#023e73
     // fluxo) pra habilitar retargeting de quem não converteu.
     trackCheckoutIdentified(
       trackEvent,
-      { flow: flowFor(partner), brand: partnerName, courseName: curso || undefined, source: 'ingressa', name: name.trim(), phone: cleanPhone },
+      {
+        flow: flowFor(partner),
+        checkoutFlow: 'ingressa_lead_form',
+        brand: partnerName,
+        courseName: curso || undefined,
+        source: 'ingressa',
+        name: name.trim(),
+        phone: cleanPhone,
+      },
       setUserProperties,
       identifyUser,
     )
@@ -155,12 +173,14 @@ export function LeadForm({ partner, partnerName, courses, accentColor = '#023e73
       // Etapa 3 do funil — lead enviado.
       trackCheckoutSubmitted(trackEvent, {
         flow: flowFor(partner),
+        checkoutFlow: 'ingressa_lead_form',
         brand: partnerName,
         courseName: curso || undefined,
         source: 'ingressa',
       })
-    } catch {
+    } catch (error) {
       // best-effort: mostra sucesso mesmo se o registro falhar (não travar o lead)
+      trackCheckoutError(trackEvent, 'ingressa_lead_submit', error)
     } finally {
       setDone(true)
       setSubmitting(false)

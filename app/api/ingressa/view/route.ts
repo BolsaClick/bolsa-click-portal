@@ -74,6 +74,9 @@ export async function POST(request: NextRequest) {
           : `ingressa_anon_${randomUUID()}`,
       properties: {
         flow,
+        // Mesmo valor do client (LeadForm.tsx) — distingue este funil do
+        // checkout Cogna real, que também usa flow: 'matricula'.
+        checkout_flow: 'ingressa_lead_form',
         brand,
         course_name: typeof body.courseName === 'string' && body.courseName ? body.courseName : null,
         source: 'ingressa',

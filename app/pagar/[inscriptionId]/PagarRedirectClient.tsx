@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { Loader2, ShieldCheck } from 'lucide-react'
+import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
+import { trackCheckoutError } from '@/app/lib/analytics/checkout-funnel'
 
 /**
  * Resolve o link de pagamento e redireciona pra Cogna. Roda a mesma rota que a
@@ -19,6 +21,7 @@ const RETRY_DELAYS_MS = [1_500, 3_000, 5_000, 8_000]
 
 export default function PagarRedirectClient({ inscriptionId }: { inscriptionId: string }) {
   const [state, setState] = useState<State>({ kind: 'loading' })
+  const { trackEvent } = usePostHogTracking()
 
   useEffect(() => {
     let cancelled = false
@@ -51,8 +54,9 @@ export default function PagarRedirectClient({ inscriptionId }: { inscriptionId: 
             return
           }
           // 202 pending → continua tentando
-        } catch {
-          // rede instável → retry
+        } catch (error) {
+          // rede instável → retry — mas era mudo pro PostHog.
+          trackCheckoutError(trackEvent, 'pagar_redirect_fetch', error)
         }
         const delay = RETRY_DELAYS_MS[attempt]
         if (delay === undefined) break
@@ -65,7 +69,7 @@ export default function PagarRedirectClient({ inscriptionId }: { inscriptionId: 
     return () => {
       cancelled = true
     }
-  }, [inscriptionId])
+  }, [inscriptionId, trackEvent])
 
   if (state.kind === 'already_paid') {
     return (

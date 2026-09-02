@@ -180,6 +180,9 @@ export async function POST(request: NextRequest) {
   if (leadId) {
     const funnelProps = {
       flow,
+      // Mesmo valor do client (LeadForm.tsx) — distingue este funil do
+      // checkout Cogna real, que também usa flow: 'matricula'.
+      checkout_flow: 'ingressa_lead_form',
       brand: partnerName ?? partnerSlug,
       course_name: cursoName ?? null,
       source: 'ingressa',

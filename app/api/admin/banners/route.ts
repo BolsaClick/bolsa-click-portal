@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { withAdminAuth, isAuthError } from '@/app/lib/middleware/admin-auth'
+import { isValidSiteKey } from '@/app/lib/banners'
 
 /**
  * GET /api/admin/banners
@@ -35,11 +36,27 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { title, subtitle, imageUrl, linkUrl, isActive = true } = body
+    const {
+      title,
+      subtitle,
+      imageUrl,
+      linkUrl,
+      isActive = true,
+      targetSites = [],
+      startsAt,
+      endsAt,
+    } = body
 
     if (!title || !imageUrl) {
       return NextResponse.json(
         { error: 'title e imageUrl são obrigatórios' },
+        { status: 400 }
+      )
+    }
+
+    if (!Array.isArray(targetSites) || !targetSites.every(isValidSiteKey)) {
+      return NextResponse.json(
+        { error: 'targetSites deve conter apenas sites válidos' },
         { status: 400 }
       )
     }
@@ -56,6 +73,9 @@ export async function POST(request: NextRequest) {
         imageUrl,
         linkUrl,
         isActive,
+        targetSites,
+        startsAt: startsAt ? new Date(startsAt) : null,
+        endsAt: endsAt ? new Date(endsAt) : null,
         order: (maxOrder._max.order || 0) + 1,
       },
     })

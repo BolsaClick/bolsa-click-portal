@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { withAdminAuth, isAuthError } from '@/app/lib/middleware/admin-auth'
+import { isValidSiteKey } from '@/app/lib/banners'
 
 /**
  * PATCH /api/admin/banners/[id]
@@ -16,7 +17,14 @@ export async function PATCH(
   try {
     const { id } = await params
     const body = await request.json()
-    const { title, subtitle, imageUrl, linkUrl, isActive, order } = body
+    const { title, subtitle, imageUrl, linkUrl, isActive, order, targetSites, startsAt, endsAt } = body
+
+    if (targetSites !== undefined && (!Array.isArray(targetSites) || !targetSites.every(isValidSiteKey))) {
+      return NextResponse.json(
+        { error: 'targetSites deve conter apenas sites válidos' },
+        { status: 400 }
+      )
+    }
 
     const existing = await prisma.banner.findUnique({ where: { id } })
 
@@ -36,6 +44,9 @@ export async function PATCH(
         ...(linkUrl !== undefined && { linkUrl }),
         ...(isActive !== undefined && { isActive }),
         ...(order !== undefined && { order }),
+        ...(targetSites !== undefined && { targetSites }),
+        ...(startsAt !== undefined && { startsAt: startsAt ? new Date(startsAt) : null }),
+        ...(endsAt !== undefined && { endsAt: endsAt ? new Date(endsAt) : null }),
       },
     })
 

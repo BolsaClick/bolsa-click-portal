@@ -1,24 +1,14 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/app/lib/prisma'
+import { getActiveBanners } from '@/app/lib/banners'
 
 /**
  * GET /api/banners
- * Retorna banners ativos ordenados por order (endpoint público)
+ * Retorna banners ativos, dentro do período de vigência e segmentados pro
+ * site atual (endpoint público — ver `getActiveBanners`)
  */
 export async function GET() {
   try {
-    const banners = await prisma.banner.findMany({
-      where: { isActive: true },
-      orderBy: { order: 'asc' },
-      select: {
-        id: true,
-        title: true,
-        subtitle: true,
-        imageUrl: true,
-        linkUrl: true,
-      },
-    })
-
+    const banners = await getActiveBanners()
     return NextResponse.json({ banners })
   } catch (error) {
     console.error('Error fetching public banners:', error)

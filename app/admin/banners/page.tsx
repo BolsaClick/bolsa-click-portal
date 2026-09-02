@@ -18,7 +18,15 @@ import {
 import { useAuth } from '@/app/contexts/AuthContext'
 import { useAdmin } from '@/app/contexts/AdminAuthContext'
 import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
+import { BANNER_SITE_KEYS } from '@/app/lib/banners'
+import type { SiteKey } from '@/app/lib/seo/site-config'
 import Image from 'next/image'
+
+const SITE_LABELS: Record<SiteKey, string> = {
+  bolsaclick: 'Bolsa Click',
+  bolsamais: 'Bolsa Mais',
+  anhanguera: 'Anhanguera',
+}
 
 interface Banner {
   id: string
@@ -28,6 +36,9 @@ interface Banner {
   linkUrl: string | null
   order: number
   isActive: boolean
+  targetSites: SiteKey[]
+  startsAt: string | null
+  endsAt: string | null
   createdAt: string
   updatedAt: string
 }
@@ -38,6 +49,9 @@ interface BannerForm {
   imageUrl: string
   linkUrl: string
   isActive: boolean
+  targetSites: SiteKey[]
+  startsAt: string
+  endsAt: string
 }
 
 const emptyForm: BannerForm = {
@@ -46,6 +60,25 @@ const emptyForm: BannerForm = {
   imageUrl: '',
   linkUrl: '',
   isActive: true,
+  targetSites: [],
+  startsAt: '',
+  endsAt: '',
+}
+
+// `datetime-local` trabalha em horário LOCAL do navegador, sem timezone —
+// convertemos pra/de ISO (o que a API espera) nessas duas pontas.
+function toDatetimeLocalValue(iso: string | null): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function fromDatetimeLocalValue(value: string): string | null {
+  if (!value) return null
+  const d = new Date(value)
+  return Number.isNaN(d.getTime()) ? null : d.toISOString()
 }
 
 export default function AdminBannersPage() {
@@ -160,6 +193,9 @@ export default function AdminBannersPage() {
           imageUrl: form.imageUrl,
           linkUrl: form.linkUrl || null,
           isActive: form.isActive,
+          targetSites: form.targetSites,
+          startsAt: fromDatetimeLocalValue(form.startsAt),
+          endsAt: fromDatetimeLocalValue(form.endsAt),
         }),
       })
 
@@ -187,9 +223,21 @@ export default function AdminBannersPage() {
       imageUrl: banner.imageUrl,
       linkUrl: banner.linkUrl || '',
       isActive: banner.isActive,
+      targetSites: banner.targetSites || [],
+      startsAt: toDatetimeLocalValue(banner.startsAt),
+      endsAt: toDatetimeLocalValue(banner.endsAt),
     })
     setShowForm(true)
     setError(null)
+  }
+
+  const toggleTargetSite = (site: SiteKey) => {
+    setForm((prev) => ({
+      ...prev,
+      targetSites: prev.targetSites.includes(site)
+        ? prev.targetSites.filter((s) => s !== site)
+        : [...prev.targetSites, site],
+    }))
   }
 
   const handleDelete = async (id: string) => {
@@ -439,6 +487,65 @@ export default function AdminBannersPage() {
                 />
               </div>
 
+              {/* Segmentação por site */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sites
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  {BANNER_SITE_KEYS.map((site) => (
+                    <label
+                      key={site}
+                      className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={form.targetSites.includes(site)}
+                        onChange={() => toggleTargetSite(site)}
+                        className="rounded border-gray-300 text-bolsa-primary focus:ring-bolsa-primary"
+                      />
+                      {SITE_LABELS[site]}
+                    </label>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-400 mt-1">
+                  Nenhum marcado = exibe em todos os sites.
+                </p>
+              </div>
+
+              {/* Período de vigência */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Exibir a partir de
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={form.startsAt}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, startsAt: e.target.value }))
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bolsa-primary focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Exibir até
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={form.endsAt}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, endsAt: e.target.value }))
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bolsa-primary focus:border-transparent"
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-gray-400 -mt-2">
+                Deixe em branco pra não limitar o período.
+              </p>
+
               {/* Active toggle */}
               <div className="flex items-center gap-3">
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -539,6 +646,20 @@ export default function AdminBannersPage() {
                     {banner.linkUrl}
                   </p>
                 )}
+                <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                  <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
+                    {banner.targetSites?.length
+                      ? banner.targetSites.map((s) => SITE_LABELS[s]).join(', ')
+                      : 'Todos os sites'}
+                  </span>
+                  {(banner.startsAt || banner.endsAt) && (
+                    <span className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full">
+                      {banner.startsAt ? new Date(banner.startsAt).toLocaleDateString('pt-BR') : '—'}
+                      {' até '}
+                      {banner.endsAt ? new Date(banner.endsAt).toLocaleDateString('pt-BR') : '—'}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Order buttons */}

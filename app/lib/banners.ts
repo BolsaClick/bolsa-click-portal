@@ -1,28 +1,16 @@
+// Módulo exclusivo de servidor: usa Prisma e `probe-image-size` (que arrasta
+// `needle` → `fs`, inexistente no browser). O `server-only` faz qualquer
+// import futuro a partir de código client falhar o build com mensagem clara,
+// em vez de voltar a arrastar `fs` silenciosamente pro bundle do navegador —
+// ver `banners-shared.ts` pro que é seguro de importar do cliente
+// (ex.: app/admin/banners/page.tsx).
+import 'server-only'
 import { unstable_cache } from 'next/cache'
 import probe from 'probe-image-size'
 import { prisma } from '@/app/lib/prisma'
-import { seoSite, type SiteKey } from '@/app/lib/seo/site-config'
+import { seoSite } from '@/app/lib/seo/site-config'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
-
-/** Sites que existem hoje pra segmentação de banner — ver `SiteKey`. */
-export const BANNER_SITE_KEYS: SiteKey[] = ['bolsaclick', 'bolsamais', 'anhanguera']
-
-export function isValidSiteKey(value: unknown): value is SiteKey {
-  return typeof value === 'string' && (BANNER_SITE_KEYS as string[]).includes(value)
-}
-
-export interface PublicBanner {
-  id: string
-  title: string
-  subtitle: string | null
-  imageUrl: string
-  linkUrl: string | null
-  // Dimensões REAIS do arquivo (não as do card/design), pra caixa do
-  // carrossel seguir a proporção de cada imagem sem cortar — ver
-  // `probeBannerDimensions` e o comentário no topo do HeroBannerSlider.
-  width: number
-  height: number
-}
+import type { PublicBanner } from '@/app/lib/banners-shared'
 
 // Fallback só usado se a sondagem da imagem falhar (URL fora do ar, formato
 // não suportado, timeout). Proporção da arte de referência cadastrada hoje

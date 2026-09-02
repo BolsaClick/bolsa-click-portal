@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { withAdminAuth, isAuthError } from '@/app/lib/middleware/admin-auth'
-import { isValidSiteKey } from '@/app/lib/banners'
+import { isValidSiteKey } from '@/app/lib/banners-shared'
 
 /**
  * GET /api/admin/banners

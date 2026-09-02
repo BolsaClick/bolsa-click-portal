@@ -18,7 +18,7 @@ import {
 import { useAuth } from '@/app/contexts/AuthContext'
 import { useAdmin } from '@/app/contexts/AdminAuthContext'
 import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
-import { BANNER_SITE_KEYS } from '@/app/lib/banners'
+import { BANNER_SITE_KEYS } from '@/app/lib/banners-shared'
 import type { SiteKey } from '@/app/lib/seo/site-config'
 import Image from 'next/image'
 

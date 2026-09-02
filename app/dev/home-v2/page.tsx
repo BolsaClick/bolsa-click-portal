@@ -118,8 +118,8 @@ export default async function HomeV3PreviewPage() {
   // IP); só as vitrines genéricas continuam server-side.
   const [popularRaw, eadRaw, blogPosts] = await Promise.all([
     // "Mais procurados": com cidade a API usa o endpoint real /offers/most-searched
-    loadShelf({ city: 'SAO PAULO', state: 'SP' }),
-    loadShelf({ modality: 'EAD' }),
+    loadShelf({ city: 'SAO PAULO', state: 'SP' }, 'preview-mais-procurados'),
+    loadShelf({ modality: 'EAD' }, 'preview-bolsas-ead'),
     loadBlogPosts(),
   ])
 

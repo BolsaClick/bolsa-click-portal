@@ -157,8 +157,8 @@ export default async function HomePage() {
   // de mostrar oferta inventada ou buraco por 1h.
   const [popular, eadOffers, blogPosts] = await Promise.all([
     // "Mais procurados": com cidade a API usa o endpoint real /offers/most-searched
-    loadShelf({ city: 'SAO PAULO', state: 'SP' }),
-    loadShelf({ modality: 'EAD' }),
+    loadShelf({ city: 'SAO PAULO', state: 'SP' }, 'mais-procurados'),
+    loadShelf({ modality: 'EAD' }, 'bolsas-ead'),
     loadBlogPosts(),
   ])
 

@@ -15,11 +15,44 @@ import { balanceByBrand } from '@/app/components/v2/home/balance-by-brand'
 import { toCourseOffer } from '@/app/components/v2/home/featured-offers'
 import type { BlogTeaserPost } from '@/app/components/v2/home/BlogTeaser'
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
+import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
 import { normalizeBrand } from '@/app/lib/utils/brand'
 import { prisma } from '@/app/lib/prisma'
 
+// Orçamento da corrida (Promise.race) entre o fetch combinado (Cogna + Athena)
+// e o timeout de sanidade. Com city, getShowFiltersCourses pode encadear DUAS
+// chamadas SEQUENCIAIS ao Tartarus (most-searched, e se ele não tiver nenhum
+// resultado no nível pedido — ex.: most-searched só devolve POS_GRADUACAO pra
+// SAO PAULO — cai pro fallback cogna/courses/search): medido em produção,
+// ~5s + ~2s = ~7s só nessas duas chamadas, quase batendo no teto antigo de
+// 8000ms. Cada chamada individual (Tartarus e Athena) já tem timeout próprio
+// de 15_000ms (SOURCE_TIMEOUT_MS em get-courses-filter.ts) — um orçamento
+// externo MENOR que os internos garante estourar sempre que o encadeamento
+// sequencial passa de 8s, mesmo com as chamadas individuais saudáveis. Causa
+// raiz do sumiço da vitrine "Mais procurados" em 2026-09-02: a race perdia
+// pro timeout, loadShelf caía no catch e devolvia [] em silêncio, e a home
+// escondia a seção inteira sem log nem alerta visível.
+const SHELF_TIMEOUT_MS = 16_000
+
 const shelfTimeout = (ms: number) =>
   new Promise<never>((_, reject) => setTimeout(() => reject(new Error('shelf timeout')), ms))
+
+/**
+ * Best-effort: avisa quando uma prateleira da home vem vazia (erro OU
+ * legitimamente sem oferta) — sem isso, a home "falha parecendo normal"
+ * (o card CONDICIONAL em page.tsx some sem deixar rastro nenhum, nem no
+ * console). Nunca bloqueia nem atrasa o render: dispara e esquece.
+ */
+function reportEmptyShelf(shelfName: string, params: Record<string, unknown>, reason: string) {
+  console.error(`[home vitrine] prateleira "${shelfName}" veio vazia (${reason}):`, params)
+  capturePostHogServerEvent({
+    event: 'home_shelf_empty',
+    distinctId: 'server-home-vitrine',
+    properties: { shelfName, reason, ...params },
+  }).catch((err) => {
+    console.error('[home vitrine] falha ao reportar prateleira vazia pro PostHog:', err)
+  })
+}
 
 /**
  * Ofertas Estácio (Athena) direto no server: o fetchAthenaOffers do funil só
@@ -61,11 +94,15 @@ export async function loadAthenaOffersServer(params: {
  * mesmo curso — Anhanguera, que quase sempre chega primeiro do Tartarus,
  * vencia a colisão mesmo quando havia oferta real de outra marca). Falha -> [].
  */
-export async function loadShelf(params: {
-  modality?: string
-  city?: string
-  state?: string
-}): Promise<CourseOffer[]> {
+export async function loadShelf(
+  params: {
+    modality?: string
+    city?: string
+    state?: string
+  },
+  /** Nome só pra log/telemetria (reportEmptyShelf) — não afeta a busca. */
+  shelfName: string = 'unnamed',
+): Promise<CourseOffer[]> {
   try {
     const [cognaResult, athenaRaw] = (await Promise.race([
       Promise.all([
@@ -80,7 +117,7 @@ export async function loadShelf(params: {
         ),
         loadAthenaOffersServer(params),
       ]),
-      shelfTimeout(8000),
+      shelfTimeout(SHELF_TIMEOUT_MS),
     ])) as [{ data?: unknown[] }, unknown[]]
 
     const all = [
@@ -105,9 +142,17 @@ export async function loadShelf(params: {
       seen.add(key)
       deduped.push(offer)
     }
-    return balanceByBrand(deduped, 8)
+    const result = balanceByBrand(deduped, 8)
+    if (result.length === 0) {
+      reportEmptyShelf(shelfName, params, 'sem-ofertas-apos-filtro')
+    }
+    return result
   } catch (error) {
-    console.error('[home vitrine] prateleira falhou:', params, error)
+    reportEmptyShelf(
+      shelfName,
+      params,
+      error instanceof Error ? error.message : 'erro-desconhecido',
+    )
     return []
   }
 }

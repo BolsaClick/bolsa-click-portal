@@ -45,26 +45,36 @@ const Hero = async () => {
               Mensalidades a partir de R$99/mês em faculdades reconhecidas pelo MEC.
               Cadastro grátis, sem taxa de adesão. EAD ou presencial.
             </p>
-            <dl className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-white/95">
-              <div className="flex items-baseline gap-1.5">
+            {/* No mobile (abaixo de `md`) essa é a única prova social que a
+                maioria dos visitantes vê antes de rolar — o banner de
+                campanha é desktop-only. Por isso vira grade 2×2 de cartões
+                (`bg-white/10`, mesmo padrão de "vidro" já usado no projeto
+                sobre fundo colorido) em vez da linha corrida de texto: mais
+                escaneável num relance, sem aumentar a altura da faixa mais
+                que alguns px. A partir de `md` volta a ser exatamente a
+                linha original com separadores "·" — não compete com o
+                banner, que só existe nesse breakpoint. Números e textos são
+                os mesmos de sempre. */}
+            <dl className="grid grid-cols-2 gap-1 w-full max-w-[22rem] mx-auto md:flex md:w-auto md:max-w-none md:mx-0 md:flex-wrap md:items-center md:justify-center md:gap-x-6 md:gap-y-2 text-white/95">
+              <div className="flex flex-wrap items-baseline justify-center gap-1.5 rounded-lg bg-white/10 border border-white/15 px-2 py-1 md:flex-nowrap md:justify-start md:rounded-none md:bg-transparent md:border-0 md:px-0 md:py-0">
                 <dt className="sr-only">Redes de ensino parceiras</dt>
-                <dd className="font-semibold text-base md:text-lg">6</dd>
-                <span className="text-white/70 text-sm md:text-base">redes parceiras</span>
+                <dd className="font-semibold text-base md:text-lg whitespace-nowrap md:whitespace-normal">6</dd>
+                <span className="text-white/70 text-sm md:text-base whitespace-nowrap md:whitespace-normal">redes parceiras</span>
               </div>
-              <span aria-hidden="true" className="text-white/30">·</span>
-              <div className="flex items-baseline gap-1.5">
+              <span aria-hidden="true" className="hidden md:inline text-white/30">·</span>
+              <div className="flex flex-wrap items-baseline justify-center gap-1.5 rounded-lg bg-white/10 border border-white/15 px-2 py-1 md:flex-nowrap md:justify-start md:rounded-none md:bg-transparent md:border-0 md:px-0 md:py-0">
                 <dt className="sr-only">Cidades com polos</dt>
-                <dd className="font-semibold text-base md:text-lg">280+</dd>
-                <span className="text-white/70 text-sm md:text-base">cidades com polos</span>
+                <dd className="font-semibold text-base md:text-lg whitespace-nowrap md:whitespace-normal">280+</dd>
+                <span className="text-white/70 text-sm md:text-base whitespace-nowrap md:whitespace-normal">cidades com polos</span>
               </div>
-              <span aria-hidden="true" className="text-white/30">·</span>
-              <div className="flex items-baseline gap-1.5">
+              <span aria-hidden="true" className="hidden md:inline text-white/30">·</span>
+              <div className="flex flex-wrap items-baseline justify-center gap-1.5 rounded-lg bg-white/10 border border-white/15 px-2 py-1 md:flex-nowrap md:justify-start md:rounded-none md:bg-transparent md:border-0 md:px-0 md:py-0">
                 <dt className="sr-only">Desconto máximo</dt>
-                <dd className="font-semibold text-base md:text-lg">até {DISCOUNT_CEILING_PCT}%</dd>
-                <span className="text-white/70 text-sm md:text-base">de desconto</span>
+                <dd className="font-semibold text-base md:text-lg whitespace-nowrap md:whitespace-normal">até {DISCOUNT_CEILING_PCT}%</dd>
+                <span className="text-white/70 text-sm md:text-base whitespace-nowrap md:whitespace-normal">de desconto</span>
               </div>
-              <span aria-hidden="true" className="text-white/30">·</span>
-              <div className="flex items-baseline gap-1.5">
+              <span aria-hidden="true" className="hidden md:inline text-white/30">·</span>
+              <div className="flex flex-wrap items-baseline justify-center gap-1.5 rounded-lg bg-white/10 border border-white/15 px-2 py-1 md:flex-nowrap md:justify-start md:rounded-none md:bg-transparent md:border-0 md:px-0 md:py-0">
                 <dt className="sr-only">Mensalidade mínima com bolsa</dt>
                 <dd className="font-semibold text-base md:text-lg">a partir de R$99/mês</dd>
               </div>

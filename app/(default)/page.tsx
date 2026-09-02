@@ -47,9 +47,9 @@ export const metadata: Metadata = {
   // rotas filhas). Sem isso, "%s | Bolsa Click" era colado por cima de um valor
   // que já terminava em "Bolsa Click" → marca duplicada no <title>.
   title: {
-    absolute: 'Bolsa de Estudo nas Maiores Redes de Ensino do Brasil | Bolsa Click',
+    absolute: 'Bolsa de Estudo nas Maiores Redes de Ensino | Bolsa Click',
   },
-  description: `Bolsa de estudo de até ${DISCOUNT_CEILING_PCT}% em Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden, reconhecidas pelo MEC. Cadastro grátis, sem taxa de adesão. EAD ou presencial.`,
+  description: `Bolsa de estudo de até ${DISCOUNT_CEILING_PCT}% em Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden, reconhecidas pelo MEC. Cadastro grátis, sem taxa. EAD ou presencial.`,
   keywords: [
     'bolsa de estudo',
     'bolsa de estudos',

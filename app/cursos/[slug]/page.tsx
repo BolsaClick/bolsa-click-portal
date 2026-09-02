@@ -124,6 +124,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description = brandedCopy.metaDescription
   }
 
+  // Rede de segurança: o degradê de sufixo acima cobre a maioria dos cursos,
+  // mas nomes de curso já longos por si só (comum em pós — ex: "Educação
+  // Especial com Ênfase em Deficiência Física e Motora") estouram os 60
+  // mesmo sem NENHUM complemento. Pra não truncar o nome do curso (dado do
+  // catálogo, aparece no H1 e no breadcrumb) nem regredir os títulos que já
+  // cabem, só quando o título + sufixo de marca passaria de 60 é que a marca
+  // é omitida via `absolute` (mesma técnica da home em app/(default)/page.tsx)
+  // — bypassa o `%s | <marca>` do layout pai em vez de mexer no texto.
+  const titleWithBrandLen = title.length + ` | ${getCurrentTheme().shortTitle}`.length
+  const titleMeta: Metadata['title'] = titleWithBrandLen <= 60 ? title : { absolute: title }
+
   // Imagem de compartilhamento gerada por código (opengraph-image.tsx nesta
   // mesma pasta) — a convenção de arquivo do Next tem precedência sobre
   // `openGraph.images` para o card do WhatsApp/Facebook/LinkedIn, mas
@@ -133,7 +144,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const ogCardUrl = absoluteUrl(`/cursos/${slug}/opengraph-image`)
 
   return {
-    title,
+    title: titleMeta,
     description,
     keywords: [
       ...curso.keywords,

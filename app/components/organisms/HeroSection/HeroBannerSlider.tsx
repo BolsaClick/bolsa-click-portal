@@ -10,6 +10,8 @@ interface Banner {
   subtitle: string | null
   imageUrl: string
   linkUrl: string | null
+  width: number
+  height: number
 }
 
 interface HeroBannerSliderProps {
@@ -22,6 +24,22 @@ interface HeroBannerSliderProps {
 // setas/bolinhas, foca por teclado) — pra não competir com o gesto dela.
 const AUTOPLAY_MS = 6000
 const RESUME_AFTER_INTERACTION_MS = 9000
+
+// ORÇAMENTO DE ALTURA (decisão de produto, 2026-09): o slot do banner é uma
+// tarja larga e baixa — referência de mercado medida em 1920x420 — não uma
+// caixa de largura fixa. A altura-alvo é 420px; a LARGURA é derivada da
+// proporção real de cada imagem (largura = 420 × proporção), limitada a
+// CEILING_WIDTH_PX pra não estourar em monitores ultra-wide.
+//
+// Consequência (é o teste que valida a fórmula): a arte de hoje, 1734x907
+// (~1,913:1), vira uma caixa de ~803×420. Uma arte-tarja 1920x420 (4,571:1)
+// pediria 1920px de largura pro mesmo orçamento de altura — estoura o teto
+// de 1680px, então a largura cede pro teto e a altura cai proporcionalmente
+// (larguraResolvida / proporção, ~367px) pra não cortar nada. Em qualquer
+// proporção, em qualquer largura de tela, é a LARGURA que cede — nunca a
+// altura corta a imagem.
+const HEIGHT_BUDGET_PX = 420
+const CEILING_WIDTH_PX = 1680
 
 /**
  * Carrossel de banners CSS-first: a "pista" é uma faixa horizontal nativa com
@@ -37,26 +55,43 @@ const RESUME_AFTER_INTERACTION_MS = 9000
  * - **Nenhuma biblioteca de carrossel**: só `next/image` + scroll-snap +
  *   IntersectionObserver, todos nativos da plataforma.
  *
- * CLS: a altura da faixa é fixa por breakpoint (reservada antes de qualquer
- * imagem carregar), então nada empurra o layout quando a imagem chega.
+ * CLS: cada banner chega do servidor já com `width`/`height` REAIS (sondados
+ * em `getActiveBanners` → `probeBannerDimensions`, sem baixar o arquivo
+ * inteiro). A altura de cada caixa é reservada via o clássico "padding-top
+ * = height/width do próprio elemento" — funciona em qualquer navegador,
+ * mesmo sem suporte à propriedade CSS `aspect-ratio` (só a partir de Safari
+ * 15/Firefox 89, e o browserslist deste projeto ainda inclui Safari 14) —
+ * a altura fica correta ANTES da imagem carregar, qualquer que seja a
+ * largura que o `min()` do orçamento de altura resolver pra aquele viewport.
  *
- * Mobile: renderiza em qualquer viewport (74% do tráfego é mobile). O que
- * antes protegia o celular de baixar o banner "de desktop" era esconder o
- * componente inteiro (`hidden md:block`); agora cada imagem é pedida em
- * `sizes="100vw"`, então o próprio `next/image` serve, pelo srcset, um
- * recorte proporcional à viewport real — o celular nunca baixa o arquivo
- * pensado pra 1920px.
+ * Nunca corta: a caixa de cada slide usa exatamente a proporção real da
+ * imagem (via padding-top), então `object-contain` nunca precisa cortar —
+ * na prática a imagem preenche a caixa perfeitamente (a caixa TEM a
+ * proporção dela). `object-contain` só entra como cinto-de-segurança pro
+ * caso raro de a sondagem ter caído no fallback (ver `probeBannerDimensions`)
+ * e a proporção real da imagem ser ligeiramente diferente.
+ *
+ * Desktop-only (`hidden md:block`): decisão de produto — não existe (e não
+ * vai existir) arte pensada pra celular; a arte é uma tarja larga (~4:1)
+ * desenhada pra 1920px, e o mesmo orçamento de 420px de altura aplicado a um
+ * viewport de 390px devolveria uma faixa de ~97px com tipografia ilegível.
+ * Melhor não mostrar do que mostrar quebrado — abaixo de `md` a dobra vai
+ * direto da faixa com H1+estatísticas pro card de busca (ver `HeroSection`,
+ * que só aplica a costura de 16px quando o banner existe).
  *
  * Sem overlay de texto: os banners cadastrados são peças publicitárias que
  * já trazem título e oferta próprios (ex.: "AINDA DÁ TEMPO / Ganhe 15%...").
  * Sobrepor o H1 do site a um criativo que já tem o dele empilha dois textos
  * concorrentes na mesma área — o carrossel só exibe a imagem. O H1 + prova
- * social do site vivem numa faixa própria, fora daqui (ver `HeroSection`).
+ * social do site vivem numa faixa própria, ANTES daqui (ver `HeroSection`).
  *
- * Bolinhas de paginação: ficam ancoradas perto do fundo da imagem, mas com
- * `bottom` maior que o quanto o card do Filter sobe por cima da imagem
- * (`-mt-10 md:-mt-14` no HeroSection, ou seja 40px/56px de overlap) — senão
- * ficam escondidas atrás do card.
+ * Setas e bolinhas de paginação: ficam num overlay `mx-auto max-w-[1680px]`
+ * (mesmo teto da caixa da imagem) centralizado sobre a faixa — não presas
+ * às bordas literais da viewport. Isso mantém os controles próximos da
+ * imagem no caso comum (bordas próximas ao teto), mas é um compromisso
+ * deliberado: pra uma arte muito mais estreita que o teto (ex.: um 4:5
+ * retrato num desktop largo), os controles não colam nas bordas exatas da
+ * imagem — ver ressalva no relatório da task.
  */
 export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
   const trackRef = useRef<HTMLDivElement>(null)
@@ -143,15 +178,12 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
   if (banners.length === 0) return null
 
   return (
-    <section aria-label="Ofertas em destaque" className="relative">
+    <section aria-label="Ofertas em destaque" className="relative hidden md:block">
       {/* Sem espaçador antes da faixa: o header (`Header/New`) é `sticky`,
           não `fixed` — já ocupa espaço próprio no fluxo do documento, então
-          nenhuma compensação manual é necessária aqui. Um spacer fixo nesse
-          ponto (herdado de quando esse ajuste ainda fazia sentido) só cria
-          uma faixa clara (bg-paper da section pai) entre o menu e o banner;
-          o pedido é o banner encostar direto no header. */}
+          nenhuma compensação manual é necessária aqui. */}
       <div
-        className="relative w-full bg-gray-100 h-[380px] sm:h-[440px] md:h-[480px] lg:h-[560px]"
+        className="relative w-full"
         role="region"
         aria-roledescription="carrossel"
         aria-label="Banners promocionais"
@@ -162,23 +194,41 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
       >
         <div
           ref={trackRef}
-          className="flex h-full w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex w-full snap-x snap-mandatory items-center overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           style={{ scrollBehavior: reducedMotion ? 'auto' : 'smooth' }}
         >
           {banners.map((banner, index) => {
             const isActive = index === currentIndex
+            const aspectRatio = banner.width / banner.height
+            // Largura que entregaria exatamente o orçamento de 420px de
+            // altura pra essa imagem específica, antes de qualquer teto.
+            const idealWidthPx = Math.round(HEIGHT_BUDGET_PX * aspectRatio)
+            const resolvedMaxWidthPx = Math.min(idealWidthPx, CEILING_WIDTH_PX)
+            // `min()`: cede pro menor dos três — 100% do espaço disponível,
+            // o teto de 1680px (regime tarja ultra-wide) ou a largura ideal
+            // pro orçamento de 420px (regime comum). Nunca corta: é sempre a
+            // LARGURA que cede.
+            const boxWidthCss = `min(100%, ${CEILING_WIDTH_PX}px, ${idealWidthPx}px)`
+            // Técnica clássica de "aspect ratio box": padding-top em % é
+            // sempre relativo à LARGURA resolvida do próprio elemento,
+            // então essa porcentagem entrega a altura certa qualquer que
+            // seja o termo que o `min()` acima escolher — sem depender da
+            // propriedade CSS `aspect-ratio` nem de JS.
+            const paddingTopPct = (banner.height / banner.width) * 100
             const image = (
-              <div className="relative h-full w-full">
+              <div
+                className="relative mx-auto overflow-hidden bg-gray-100"
+                style={{ width: boxWidthCss }}
+              >
+                <div style={{ paddingTop: `${paddingTopPct}%` }} />
                 <Image
                   src={banner.imageUrl}
                   alt={banner.title}
                   fill
-                  className="object-cover object-center md:object-top"
-                  // Toda imagem é renderizada em 100vw — o `sizes` avisa o
-                  // next/image que a largura pedida deve seguir a viewport
-                  // real, então no celular ele busca no srcset um recorte bem
-                  // menor que o desktop, em vez de baixar a imagem grande.
-                  sizes="100vw"
+                  className="object-contain"
+                  // Aproxima o hint de `sizes` da largura que a caixa
+                  // realmente vai ocupar (ver `boxWidthCss`).
+                  sizes={`(min-width: ${resolvedMaxWidthPx}px) ${resolvedMaxWidthPx}px, 100vw`}
                   quality={70}
                   loading={index === 0 ? 'eager' : 'lazy'}
                   priority={index === 0}
@@ -192,7 +242,7 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
                 ref={(el) => {
                   slideRefs.current[index] = el
                 }}
-                className="relative h-full w-full flex-none snap-center"
+                className="relative w-full flex-none snap-center"
                 role="group"
                 aria-roledescription="slide"
                 aria-label={`${index + 1} de ${banners.length}: ${banner.title}`}
@@ -202,7 +252,7 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
                     href={banner.linkUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block h-full w-full"
+                    className="block"
                     // Roving tabindex: só o slide ativo entra no fluxo de Tab.
                     // Evita que quem navega por teclado precise passar por
                     // todos os slides escondidos fora da viewport pra chegar
@@ -220,11 +270,11 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
         </div>
 
         {banners.length > 1 && (
-          <>
+          <div className="pointer-events-none absolute inset-0 mx-auto max-w-[1680px]">
             <button
               type="button"
               onClick={() => goTo((currentIndex - 1 + banners.length) % banners.length)}
-              className="absolute left-2 top-1/2 z-[5] -translate-y-1/2 rounded-full bg-white/85 p-2 text-bolsa-primary shadow hover:bg-white transition"
+              className="pointer-events-auto absolute left-2 top-1/2 z-[5] -translate-y-1/2 rounded-full bg-white/85 p-2 text-bolsa-primary shadow hover:bg-white transition"
               aria-label="Banner anterior"
             >
               <ChevronLeft size={20} />
@@ -232,17 +282,17 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
             <button
               type="button"
               onClick={() => goTo((currentIndex + 1) % banners.length)}
-              className="absolute right-2 top-1/2 z-[5] -translate-y-1/2 rounded-full bg-white/85 p-2 text-bolsa-primary shadow hover:bg-white transition"
+              className="pointer-events-auto absolute right-2 top-1/2 z-[5] -translate-y-1/2 rounded-full bg-white/85 p-2 text-bolsa-primary shadow hover:bg-white transition"
               aria-label="Próximo banner"
             >
               <ChevronRight size={20} />
             </button>
 
-            {/* bottom-12/md:bottom-16 (48px/64px) fica sempre acima do quanto
-                o card do Filter sobe por cima da imagem (-mt-10/-mt-14 =
-                40px/56px de overlap no HeroSection) — as bolinhas nunca
-                ficam escondidas atrás do card. */}
-            <div className="absolute bottom-12 left-0 right-0 z-[5] flex justify-center space-x-2 md:bottom-16">
+            {/* bottom-3/md:bottom-4: sem mais nada sobrepondo a base do
+                banner (a costura de 16px com o card de busca agora fica no
+                TOPO — ver HeroSection), então as bolinhas só precisam de uma
+                folga pequena da própria borda da imagem. */}
+            <div className="pointer-events-auto absolute bottom-3 left-0 right-0 z-[5] flex justify-center space-x-2 md:bottom-4">
               {banners.map((_, index) => (
                 <button
                   key={index}
@@ -256,7 +306,7 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
                 />
               ))}
             </div>
-          </>
+          </div>
         )}
       </div>
     </section>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
@@ -14,12 +14,6 @@ interface Banner {
 
 interface HeroBannerSliderProps {
   banners: Banner[]
-  /**
-   * Título + prova social do site (H1 transacional), injetado pelo
-   * `HeroSection` e renderizado SOBRE a imagem — não é copy por banner.
-   * Fica fora da pista que rola (`track`), então não se move com o swipe.
-   */
-  overlay?: ReactNode
 }
 
 // Troca automática a cada 6s. Pausa sozinho quando a aba está em segundo
@@ -53,16 +47,18 @@ const RESUME_AFTER_INTERACTION_MS = 9000
  * recorte proporcional à viewport real — o celular nunca baixa o arquivo
  * pensado pra 1920px.
  *
- * Overlay: título + prova social vivem SOBRE a imagem (não numa faixa
- * separada abaixo). É uma camada `absolute` fora da pista que rola — puro
- * CSS, sem custo de JS — com dois reforços de contraste que não dependem de
- * a imagem do banner ser escura: (1) gradiente de baixo pra cima cobrindo
- * boa parte da altura, forte o bastante pra funcionar mesmo sobre fotos
- * muito claras; (2) `text-shadow` no texto como reforço de borda. O texto
- * fica com `pointer-events-none` (deixa o toque atravessar pro link do
- * slide); só as bolinhas de navegação recebem clique.
+ * Sem overlay de texto: os banners cadastrados são peças publicitárias que
+ * já trazem título e oferta próprios (ex.: "AINDA DÁ TEMPO / Ganhe 15%...").
+ * Sobrepor o H1 do site a um criativo que já tem o dele empilha dois textos
+ * concorrentes na mesma área — o carrossel só exibe a imagem. O H1 + prova
+ * social do site vivem numa faixa própria, fora daqui (ver `HeroSection`).
+ *
+ * Bolinhas de paginação: ficam ancoradas perto do fundo da imagem, mas com
+ * `bottom` maior que o quanto o card do Filter sobe por cima da imagem
+ * (`-mt-10 md:-mt-14` no HeroSection, ou seja 40px/56px de overlap) — senão
+ * ficam escondidas atrás do card.
  */
-export default function HeroBannerSlider({ banners, overlay }: HeroBannerSliderProps) {
+export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
   const trackRef = useRef<HTMLDivElement>(null)
   const slideRefs = useRef<(HTMLDivElement | null)[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -148,10 +144,14 @@ export default function HeroBannerSlider({ banners, overlay }: HeroBannerSliderP
 
   return (
     <section aria-label="Ofertas em destaque" className="relative">
-      <div className="h-16 md:h-20" />
-
+      {/* Sem espaçador antes da faixa: o header (`Header/New`) é `sticky`,
+          não `fixed` — já ocupa espaço próprio no fluxo do documento, então
+          nenhuma compensação manual é necessária aqui. Um spacer fixo nesse
+          ponto (herdado de quando esse ajuste ainda fazia sentido) só cria
+          uma faixa clara (bg-paper da section pai) entre o menu e o banner;
+          o pedido é o banner encostar direto no header. */}
       <div
-        className="relative w-full bg-ink-900 h-[380px] sm:h-[440px] md:h-[480px] lg:h-[560px]"
+        className="relative w-full bg-gray-100 h-[380px] sm:h-[440px] md:h-[480px] lg:h-[560px]"
         role="region"
         aria-roledescription="carrossel"
         aria-label="Banners promocionais"
@@ -219,55 +219,12 @@ export default function HeroBannerSlider({ banners, overlay }: HeroBannerSliderP
           })}
         </div>
 
-        {overlay && (
-          <>
-            {/* Reforço de contraste nº1: gradiente escuro de baixo pra cima,
-                forte o bastante pra funcionar mesmo sobre banners muito
-                claros — não assume que a imagem já é escura por padrão. */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-ink-900/95 via-ink-900/55 via-45% to-transparent"
-            />
-            {/* Título + prova social do site, com as bolinhas de navegação
-                logo abaixo — os dois no MESMO bloco `flex-col`, ancorado
-                pelo `pb`. Isso garante, num lugar só, que nada fica embaixo
-                da faixa que o card do Filter cobre ao subir por cima da
-                imagem (`-mt-10 md:-mt-14` no HeroSection): o `pb` aqui
-                (48/56/64px) é sempre maior que aquele overlap (40/56px), daí
-                as bolinhas nunca ficam escondidas atrás do card.
-                `pointer-events-none` no bloco de texto deixa o toque
-                atravessar pro link do slide (o texto em si não é clicável);
-                reforço de contraste nº2 é o text-shadow, que herda pros
-                filhos (dt/dd/span). As bolinhas reativam pointer-events
-                pra continuarem clicáveis. */}
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] flex flex-col items-center gap-3 px-4 pb-12 pt-10 sm:pb-14 md:pb-16 [text-shadow:0_2px_10px_rgba(11,31,60,0.55)]">
-              {overlay}
-              {banners.length > 1 && (
-                <div className="pointer-events-auto flex justify-center gap-2">
-                  {banners.map((_, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => goTo(index)}
-                      className={`h-2.5 rounded-full transition-all duration-300 ${
-                        index === currentIndex ? 'w-8 bg-bolsa-secondary' : 'w-2.5 bg-white/60 hover:bg-white/90'
-                      }`}
-                      aria-label={`Ir para o banner ${index + 1} de ${banners.length}`}
-                      aria-current={index === currentIndex}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </>
-        )}
-
         {banners.length > 1 && (
           <>
             <button
               type="button"
               onClick={() => goTo((currentIndex - 1 + banners.length) % banners.length)}
-              className="absolute left-3 top-4 z-[5] rounded-full bg-white/90 p-2 text-bolsa-primary shadow-md hover:bg-white transition sm:top-6"
+              className="absolute left-2 top-1/2 z-[5] -translate-y-1/2 rounded-full bg-white/85 p-2 text-bolsa-primary shadow hover:bg-white transition"
               aria-label="Banner anterior"
             >
               <ChevronLeft size={20} />
@@ -275,11 +232,30 @@ export default function HeroBannerSlider({ banners, overlay }: HeroBannerSliderP
             <button
               type="button"
               onClick={() => goTo((currentIndex + 1) % banners.length)}
-              className="absolute right-3 top-4 z-[5] rounded-full bg-white/90 p-2 text-bolsa-primary shadow-md hover:bg-white transition sm:top-6"
+              className="absolute right-2 top-1/2 z-[5] -translate-y-1/2 rounded-full bg-white/85 p-2 text-bolsa-primary shadow hover:bg-white transition"
               aria-label="Próximo banner"
             >
               <ChevronRight size={20} />
             </button>
+
+            {/* bottom-12/md:bottom-16 (48px/64px) fica sempre acima do quanto
+                o card do Filter sobe por cima da imagem (-mt-10/-mt-14 =
+                40px/56px de overlap no HeroSection) — as bolinhas nunca
+                ficam escondidas atrás do card. */}
+            <div className="absolute bottom-12 left-0 right-0 z-[5] flex justify-center space-x-2 md:bottom-16">
+              {banners.map((_, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => goTo(index)}
+                  className={`h-2.5 rounded-full transition-all duration-300 ${
+                    index === currentIndex ? 'w-8 bg-bolsa-secondary' : 'w-2.5 bg-white/60 hover:bg-white/90'
+                  }`}
+                  aria-label={`Ir para o banner ${index + 1} de ${banners.length}`}
+                  aria-current={index === currentIndex}
+                />
+              ))}
+            </div>
           </>
         )}
       </div>

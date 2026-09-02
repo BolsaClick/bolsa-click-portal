@@ -30,11 +30,20 @@ type Props = {
   courseSlugMap?: Record<string, string>
   /**
    * Maior desconto REAL da marca (%), derivado pelo servidor das mesmas
-   * ofertas de `initialCourses` (ver getInstitutionMaxDiscountPct). NUNCA o
-   * teto global do catálogo — 0 quando a marca não tem desconto hoje (ex.:
-   * IBMEC em graduação), o que muda a copy da página pra não prometer bolsa.
+   * ofertas de `initialCourses` (ver getInstitutionDiscountState). NUNCA o
+   * teto global do catálogo — 0 quando a marca não tem desconto comprovado
+   * hoje (ex.: IBMEC em graduação) OU quando o estado é incerto
+   * (`discountUnknown`), o que muda a copy da página pra não prometer bolsa.
    */
   maxDiscountPct: number
+  /**
+   * true quando não há evidência POSITIVA suficiente pra afirmar que a marca
+   * NÃO tem bolsa (busca falhou, ou lista de ofertas veio vazia/curta demais
+   * — ver MIN_COURSES_FOR_ABSENCE_CLAIM em institution-discount.ts). Nesse
+   * estado a copy nunca promete % nem nega bolsa — cai numa formulação
+   * neutra ("não conseguimos confirmar agora").
+   */
+  discountUnknown: boolean
 }
 
 const modalityShortLabel: Record<string, string> = {
@@ -78,7 +87,7 @@ const modalityDetail: Record<string, { title: (n: string) => string; body: (n: s
   },
 }
 
-export default function FaculdadePageClient({ institution, initialCourses, brandContent, courseSlugMap, maxDiscountPct }: Props) {
+export default function FaculdadePageClient({ institution, initialCourses, brandContent, courseSlugMap, maxDiscountPct, discountUnknown }: Props) {
   const hasDiscount = maxDiscountPct > 0
   const [selectedModality, setSelectedModality] = useState<string>('')
   const [visibleCount, setVisibleCount] = useState(6)
@@ -124,7 +133,9 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
       q: `Como conseguir bolsa de estudo na ${institution.name}?`,
       a: hasDiscount
         ? `Pelo Bolsa Click: busca o curso, escolhe a melhor oferta e se inscreve grátis. As bolsas chegam a ${maxDiscountPct}% de desconto.`
-        : `Hoje as ofertas de graduação da ${institution.name} no Bolsa Click não têm desconto — a mensalidade listada é o valor cheio da instituição. Você pode comparar com outras faculdades parceiras que têm bolsa própria ativa.`,
+        : discountUnknown
+          ? `No momento não conseguimos confirmar se a ${institution.name} tem bolsa própria ativa — o catálogo de ofertas está temporariamente indisponível. Tenta de novo em alguns minutos ou compara com outras faculdades parceiras.`
+          : `Hoje as ofertas de graduação da ${institution.name} no Bolsa Click não têm desconto — a mensalidade listada é o valor cheio da instituição. Você pode comparar com outras faculdades parceiras que têm bolsa própria ativa.`,
     },
     {
       q: `Quais cursos a Faculdade ${institution.name} oferece?`,
@@ -144,7 +155,9 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
       q: `Quanto custa estudar na ${institution.name}?`,
       a: hasDiscount
         ? `Os valores variam por curso e modalidade. Pelo Bolsa Click, você encontra bolsas com até ${maxDiscountPct}% de desconto na mensalidade.`
-        : `Os valores variam por curso e modalidade. Hoje as mensalidades da ${institution.name} no Bolsa Click são o valor cheio, sem desconto — veja os preços reais de cada curso na seção de ofertas acima.`,
+        : discountUnknown
+          ? `Os valores variam por curso e modalidade. No momento não conseguimos confirmar se há desconto ativo pra ${institution.name} — recarregue a página em alguns minutos pra ver os valores atualizados.`
+          : `Os valores variam por curso e modalidade. Hoje as mensalidades da ${institution.name} no Bolsa Click são o valor cheio, sem desconto — veja os preços reais de cada curso na seção de ofertas acima.`,
     },
     {
       q: `A ${institution.name} tem cursos EAD?`,
@@ -257,6 +270,13 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
                   Bolsa Click, compare as ofertas e inscreva-se grátis — os descontos chegam a
                   até {maxDiscountPct}% nas mensalidades, em cursos {institution.modalities.includes('EAD') ? 'EAD e presenciais' : 'presenciais'} reconhecidos
                   pelo MEC.
+                </>
+              ) : discountUnknown ? (
+                <>
+                  Ainda não conseguimos confirmar o desconto real da {institution.name} nas
+                  ofertas de graduação — o catálogo está temporariamente indisponível ou
+                  incompleto{institution.mecRating ? `, mas a instituição tem nota ${institution.mecRating} no MEC` : ''}. Veja os cursos e mensalidades disponíveis abaixo, ou
+                  compare com outras faculdades parceiras com bolsa ativa.
                 </>
               ) : (
                 <>
@@ -860,7 +880,9 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
             <p className="text-ink-700 text-[15px] md:text-base leading-relaxed mb-8 max-w-3xl">
               {hasDiscount
                 ? 'Algumas das mensalidades com bolsa já aplicada, direto do catálogo. Os valores variam por curso, modalidade e polo — veja a oferta completa na busca.'
-                : 'Algumas das mensalidades reais, direto do catálogo — hoje sem desconto aplicado. Os valores variam por curso, modalidade e polo.'}
+                : discountUnknown
+                  ? 'Algumas das mensalidades disponíveis agora, direto do catálogo — ainda não conseguimos confirmar se há desconto ativo pra essa instituição. Os valores variam por curso, modalidade e polo.'
+                  : 'Algumas das mensalidades reais, direto do catálogo — hoje sem desconto aplicado. Os valores variam por curso, modalidade e polo.'}
             </p>
             <ul className="divide-y divide-hairline border-t border-hairline">
               {cursosComBolsa.map((c, i) => (

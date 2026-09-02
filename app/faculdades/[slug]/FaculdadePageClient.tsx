@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import CourseCardNew from '@/app/components/CourseCardNew'
 import { Course } from '@/app/interface/course'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 import { normalizeCourseNameKey } from '@/app/lib/utils/course-name-key'
 import type { InstitutionData } from '../_data/types'
 import type { BrandContent } from './_data/brand-content'
@@ -28,13 +29,6 @@ type Props = {
   brandContent: BrandContent | null
   /** Mapa nome→slug de cursos enriquecidos (/cursos/[slug]), pro link "Ver detalhes do curso" no card. */
   courseSlugMap?: Record<string, string>
-  /**
-   * Maior desconto REAL da marca (%), derivado pelo servidor das mesmas
-   * ofertas de `initialCourses` (ver getInstitutionMaxDiscountPct). NUNCA o
-   * teto global do catálogo — 0 quando a marca não tem desconto hoje (ex.:
-   * IBMEC em graduação), o que muda a copy da página pra não prometer bolsa.
-   */
-  maxDiscountPct: number
 }
 
 const modalityShortLabel: Record<string, string> = {
@@ -78,8 +72,7 @@ const modalityDetail: Record<string, { title: (n: string) => string; body: (n: s
   },
 }
 
-export default function FaculdadePageClient({ institution, initialCourses, brandContent, courseSlugMap, maxDiscountPct }: Props) {
-  const hasDiscount = maxDiscountPct > 0
+export default function FaculdadePageClient({ institution, initialCourses, brandContent, courseSlugMap }: Props) {
   const [selectedModality, setSelectedModality] = useState<string>('')
   const [visibleCount, setVisibleCount] = useState(6)
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(0)
@@ -122,9 +115,7 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
     },
     {
       q: `Como conseguir bolsa de estudo na ${institution.name}?`,
-      a: hasDiscount
-        ? `Pelo Bolsa Click: busca o curso, escolhe a melhor oferta e se inscreve grátis. As bolsas chegam a ${maxDiscountPct}% de desconto.`
-        : `Hoje as ofertas de graduação da ${institution.name} no Bolsa Click não têm desconto — a mensalidade listada é o valor cheio da instituição. Você pode comparar com outras faculdades parceiras que têm bolsa própria ativa.`,
+      a: `Pelo Bolsa Click: busca o curso, escolhe a melhor oferta e se inscreve grátis. As bolsas chegam a ${DISCOUNT_CEILING_PCT}% de desconto.`,
     },
     {
       q: `Quais cursos a Faculdade ${institution.name} oferece?`,
@@ -142,9 +133,7 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
     },
     {
       q: `Quanto custa estudar na ${institution.name}?`,
-      a: hasDiscount
-        ? `Os valores variam por curso e modalidade. Pelo Bolsa Click, você encontra bolsas com até ${maxDiscountPct}% de desconto na mensalidade.`
-        : `Os valores variam por curso e modalidade. Hoje as mensalidades da ${institution.name} no Bolsa Click são o valor cheio, sem desconto — veja os preços reais de cada curso na seção de ofertas acima.`,
+      a: `Os valores variam por curso e modalidade. Pelo Bolsa Click, você encontra bolsas com até ${DISCOUNT_CEILING_PCT}% de desconto na mensalidade.`,
     },
     {
       q: `A ${institution.name} tem cursos EAD?`,
@@ -237,8 +226,7 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
                   Faculdade parceira
                 </span>
                 <h1 className="font-display text-4xl md:text-5xl lg:text-[56px] font-semibold text-white leading-[1.05]">
-                  {hasDiscount ? 'Bolsas de Estudo na' : 'Cursos e Mensalidades na'}{' '}
-                  <span className="italic text-white/85">{institution.name}</span>
+                  Bolsas de Estudo na <span className="italic text-white/85">{institution.name}</span>
                 </h1>
                 <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-white/60 mt-4">
                   Faculdade {typeLabels[institution.type]}
@@ -251,21 +239,10 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
             {/* Resposta direta GEO (40-60 palavras): responde "como conseguir bolsa
                 na {marca}" no topo, pra extração por AI Overviews/ChatGPT/Perplexity. */}
             <p data-speakable="answer" className="text-white text-[16px] md:text-[18px] leading-relaxed max-w-3xl font-medium">
-              {hasDiscount ? (
-                <>
-                  Para conseguir bolsa de estudo na {institution.name}, busque o curso aqui no
-                  Bolsa Click, compare as ofertas e inscreva-se grátis — os descontos chegam a
-                  até {maxDiscountPct}% nas mensalidades, em cursos {institution.modalities.includes('EAD') ? 'EAD e presenciais' : 'presenciais'} reconhecidos
-                  pelo MEC.
-                </>
-              ) : (
-                <>
-                  A {institution.name} não tem bolsa própria ativa nas ofertas de graduação
-                  listadas aqui hoje — as mensalidades mostradas são o valor cheio da
-                  instituição{institution.mecRating ? `, nota ${institution.mecRating} no MEC` : ''}. Compare os cursos e preços reais abaixo, ou veja outras
-                  faculdades parceiras com desconto ativo.
-                </>
-              )}
+              Para conseguir bolsa de estudo na {institution.name}, busque o curso aqui no
+              Bolsa Click, compare as ofertas e inscreva-se grátis — os descontos chegam a
+              até {DISCOUNT_CEILING_PCT}% nas mensalidades, em cursos {institution.modalities.includes('EAD') ? 'EAD e presenciais' : 'presenciais'} reconhecidos
+              pelo MEC.
             </p>
 
             <p className="text-white/80 text-[15px] md:text-[17px] leading-relaxed max-w-3xl mt-4">
@@ -277,7 +254,7 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
                 href="#ofertas"
                 className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-bolsa-secondary text-white font-semibold rounded-full hover:bg-bolsa-secondary/90 transition-colors text-[14px] shadow-lg shadow-bolsa-secondary/30"
               >
-                {hasDiscount ? 'Ver bolsas disponíveis' : 'Ver cursos disponíveis'}
+                Ver bolsas disponíveis
                 <ArrowRight size={16} />
               </a>
               <Link
@@ -343,17 +320,8 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
                 Por que estudar aqui
               </span>
               <h2 className="font-display text-3xl md:text-4xl text-ink-900 leading-tight mb-6">
-                {hasDiscount ? (
-                  <>
-                    Tradição, alcance{' '}
-                    <span className="italic text-ink-700">e bolsa garantida.</span>
-                  </>
-                ) : (
-                  <>
-                    Tradição, alcance{' '}
-                    <span className="italic text-ink-700">e reconhecimento no mercado.</span>
-                  </>
-                )}
+                Tradição, alcance{' '}
+                <span className="italic text-ink-700">e bolsa garantida.</span>
               </h2>
               <div className="space-y-4 text-ink-700 text-[16px] leading-relaxed mb-8">
                 <p>
@@ -375,19 +343,8 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
                     : ''}
                 </p>
                 <p>
-                  {hasDiscount ? (
-                    <>
-                      Pelo Bolsa Click você garante bolsa com até{' '}
-                      <strong>{maxDiscountPct}% de desconto</strong> na {institution.name}.
-                      Cadastro grátis, sem ENEM, sem prova.
-                    </>
-                  ) : (
-                    <>
-                      Pelo Bolsa Click você compara os cursos e{' '}
-                      <strong>mensalidades reais</strong> da {institution.name} antes de
-                      decidir. Cadastro grátis, sem ENEM, sem prova.
-                    </>
-                  )}
+                  Pelo Bolsa Click você garante bolsa com até <strong>{DISCOUNT_CEILING_PCT}% de desconto</strong> na {institution.name}.
+                  Cadastro grátis, sem ENEM, sem prova.
                 </p>
               </div>
 
@@ -448,10 +405,10 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
                 <div>
                   <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 flex items-center gap-3 mb-3">
                     <span className="h-px w-8 bg-ink-300" />
-                    {hasDiscount ? `Bolsas na ${institution.name}` : `Cursos na ${institution.name}`}
+                    Bolsas na {institution.name}
                   </span>
                   <h2 className="font-display text-3xl md:text-[36px] font-semibold text-ink-900 leading-tight">
-                    {hasDiscount ? 'Cursos com bolsa garantida' : 'Cursos disponíveis'}
+                    Cursos com bolsa garantida
                   </h2>
                   <p className="text-ink-500 text-[15px] mt-1 max-w-2xl">
                     {institutionCourses.length}{' '}
@@ -625,19 +582,16 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
                     Pronto pra começar?
                   </span>
                   <h3 className="font-display text-2xl font-semibold mb-2 leading-tight">
-                    {hasDiscount ? 'Bolsa na' : 'Cursos na'}{' '}
-                    <span className="italic text-white/85">{institution.name}</span>
+                    Bolsa na <span className="italic text-white/85">{institution.name}</span>
                   </h3>
                   <p className="text-white/70 text-[13px] mb-5 leading-relaxed">
-                    {hasDiscount
-                      ? `Encontre bolsas com até ${maxDiscountPct}% de desconto. Cadastro grátis, sem ENEM.`
-                      : 'Veja mensalidades reais e nota MEC. Cadastro grátis, sem ENEM.'}
+                    Encontre bolsas com até {DISCOUNT_CEILING_PCT}% de desconto. Cadastro grátis, sem ENEM.
                   </p>
                   <a
                     href="#ofertas"
                     className="inline-flex items-center justify-center gap-2 w-full px-5 py-3 bg-bolsa-secondary text-white font-semibold rounded-full text-[13px] hover:bg-bolsa-secondary/90 transition-colors"
                   >
-                    {hasDiscount ? 'Ver bolsas disponíveis' : 'Ver cursos disponíveis'}
+                    Ver bolsas disponíveis
                     <ArrowRight size={14} />
                   </a>
                   <Link
@@ -855,12 +809,11 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
               Mensalidades reais
             </span>
             <h2 className="font-display text-3xl md:text-4xl text-ink-900 leading-tight mb-4">
-              {hasDiscount ? `Cursos com bolsa na ${institution.name}` : `Mensalidades na ${institution.name}`}
+              Cursos com bolsa na {institution.name}
             </h2>
             <p className="text-ink-700 text-[15px] md:text-base leading-relaxed mb-8 max-w-3xl">
-              {hasDiscount
-                ? 'Algumas das mensalidades com bolsa já aplicada, direto do catálogo. Os valores variam por curso, modalidade e polo — veja a oferta completa na busca.'
-                : 'Algumas das mensalidades reais, direto do catálogo — hoje sem desconto aplicado. Os valores variam por curso, modalidade e polo.'}
+              Algumas das mensalidades com bolsa já aplicada, direto do catálogo. Os valores
+              variam por curso, modalidade e polo — veja a oferta completa na busca.
             </p>
             <ul className="divide-y divide-hairline border-t border-hairline">
               {cursosComBolsa.map((c, i) => (

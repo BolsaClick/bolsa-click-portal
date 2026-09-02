@@ -106,10 +106,7 @@ export default async function PartnerCourseLanding({ params }: Props) {
     courseOptions.unshift(course.name)
   }
 
-  // Fora do escopo desta correção (landing paga, noindex): mantém o teto
-  // global como antes — não deriva desconto real aqui pra não expandir o
-  // fetch desta página. Ver app/faculdades/[slug]/page.tsx pro padrão certo.
-  const brand = BRAND_CONTENT[partner]?.(DISCOUNT_CEILING_PCT)
+  const brand = BRAND_CONTENT[partner]
   const pontosFortes = brand?.valeAPena.pontosFortes ?? [
     'Diploma reconhecido pelo MEC',
     `Bolsas de até ${DISCOUNT_CEILING_PCT}% sem nota de corte`,

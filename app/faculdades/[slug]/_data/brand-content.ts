@@ -8,6 +8,8 @@
 // e-MEC). Cada marca tem texto próprio pra evitar conteúdo duplicado entre as 6
 // brand pages (Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden).
 
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
+
 export interface BrandPasso {
   titulo: string
   descricao: string
@@ -34,8 +36,8 @@ export interface BrandContent {
   }
 }
 
-export const BRAND_CONTENT: Record<string, (maxDiscountPct: number) => BrandContent> = {
-  anhanguera: (maxDiscountPct) => ({
+export const BRAND_CONTENT: Record<string, BrandContent> = {
+  anhanguera: {
     comoConseguir: {
       intro:
         'A Anhanguera trabalha com bolsas próprias em graduação, pós e cursos EAD, sem depender de ENEM nem de nota de corte. Pelo Bolsa Click você garante o desconto antes de se matricular — em qualquer um dos mais de 70 polos ou 100% online.',
@@ -48,7 +50,7 @@ export const BRAND_CONTENT: Record<string, (maxDiscountPct: number) => BrandCont
         {
           titulo: 'Compare as ofertas com bolsa',
           descricao:
-            `Veja a mensalidade original e a mensalidade com bolsa lado a lado, além do polo mais perto de você. Os descontos da Anhanguera chegam a ${maxDiscountPct}%, maiores no EAD.`,
+            `Veja a mensalidade original e a mensalidade com bolsa lado a lado, além do polo mais perto de você. Os descontos da Anhanguera chegam a ${DISCOUNT_CEILING_PCT}%, maiores no EAD.`,
         },
         {
           titulo: 'Cadastre-se grátis',
@@ -77,7 +79,7 @@ export const BRAND_CONTENT: Record<string, (maxDiscountPct: number) => BrandCont
       },
       {
         q: 'Quanto custa a mensalidade da Anhanguera com bolsa?',
-        a: `Depende do curso, da modalidade e do polo. Com a bolsa aplicada pelo Bolsa Click o desconto chega a ${maxDiscountPct}% sobre o valor cheio — os cursos EAD costumam ter as mensalidades mais baixas. Veja os valores reais de cada curso na seção de ofertas acima.`,
+        a: `Depende do curso, da modalidade e do polo. Com a bolsa aplicada pelo Bolsa Click o desconto chega a ${DISCOUNT_CEILING_PCT}% sobre o valor cheio — os cursos EAD costumam ter as mensalidades mais baixas. Veja os valores reais de cada curso na seção de ofertas acima.`,
       },
       {
         q: 'O diploma da Anhanguera é reconhecido?',
@@ -91,14 +93,14 @@ export const BRAND_CONTENT: Record<string, (maxDiscountPct: number) => BrandCont
         'Mais de 70 polos presenciais + EAD de cobertura nacional — provavelmente há uma unidade perto de você',
         'Catálogo com mais de 400 cursos de graduação e pós',
         'Estrutura do grupo Cogna, com plataforma de ensino consolidada e ferramentas de empregabilidade',
-        `Bolsas de até ${maxDiscountPct}% sem ENEM e sem nota de corte`,
+        `Bolsas de até ${DISCOUNT_CEILING_PCT}% sem ENEM e sem nota de corte`,
       ],
       consideracoes:
         'O Conceito Institucional 3 no MEC é intermediário — então vale checar a nota específica do curso que você quer no e-MEC, já que ela varia bastante entre as graduações. É uma boa escolha pra quem prioriza preço baixo, flexibilidade e capilaridade de polos.',
     },
-  }),
+  },
 
-  unopar: (maxDiscountPct) => ({
+  unopar: {
     comoConseguir: {
       intro:
         'A Unopar é referência em EAD no Brasil e tem a maior rede de polos de apoio presencial do país — mais de 750. As bolsas próprias funcionam sem ENEM; pelo Bolsa Click você reserva o desconto antes da matrícula.',
@@ -111,7 +113,7 @@ export const BRAND_CONTENT: Record<string, (maxDiscountPct: number) => BrandCont
         {
           titulo: 'Compare mensalidade e polo de apoio',
           descricao:
-            `Veja o desconto aplicado sobre o valor cheio e confira qual dos mais de 750 polos fica perto de você. As bolsas da Unopar chegam a ${maxDiscountPct}%.`,
+            `Veja o desconto aplicado sobre o valor cheio e confira qual dos mais de 750 polos fica perto de você. As bolsas da Unopar chegam a ${DISCOUNT_CEILING_PCT}%.`,
         },
         {
           titulo: 'Faça o cadastro gratuito',
@@ -136,7 +138,7 @@ export const BRAND_CONTENT: Record<string, (maxDiscountPct: number) => BrandCont
       },
       {
         q: 'Como conseguir bolsa na Unopar?',
-        a: `Busque o curso no Bolsa Click, filtre pela Unopar, compare as ofertas com desconto e cadastre-se de graça. As bolsas próprias não exigem ENEM e o desconto chega a ${maxDiscountPct}% na mensalidade.`,
+        a: `Busque o curso no Bolsa Click, filtre pela Unopar, compare as ofertas com desconto e cadastre-se de graça. As bolsas próprias não exigem ENEM e o desconto chega a ${DISCOUNT_CEILING_PCT}% na mensalidade.`,
       },
       {
         q: 'Preciso ir ao polo da Unopar?',
@@ -154,14 +156,14 @@ export const BRAND_CONTENT: Record<string, (maxDiscountPct: number) => BrandCont
         'Mais de 750 polos de apoio — a maior cobertura presencial de EAD do país',
         'Status de universidade (fundada em 1972), com tradição e autonomia acadêmica',
         'Metodologia de EAD madura, pensada pra quem concilia trabalho e estudo',
-        `Bolsas próprias de até ${maxDiscountPct}% sem exigência de ENEM`,
+        `Bolsas próprias de até ${DISCOUNT_CEILING_PCT}% sem exigência de ENEM`,
       ],
       consideracoes:
         'O Conceito Institucional 3 é intermediário, então confira a nota do curso específico no e-MEC. A Unopar faz mais sentido pra quem vai de EAD/semipresencial e valoriza ter um polo físico por perto — quem busca curso 100% presencial em campus tradicional pode ter opções mais limitadas.',
     },
-  }),
+  },
 
-  pitagoras: (maxDiscountPct) => ({
+  pitagoras: {
     comoConseguir: {
       intro:
         'A Pitágoras é uma das instituições mais antigas do grupo Cogna, com forte presença em Minas Gerais e cursos EAD em todo o país. As bolsas próprias dispensam ENEM — pelo Bolsa Click você garante o desconto antes de fechar a matrícula.',
@@ -174,7 +176,7 @@ export const BRAND_CONTENT: Record<string, (maxDiscountPct: number) => BrandCont
         {
           titulo: 'Compare as ofertas com bolsa',
           descricao:
-            `Confira a mensalidade com desconto e a modalidade de cada oferta. As bolsas da Pitágoras chegam a ${maxDiscountPct}%, com os menores valores geralmente no EAD.`,
+            `Confira a mensalidade com desconto e a modalidade de cada oferta. As bolsas da Pitágoras chegam a ${DISCOUNT_CEILING_PCT}%, com os menores valores geralmente no EAD.`,
         },
         {
           titulo: 'Cadastre-se sem custo',
@@ -199,7 +201,7 @@ export const BRAND_CONTENT: Record<string, (maxDiscountPct: number) => BrandCont
       },
       {
         q: 'Como conseguir bolsa na Pitágoras?',
-        a: `Busque o curso no Bolsa Click, filtre pela Pitágoras e compare as ofertas com desconto. O cadastro é gratuito, as bolsas próprias não exigem ENEM e o desconto chega a ${maxDiscountPct}% na mensalidade.`,
+        a: `Busque o curso no Bolsa Click, filtre pela Pitágoras e compare as ofertas com desconto. O cadastro é gratuito, as bolsas próprias não exigem ENEM e o desconto chega a ${DISCOUNT_CEILING_PCT}% na mensalidade.`,
       },
       {
         q: 'A Pitágoras tem cursos EAD?',
@@ -207,7 +209,7 @@ export const BRAND_CONTENT: Record<string, (maxDiscountPct: number) => BrandCont
       },
       {
         q: 'Quanto custa estudar na Pitágoras?',
-        a: `A mensalidade varia por curso e modalidade. Com a bolsa aplicada pelo Bolsa Click o desconto chega a ${maxDiscountPct}% sobre o valor cheio. Veja os valores reais de cada curso disponível na seção de ofertas acima.`,
+        a: `A mensalidade varia por curso e modalidade. Com a bolsa aplicada pelo Bolsa Click o desconto chega a ${DISCOUNT_CEILING_PCT}% sobre o valor cheio. Veja os valores reais de cada curso disponível na seção de ofertas acima.`,
       },
     ],
     valeAPena: {
@@ -217,14 +219,14 @@ export const BRAND_CONTENT: Record<string, (maxDiscountPct: number) => BrandCont
         'Uma das instituições mais antigas do país (desde 1966), com marca consolidada',
         'Forte presença presencial em Minas Gerais + EAD de alcance nacional',
         'Estrutura e plataforma do grupo Cogna Educação',
-        `Bolsas próprias de até ${maxDiscountPct}% sem ENEM e sem nota de corte`,
+        `Bolsas próprias de até ${DISCOUNT_CEILING_PCT}% sem ENEM e sem nota de corte`,
       ],
       consideracoes:
         'Como as notas MEC variam por curso e a fonte oficial é o e-MEC, vale conferir lá o Conceito da graduação específica antes de decidir. A Pitágoras é uma boa escolha pra quem está em Minas ou quer EAD com uma marca de longa trajetória.',
     },
-  }),
+  },
 
-  unime: (maxDiscountPct) => ({
+  unime: {
     comoConseguir: {
       intro:
         'A Unime concentra sua estrutura presencial na Bahia e complementa com EAD para todo o país. As bolsas próprias funcionam sem ENEM — pelo Bolsa Click você reserva o desconto antes de se matricular.',
@@ -237,7 +239,7 @@ export const BRAND_CONTENT: Record<string, (maxDiscountPct: number) => BrandCont
         {
           titulo: 'Compare as ofertas com bolsa',
           descricao:
-            `Veja a mensalidade com desconto e a modalidade de cada oferta. As bolsas da Unime chegam a ${maxDiscountPct}% sobre o valor cheio.`,
+            `Veja a mensalidade com desconto e a modalidade de cada oferta. As bolsas da Unime chegam a ${DISCOUNT_CEILING_PCT}% sobre o valor cheio.`,
         },
         {
           titulo: 'Faça o cadastro gratuito',
@@ -262,7 +264,7 @@ export const BRAND_CONTENT: Record<string, (maxDiscountPct: number) => BrandCont
       },
       {
         q: 'Como conseguir bolsa na Unime?',
-        a: `Busque o curso no Bolsa Click, filtre pela Unime e compare as ofertas com desconto. O cadastro é grátis, as bolsas próprias não exigem ENEM e o desconto chega a ${maxDiscountPct}% na mensalidade.`,
+        a: `Busque o curso no Bolsa Click, filtre pela Unime e compare as ofertas com desconto. O cadastro é grátis, as bolsas próprias não exigem ENEM e o desconto chega a ${DISCOUNT_CEILING_PCT}% na mensalidade.`,
       },
       {
         q: 'A Unime é uma boa faculdade?',
@@ -270,7 +272,7 @@ export const BRAND_CONTENT: Record<string, (maxDiscountPct: number) => BrandCont
       },
       {
         q: 'Quanto custa a mensalidade da Unime com bolsa?',
-        a: `O valor depende do curso e da modalidade. Com a bolsa aplicada pelo Bolsa Click o desconto chega a ${maxDiscountPct}% sobre o valor cheio. Confira as mensalidades reais de cada curso na seção de ofertas acima.`,
+        a: `O valor depende do curso e da modalidade. Com a bolsa aplicada pelo Bolsa Click o desconto chega a ${DISCOUNT_CEILING_PCT}% sobre o valor cheio. Confira as mensalidades reais de cada curso na seção de ofertas acima.`,
       },
     ],
     valeAPena: {
@@ -280,14 +282,14 @@ export const BRAND_CONTENT: Record<string, (maxDiscountPct: number) => BrandCont
         'Conceito Institucional 4 no MEC — acima da média das particulares',
         'Referência presencial na região metropolitana de Salvador',
         'Opção de EAD com diploma reconhecido para quem está fora da Bahia',
-        `Bolsas próprias de até ${maxDiscountPct}% sem exigência de ENEM`,
+        `Bolsas próprias de até ${DISCOUNT_CEILING_PCT}% sem exigência de ENEM`,
       ],
       consideracoes:
         'A presença presencial da Unime é regional (concentrada na Bahia), então fora do estado o caminho natural é o EAD. Para quem está em Salvador e região e quer uma instituição bem avaliada pelo MEC com mensalidade acessível, é uma das melhores opções entre as parceiras.',
     },
-  }),
+  },
 
-  estacio: (maxDiscountPct) => ({
+  estacio: {
     comoConseguir: {
       intro:
         'A Estácio é uma das maiores redes do país, do grupo YDUQS, com campus presenciais em todas as regiões e uma estrutura de EAD de grande porte. As bolsas próprias dispensam ENEM — pelo Bolsa Click você garante o desconto antes da matrícula.',
@@ -300,7 +302,7 @@ export const BRAND_CONTENT: Record<string, (maxDiscountPct: number) => BrandCont
         {
           titulo: 'Compare as ofertas com bolsa',
           descricao:
-            `Veja a mensalidade original e a com bolsa lado a lado, além do campus ou polo mais próximo. Os descontos da Estácio chegam a ${maxDiscountPct}%.`,
+            `Veja a mensalidade original e a com bolsa lado a lado, além do campus ou polo mais próximo. Os descontos da Estácio chegam a ${DISCOUNT_CEILING_PCT}%.`,
         },
         {
           titulo: 'Cadastre-se grátis',
@@ -333,7 +335,7 @@ export const BRAND_CONTENT: Record<string, (maxDiscountPct: number) => BrandCont
       },
       {
         q: 'Quanto custa a mensalidade da Estácio com bolsa?',
-        a: `O valor varia por curso, campus e modalidade. Com a bolsa do Bolsa Click o desconto chega a ${maxDiscountPct}% sobre o valor cheio, e os cursos EAD tendem a ter as mensalidades mais baixas. Veja os valores reais na seção de ofertas acima.`,
+        a: `O valor varia por curso, campus e modalidade. Com a bolsa do Bolsa Click o desconto chega a ${DISCOUNT_CEILING_PCT}% sobre o valor cheio, e os cursos EAD tendem a ter as mensalidades mais baixas. Veja os valores reais na seção de ofertas acima.`,
       },
     ],
     valeAPena: {
@@ -343,14 +345,14 @@ export const BRAND_CONTENT: Record<string, (maxDiscountPct: number) => BrandCont
         'Conceito Institucional 4 no MEC — acima da média das particulares',
         'Cerca de 100 campus e polos presenciais em todas as regiões',
         'Mais de 500 cursos entre graduação e pós, presencial e EAD',
-        `Bolsas de até ${maxDiscountPct}% sem ENEM, com aceitação opcional da nota do ENEM`,
+        `Bolsas de até ${DISCOUNT_CEILING_PCT}% sem ENEM, com aceitação opcional da nota do ENEM`,
       ],
       consideracoes:
         'Por ser uma rede muito grande, a experiência pode variar de campus pra campus — vale conferir a nota do curso específico no e-MEC. É uma escolha sólida pra quem quer faculdade presencial de marca conhecida com boa cobertura nacional, ou EAD de uma instituição bem avaliada.',
     },
-  }),
+  },
 
-  wyden: (maxDiscountPct) => ({
+  wyden: {
     comoConseguir: {
       intro:
         'A Wyden é a marca de centros universitários do grupo YDUQS, o mesmo grupo da Estácio. As bolsas próprias dispensam ENEM — pelo Bolsa Click você compara o De/Por da oferta antes de se matricular. Cadastro grátis, sem taxa de adesão.',
@@ -363,7 +365,7 @@ export const BRAND_CONTENT: Record<string, (maxDiscountPct: number) => BrandCont
         {
           titulo: 'Compare as ofertas com bolsa',
           descricao:
-            `Veja a mensalidade original e a mensalidade com bolsa lado a lado. Os descontos da Wyden chegam a ${maxDiscountPct}%, e o percentual varia por curso, unidade e modalidade.`,
+            `Veja a mensalidade original e a mensalidade com bolsa lado a lado. O teto atual do catálogo é ${DISCOUNT_CEILING_PCT}%, e o percentual varia por curso, unidade e modalidade.`,
         },
         {
           titulo: 'Cadastre-se grátis',
@@ -396,7 +398,7 @@ export const BRAND_CONTENT: Record<string, (maxDiscountPct: number) => BrandCont
       },
       {
         q: 'Quanto custa a mensalidade da Wyden com bolsa?',
-        a: `Depende do curso, da modalidade e da unidade. Com a bolsa aplicada pelo Bolsa Click o desconto chega a ${maxDiscountPct}% sobre o valor cheio, conforme a oferta. Veja os valores reais na seção de ofertas acima.`,
+        a: `Depende do curso, da modalidade e da unidade. Com a bolsa aplicada pelo Bolsa Click o desconto chega a ${DISCOUNT_CEILING_PCT}% sobre o valor cheio, conforme a oferta. Veja os valores reais na seção de ofertas acima.`,
       },
     ],
     valeAPena: {
@@ -405,11 +407,11 @@ export const BRAND_CONTENT: Record<string, (maxDiscountPct: number) => BrandCont
       pontosFortes: [
         'Marca de centros universitários do grupo YDUQS',
         'Ofertas de graduação EAD e presencial no catálogo do Bolsa Click',
-        `Bolsas de até ${maxDiscountPct}% sem exigir ENEM, conforme a oferta`,
+        `Bolsas de até ${DISCOUNT_CEILING_PCT}% sem exigir ENEM, conforme a oferta`,
         'Cadastro grátis, sem taxa de adesão',
       ],
       consideracoes:
         'A experiência varia por centro universitário da marca. Confira a nota do curso específico no e-MEC e o De/Por da oferta no catálogo antes de decidir.',
     },
-  }),
+  },
 }

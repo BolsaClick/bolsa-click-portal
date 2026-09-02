@@ -6,7 +6,6 @@ import { prisma } from '@/app/lib/prisma'
 import { getCurrentTheme } from '@/app/lib/themes'
 import { getInstitutionCourses } from '@/app/lib/api/get-institution-courses'
 import { normalizeCourseNameKey } from '@/app/lib/utils/course-name-key'
-import { getInstitutionMaxDiscountPct } from '@/app/lib/utils/institution-discount'
 import { BRAND_CONTENT } from '@/app/faculdades/[slug]/_data/brand-content'
 import DepoimentosSection from '@/app/bolsas-de-estudo/_components/DepoimentosSection'
 import { LeadForm } from './_components/LeadForm'
@@ -132,10 +131,7 @@ export default async function PartnerLanding({
   // fire-and-forget em LeadForm (useEffect de mount → POST /api/ingressa/view,
   // sem gate de consentimento, roda no CLIENTE mas fora do SDK do PostHog).
 
-  // Desconto REAL da marca (não o teto global) — mesma lógica de
-  // /faculdades/[slug]: deriva das ofertas já carregadas acima.
-  const maxDiscountPct = getInstitutionMaxDiscountPct(courses)
-  const brand = maxDiscountPct > 0 ? BRAND_CONTENT[institutionSlugFor(partner)]?.(maxDiscountPct) : undefined
+  const brand = BRAND_CONTENT[institutionSlugFor(partner)]
   const brandColor = brandColorFor(partner)
   // Dropdown "curso de interesse": pra pós, restringe ao catálogo de pós (senão
   // mistura nome de curso de graduação num site que só oferece pós). Demais

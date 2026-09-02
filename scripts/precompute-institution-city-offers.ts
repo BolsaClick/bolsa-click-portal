@@ -55,6 +55,7 @@ const BRAND_NAME_TO_SLUG: Record<string, string> = {
   Pitágoras: 'pitagoras',
   Unime: 'unime',
   Estácio: 'estacio',
+  IBMEC: 'ibmec',
 }
 
 interface RawOffer {

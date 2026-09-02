@@ -414,4 +414,78 @@ export const BRAND_CONTENT: Record<string, BrandContent> = {
         'A experiência varia por centro universitário da marca. Confira a nota do curso específico no e-MEC e o De/Por da oferta no catálogo antes de decidir.',
     },
   },
+
+  // IBMEC: catálogo 100% presencial (sem EAD) e, diferente das demais marcas
+  // YDUQS aqui listadas, sem desconto/bolsa no preço de nenhuma das 122 ofertas
+  // de graduação verificadas na Athena (priceFrom == priceTo, listaBolsa
+  // vazia, discount 0 em todas). Por isso este texto NÃO cita
+  // DISCOUNT_CEILING_PCT nem qualquer percentual de bolsa pro IBMEC — seria
+  // uma claim não verificável (CLAUDE.md: só claim numérico com dado real).
+  // O foco do texto é comparar mensalidade e campus, não prometer desconto.
+  ibmec: {
+    comoConseguir: {
+      intro:
+        'O IBMEC integra o grupo YDUQS — o mesmo da Estácio e da Wyden — com nota máxima 5 no MEC e cursos presenciais de negócios, direito e engenharia. Pelo Bolsa Click você compara a mensalidade de cada campus antes de se cadastrar.',
+      passos: [
+        {
+          titulo: 'Busque o curso no IBMEC',
+          descricao:
+            'Pesquise o curso desejado — Administração, Direito, Engenharia e outros — e filtre pelo IBMEC. As ofertas cobrem os campus de São Paulo, Rio de Janeiro, Belo Horizonte e Brasília, sempre na modalidade presencial.',
+        },
+        {
+          titulo: 'Compare a mensalidade e o campus',
+          descricao:
+            'Veja o valor mensal de cada curso e qual unidade fica mais perto de você antes de decidir onde estudar.',
+        },
+        {
+          titulo: 'Cadastre-se grátis',
+          descricao:
+            'Faça seu cadastro no Bolsa Click sem custo. Isso registra seu interesse na oferta escolhida.',
+        },
+        {
+          titulo: 'Conclua a matrícula com o IBMEC',
+          descricao:
+            'Finalize a matrícula direto com o IBMEC, seguindo o processo seletivo definido pela instituição.',
+        },
+      ],
+    },
+    faq: [
+      {
+        q: 'Qual a nota do IBMEC no MEC?',
+        a: 'O IBMEC tem nota máxima 5 no MEC (numa escala de 1 a 5). Você pode conferir o registro completo da instituição no portal e-MEC.',
+      },
+      {
+        q: 'O IBMEC faz parte de qual grupo?',
+        a: 'O IBMEC integra o grupo YDUQS, o mesmo grupo da Estácio e da Wyden. Diferente dessas duas marcas, o IBMEC concentra seu catálogo em cursos presenciais de negócios, direito e engenharia.',
+      },
+      {
+        q: 'Em quais cidades o IBMEC tem campus no Bolsa Click?',
+        a: 'No catálogo do Bolsa Click, o IBMEC está presente em São Paulo, Rio de Janeiro, Belo Horizonte e Brasília, sempre com aulas presenciais.',
+      },
+      {
+        q: 'O IBMEC tem cursos EAD?',
+        a: 'Não. No catálogo do Bolsa Click, todas as ofertas de graduação do IBMEC são presenciais.',
+      },
+      {
+        q: 'Quais cursos o IBMEC oferece pelo Bolsa Click?',
+        a: 'O catálogo inclui Administração, Direito, Ciências Econômicas, Ciências Contábeis, Relações Internacionais, Comunicação Social - Publicidade e Propaganda, Arquitetura e Urbanismo, Ciência de Dados e Inteligência Artificial, e as engenharias Civil, de Computação, de Produção, de Software e Mecânica.',
+      },
+      {
+        q: 'Como funciona o cadastro no IBMEC pelo Bolsa Click?',
+        a: 'Você busca o curso, compara a mensalidade e o campus disponíveis e faz o cadastro gratuito no Bolsa Click. A matrícula é concluída direto com o IBMEC, seguindo o processo seletivo da instituição.',
+      },
+    ],
+    valeAPena: {
+      veredito:
+        'O IBMEC tem nota máxima 5 no MEC e concentra seu catálogo em cursos presenciais de negócios, direito e engenharia — indicado pra quem já decidiu estudar presencialmente numa das quatro cidades onde a instituição está presente.',
+      pontosFortes: [
+        'Nota máxima 5 no MEC — a mais alta da escala',
+        'Foco em negócios, direito e engenharia, com cursos como Ciência de Dados e Inteligência Artificial e Engenharia de Software ao lado das graduações tradicionais',
+        'Faz parte do grupo YDUQS, o mesmo grupo da Estácio e da Wyden',
+        'Campus em quatro capitais: São Paulo, Rio de Janeiro, Belo Horizonte e Brasília',
+      ],
+      consideracoes:
+        'O catálogo do IBMEC no Bolsa Click é 100% presencial e está limitado a essas quatro cidades — fora delas, ou pra quem busca EAD, vale comparar com as outras marcas parceiras. Consulte a mensalidade de cada oferta antes de decidir; os valores variam por curso, campus e turno.',
+    },
+  },
 }

@@ -11,7 +11,7 @@ import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
 import type { Course } from '@/app/interface/course'
 
 /** Marcas servidas pela API Athena (YDUQS) — buscadas server-side à parte. */
-const YDUQS_BRANDS = new Set(['Estácio', 'Wyden'])
+const YDUQS_BRANDS = new Set(['Estácio', 'Wyden', 'IBMEC'])
 
 function normalize(s: string): string {
   return s

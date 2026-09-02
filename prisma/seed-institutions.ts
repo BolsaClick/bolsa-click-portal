@@ -320,7 +320,7 @@ Os diferenciais do IBMEC incluem: nota 5 no MEC (nota máxima), corpo docente 10
       'Programas de intercâmbio com universidades internacionais',
       'Rede de ex-alunos influente no mercado financeiro e corporativo',
     ],
-    logoUrl: '',
+    logoUrl: '/assets/logo-ibmec.svg',
     imageUrl: '',
     imageAlt: 'Logo do IBMEC',
     keywords: [
@@ -331,7 +331,7 @@ Os diferenciais do IBMEC incluem: nota 5 no MEC (nota máxima), corpo docente 10
     ],
     metaTitle: 'Faculdade IBMEC - Nota 5 no MEC | Bolsas de Estudo | Bolsa Click',
     metaDescription: 'Encontre bolsas de estudo na Faculdade IBMEC, instituição nota 5 no MEC. Referência em negócios, direito e engenharia. Campus em SP, RJ, BH e Brasília. Inscreva-se!',
-    isActive: false,
+    isActive: true,
     order: 7,
   },
 ]

@@ -29,6 +29,7 @@ import {
   trackCheckoutViewed,
   trackCheckoutSubmitted,
   trackCheckoutIdentified,
+  trackCheckoutError,
   reportInscriptionFailure,
 } from '@/app/lib/analytics/checkout-funnel'
 import { suggestEmailCorrection } from '@/app/lib/validation/email-typo'
@@ -273,6 +274,7 @@ export default function EstacioCheckoutClient() {
     // Funil unificado — etapa 1 (fluxo Estácio)
     trackCheckoutViewed(trackEvent, {
       flow: 'estacio',
+      checkoutFlow: 'estacio_checkout',
       brand: offer.brand,
       modality: offer.modality,
       offerId: offer.offerId,
@@ -330,8 +332,10 @@ export default function EstacioCheckoutClient() {
           state: data.uf || prev.state,
         }))
       }
-    } catch {
-      // silencioso — usuário preenche manualmente
+    } catch (error) {
+      // silencioso pro usuário — preenche manualmente. Mas era mudo pro
+      // PostHog também: sem sinal nenhum de quando o ViaCEP falha.
+      trackCheckoutError(trackEvent, 'cep_autofill', error)
     } finally {
       setCepLoading(false)
     }
@@ -417,7 +421,10 @@ export default function EstacioCheckoutClient() {
         },
         nivel: offer.academicLevel || undefined,
       },
-    }).catch((leadError) => console.error('Registro de lead falhou:', leadError))
+    }).catch((leadError) => {
+      console.error('Registro de lead falhou:', leadError)
+      trackCheckoutError(trackEvent, 'estacio_lead_create', leadError)
+    })
 
     // Funil unificado — etapa 2: identifica ANTES de enviar pra Estácio.
     // Estava depois do sucesso, o que só identificava quem já tinha convertido:
@@ -427,6 +434,7 @@ export default function EstacioCheckoutClient() {
       trackEvent,
       {
         flow: 'estacio',
+        checkoutFlow: 'estacio_checkout',
         brand: offer.brand,
         modality: offer.modality,
         offerId: offer.offerId,
@@ -517,12 +525,16 @@ export default function EstacioCheckoutClient() {
           monthlyPrice: displayPrice,
           enrollmentFee: data?.amount,
         }),
-      }).catch((confirmError) => console.error('Confirmação de inscrição falhou:', confirmError))
+      }).catch((confirmError) => {
+        console.error('Confirmação de inscrição falhou:', confirmError)
+        trackCheckoutError(trackEvent, 'estacio_confirm_inscription_server', confirmError)
+      })
 
       // Funil unificado — etapa 3 (fluxo Estácio): inscrição criada.
       // (a etapa 2 / identificação agora acontece antes do envio, acima)
       trackCheckoutSubmitted(trackEvent, {
         flow: 'estacio',
+        checkoutFlow: 'estacio_checkout',
         brand: offer.brand,
         modality: offer.modality,
         offerId: offer.offerId,

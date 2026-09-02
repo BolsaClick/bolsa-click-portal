@@ -24,7 +24,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useEffect, useState, useRef, Suspense } from 'react'
+import { useEffect, useMemo, useState, useRef, Suspense } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -62,6 +62,7 @@ import {
   trackCheckoutViewed,
   trackCheckoutIdentified,
   trackCheckoutSubmitted,
+  trackCheckoutError,
   reportInscriptionFailure,
 } from '@/app/lib/analytics/checkout-funnel'
 import { formatPhone } from '@/utils/formatters'
@@ -161,9 +162,20 @@ function MatriculaContent() {
   const { user, firebaseUser, loading: authLoading } = useAuth()
 
 
-  const storedCheckoutParams = typeof window !== 'undefined'
-    ? (() => { try { return JSON.parse(localStorage.getItem('pendingCheckoutParams') || '') } catch { return null } })()
-    : null
+  // useMemo (não recalcula a cada tecla): este bloco reavaliava a cada
+  // re-render — o form abaixo re-renderiza a cada tecla digitada (watch()) —
+  // e um catch instrumentado ali dentro floodaria o PostHog a cada digitação.
+  const storedCheckoutParams = useMemo(() => {
+    if (typeof window === 'undefined') return null
+    try {
+      return JSON.parse(localStorage.getItem('pendingCheckoutParams') || '')
+    } catch (error) {
+      console.error('Erro ao ler pendingCheckoutParams do localStorage:', error)
+      trackCheckoutError(trackEvent, 'checkout_params_parse', error)
+      return null
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const groupId = searchParams.get('groupId') || searchParams.get('id') || storedCheckoutParams?.groupId
   const unitId = searchParams.get('unitId') || storedCheckoutParams?.unitId
@@ -322,6 +334,7 @@ const isFormValidForPayment =
       console.log('✅ Perfil do usuário atualizado no PostgreSQL')
     } catch (error) {
       console.error('Erro ao atualizar perfil:', error)
+      trackCheckoutError(trackEvent, 'profile_update', error)
       // Não bloquear o fluxo se falhar
     }
   }
@@ -361,6 +374,7 @@ const isFormValidForPayment =
       // Funil unificado — etapa 1 (ver app/lib/analytics/checkout-funnel.ts)
       trackCheckoutViewed(trackEvent, {
         flow: 'matricula',
+        checkoutFlow: 'cogna_matricula',
         academicLevel: offerDetails.academicLevel,
         brand: offerDetails.brand,
         modality: offerDetails.modality,
@@ -545,6 +559,7 @@ const isFormValidForPayment =
       }
     } catch (error: unknown) {
       console.error('Erro ao cadastrar estudante:', error)
+      trackCheckoutError(trackEvent, 'student_lead_create', error)
       // Não mostrar erro para o usuário, apenas logar
       // O cadastro pode falhar silenciosamente
     } finally {
@@ -668,6 +683,7 @@ const isFormValidForPayment =
         return null
       } catch (err) {
         console.error('Erro ao validar voucher GALENA+15:', err)
+        trackCheckoutError(trackEvent, 'voucher_auto_validate', err)
         return null
       }
     }
@@ -713,7 +729,7 @@ const isFormValidForPayment =
     return () => {
       cancelled = true
     }
-  }, [offerDetails, posInstallmentId, watchedCpf])
+  }, [offerDetails, posInstallmentId, watchedCpf, trackEvent])
 
   // Reage à troca de forma de pagamento na pós quando ela derruba o campo de
   // voucher (ver `isPosVoucherPaymentType`/`showVoucherField`: só existe em
@@ -969,6 +985,7 @@ const isFormValidForPayment =
       }
     } catch (err) {
       console.error('Erro ao validar voucher manual:', err)
+      trackCheckoutError(trackEvent, 'voucher_manual_validate', err)
       setVoucherMessageType('error')
       setVoucherMessage('Não conseguimos validar agora, tente de novo.')
     } finally {
@@ -1033,8 +1050,9 @@ const isFormValidForPayment =
         if (stored) {
           try {
             paymentMethod = JSON.parse(stored) as { id: string; dueDay: string; voucher?: string; voucherId?: number }
-          } catch {
-            // ignore
+          } catch (error) {
+            console.error('Erro ao ler pendingPosPaymentMethod do localStorage:', error)
+            trackCheckoutError(trackEvent, 'payment_method_parse', error)
           }
         }
       }
@@ -1173,7 +1191,10 @@ const isFormValidForPayment =
             monthlyPrice: offerDetails?.montlyFeeTo,
             enrollmentFee: offerDetails?.subscriptionValue,
           }),
-        }).catch((e) => console.error('Confirmação de inscrição falhou:', e))
+        }).catch((e) => {
+          console.error('Confirmação de inscrição falhou:', e)
+          trackCheckoutError(trackEvent, 'confirm_inscription_server', e)
+        })
 
         // O marcador "Pendente Pagamento" saiu em 2026-08-11 junto com o CRM
         // (troca de fornecedor). Ele distinguia a graduação EAD/semi ATHENAS,
@@ -1215,6 +1236,7 @@ const isFormValidForPayment =
             console.log('✅ Inscrição salva no banco de dados')
           } catch (enrollError) {
             console.error('Erro ao salvar inscrição no banco:', enrollError)
+            trackCheckoutError(trackEvent, 'enrollment_save', enrollError)
             // Não bloquear o fluxo se falhar
           }
         }
@@ -1268,9 +1290,11 @@ const isFormValidForPayment =
                 })
               } else {
                 console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceResult.error)
+                trackCheckoutError(trackEvent, 'marketplace_inscription', marketplaceResult.error)
               }
             } catch (marketplaceError) {
               console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceError)
+              trackCheckoutError(trackEvent, 'marketplace_inscription', marketplaceError)
             }
           }
 
@@ -1280,6 +1304,7 @@ const isFormValidForPayment =
           // desativar o marketplace crie um ponto cego no funil de conversão.
           trackCheckoutSubmitted(trackEvent, {
             flow: 'matricula',
+            checkoutFlow: 'cogna_matricula',
             academicLevel: offerDetails.academicLevel,
             brand: offerDetails.brand,
             modality: offerDetails.modality,
@@ -1505,6 +1530,7 @@ const isFormValidForPayment =
     // Funil unificado — etapa 3 (ramo pós/profissionalizante)
     trackCheckoutSubmitted(trackEvent, {
       flow: 'matricula',
+      checkoutFlow: 'cogna_matricula',
       academicLevel: offerDetails.academicLevel,
       brand: offerDetails.brand,
       modality: offerDetails.modality,
@@ -1585,7 +1611,9 @@ const isFormValidForPayment =
                   minInstallmentValue?: number
                 }
               : null
-          } catch {
+          } catch (error) {
+            console.error('Erro ao ler selectedCourse do localStorage:', error)
+            trackCheckoutError(trackEvent, 'course_cache_read', error)
             return null
           }
         })()
@@ -2023,6 +2051,7 @@ const isFormValidForPayment =
                                         trackEvent,
                                         {
                                           flow: 'matricula',
+                                          checkoutFlow: 'cogna_matricula',
                                           academicLevel: offerDetails?.academicLevel,
                                           brand: offerDetails?.brand,
                                           modality: offerDetails?.modality,
@@ -2100,6 +2129,7 @@ const isFormValidForPayment =
                                           }
                                         } catch (checkError: unknown) {
                                           console.error('Erro ao verificar inscrição existente na Cogna (fail-open, não bloqueia):', checkError)
+                                          trackCheckoutError(trackEvent, 'cpf_inscription_check', checkError)
                                         }
                                       }
                                     } catch (error: unknown) {
@@ -2108,6 +2138,7 @@ const isFormValidForPayment =
                                       const errorMessage = axiosError.response?.data?.message || axiosError.message || 'Erro ao validar CPF. Tente novamente.'
                                       setCpfValidationError(errorMessage)
                                       toast.error(errorMessage)
+                                      trackCheckoutError(trackEvent, 'cpf_validation', error)
                                     } finally {
                                       setIsValidatingCpf(false)
                                     }

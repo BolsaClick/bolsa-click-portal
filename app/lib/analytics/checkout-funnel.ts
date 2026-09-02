@@ -46,6 +46,16 @@ export function normalizeAcademicLevel(level?: string): string {
 
 export interface CheckoutContext {
   flow: CheckoutFlow
+  // Identificador ESTÁVEL do checkout/mecanismo que disparou o evento (ex:
+  // 'cogna_matricula', 'estacio_checkout', 'ingressa_lead_form'). Existe
+  // porque `flow` sozinho não basta: mais de um checkout/página pode
+  // compartilhar o mesmo `flow` ('matricula' cobre tanto o checkout Cogna
+  // quanto o lead form do ingressa para marcas não-Estácio), contaminando
+  // qualquer número de funil calculado por `flow` — foi o que saiu errado num
+  // relatório de abandono de checkout. `checkout_flow` é o dado que resolve
+  // isso — cada chamador deve passar um valor próprio e nunca reaproveitar o
+  // de outro arquivo.
+  checkoutFlow?: string
   academicLevel?: string
   brand?: string
   modality?: string
@@ -60,6 +70,7 @@ function baseProps(
 ): Record<string, string | number | boolean | null | undefined> {
   return {
     flow: ctx.flow,
+    checkout_flow: ctx.checkoutFlow,
     academic_level: ctx.academicLevel ? normalizeAcademicLevel(ctx.academicLevel) : undefined,
     brand: ctx.brand,
     modality: ctx.modality,
@@ -67,6 +78,49 @@ function baseProps(
     course_name: ctx.courseName,
     offer_id: ctx.offerId,
     source: ctx.source,
+  }
+}
+
+// Observabilidade de falhas silenciosas do checkout — muita sessão perdida
+// não clica em NADA, sinal de trava silenciosa, não desistência. Catches que
+// caíam só em console.error (ou nem isso) ficavam invisíveis pro PostHog;
+// `trackCheckoutError` é o ponto único que os arquivos do checkout (Cogna,
+// Estácio, payment-link, lead form do ingressa) usam pra emitir `checkout_error`
+// com o MESMO `track`/`onEvent` que cada arquivo já usa — nunca `window.posthog`
+// direto, que já se provou `undefined` em produção.
+//
+// `step` deve ser um nome curto e estável (ex: 'cpf_validation').
+//
+// Regra de privacidade: a mensagem de erro pode ecoar CPF/e-mail/telefone (ex:
+// validação que devolve o valor digitado) — sanitiza antes de mandar.
+export function sanitizeCheckoutErrorMessage(message: string): string {
+  return message
+    // e-mail
+    .replace(/[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}/g, '[email]')
+    // CPF, com ou sem máscara
+    .replace(/\d{3}\.?\d{3}\.?\d{3}-?\d{2}/g, '[cpf]')
+    // telefone/celular, com ou sem máscara
+    .replace(/\(?\d{2}\)?[\s.-]?9?\d{4}[\s.-]?\d{4}/g, '[telefone]')
+    // qualquer sequência longa de dígitos residual (CEP, RG, etc.)
+    .replace(/\d{5,}/g, '[numero]')
+    .slice(0, 300)
+}
+
+/**
+ * Dispara `checkout_error` no MESMO `track` (ou `onEvent`, mesma assinatura)
+ * que o arquivo chamador já usa. Nunca deixa a telemetria derrubar o
+ * checkout: qualquer falha aqui dentro é engolida.
+ */
+export function trackCheckoutError(track: TrackFn, step: string, error: unknown): void {
+  try {
+    const rawMessage = error instanceof Error ? error.message : String(error)
+    track('checkout_error', {
+      step,
+      error_message: sanitizeCheckoutErrorMessage(rawMessage),
+      error_name: error instanceof Error ? error.name : undefined,
+    })
+  } catch {
+    // Telemetria nunca pode derrubar o checkout.
   }
 }
 

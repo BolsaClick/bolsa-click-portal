@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
@@ -14,6 +14,12 @@ interface Banner {
 
 interface HeroBannerSliderProps {
   banners: Banner[]
+  /**
+   * Título + prova social do site (H1 transacional), injetado pelo
+   * `HeroSection` e renderizado SOBRE a imagem — não é copy por banner.
+   * Fica fora da pista que rola (`track`), então não se move com o swipe.
+   */
+  overlay?: ReactNode
 }
 
 // Troca automática a cada 6s. Pausa sozinho quando a aba está em segundo
@@ -46,8 +52,17 @@ const RESUME_AFTER_INTERACTION_MS = 9000
  * `sizes="100vw"`, então o próprio `next/image` serve, pelo srcset, um
  * recorte proporcional à viewport real — o celular nunca baixa o arquivo
  * pensado pra 1920px.
+ *
+ * Overlay: título + prova social vivem SOBRE a imagem (não numa faixa
+ * separada abaixo). É uma camada `absolute` fora da pista que rola — puro
+ * CSS, sem custo de JS — com dois reforços de contraste que não dependem de
+ * a imagem do banner ser escura: (1) gradiente de baixo pra cima cobrindo
+ * boa parte da altura, forte o bastante pra funcionar mesmo sobre fotos
+ * muito claras; (2) `text-shadow` no texto como reforço de borda. O texto
+ * fica com `pointer-events-none` (deixa o toque atravessar pro link do
+ * slide); só as bolinhas de navegação recebem clique.
  */
-export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
+export default function HeroBannerSlider({ banners, overlay }: HeroBannerSliderProps) {
   const trackRef = useRef<HTMLDivElement>(null)
   const slideRefs = useRef<(HTMLDivElement | null)[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -136,7 +151,7 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
       <div className="h-16 md:h-20" />
 
       <div
-        className="relative w-full bg-gray-100 h-[220px] sm:h-[300px] md:h-[400px] lg:h-[500px]"
+        className="relative w-full bg-ink-900 h-[380px] sm:h-[440px] md:h-[480px] lg:h-[560px]"
         role="region"
         aria-roledescription="carrossel"
         aria-label="Banners promocionais"
@@ -204,12 +219,55 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
           })}
         </div>
 
+        {overlay && (
+          <>
+            {/* Reforço de contraste nº1: gradiente escuro de baixo pra cima,
+                forte o bastante pra funcionar mesmo sobre banners muito
+                claros — não assume que a imagem já é escura por padrão. */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-ink-900/95 via-ink-900/55 via-45% to-transparent"
+            />
+            {/* Título + prova social do site, com as bolinhas de navegação
+                logo abaixo — os dois no MESMO bloco `flex-col`, ancorado
+                pelo `pb`. Isso garante, num lugar só, que nada fica embaixo
+                da faixa que o card do Filter cobre ao subir por cima da
+                imagem (`-mt-10 md:-mt-14` no HeroSection): o `pb` aqui
+                (48/56/64px) é sempre maior que aquele overlap (40/56px), daí
+                as bolinhas nunca ficam escondidas atrás do card.
+                `pointer-events-none` no bloco de texto deixa o toque
+                atravessar pro link do slide (o texto em si não é clicável);
+                reforço de contraste nº2 é o text-shadow, que herda pros
+                filhos (dt/dd/span). As bolinhas reativam pointer-events
+                pra continuarem clicáveis. */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] flex flex-col items-center gap-3 px-4 pb-12 pt-10 sm:pb-14 md:pb-16 [text-shadow:0_2px_10px_rgba(11,31,60,0.55)]">
+              {overlay}
+              {banners.length > 1 && (
+                <div className="pointer-events-auto flex justify-center gap-2">
+                  {banners.map((_, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => goTo(index)}
+                      className={`h-2.5 rounded-full transition-all duration-300 ${
+                        index === currentIndex ? 'w-8 bg-bolsa-secondary' : 'w-2.5 bg-white/60 hover:bg-white/90'
+                      }`}
+                      aria-label={`Ir para o banner ${index + 1} de ${banners.length}`}
+                      aria-current={index === currentIndex}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
         {banners.length > 1 && (
           <>
             <button
               type="button"
               onClick={() => goTo((currentIndex - 1 + banners.length) % banners.length)}
-              className="absolute left-2 top-1/2 z-[5] -translate-y-1/2 rounded-full bg-white/85 p-2 text-bolsa-primary shadow hover:bg-white transition"
+              className="absolute left-3 top-4 z-[5] rounded-full bg-white/90 p-2 text-bolsa-primary shadow-md hover:bg-white transition sm:top-6"
               aria-label="Banner anterior"
             >
               <ChevronLeft size={20} />
@@ -217,42 +275,13 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
             <button
               type="button"
               onClick={() => goTo((currentIndex + 1) % banners.length)}
-              className="absolute right-2 top-1/2 z-[5] -translate-y-1/2 rounded-full bg-white/85 p-2 text-bolsa-primary shadow hover:bg-white transition"
+              className="absolute right-3 top-4 z-[5] rounded-full bg-white/90 p-2 text-bolsa-primary shadow-md hover:bg-white transition sm:top-6"
               aria-label="Próximo banner"
             >
               <ChevronRight size={20} />
             </button>
-
-            <div className="absolute bottom-6 left-0 right-0 z-[5] flex justify-center space-x-2">
-              {banners.map((_, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => goTo(index)}
-                  className={`h-2.5 rounded-full transition-all duration-300 ${
-                    index === currentIndex ? 'w-8 bg-bolsa-secondary' : 'w-2.5 bg-white/60 hover:bg-white/90'
-                  }`}
-                  aria-label={`Ir para o banner ${index + 1} de ${banners.length}`}
-                  aria-current={index === currentIndex}
-                />
-              ))}
-            </div>
           </>
         )}
-
-        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-[80px] overflow-hidden z-[3]">
-          <svg
-            viewBox="0 0 1440 320"
-            className="absolute bottom-0 w-full"
-            preserveAspectRatio="none"
-            style={{ height: '80px', width: '100%' }}
-          >
-            <path
-              fill="#F8F8F8"
-              d="M0,160L48,170.7C96,181,192,203,288,208C384,213,480,203,576,181.3C672,160,768,128,864,128C960,128,1056,160,1152,165.3C1248,171,1344,149,1392,138.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
-            />
-          </svg>
-        </div>
       </div>
     </section>
   )

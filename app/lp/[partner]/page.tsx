@@ -131,7 +131,10 @@ export default async function PartnerLanding({
   // fire-and-forget em LeadForm (useEffect de mount → POST /api/ingressa/view,
   // sem gate de consentimento, roda no CLIENTE mas fora do SDK do PostHog).
 
-  const brand = BRAND_CONTENT[institutionSlugFor(partner)]
+  // Landing paga fora do escopo desta mudança (mantém o teto global de
+  // sempre) — BRAND_CONTENT virou fábrica parametrizada pelo desconto real
+  // pra /faculdades/[slug]; aqui só corrige o tipo, chamando com o teto.
+  const brand = BRAND_CONTENT[institutionSlugFor(partner)]?.(DISCOUNT_CEILING_PCT)
   const brandColor = brandColorFor(partner)
   // Dropdown "curso de interesse": pra pós, restringe ao catálogo de pós (senão
   // mistura nome de curso de graduação num site que só oferece pós). Demais

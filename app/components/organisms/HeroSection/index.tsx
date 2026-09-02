@@ -10,63 +10,41 @@ const Hero = async () => {
   } catch {
     // Fallback to placeholder hero silently
   }
-  const hasBanners = banners.length > 0
 
-  // H1 transacional + prova social — SEMPRE renderizado (mobile-first SEO).
-  // Com banner ativo, esse bloco vira o `overlay` do carrossel: título e
-  // números vivem SOBRE a imagem (não numa faixa separada abaixo dela), pra
-  // a proposta de valor responder ao visitante antes da dobra.
-  const heroOverlay = (
-    <div className="mx-auto flex max-w-3xl flex-col items-center gap-2.5 text-center sm:gap-3">
-      <h1 className="font-display text-2xl font-semibold leading-tight text-white sm:text-3xl md:text-4xl lg:text-5xl">
-        Bolsas de até <span className="text-bolsa-secondary">{DISCOUNT_CEILING_PCT}%</span> nas{' '}
-        <span className="text-bolsa-secondary">maiores redes de ensino</span> do Brasil
-      </h1>
-      {/* Stats strip — densidade marketplace. Sempre visível, dá prova
-          social numérica antes do scroll. */}
-      <dl className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-white sm:gap-x-6">
-        <div className="flex items-baseline gap-1.5">
-          <dt className="sr-only">Redes de ensino parceiras</dt>
-          <dd className="text-sm font-semibold sm:text-base md:text-lg">6</dd>
-          <span className="text-xs text-white/75 sm:text-sm md:text-base">redes parceiras</span>
-        </div>
-        <span aria-hidden="true" className="text-white/40">
-          ·
-        </span>
-        <div className="flex items-baseline gap-1.5">
-          <dt className="sr-only">Cidades com polos</dt>
-          <dd className="text-sm font-semibold sm:text-base md:text-lg">280+</dd>
-          <span className="text-xs text-white/75 sm:text-sm md:text-base">cidades com polos</span>
-        </div>
-        <span aria-hidden="true" className="text-white/40">
-          ·
-        </span>
-        <div className="flex items-baseline gap-1.5">
-          <dt className="sr-only">Desconto máximo</dt>
-          <dd className="text-sm font-semibold sm:text-base md:text-lg">até {DISCOUNT_CEILING_PCT}%</dd>
-          <span className="text-xs text-white/75 sm:text-sm md:text-base">de desconto</span>
-        </div>
-        <span aria-hidden="true" className="text-white/40">
-          ·
-        </span>
-        <div className="flex items-baseline gap-1.5">
-          <dt className="sr-only">Mensalidade mínima com bolsa</dt>
-          <dd className="text-sm font-semibold sm:text-base md:text-lg">a partir de R$99/mês</dd>
-        </div>
-      </dl>
-    </div>
-  )
+  const hasBanners = banners.length > 0
 
   return (
     <section aria-label="Seção principal de destaque" className="relative bg-paper w-full overflow-x-clip">
-      {/* SLIDE AREA — carrossel de banners do CMS. Visível em qualquer
-          viewport (mobile inclusive — 74% do tráfego): cada slide pede a
-          imagem no tamanho certo via `sizes` do next/image, então o celular
-          não baixa a imagem "desktop" inteira. Título + prova social vivem
-          SOBRE a imagem via `overlay` (ver comentário no HeroBannerSlider). */}
-      {hasBanners && <HeroBannerSlider banners={banners} overlay={heroOverlay} />}
+      {hasBanners && (
+        <>
+          {/* H1 só pra leitor de tela (`sr-only`, mesmo padrão já usado nos
+              rótulos `dt` da faixa de números). Decisão do dono do produto:
+              o carrossel de banners — peças publicitárias que já têm título
+              e oferta próprios — ocupa visualmente o espaço que antes era a
+              faixa azul-marinho com H1 + prova social; ela não volta. Mas a
+              página não pode ficar sem H1 (sinal de conteúdo pra busca +
+              regra editorial de responder a query principal logo no
+              início), então o claim segue existindo no DOM pra SEO/GEO, só
+              que sem aparecer sobre o criativo do banner. */}
+          <h1 className="sr-only">
+            Bolsas de até {DISCOUNT_CEILING_PCT}% nas maiores redes de ensino do Brasil — 6 redes parceiras,
+            280+ cidades com polos.
+          </h1>
 
-      {/* Hero completo com gradient — só quando NÃO há banner ativo (fallback). */}
+          {/* SLIDE AREA — carrossel de banners do CMS. Visível em qualquer
+              viewport (mobile inclusive — 74% do tráfego): cada slide pede a
+              imagem no tamanho certo via `sizes` do next/image, então o
+              celular não baixa a imagem "desktop" inteira. Os banners são
+              peças publicitárias com título e oferta próprios — o carrossel
+              exibe só a imagem, sem overlay de texto do site (ver
+              comentário no HeroBannerSlider). */}
+          <HeroBannerSlider banners={banners} />
+        </>
+      )}
+
+      {/* Hero completo com gradient — só quando NÃO há banner ativo
+          (fallback). Único caso em que o H1 aparece visível: sem banner
+          cadastrado não há criativo de terceiro pra competir com o texto. */}
       {!hasBanners && (
         <div className="relative w-full overflow-hidden bg-gradient-to-br from-bolsa-primary via-bolsa-primary to-blue-900">
           <div

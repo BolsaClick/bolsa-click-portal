@@ -49,6 +49,12 @@ export function middleware(request: NextRequest) {
       pathname.startsWith("/api") ||
       pathname.startsWith("/_next") ||
       pathname.startsWith("/lp") ||
+      // Proxy do PostHog (analytics) e do UTMify (pixel) — ver rewrites() em
+      // next.config.ts. Sem isto, "/ingest/flags" (sem ponto no path) cai no
+      // ramo de rewrite pra "/lp/ingest/flags" logo abaixo e nunca chega no
+      // PostHog: analytics e feature flags saem 500 neste domínio.
+      pathname.startsWith("/ingest") ||
+      pathname.startsWith("/utm") ||
       pathname.includes(".");
     if (!passthrough) {
       const url = request.nextUrl.clone();
@@ -71,6 +77,10 @@ export function middleware(request: NextRequest) {
       pathname.startsWith("/api") ||
       pathname.startsWith("/_next") ||
       pathname.startsWith("/lp") ||
+      // Mesmo motivo do bloco ingressa.digital acima: sem isto o proxy do
+      // PostHog (/ingest) e do UTMify (/utm) quebra neste domínio também.
+      pathname.startsWith("/ingest") ||
+      pathname.startsWith("/utm") ||
       pathname.includes(".");
     if (!passthrough) {
       const url = request.nextUrl.clone();

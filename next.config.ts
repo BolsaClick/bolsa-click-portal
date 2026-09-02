@@ -22,12 +22,18 @@ const CSP_REPORT_ONLY = [
   "img-src 'self' data: blob: https:",
   "media-src 'self' blob:",
   // Fetch / XHR / WebSocket — todas as APIs first-party + integrações.
-  "connect-src 'self' https://hermes.bolsamais.com.br https://us.i.posthog.com https://us-assets.i.posthog.com https://api.utmify.com.br https://analytics.tiktok.com https://www.google-analytics.com https://www.googletagmanager.com https://stats.g.doubleclick.net https://*.facebook.com https://tartarus-api.inovitdigital.com.br https://elysium-api.inovitdigital.com.br https://t3.storageapi.dev https://bolsa-click.fly.storage.tigris.dev https://*.firebaseio.com https://*.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com",
+  // PostHog agora é servido via proxy same-origin (/ingest/*, ver rewrites()
+  // abaixo) — us.i.posthog.com / us-assets.i.posthog.com deixam de ser
+  // chamados pelo browser, mas ficam na whitelist como fallback defensivo.
+  // us.posthog.com (ui_host) é novo: usado pelo SDK pros links do toolbar/
+  // dashboard apontarem pro domínio certo do PostHog em vez do proxy.
+  "connect-src 'self' https://hermes.bolsamais.com.br https://us.i.posthog.com https://us-assets.i.posthog.com https://us.posthog.com https://api.utmify.com.br https://analytics.tiktok.com https://www.google-analytics.com https://www.googletagmanager.com https://stats.g.doubleclick.net https://*.facebook.com https://tartarus-api.inovitdigital.com.br https://elysium-api.inovitdigital.com.br https://t3.storageapi.dev https://bolsa-click.fly.storage.tigris.dev https://*.firebaseio.com https://*.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com",
   // iframes: GTM noscript pixel + checkout embutido da Cogna na tela de sucesso.
   // kroton.platosedu.io é o checkout de pós/profissionalizante, que permite embed
   // (o de graduação, pay.anhanguera.com, responde frame-ancestors 'self' e não).
   // A CSP hoje é Report-Only; declarar já evita o bloqueio quando virar enforce.
-  "frame-src 'self' https://www.googletagmanager.com https://www.facebook.com https://kroton.platosedu.io",
+  // us.posthog.com: toolbar do PostHog (iframe), quando habilitado via ui_host.
+  "frame-src 'self' https://www.googletagmanager.com https://www.facebook.com https://kroton.platosedu.io https://us.posthog.com",
   // Frame ancestors — quem pode embedar o site (Clickjacking).
   "frame-ancestors 'self'",
   // Form actions — pra onde formulários podem submeter.
@@ -162,13 +168,19 @@ const nextConfig: NextConfig = {
         source: "/ingest/static/:path*",
         destination: "https://us-assets.i.posthog.com/static/:path*",
       },
+      // Chunk do SDK carregado sob demanda (ex.: session replay); vive no
+      // host de assets, não no de ingestão — path próprio na doc oficial do
+      // PostHog (posthog.com/docs/advanced/proxy/nextjs).
+      {
+        source: "/ingest/array/:path*",
+        destination: "https://us-assets.i.posthog.com/array/:path*",
+      },
+      // Catch-all: ingestão de eventos, /flags, /decide etc. — precisa vir
+      // DEPOIS das regras mais específicas acima (static/array), senão elas
+      // nunca seriam alcançadas.
       {
         source: "/ingest/:path*",
         destination: "https://us.i.posthog.com/:path*",
-      },
-      {
-        source: "/ingest/decide",
-        destination: "https://us.i.posthog.com/decide",
       },
       {
         source: "/utm/:path*",

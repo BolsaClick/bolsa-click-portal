@@ -31,7 +31,14 @@ const Hero = async () => {
   //     card, sobre o fundo cinza-claro da tarja.
   const contentOrderClass = hasBanners ? 'order-1 md:order-3' : 'order-1'
   const contentTopSpacingClass = hasBanners ? 'mt-0 md:mt-8' : 'mt-0'
-  const searchTopSpacingClass = hasBanners ? 'mt-4 md:mt-0 md:-mt-4' : 'mt-4 md:mt-6'
+  // O card de busca monta SOBRE o banner: parte dentro, parte fora. Antes eram
+  // 16px (`-mt-4`), que só encostava — as duas peças liam como blocos empilhados.
+  // Agora ~1/3 do card fica sobre a arte, que é o que dá a costura. O banner é
+  // `max-w-screen-xl` e o card `max-w-4xl`, então a diferença de largura também
+  // é visível: o banner emoldura o card em vez de competir com ele.
+  const searchTopSpacingClass = hasBanners
+    ? 'mt-4 md:mt-0 md:-mt-16 lg:-mt-24'
+    : 'mt-4 md:mt-6'
 
   return (
     <section aria-label="Seção principal de destaque" className="relative bg-mist w-full overflow-x-clip pb-16 md:pb-20">
@@ -50,7 +57,11 @@ const Hero = async () => {
             pra costurar na borda inferior dele (`md:-mt-4`); sem banner,
             seguido do conteúdo com uma folga normal, nunca negativa. */}
         <div className={`relative z-20 order-2 ${searchTopSpacingClass}`}>
-          <Filter />
+          {/* `asPageHeading` move o h1 da home pra cá. O bloco de texto que o
+              carregava saiu da dobra (decisão do Rodrigo, 03/09: o banner e a
+              busca bastam ali), mas a home não pode ficar SEM h1 — ela é a
+              página que disputa "bolsas de estudo". */}
+          <Filter asPageHeading />
         </div>
 
         {/* CONTEÚDO — h1 real (crítico pra SEO/GEO: estamos disputando a
@@ -67,14 +78,6 @@ const Hero = async () => {
         <div
           className={`relative mx-auto w-full max-w-screen-lg px-4 py-5 sm:px-6 md:py-4 lg:px-8 ${contentOrderClass} ${contentTopSpacingClass}`}
         >
-          <h1 className="font-display text-2xl md:text-xl lg:text-2xl font-semibold text-ink-900 leading-tight mb-1.5">
-            Bolsas de até <span className="text-bolsa-secondary">{DISCOUNT_CEILING_PCT}%</span> nas{' '}
-            <span className="text-bolsa-secondary">maiores redes de ensino</span> do Brasil
-          </h1>
-          <p className="text-ink-500 text-sm max-w-2xl leading-relaxed mb-3">
-            Mensalidades a partir de R$99/mês em faculdades reconhecidas pelo MEC.
-            Cadastro grátis, sem taxa de adesão. EAD ou presencial.
-          </p>
           {/* No mobile (abaixo de `md`) essa é a única prova social que a
               maioria dos visitantes vê antes de rolar — o banner de
               campanha é desktop-only. Por isso vira grade 2×2 de cartões

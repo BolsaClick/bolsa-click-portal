@@ -28,7 +28,20 @@ const educationLevels: { levels: FormValues['levels']; label: string }[] = [
   { levels: 'pos', label: 'Pós-graduação' },
   { levels: 'profissionalizante', label: 'Profissionalizante' }
 ]
-const Filter = () => {
+interface FilterProps {
+  /**
+   * Renderiza o título do card como `h1` em vez de `h2`.
+   *
+   * Existe porque este componente aparece em DUAS páginas: a home (onde ele é
+   * o topo da dobra e precisa carregar o único h1) e /bolsas-de-estudo (que
+   * tem h1 próprio). Promover o heading direto criaria h1 duplicado lá.
+   * Default `false` — quem não passa nada continua com h2, como sempre foi.
+   */
+  asPageHeading?: boolean
+}
+
+const Filter = ({ asPageHeading = false }: FilterProps) => {
+  const Heading = asPageHeading ? 'h1' : 'h2'
   const navigate = useRouter()
   const { city: geoCity, state: geoState } = useGeoLocation()
   const { saveSearch } = useLastSearch()
@@ -407,9 +420,9 @@ const Filter = () => {
               Busca de bolsas
             </span>
           </div>
-          <h2 className="font-display text-xl md:text-[26px] leading-tight font-semibold mb-1.5">
+          <Heading className="font-display text-xl md:text-[26px] leading-tight font-semibold mb-1.5">
             Encontre sua bolsa em segundos
-          </h2>
+          </Heading>
           <p className="text-white/75 text-[13px] md:text-[14px] max-w-xl leading-relaxed">
             Escolha o nível, digite o curso e a cidade. A gente compara as faculdades parceiras
             e mostra a melhor bolsa pra você.

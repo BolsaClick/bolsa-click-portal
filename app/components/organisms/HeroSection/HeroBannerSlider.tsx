@@ -193,7 +193,7 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
           não `fixed` — já ocupa espaço próprio no fluxo do documento, então
           nenhuma compensação manual é necessária aqui. */}
       <div
-        className="relative mx-auto w-full max-w-screen-lg px-4 sm:px-6 lg:px-8"
+        className="relative mx-auto w-full max-w-screen-xl px-4 sm:px-6 lg:px-8"
         role="region"
         aria-roledescription="carrossel"
         aria-label="Banners promocionais"

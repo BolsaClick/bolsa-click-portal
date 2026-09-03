@@ -199,11 +199,58 @@ const nextConfig: NextConfig = {
       ['cst-em-mecatronica-industrial', 'mecatronica-industrial-tecnologo'],
       ['cst-em-automacao-industrial', 'automacao-industrial-tecnologo'],
     ]
+    // Posts de blog duplicados: uma rodada de geração criou variante com sufixo
+    // `-2026-07` em vez de atualizar o post existente, e as duas versões ficaram
+    // vivas competindo pela mesma query. Três dos quatro pares são termos de
+    // dinheiro (prouni, desconto em faculdade, bolsa pra quem trabalha), então a
+    // canibalização estava batendo justamente nos posts de maior valor.
+    //
+    // O sobrevivente é sempre o slug limpo — URL melhor e, em três dos quatro
+    // casos, também o texto mais longo. O 301 tem que ir pro ar ANTES de
+    // desativar o duplicado: `app/blog/[slug]/page.tsx` filtra por isActive, e
+    // sem redirect a URL desativada viraria 404, jogando fora a autoridade.
+    const blogDupes = [
+      [
+        'prouni-2026-inscricao-notas-de-corte-como-usar-2026-07',
+        'prouni-2026-inscricao-notas-de-corte-como-usar',
+      ],
+      [
+        'desconto-em-faculdade-diferenca-prouni-fies-bolsa-direta-2026-07',
+        'desconto-em-faculdade-diferenca-prouni-fies-bolsa-direta',
+      ],
+      [
+        'bolsas-de-estudo-para-quem-ja-trabalha-opcoes-como-concorrer-2026-07',
+        'bolsas-de-estudo-para-quem-ja-trabalha-opcoes-como-concorrer',
+      ],
+      [
+        'quem-foi-louis-pasteur-descobertas-medicina-2026-07',
+        'quem-foi-louis-pasteur-descobertas-medicina',
+      ],
+      // Pares que já estavam resolvidos no banco (duplicata inativa), mas cuja
+      // URL antiga pode ter link externo apontando — 301 em vez de 404.
+      [
+        'diferenca-entre-bacharelado-licenciatura-e-tecnologo-qual-escolher-2026-07',
+        'diferenca-entre-bacharelado-licenciatura-e-tecnologo-qual-escolher',
+      ],
+      [
+        'o-que-e-computacao-em-nuvem-por-que-empresas-querem-profissionais',
+        'computacao-em-nuvem-o-que-e-por-que-empresas-querem-profissionais',
+      ],
+      [
+        'o-que-e-computacao-em-nuvem-por-que-empresas-querem-profissionais-2026-07',
+        'computacao-em-nuvem-o-que-e-por-que-empresas-querem-profissionais',
+      ],
+    ]
     return [
       ...courseDupes.flatMap(([from, to]) => [
         { source: `/cursos/${from}`, destination: `/cursos/${to}`, permanent: true },
         { source: `/carreiras/${from}`, destination: `/carreiras/${to}`, permanent: true },
       ]),
+      ...blogDupes.map(([from, to]) => ({
+        source: `/blog/${from}`,
+        destination: `/blog/${to}`,
+        permanent: true,
+      })),
       // URL "natural" que não existe (a central de ajuda é /central-de-ajuda).
       // 301 pra não devolver 404 a backlink externo/citação que chute esse path
       // (a auditoria GEO flagou o /perguntas-frequentes → 404).

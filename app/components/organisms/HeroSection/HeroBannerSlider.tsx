@@ -38,7 +38,12 @@ const RESUME_AFTER_INTERACTION_MS = 9000
 // (larguraResolvida / proporção, ~367px) pra não cortar nada. Em qualquer
 // proporção, em qualquer largura de tela, é a LARGURA que cede — nunca a
 // altura corta a imagem.
-const HEIGHT_BUDGET_PX = 420
+// 480 e não 420: a largura do banner é DERIVADA deste orçamento
+// (largura = orçamento × proporção), não do container. Com 420 a arte 1,913:1
+// resolvia em ~803px e ficava mais ESTREITA que o card de busca (896px) — as
+// duas peças competiam em vez de uma emoldurar a outra. A 550 ela vai a ~1052px,
+// que deixa ~78px de moldura de cada lado do card de 896px.
+const HEIGHT_BUDGET_PX = 550
 const CEILING_WIDTH_PX = 1680
 
 /**

@@ -43,7 +43,26 @@ const RESUME_AFTER_INTERACTION_MS = 9000
 // resolvia em ~803px e ficava mais ESTREITA que o card de busca (896px) — as
 // duas peças competiam em vez de uma emoldurar a outra. A 550 ela vai a ~1052px,
 // que deixa ~78px de moldura de cada lado do card de 896px.
-const HEIGHT_BUDGET_PX = 550
+// REGIME COVER (03/09, pedido do Rodrigo). Antes a caixa herdava a proporção da
+// arte e a imagem entrava com `object-contain`: nunca cortava, mas a largura
+// ficava refém da proporção — a arte 1,91:1 resolvia em ~1051px e não tinha como
+// virar a tarja larga da referência sem esticar a altura pra 636px.
+//
+// Agora a caixa tem proporção PRÓPRIA e a arte entra com `object-cover`. O
+// banner passa a ocupar a largura cheia do container em qualquer arte.
+//
+// O CUSTO É REAL E CONHECIDO: cover corta. Com a arte 1734x907 numa caixa de
+// 2,8:1 e 1216px de largura, saem ~200px de altura — ~100px em cima e ~100px
+// embaixo. Na arte da Anhanguera isso morde o logo (topo) e o botão "Garanta
+// sua vaga" (base). Ajuste BANNER_ASPECT e BANNER_OBJECT_POSITION conforme a
+// arte da campanha do momento; arte desenhada em 2,8:1 ou mais larga não perde
+// nada, porque não sobra o que cortar.
+//
+// Ancorado no TOPO ('center top') e não no centro: centralizado, o corte comia
+// as DUAS pontas — o logo do parceiro em cima e o CTA embaixo. Ancorando no
+// topo, o logo e a headline ficam inteiros e o sacrifício é só a base.
+const BANNER_ASPECT = 2.8
+const BANNER_OBJECT_POSITION = 'center top'
 const CEILING_WIDTH_PX = 1680
 
 /**
@@ -214,22 +233,13 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
         >
           {banners.map((banner, index) => {
             const isActive = index === currentIndex
-            const aspectRatio = banner.width / banner.height
-            // Largura que entregaria exatamente o orçamento de 420px de
-            // altura pra essa imagem específica, antes de qualquer teto.
-            const idealWidthPx = Math.round(HEIGHT_BUDGET_PX * aspectRatio)
-            const resolvedMaxWidthPx = Math.min(idealWidthPx, CEILING_WIDTH_PX)
-            // `min()`: cede pro menor dos três — 100% do espaço disponível,
-            // o teto de 1680px (regime tarja ultra-wide) ou a largura ideal
-            // pro orçamento de 420px (regime comum). Nunca corta: é sempre a
-            // LARGURA que cede.
-            const boxWidthCss = `min(100%, ${CEILING_WIDTH_PX}px, ${idealWidthPx}px)`
-            // Técnica clássica de "aspect ratio box": padding-top em % é
-            // sempre relativo à LARGURA resolvida do próprio elemento,
-            // então essa porcentagem entrega a altura certa qualquer que
-            // seja o termo que o `min()` acima escolher — sem depender da
-            // propriedade CSS `aspect-ratio` nem de JS.
-            const paddingTopPct = (banner.height / banner.width) * 100
+            // Largura cheia do container, limitada só pelo teto de tarja. A
+            // proporção da ARTE não entra mais nessa conta — é justamente o
+            // acoplamento que o regime cover desfez.
+            const boxWidthCss = `min(100%, ${CEILING_WIDTH_PX}px)`
+            // A altura agora vem da proporção DA CAIXA, não da arte — é isso que
+            // desacopla a largura do banner do formato do arquivo enviado.
+            const paddingTopPct = 100 / BANNER_ASPECT
             const image = (
               <div
                 className="relative mx-auto overflow-hidden rounded-2xl bg-gray-100"
@@ -240,10 +250,11 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
                   src={banner.imageUrl}
                   alt={banner.title}
                   fill
-                  className="object-contain"
+                  className="object-cover"
+                  style={{ objectPosition: BANNER_OBJECT_POSITION }}
                   // Aproxima o hint de `sizes` da largura que a caixa
                   // realmente vai ocupar (ver `boxWidthCss`).
-                  sizes={`(min-width: ${resolvedMaxWidthPx}px) ${resolvedMaxWidthPx}px, 100vw`}
+                  sizes={`(min-width: ${CEILING_WIDTH_PX}px) ${CEILING_WIDTH_PX}px, 100vw`}
                   quality={70}
                   loading={index === 0 ? 'eager' : 'lazy'}
                   priority={index === 0}

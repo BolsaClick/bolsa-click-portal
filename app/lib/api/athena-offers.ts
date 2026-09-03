@@ -370,11 +370,32 @@ export function normalizeAthenaOffer(raw: AthenaOffer): Course {
  * vazia sob carga — não lança nada, indistinguível de ausência real numa
  * chamada isolada; ver comentário em probeAthenaHealth).
  */
-export async function searchAthenaOffers(
+export interface AthenaSearchResult {
+  /** Ofertas da PRIMEIRA página apenas — a API pagina em 20 por padrão. */
+  offers: AthenaOffer[]
+  /**
+   * Total REAL de ofertas que casam com a busca, lido de `meta.total`.
+   *
+   * Não confundir com `offers.length`. A API responde
+   * `{ data: [...20], meta: { page, size, total, totalPages } }`, então contar o
+   * array devolve o TAMANHO DA PÁGINA, não o total. Pedagogia em Recife pela
+   * Estácio tem 56 ofertas e `data.length` diz 20 — subcontagem de quase 3x,
+   * silenciosa, que já levou dois diagnósticos independentes a conclusões
+   * erradas sobre a cobertura do catálogo.
+   */
+  total: number
+}
+
+/**
+ * Igual a `searchAthenaOffers`, mas devolve também o total real do envelope.
+ * Use quando o que importa é QUANTAS ofertas existem, não quais — contagem pra
+ * gate de indexação, cache, DATA_BLOCK editorial.
+ */
+export async function searchAthenaOffersWithMeta(
   params: SearchAthenaOffersParams,
   opts?: { throwOnFailure?: boolean },
-): Promise<AthenaOffer[]> {
-  if (!process.env.ATHENA_BASE_URL) return []
+): Promise<AthenaSearchResult> {
+  if (!process.env.ATHENA_BASE_URL) return { offers: [], total: 0 }
 
   // O kill switch `estacio_enabled` (jul/2026) foi APOSENTADO em 2026-08-17:
   // a Estácio é parceira permanente. Além de não fazer mais sentido, ele tinha
@@ -411,12 +432,30 @@ export async function searchAthenaOffers(
     // Sem filtro de inscrevibilidade (decisão do negócio): mostrar tudo que a
     // Athena retorna, inclusive ofertas com split de curso. Eventual INT004 é
     // tratado/exibido no checkout (/api/athena-checkout → EstacioCheckoutClient).
-    return list
+    //
+    // `meta.total` é o total real; quando ausente (contrato mudou, resposta é
+    // array puro), cai pro tamanho da lista — subconta, mas nunca inventa.
+    const total =
+      typeof data?.meta?.total === 'number' ? data.meta.total : list.length
+
+    return { offers: list, total }
   } catch (error) {
     console.error('Erro ao buscar ofertas na Athena:', error)
     if (opts?.throwOnFailure) throw error
-    return []
+    return { offers: [], total: 0 }
   }
+}
+
+/**
+ * Busca ofertas da Athena. Devolve só a primeira página (20 por padrão) — se o
+ * que você precisa é a CONTAGEM, use `searchAthenaOffersWithMeta`.
+ */
+export async function searchAthenaOffers(
+  params: SearchAthenaOffersParams,
+  opts?: { throwOnFailure?: boolean },
+): Promise<AthenaOffer[]> {
+  const { offers } = await searchAthenaOffersWithMeta(params, opts)
+  return offers
 }
 
 /**

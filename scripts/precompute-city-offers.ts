@@ -32,7 +32,7 @@
 import { PrismaClient } from '@prisma/client'
 import axios from 'axios'
 import { BRAZILIAN_CITIES } from '../app/lib/constants/brazilian-cities'
-import { searchAthenaOffers } from '../app/lib/api/athena-offers'
+import { searchAthenaOffersWithMeta } from '../app/lib/api/athena-offers'
 
 const args = Object.fromEntries(
   process.argv
@@ -142,8 +142,13 @@ async function fetchOffers(
       const prices = data
         .map((o) => o.minPrice ?? o.prices?.withDiscount ?? 0)
         .filter((p) => p > 0)
+      // `data.length` é o tamanho da PÁGINA (size=50), não o total. A Tartarus
+      // devolve `totalItems` no topo; sem ele, uma cidade com mais de 50 ofertas
+      // ficaria eternamente registrada como tendo exatamente 50.
+      const total =
+        typeof res.data?.totalItems === 'number' ? res.data.totalItems : data.length
       return {
-        offerCount: data.length,
+        offerCount: total,
         minPrice: prices.length ? Math.min(...prices) : null,
       }
     } catch (err) {
@@ -177,18 +182,25 @@ async function fetchAthenaOffers(
     try {
       const perBrand = await Promise.all(
         ATHENA_BRANDS.map((brand) =>
-          searchAthenaOffers(
+          searchAthenaOffersWithMeta(
             { courseName, city, state, academicLevel: nivel, brand },
             { throwOnFailure: true },
           ),
         ),
       )
-      const all = perBrand.flat() as AthenaPriced[]
+      // Total REAL somado por marca (`meta.total`), não o tamanho das páginas.
+      // A Athena pagina em 20: contar as listas dava no máximo 60 pras três
+      // marcas, teto que "Pedagogia em Recife = 40" tinha batido sem avisar.
+      const offerCount = perBrand.reduce((sum, r) => sum + r.total, 0)
+      // O preço mínimo, esse, sai da primeira página de cada marca — é o que
+      // temos sem paginar tudo e quadruplicar de novo a carga na API. Pode
+      // superestimar o mínimo, nunca inventa valor: todo preço veio da API.
+      const all = perBrand.flatMap((r) => r.offers) as AthenaPriced[]
       const prices = all
         .map((o) => o.minPrice ?? o.prices?.withDiscount ?? 0)
         .filter((p) => p > 0)
       return {
-        offerCount: all.length,
+        offerCount,
         minPrice: prices.length ? Math.min(...prices) : null,
       }
     } catch (err) {

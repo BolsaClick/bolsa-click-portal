@@ -9,7 +9,7 @@ export function WhatsAppSocialIcon() {
 
   return (
     <a
-      href="https://wa.me/551153043216"
+      href="https://wa.me/551151230079"
       className="text-neutral-500 hover:text-white transition-colors"
       target="_blank"
       rel="noopener noreferrer"
@@ -26,11 +26,11 @@ export function WhatsAppPhoneLink() {
 
   return (
     <a
-      href="https://wa.me/551153043216"
+      href="https://wa.me/551151230079"
       className="flex items-center text-neutral-300 text-sm hover:text-white transition-colors"
     >
       <Phone size={16} className="text-neutral-400 mr-2 flex-shrink-0" />
-      (11) 5304-3216
+      (11) 5123-0079
     </a>
   )
 }

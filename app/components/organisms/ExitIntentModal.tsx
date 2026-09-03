@@ -7,7 +7,7 @@ import { useExitIntent } from '@/app/lib/hooks/useExitIntent'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { useWhatsappFeatureFlag } from '@/app/lib/hooks/usePostHogFeatureFlags'
 
-const WHATSAPP_URL = 'https://wa.me/551153043216'
+const WHATSAPP_URL = 'https://wa.me/551151230079'
 
 export default function ExitIntentModal() {
   const showWhatsapp = useWhatsappFeatureFlag()

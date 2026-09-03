@@ -62,7 +62,7 @@ export function WatiWhatsappWidget() {
                 ctaText: "Precisa de ajuda? \\ud83d\\udc99",
                 borderRadius: "25",
                 autoShow: false,
-                phoneNumber: "551153043216"
+                phoneNumber: "551151230079"
               }
             };
 

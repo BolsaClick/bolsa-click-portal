@@ -52,6 +52,11 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           NEXT_PUBLIC_TARTARUS_API: ${{ secrets.NEXT_PUBLIC_TARTARUS_API }}
+          # Sem isto, `searchAthenaOffers` devolve lista vazia ANTES do
+          # try/catch e toda oferta da Estácio vira zero gravado — falso zero
+          # uniforme, que o controle positivo por lote não distingue de
+          # "curso não existe em lugar nenhum". Aconteceu na rodada 33802574423.
+          ATHENA_BASE_URL: ${{ secrets.ATHENA_BASE_URL }}
         run: >-
           npx tsx scripts/precompute-city-offers.ts
           --city-limit=${{ github.event.inputs.city_limit || '160' }}

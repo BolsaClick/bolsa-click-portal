@@ -395,7 +395,19 @@ export async function searchAthenaOffersWithMeta(
   params: SearchAthenaOffersParams,
   opts?: { throwOnFailure?: boolean },
 ): Promise<AthenaSearchResult> {
-  if (!process.env.ATHENA_BASE_URL) return { offers: [], total: 0 }
+  // Config ausente NÃO é "não tem oferta". Quem pede `throwOnFailure` está
+  // gravando o resultado em algum lugar (cache, DATA_BLOCK) e precisa saber a
+  // diferença — devolver vazio aqui produz falso zero uniforme, que nenhum
+  // controle positivo consegue distinguir de ausência real. Para o resto dos
+  // chamadores (render de página), degradar em silêncio segue correto.
+  if (!process.env.ATHENA_BASE_URL) {
+    if (opts?.throwOnFailure) {
+      throw new Error(
+        'ATHENA_BASE_URL não está no ambiente — impossível medir oferta da Athena',
+      )
+    }
+    return { offers: [], total: 0 }
+  }
 
   // O kill switch `estacio_enabled` (jul/2026) foi APOSENTADO em 2026-08-17:
   // a Estácio é parceira permanente. Além de não fazer mais sentido, ele tinha

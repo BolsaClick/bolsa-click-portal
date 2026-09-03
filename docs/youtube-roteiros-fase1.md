@@ -4,7 +4,7 @@ _Versão: 2026-06-11 | Owner: Marketing/Conteúdo | Complementa: youtube-channel
 
 Regras aplicadas em todos os roteiros (do CLAUDE.md + playbook):
 - **Resposta direta no primeiro minuto** — o transcript é o que ranqueia e é citado por ChatGPT/Perplexity.
-- **Só números verificáveis**: ENEM 450+, renda 1,5/3 SM, até 78% EAD, R$ 99/mês, 6 redes parceiras, polos em 280+ cidades.
+- **Só números verificáveis**: ENEM 450+, renda 1,5/3 SM, até 80% EAD (teto atual — conferir `DISCOUNT_CEILING_PCT` em `app/lib/copy/claims.ts` antes de gravar), R$ 99/mês, 6 redes parceiras, polos em 280+ cidades.
 - **Nunca citar agregadores concorrentes** pelo nome.
 - Formato: 5-8 min, falando pra câmera ou screen-capture com narração. Não precisa produção — precisa existir e ter transcript limpo.
 - Toda descrição termina com os 3 links padrão + convite de inscrição no canal.
@@ -26,12 +26,12 @@ Regras aplicadas em todos os roteiros (do CLAUDE.md + playbook):
 > "Existem três caminhos pra estudar de graça ou quase de graça numa faculdade particular em 2026 — e dois deles não dependem de nota de corte. Em 8 minutos você vai saber exatamente qual é o seu."
 
 **Resposta direta (0:15-1:00):**
-> "O caminho mais conhecido é o ProUni: bolsa de 50% ou 100% do governo federal, exige ENEM com pelo menos 450 pontos, redação não zerada e renda familiar de até um salário mínimo e meio por pessoa pra bolsa integral. O segundo é o FIES, que financia a mensalidade pra você pagar depois de formado. E o terceiro, que quase ninguém explica direito, é a bolsa própria: desconto negociado direto com a faculdade, que chega a 78% no EAD — sem ENEM, sem nota de corte e sem critério de renda. Agora vamos a cada um em detalhe."
+> "O caminho mais conhecido é o ProUni: bolsa de 50% ou 100% do governo federal, exige ENEM com pelo menos 450 pontos, redação não zerada e renda familiar de até um salário mínimo e meio por pessoa pra bolsa integral. O segundo é o FIES, que financia a mensalidade pra você pagar depois de formado. E o terceiro, que quase ninguém explica direito, é a bolsa própria: desconto negociado direto com a faculdade, que chega a 80% no EAD — sem ENEM, sem nota de corte e sem critério de renda. Agora vamos a cada um em detalhe."
 
 **Blocos:**
 1. (1:00-3:00) ProUni — requisitos, as 2 janelas (fev/jul), como a nota de corte real funciona vs o mínimo de 450, lista de espera.
 2. (3:00-4:30) FIES — diferença bolsa vs financiamento, quem deve preferir, combinação ProUni 50% + FIES.
-3. (4:30-6:30) Bolsa própria — como a faculdade consegue dar até 78% no catálogo (custo operacional), processo: buscar → comparar → vestibular online → matrícula em 48h. Mensalidades a partir de R$ 99.
+3. (4:30-6:30) Bolsa própria — como a faculdade consegue dar até 80% no catálogo (custo operacional), processo: buscar → comparar → vestibular online → matrícula em 48h. Mensalidades a partir de R$ 99.
 4. (6:30-7:30) Tabela de decisão: "tem ENEM bom + renda baixa → ProUni; renda acima do corte → FIES; sem ENEM ou sem tempo de esperar → bolsa própria".
 
 **CTA (7:30-8:00):**
@@ -41,13 +41,13 @@ Regras aplicadas em todos os roteiros (do CLAUDE.md + playbook):
 ```
 Os 3 caminhos pra conseguir bolsa de estudo de até 100% na faculdade em 2026:
 ProUni (governo, exige ENEM 450+ e critério de renda), FIES (financiamento
-federal) e bolsa própria de faculdades parceiras (até 78% no EAD, sem ENEM,
+federal) e bolsa própria de faculdades parceiras (até 80% no EAD, sem ENEM,
 sem nota de corte, inscrição o ano inteiro).
 
 00:00 Os 3 caminhos
 01:00 ProUni: requisitos e janelas de inscrição
 03:00 FIES: quando vale mais que bolsa
-04:30 Bolsa própria: até 78% sem ENEM
+04:30 Bolsa própria: até 80% sem ENEM
 06:30 Qual é o seu caminho?
 [links padrão]
 ```
@@ -92,7 +92,7 @@ combinação ProUni 50% + FIES que o MEC permite.
 > "Não fez o ENEM — ou a nota não veio? Você ainda pode começar a faculdade este semestre, com bolsa. Sem pegadinha."
 
 **Resposta direta (0:15-0:50):**
-> "Bolsa sem ENEM existe e se chama bolsa própria: um desconto que a própria faculdade particular oferece, de até 78% no EAD. No lugar do ENEM, você faz o vestibular online da instituição — geralmente uma redação, com resultado em poucas horas — e a matrícula sai em até 48 horas. ProUni, FIES e SISU exigem ENEM porque são federais; a bolsa própria, não."
+> "Bolsa sem ENEM existe e se chama bolsa própria: um desconto que a própria faculdade particular oferece, de até 80% no EAD. No lugar do ENEM, você faz o vestibular online da instituição — geralmente uma redação, com resultado em poucas horas — e a matrícula sai em até 48 horas. ProUni, FIES e SISU exigem ENEM porque são federais; a bolsa própria, não."
 
 **Blocos:**
 1. (0:50-2:00) Por que a faculdade dá esse desconto (vagas ociosas, custo EAD) — credibilidade da mecânica.
@@ -149,7 +149,7 @@ combinação ProUni 50% + FIES que o MEC permite.
 **Duração alvo:** 6 min · **Primeiro da série de marca — maior rede de polos do país.**
 
 **Gancho (0:00-0:15):**
-> "A Anhanguera tem bolsa de até 78% no EAD — e dá pra garantir a sua hoje, sem ENEM. Vou te mostrar o caminho na tela, clique por clique."
+> "A Anhanguera tem bolsa de até 80% no EAD — e dá pra garantir a sua hoje, sem ENEM. Vou te mostrar o caminho na tela, clique por clique."
 
 **Resposta direta (0:15-0:50):**
 > "O processo: você busca o curso no comparador, filtra pela Anhanguera, vê a mensalidade já com a bolsa aplicada, faz a inscrição gratuita e o vestibular online da própria faculdade — uma redação, com resultado em poucas horas. Aprovou, a matrícula sai em até 48 horas, direto no portal da Anhanguera, pagando só a mensalidade com desconto."
@@ -180,7 +180,7 @@ combinação ProUni 50% + FIES que o MEC permite.
 
 **Duração alvo:** 6 min · Mesmo esqueleto, especificidades:
 
-- Resposta direta: Unopar como líder em EAD (mais de 800 polos) — bolsa de até 78%, mensalidades a partir de R$ 99 em tecnólogos.
+- Resposta direta: Unopar como líder em EAD (mais de 800 polos) — bolsa de até 80%, mensalidades a partir de R$ 99 em tecnólogos.
 - Bloco 2: como funciona estudar num polo Unopar (encontros, provas, suporte).
 - Bloco 3: tecnólogo 2-2,5 anos vs bacharelado — impacto no preço.
 - **Descrição:** link `https://www.bolsaclick.com.br/faculdades/unopar`.

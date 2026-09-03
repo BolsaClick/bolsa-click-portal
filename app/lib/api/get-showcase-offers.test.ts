@@ -19,7 +19,7 @@ test('baseCourseName distinguishes Administração from Administração Pública
   )
 })
 
-test('stub De/Por 119/950, 99.99/1290 and 109/1100 compute above the 78% ceiling', () => {
+test(`stub De/Por 119/950, 99.99/1290 and 109/1100 compute above the ${DISCOUNT_CEILING_PCT}% ceiling`, () => {
   assert.equal(discountFromPrices(119, 950), 87)
   assert.equal(discountFromPrices(99.99, 1290), 92)
   assert.equal(discountFromPrices(109, 1100), 90)

@@ -1,8 +1,10 @@
 /**
- * Conteúdo travado do copy lock (teto 78% + 6 redes).
+ * Conteúdo travado do copy lock (teto DISCOUNT_CEILING_PCT + 6 redes).
  * Importado por `lock-copy-claims.ts` e pelo seed manual de posts de marca.
  * Sem side-effect: este módulo não grava no banco.
  */
+
+import { DISCOUNT_CEILING_PCT } from '../app/lib/copy/claims'
 
 export const GUIA_PASSO_A_PASSO_SLUG = 'como-conseguir-bolsa-estudo-2026-guia-passo-a-passo'
 
@@ -11,9 +13,9 @@ export const GUIA_PASSO_A_PASSO = {
   title: 'Como conseguir bolsa de estudo em 2026: guia passo a passo',
   metaTitle: 'Como conseguir bolsa de estudo em 2026 | Sem ENEM | Bolsa Click',
   metaDescription:
-    'Pra conseguir bolsa sem ENEM, use a bolsa própria das faculdades parceiras: Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. Teto do catálogo: 78%. Cadastro grátis, sem taxa de adesão.',
+    `Pra conseguir bolsa sem ENEM, use a bolsa própria das faculdades parceiras: Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. Teto do catálogo: ${DISCOUNT_CEILING_PCT}%. Cadastro grátis, sem taxa de adesão.`,
   excerpt:
-    'Pra conseguir bolsa sem ENEM, o caminho é a bolsa própria das faculdades parceiras. O desconto máximo no catálogo agora é 78%. Cadastro grátis, sem taxa de adesão.',
+    `Pra conseguir bolsa sem ENEM, o caminho é a bolsa própria das faculdades parceiras. O desconto máximo no catálogo agora é ${DISCOUNT_CEILING_PCT}%. Cadastro grátis, sem taxa de adesão.`,
   keywords: [
     'como conseguir bolsa de estudo',
     'bolsa de estudo 2026',
@@ -27,7 +29,7 @@ export const GUIA_PASSO_A_PASSO = {
   categorySlugs: ['bolsas-de-estudo'],
   featured: false,
   content: `
-<p>Pra conseguir bolsa sem ENEM, o caminho é a bolsa própria das faculdades parceiras: Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. O desconto máximo no catálogo agora é 78% (vitrine: Publicidade, De R$ 1.497,92 por R$ 316). Cadastro grátis, sem taxa de adesão.</p>
+<p>Pra conseguir bolsa sem ENEM, o caminho é a bolsa própria das faculdades parceiras: Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. O desconto máximo no catálogo agora é ${DISCOUNT_CEILING_PCT}%. Cadastro grátis, sem taxa de adesão.</p>
 
 <h2>Os 3 caminhos para bolsa em 2026</h2>
 
@@ -43,7 +45,7 @@ export const GUIA_PASSO_A_PASSO = {
 <p>O FIES financia a mensalidade para pagamento após a formação, com regras de juros e carência definidas pelo governo. Também exige ENEM e critério de renda. Não é bolsa: é financiamento. Confira o edital vigente em <a href="https://acessounico.mec.gov.br/fies" rel="nofollow noopener" target="_blank">acessounico.mec.gov.br/fies</a> e o panorama em <a href="/fies">FIES no Bolsa Click</a>.</p>
 
 <h3>Caminho 3: bolsa própria da faculdade (sem ENEM)</h3>
-<p>As bolsas próprias são descontos negociados direto com a instituição. No Bolsa Click você compara o De/Por antes de se cadastrar. Não há nota de corte de ENEM nem critério de renda da plataforma. O teto atual do catálogo é <strong>78%</strong> — o mesmo da vitrine da home (Publicidade e Propaganda presencial em São Paulo, De R$ 1.497,92 por R$ 316). Em EAD, há ofertas a partir de R$ 99/mês.</p>
+<p>As bolsas próprias são descontos negociados direto com a instituição. No Bolsa Click você compara o De/Por antes de se cadastrar. Não há nota de corte de ENEM nem critério de renda da plataforma. O teto atual do catálogo é <strong>${DISCOUNT_CEILING_PCT}%</strong>. Em EAD, há ofertas a partir de R$ 99/mês.</p>
 <p>As 6 redes nomeáveis no catálogo parceiro: <strong>Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden</strong>. UNIC, UNIDERP e Ibmec podem aparecer em alguma oferta, mas não entram nessa lista de redes do hero. Cadastro grátis, sem taxa de adesão. A matrícula, a duração do desconto e eventuais taxas seguem o contrato da faculdade da oferta escolhida.</p>
 <ol>
   <li>Busque o curso, a cidade e a modalidade em <a href="/bolsas-de-estudo">bolsas de estudo</a>.</li>
@@ -72,7 +74,7 @@ export const GUIA_PASSO_A_PASSO = {
       <td>Cobertura</td>
       <td>50% ou 100%</td>
       <td>Financiamento</td>
-      <td>Até 78% no catálogo</td>
+      <td>Até ${DISCOUNT_CEILING_PCT}% no catálogo</td>
     </tr>
     <tr>
       <td>Quando</td>
@@ -96,7 +98,7 @@ export const GUIA_PASSO_A_PASSO = {
 <h3>Preciso de ENEM para conseguir bolsa?</h3>
 <p>Não obrigatoriamente. ProUni e FIES exigem. A bolsa própria das faculdades parceiras não exige nota do ENEM.</p>
 <h3>Qual é o desconto máximo no Bolsa Click?</h3>
-<p>O teto atual do catálogo é 78%, verificado na vitrine (Publicidade e Propaganda presencial SP, De R$ 1.497,92 por R$ 316). O percentual de cada curso varia por unidade e modalidade.</p>
+<p>O teto atual do catálogo é ${DISCOUNT_CEILING_PCT}%. O percentual de cada curso varia por unidade e modalidade.</p>
 <h3>A bolsa vale o curso inteiro?</h3>
 <p>Não trate isso como absoluto. O percentual e a duração seguem o contrato da faculdade da oferta. Cadastro no Bolsa Click é grátis, sem taxa de adesão.</p>
 <h3>Quanto tempo leva para começar?</h3>
@@ -134,7 +136,7 @@ O cadastro no Bolsa Click é grátis, sem taxa de adesão. A matrícula, as regr
     'Marca de centros universitários do grupo YDUQS, o mesmo da Estácio',
     'Ofertas de graduação EAD e presencial no catálogo do Bolsa Click',
     'Cursos reconhecidos pelo MEC — confira o curso específico no e-MEC',
-    'Bolsas de até 78% conforme a oferta do catálogo',
+    `Bolsas de até ${DISCOUNT_CEILING_PCT}% conforme a oferta do catálogo`,
     'Cadastro grátis, sem taxa de adesão',
   ],
   logoUrl: '/assets/wyden.svg',
@@ -144,9 +146,9 @@ O cadastro no Bolsa Click é grátis, sem taxa de adesão. A matrícula, as regr
     'wyden', 'faculdade wyden', 'wyden ead', 'wyden bolsa',
     'wyden cursos', 'wyden yduqs', 'centro universitário wyden',
   ],
-  metaTitle: 'Faculdade Wyden - Bolsas de Estudo com até 78% de Desconto | Bolsa Click',
+  metaTitle: `Faculdade Wyden - Bolsas de Estudo com até ${DISCOUNT_CEILING_PCT}% de Desconto | Bolsa Click`,
   metaDescription:
-    'Bolsas de estudo na Wyden (grupo YDUQS) com até 78% de desconto. Graduação EAD e presencial reconhecida pelo MEC. Cadastro grátis, sem taxa de adesão.',
+    `Bolsas de estudo na Wyden (grupo YDUQS) com até ${DISCOUNT_CEILING_PCT}% de desconto. Graduação EAD e presencial reconhecida pelo MEC. Cadastro grátis, sem taxa de adesão.`,
   isActive: true,
   order: 4,
 }

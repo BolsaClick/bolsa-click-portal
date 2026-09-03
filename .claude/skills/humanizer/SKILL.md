@@ -48,8 +48,9 @@ direta.
 > Errado: "A bolsa não é só um desconto, é uma oportunidade de mudar de
 > vida."
 >
-> Melhor: "A bolsa reduz a mensalidade em até 78%, o suficiente pra
-> viabilizar a faculdade pra quem não conseguiria pagar o valor cheio."
+> Melhor: "A bolsa reduz a mensalidade em até [teto atual, ver
+> `app/lib/copy/claims.ts`], o suficiente pra viabilizar a faculdade pra
+> quem não conseguiria pagar o valor cheio."
 
 ### Voz passiva excessiva
 

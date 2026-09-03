@@ -4,6 +4,15 @@
  *  - upsert da instituição Wyden (6ª rede do diretório /faculdades)
  *  - reescreve /blog/como-conseguir-bolsa-estudo-2026-guia-passo-a-passo
  *  - troca 80% → 78% em /blog/como-conseguir-bolsa-anhanguera-sem-enem
+ *    (migração pontual de 2026-08, quando o teto era 78%; ver histórico
+ *    do arquivo antes de reaproveitar)
+ *
+ * ATENÇÃO (2026-09-02): DISCOUNT_CEILING_PCT em claims.ts subiu pra 80.
+ * `lockCeilingText`/`lockAnhangueraPost` fazem exatamente o oposto do que a
+ * constante manda hoje — rodar isto agora reescreveria conteúdo correto
+ * (80%) pro valor antigo (78%). Por isso o guard abaixo aborta enquanto a
+ * constante não voltar a ser 78. Não removi a lógica: é o registro de uma
+ * migração específica já aplicada, não um gerador reutilizável.
  *
  * Idempotente. Não inventa MEC/campus/preço.
  *
@@ -12,6 +21,7 @@
  */
 
 import { PrismaClient } from '@prisma/client'
+import { DISCOUNT_CEILING_PCT } from '../app/lib/copy/claims'
 import { GUIA_PASSO_A_PASSO, WYDEN_INSTITUTION } from './lock-copy-data'
 
 const prisma = new PrismaClient()
@@ -133,7 +143,23 @@ async function lockAnhangueraPost() {
 }
 
 async function main() {
-  console.log('━━━ lock-copy-claims (teto 78%, 6 redes, Wyden) ━━━\n')
+  // `lockAnhangueraPost`/`lockCeilingText` foram escritos pra forçar o texto
+  // pra "78%" — isso só faz sentido enquanto DISCOUNT_CEILING_PCT (claims.ts)
+  // for 78. Hoje é 80: deixar isto rodar reescreveria conteúdo correto pro
+  // valor antigo. Aborta em vez de silenciosamente sabotar o teto atual.
+  // (cast pra number: DISCOUNT_CEILING_PCT é um literal type, e comparar
+  // literais que não se sobrepõem é erro de tipo em `strict`)
+  const currentCeiling: number = DISCOUNT_CEILING_PCT
+  if (currentCeiling !== 78) {
+    console.error(
+      `✗ abortado: DISCOUNT_CEILING_PCT é ${DISCOUNT_CEILING_PCT} (claims.ts), não 78. ` +
+        'lockAnhangueraPost forçaria o post de volta pro teto antigo. ' +
+        'upsertWyden/lockGuiaPost seguem GUIA_PASSO_A_PASSO (já deriva do teto atual) e são seguros — ' +
+        'rode-os isoladamente se for só isso que você precisa, ou revise este script antes de destravar o guard.',
+    )
+    process.exit(1)
+  }
+  console.log(`━━━ lock-copy-claims (teto ${DISCOUNT_CEILING_PCT}%, 6 redes, Wyden) ━━━\n`)
   await upsertWyden()
   await lockGuiaPost()
   await lockAnhangueraPost()

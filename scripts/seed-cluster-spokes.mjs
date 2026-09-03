@@ -2,10 +2,13 @@
 // 1. /blog/bolsa-sem-prouni — spoke do pillar /como-conseguir-bolsa-de-estudo
 // 2. /blog/mensalidade-de-psicologia-com-bolsa — spoke do pillar /bolsas/saude
 //
-// Run: node scripts/seed-cluster-spokes.mjs
+// Run: npx tsx scripts/seed-cluster-spokes.mjs
+// (precisa de tsx, não `node` puro, porque importa DISCOUNT_CEILING_PCT de
+// app/lib/copy/claims.ts em vez de repetir o teto de desconto aqui.)
 // Idempotente: usa upsert por slug.
 
 import { PrismaClient } from '@prisma/client'
+import { DISCOUNT_CEILING_PCT } from '../app/lib/copy/claims.ts'
 
 const prisma = new PrismaClient()
 
@@ -16,7 +19,7 @@ const POST_SEM_PROUNI = {
     'Não passou no ProUni ou não atende requisitos? Veja 5 caminhos alternativos pra conseguir bolsa em faculdade particular sem precisar do programa federal.',
   metaTitle: 'Bolsa de Estudo Sem ProUni: 5 Alternativas em 2026 | Bolsa Click',
   metaDescription:
-    'Bolsa sem ProUni: descubra 5 alternativas que funcionam hoje — FIES, Bolsa Click (até 78%), bolsas filantrópicas e mais. Sem ENEM, sem comprovação de renda.',
+    `Bolsa sem ProUni: descubra 5 alternativas que funcionam hoje — FIES, Bolsa Click (até ${DISCOUNT_CEILING_PCT}%), bolsas filantrópicas e mais. Sem ENEM, sem comprovação de renda.`,
   keywords: [
     'bolsa sem prouni',
     'como conseguir bolsa sem prouni',
@@ -40,9 +43,9 @@ const POST_SEM_PROUNI = {
 
 <h2>5 alternativas reais ao ProUni</h2>
 
-<h3>1. Bolsa Click — descontos de até 78% sem ENEM</h3>
+<h3>1. Bolsa Click — descontos de até ${DISCOUNT_CEILING_PCT}% sem ENEM</h3>
 
-<p>O <a href="/">Bolsa Click</a> é uma plataforma gratuita que negocia descontos com as principais redes de faculdade particular do Brasil (Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden). Os descontos chegam a 78% sobre o valor da mensalidade cheia, e <strong>não exigem nota do ENEM, comprovação de renda ou CPF de parente</strong>.</p>
+<p>O <a href="/">Bolsa Click</a> é uma plataforma gratuita que negocia descontos com as principais redes de faculdade particular do Brasil (Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden). Os descontos chegam a ${DISCOUNT_CEILING_PCT}% sobre o valor da mensalidade cheia, e <strong>não exigem nota do ENEM, comprovação de renda ou CPF de parente</strong>.</p>
 
 <p>O cadastro é 100% gratuito. Você escolhe o curso e a unidade, garante a bolsa antes da matrícula, e segue direto pra inscrição com a faculdade já com o desconto aplicado. Mensalidades começam a partir de R$ 99/mês em modalidades EAD.</p>
 
@@ -91,7 +94,7 @@ const POST_MENSALIDADE_PSI = {
   slug: 'mensalidade-de-psicologia-com-bolsa',
   title: 'Quanto custa a mensalidade de Psicologia com bolsa de estudo? Valores 2026',
   excerpt:
-    'Mensalidade de Psicologia varia de R$ 199 a R$ 2.500. Veja preços com bolsa em Anhanguera, Unopar e outras faculdades particulares, desconto médio e como economizar até 78%.',
+    `Mensalidade de Psicologia varia de R$ 199 a R$ 2.500. Veja preços com bolsa em Anhanguera, Unopar e outras faculdades particulares, desconto médio e como economizar até ${DISCOUNT_CEILING_PCT}%.`,
   metaTitle: 'Mensalidade de Psicologia com Bolsa 2026: a partir de R$ 199 | Bolsa Click',
   metaDescription:
     'Mensalidade de Psicologia em faculdade particular: valor cheio R$ 1.200-R$ 2.500. Com bolsa pelo Bolsa Click, partir de R$ 199/mês. Veja preços por faculdade e cidade.',
@@ -124,7 +127,7 @@ const POST_MENSALIDADE_PSI = {
 
 <h2>Quanto custa Psicologia com bolsa pelo Bolsa Click?</h2>
 
-<p>Com bolsas negociadas pelo Bolsa Click nas faculdades parceiras Cogna e YDUQS (Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden), os descontos chegam a 78% sobre o valor cheio. Os preços com bolsa em 2026 começam:</p>
+<p>Com bolsas negociadas pelo Bolsa Click nas faculdades parceiras Cogna e YDUQS (Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden), os descontos chegam a ${DISCOUNT_CEILING_PCT}% sobre o valor cheio. Os preços com bolsa em 2026 começam:</p>
 
 <ul>
 <li><strong>Modalidade semipresencial:</strong> a partir de R$ 199/mês</li>
@@ -156,7 +159,7 @@ const POST_MENSALIDADE_PSI = {
 
 <h2>Como economizar mais</h2>
 
-<p><strong>Combine Bolsa Click com modalidade semipresencial.</strong> A diferença de preço entre presencial e semipresencial chega a 30% — somado ao desconto de até 78% do Bolsa Click, a mensalidade fica em R$ 199-R$ 299/mês na maioria das cidades.</p>
+<p><strong>Combine Bolsa Click com modalidade semipresencial.</strong> A diferença de preço entre presencial e semipresencial chega a 30% — somado ao desconto de até ${DISCOUNT_CEILING_PCT}% do Bolsa Click, a mensalidade fica em R$ 199-R$ 299/mês na maioria das cidades.</p>
 
 <p><strong>Escolha cidades menores se mora longe da capital.</strong> Mensalidade em cidade interior costuma ser 30-40% mais barata que em capital, e Anhanguera/Unopar têm polos em mais de 280 cidades brasileiras.</p>
 
@@ -221,7 +224,7 @@ const POST_EAD_TRABALHO = {
     'Combinar trabalho e graduação não precisa ser sofrimento. Veja como escolher uma faculdade EAD que se encaixa na rotina de quem trabalha 40h/semana, com bolsa pelo Bolsa Click.',
   metaTitle: 'Faculdade EAD para Quem Trabalha 2026 | Bolsa Click',
   metaDescription:
-    'Faculdade EAD para quem trabalha: 5 critérios essenciais (flexibilidade, polo próximo, custo, reconhecimento MEC). Bolsa de até 78% pelo Bolsa Click.',
+    `Faculdade EAD para quem trabalha: 5 critérios essenciais (flexibilidade, polo próximo, custo, reconhecimento MEC). Bolsa de até ${DISCOUNT_CEILING_PCT}% pelo Bolsa Click.`,
   keywords: [
     'faculdade ead para quem trabalha',
     'bolsa ead trabalho',
@@ -486,7 +489,7 @@ const POST_PEDAGOGIA_EAD = {
 
 <ul>
 <li><strong>Sem bolsa:</strong> mensalidade cheia R$ 400 a R$ 800/mês</li>
-<li><strong>Com bolsa Bolsa Click:</strong> a partir de R$ 99/mês (descontos de até 78%)</li>
+<li><strong>Com bolsa Bolsa Click:</strong> a partir de R$ 99/mês (descontos de até ${DISCOUNT_CEILING_PCT}%)</li>
 </ul>
 
 <p>Em 4 anos com bolsa: investimento total entre R$ 4.800 e R$ 12.000. Uma das graduações mais acessíveis do país.</p>
@@ -521,9 +524,9 @@ const POST_PEDAGOGIA_EAD = {
 
 const POST_ENFERMAGEM_ANHANGUERA = {
   slug: 'bolsa-de-enfermagem-anhanguera',
-  title: 'Bolsa de Enfermagem na Anhanguera 2026: como conseguir até 78% de desconto',
+  title: `Bolsa de Enfermagem na Anhanguera 2026: como conseguir até ${DISCOUNT_CEILING_PCT}% de desconto`,
   excerpt:
-    'A Anhanguera tem mais de 200 polos pelo Brasil ofertando Enfermagem com bolsa de até 78% pelo Bolsa Click. Veja mensalidade, reconhecimento MEC e processo de matrícula.',
+    `A Anhanguera tem mais de 200 polos pelo Brasil ofertando Enfermagem com bolsa de até ${DISCOUNT_CEILING_PCT}% pelo Bolsa Click. Veja mensalidade, reconhecimento MEC e processo de matrícula.`,
   metaTitle: 'Bolsa de Enfermagem na Anhanguera 2026: a partir de R$ 299 | Bolsa Click',
   metaDescription:
     'Enfermagem na Anhanguera com bolsa Bolsa Click a partir de R$ 299/mês. Reconhecimento MEC. Mais de 200 polos no Brasil. Sem ENEM, cadastro grátis.',
@@ -553,7 +556,7 @@ const POST_ENFERMAGEM_ANHANGUERA = {
 
 <ul>
 <li><strong>Mensalidade cheia (sem bolsa):</strong> R$ 1.200 a R$ 1.800/mês conforme cidade</li>
-<li><strong>Com bolsa Bolsa Click:</strong> a partir de R$ 299/mês (desconto de até 78%)</li>
+<li><strong>Com bolsa Bolsa Click:</strong> a partir de R$ 299/mês (desconto de até ${DISCOUNT_CEILING_PCT}%)</li>
 </ul>
 
 <p>Em 5 anos com bolsa: investimento total entre R$ 18.000 e R$ 24.000. Em valor cheio: R$ 72.000 a R$ 108.000. Economia: até R$ 90 mil.</p>
@@ -621,7 +624,7 @@ const POST_ADM_EAD = {
 
 <ul>
 <li><strong>Sem bolsa:</strong> mensalidade cheia R$ 350 a R$ 700/mês</li>
-<li><strong>Com bolsa Bolsa Click:</strong> a partir de R$ 99/mês (até 78% off)</li>
+<li><strong>Com bolsa Bolsa Click:</strong> a partir de R$ 99/mês (até ${DISCOUNT_CEILING_PCT}% off)</li>
 </ul>
 
 <p>O curso dura 4 anos (8 semestres). Investimento total com bolsa: R$ 4.752 a R$ 12.000. Uma das graduações mais baratas do país em modalidade EAD.</p>
@@ -657,7 +660,7 @@ const POST_FACULDADE_EAD_ANHANGUERA = {
     'A Anhanguera EAD tem mais de 1.500 polos e mensalidades a partir de R$ 99/mês com bolsa Bolsa Click. Guia completo dos cursos, processo e diferenciais da maior rede EAD do Brasil.',
   metaTitle: 'Faculdade EAD Anhanguera 2026 | Mensalidade a partir de R$ 99',
   metaDescription:
-    'Anhanguera EAD: 1.500+ polos, cursos reconhecidos MEC, bolsa de até 78% pelo Bolsa Click. Administração, Pedagogia, ADS, Engenharias e mais a partir de R$ 99/mês.',
+    `Anhanguera EAD: 1.500+ polos, cursos reconhecidos MEC, bolsa de até ${DISCOUNT_CEILING_PCT}% pelo Bolsa Click. Administração, Pedagogia, ADS, Engenharias e mais a partir de R$ 99/mês.`,
   keywords: [
     'faculdade ead anhanguera',
     'anhanguera ead',
@@ -679,7 +682,7 @@ const POST_FACULDADE_EAD_ANHANGUERA = {
 <li><strong>Mais de 100 cursos reconhecidos MEC</strong> em modalidade EAD ou semipresencial</li>
 <li><strong>Plataforma EAD madura</strong> (Aulas+ ou Sava) com aulas gravadas + tutoria 24/7</li>
 <li><strong>Diploma reconhecido</strong> idêntico ao presencial pra todas as finalidades</li>
-<li><strong>Bolsa Click negociada</strong> com descontos de até 78% sobre valor cheio</li>
+<li><strong>Bolsa Click negociada</strong> com descontos de até ${DISCOUNT_CEILING_PCT}% sobre valor cheio</li>
 </ul>
 
 <h2>Cursos EAD na Anhanguera com bolsa Bolsa Click</h2>
@@ -720,10 +723,10 @@ const POST_QUANTO_CUSTA = {
   slug: 'quanto-custa-uma-faculdade-particular',
   title: 'Quanto custa uma faculdade particular no Brasil? Valores 2026 por curso',
   excerpt:
-    'Faculdade particular no Brasil custa de R$ 400 a R$ 6.500/mês conforme curso e cidade. Veja preços médios por área, modalidade e como economizar até 78% com bolsa.',
+    `Faculdade particular no Brasil custa de R$ 400 a R$ 6.500/mês conforme curso e cidade. Veja preços médios por área, modalidade e como economizar até ${DISCOUNT_CEILING_PCT}% com bolsa.`,
   metaTitle: 'Quanto Custa uma Faculdade Particular em 2026 | Valores por Curso',
   metaDescription:
-    'Mensalidade de faculdade particular no Brasil: R$ 400 (EAD) a R$ 6.500/mês (Medicina). Veja preços por curso, modalidade e cidade. Como reduzir até 78% com bolsa Bolsa Click.',
+    `Mensalidade de faculdade particular no Brasil: R$ 400 (EAD) a R$ 6.500/mês (Medicina). Veja preços por curso, modalidade e cidade. Como reduzir até ${DISCOUNT_CEILING_PCT}% com bolsa Bolsa Click.`,
   keywords: [
     'quanto custa faculdade particular',
     'valor mensalidade faculdade',
@@ -769,7 +772,7 @@ const POST_QUANTO_CUSTA = {
 
 <h2>Como reduzir custos</h2>
 
-<h3>1. Bolsa Click — até 78% de desconto</h3>
+<h3>1. Bolsa Click — até ${DISCOUNT_CEILING_PCT}% de desconto</h3>
 <p>Cadastro grátis, sem ENEM. Negocia descontos com Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. Aplica-se a qualquer curso e cidade que essas redes ofertam.</p>
 
 <h3>2. ProUni — bolsa integral pra baixa renda</h3>

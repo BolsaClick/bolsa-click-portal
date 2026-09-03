@@ -14,13 +14,18 @@ depende deste DNA.md). As duas fontes escrevem na mesma tabela
 ## Quem somos
 
 Bolsa Click é uma plataforma brasileira de bolsas de estudo. Conecta
-estudantes a bolsas de até 78% de desconto em 6 redes de ensino parceiras
+estudantes a bolsas de até [teto atual, ver `DISCOUNT_CEILING_PCT` em
+`app/lib/copy/claims.ts`] de desconto em 6 redes de ensino parceiras
 (Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden), graduação,
 pós-graduação e cursos técnicos, presencial e EAD. Cadastro grátis, sem
 taxa de adesão. Comparação de preços real (dado first-party do catálogo).
 
-**Lock de claims (não republicar):** teto **78%**. Proibido 80%, 85% e 92%.
-Não citar Ampli. Não prometer "matrícula em 5 min" nem "bolsa vale o curso
+**Lock de claims (não republicar):** o teto de desconto nunca é hardcodeado
+em prosa nem em prompt — sempre conferir `DISCOUNT_CEILING_PCT` em
+`app/lib/copy/claims.ts` antes de publicar (esse arquivo já documenta a
+âncora real por trás do número) e é proibido citar qualquer percentual
+acima dele; valores maiores já foram usados por engano no passado. Não
+citar Ampli. Não prometer "matrícula em 5 min" nem "bolsa vale o curso
 inteiro" como absoluto. UNIC/UNIDERP/Ibmec podem aparecer no catálogo, mas
 não são a 7ª rede do hero.
 
@@ -108,8 +113,9 @@ bolsa, é importante entender..."
 
 **Certo** (resposta direta, contexto depois): "Pra conseguir bolsa de 50%
 ou mais, o caminho mais rápido é o ProUni via ENEM ou bolsas próprias de
-faculdades EAD parceiras, com desconto de até 78% sem nota de corte. Veja
-como funciona cada opção..."
+faculdades EAD parceiras, com desconto de até [teto atual, ver
+`app/lib/copy/claims.ts`] sem nota de corte. Veja como funciona cada
+opção..."
 
 ## Guardrails obrigatórios (embutidos aqui, não herdados do Hermes)
 
@@ -143,9 +149,10 @@ dado real disponível pra citar, o artigo fala em termos genéricos
 de inventar um número novo.
 
 Claims numéricos genéricos (não específicos de 1 instituição) só os já
-validados no site: 6 redes parceiras, 280+ cidades com polos, até 78% de
-desconto, +1.000 estudantes atendidos. Nunca inventar número tipo "30 mil
-faculdades" ou "maior do Brasil".
+validados no site: 6 redes parceiras, 280+ cidades com polos, desconto até
+o teto de `DISCOUNT_CEILING_PCT` (`app/lib/copy/claims.ts`), +1.000
+estudantes atendidos. Nunca inventar número tipo "30 mil faculdades" ou
+"maior do Brasil".
 
 ### Fontes externas permitidas (whitelist editorial)
 

@@ -6,6 +6,7 @@
  * Conteúdo 100% autoral, validado pelos guards editoriais do seed-blog-posts.ts.
  */
 import { PrismaClient } from '@prisma/client'
+import { DISCOUNT_CEILING_PCT } from '../app/lib/copy/claims'
 
 const prisma = new PrismaClient()
 
@@ -85,7 +86,7 @@ const content = `
 <h2>Como a bolsa própria derruba a mensalidade</h2>
 <p>O desconto que transforma uma mensalidade cheia (entre R$ 262,64 e R$ 284,62) em algo a partir de R$ 108,39 vem da <strong>bolsa própria</strong> das redes parceiras. Ela funciona diferente do ProUni:</p>
 <ul>
-<li><strong>Bolsa própria da rede:</strong> desconto aplicado direto na matrícula, sem precisar de nota de corte do ENEM. Mantém-se enquanto a matrícula está ativa e as condições contratuais são cumpridas. Pode chegar a 78% em cursos EAD.</li>
+<li><strong>Bolsa própria da rede:</strong> desconto aplicado direto na matrícula, sem precisar de nota de corte do ENEM. Mantém-se enquanto a matrícula está ativa e as condições contratuais são cumpridas. Pode chegar a ${DISCOUNT_CEILING_PCT}% em cursos EAD.</li>
 <li><strong>ProUni:</strong> bolsa federal de 50% ou 100%, disponível para quem fez o ENEM com ao menos 450 pontos, estudou em escola pública (ou bolsista em escola particular) e atende ao critério de renda familiar per capita de até 1,5 salário mínimo (bolsa integral) ou 3 salários mínimos (bolsa parcial).</li>
 </ul>
 <p>Na maioria dos casos, a bolsa própria da rede parceira é mais imediata: não depende de edital semestral, não tem fila, e o desconto aparece já na primeira mensalidade.</p>
@@ -113,7 +114,7 @@ const content = `
 <h2>EAD barato x presencial: comparativo de custo total</h2>
 <p>O EAD já parte de um valor de mensalidade menor que o presencial. Com a bolsa própria, a diferença cresce ainda mais:</p>
 <ul>
-<li><strong>EAD com bolsa:</strong> a partir de R$ 108,39/mês. O custo total é menor porque a mensalidade já parte de um valor reduzido e os descontos chegam a 78%.</li>
+<li><strong>EAD com bolsa:</strong> a partir de R$ 108,39/mês. O custo total é menor porque a mensalidade já parte de um valor reduzido e os descontos chegam a ${DISCOUNT_CEILING_PCT}%.</li>
 <li><strong>Presencial sem bolsa:</strong> mensalidades costumam ficar em um patamar significativamente mais alto dependendo do curso e da cidade, sem contar o custo de deslocamento diário.</li>
 </ul>
 <p>A ressalva é que o presencial ainda é necessário em cursos de alta carga prática — medicina, odontologia, fisioterapia. Para a maioria das graduações em gestão, TI, educação e direito, o EAD entrega o mesmo diploma reconhecido com custo total menor.</p>

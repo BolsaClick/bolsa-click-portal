@@ -42,15 +42,19 @@ direto.
 **Certo** (resposta nos primeiros 40-60 palavras, contexto depois):
 > "Pra conseguir bolsa de 50% ou mais, o caminho mais rápido é o ProUni
 > via ENEM ou bolsas próprias de faculdades EAD parceiras, com desconto de
-> até 78% sem nota de corte. Veja como funciona cada opção..."
+> até [teto atual, ver `app/lib/copy/claims.ts`] sem nota de corte. Veja
+> como funciona cada opção..."
 
 Aplique esse padrão no primeiro parágrafo de QUALQUER conteúdo revisado
 por esta skill, não só posts de blog.
 
-**Lock de claims:** teto **78%**. Proibido 80%, 85% e 92%. Redes nomeáveis:
-Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. Não citar Ampli.
-Não prometer "matrícula em 5 min" nem bolsa vitalícia. Wedge: "Cadastro
-grátis, sem taxa de adesão". Fonte: `app/lib/copy/claims.ts`.
+**Lock de claims:** nunca hardcodear o teto de desconto — conferir
+`DISCOUNT_CEILING_PCT` em `app/lib/copy/claims.ts` antes de publicar
+(fonte de verdade, com a âncora real documentada no próprio arquivo) e é
+proibido citar qualquer percentual acima dele. Redes nomeáveis: Anhanguera,
+Unopar, Pitágoras, Estácio, Unime e Wyden. Não citar Ampli. Não prometer
+"matrícula em 5 min" nem bolsa vitalícia. Wedge: "Cadastro grátis, sem taxa
+de adesão".
 
 ## Checklist GEO adicional
 

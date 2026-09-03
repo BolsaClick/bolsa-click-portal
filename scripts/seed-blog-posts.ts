@@ -226,7 +226,7 @@ const ARCHETYPES: Archetype[] = [
   // ---- 8 curso × cidade ----
   {
     slug: 'faculdade-administracao-ead-sao-paulo-bolsas',
-    title: 'Faculdade de Administração EAD em São Paulo: bolsas de até 78%',
+    title: `Faculdade de Administração EAD em São Paulo: bolsas de até ${DISCOUNT_CEILING_PCT}%`,
     kind: 'curso_cidade', cursoKey: 'administracao', cityKey: 'sp', modality: 'EAD',
     categorySlugs: ['ead', 'faculdades-por-cidade', 'bolsas-de-estudo'],
     featured: true,
@@ -486,7 +486,7 @@ const ARCHETYPES: Archetype[] = [
     title: 'Bolsa de estudo EAD ou presencial: onde o desconto é maior',
     kind: 'ranking',
     categorySlugs: ['bolsas-de-estudo', 'ead'],
-    briefing: 'Comparativo: EAD chega a 78% via bolsa própria (mensalidade base já menor), presencial fica em 30-70% típico. Casos onde presencial compensa (curso prático). Linkar pra /bolsas-de-estudo e /faculdade-ead.',
+    briefing: `Comparativo: EAD chega a ${DISCOUNT_CEILING_PCT}% via bolsa própria (mensalidade base já menor), presencial fica em 30-70% típico. Casos onde presencial compensa (curso prático). Linkar pra /bolsas-de-estudo e /faculdade-ead.`,
   },
   {
     slug: 'faculdade-ead-mais-barata',
@@ -494,7 +494,7 @@ const ARCHETYPES: Archetype[] = [
     kind: 'guia',
     categorySlugs: ['ead', 'bolsas-de-estudo'],
     featured: true,
-    briefing: 'Responder direto qual o caminho pra conseguir a faculdade EAD mais barata: a mensalidade EAD já parte de um valor menor que o presencial e a bolsa própria de faculdades parceiras derruba ainda mais o preço (descontos chegam a 78% sem nota de corte). REGRA INEGOCIÁVEL DE PREÇO: cite APENAS valores presentes em DATA_BLOCK.allowedPrices — NÃO invente mensalidades, médias nem faixas em reais que não estejam ali; quando não houver preço, fale qualitativamente ("mensalidades a partir de valores acessíveis", "economia de até X% com bolsa") sem citar R$ específico. Cobrir: quais cursos EAD costumam ter a mensalidade mais baixa (Pedagogia, ADS, Administração, Gestão), como a bolsa própria reduz o valor mês a mês, comparativo de custo EAD x presencial, e um alerta editorial forte: barato não pode significar não reconhecido — sempre conferir o reconhecimento no e-MEC mesmo quando o preço chama atenção. Incluir tabela comparando cursos/faixas e a seção Perguntas frequentes. Linkar pra /bolsas-de-estudo com anchor "guia completo de bolsas de estudo" e pra /faculdade-ead no primeiro terço.',
+    briefing: `Responder direto qual o caminho pra conseguir a faculdade EAD mais barata: a mensalidade EAD já parte de um valor menor que o presencial e a bolsa própria de faculdades parceiras derruba ainda mais o preço (descontos chegam a ${DISCOUNT_CEILING_PCT}% sem nota de corte). REGRA INEGOCIÁVEL DE PREÇO: cite APENAS valores presentes em DATA_BLOCK.allowedPrices — NÃO invente mensalidades, médias nem faixas em reais que não estejam ali; quando não houver preço, fale qualitativamente ("mensalidades a partir de valores acessíveis", "economia de até X% com bolsa") sem citar R$ específico. Cobrir: quais cursos EAD costumam ter a mensalidade mais baixa (Pedagogia, ADS, Administração, Gestão), como a bolsa própria reduz o valor mês a mês, comparativo de custo EAD x presencial, e um alerta editorial forte: barato não pode significar não reconhecido — sempre conferir o reconhecimento no e-MEC mesmo quando o preço chama atenção. Incluir tabela comparando cursos/faixas e a seção Perguntas frequentes. Linkar pra /bolsas-de-estudo com anchor "guia completo de bolsas de estudo" e pra /faculdade-ead no primeiro terço.`,
   },
   {
     slug: 'bolsa-cursos-profissionalizantes-tecnico',
@@ -555,21 +555,21 @@ const ARCHETYPES: Archetype[] = [
     kind: 'guia',
     categorySlugs: ['ead', 'bolsas-de-estudo'],
     featured: true,
-    briefing: 'Responder direto (primeiras 40-60 palavras) como conseguir bolsa de estudo na Faculdade Anhanguera EAD: buscar o curso no Bolsa Click, comparar as ofertas das unidades/polos e se inscrever grátis — desconto chega a 78% sem nota de corte. Cobrir: modalidade EAD da Anhanguera (polos, diploma reconhecido pelo MEC), quais cursos têm bolsa, passo-a-passo da inscrição, e como conferir o reconhecimento no e-MEC. NÃO citar preço em R$ específico — fale em PERCENTUAIS de desconto. LINKAR no primeiro terço pra /faculdades/anhanguera com anchor "bolsas de estudo na Anhanguera" e pra /bolsas-de-estudo. Anhanguera é parceira (pode citar). Não citar concorrentes agregadores. Incluir seção Perguntas frequentes.',
+    briefing: `Responder direto (primeiras 40-60 palavras) como conseguir bolsa de estudo na Faculdade Anhanguera EAD: buscar o curso no Bolsa Click, comparar as ofertas das unidades/polos e se inscrever grátis — desconto chega a ${DISCOUNT_CEILING_PCT}% sem nota de corte. Cobrir: modalidade EAD da Anhanguera (polos, diploma reconhecido pelo MEC), quais cursos têm bolsa, passo-a-passo da inscrição, e como conferir o reconhecimento no e-MEC. NÃO citar preço em R$ específico — fale em PERCENTUAIS de desconto. LINKAR no primeiro terço pra /faculdades/anhanguera com anchor "bolsas de estudo na Anhanguera" e pra /bolsas-de-estudo. Anhanguera é parceira (pode citar). Não citar concorrentes agregadores. Incluir seção Perguntas frequentes.`,
   },
   {
     slug: 'como-conseguir-bolsa-anhanguera-sem-enem',
     title: 'Como conseguir bolsa na Anhanguera sem ENEM',
     kind: 'guia',
     categorySlugs: ['bolsas-de-estudo', 'ead'],
-    briefing: 'Responder direto: dá pra conseguir bolsa na Anhanguera SEM nota do ENEM, usando o processo seletivo próprio da faculdade (geralmente uma redação online) via Bolsa Click — sem critério de renda, inscrição o ano todo. Teto de desconto: até 78% (proibido 80/85/92). Explicar a diferença pra ProUni/FIES (que exigem ENEM). Passo-a-passo. NÃO citar preço em R$; falar em percentuais. LINKAR no primeiro terço pra /faculdades/anhanguera ("bolsas de estudo na Anhanguera"), /sem-enem e /bolsas-de-estudo. Anhanguera é parceira. Seção Perguntas frequentes. Não prometer matrícula em 5 min nem bolsa vitalícia.',
+    briefing: `Responder direto: dá pra conseguir bolsa na Anhanguera SEM nota do ENEM, usando o processo seletivo próprio da faculdade (geralmente uma redação online) via Bolsa Click — sem critério de renda, inscrição o ano todo. Teto de desconto: até ${DISCOUNT_CEILING_PCT}% (proibido qualquer valor acima do teto). Explicar a diferença pra ProUni/FIES (que exigem ENEM). Passo-a-passo. NÃO citar preço em R$; falar em percentuais. LINKAR no primeiro terço pra /faculdades/anhanguera ("bolsas de estudo na Anhanguera"), /sem-enem e /bolsas-de-estudo. Anhanguera é parceira. Seção Perguntas frequentes. Não prometer matrícula em 5 min nem bolsa vitalícia.`,
   },
   {
     slug: 'anhanguera-vale-a-pena-mec-bolsas',
     title: 'A Anhanguera vale a pena? Nota MEC, bolsas e o que esperar',
     kind: 'guia',
     categorySlugs: ['guias-mec', 'bolsas-de-estudo'],
-    briefing: 'Responder de forma equilibrada e honesta se a Anhanguera vale a pena: instituição privada do grupo Cogna, ampla rede de polos, diploma reconhecido pelo MEC, forte em EAD, bolsas de até 78% via Bolsa Click. Orientar o leitor a CONFERIR a nota institucional atual no e-MEC e na página da faculdade (NÃO afirmar um número de nota MEC específico — direcionar pra verificação). Cobrir prós (acessibilidade, flexibilidade, alcance), pontos de atenção (conferir reconhecimento do curso específico) e pra quem faz sentido. NÃO citar preço em R$. LINKAR pra /faculdades/anhanguera e /bolsas-de-estudo. Anhanguera é parceira. Seção Perguntas frequentes.',
+    briefing: `Responder de forma equilibrada e honesta se a Anhanguera vale a pena: instituição privada do grupo Cogna, ampla rede de polos, diploma reconhecido pelo MEC, forte em EAD, bolsas de até ${DISCOUNT_CEILING_PCT}% via Bolsa Click. Orientar o leitor a CONFERIR a nota institucional atual no e-MEC e na página da faculdade (NÃO afirmar um número de nota MEC específico — direcionar pra verificação). Cobrir prós (acessibilidade, flexibilidade, alcance), pontos de atenção (conferir reconhecimento do curso específico) e pra quem faz sentido. NÃO citar preço em R$. LINKAR pra /faculdades/anhanguera e /bolsas-de-estudo. Anhanguera é parceira. Seção Perguntas frequentes.`,
   },
 
   // ===========================================================
@@ -623,7 +623,7 @@ const ARCHETYPES: Archetype[] = [
     cursoKey: 'psicologia',
     categorySlugs: ['carreira-e-mercado', 'cursos-de-graduacao'],
     featured: true,
-    briefing: 'Responder direto nos primeiros 40-60 palavras: faixa salarial do psicólogo em 2026 por área de atuação (clínica, organizacional/RH, hospitalar, escolar, jurídica). Cobrir: piso salarial referenciado pelo CFP e CBO, diferença CLT vs autônomo/liberal, impacto da especialização no salário, perspectiva de crescimento (junior/pleno/sênior). Dados de CAGED/CBO como fonte — NÃO inventar valores. Incluir tabela com áreas × faixa salarial. LINKAR no primeiro terço pra /cursos/psicologia-bacharelado (anchor "bolsa de psicologia com até 78% de desconto") e pra /bolsas-de-estudo. Encerrar com CTA de comparar bolsas. Seção FAQ com 4+ perguntas.',
+    briefing: `Responder direto nos primeiros 40-60 palavras: faixa salarial do psicólogo em 2026 por área de atuação (clínica, organizacional/RH, hospitalar, escolar, jurídica). Cobrir: piso salarial referenciado pelo CFP e CBO, diferença CLT vs autônomo/liberal, impacto da especialização no salário, perspectiva de crescimento (junior/pleno/sênior). Dados de CAGED/CBO como fonte — NÃO inventar valores. Incluir tabela com áreas × faixa salarial. LINKAR no primeiro terço pra /cursos/psicologia-bacharelado (anchor "bolsa de psicologia com até ${DISCOUNT_CEILING_PCT}% de desconto") e pra /bolsas-de-estudo. Encerrar com CTA de comparar bolsas. Seção FAQ com 4+ perguntas.`,
   },
   {
     slug: 'quanto-ganha-enfermeiro-salario-2026',
@@ -713,11 +713,12 @@ const FORBIDDEN_BRANDS: RegExp[] = [
 ]
 
 /**
- * Teto de desconto travado (DISCOUNT_CEILING_PCT, hoje 78%). Sinaliza
- * qualquer "N%" acima do teto quando aparece perto de "desconto"/"bolsa"
- * (não só o trio 80/85/92 já visto em produção). Contexto de ±40 chars
- * evita falso-positivo em percentuais que não são desconto de mensalidade
- * (ex.: "financia 100% da mensalidade", "até 40% das aulas online").
+ * Teto de desconto travado (DISCOUNT_CEILING_PCT — ver valor atual em
+ * app/lib/copy/claims.ts). Sinaliza qualquer "N%" acima do teto quando
+ * aparece perto de "desconto"/"bolsa" (não só valores específicos já vistos
+ * por engano em produção). Contexto de ±40 chars evita falso-positivo em
+ * percentuais que não são desconto de mensalidade (ex.: "financia 100% da
+ * mensalidade", "até 40% das aulas online").
  * Deriva do canon em app/lib/copy/claims.ts.
  */
 function findForbiddenCeilingPct(text: string): string | null {
@@ -752,7 +753,7 @@ REGRAS INEGOCIÁVEIS:
    - Qualquer outro agregador concorrente de bolsas
    Se precisar comparar, use termos genéricos ("plataformas agregadoras", "outros sites de bolsa") sem nomes.
 
-3. ANTI-HALLUCINATION — para valores monetários (preços, mensalidades, R$), use APENAS números que apareçam no array "allowedPrices" do DATA_BLOCK. Está PROIBIDO inventar mensalidades, médias ou faixas que não estejam ali. Se "allowedPrices" estiver vazio, NÃO cite nenhum preço específico no texto — fale qualitativamente ("mensalidades acessíveis", "valores que variam conforme a instituição"). Para nota MEC, salário, % de bolsa e duração, use APENAS valores do DATA_BLOCK. Se um dado não estiver presente, omita. Se isNationalFallback=true, mencione no texto que os preços são médias nacionais. TETO DE DESCONTO: o máximo citável é ${DISCOUNT_CEILING_PCT}%. É PROIBIDO escrever qualquer percentual de desconto/bolsa acima disso (ex.: 80%, 85%, 92% já foram usados por engano e estão banidos). As 6 redes nomeáveis: Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. NÃO cite Ampli. NÃO prometa "matrícula em 5 min" nem "bolsa vale o curso inteiro" como absoluto; use "Cadastro grátis, sem taxa de adesão".
+3. ANTI-HALLUCINATION — para valores monetários (preços, mensalidades, R$), use APENAS números que apareçam no array "allowedPrices" do DATA_BLOCK. Está PROIBIDO inventar mensalidades, médias ou faixas que não estejam ali. Se "allowedPrices" estiver vazio, NÃO cite nenhum preço específico no texto — fale qualitativamente ("mensalidades acessíveis", "valores que variam conforme a instituição"). Para nota MEC, salário, % de bolsa e duração, use APENAS valores do DATA_BLOCK. Se um dado não estiver presente, omita. Se isNationalFallback=true, mencione no texto que os preços são médias nacionais. TETO DE DESCONTO: o máximo citável é ${DISCOUNT_CEILING_PCT}%. É PROIBIDO escrever qualquer percentual de desconto/bolsa acima disso (valores acima do teto já foram usados por engano no passado e estão banidos). As 6 redes nomeáveis: Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. NÃO cite Ampli. NÃO prometa "matrícula em 5 min" nem "bolsa vale o curso inteiro" como absoluto; use "Cadastro grátis, sem taxa de adesão".
 
 4. FONTES EXTERNAS CITÁVEIS (apenas quando relevante, citar por nome sem URL):
    - .gov.br: MEC, INEP, e-MEC, IBGE, CAGED, CBO
@@ -782,7 +783,7 @@ REGRAS INEGOCIÁVEIS:
    "Antes de sair se inscrevendo em qualquer bolsa, é importante entender..."
 
    PADRÃO CORRETO (resposta direta + contexto depois):
-   "Pra conseguir bolsa sem ENEM, o caminho é a bolsa própria das faculdades parceiras: Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. O desconto máximo no catálogo agora é 78%. Cadastro grátis, sem taxa de adesão. Veja como cada opção funciona..."
+   "Pra conseguir bolsa sem ENEM, o caminho é a bolsa própria das faculdades parceiras: Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. O desconto máximo no catálogo agora é ${DISCOUNT_CEILING_PCT}%. Cadastro grátis, sem taxa de adesão. Veja como cada opção funciona..."
 
 8. FORMATO DE SAÍDA — você DEVE chamar a tool "submit_blog_post" com os argumentos no schema definido. Não responda com texto livre.`
 
@@ -1134,7 +1135,7 @@ function validatePost(post: GeneratedPost, _arch: Archetype, dataBlock: DataBloc
     if (open !== close) return { ok: false, reason: `tags <${tag}> desbalanceadas (${open} abre / ${close} fecha)` }
   }
 
-  // Anti-concorrente + teto de desconto (não republicar 80/85/92 nem Ampli)
+  // Anti-concorrente + teto de desconto (não republicar valor acima do teto nem Ampli)
   for (const rx of FORBIDDEN_BRANDS) {
     if (rx.test(content) || rx.test(post.title) || rx.test(post.excerpt)) {
       return { ok: false, reason: `Menção a concorrente/marca proibida: ${rx.source}` }

@@ -33,7 +33,8 @@ const ogCardUrl = seoSite.key === 'bolsaclick' ? `${theme.siteUrl}/opengraph-ima
 // autoridade do domínio e deve carregar o termo que queremos rankear.
 // Padrão atual (decisão 2026-07): "Bolsa de Estudo nas Maiores Redes de Ensino
 // do Brasil" — mantém o termo, DIFERENCIA o padrão da pillar /bolsas-de-estudo
-// (que usa "Bolsas de Estudo até 78%: Compare...") e alinha com o H1 do hero.
+// (que usa "Bolsas de Estudo até {DISCOUNT_CEILING_PCT}%: Compare...", ver
+// app/lib/copy/claims.ts) e alinha com o H1 do hero.
 // NÃO reverter pra title só de marca por medo de canibalizar /bolsas-de-estudo:
 // canibalização exige mesma INTENÇÃO + conteúdo, não só overlap de keyword. A
 // home é hub de marca (navegacional/institucional) e a pillar é ferramenta de

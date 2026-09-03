@@ -127,7 +127,7 @@ function cityKey(city: string | undefined): string {
 /**
  * Escolhe 1 oferta real pro slot. Sem match honesto → null (o card some).
  * Prefere a cidade do slot, depois a modalidade pedida, depois o maior
- * desconto ≤ teto 78%. SEMIPRESENCIAL conta (Pedagogia BH não tem EAD comercial).
+ * desconto ≤ teto (DISCOUNT_CEILING_PCT, claims.ts). SEMIPRESENCIAL conta (Pedagogia BH não tem EAD comercial).
  * Cidade é preferência, não filtro — empty state é pior que um De/Por real.
  */
 export function pickShelfOffer(

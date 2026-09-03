@@ -32,10 +32,12 @@ nome público.
 5. Ativar notificações por e-mail pra TODA nova reclamação (o SLA depende
    disso). Plano gratuito primeiro; avaliar RA HugMe após 90 dias.
 
-**Descrição do perfil (texto-base, alinhado ao vocabulário aprovado):**
+**Descrição do perfil (texto-base, alinhado ao vocabulário aprovado):** antes
+de publicar, confira o teto atual em `DISCOUNT_CEILING_PCT`
+(`app/lib/copy/claims.ts`) — 80% nesta data.
 > O Bolsa Click é um marketplace brasileiro de bolsas de estudo que conecta
 > estudantes às maiores redes de ensino do país (Anhanguera, Estácio, Unopar,
-> Pitágoras, Unime e Wyden), com descontos de até 78% e inscrição gratuita.
+> Pitágoras, Unime e Wyden), com descontos de até 80% e inscrição gratuita.
 > Não cobramos taxa de inscrição, cadastro ou qualquer valor antecipado — o
 > estudante paga apenas a mensalidade, já com desconto, diretamente à
 > faculdade. CNPJ 57.554.723/0001-50, em operação desde 2024.

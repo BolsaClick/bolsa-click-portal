@@ -68,7 +68,7 @@ export default function CursosPageClient({ courses, featuredOffers }: CursosPage
   const [selectedType, setSelectedType] = useState<TypeKey>('TODOS')
   const catalogRef = useRef<HTMLElement>(null)
 
-  // Só cards com De/Por reais e % ≤ teto 78%. Stubs 87/90/92 nunca entram.
+  // Só cards com De/Por reais e % ≤ teto (DISCOUNT_CEILING_PCT, claims.ts). Stubs 87/90/92 nunca entram.
   const liveFeaturedOffers = featuredOffers.filter((o) => {
     const pct = discountPct(o)
     return pct > 0 && pct <= DISCOUNT_CEILING_PCT

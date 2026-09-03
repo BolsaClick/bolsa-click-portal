@@ -7,6 +7,7 @@
  */
 import { PrismaClient } from '@prisma/client'
 import { writeFileSync } from 'fs'
+import { DISCOUNT_CEILING_PCT } from '../app/lib/copy/claims'
 
 const prisma = new PrismaClient()
 const OUT = process.env.OUT ?? 'disparo-reativacao.csv'
@@ -75,12 +76,12 @@ async function main() {
       const curso = courseName(topSlug)
       const link = `${SITE}/simulador-de-bolsa?${UTM('base-jul', 'teste-vocacional')}`
       const msg = perfil
-        ? `Oi ${nome}! 👋 Aqui é do Bolsa Click. Você fez nosso teste vocacional e seu perfil deu *${perfil}* — com ${curso} entre os cursos que mais combinam com você. 🎓 Quer ver agora quanto ficaria a mensalidade de ${curso} com bolsa de até 78%, sem nota de corte? É rápido: ${link} — se não quiser mais receber, responda SAIR.`
-        : `Oi ${nome}! 👋 Aqui é do Bolsa Click. Você fez nosso teste vocacional e ${curso} apareceu entre os cursos que mais combinam com você. 🎓 Quer ver a mensalidade com bolsa de até 78%? ${link} — se não quiser mais receber, responda SAIR.`
+        ? `Oi ${nome}! 👋 Aqui é do Bolsa Click. Você fez nosso teste vocacional e seu perfil deu *${perfil}* — com ${curso} entre os cursos que mais combinam com você. 🎓 Quer ver agora quanto ficaria a mensalidade de ${curso} com bolsa de até ${DISCOUNT_CEILING_PCT}%, sem nota de corte? É rápido: ${link} — se não quiser mais receber, responda SAIR.`
+        : `Oi ${nome}! 👋 Aqui é do Bolsa Click. Você fez nosso teste vocacional e ${curso} apareceu entre os cursos que mais combinam com você. 🎓 Quer ver a mensalidade com bolsa de até ${DISCOUNT_CEILING_PCT}%? ${link} — se não quiser mais receber, responda SAIR.`
       row = ['seg1-teste-vocacional', nome, phone, perfil, curso, link, msg]
     } else {
       const link = `${SITE}/descubra-sua-bolsa?${UTM('base-jul', 'geral')}`
-      const msg = `Oi ${nome}! 👋 Aqui é do Bolsa Click. Vi que você começou a buscar bolsa com a gente. São bolsas de até 78% sem nota de corte, em faculdades reconhecidas pelo MEC. 🎓 Em 2 minutos você descobre a sua: ${link} — se não quiser mais receber, responda SAIR.`
+      const msg = `Oi ${nome}! 👋 Aqui é do Bolsa Click. Vi que você começou a buscar bolsa com a gente. São bolsas de até ${DISCOUNT_CEILING_PCT}% sem nota de corte, em faculdades reconhecidas pelo MEC. 🎓 Em 2 minutos você descobre a sua: ${link} — se não quiser mais receber, responda SAIR.`
       row = ['seg2-geral', nome, phone, '', '', link, msg]
     }
 

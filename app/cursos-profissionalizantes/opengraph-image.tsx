@@ -15,7 +15,7 @@ import {
  * declarava `openGraph.images` nenhuma — herdava o fallback estático
  * `og-image-bolsaclick.png` do layout raiz.
  *
- * Sem `DISCOUNT_CEILING_PCT` aqui de propósito: o teto de 78% em
+ * Sem `DISCOUNT_CEILING_PCT` aqui de propósito: o teto definido em
  * `app/lib/copy/claims.ts` está ancorado numa oferta de graduação, e a
  * própria página não faz claim de percentual para profissionalizantes — só
  * "bolsa de estudo e desconto". Mantemos a mesma restrição na imagem.

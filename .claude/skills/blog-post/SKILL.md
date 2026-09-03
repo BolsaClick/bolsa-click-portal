@@ -90,8 +90,9 @@ com `id`, `h3`, `ul`/`ol`/`li`, `strong`, `blockquote`), mesmo tom.
   instituição específica, isso **tem que vir de dado real** (catálogo
   first-party via API/DB deste repo, ou fonte da whitelist do DNA.md).
   Nunca invente o número. Sem dado real disponível, fale em termos
-  genéricos já validados (6 redes parceiras, 280+ cidades, até 78% de
-  desconto).
+  genéricos já validados (6 redes parceiras, 280+ cidades, desconto até o
+  teto de `DISCOUNT_CEILING_PCT` — conferir o valor atual em
+  `app/lib/copy/claims.ts`, nunca hardcodear o número aqui).
 
 ## Passo 4: humanizar
 

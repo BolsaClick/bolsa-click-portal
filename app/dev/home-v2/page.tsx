@@ -37,7 +37,8 @@ export const dynamic = 'force-dynamic'
  * (docs/MASCOTES.md; máx. 1 mascote por dobra).
  *
  * Claims: apenas os aprovados — 6 redes parceiras, 280+ cidades com polos,
- * +1.000 estudantes, até 78% de desconto, a partir de R$ 99/mês.
+ * +1.000 estudantes, desconto até o teto (DISCOUNT_CEILING_PCT, claims.ts),
+ * a partir de R$ 99/mês.
  */
 
 const DEMO_CARD_HREF = '/checkout/matricula?preview=home-v3'

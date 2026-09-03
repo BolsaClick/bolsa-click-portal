@@ -21,7 +21,7 @@ interface HeroBannerSliderProps {
 // Troca automática a cada 6s. Pausa sozinho quando a aba está em segundo
 // plano, quando o `prefers-reduced-motion` do sistema pede menos movimento,
 // e por alguns segundos sempre que a pessoa interage (arrasta, clica nas
-// setas/bolinhas, foca por teclado) — pra não competir com o gesto dela.
+// setas/traços, foca por teclado) — pra não competir com o gesto dela.
 const AUTOPLAY_MS = 6000
 const RESUME_AFTER_INTERACTION_MS = 9000
 
@@ -109,7 +109,7 @@ const CEILING_WIDTH_PX = 1680
  * concorrentes na mesma área — o carrossel só exibe a imagem. O H1 + prova
  * social do site vivem numa faixa própria, ANTES daqui (ver `HeroSection`).
  *
- * Setas e bolinhas de paginação: ficam num overlay `mx-auto max-w-[1680px]`
+ * Setas e traços de paginação: ficam num overlay `mx-auto max-w-[1680px]`
  * (mesmo teto da caixa da imagem) centralizado sobre a faixa — não presas
  * às bordas literais da viewport. Isso mantém os controles próximos da
  * imagem no caso comum (bordas próximas ao teto), mas é um compromisso
@@ -314,22 +314,37 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
               <ChevronRight size={20} />
             </button>
 
-            {/* bottom-3/md:bottom-4: sem mais nada sobrepondo a base do
-                banner (a costura de 16px com o card de busca agora fica no
-                TOPO — ver HeroSection), então as bolinhas só precisam de uma
-                folga pequena da própria borda da imagem. */}
-            <div className="pointer-events-auto absolute bottom-3 left-0 right-0 z-[5] flex justify-center space-x-2 md:bottom-4">
+            {/* TRAÇOS de paginação, no alto à direita — não mais bolinhas no
+                rodapé. Duas razões, nessa ordem:
+
+                1. O card de busca agora monta sobre a BASE do banner (ver
+                   HeroSection), e a base central é justamente onde as
+                   bolinhas ficavam. Elas passariam a viver atrás do card.
+                2. Traço de largura fixa comunica "quantos slides existem e
+                   em qual estou" melhor que bolinha, porque a barra ativa
+                   preenche em vez de só mudar de cor.
+
+                Largura igual pra todos: o estado ativo é o PREENCHIMENTO, não
+                o tamanho. Bolinha que estica no ativo faz a régua inteira
+                dançar a cada troca. */}
+            <div className="pointer-events-auto absolute right-4 top-4 z-[5] flex gap-1.5 md:right-6 md:top-5">
               {banners.map((_, index) => (
                 <button
                   key={index}
                   type="button"
                   onClick={() => goTo(index)}
-                  className={`h-2.5 rounded-full transition-all duration-300 ${
-                    index === currentIndex ? 'w-8 bg-bolsa-secondary' : 'w-2.5 bg-white/60 hover:bg-white/90'
-                  }`}
+                  className="group py-2"
                   aria-label={`Ir para o banner ${index + 1} de ${banners.length}`}
                   aria-current={index === currentIndex}
-                />
+                >
+                  <span
+                    className={`block h-1 w-8 rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.35)] transition-colors duration-300 md:w-10 ${
+                      index === currentIndex
+                        ? 'bg-white'
+                        : 'bg-white/40 group-hover:bg-white/70'
+                    }`}
+                  />
+                </button>
               ))}
             </div>
           </div>

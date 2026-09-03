@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { useAdmin } from '@/app/contexts/AdminAuthContext'
+import { useBrand } from '../_components/BrandProvider'
 import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 import { BANNER_SITE_KEYS } from '@/app/lib/banners-shared'
 import type { SiteKey } from '@/app/lib/seo/site-config'
@@ -84,6 +85,7 @@ function fromDatetimeLocalValue(value: string): string | null {
 export default function AdminBannersPage() {
   const { firebaseUser } = useAuth()
   const { hasPermission } = useAdmin()
+  const { config: activeBrand } = useBrand()
 
   const [banners, setBanners] = useState<Banner[]>([])
   const [loading, setLoading] = useState(true)
@@ -98,16 +100,25 @@ export default function AdminBannersPage() {
 
   const fetchBanners = async () => {
     if (!firebaseUser) return
+    setLoading(true)
     try {
       const token = await firebaseUser.getIdToken()
-      const res = await fetch('/api/admin/banners', {
+      const res = await fetch('/api/admin/brand/banners', {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (res.ok) {
         const data = await res.json()
         setBanners(data.banners)
+        setError(null)
+      } else {
+        // Lista vazia por falha na marca não é "sem banner" — ver
+        // brandCallKind em app/lib/admin/brand-client.ts.
+        const data = await res.json().catch(() => null)
+        setBanners([])
+        setError(data?.error || `Erro ao carregar banners (HTTP ${res.status})`)
       }
     } catch {
+      setBanners([])
       setError('Erro ao carregar banners')
     } finally {
       setLoading(false)
@@ -117,7 +128,7 @@ export default function AdminBannersPage() {
   useEffect(() => {
     fetchBanners()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firebaseUser])
+  }, [firebaseUser, activeBrand.id])
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -132,7 +143,7 @@ export default function AdminBannersPage() {
         const base64 = reader.result as string
 
         const token = await firebaseUser.getIdToken()
-        const response = await fetch('/api/admin/upload', {
+        const response = await fetch('/api/admin/brand/upload', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -177,8 +188,8 @@ export default function AdminBannersPage() {
     try {
       const token = await firebaseUser.getIdToken()
       const url = editingId
-        ? `/api/admin/banners/${editingId}`
-        : '/api/admin/banners'
+        ? `/api/admin/brand/banners/${editingId}`
+        : '/api/admin/brand/banners'
       const method = editingId ? 'PATCH' : 'POST'
 
       const res = await fetch(url, {
@@ -245,7 +256,7 @@ export default function AdminBannersPage() {
 
     try {
       const token = await firebaseUser.getIdToken()
-      const res = await fetch(`/api/admin/banners/${id}`, {
+      const res = await fetch(`/api/admin/brand/banners/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -266,7 +277,7 @@ export default function AdminBannersPage() {
 
     try {
       const token = await firebaseUser.getIdToken()
-      await fetch(`/api/admin/banners/${banner.id}`, {
+      await fetch(`/api/admin/brand/banners/${banner.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -297,7 +308,7 @@ export default function AdminBannersPage() {
     try {
       const token = await firebaseUser.getIdToken()
       await Promise.all([
-        fetch(`/api/admin/banners/${currentBanner.id}`, {
+        fetch(`/api/admin/brand/banners/${currentBanner.id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -305,7 +316,7 @@ export default function AdminBannersPage() {
           },
           body: JSON.stringify({ order: swapBanner.order }),
         }),
-        fetch(`/api/admin/banners/${swapBanner.id}`, {
+        fetch(`/api/admin/brand/banners/${swapBanner.id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -337,7 +348,10 @@ export default function AdminBannersPage() {
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Banners</h2>
             <p className="text-sm text-gray-500">
-              Gerencie os banners do slider da homepage
+              Gerencie os banners do slider da homepage — marca{' '}
+              <span className="font-medium" style={{ color: activeBrand.color }}>
+                {activeBrand.label}
+              </span>
             </p>
           </div>
         </div>

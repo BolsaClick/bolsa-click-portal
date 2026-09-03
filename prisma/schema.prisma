@@ -452,9 +452,20 @@ model CityCourseOfferCache {
   id               String   @id @default(cuid())
   featuredCourseId String
   citySlug         String
+  // offerCount/minPrice/fetchedAt = fonte COGNA (Tartarus). Semântica original
+  // preservada: o corte de 14 dias do sitemap lê `fetchedAt` esperando isso.
   offerCount       Int      @default(0)
   minPrice         Float?
   fetchedAt        DateTime @default(now())
+  // Fonte ATHENA (YDUQS: Estácio, IBMEC, Wyden). Carimbo próprio porque as duas
+  // fontes falham de forma independente e podem ser gravadas em rodadas
+  // diferentes — atualizar um pelo outro faria número velho parecer fresco.
+  // Coluna separada (em vez de somar em offerCount) porque o rollout do gate é
+  // FASEADO: hoje só o Grupo A usa contagem mesclada. Ver resolveOfferCountForGate
+  // em app/cursos/[slug]/[city]/page.tsx antes de mudar quem lê o quê.
+  athenaOfferCount Int      @default(0)
+  athenaMinPrice   Float?
+  athenaFetchedAt  DateTime?
 
   @@unique([featuredCourseId, citySlug])
   @@index([citySlug])

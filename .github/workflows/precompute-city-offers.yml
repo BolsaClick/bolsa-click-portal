@@ -5,6 +5,12 @@ name: Precompute city offers
 # envelhece, as páginas caem no fallback de API ao vivo e voltam a oscilar entre
 # index/noindex. Roda no GitHub Actions (não na Vercel) porque é job de horas e
 # funções serverless da Vercel têm limite de duração.
+#
+# A rodada é INCREMENTAL: revarrer os 76.320 pares toda semana passou a não caber
+# no teto de 300min — em 30/08 o job foi CANCELADO em 5h00m19s no meio da fila, e
+# as 30.900 linhas não alcançadas ficaram com medição de 23/08. Agora só reconsulta
+# o que passou de --max-age-days, na ordem do mais velho pro mais novo, e encerra
+# sozinho em --time-budget-min pra imprimir o resumo em vez de morrer sem registro.
 
 on:
   schedule:
@@ -20,6 +26,10 @@ on:
         description: 'Chamadas paralelas à Tartarus'
         required: false
         default: '4'
+      max_age_days:
+        description: 'Só reconsulta cache mais velho que N dias (0 = revarrer tudo)'
+        required: false
+        default: '6'
 
 # Evita duas execuções simultâneas escrevendo no mesmo cache.
 concurrency:
@@ -46,3 +56,5 @@ jobs:
           npx tsx scripts/precompute-city-offers.ts
           --city-limit=${{ github.event.inputs.city_limit || '160' }}
           --concurrency=${{ github.event.inputs.concurrency || '4' }}
+          --max-age-days=${{ github.event.inputs.max_age_days || '6' }}
+          --time-budget-min=280

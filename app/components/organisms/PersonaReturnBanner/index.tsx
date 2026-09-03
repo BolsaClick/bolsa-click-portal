@@ -10,7 +10,7 @@ const PersonaReturnBanner = () => {
   return (
     <section
       aria-labelledby="persona-return-title"
-      className="bg-gradient-to-br from-bolsa-primary/95 to-blue-900 py-14 md:py-16"
+      className="bg-gradient-to-br from-bolsa-primary/95 to-emerald-950 py-14 md:py-16"
     >
       <Container>
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-center">

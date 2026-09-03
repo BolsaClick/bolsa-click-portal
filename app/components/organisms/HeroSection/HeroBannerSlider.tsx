@@ -21,7 +21,7 @@ interface HeroBannerSliderProps {
 // Troca automática a cada 6s. Pausa sozinho quando a aba está em segundo
 // plano, quando o `prefers-reduced-motion` do sistema pede menos movimento,
 // e por alguns segundos sempre que a pessoa interage (arrasta, clica nas
-// setas/bolinhas, foca por teclado) — pra não competir com o gesto dela.
+// setas/traços, foca por teclado) — pra não competir com o gesto dela.
 const AUTOPLAY_MS = 6000
 const RESUME_AFTER_INTERACTION_MS = 9000
 
@@ -38,7 +38,31 @@ const RESUME_AFTER_INTERACTION_MS = 9000
 // (larguraResolvida / proporção, ~367px) pra não cortar nada. Em qualquer
 // proporção, em qualquer largura de tela, é a LARGURA que cede — nunca a
 // altura corta a imagem.
-const HEIGHT_BUDGET_PX = 420
+// 480 e não 420: a largura do banner é DERIVADA deste orçamento
+// (largura = orçamento × proporção), não do container. Com 420 a arte 1,913:1
+// resolvia em ~803px e ficava mais ESTREITA que o card de busca (896px) — as
+// duas peças competiam em vez de uma emoldurar a outra. A 550 ela vai a ~1052px,
+// que deixa ~78px de moldura de cada lado do card de 896px.
+// REGIME COVER (03/09, pedido do Rodrigo). Antes a caixa herdava a proporção da
+// arte e a imagem entrava com `object-contain`: nunca cortava, mas a largura
+// ficava refém da proporção — a arte 1,91:1 resolvia em ~1051px e não tinha como
+// virar a tarja larga da referência sem esticar a altura pra 636px.
+//
+// Agora a caixa tem proporção PRÓPRIA e a arte entra com `object-cover`. O
+// banner passa a ocupar a largura cheia do container em qualquer arte.
+//
+// O CUSTO É REAL E CONHECIDO: cover corta. Com a arte 1734x907 numa caixa de
+// 2,8:1 e 1216px de largura, saem ~200px de altura — ~100px em cima e ~100px
+// embaixo. Na arte da Anhanguera isso morde o logo (topo) e o botão "Garanta
+// sua vaga" (base). Ajuste BANNER_ASPECT e BANNER_OBJECT_POSITION conforme a
+// arte da campanha do momento; arte desenhada em 2,8:1 ou mais larga não perde
+// nada, porque não sobra o que cortar.
+//
+// Ancorado no TOPO ('center top') e não no centro: centralizado, o corte comia
+// as DUAS pontas — o logo do parceiro em cima e o CTA embaixo. Ancorando no
+// topo, o logo e a headline ficam inteiros e o sacrifício é só a base.
+const BANNER_ASPECT = 2.8
+const BANNER_OBJECT_POSITION = 'center top'
 const CEILING_WIDTH_PX = 1680
 
 /**
@@ -85,7 +109,7 @@ const CEILING_WIDTH_PX = 1680
  * concorrentes na mesma área — o carrossel só exibe a imagem. O H1 + prova
  * social do site vivem numa faixa própria, ANTES daqui (ver `HeroSection`).
  *
- * Setas e bolinhas de paginação: ficam num overlay `mx-auto max-w-[1680px]`
+ * Setas e traços de paginação: ficam num overlay `mx-auto max-w-[1680px]`
  * (mesmo teto da caixa da imagem) centralizado sobre a faixa — não presas
  * às bordas literais da viewport. Isso mantém os controles próximos da
  * imagem no caso comum (bordas próximas ao teto), mas é um compromisso
@@ -193,7 +217,7 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
           não `fixed` — já ocupa espaço próprio no fluxo do documento, então
           nenhuma compensação manual é necessária aqui. */}
       <div
-        className="relative mx-auto w-full max-w-screen-lg px-4 sm:px-6 lg:px-8"
+        className="relative mx-auto w-full max-w-screen-xl px-4 sm:px-6 lg:px-8"
         role="region"
         aria-roledescription="carrossel"
         aria-label="Banners promocionais"
@@ -209,22 +233,13 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
         >
           {banners.map((banner, index) => {
             const isActive = index === currentIndex
-            const aspectRatio = banner.width / banner.height
-            // Largura que entregaria exatamente o orçamento de 420px de
-            // altura pra essa imagem específica, antes de qualquer teto.
-            const idealWidthPx = Math.round(HEIGHT_BUDGET_PX * aspectRatio)
-            const resolvedMaxWidthPx = Math.min(idealWidthPx, CEILING_WIDTH_PX)
-            // `min()`: cede pro menor dos três — 100% do espaço disponível,
-            // o teto de 1680px (regime tarja ultra-wide) ou a largura ideal
-            // pro orçamento de 420px (regime comum). Nunca corta: é sempre a
-            // LARGURA que cede.
-            const boxWidthCss = `min(100%, ${CEILING_WIDTH_PX}px, ${idealWidthPx}px)`
-            // Técnica clássica de "aspect ratio box": padding-top em % é
-            // sempre relativo à LARGURA resolvida do próprio elemento,
-            // então essa porcentagem entrega a altura certa qualquer que
-            // seja o termo que o `min()` acima escolher — sem depender da
-            // propriedade CSS `aspect-ratio` nem de JS.
-            const paddingTopPct = (banner.height / banner.width) * 100
+            // Largura cheia do container, limitada só pelo teto de tarja. A
+            // proporção da ARTE não entra mais nessa conta — é justamente o
+            // acoplamento que o regime cover desfez.
+            const boxWidthCss = `min(100%, ${CEILING_WIDTH_PX}px)`
+            // A altura agora vem da proporção DA CAIXA, não da arte — é isso que
+            // desacopla a largura do banner do formato do arquivo enviado.
+            const paddingTopPct = 100 / BANNER_ASPECT
             const image = (
               <div
                 className="relative mx-auto overflow-hidden rounded-2xl bg-gray-100"
@@ -235,10 +250,11 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
                   src={banner.imageUrl}
                   alt={banner.title}
                   fill
-                  className="object-contain"
+                  className="object-cover"
+                  style={{ objectPosition: BANNER_OBJECT_POSITION }}
                   // Aproxima o hint de `sizes` da largura que a caixa
                   // realmente vai ocupar (ver `boxWidthCss`).
-                  sizes={`(min-width: ${resolvedMaxWidthPx}px) ${resolvedMaxWidthPx}px, 100vw`}
+                  sizes={`(min-width: ${CEILING_WIDTH_PX}px) ${CEILING_WIDTH_PX}px, 100vw`}
                   quality={70}
                   loading={index === 0 ? 'eager' : 'lazy'}
                   priority={index === 0}
@@ -298,22 +314,37 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
               <ChevronRight size={20} />
             </button>
 
-            {/* bottom-3/md:bottom-4: sem mais nada sobrepondo a base do
-                banner (a costura de 16px com o card de busca agora fica no
-                TOPO — ver HeroSection), então as bolinhas só precisam de uma
-                folga pequena da própria borda da imagem. */}
-            <div className="pointer-events-auto absolute bottom-3 left-0 right-0 z-[5] flex justify-center space-x-2 md:bottom-4">
+            {/* TRAÇOS de paginação, no alto à direita — não mais bolinhas no
+                rodapé. Duas razões, nessa ordem:
+
+                1. O card de busca agora monta sobre a BASE do banner (ver
+                   HeroSection), e a base central é justamente onde as
+                   bolinhas ficavam. Elas passariam a viver atrás do card.
+                2. Traço de largura fixa comunica "quantos slides existem e
+                   em qual estou" melhor que bolinha, porque a barra ativa
+                   preenche em vez de só mudar de cor.
+
+                Largura igual pra todos: o estado ativo é o PREENCHIMENTO, não
+                o tamanho. Bolinha que estica no ativo faz a régua inteira
+                dançar a cada troca. */}
+            <div className="pointer-events-auto absolute right-4 top-4 z-[5] flex gap-1.5 md:right-6 md:top-5">
               {banners.map((_, index) => (
                 <button
                   key={index}
                   type="button"
                   onClick={() => goTo(index)}
-                  className={`h-2.5 rounded-full transition-all duration-300 ${
-                    index === currentIndex ? 'w-8 bg-bolsa-secondary' : 'w-2.5 bg-white/60 hover:bg-white/90'
-                  }`}
+                  className="group py-2"
                   aria-label={`Ir para o banner ${index + 1} de ${banners.length}`}
                   aria-current={index === currentIndex}
-                />
+                >
+                  <span
+                    className={`block h-1 w-8 rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.35)] transition-colors duration-300 md:w-10 ${
+                      index === currentIndex
+                        ? 'bg-white'
+                        : 'bg-white/40 group-hover:bg-white/70'
+                    }`}
+                  />
+                </button>
               ))}
             </div>
           </div>

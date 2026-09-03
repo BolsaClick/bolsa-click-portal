@@ -43,6 +43,17 @@ export const MIN_OFFERS_TO_SUBMIT_SITEMAP = 5
 export const MIN_OFFERS_TO_INDEX_INSTITUTION = 8
 
 /**
+ * Trend score (0-100) a partir do qual um curso é considerado "alta demanda"
+ * pra fins do gate — abaixo de MIN_OFFERS_TO_INDEX ofertas locais, só esse
+ * patamar de demanda justifica indexar mesmo com pouca oferta (ver
+ * shouldIndexCityPage). Extraído como constante (valor inalterado, 60) porque
+ * app/cursos/[slug]/[city]/page.tsx reusa o MESMO corte pra decidir o escopo
+ * do rollout faseado do gate mesclado Cogna+Athena (Grupo A) — ver comentário
+ * lá. Mudar este valor muda os dois lugares junto, de propósito.
+ */
+export const MIN_TREND_SCORE_FOR_HIGH_DEMAND = 60
+
+/**
  * Decide se uma página de curso×cidade ou faculdade×cidade deve ser indexada.
  *
  * @param offerCount Quantidade de ofertas LOCAIS encontradas (não fallback)
@@ -56,11 +67,11 @@ export function shouldIndexCityPage(
   // Oferta local suficiente → index (comparativo tem valor SEO)
   if (offerCount >= MIN_OFFERS_TO_INDEX) return true
 
-  // Demanda alta (≥ 60) MAS ainda exige ao menos 1 oferta local: sem nenhuma
+  // Demanda alta MAS ainda exige ao menos 1 oferta local: sem nenhuma
   // oferta, a página é duplicata do conteúdo nacional + nome da cidade — thin em
   // escala que afoga o crawl budget (Google joga pra "Detectada, não indexada").
   // Com ≥ 1 oferta + alta demanda, o comparativo local tem substância pra rankear.
-  if ((trendScore ?? 0) >= 60 && offerCount >= 1) return true
+  if ((trendScore ?? 0) >= MIN_TREND_SCORE_FOR_HIGH_DEMAND && offerCount >= 1) return true
 
   return false
 }

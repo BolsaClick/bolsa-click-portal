@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import { cache } from 'react'
 import { prisma } from '@/app/lib/prisma'
 import { resolveCanonicalCourseSlug } from '@/app/lib/seo/slug-resolver'
-import { shouldIndexCityPage } from '@/app/lib/seo/city-page-gate'
+import { shouldIndexCityPage, MIN_TREND_SCORE_FOR_HIGH_DEMAND } from '@/app/lib/seo/city-page-gate'
 import { durationToIso8601 } from '@/app/lib/seo/schema-helpers'
 import { buildBrandedCourseCopy, canIndexBrandedCopy } from '@/app/lib/seo/branded-course-copy'
 import { absoluteUrl, publicRobots, seoSite } from '@/app/lib/seo/site-config'
@@ -59,6 +59,62 @@ const getCachedOfferCount = cache(async (
     return null
   }
 })
+
+/**
+ * Resolve a contagem de ofertas que alimenta o gate de indexação
+ * (shouldIndexCityPage) — ver app/lib/seo/city-page-gate.ts.
+ *
+ * ROLLOUT FASEADO (2026-09-02, fix/gate-considera-athena) — LEIA ANTES DE MEXER:
+ *
+ * O cache CityCourseOfferCache só é populado por scripts/precompute-city-offers.ts,
+ * que consulta SOMENTE a Tartarus (Cogna). A busca ao vivo (liveOfferCount,
+ * acima) já mescla Cogna + Athena (Estácio/IBMEC/Wyden) — é a mesma lista que a
+ * página renderiza. Isso criava uma classe de página com oferta Estácio real na
+ * tela mas presa em noindex porque o cache Cogna-only está travado em 0 (ver
+ * dimensionamento no relatório da tarefa "gate considera Athena").
+ *
+ * Dimensionamento (medido + extrapolado, 2026-08-31/09-01) apontou ~4.000-4.500
+ * páginas noindex→index no total se TODO curso passasse a usar a contagem ao
+ * vivo mesclada de uma vez. Decisão deliberada: liberar só o "Grupo A" nesta
+ * rodada — cursos de ALTA DEMANDA (trendScore >= MIN_TREND_SCORE_FOR_HIGH_DEMAND,
+ * o mesmo corte que o próprio gate já usa pra dispensar oferta abundante). É o
+ * ÚNICO grupo medido ao vivo (amostra de 15 combos zerados no cache Cogna,
+ * 10 delas — 67% — tinham oferta Athena real; ~1.580 páginas estimadas).
+ *
+ * Cursos abaixo do corte (trendScore < MIN_TREND_SCORE_FOR_HIGH_DEMAND — os
+ * "Grupo B" do relatório, ~2.860 páginas estimadas só por EXTRAPOLAÇÃO, nunca
+ * medidas ao vivo) continuam no comportamento antigo: cache Cogna-only, com
+ * fallback à busca ao vivo só quando a linha do cache não existe. Isso é
+ * INTENCIONAL, não uma limitação esquecida — a ideia é validar a curva do
+ * Grupo A no Search Console por 2-3 semanas antes de liberar o resto. Pra
+ * expandir o rollout depois: relaxar (ou remover) a condição isHighDemandCourse
+ * abaixo — não precisa mexer no gate em si nem nos thresholds de qualidade
+ * (MIN_OFFERS_TO_INDEX etc. não mudam).
+ *
+ * Sem kill switch pra tratar aqui: a flag estacio_enabled que existia em
+ * app/lib/api/athena-offers.ts foi aposentada em 2026-08-17 (Estácio é
+ * parceira permanente) — liveOfferCount já reflete exatamente o que a busca
+ * ao vivo devolve, sem esconder nada atrás de flag.
+ */
+async function resolveOfferCountForGate(params: {
+  featuredCourseId: string
+  citySlug: string
+  trendScore: number
+  liveOfferCount: number
+}): Promise<number> {
+  const { featuredCourseId, citySlug, trendScore, liveOfferCount } = params
+  const isHighDemandCourse = trendScore >= MIN_TREND_SCORE_FOR_HIGH_DEMAND
+
+  if (isHighDemandCourse) {
+    // Grupo A: contagem REAL que a página renderiza (Cogna + Athena mesclados),
+    // não o cache Cogna-only. Filtro e conteúdo concordam por construção.
+    return liveOfferCount
+  }
+
+  // Grupo B/C (fora do rollout desta rodada): comportamento antigo, inalterado.
+  const cachedOfferCount = await getCachedOfferCount(featuredCourseId, citySlug)
+  return cachedOfferCount ?? liveOfferCount
+}
 
 // Gerar metadata dinâmica (SEO) com cidade
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -131,15 +187,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const nationalUrl = absoluteUrl(`/cursos/${slug}`)
 
   // Indexação inteligente via gate compartilhado (app/lib/seo/city-page-gate.ts):
-  // exige MIN_OFFERS_TO_INDEX=2 ofertas locais, ou trendScore ≥ 60 pra páginas
-  // sem oferta suficiente. Páginas com 0 ou 1 oferta são thin content em escala
-  // e viram noindex,follow + canonical pra versão nacional.
+  // exige MIN_OFFERS_TO_INDEX=2 ofertas locais, ou trendScore ≥
+  // MIN_TREND_SCORE_FOR_HIGH_DEMAND pra páginas sem oferta suficiente. Páginas
+  // com 0 ou 1 oferta são thin content em escala e viram noindex,follow +
+  // canonical pra versão nacional.
   const trendScore = curso.trendScore ?? 0
-  // Prioriza o cache precomputado (estável, mesma fonte do sitemap). Só usa a
-  // contagem ao vivo quando não há linha no cache ainda (sem regressão).
-  const liveOfferCount = fromFallback ? 0 : offers.length
-  const cachedOfferCount = await getCachedOfferCount(curso.id, citySlug)
-  const offerCountForGate = cachedOfferCount ?? liveOfferCount
+  const offerCountForGate = await resolveOfferCountForGate({
+    featuredCourseId: curso.id,
+    citySlug,
+    trendScore,
+    liveOfferCount: fromFallback ? 0 : offers.length,
+  })
   const shouldIndex = shouldIndexCityPage(offerCountForGate, trendScore)
   const canonical = shouldIndex ? pageUrl : nationalUrl
 
@@ -229,14 +287,16 @@ export default async function CursoCidadePage({ params }: Props) {
   )
 
   // Mesma lógica de indexação inteligente do generateMetadata (via gate
-  // compartilhado). Repete aqui porque Schema Course/FAQ não deve ser emitido
-  // em URLs noindex.
+  // compartilhado + resolveOfferCountForGate). Repete aqui porque Schema
+  // Course/FAQ não deve ser emitido em URLs noindex.
   const trendScore = cursoMetadata.trendScore ?? 0
-  // Mesma fonte de verdade do generateMetadata e do sitemap: cache precomputado,
-  // com fallback à contagem ao vivo só em cache miss.
-  const liveOfferCount = fromFallback ? 0 : (courseOffers?.length ?? 0)
-  const cachedOfferCount = await getCachedOfferCount(cursoMetadata.id, citySlug)
-  const shouldIndex = shouldIndexCityPage(cachedOfferCount ?? liveOfferCount, trendScore)
+  const offerCountForGate = await resolveOfferCountForGate({
+    featuredCourseId: cursoMetadata.id,
+    citySlug,
+    trendScore,
+    liveOfferCount: fromFallback ? 0 : (courseOffers?.length ?? 0),
+  })
+  const shouldIndex = shouldIndexCityPage(offerCountForGate, trendScore)
 
   // Outras cidades para internal linking (exclui a cidade atual)
   const otherCities = BRAZILIAN_CITIES

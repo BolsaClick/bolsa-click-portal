@@ -32,7 +32,10 @@
 import { PrismaClient } from '@prisma/client'
 import axios from 'axios'
 import { BRAZILIAN_CITIES } from '../app/lib/constants/brazilian-cities'
-import { searchAthenaOffersWithMeta } from '../app/lib/api/athena-offers'
+import {
+  searchAthenaOffersWithMeta,
+  normalizeAthenaOffer,
+} from '../app/lib/api/athena-offers'
 
 const args = Object.fromEntries(
   process.argv
@@ -98,11 +101,6 @@ const tartarus = axios.create({
 interface TartarusOffer {
   minPrice?: number
   prices?: { withDiscount?: number; withoutDiscount?: number }
-}
-
-interface AthenaPriced {
-  minPrice?: number
-  prices?: { withDiscount?: number }
 }
 
 interface FetchResult {
@@ -192,12 +190,18 @@ async function fetchAthenaOffers(
       // A Athena pagina em 20: contar as listas dava no máximo 60 pras três
       // marcas, teto que "Pedagogia em Recife = 40" tinha batido sem avisar.
       const offerCount = perBrand.reduce((sum, r) => sum + r.total, 0)
-      // O preço mínimo, esse, sai da primeira página de cada marca — é o que
-      // temos sem paginar tudo e quadruplicar de novo a carga na API. Pode
-      // superestimar o mínimo, nunca inventa valor: todo preço veio da API.
-      const all = perBrand.flatMap((r) => r.offers) as AthenaPriced[]
-      const prices = all
-        .map((o) => o.minPrice ?? o.prices?.withDiscount ?? 0)
+      // O preço mínimo sai da primeira página de cada marca — é o que temos sem
+      // paginar tudo e quadruplicar de novo a carga na API. Pode superestimar o
+      // mínimo, nunca inventa valor: todo preço veio da API.
+      //
+      // Passa por `normalizeAthenaOffer` porque a Athena usa nomes de campo
+      // PRÓPRIOS — `priceTo` (com desconto) e `priceFrom` (sem) — e não os
+      // `minPrice`/`prices.withDiscount` da Tartarus. Ler os nomes da Cogna
+      // numa oferta da Athena devolve undefined em todo campo, e o resultado
+      // era `athenaMinPrice` nulo em 100% das linhas, sem erro nenhum.
+      const prices = perBrand
+        .flatMap((r) => r.offers)
+        .map((o) => normalizeAthenaOffer(o).minPrice ?? 0)
         .filter((p) => p > 0)
       return {
         offerCount,

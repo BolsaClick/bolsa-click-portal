@@ -358,10 +358,21 @@ export function normalizeAthenaOffer(raw: AthenaOffer): Course {
 
 /**
  * Busca ofertas Estácio na Athena por curso + cidade.
- * Degradação graciosa: em qualquer falha retorna [] (a busca Tartarus segue normal).
+ * Degradação graciosa por padrão: em qualquer falha retorna [] (a busca
+ * Tartarus segue normal) — comportamento INALTERADO pra todo caller existente.
+ *
+ * `opts.throwOnFailure` é aditivo e opt-in (default false/undefined): quando
+ * true, uma falha real (exceção após a chamada HTTP) é RELANÇADA em vez de
+ * engolida. Existe só pra quem precisa DISTINGUIR "não tem oferta" de "não
+ * consegui buscar" — ver `probeAthenaHealth` em
+ * app/cursos/[slug]/[city]/_data/city-offers.ts, único caller que passa esta
+ * opção hoje. Não cobre o outro modo de falha conhecido (HTTP 200 com lista
+ * vazia sob carga — não lança nada, indistinguível de ausência real numa
+ * chamada isolada; ver comentário em probeAthenaHealth).
  */
 export async function searchAthenaOffers(
   params: SearchAthenaOffersParams,
+  opts?: { throwOnFailure?: boolean },
 ): Promise<AthenaOffer[]> {
   if (!process.env.ATHENA_BASE_URL) return []
 
@@ -403,6 +414,7 @@ export async function searchAthenaOffers(
     return list
   } catch (error) {
     console.error('Erro ao buscar ofertas na Athena:', error)
+    if (opts?.throwOnFailure) throw error
     return []
   }
 }

@@ -10,7 +10,7 @@ import { absoluteUrl, publicRobots, seoSite } from '@/app/lib/seo/site-config'
 import { ogImageObject } from '@/app/lib/seo/schema-image'
 import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 import { getCourseBySlug } from '../_data/course-lookup'
-import { getCityCourseOffers, priceRangeFromOffers } from './_data/city-offers'
+import { getCityCourseOffers, priceRangeFromOffers, probeAthenaHealth } from './_data/city-offers'
 import { BRAZILIAN_CITIES, getCityBySlug } from '@/app/lib/constants/brazilian-cities'
 import {
   OffersComparisonTable,
@@ -95,25 +95,130 @@ const getCachedOfferCount = cache(async (
  * app/lib/api/athena-offers.ts foi aposentada em 2026-08-17 (Estácio é
  * parceira permanente) — liveOfferCount já reflete exatamente o que a busca
  * ao vivo devolve, sem esconder nada atrás de flag.
+ *
+ * BLINDAGEM CONTRA FALHA DE BUSCA (2026-09-03) — LEIA ANTES DE MEXER:
+ *
+ * Pro Grupo A, liveOfferCount vem de uma busca AO VIVO a cada revalidação
+ * ISR (24h) — diferente do cache Cogna-only do Grupo B/C, que só é
+ * sobrescrito por um script batch. Se a Athena falhar (ou devolver 200 com
+ * lista vazia sob carga — ver athena-offers.ts) NO EXATO INSTANTE da
+ * revalidação, liveOfferCount despenca pra um valor que pode não refletir a
+ * oferta real, e a página fica presa nesse estado errado por até 24h — o
+ * mesmo defeito de "zero por falha vira zero definitivo" que já mordeu a
+ * copy de desconto (ver app/lib/utils/institution-discount.ts). Princípio
+ * idêntico ao de lá: noindex só com evidência POSITIVA de ausência, nunca
+ * com um zero que pode ter vindo de falha.
+ *
+ * Mitigação, em camadas (nunca REBAIXA por causa de falha; na dúvida, mantém
+ * a evidência mais forte já disponível):
+ *   1. Se liveOfferCount JÁ basta pra indexar (shouldIndexCityPage), usa
+ *      direto — evidência positiva não precisa de sonda extra.
+ *   2. Senão, olha o cache Cogna-only (mesma fonte do Grupo B/C). Se ELE já
+ *      basta sozinho, usa — Cogna não depende da Athena, então essa leitura
+ *      não pode ter sido vítima da falha que estamos blindando.
+ *   3. Só nesse ponto (zona ambígua: nem live nem cache bastam) chama
+ *      probeAthenaHealth — sonda leve e cacheada (10min) que reusa a MESMA
+ *      chamada Athena com throwOnFailure, pra distinguir "Athena respondeu e
+ *      não achou nada" (evidência real de ausência — confia no zero, cai no
+ *      shouldIndexCityPage normal) de "Athena lançou uma exceção agora" (não
+ *      confia: devolve o piso mínimo que o próprio shouldIndexCityPage já
+ *      aceita pra alta demanda — offerCount=1 —, NUNCA cachedOfferCount, que
+ *      nesse ponto já sabemos insuficiente e não protegeria nada pra uma
+ *      página que só é Grupo A por causa da Athena).
+ *
+ * LIMITE CONHECIDO (não fechado nesta rodada): a sonda só pega o modo de
+ * falha "exceção" — o modo "200 vazio sob carga" não lança nada, e uma
+ * chamada isolada não distingue isso de ausência real (ver comentário em
+ * probeAthenaHealth, city-offers.ts). Nesse caso raro e não coberto, uma
+ * página do Grupo A que dependia SÓ da Athena (cache Cogna também
+ * insuficiente) ainda pode cair pra noindex por até 24h — janela idêntica à
+ * que já existia ANTES desta blindagem (nunca pior), só que agora restrita a
+ * essa interseção estreita em vez de qualquer falha Athena.
+ *
+ * RISCO RESIDUAL DO PASSO 3 (aceito de propósito, ver relatório da tarefa):
+ * se a Athena ficar fora do ar por DIAS (não só o instante da revalidação),
+ * uma página do Grupo A sem oferta nenhuma (nem Cogna nem Athena, desde
+ * sempre) pode ficar indexada por engano até a Athena voltar — o preço da
+ * assimetria "falha nunca rebaixa" quando a falha não é transitória.
+ * Mitigação completa exigiria persistir uma contagem mesclada Cogna+Athena
+ * com o mesmo gate "nunca escreve com falha" do
+ * precompute-institution-max-discount.ts — próximo passo, fora de escopo
+ * aqui — e/ou alertar sobre falhas repetidas de probeAthenaHealth.
  */
 async function resolveOfferCountForGate(params: {
   featuredCourseId: string
   citySlug: string
   trendScore: number
   liveOfferCount: number
+  apiCourseName: string
+  cityName: string
+  stateUF: string
+  nivel: string
+  fromFallback: boolean
 }): Promise<number> {
-  const { featuredCourseId, citySlug, trendScore, liveOfferCount } = params
+  const {
+    featuredCourseId,
+    citySlug,
+    trendScore,
+    liveOfferCount,
+    apiCourseName,
+    cityName,
+    stateUF,
+    nivel,
+    fromFallback,
+  } = params
   const isHighDemandCourse = trendScore >= MIN_TREND_SCORE_FOR_HIGH_DEMAND
 
-  if (isHighDemandCourse) {
-    // Grupo A: contagem REAL que a página renderiza (Cogna + Athena mesclados),
-    // não o cache Cogna-only. Filtro e conteúdo concordam por construção.
+  if (!isHighDemandCourse) {
+    // Grupo B/C (fora do rollout desta rodada): comportamento antigo, inalterado.
+    const cachedOfferCount = await getCachedOfferCount(featuredCourseId, citySlug)
+    return cachedOfferCount ?? liveOfferCount
+  }
+
+  // Grupo A — passo 1: evidência positiva já basta, sem sonda.
+  if (shouldIndexCityPage(liveOfferCount, trendScore)) {
     return liveOfferCount
   }
 
-  // Grupo B/C (fora do rollout desta rodada): comportamento antigo, inalterado.
+  // Grupo A — passo 2: o cache Cogna-only (não depende da Athena) já basta
+  // sozinho — não precisa saber se a Athena está saudável.
   const cachedOfferCount = await getCachedOfferCount(featuredCourseId, citySlug)
-  return cachedOfferCount ?? liveOfferCount
+  if (cachedOfferCount !== null && shouldIndexCityPage(cachedOfferCount, trendScore)) {
+    return cachedOfferCount
+  }
+
+  // Grupo A — passo 3: zona ambígua (nem live nem cache bastam). Só aqui vale
+  // a pena pagar a sonda extra (mesma janela de cache de 10min do fetch de
+  // conteúdo, então não dobra tráfego a cada request — só por revalidação).
+  const athenaHealthy = await probeAthenaHealth(apiCourseName, cityName, stateUF, nivel, !fromFallback)
+  if (!athenaHealthy) {
+    // Falha CONFIRMADA (exceção real) bem na hora da revalidação — não temos
+    // como saber se a página é legitimamente vazia ou se é a Athena falhando
+    // por acidente. "Falha nunca rebaixa" (requisito da tarefa): devolver
+    // cachedOfferCount aqui NÃO protegeria nada — pra uma página que só é
+    // Grupo A por causa da Athena, o cache Cogna-only já era insuficiente
+    // (é POR ISSO que chegamos no passo 3), então cairia no mesmo zero de
+    // sempre e a blindagem não faria diferença nenhuma.
+    //
+    // Em vez disso, devolve o PISO mínimo que shouldIndexCityPage já aceita
+    // pra curso de alta demanda (trendScore >= MIN_TREND_SCORE_FOR_HIGH_DEMAND,
+    // sempre verdade aqui — Grupo A): offerCount >= 1. Não é uma contagem
+    // "real" — só alimenta o booleano de indexação (nunca aparece em
+    // title/description/schema, que usam offers.length de verdade, não
+    // offerCountForGate). Risco residual, aceito de propósito: se a Athena
+    // ficar fora do ar por DIAS (não só o instante da revalidação), uma
+    // página do Grupo A que nunca teve oferta nenhuma pode ficar indexada
+    // por engano até a Athena voltar — mitigar monitorando probeAthenaHealth
+    // (falhas repetidas = alerta) e, no médio prazo, persistindo uma
+    // contagem mesclada Cogna+Athena com o mesmo gate "nunca escreve com
+    // falha" do precompute-institution-max-discount.ts (ver relatório).
+    return 1
+  }
+
+  // Athena respondeu sem exceção: o zero é evidência POSITIVA de ausência
+  // (mesmo princípio de NO_DISCOUNT em institution-discount.ts) — confia na
+  // contagem mesclada ao vivo, que é a mesma que a página renderiza.
+  return liveOfferCount
 }
 
 // Gerar metadata dinâmica (SEO) com cidade
@@ -197,6 +302,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     citySlug,
     trendScore,
     liveOfferCount: fromFallback ? 0 : offers.length,
+    apiCourseName: curso.apiCourseName,
+    cityName: cityData.name,
+    stateUF: cityData.state,
+    nivel: curso.nivel,
+    fromFallback,
   })
   const shouldIndex = shouldIndexCityPage(offerCountForGate, trendScore)
   const canonical = shouldIndex ? pageUrl : nationalUrl
@@ -295,6 +405,11 @@ export default async function CursoCidadePage({ params }: Props) {
     citySlug,
     trendScore,
     liveOfferCount: fromFallback ? 0 : (courseOffers?.length ?? 0),
+    apiCourseName: cursoMetadata.apiCourseName,
+    cityName: cityData.name,
+    stateUF: cityData.state,
+    nivel: cursoMetadata.nivel,
+    fromFallback,
   })
   const shouldIndex = shouldIndexCityPage(offerCountForGate, trendScore)
 

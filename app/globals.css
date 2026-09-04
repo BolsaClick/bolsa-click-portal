@@ -290,6 +290,10 @@ html.cookie-banner-visible [data-checkout-inscription] {
   }
 }
 
+/* Fica acima do banner de cookies (z 1100) para o botão nunca ficar coberto.
+   Consequência: qualquer camada que precise abrir SOBRE o botão — dropdown de
+   select, tooltip, popover — tem de passar de 1200. O dropdown de "forma de
+   ingresso" no checkout Estácio usa 1300 por isso. */
 .checkout-step-cta {
   position: relative;
   z-index: 1200;

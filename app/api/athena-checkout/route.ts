@@ -7,6 +7,7 @@ import {
   type AthenaEnrollmentResponse,
 } from '@/app/lib/api/athena-offers'
 import { getEmailMxRejectionMessage } from '@/app/lib/validation/email-mx'
+import { mensagemDaRecusa } from '@/app/lib/checkout/athena-enrollment'
 
 /**
  * POST /api/athena-checkout — cria a inscrição Estácio na Athena (POST /api/enrollments)
@@ -14,27 +15,13 @@ import { getEmailMxRejectionMessage } from '@/app/lib/validation/email-mx'
  *
  * ATL016 (CPF já inscrito) é tratado como sucesso: a Athena devolve a inscrição/link existente.
  *
+ * LEGADO desde 2026-09-04: o checkout Estácio do portal NÃO passa mais por
+ * aqui. Ele cobra a taxa de matrícula do Bolsa Click antes
+ * (/api/athena-checkout/charge) e cria a inscrição só depois do pagamento
+ * confirmar (/api/athena-checkout/confirm → confirm-estacio.ts). Esta rota
+ * segue de pé para inscrição SEM cobrança (uso interno/suporte); a lógica de
+ * recusa é a mesma, compartilhada em app/lib/checkout/athena-enrollment.ts.
  */
-/**
- * Traduz a recusa do parceiro para uma frase que o candidato entenda.
- *
- * A mensagem crua da YDUQS fala em `codCursoPai` e `codCampusPai` — não serve
- * para a tela. E a recusa mais comum (MS004, 9 de 16 casos nos últimos 30 dias)
- * é a oferta não existir mais lá, o que tem uma ação clara: escolher outra.
- */
-function mensagemDaRecusa(errorCode: string | null): string {
-  if (errorCode === 'ATL016') {
-    return 'Este CPF já possui uma inscrição nesta instituição. Fale com a gente para retomar de onde parou.'
-  }
-  if (errorCode === 'MS004') {
-    return 'Esta oferta não está mais disponível na instituição. Escolha outra opção de curso ou unidade.'
-  }
-  if (errorCode === 'MS002') {
-    return 'A instituição não aceitou alguns dos dados informados. Confira os campos e tente novamente.'
-  }
-  return 'Não foi possível concluir a inscrição nesta oferta. Tente outra opção ou fale com a gente.'
-}
-
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as CreateEnrollmentInput

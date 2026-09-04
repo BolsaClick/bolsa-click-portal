@@ -18,6 +18,13 @@ export default function EstacioSuccessClient() {
   const pixCode = searchParams.get('pixCode')
   const amount = searchParams.get('amount')
   const dueDate = searchParams.get('dueDate')
+  // Taxa de matrícula do Bolsa Click (centavos) — já PAGA neste checkout.
+  // Ausente em links antigos, e aí a tela simplesmente não mostra o bloco.
+  const taxaCentavos = Number(searchParams.get('taxa') ?? '')
+  const taxaPaga =
+    Number.isFinite(taxaCentavos) && taxaCentavos > 0
+      ? (taxaCentavos / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+      : null
   const [pixCopied, setPixCopied] = useState(false)
   const { trackEvent } = usePostHogTracking()
 
@@ -85,11 +92,57 @@ export default function EstacioSuccessClient() {
           </div>
           <h1 className="text-2xl font-bold text-gray-800">Inscrição realizada com sucesso!</h1>
           <p className="text-gray-600 mt-2">
-            Falta só um passo: finalize o pagamento da matrícula na instituição.
+            {taxaPaga
+              ? 'A taxa de matrícula do Bolsa Click está paga. Falta agora o pagamento do curso, que é feito na instituição.'
+              : 'Falta só um passo: finalize o pagamento da matrícula na instituição.'}
           </p>
         </div>
 
         <div className="p-6 space-y-6">
+          {/* As DUAS cobranças, lado a lado e nomeadas — a nossa (paga) e a da
+              instituição (a pagar). Sem essa separação explícita o candidato lê
+              como cobrança dupla pelo mesmo item e abre chargeback. */}
+          {taxaPaga && (
+            <div className="border border-gray-200 rounded-lg divide-y divide-gray-100">
+              <div className="flex items-start justify-between gap-4 p-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-800">
+                    Taxa de matrícula Bolsa Click
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Cobrança única, feita por nós para enviar sua inscrição.
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-sm font-semibold text-gray-800">{taxaPaga}</p>
+                  <span className="inline-flex items-center gap-1 mt-1 text-[11px] font-medium text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Paga
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-start justify-between gap-4 p-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-800">
+                    Matrícula do curso — Estácio
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Cobrança da própria instituição, separada da nossa taxa. É esta que garante sua
+                    vaga no curso.
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-sm font-semibold text-gray-800">
+                    {formatBRL(amount) ?? 'A pagar'}
+                  </p>
+                  <span className="inline-flex items-center mt-1 text-[11px] font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+                    Pendente
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {(course || numeroInscricao) && (
             <div className="border border-gray-200 rounded-lg p-4 space-y-2 text-sm">
               <h2 className="font-medium">Detalhes da inscrição</h2>
@@ -107,7 +160,7 @@ export default function EstacioSuccessClient() {
               )}
               {formatBRL(amount) && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Valor da matrícula</span>
+                  <span className="text-gray-500">Matrícula na instituição</span>
                   <span className="font-medium text-emerald-700">{formatBRL(amount)}</span>
                 </div>
               )}
@@ -126,7 +179,12 @@ export default function EstacioSuccessClient() {
 
           {pixCode && (
             <div className="border border-gray-200 rounded-lg p-4">
-              <h3 className="font-medium text-gray-800 mb-4 text-center">Pague com PIX</h3>
+              <h3 className="font-medium text-gray-800 mb-1 text-center">
+                Pague a matrícula da Estácio com PIX
+              </h3>
+              <p className="text-xs text-center text-gray-500 mb-4">
+                Cobrança da instituição — não é a taxa do Bolsa Click, que já está paga.
+              </p>
               <div className="flex justify-center mb-4">
                 <div className="p-3 bg-white border border-gray-200 rounded-xl shadow-sm inline-block">
                   <QRCode
@@ -166,7 +224,15 @@ export default function EstacioSuccessClient() {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h3 className="font-medium text-blue-800 mb-2">Próximos passos</h3>
             <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
-              <li>Acesse a página de pagamento da instituição para finalizar a matrícula.</li>
+              {taxaPaga && (
+                <li>
+                  A taxa de matrícula do Bolsa Click ({taxaPaga}) já está paga — nada a fazer aqui.
+                </li>
+              )}
+              <li>
+                Agora pague a matrícula do curso na página da instituição: é uma cobrança separada,
+                da Estácio.
+              </li>
               <li>Você pode pagar via PIX ou boleto, conforme as opções exibidas lá.</li>
               <li>Verifique seu e-mail para acompanhar os próximos passos.</li>
             </ul>
@@ -185,7 +251,7 @@ export default function EstacioSuccessClient() {
                 rel="noopener noreferrer"
                 className="w-full py-3 px-4 bg-emerald-600 rounded-md text-sm font-medium text-white hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
               >
-                <span>Finalizar pagamento da matrícula</span>
+                <span>Pagar a matrícula na Estácio</span>
                 <ExternalLink className="w-4 h-4" />
               </a>
               <p className="text-center text-xs text-gray-500">O link abre em uma nova aba.</p>

@@ -118,6 +118,13 @@ export const metadata: Metadata = {
   robots: publicRobots(),
   applicationName: theme.name,
   category: 'education',
+  // Verificação de domínio da Meta (bolsaclick.com.br) — libera Meta Pixel/CAPI
+  // pra rodar campanhas no domínio. Mesmo padrão usado no bc-landing.
+  verification: {
+    other: {
+      'facebook-domain-verification': 'n4m35kg56ctjeup61lb6hbe8ql6u7k',
+    },
+  },
   other: {
     copyright: seoSite.name,
     abstract: seoSite.description,

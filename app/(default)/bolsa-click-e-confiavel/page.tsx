@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 // Página de confiança (GEO/E-E-A-T). Responde de frente as queries "é confiável /
 // é seguro / como funciona / é grátis" — exatamente o tipo de pergunta que IAs
@@ -57,8 +58,8 @@ const FAQ = [
     a: 'Sim. As faculdades parceiras do Bolsa Click são instituições reconhecidas pelo MEC (Ministério da Educação), e os cursos seguem a regulamentação oficial. O diploma tem a mesma validade de qualquer graduação, pós-graduação ou curso técnico de uma instituição credenciada, seja na modalidade EAD ou presencial.',
   },
   {
-    q: 'A bolsa vale durante todo o curso?',
-    a: 'Sim. O desconto da bolsa vale do primeiro ao último semestre, enquanto você mantém a matrícula ativa e a aprovação acadêmica. Você não precisa renovar a bolsa a cada período nem disputar o benefício novamente: o percentual contratado acompanha você até a conclusão do curso.',
+    q: 'Por quanto tempo vale a bolsa?',
+    a: 'O percentual e a duração seguem o contrato da faculdade da oferta escolhida. Cadastro no Bolsa Click é grátis, sem taxa de adesão. Confira as condições de cada oferta antes de matricular.',
   },
   {
     q: 'Preciso da nota do ENEM para conseguir uma bolsa?',
@@ -102,7 +103,7 @@ export default function BolsaClickEConfiavel() {
             <strong>Sim, o Bolsa Click é confiável.</strong> O cadastro é 100% gratuito, você só
             paga a mensalidade já com desconto — e diretamente à faculdade, nunca à plataforma — e
             todas as instituições parceiras são reconhecidas pelo MEC. Você compara as bolsas antes
-            de decidir e a economia chega a 80%.
+            de decidir e a economia chega a {DISCOUNT_CEILING_PCT}%.
           </p>
         </div>
       </section>

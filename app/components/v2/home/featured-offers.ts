@@ -22,6 +22,11 @@ export function toCourseOffer(raw: unknown): CourseOffer | null {
     typeof r[key] === 'string' && (r[key] as string).trim() ? (r[key] as string) : undefined
   const num = (key: string): number | undefined =>
     typeof r[key] === 'number' && (r[key] as number) > 0 ? (r[key] as number) : undefined
+  // codFormaIngressoOferta pode legitimamente ser 0 — não usar num() (exige > 0).
+  const numAny = (key: string): number | undefined =>
+    typeof r[key] === 'number' ? (r[key] as number) : undefined
+  const id: number | string | undefined =
+    typeof r.id === 'number' || typeof r.id === 'string' ? r.id : undefined
 
   return {
     name,
@@ -43,6 +48,20 @@ export function toCourseOffer(raw: unknown): CourseOffer | null {
     source: str('source'),
     totalInstallment: num('totalInstallment'),
     minInstallmentValue: num('minInstallmentValue'),
+    // Identificadores — só usados pra montar o link direto de checkout
+    // (offerCheckoutHref); sem eles o card cai pro link de resultado.
+    id,
+    unitId: str('unitId'),
+    businessKey: str('businessKey'),
+    offerId: str('offerId'),
+    classShift: str('classShift'),
+    unitState: str('unitState'),
+    unitAddress: str('unitAddress'),
+    unitDistrict: str('unitDistrict'),
+    unitPostalCode: str('unitPostalCode'),
+    codFormaIngressoOferta: numAny('codFormaIngressoOferta'),
+    priceForma2: num('priceForma2'),
+    priceForma3: num('priceForma3'),
   }
 }
 

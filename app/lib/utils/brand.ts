@@ -12,9 +12,54 @@ export function normalizeBrand(brand?: string): string {
   if (n.includes('pitagoras') || n.includes('pitágoras')) return 'Pitágoras'
   if (n.includes('unime')) return 'Unime'
   if (n.includes('estacio') || n.includes('estácio')) return 'Estácio'
+  if (n.includes('ibmec')) return 'IBMEC'
   if (n.includes('wyden')) return 'Wyden'
   return brand!
     .split(' ')
     .map((w) => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w))
     .join(' ')
+}
+
+/**
+ * Label normalizado → valor aceito pelo filtro `brands` do Tartarus (enum
+ * Cogna). Null = não é marca Cogna.
+ */
+const COGNA_BRAND_PARAM: Record<string, string> = {
+  Anhanguera: 'ANHANGUERA',
+  Unopar: 'UNOPAR',
+  'Pitágoras': 'PITAGORAS',
+  Unime: 'UNIME',
+}
+export function cognaBrandParam(label: string): string | null {
+  return COGNA_BRAND_PARAM[label] ?? null
+}
+
+/**
+ * Label normalizado → termo do filtro `brand` da Athena (substring do slug da
+ * instituição, sem acento). Null = não é marca YDUQS.
+ */
+const YDUQS_BRAND_SLUG: Record<string, string> = {
+  'Estácio': 'estacio',
+  IBMEC: 'ibmec',
+  Wyden: 'wyden',
+}
+export function yduqsBrandSlug(label: string): string | null {
+  return YDUQS_BRAND_SLUG[label] ?? null
+}
+
+/**
+ * Marca (raw, de qualquer fonte) → chave pra lookup no mapa de nota MEC
+ * (`getBrandMecRatings()`, indexado por `Institution.slug` e pelo nome
+ * normalizado). Passa primeiro por `normalizeBrand` pra agrupar as várias
+ * razões sociais YDUQS ("UNIVERSIDADE ESTÁCIO DE SÁ" → "Estácio"), depois
+ * slugifica igual ao `normalize()` de app/lib/brand-mec-ratings.ts. Client-safe
+ * (sem Prisma) — pode ser importado em componente 'use client'.
+ */
+export function brandMecKey(brand?: string): string {
+  return normalizeBrand(brand)
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
 }

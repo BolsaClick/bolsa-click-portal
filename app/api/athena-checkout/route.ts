@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import {
   createAthenaEnrollment,
   extractCheckoutResult,
+  isEnrollmentAccepted,
   type CreateEnrollmentInput,
   type AthenaEnrollmentResponse,
 } from '@/app/lib/api/athena-offers'
-import { isServerFlagEnabled } from '@/app/lib/analytics/server-flags'
+import { getEmailMxRejectionMessage } from '@/app/lib/validation/email-mx'
 
 /**
  * POST /api/athena-checkout — cria a inscrição Estácio na Athena (POST /api/enrollments)
@@ -13,19 +14,29 @@ import { isServerFlagEnabled } from '@/app/lib/analytics/server-flags'
  *
  * ATL016 (CPF já inscrito) é tratado como sucesso: a Athena devolve a inscrição/link existente.
  *
- * Mesmo kill switch de `searchAthenaOffers` (flag `estacio_enabled`): a busca some da
- * listagem, mas sem isso aqui a inscrição continuava aceitando POST direto (link
- * antigo/indexado) mesmo com a Estácio escondida — é esse buraco que fecha.
  */
+/**
+ * Traduz a recusa do parceiro para uma frase que o candidato entenda.
+ *
+ * A mensagem crua da YDUQS fala em `codCursoPai` e `codCampusPai` — não serve
+ * para a tela. E a recusa mais comum (MS004, 9 de 16 casos nos últimos 30 dias)
+ * é a oferta não existir mais lá, o que tem uma ação clara: escolher outra.
+ */
+function mensagemDaRecusa(errorCode: string | null): string {
+  if (errorCode === 'ATL016') {
+    return 'Este CPF já possui uma inscrição nesta instituição. Fale com a gente para retomar de onde parou.'
+  }
+  if (errorCode === 'MS004') {
+    return 'Esta oferta não está mais disponível na instituição. Escolha outra opção de curso ou unidade.'
+  }
+  if (errorCode === 'MS002') {
+    return 'A instituição não aceitou alguns dos dados informados. Confira os campos e tente novamente.'
+  }
+  return 'Não foi possível concluir a inscrição nesta oferta. Tente outra opção ou fale com a gente.'
+}
+
 export async function POST(request: NextRequest) {
   try {
-    if (!(await isServerFlagEnabled('estacio_enabled', false))) {
-      return NextResponse.json(
-        { error: 'Inscrições Estácio temporariamente indisponíveis.' },
-        { status: 503 },
-      )
-    }
-
     const body = (await request.json()) as CreateEnrollmentInput
 
     // Validação mínima dos obrigatórios.
@@ -49,7 +60,39 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Domínio sem MX não recebe e-mail nenhum — erro comprovado, não
+    // suspeita. Fail-open embutido em getEmailMxRejectionMessage: só rejeita
+    // quando a consulta DNS PROVA que o domínio não tem MX; timeout/erro de
+    // rede deixa passar (ver app/lib/validation/email-mx.ts).
+    const mxRejection = await getEmailMxRejectionMessage(student.email)
+    if (mxRejection) {
+      return NextResponse.json({ error: mxRejection }, { status: 422 })
+    }
+
     const result = await createAthenaEnrollment(body)
+
+    // O athena-api responde 200 mesmo quando a YDUQS recusa: ele captura o
+    // erro, grava a inscrição como FAILED e devolve o registro. Sem checar
+    // isto, o candidato ia para a tela de sucesso sem link de pagamento,
+    // virava "inscrito" no CRM e contava como conversão.
+    if (!isEnrollmentAccepted(result)) {
+      console.error('❌ Athena recusou a inscrição', {
+        status: result.status,
+        errorCode: result.errorCode,
+        providerMessage: result.providerMessage,
+        offerId: body.offerId,
+      })
+      return NextResponse.json(
+        {
+          error: mensagemDaRecusa(result.errorCode),
+          // Códigos ajudam o suporte a agrupar; a mensagem crua do parceiro
+          // fica só no log, porque fala em codCursoPai e afins.
+          errorCode: result.errorCode,
+        },
+        { status: 422 },
+      )
+    }
+
     return NextResponse.json(result)
   } catch (error: unknown) {
     // ATL016 = CPF já inscrito → tratar como sucesso, devolvendo a inscrição existente.

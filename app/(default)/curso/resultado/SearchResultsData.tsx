@@ -1,9 +1,42 @@
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
+import { getFeaturedCourseSlugMap } from '@/app/lib/api/featured-course-slugs'
+import { getBrandMecRatings } from '@/app/lib/brand-mec-ratings'
 import { normalizeAcademicLevel } from '@/app/lib/academic-level'
 import SearchResultsView, { type ShowCoursesResult } from './SearchResultsView'
 import ResultsSkeleton from './ResultsSkeleton'
 import { buildCourseNameForAPI } from './course-name'
 import type { ResultsCurrent } from './ResultsShell'
+
+// ─── Cache em memória da busca (só servidor) ─────────────────────────────────
+// Query fria contra Tartarus+Athena chegou a 30s+ de SSR (medido 2026-07-27);
+// com cache o segundo visitante da mesma busca recebe em ~0. Em memória de
+// propósito (processo Railway é longevo): controle fino da política — só entra
+// resultado SAUDÁVEL (com ofertas e sem fonte caída), pra nunca pinar um
+// "INDISPONÍVEL" transitório nem uma lista parcial por 5 minutos.
+const SEARCH_CACHE_TTL_MS = 5 * 60_000
+const SEARCH_CACHE_MAX = 300
+const searchCache = new Map<string, { value: ShowCoursesResult; expires: number }>()
+
+async function getShowFiltersCoursesCached(
+  ...args: Parameters<typeof getShowFiltersCourses>
+): Promise<ShowCoursesResult> {
+  const key = JSON.stringify(args)
+  const hit = searchCache.get(key)
+  if (hit && hit.expires > Date.now()) return hit.value
+
+  const value = (await getShowFiltersCourses(...args)) as ShowCoursesResult
+  const healthy =
+    (value?.data?.length ?? 0) > 0 &&
+    !(value as { failedSources?: unknown[] }).failedSources?.length
+  if (healthy) {
+    if (searchCache.size >= SEARCH_CACHE_MAX) {
+      const oldest = searchCache.keys().next().value
+      if (oldest !== undefined) searchCache.delete(oldest)
+    }
+    searchCache.set(key, { value, expires: Date.now() + SEARCH_CACHE_TTL_MS })
+  }
+  return value
+}
 
 /**
  * Server Component isolado só pra busca de ofertas — envolto em `<Suspense>`
@@ -11,10 +44,11 @@ import type { ResultsCurrent } from './ResultsShell'
  * espera as APIs (Tartarus/Athena), que podem levar vários segundos.
  */
 export default async function SearchResultsData({ current }: { current: ResultsCurrent }) {
-  const { curso, cursoNomeCompleto, cidade, estado, modalidade, nivel } = current
+  const { curso, cursoNomeCompleto, cidade, estado, modalidade, nivel, marcas } = current
 
   const courseNameForAPI = buildCourseNameForAPI(curso, cursoNomeCompleto)
   const normalizedNivel = normalizeAcademicLevel(nivel)
+  const selectedBrands = marcas ? marcas.split(',').filter(Boolean) : undefined
 
   // Mesma condição do client de antes: busca nacional imediata com curso
   // definido, OU cidade+estado (da URL ou já resolvidos pelo GeoRedirect).
@@ -28,8 +62,26 @@ export default async function SearchResultsData({ current }: { current: ResultsC
   let showCourses: ShowCoursesResult | undefined
   let isError = false
 
+  // Mapa nome→slug dos cursos enriquecidos (/cursos/[slug]), pro link "Ver
+  // detalhes do curso" no card. Busca em paralelo com a oferta — cache em
+  // memória (TTL 10min) deixa isso praticamente grátis na maioria das
+  // requests. Falha aqui não pode derrubar a página de resultado: cai pra {}
+  // e os cards simplesmente não mostram o link secundário.
+  const courseSlugMapPromise = getFeaturedCourseSlugMap().catch((error) => {
+    console.error('Erro ao buscar mapa de slugs de cursos (resultado):', error)
+    return {} as Record<string, string>
+  })
+
+  // Nota MEC por marca (Institution.mecRating, real, cacheada 1h) — social
+  // proof no card. Mesmo tratamento de falha graciosa: sem o dado, os cards
+  // simplesmente não mostram o selo (nunca inventa nota).
+  const mecRatingsPromise = getBrandMecRatings().catch((error) => {
+    console.error('Erro ao buscar notas MEC (resultado):', error)
+    return {} as Record<string, number>
+  })
+
   try {
-    showCourses = (await getShowFiltersCourses(
+    showCourses = await getShowFiltersCoursesCached(
       courseNameForAPI,
       cidade || undefined,
       estado || undefined,
@@ -37,11 +89,15 @@ export default async function SearchResultsData({ current }: { current: ResultsC
       normalizedNivel,
       1,
       20,
-    )) as ShowCoursesResult
+      selectedBrands,
+    )
   } catch (error) {
     console.error('Erro ao buscar cursos (resultado):', error)
     isError = true
   }
+
+  const courseSlugMap = await courseSlugMapPromise
+  const mecRatings = await mecRatingsPromise
 
   // Fallback automático: quando a busca exata vier vazia mas o usuário pediu
   // curso + cidade + modalidade, refazemos SEM a modalidade — mostra o mesmo
@@ -54,7 +110,7 @@ export default async function SearchResultsData({ current }: { current: ResultsC
   let fallbackCourses: ShowCoursesResult | undefined
   if (shouldFetchFallback) {
     try {
-      fallbackCourses = (await getShowFiltersCourses(
+      fallbackCourses = await getShowFiltersCoursesCached(
         courseNameForAPI,
         cidade || undefined,
         estado || undefined,
@@ -62,7 +118,8 @@ export default async function SearchResultsData({ current }: { current: ResultsC
         normalizedNivel,
         1,
         12,
-      )) as ShowCoursesResult
+        selectedBrands,
+      )
     } catch (error) {
       console.error('Erro ao buscar fallback de modalidade (resultado):', error)
     }
@@ -71,11 +128,13 @@ export default async function SearchResultsData({ current }: { current: ResultsC
   return (
     <SearchResultsView
       // Remonta (reseta paginação/estado local) a cada busca nova.
-      key={`${courseNameForAPI ?? ''}|${cidade}|${estado}|${modalidade}|${normalizedNivel}`}
+      key={`${courseNameForAPI ?? ''}|${cidade}|${estado}|${modalidade}|${normalizedNivel}|${marcas ?? ''}`}
       current={current}
       initialShowCourses={showCourses}
       initialIsError={isError}
       initialFallbackCourses={fallbackCourses}
+      courseSlugMap={courseSlugMap}
+      mecRatings={mecRatings}
     />
   )
 }

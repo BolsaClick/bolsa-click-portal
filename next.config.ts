@@ -10,7 +10,6 @@ import type { NextConfig } from "next";
 //   - GTM / Google Analytics
 //   - TikTok Pixel + Events API           - UTMify (pixel + Orders API)
 //   - Firebase Auth + Firestore           - Tigris Storage (imagens)
-//   - Notealy (server-side, não importa pro CSP do browser)
 const CSP_REPORT_ONLY = [
   "default-src 'self'",
   // Inline scripts são usados pelo Next (hydration tokens) e pelos pixels;
@@ -23,9 +22,18 @@ const CSP_REPORT_ONLY = [
   "img-src 'self' data: blob: https:",
   "media-src 'self' blob:",
   // Fetch / XHR / WebSocket — todas as APIs first-party + integrações.
-  "connect-src 'self' https://hermes.bolsamais.com.br https://us.i.posthog.com https://us-assets.i.posthog.com https://api.utmify.com.br https://analytics.tiktok.com https://www.google-analytics.com https://www.googletagmanager.com https://stats.g.doubleclick.net https://*.facebook.com https://thanos.notealy.com https://tartarus-api.inovitdigital.com.br https://elysium-api.inovitdigital.com.br https://t3.storageapi.dev https://bolsa-click.fly.storage.tigris.dev https://*.firebaseio.com https://*.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com",
-  // iframes: GTM noscript pixel.
-  "frame-src 'self' https://www.googletagmanager.com https://www.facebook.com",
+  // PostHog agora é servido via proxy same-origin (/ingest/*, ver rewrites()
+  // abaixo) — us.i.posthog.com / us-assets.i.posthog.com deixam de ser
+  // chamados pelo browser, mas ficam na whitelist como fallback defensivo.
+  // us.posthog.com (ui_host) é novo: usado pelo SDK pros links do toolbar/
+  // dashboard apontarem pro domínio certo do PostHog em vez do proxy.
+  "connect-src 'self' https://hermes.bolsamais.com.br https://us.i.posthog.com https://us-assets.i.posthog.com https://us.posthog.com https://api.utmify.com.br https://analytics.tiktok.com https://www.google-analytics.com https://www.googletagmanager.com https://stats.g.doubleclick.net https://*.facebook.com https://tartarus-api.inovitdigital.com.br https://elysium-api.inovitdigital.com.br https://t3.storageapi.dev https://bolsa-click.fly.storage.tigris.dev https://*.firebaseio.com https://*.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com",
+  // iframes: GTM noscript pixel + checkout embutido da Cogna na tela de sucesso.
+  // kroton.platosedu.io é o checkout de pós/profissionalizante, que permite embed
+  // (o de graduação, pay.anhanguera.com, responde frame-ancestors 'self' e não).
+  // A CSP hoje é Report-Only; declarar já evita o bloqueio quando virar enforce.
+  // us.posthog.com: toolbar do PostHog (iframe), quando habilitado via ui_host.
+  "frame-src 'self' https://www.googletagmanager.com https://www.facebook.com https://kroton.platosedu.io https://us.posthog.com",
   // Frame ancestors — quem pode embedar o site (Clickjacking).
   "frame-ancestors 'self'",
   // Form actions — pra onde formulários podem submeter.
@@ -160,13 +168,19 @@ const nextConfig: NextConfig = {
         source: "/ingest/static/:path*",
         destination: "https://us-assets.i.posthog.com/static/:path*",
       },
+      // Chunk do SDK carregado sob demanda (ex.: session replay); vive no
+      // host de assets, não no de ingestão — path próprio na doc oficial do
+      // PostHog (posthog.com/docs/advanced/proxy/nextjs).
+      {
+        source: "/ingest/array/:path*",
+        destination: "https://us-assets.i.posthog.com/array/:path*",
+      },
+      // Catch-all: ingestão de eventos, /flags, /decide etc. — precisa vir
+      // DEPOIS das regras mais específicas acima (static/array), senão elas
+      // nunca seriam alcançadas.
       {
         source: "/ingest/:path*",
         destination: "https://us.i.posthog.com/:path*",
-      },
-      {
-        source: "/ingest/decide",
-        destination: "https://us.i.posthog.com/decide",
       },
       {
         source: "/utm/:path*",
@@ -185,11 +199,58 @@ const nextConfig: NextConfig = {
       ['cst-em-mecatronica-industrial', 'mecatronica-industrial-tecnologo'],
       ['cst-em-automacao-industrial', 'automacao-industrial-tecnologo'],
     ]
+    // Posts de blog duplicados: uma rodada de geração criou variante com sufixo
+    // `-2026-07` em vez de atualizar o post existente, e as duas versões ficaram
+    // vivas competindo pela mesma query. Três dos quatro pares são termos de
+    // dinheiro (prouni, desconto em faculdade, bolsa pra quem trabalha), então a
+    // canibalização estava batendo justamente nos posts de maior valor.
+    //
+    // O sobrevivente é sempre o slug limpo — URL melhor e, em três dos quatro
+    // casos, também o texto mais longo. O 301 tem que ir pro ar ANTES de
+    // desativar o duplicado: `app/blog/[slug]/page.tsx` filtra por isActive, e
+    // sem redirect a URL desativada viraria 404, jogando fora a autoridade.
+    const blogDupes = [
+      [
+        'prouni-2026-inscricao-notas-de-corte-como-usar-2026-07',
+        'prouni-2026-inscricao-notas-de-corte-como-usar',
+      ],
+      [
+        'desconto-em-faculdade-diferenca-prouni-fies-bolsa-direta-2026-07',
+        'desconto-em-faculdade-diferenca-prouni-fies-bolsa-direta',
+      ],
+      [
+        'bolsas-de-estudo-para-quem-ja-trabalha-opcoes-como-concorrer-2026-07',
+        'bolsas-de-estudo-para-quem-ja-trabalha-opcoes-como-concorrer',
+      ],
+      [
+        'quem-foi-louis-pasteur-descobertas-medicina-2026-07',
+        'quem-foi-louis-pasteur-descobertas-medicina',
+      ],
+      // Pares que já estavam resolvidos no banco (duplicata inativa), mas cuja
+      // URL antiga pode ter link externo apontando — 301 em vez de 404.
+      [
+        'diferenca-entre-bacharelado-licenciatura-e-tecnologo-qual-escolher-2026-07',
+        'diferenca-entre-bacharelado-licenciatura-e-tecnologo-qual-escolher',
+      ],
+      [
+        'o-que-e-computacao-em-nuvem-por-que-empresas-querem-profissionais',
+        'computacao-em-nuvem-o-que-e-por-que-empresas-querem-profissionais',
+      ],
+      [
+        'o-que-e-computacao-em-nuvem-por-que-empresas-querem-profissionais-2026-07',
+        'computacao-em-nuvem-o-que-e-por-que-empresas-querem-profissionais',
+      ],
+    ]
     return [
       ...courseDupes.flatMap(([from, to]) => [
         { source: `/cursos/${from}`, destination: `/cursos/${to}`, permanent: true },
         { source: `/carreiras/${from}`, destination: `/carreiras/${to}`, permanent: true },
       ]),
+      ...blogDupes.map(([from, to]) => ({
+        source: `/blog/${from}`,
+        destination: `/blog/${to}`,
+        permanent: true,
+      })),
       // URL "natural" que não existe (a central de ajuda é /central-de-ajuda).
       // 301 pra não devolver 404 a backlink externo/citação que chute esse path
       // (a auditoria GEO flagou o /perguntas-frequentes → 404).

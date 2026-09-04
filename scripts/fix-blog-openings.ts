@@ -7,6 +7,7 @@
  */
 
 import { PrismaClient } from '@prisma/client'
+import { DISCOUNT_CEILING_PCT } from '../app/lib/copy/claims'
 
 const prisma = new PrismaClient()
 
@@ -20,7 +21,7 @@ const FIXES: Fix[] = [
   {
     slug: 'como-conseguir-bolsa-estudo-50-faculdade',
     oldFirstPRegex: /<p>\s*Antes de sair se inscrevendo[\s\S]*?<\/p>/i,
-    newFirstPHtml: `<p>Pra conseguir bolsa de 50% ou mais em faculdade particular, os 4 caminhos com maior chance são: <strong>Prouni</strong> (bolsa integral ou parcial via ENEM ≥ 450 + renda baixa), <strong>Fies</strong> (financiamento estudantil pago após formado), <strong>bolsas próprias das faculdades parceiras</strong> (até 80% de desconto, sem ENEM e sem comprovação de renda) e <strong>marketplaces agregadores de bolsa</strong>. Cada um tem critério diferente — veja como funciona abaixo.</p>`,
+    newFirstPHtml: `<p>Pra conseguir bolsa de 50% ou mais em faculdade particular, os 4 caminhos com maior chance são: <strong>Prouni</strong> (bolsa integral ou parcial via ENEM ≥ 450 + renda baixa), <strong>Fies</strong> (financiamento estudantil pago após formado), <strong>bolsas próprias das faculdades parceiras</strong> (até ${DISCOUNT_CEILING_PCT}% de desconto, sem ENEM e sem comprovação de renda) e <strong>marketplaces agregadores de bolsa</strong>. Cada um tem critério diferente — veja como funciona abaixo.</p>`,
   },
   {
     slug: 'cursos-ead-mais-procurados-2026',

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight, GraduationCap, Clock, Monitor } from 'lucide-react'
 import Container from '../../atoms/Container'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 // Section direcionada à persona "adulto retornando aos estudos":
 // parou a faculdade, sem ENEM, alto ceticismo, alta intenção de fechamento.
@@ -9,7 +10,7 @@ const PersonaReturnBanner = () => {
   return (
     <section
       aria-labelledby="persona-return-title"
-      className="bg-gradient-to-br from-bolsa-primary/95 to-blue-900 py-14 md:py-16"
+      className="bg-gradient-to-br from-bolsa-primary/95 to-emerald-950 py-14 md:py-16"
     >
       <Container>
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-center">
@@ -26,7 +27,7 @@ const PersonaReturnBanner = () => {
             </h2>
             <p className="text-white/85 text-base md:text-lg leading-relaxed mb-6 max-w-2xl">
               Faculdades parceiras em mais de 280 cidades aceitam histórico parcial e dispensam ENEM. Estude 100%
-              online, no seu ritmo, com diploma reconhecido pelo MEC e bolsa de até 80%.
+              online, no seu ritmo, com diploma reconhecido pelo MEC e bolsa de até {DISCOUNT_CEILING_PCT}%.
             </p>
 
             <ul className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 text-sm">
@@ -36,7 +37,7 @@ const PersonaReturnBanner = () => {
               </li>
               <li className="flex items-center gap-2 text-white/90">
                 <Clock className="w-5 h-5 text-bolsa-secondary flex-shrink-0" aria-hidden="true" />
-                <span>Matrícula em 5 min</span>
+                <span>Cadastro grátis, sem taxa de adesão</span>
               </li>
               <li className="flex items-center gap-2 text-white/90">
                 <Monitor className="w-5 h-5 text-bolsa-secondary flex-shrink-0" aria-hidden="true" />

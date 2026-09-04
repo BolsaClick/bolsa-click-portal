@@ -17,7 +17,17 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { useAdmin } from '@/app/contexts/AdminAuthContext'
+import { useBrand } from '../_components/BrandProvider'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
+import { BANNER_SITE_KEYS } from '@/app/lib/banners-shared'
+import type { SiteKey } from '@/app/lib/seo/site-config'
 import Image from 'next/image'
+
+const SITE_LABELS: Record<SiteKey, string> = {
+  bolsaclick: 'Bolsa Click',
+  bolsamais: 'Bolsa Mais',
+  anhanguera: 'Anhanguera',
+}
 
 interface Banner {
   id: string
@@ -27,6 +37,9 @@ interface Banner {
   linkUrl: string | null
   order: number
   isActive: boolean
+  targetSites: SiteKey[]
+  startsAt: string | null
+  endsAt: string | null
   createdAt: string
   updatedAt: string
 }
@@ -37,6 +50,9 @@ interface BannerForm {
   imageUrl: string
   linkUrl: string
   isActive: boolean
+  targetSites: SiteKey[]
+  startsAt: string
+  endsAt: string
 }
 
 const emptyForm: BannerForm = {
@@ -45,11 +61,31 @@ const emptyForm: BannerForm = {
   imageUrl: '',
   linkUrl: '',
   isActive: true,
+  targetSites: [],
+  startsAt: '',
+  endsAt: '',
+}
+
+// `datetime-local` trabalha em horário LOCAL do navegador, sem timezone —
+// convertemos pra/de ISO (o que a API espera) nessas duas pontas.
+function toDatetimeLocalValue(iso: string | null): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function fromDatetimeLocalValue(value: string): string | null {
+  if (!value) return null
+  const d = new Date(value)
+  return Number.isNaN(d.getTime()) ? null : d.toISOString()
 }
 
 export default function AdminBannersPage() {
   const { firebaseUser } = useAuth()
   const { hasPermission } = useAdmin()
+  const { config: activeBrand } = useBrand()
 
   const [banners, setBanners] = useState<Banner[]>([])
   const [loading, setLoading] = useState(true)
@@ -64,16 +100,25 @@ export default function AdminBannersPage() {
 
   const fetchBanners = async () => {
     if (!firebaseUser) return
+    setLoading(true)
     try {
       const token = await firebaseUser.getIdToken()
-      const res = await fetch('/api/admin/banners', {
+      const res = await fetch('/api/admin/brand/banners', {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (res.ok) {
         const data = await res.json()
         setBanners(data.banners)
+        setError(null)
+      } else {
+        // Lista vazia por falha na marca não é "sem banner" — ver
+        // brandCallKind em app/lib/admin/brand-client.ts.
+        const data = await res.json().catch(() => null)
+        setBanners([])
+        setError(data?.error || `Erro ao carregar banners (HTTP ${res.status})`)
       }
     } catch {
+      setBanners([])
       setError('Erro ao carregar banners')
     } finally {
       setLoading(false)
@@ -83,7 +128,7 @@ export default function AdminBannersPage() {
   useEffect(() => {
     fetchBanners()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firebaseUser])
+  }, [firebaseUser, activeBrand.id])
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -98,7 +143,7 @@ export default function AdminBannersPage() {
         const base64 = reader.result as string
 
         const token = await firebaseUser.getIdToken()
-        const response = await fetch('/api/admin/upload', {
+        const response = await fetch('/api/admin/brand/upload', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -143,8 +188,8 @@ export default function AdminBannersPage() {
     try {
       const token = await firebaseUser.getIdToken()
       const url = editingId
-        ? `/api/admin/banners/${editingId}`
-        : '/api/admin/banners'
+        ? `/api/admin/brand/banners/${editingId}`
+        : '/api/admin/brand/banners'
       const method = editingId ? 'PATCH' : 'POST'
 
       const res = await fetch(url, {
@@ -159,6 +204,9 @@ export default function AdminBannersPage() {
           imageUrl: form.imageUrl,
           linkUrl: form.linkUrl || null,
           isActive: form.isActive,
+          targetSites: form.targetSites,
+          startsAt: fromDatetimeLocalValue(form.startsAt),
+          endsAt: fromDatetimeLocalValue(form.endsAt),
         }),
       })
 
@@ -186,9 +234,21 @@ export default function AdminBannersPage() {
       imageUrl: banner.imageUrl,
       linkUrl: banner.linkUrl || '',
       isActive: banner.isActive,
+      targetSites: banner.targetSites || [],
+      startsAt: toDatetimeLocalValue(banner.startsAt),
+      endsAt: toDatetimeLocalValue(banner.endsAt),
     })
     setShowForm(true)
     setError(null)
+  }
+
+  const toggleTargetSite = (site: SiteKey) => {
+    setForm((prev) => ({
+      ...prev,
+      targetSites: prev.targetSites.includes(site)
+        ? prev.targetSites.filter((s) => s !== site)
+        : [...prev.targetSites, site],
+    }))
   }
 
   const handleDelete = async (id: string) => {
@@ -196,7 +256,7 @@ export default function AdminBannersPage() {
 
     try {
       const token = await firebaseUser.getIdToken()
-      const res = await fetch(`/api/admin/banners/${id}`, {
+      const res = await fetch(`/api/admin/brand/banners/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -217,7 +277,7 @@ export default function AdminBannersPage() {
 
     try {
       const token = await firebaseUser.getIdToken()
-      await fetch(`/api/admin/banners/${banner.id}`, {
+      await fetch(`/api/admin/brand/banners/${banner.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -248,7 +308,7 @@ export default function AdminBannersPage() {
     try {
       const token = await firebaseUser.getIdToken()
       await Promise.all([
-        fetch(`/api/admin/banners/${currentBanner.id}`, {
+        fetch(`/api/admin/brand/banners/${currentBanner.id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -256,7 +316,7 @@ export default function AdminBannersPage() {
           },
           body: JSON.stringify({ order: swapBanner.order }),
         }),
-        fetch(`/api/admin/banners/${swapBanner.id}`, {
+        fetch(`/api/admin/brand/banners/${swapBanner.id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -288,7 +348,10 @@ export default function AdminBannersPage() {
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Banners</h2>
             <p className="text-sm text-gray-500">
-              Gerencie os banners do slider da homepage
+              Gerencie os banners do slider da homepage — marca{' '}
+              <span className="font-medium" style={{ color: activeBrand.color }}>
+                {activeBrand.label}
+              </span>
             </p>
           </div>
         </div>
@@ -345,7 +408,7 @@ export default function AdminBannersPage() {
                     setForm((prev) => ({ ...prev, title: e.target.value }))
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bolsa-primary focus:border-transparent"
-                  placeholder="Ex: Administração com 80% OFF"
+                  placeholder={`Ex: Administração com ${DISCOUNT_CEILING_PCT}% OFF`}
                   required
                 />
               </div>
@@ -437,6 +500,65 @@ export default function AdminBannersPage() {
                   placeholder="https://..."
                 />
               </div>
+
+              {/* Segmentação por site */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sites
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  {BANNER_SITE_KEYS.map((site) => (
+                    <label
+                      key={site}
+                      className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={form.targetSites.includes(site)}
+                        onChange={() => toggleTargetSite(site)}
+                        className="rounded border-gray-300 text-bolsa-primary focus:ring-bolsa-primary"
+                      />
+                      {SITE_LABELS[site]}
+                    </label>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-400 mt-1">
+                  Nenhum marcado = exibe em todos os sites.
+                </p>
+              </div>
+
+              {/* Período de vigência */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Exibir a partir de
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={form.startsAt}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, startsAt: e.target.value }))
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bolsa-primary focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Exibir até
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={form.endsAt}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, endsAt: e.target.value }))
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bolsa-primary focus:border-transparent"
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-gray-400 -mt-2">
+                Deixe em branco pra não limitar o período.
+              </p>
 
               {/* Active toggle */}
               <div className="flex items-center gap-3">
@@ -538,6 +660,20 @@ export default function AdminBannersPage() {
                     {banner.linkUrl}
                   </p>
                 )}
+                <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                  <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
+                    {banner.targetSites?.length
+                      ? banner.targetSites.map((s) => SITE_LABELS[s]).join(', ')
+                      : 'Todos os sites'}
+                  </span>
+                  {(banner.startsAt || banner.endsAt) && (
+                    <span className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full">
+                      {banner.startsAt ? new Date(banner.startsAt).toLocaleDateString('pt-BR') : '—'}
+                      {' até '}
+                      {banner.endsAt ? new Date(banner.endsAt).toLocaleDateString('pt-BR') : '—'}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Order buttons */}

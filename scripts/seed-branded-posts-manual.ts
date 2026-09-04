@@ -15,6 +15,8 @@
  */
 
 import { PrismaClient } from '@prisma/client'
+import { DISCOUNT_CEILING_PCT } from '../app/lib/copy/claims'
+import { GUIA_PASSO_A_PASSO } from './lock-copy-data'
 
 const DRY_RUN = process.argv.includes('--dry-run')
 const DEFAULT_IMAGE = '/assets/og-image-bolsaclick.png'
@@ -41,13 +43,16 @@ type Post = {
 
 const POSTS: Post[] = [
   {
+    ...GUIA_PASSO_A_PASSO,
+  },
+  {
     slug: 'anhanguera-ead-como-conseguir-bolsa',
     title: 'Anhanguera EAD: como conseguir bolsa de estudo em 2026',
     metaTitle: 'Anhanguera EAD: como conseguir bolsa de estudo em 2026',
     metaDescription:
-      'Como conseguir bolsa de estudo na Anhanguera EAD: busque o curso, compare as ofertas e inscreva-se grátis. Descontos de até 80% sem nota de corte, em cursos reconhecidos pelo MEC.',
+      `Como conseguir bolsa de estudo na Anhanguera EAD: busque o curso, compare as ofertas e inscreva-se grátis. Descontos de até ${DISCOUNT_CEILING_PCT}% sem nota de corte, em cursos reconhecidos pelo MEC.`,
     excerpt:
-      'O passo a passo pra garantir bolsa de até 80% na Anhanguera EAD em 2026 — sem nota de corte, com inscrição gratuita e diploma reconhecido pelo MEC.',
+      `O passo a passo pra garantir bolsa de até ${DISCOUNT_CEILING_PCT}% na Anhanguera EAD em 2026 — sem nota de corte, com inscrição gratuita e diploma reconhecido pelo MEC.`,
     keywords: [
       'anhanguera ead', 'bolsa anhanguera', 'bolsa de estudo anhanguera', 'anhanguera ead bolsa',
       'anhanguera ead como funciona', 'faculdade anhanguera ead', 'anhanguera desconto', 'anhanguera mensalidade',
@@ -57,7 +62,7 @@ const POSTS: Post[] = [
     categorySlugs: ['ead', 'bolsas-de-estudo'],
     featured: true,
     content: `
-<p>Para conseguir bolsa de estudo na <strong>Anhanguera EAD</strong>, o caminho mais rápido é buscar o curso aqui no Bolsa Click, comparar as ofertas das unidades e polos e se inscrever gratuitamente — os descontos chegam a <strong>até 80%</strong> na mensalidade, sem nota de corte, em cursos reconhecidos pelo MEC. <a href="/faculdades/anhanguera">Veja as bolsas de estudo na Anhanguera</a> e garanta a sua.</p>
+<p>Para conseguir bolsa de estudo na <strong>Anhanguera EAD</strong>, o caminho mais rápido é buscar o curso aqui no Bolsa Click, comparar as ofertas das unidades e polos e se inscrever gratuitamente — os descontos chegam a <strong>até ${DISCOUNT_CEILING_PCT}%</strong> na mensalidade, sem nota de corte, em cursos reconhecidos pelo MEC. <a href="/faculdades/anhanguera">Veja as bolsas de estudo na Anhanguera</a> e garanta a sua.</p>
 
 <h2>Como funciona a bolsa na Anhanguera EAD</h2>
 <p>A Anhanguera é uma das maiores redes de ensino superior privado do Brasil, com ampla presença em ensino a distância. As bolsas oferecidas via Bolsa Click são <strong>bolsas próprias da faculdade</strong> — diferentes do ProUni e do FIES, que são programas federais. Na prática, isso significa três vantagens pra quem quer estudar EAD:</p>
@@ -66,7 +71,7 @@ const POSTS: Post[] = [
   <li><strong>Sem critério de renda:</strong> a bolsa não depende de comprovação de renda familiar.</li>
   <li><strong>Inscrição o ano todo:</strong> não há janela fechada como nas edições do ProUni.</li>
 </ul>
-<p>O desconto é aplicado já na primeira mensalidade e vale durante todo o curso, enquanto você mantém a matrícula ativa e a aprovação acadêmica.</p>
+<p>O desconto é aplicado já na primeira mensalidade. O percentual e a duração seguem o contrato da faculdade da oferta escolhida.</p>
 
 <h2>Passo a passo pra garantir sua bolsa</h2>
 <ol>
@@ -87,9 +92,9 @@ const POSTS: Post[] = [
 <h3>Preciso de ENEM pra conseguir bolsa na Anhanguera EAD?</h3>
 <p>Não. A bolsa própria da Anhanguera via Bolsa Click aceita o processo seletivo da própria faculdade (geralmente uma redação online), sem exigir nota do ENEM.</p>
 <h3>De quanto é o desconto?</h3>
-<p>Os descontos nas mensalidades chegam a até 80%, variando por curso, modalidade e unidade. Veja o valor real de cada oferta na <a href="/faculdades/anhanguera">página da Anhanguera</a>.</p>
-<h3>A bolsa vale durante todo o curso?</h3>
-<p>Sim. O desconto acompanha você do primeiro ao último semestre, enquanto a matrícula estiver ativa e você mantiver a aprovação acadêmica.</p>
+<p>Os descontos nas mensalidades chegam a até ${DISCOUNT_CEILING_PCT}%, variando por curso, modalidade e unidade. Veja o valor real de cada oferta na <a href="/faculdades/anhanguera">página da Anhanguera</a>.</p>
+<h3>Por quanto tempo vale a bolsa?</h3>
+<p>O percentual e a duração seguem o contrato da faculdade da oferta escolhida. Cadastro no Bolsa Click é grátis, sem taxa de adesão.</p>
 <h3>O diploma EAD vale o mesmo que o presencial?</h3>
 <p>Sim. Para o MEC, o diploma de um curso a distância reconhecido tem exatamente a mesma validade do presencial.</p>
 `.trim(),
@@ -143,7 +148,7 @@ const POSTS: Post[] = [
 <h3>Quando posso me inscrever?</h3>
 <p>O ano todo. Não há janela fechada como nas edições do ProUni e do FIES.</p>
 <h3>Quanto desconto eu consigo?</h3>
-<p>Os descontos chegam a até 80% na mensalidade, conforme o curso e a unidade. Confira cada oferta na <a href="/faculdades/anhanguera">página da Anhanguera</a>.</p>
+<p>Os descontos chegam a até ${DISCOUNT_CEILING_PCT}% na mensalidade, conforme o curso e a unidade. Confira cada oferta na <a href="/faculdades/anhanguera">página da Anhanguera</a>.</p>
 `.trim(),
   },
   {
@@ -151,9 +156,9 @@ const POSTS: Post[] = [
     title: 'A Anhanguera vale a pena? Nota MEC, bolsas e o que esperar',
     metaTitle: 'A Anhanguera vale a pena? Nota MEC, bolsas e o que esperar',
     metaDescription:
-      'A Anhanguera vale a pena? Veja prós, pontos de atenção, como conferir a nota no MEC e as bolsas de até 80% — um panorama honesto pra decidir.',
+      `A Anhanguera vale a pena? Veja prós, pontos de atenção, como conferir a nota no MEC e as bolsas de até ${DISCOUNT_CEILING_PCT}% — um panorama honesto pra decidir.`,
     excerpt:
-      'Um panorama honesto da Anhanguera: rede ampla, forte em EAD, diploma reconhecido pelo MEC e bolsas de até 80%. Veja os prós, os cuidados e pra quem faz sentido.',
+      `Um panorama honesto da Anhanguera: rede ampla, forte em EAD, diploma reconhecido pelo MEC e bolsas de até ${DISCOUNT_CEILING_PCT}%. Veja os prós, os cuidados e pra quem faz sentido.`,
     keywords: [
       'anhanguera vale a pena', 'anhanguera é boa', 'anhanguera nota mec', 'faculdade anhanguera',
       'bolsa de estudo anhanguera', 'anhanguera é reconhecida pelo mec', 'anhanguera ead vale a pena',
@@ -162,11 +167,11 @@ const POSTS: Post[] = [
     imageAlt: 'Estudante avaliando se a faculdade Anhanguera vale a pena, com nota do MEC e bolsa de estudo',
     categorySlugs: ['guias-mec', 'bolsas-de-estudo'],
     content: `
-<p>A <strong>Anhanguera</strong> vale a pena pra quem busca uma faculdade acessível, com ampla rede de polos, forte presença em EAD, diploma reconhecido pelo MEC e bolsas de até 80% na mensalidade. Como toda instituição grande, o que mais pesa na decisão é o <strong>curso específico</strong> e a sua nota atual no MEC — que dá pra conferir em minutos. <a href="/faculdades/anhanguera">Veja as bolsas de estudo na Anhanguera</a> e compare antes de decidir.</p>
+<p>A <strong>Anhanguera</strong> vale a pena pra quem busca uma faculdade acessível, com ampla rede de polos, forte presença em EAD, diploma reconhecido pelo MEC e bolsas de até ${DISCOUNT_CEILING_PCT}% na mensalidade. Como toda instituição grande, o que mais pesa na decisão é o <strong>curso específico</strong> e a sua nota atual no MEC — que dá pra conferir em minutos. <a href="/faculdades/anhanguera">Veja as bolsas de estudo na Anhanguera</a> e compare antes de decidir.</p>
 
 <h2>Os pontos fortes</h2>
 <ul>
-  <li><strong>Acessibilidade:</strong> bolsas próprias de até 80%, sem nota de corte e sem critério de renda, via Bolsa Click.</li>
+  <li><strong>Acessibilidade:</strong> bolsas próprias de até ${DISCOUNT_CEILING_PCT}%, sem nota de corte e sem critério de renda, via Bolsa Click.</li>
   <li><strong>Alcance nacional:</strong> uma das maiores redes privadas do país, com ampla cobertura de polos e cursos EAD.</li>
   <li><strong>Flexibilidade:</strong> modalidades EAD, semipresencial e presencial, boas pra quem concilia trabalho e estudo.</li>
   <li><strong>Reconhecimento:</strong> instituição reconhecida pelo MEC, com diploma de validade nacional.</li>
@@ -187,7 +192,7 @@ const POSTS: Post[] = [
 <h3>O diploma da Anhanguera tem validade?</h3>
 <p>Sim. O diploma de um curso reconhecido tem validade nacional, seja na modalidade presencial ou EAD.</p>
 <h3>Dá pra estudar na Anhanguera com bolsa?</h3>
-<p>Dá. Há bolsas próprias de até 80% via Bolsa Click, sem nota de corte. Veja as ofertas na <a href="/faculdades/anhanguera">página da Anhanguera</a>.</p>
+<p>Dá. Há bolsas próprias de até ${DISCOUNT_CEILING_PCT}% via Bolsa Click, sem nota de corte. Veja as ofertas na <a href="/faculdades/anhanguera">página da Anhanguera</a>.</p>
 <h3>EAD da Anhanguera vale a pena?</h3>
 <p>Para cursos teóricos e pra quem precisa de flexibilidade, sim — o EAD reconhecido pelo MEC tem a mesma validade do presencial e costuma ter o maior desconto.</p>
 `.trim(),
@@ -199,9 +204,9 @@ const POSTS: Post[] = [
     title: 'Unopar EAD: como conseguir bolsa de estudo em 2026',
     metaTitle: 'Unopar EAD: como conseguir bolsa de estudo em 2026',
     metaDescription:
-      'Como conseguir bolsa de estudo na Unopar EAD: busque o curso, compare as ofertas e inscreva-se grátis. Descontos de até 80% sem nota de corte, em cursos reconhecidos pelo MEC.',
+      `Como conseguir bolsa de estudo na Unopar EAD: busque o curso, compare as ofertas e inscreva-se grátis. Descontos de até ${DISCOUNT_CEILING_PCT}% sem nota de corte, em cursos reconhecidos pelo MEC.`,
     excerpt:
-      'O passo a passo pra garantir bolsa de até 80% na Unopar EAD em 2026 — sem nota de corte, inscrição gratuita e diploma reconhecido pelo MEC.',
+      `O passo a passo pra garantir bolsa de até ${DISCOUNT_CEILING_PCT}% na Unopar EAD em 2026 — sem nota de corte, inscrição gratuita e diploma reconhecido pelo MEC.`,
     keywords: [
       'unopar ead', 'bolsa unopar', 'bolsa de estudo unopar', 'unopar ead bolsa',
       'unopar ead como funciona', 'faculdade unopar ead', 'unopar desconto', 'unopar mensalidade',
@@ -211,7 +216,7 @@ const POSTS: Post[] = [
     categorySlugs: ['ead', 'bolsas-de-estudo'],
     featured: true,
     content: `
-<p>Para conseguir bolsa de estudo na <strong>Unopar EAD</strong>, o caminho mais rápido é buscar o curso aqui no Bolsa Click, comparar as ofertas dos polos e se inscrever gratuitamente — os descontos chegam a <strong>até 80%</strong> na mensalidade, sem nota de corte, em cursos reconhecidos pelo MEC. <a href="/faculdades/unopar">Veja as bolsas de estudo na Unopar</a> e garanta a sua.</p>
+<p>Para conseguir bolsa de estudo na <strong>Unopar EAD</strong>, o caminho mais rápido é buscar o curso aqui no Bolsa Click, comparar as ofertas dos polos e se inscrever gratuitamente — os descontos chegam a <strong>até ${DISCOUNT_CEILING_PCT}%</strong> na mensalidade, sem nota de corte, em cursos reconhecidos pelo MEC. <a href="/faculdades/unopar">Veja as bolsas de estudo na Unopar</a> e garanta a sua.</p>
 
 <h2>Como funciona a bolsa na Unopar EAD</h2>
 <p>A Unopar é uma das maiores redes de ensino a distância do Brasil, com ampla cobertura de polos pelo país. As bolsas oferecidas via Bolsa Click são <strong>bolsas próprias da faculdade</strong> — diferentes do ProUni e do FIES, que são programas federais. Isso traz três vantagens claras:</p>
@@ -220,7 +225,7 @@ const POSTS: Post[] = [
   <li><strong>Sem critério de renda:</strong> a bolsa não depende de comprovação de renda familiar.</li>
   <li><strong>Inscrição o ano todo:</strong> sem janela fechada como nas edições do ProUni.</li>
 </ul>
-<p>O desconto entra já na primeira mensalidade e vale durante todo o curso, enquanto a matrícula estiver ativa e você mantiver a aprovação acadêmica.</p>
+<p>O desconto entra já na primeira mensalidade. O percentual e a duração seguem o contrato da faculdade da oferta escolhida.</p>
 
 <h2>Passo a passo pra garantir sua bolsa</h2>
 <ol>
@@ -241,8 +246,8 @@ const POSTS: Post[] = [
 <h3>Preciso de ENEM pra conseguir bolsa na Unopar EAD?</h3>
 <p>Não. A bolsa própria da Unopar via Bolsa Click aceita o processo seletivo da própria faculdade (geralmente uma redação online), sem exigir ENEM.</p>
 <h3>De quanto é o desconto?</h3>
-<p>Os descontos chegam a até 80%, variando por curso, modalidade e polo. Veja o valor real de cada oferta na <a href="/faculdades/unopar">página da Unopar</a>.</p>
-<h3>A bolsa vale durante todo o curso?</h3>
+<p>Os descontos chegam a até ${DISCOUNT_CEILING_PCT}%, variando por curso, modalidade e polo. Veja o valor real de cada oferta na <a href="/faculdades/unopar">página da Unopar</a>.</p>
+<h3>Por quanto tempo vale a bolsa?</h3>
 <p>Sim. O desconto acompanha você do primeiro ao último semestre, enquanto a matrícula estiver ativa e você mantiver a aprovação.</p>
 <h3>O diploma EAD da Unopar vale o mesmo que o presencial?</h3>
 <p>Sim. Para o MEC, o diploma de um curso a distância reconhecido tem a mesma validade do presencial.</p>
@@ -296,7 +301,7 @@ const POSTS: Post[] = [
 <h3>Quando posso me inscrever?</h3>
 <p>O ano todo. Não há janela fechada como nas edições do ProUni e do FIES.</p>
 <h3>Quanto desconto eu consigo?</h3>
-<p>Os descontos chegam a até 80% na mensalidade, conforme o curso e o polo. Confira cada oferta na <a href="/faculdades/unopar">página da Unopar</a>.</p>
+<p>Os descontos chegam a até ${DISCOUNT_CEILING_PCT}% na mensalidade, conforme o curso e o polo. Confira cada oferta na <a href="/faculdades/unopar">página da Unopar</a>.</p>
 `.trim(),
   },
   {
@@ -304,9 +309,9 @@ const POSTS: Post[] = [
     title: 'A Unopar vale a pena? Nota MEC, bolsas e o que esperar',
     metaTitle: 'A Unopar vale a pena? Nota MEC, bolsas e o que esperar',
     metaDescription:
-      'A Unopar vale a pena? Veja prós, pontos de atenção, como conferir a nota no MEC e as bolsas de até 80% — um panorama honesto pra decidir.',
+      `A Unopar vale a pena? Veja prós, pontos de atenção, como conferir a nota no MEC e as bolsas de até ${DISCOUNT_CEILING_PCT}% — um panorama honesto pra decidir.`,
     excerpt:
-      'Um panorama honesto da Unopar: forte em EAD e saúde, ampla rede de polos, diploma reconhecido pelo MEC e bolsas de até 80%. Veja os prós, os cuidados e pra quem faz sentido.',
+      `Um panorama honesto da Unopar: forte em EAD e saúde, ampla rede de polos, diploma reconhecido pelo MEC e bolsas de até ${DISCOUNT_CEILING_PCT}%. Veja os prós, os cuidados e pra quem faz sentido.`,
     keywords: [
       'unopar vale a pena', 'unopar é boa', 'unopar nota mec', 'faculdade unopar',
       'bolsa de estudo unopar', 'unopar é reconhecida pelo mec', 'unopar ead vale a pena',
@@ -315,11 +320,11 @@ const POSTS: Post[] = [
     imageAlt: 'Estudante avaliando se a faculdade Unopar vale a pena, com nota do MEC e bolsa de estudo',
     categorySlugs: ['guias-mec', 'bolsas-de-estudo'],
     content: `
-<p>A <strong>Unopar</strong> vale a pena pra quem busca uma faculdade acessível e flexível, com ampla rede de polos, presença forte em EAD (especialmente na área da saúde e licenciaturas), diploma reconhecido pelo MEC e bolsas de até 80% na mensalidade. Como em toda rede grande, o que mais pesa é o <strong>curso específico</strong> e a nota atual no MEC — que dá pra conferir em minutos. <a href="/faculdades/unopar">Veja as bolsas de estudo na Unopar</a> e compare antes de decidir.</p>
+<p>A <strong>Unopar</strong> vale a pena pra quem busca uma faculdade acessível e flexível, com ampla rede de polos, presença forte em EAD (especialmente na área da saúde e licenciaturas), diploma reconhecido pelo MEC e bolsas de até ${DISCOUNT_CEILING_PCT}% na mensalidade. Como em toda rede grande, o que mais pesa é o <strong>curso específico</strong> e a nota atual no MEC — que dá pra conferir em minutos. <a href="/faculdades/unopar">Veja as bolsas de estudo na Unopar</a> e compare antes de decidir.</p>
 
 <h2>Os pontos fortes</h2>
 <ul>
-  <li><strong>Acessibilidade:</strong> bolsas próprias de até 80%, sem nota de corte e sem critério de renda, via Bolsa Click.</li>
+  <li><strong>Acessibilidade:</strong> bolsas próprias de até ${DISCOUNT_CEILING_PCT}%, sem nota de corte e sem critério de renda, via Bolsa Click.</li>
   <li><strong>Tradição em EAD:</strong> uma das pioneiras e maiores em ensino a distância no Brasil, com ampla rede de polos.</li>
   <li><strong>Forte em saúde e licenciaturas:</strong> boa oferta em cursos como Enfermagem (semipresencial) e Pedagogia.</li>
   <li><strong>Reconhecimento:</strong> instituição reconhecida pelo MEC, com diploma de validade nacional.</li>
@@ -340,7 +345,7 @@ const POSTS: Post[] = [
 <h3>O diploma da Unopar tem validade?</h3>
 <p>Sim. O diploma de um curso reconhecido tem validade nacional, seja presencial ou EAD.</p>
 <h3>Dá pra estudar na Unopar com bolsa?</h3>
-<p>Dá. Há bolsas próprias de até 80% via Bolsa Click, sem nota de corte. Veja as ofertas na <a href="/faculdades/unopar">página da Unopar</a>.</p>
+<p>Dá. Há bolsas próprias de até ${DISCOUNT_CEILING_PCT}% via Bolsa Click, sem nota de corte. Veja as ofertas na <a href="/faculdades/unopar">página da Unopar</a>.</p>
 <h3>EAD da Unopar vale a pena?</h3>
 <p>Para cursos teóricos e da área da saúde (no formato semipresencial), e pra quem precisa de flexibilidade, sim — o EAD reconhecido pelo MEC tem a mesma validade do presencial.</p>
 `.trim(),
@@ -350,9 +355,9 @@ const POSTS: Post[] = [
     title: 'Estácio EAD: como conseguir bolsa de estudo em 2026',
     metaTitle: 'Estácio EAD: como conseguir bolsa de estudo em 2026',
     metaDescription:
-      'Como conseguir bolsa de estudo na Estácio EAD: busque o curso, compare as ofertas e inscreva-se grátis. Descontos de até 80% sem nota de corte, em cursos reconhecidos pelo MEC.',
+      `Como conseguir bolsa de estudo na Estácio EAD: busque o curso, compare as ofertas e inscreva-se grátis. Descontos de até ${DISCOUNT_CEILING_PCT}% sem nota de corte, em cursos reconhecidos pelo MEC.`,
     excerpt:
-      'O passo a passo pra garantir bolsa de até 80% na Estácio EAD em 2026 — sem nota de corte, com inscrição gratuita e diploma reconhecido pelo MEC.',
+      `O passo a passo pra garantir bolsa de até ${DISCOUNT_CEILING_PCT}% na Estácio EAD em 2026 — sem nota de corte, com inscrição gratuita e diploma reconhecido pelo MEC.`,
     keywords: [
       'estacio ead', 'bolsa estacio', 'bolsa de estudo estacio', 'estacio ead bolsa',
       'estacio ead como funciona', 'faculdade estacio ead', 'estacio desconto', 'estacio mensalidade',
@@ -362,7 +367,7 @@ const POSTS: Post[] = [
     categorySlugs: ['ead', 'bolsas-de-estudo'],
     featured: true,
     content: `
-<p>Para conseguir bolsa de estudo na <strong>Estácio EAD</strong>, o caminho mais rápido é buscar o curso aqui no Bolsa Click, comparar as ofertas dos polos e se inscrever gratuitamente — os descontos chegam a <strong>até 80%</strong> na mensalidade, sem nota de corte, em cursos reconhecidos pelo MEC. <a href="/faculdades/estacio">Veja as bolsas de estudo na Estácio</a> e garanta a sua.</p>
+<p>Para conseguir bolsa de estudo na <strong>Estácio EAD</strong>, o caminho mais rápido é buscar o curso aqui no Bolsa Click, comparar as ofertas dos polos e se inscrever gratuitamente — os descontos chegam a <strong>até ${DISCOUNT_CEILING_PCT}%</strong> na mensalidade, sem nota de corte, em cursos reconhecidos pelo MEC. <a href="/faculdades/estacio">Veja as bolsas de estudo na Estácio</a> e garanta a sua.</p>
 
 <h2>Como funciona a bolsa na Estácio EAD</h2>
 <p>Fundada em 1970 no Rio de Janeiro e hoje parte do grupo Yduqs, a Estácio é uma das maiores e mais tradicionais instituições de ensino superior privado do Brasil, com forte presença em ensino a distância. As bolsas oferecidas via Bolsa Click são <strong>bolsas próprias da faculdade</strong> — diferentes do ProUni e do FIES, que são programas federais. Na prática, isso traz três vantagens pra quem quer estudar EAD:</p>
@@ -371,7 +376,7 @@ const POSTS: Post[] = [
   <li><strong>Sem critério de renda:</strong> a bolsa não depende de comprovação de renda familiar.</li>
   <li><strong>Inscrição o ano todo:</strong> não há janela fechada como nas edições do ProUni.</li>
 </ul>
-<p>O desconto é aplicado já na primeira mensalidade e vale durante todo o curso, enquanto você mantém a matrícula ativa e a aprovação acadêmica.</p>
+<p>O desconto é aplicado já na primeira mensalidade. O percentual e a duração seguem o contrato da faculdade da oferta escolhida.</p>
 
 <h2>Passo a passo pra garantir sua bolsa</h2>
 <ol>
@@ -392,9 +397,9 @@ const POSTS: Post[] = [
 <h3>Preciso de ENEM pra conseguir bolsa na Estácio EAD?</h3>
 <p>Não. A bolsa própria da Estácio via Bolsa Click aceita o processo seletivo da própria faculdade (geralmente uma redação online), sem exigir nota do ENEM.</p>
 <h3>De quanto é o desconto?</h3>
-<p>Os descontos nas mensalidades chegam a até 80%, variando por curso, modalidade e polo. Veja o valor real de cada oferta na <a href="/faculdades/estacio">página da Estácio</a>.</p>
-<h3>A bolsa vale durante todo o curso?</h3>
-<p>Sim. O desconto acompanha você do primeiro ao último semestre, enquanto a matrícula estiver ativa e você mantiver a aprovação acadêmica.</p>
+<p>Os descontos nas mensalidades chegam a até ${DISCOUNT_CEILING_PCT}%, variando por curso, modalidade e polo. Veja o valor real de cada oferta na <a href="/faculdades/estacio">página da Estácio</a>.</p>
+<h3>Por quanto tempo vale a bolsa?</h3>
+<p>O percentual e a duração seguem o contrato da faculdade da oferta escolhida. Cadastro no Bolsa Click é grátis, sem taxa de adesão.</p>
 <h3>O diploma EAD vale o mesmo que o presencial?</h3>
 <p>Sim. Para o MEC, o diploma de um curso a distância reconhecido tem exatamente a mesma validade do presencial.</p>
 `.trim(),
@@ -448,7 +453,7 @@ const POSTS: Post[] = [
 <h3>Quando posso me inscrever?</h3>
 <p>O ano todo. Não há janela fechada como nas edições do ProUni e do FIES.</p>
 <h3>Quanto desconto eu consigo?</h3>
-<p>Os descontos chegam a até 80% na mensalidade, conforme o curso e o polo. Confira cada oferta na <a href="/faculdades/estacio">página da Estácio</a>.</p>
+<p>Os descontos chegam a até ${DISCOUNT_CEILING_PCT}% na mensalidade, conforme o curso e o polo. Confira cada oferta na <a href="/faculdades/estacio">página da Estácio</a>.</p>
 `.trim(),
   },
   {
@@ -456,9 +461,9 @@ const POSTS: Post[] = [
     title: 'A Estácio vale a pena? Nota MEC, bolsas e o que esperar',
     metaTitle: 'A Estácio vale a pena? Nota MEC, bolsas e o que esperar',
     metaDescription:
-      'A Estácio vale a pena? Veja prós, pontos de atenção, como conferir a nota no MEC e as bolsas de até 80% — um panorama honesto pra decidir.',
+      `A Estácio vale a pena? Veja prós, pontos de atenção, como conferir a nota no MEC e as bolsas de até ${DISCOUNT_CEILING_PCT}% — um panorama honesto pra decidir.`,
     excerpt:
-      'Um panorama honesto da Estácio: tradição desde 1970, forte em EAD, nota 4 no MEC e bolsas de até 80%. Veja os prós, os cuidados e pra quem faz sentido.',
+      `Um panorama honesto da Estácio: tradição desde 1970, forte em EAD, nota 4 no MEC e bolsas de até ${DISCOUNT_CEILING_PCT}%. Veja os prós, os cuidados e pra quem faz sentido.`,
     keywords: [
       'estacio vale a pena', 'estacio é boa', 'estacio nota mec', 'faculdade estacio',
       'bolsa de estudo estacio', 'estacio é reconhecida pelo mec', 'estacio ead vale a pena',
@@ -467,12 +472,12 @@ const POSTS: Post[] = [
     imageAlt: 'Estudante avaliando se a faculdade Estácio vale a pena, com nota do MEC e bolsa de estudo',
     categorySlugs: ['guias-mec', 'bolsas-de-estudo'],
     content: `
-<p>A <strong>Estácio</strong> vale a pena pra quem busca uma faculdade acessível, com tradição de mais de 50 anos, forte presença em EAD, diploma reconhecido pelo MEC (nota institucional 4) e bolsas de até 80% na mensalidade. Como toda instituição grande, o que mais pesa na decisão é o <strong>curso específico</strong> e a sua nota atual no MEC — que dá pra conferir em minutos. <a href="/faculdades/estacio">Veja as bolsas de estudo na Estácio</a> e compare antes de decidir.</p>
+<p>A <strong>Estácio</strong> vale a pena pra quem busca uma faculdade acessível, com tradição de mais de 50 anos, forte presença em EAD, diploma reconhecido pelo MEC (nota institucional 4) e bolsas de até ${DISCOUNT_CEILING_PCT}% na mensalidade. Como toda instituição grande, o que mais pesa na decisão é o <strong>curso específico</strong> e a sua nota atual no MEC — que dá pra conferir em minutos. <a href="/faculdades/estacio">Veja as bolsas de estudo na Estácio</a> e compare antes de decidir.</p>
 
 <h2>Os pontos fortes</h2>
 <ul>
   <li><strong>Tradição:</strong> fundada em 1970 no Rio de Janeiro, é uma das instituições privadas mais consolidadas do país, hoje parte do grupo Yduqs.</li>
-  <li><strong>Acessibilidade:</strong> bolsas próprias de até 80%, sem nota de corte e sem critério de renda, via Bolsa Click.</li>
+  <li><strong>Acessibilidade:</strong> bolsas próprias de até ${DISCOUNT_CEILING_PCT}%, sem nota de corte e sem critério de renda, via Bolsa Click.</li>
   <li><strong>Alcance nacional:</strong> mais de 100 campus e polos de EAD presentes em todos os estados brasileiros.</li>
   <li><strong>Reconhecimento:</strong> instituição reconhecida pelo MEC, com nota institucional 4 e diploma de validade nacional.</li>
 </ul>
@@ -490,7 +495,7 @@ const POSTS: Post[] = [
 <h3>A Estácio é reconhecida pelo MEC?</h3>
 <p>Sim. É uma instituição reconhecida pelo Ministério da Educação, com nota institucional 4. Confirme sempre a nota do curso específico no e-MEC.</p>
 <h3>De quanto são as bolsas?</h3>
-<p>As bolsas próprias chegam a até 80% de desconto na mensalidade, conforme o curso e o polo. Veja os valores reais na <a href="/faculdades/estacio">página da Estácio</a>.</p>
+<p>As bolsas próprias chegam a até ${DISCOUNT_CEILING_PCT}% de desconto na mensalidade, conforme o curso e o polo. Veja os valores reais na <a href="/faculdades/estacio">página da Estácio</a>.</p>
 <h3>Preciso de ENEM pra estudar na Estácio?</h3>
 <p>Não. A bolsa própria aceita o processo seletivo da própria faculdade (geralmente uma redação online), sem exigir ENEM nem comprovação de renda.</p>
 <h3>EAD da Estácio vale a pena?</h3>

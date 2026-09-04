@@ -5,7 +5,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { BRAZILIAN_CITIES } from '@/app/lib/constants/brazilian-cities'
-import { shouldIndexInstitutionCityPage } from '@/app/lib/seo/city-page-gate'
+import { shouldIndexInstitutionCityPage, MIN_OFFERS_TO_SUBMIT_SITEMAP } from '@/app/lib/seo/city-page-gate'
 import { isOffTopicNoindex } from '@/app/lib/blog/noindex-slugs'
 import { COURSE_PROFILES } from '@/app/lib/teste-vocacional/methodology-profiles'
 import { seoSite } from '@/app/lib/seo/site-config'
@@ -107,7 +107,13 @@ async function buildStaticSitemap(): Promise<SitemapEntry[]> {
     const staleCutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
     const rows = await withTimeout(
       prisma.cityCourseOfferCache.findMany({
-        where: { offerCount: { gt: 0 }, fetchedAt: { gte: staleCutoff } },
+        // Mesclado: `offerCount` é só a Cogna. Uma cidade que só tem oferta
+        // da Estácio some daqui se filtrar por ele sozinho — mesma leitura
+        // parcial que prendia página em noindex (ver getCachedOfferCount).
+        where: {
+          OR: [{ offerCount: { gt: 0 } }, { athenaOfferCount: { gt: 0 } }],
+          fetchedAt: { gte: staleCutoff },
+        },
         distinct: ['citySlug'],
         select: { citySlug: true },
       }),
@@ -215,7 +221,7 @@ async function buildCourseCitiesSitemap(): Promise<SitemapEntry[]> {
           orderBy: { trendScore: 'desc' },
         }),
         prisma.cityCourseOfferCache.findMany({
-          select: { featuredCourseId: true, citySlug: true, offerCount: true },
+          select: { featuredCourseId: true, citySlug: true, offerCount: true, athenaOfferCount: true },
         }),
       ]),
       10_000,
@@ -233,7 +239,10 @@ async function buildCourseCitiesSitemap(): Promise<SitemapEntry[]> {
         inner = new Map()
         cacheByCourse.set(row.featuredCourseId, inner)
       }
-      inner.set(row.citySlug, row.offerCount)
+      // Soma as duas fontes: é a MESMA contagem que a página usa pra decidir
+      // index/noindex. Se divergirem, volta o mismatch "URL no sitemap mas
+      // página noindex" que a auditoria de 2026-07 pegou como Critical #3.
+      inner.set(row.citySlug, row.offerCount + row.athenaOfferCount)
     }
 
     return courses
@@ -248,16 +257,15 @@ async function buildCourseCitiesSitemap(): Promise<SitemapEntry[]> {
             // Sem cache auditado pro curso → mantém comportamento legado.
             if (!isAudited) return shouldEmitCityUrl(score, city.slug)
 
-            // Com cache auditado: aplica o MESMO critério do shouldIndexCityPage
-            // (gate runtime) — emitir só o que é indexável, nunca URL noindex.
-            //   offerCount ≥ 2 → emit
-            //   offerCount = 1 + trendScore ≥ 60 → emit (alta demanda + alguma oferta)
-            //   offerCount = 0 → skip SEMPRE (era a fonte do flood: trend≥60 emitia
-            //                    todas as cidades de curso popular sem oferta local).
+            // Com cache auditado: critério de SUBMISSÃO, mais estrito que o de
+            // indexação (MIN_OFFERS_TO_SUBMIT_SITEMAP > MIN_OFFERS_TO_INDEX).
+            // A divergência é intencional — ver doc em city-page-gate.ts. Página
+            // com 2-4 ofertas segue indexável e linkada; só não é empurrada aqui,
+            // pra o crawl budget ir pras que têm inventário de verdade.
+            //   offerCount ≥ 5 → emit
+            //   offerCount = 0 → skip SEMPRE (fonte do flood original)
             const offers = courseCache!.get(city.slug) ?? 0
-            if (offers >= 2) return true
-            if (score >= 60 && offers >= 1) return true
-            return false
+            return offers >= MIN_OFFERS_TO_SUBMIT_SITEMAP
           })
           .map((city) => ({
             loc: `${SITE_URL}/cursos/${slug}/${city.slug}`,

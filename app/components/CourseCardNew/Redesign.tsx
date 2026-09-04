@@ -1,169 +1,95 @@
 import { Course } from "@/app/interface/course"
+import { hasInstallmentPlan, isTotalPriceLevel } from '@/app/components/v2/course-offer'
 import { titleCasePtBr } from "@/app/lib/utils/title-case"
-import { postSearch } from "@/app/lib/api/post-search"
 import { useFavorites } from "@/app/lib/hooks/useFavorites"
 import { usePostHogTracking } from "@/app/lib/hooks/usePostHogTracking"
-import { trackFbqDual } from "@/app/lib/analytics/fbq"
-import { pushDataLayerEvent } from "@/app/lib/analytics/gtag"
-import { trackTikTok } from "@/app/lib/analytics/ttq"
-import { Building2, Clock, Heart, MapPin, Star, Users, Lock } from "lucide-react"
+import { useCourseSelection } from "@/app/lib/hooks/useCourseSelection"
+import { courseNeedsShiftSelection, resolveCourseModality, buildCourseCheckoutDestination } from "@/app/lib/checkout/course-destination"
+import { getPriceAnchor } from "@/app/lib/utils/price-anchor"
+import { brandMecKey } from "@/app/lib/utils/brand"
+import { formatCurrency } from "@/utils/fomartCurrency"
+import { Building2, Clock, Heart, MapPin, Star, Users, Lock, ShieldCheck } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
+import Link from "next/link"
 import { useState } from "react"
-import { toast } from "sonner"
 
 interface CourseCardProps {
   course: Course
   courseName: string
+  /** Slug de /cursos/[slug] quando o curso tem página de detalhe enriquecida (FeaturedCourse). */
+  detailSlug?: string
+  /** Marca (chave slugificada via brandMecKey) → nota MEC (1-5). Sem o dado, o selo não aparece. */
+  mecRatings?: Record<string, number>
 }
 
 const CourseCardRedesign: React.FC<CourseCardProps> = ({
   course,
   courseName,
+  detailSlug,
+  mecRatings,
 }) => {
   const { isFavorite, toggleFavorite } = useFavorites()
   const { trackEvent } = usePostHogTracking()
+  const { selectCourse } = useCourseSelection('resultado')
   const [selectedShift, setSelectedShift] = useState<string>('')
   const [justFavorited, setJustFavorited] = useState(false)
 
-  const courseModality = course.modality?.toUpperCase() || course.commercialModality?.toUpperCase() || ''
+  const courseModality = resolveCourseModality(course)
 
-  const needsShiftSelection = () => {
-    if (!course.businessKey || !course.unitId) return false
-    const isVirtual = course.shiftOptions?.some(s => s.toUpperCase() === 'VIRTUAL') ||
-      course.classShift?.toUpperCase() === 'VIRTUAL'
-    if (isVirtual) return false
-    const hasMultipleShifts = course.shiftOptions && course.shiftOptions.length > 1
-    return hasMultipleShifts
-  }
+  const needsShiftSelection = () => courseNeedsShiftSelection(course)
 
+  // Destino + tracking vêm do hook compartilhado (useCourseSelection) — mesma
+  // fonte de verdade do card original e das landings de SEO.
   const handleClick = async () => {
-    if (needsShiftSelection() && !selectedShift) {
-      toast.error('Por favor, selecione o turno')
-      trackEvent('course_card_click_blocked', {
-        reason: 'shift_not_selected',
-        course_id: course.id,
-        course_name: course.name,
-        design_version: 'redesign_v2',
-      })
-      return
-    }
-
-    if (course.source === 'YDUQS') {
-      trackEvent('course_selected', {
-        course_id: course.id,
-        course_name: course.name,
-        course_brand: course.brand,
-        academic_level: course.academicLevel,
-        modality: courseModality,
-        price: course.minPrice,
-        city: course.city,
-        state: course.uf || course.unitState,
-        source: 'YDUQS',
-        design_version: 'redesign_v2',
-      })
-
-      const params = new URLSearchParams()
-      if (course.offerId) params.set('offerId', course.offerId)
-      if (course.name) params.set('courseName', course.name)
-      if (course.brand) params.set('brand', course.brand)
-      const athenaModality = courseModality || course.modality || course.commercialModality || ''
-      if (athenaModality) params.set('modality', athenaModality)
-      if (course.minPrice) params.set('price', String(course.minPrice))
-      if (course.city) params.set('city', course.city)
-      const athenaState = course.uf || course.unitState || ''
-      if (athenaState) params.set('state', athenaState)
-      if (course.academicLevel) params.set('academicLevel', course.academicLevel)
-      if (course.unitAddress) params.set('unitAddress', course.unitAddress)
-      if (course.unitDistrict) params.set('unitDistrict', course.unitDistrict)
-      if (course.unitPostalCode) params.set('unitPostalCode', course.unitPostalCode)
-      // Preço por forma de ingresso (2/3) — opcional, ver Course.priceForma2/3.
-      if (course.priceForma2) params.set('priceForma2', String(course.priceForma2))
-      if (course.priceForma3) params.set('priceForma3', String(course.priceForma3))
-
-      localStorage.setItem('selectedCourse', JSON.stringify(course))
-      window.location.href = `/checkout/estacio?${params.toString()}`
-      return
-    }
-
-    if (course.id && course.unitId) {
-      try {
-        await postSearch(String(course.id), course.unitId, course)
-      } catch (error) {
-        console.error('Erro ao enviar dados para search:', error)
-      }
-    }
-
-    const params = new URLSearchParams()
-    if (course.id) params.set('groupId', String(course.id))
-    if (course.unitId) params.set('unitId', course.unitId)
-    const finalModality = courseModality || course.modality || course.commercialModality || ''
-    if (finalModality) params.set('modality', finalModality)
-    const singleShift = course.shiftOptions && course.shiftOptions.length === 1 ? course.shiftOptions[0] : null
-    const finalShift = selectedShift || course.classShift || singleShift || ''
-    if (finalShift) params.set('shift', finalShift)
-
-    trackEvent('course_selected', {
-      course_id: course.id,
-      course_name: course.name,
-      course_brand: course.brand,
-      design_version: 'redesign_v2',
-      price: course.minPrice,
+    await selectCourse(course, {
+      selectedShift,
+      extraProps: { design_version: 'redesign_v2' },
     })
-
-    void trackFbqDual('ViewContent', {
-      content_name: course.name,
-      content_type: 'product',
-      content_ids: course.id ? [String(course.id)] : undefined,
-      value: course.minPrice || 0,
-      currency: 'BRL',
-    })
-
-    // GA4 ecommerce (dataLayer/GTM) - select_item, paridade com o ViewContent acima.
-    pushDataLayerEvent('select_item', {
-      ecommerce: {
-        currency: 'BRL',
-        value: course.minPrice || 0,
-        items: [
-          {
-            item_id: course.id ? String(course.id) : undefined,
-            item_name: course.name,
-            item_brand: course.brand,
-          },
-        ],
-      },
-    })
-
-    trackTikTok('ViewContent', {
-      content_id: course.id,
-      content_name: course.name,
-      content_type: 'product',
-      value: course.minPrice || 0,
-      currency: 'BRL',
-    })
-
-    window.location.href = `/checkout/matricula?${params.toString()}`
   }
+
+  const destination = buildCourseCheckoutDestination(course, selectedShift)
+  const shiftBlocked = needsShiftSelection() && !selectedShift
 
   const renderUniversityImage = (universityName: string) => {
     const n = (universityName || '').toLowerCase()
+    // UNAES é a marca que a Cogna usa em todo o catálogo profissionalizante
+    // (COSMOS) — 2.000 ofertas, país inteiro. Faz parte da família Anhanguera
+    // e não tem logo próprio no repositório, então usa o da Anhanguera
+    // (decisão do Rodrigo, 2026-08-20). Vem ANTES do teste de 'anhanguera'
+    // só por clareza de leitura; as duas strings não colidem.
+    if (n.includes('unaes')) return '/assets/logo-anhanguera-bolsa-click.svg'
     if (n.includes('anhanguera')) return '/assets/logo-anhanguera-bolsa-click.svg'
     if (n.includes('unopar')) return '/assets/logo-unopar.svg'
     if (n.includes('pitagoras') || n.includes('pitágoras')) return '/assets/logo-pitagoras.svg'
     if (n.includes('unime')) return '/assets/logo-unime-p.png'
     if (n.includes('estacio') || n.includes('estácio')) return '/estacio-logo.png'
     if (n.includes('wyden')) return '/assets/wyden.svg'
+    if (n.includes('ibmec')) return '/assets/logo-ibmec.svg'
+    // UNIC, como a UNAES, é da família Anhanguera e não tem logo próprio
+    // aqui (decisão do Rodrigo, 2026-08-20). Fica por ÚLTIMO de propósito:
+    // 'unic' é curto e casaria dentro de nomes de outras marcas se viesse
+    // antes — as marcas YDUQS chegam como nome completo da unidade.
+    if (n.includes('unic')) return '/assets/logo-anhanguera-bolsa-click.svg'
     return '/assets/logo-bolsa-click-rosa.png'
   }
 
-  const hasDiscount = Boolean(
-    course.minPrice > 0 &&
-    typeof course.maxPrice === 'number' &&
-    course.maxPrice > course.minPrice
-  )
-  const discountPercentage = hasDiscount
-    ? Math.floor((1 - course.minPrice / course.maxPrice!) * 100)
-    : 0
+  // Pós-graduação e profissionalizante: minPrice/maxPrice já são o TOTAL do
+  // curso (priceWithDiscount/priceWithoutDiscount no Tartarus), não
+  // mensalidade — a economia é a diferença simples, sem multiplicar por
+  // duração de novo (isso inflava "Economize" até igualar o "De"). Graduação
+  // continua mensal, então mantém a multiplicação por duração.
+  const priceAnchor = getPriceAnchor({
+    from: course.maxPrice,
+    to: course.minPrice,
+    durationMonths: course.durationInMonths ?? course.duration,
+    priceIsTotal: isTotalPriceLevel(course.academicLevel),
+  })
+  const hasDiscount = priceAnchor !== null
+  // Nota MEC real da instituição (Institution.mecRating, 1-5) — course.mecScore
+  // fica como fallback (campo do tipo, mas hoje nunca populado por nenhuma
+  // fonte); sem dado em nenhum dos dois, undefined e o selo não aparece.
+  const mecRating = course.mecScore ?? mecRatings?.[brandMecKey(course.brand)]
 
   return (
     <article
@@ -194,10 +120,12 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
       {hasDiscount && (
         <div className="px-5 py-2 bg-emerald-50 border-b border-emerald-100 flex items-center gap-2">
           <span className="inline-block bg-emerald-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-            -{discountPercentage}%
+            -{priceAnchor?.discountPct}%
           </span>
           <span className="text-xs text-emerald-700 font-medium">
-            Desconto real na mensalidade
+            {isTotalPriceLevel(course.academicLevel)
+              ? 'Desconto real no valor total do curso'
+              : 'Desconto real na mensalidade'}
           </span>
         </div>
       )}
@@ -269,12 +197,34 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
         {courseName || course.name}
       </h3>
 
+      {/* Link secundário pra quem ainda está em dúvida — não compete com o
+          CTA principal, só dá saída pra grade/carreira/FAQ do curso. Só
+          aparece quando há página enriquecida (FeaturedCourse). */}
+      {detailSlug && (
+        <Link
+          href={`/cursos/${detailSlug}`}
+          prefetch={false}
+          onClick={(e) => {
+            e.stopPropagation()
+            trackEvent('course_details_clicked', {
+              course_name: course.name,
+              brand: course.brand,
+              detail_slug: detailSlug,
+              design_version: 'redesign_v2',
+            })
+          }}
+          className="px-5 pb-3 block w-fit text-[12px] text-bolsa-primary hover:underline"
+        >
+          Ver detalhes do curso
+        </Link>
+      )}
+
       {/* SOCIAL PROOF: MEC + alunos */}
       <div className="px-5 pb-4 flex items-center gap-4">
-        {course.mecScore && (
-          <div className="flex items-center gap-1">
+        {typeof mecRating === 'number' && (
+          <div className="flex items-center gap-1" title={`Nota MEC: ${mecRating} de 5`}>
             <Star size={13} className="text-amber-500" fill="currentColor" />
-            <span className="text-sm font-bold text-ink-900">{course.mecScore.toFixed(1)}</span>
+            <span className="text-sm font-bold text-ink-900">{mecRating.toFixed(1)}</span>
             <span className="text-xs text-ink-500">MEC</span>
           </div>
         )}
@@ -325,34 +275,42 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
       {/* RODAPÉ: preço + CTA */}
       <div className="px-5 pb-5 pt-4 border-t border-ink-100">
         {/* Comparativo usa apenas os preços real e cheio retornados pela API */}
-        {hasDiscount && (
-          <div className="mb-1.5 flex items-center gap-2 text-xs text-ink-500">
-            <span>
-              De{' '}
-              <span className="line-through decoration-ink-300">
-                {course.maxPrice!.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+        {priceAnchor && (
+          <div className="mb-1.5">
+            <div className="flex items-center gap-2 text-xs text-ink-500">
+              <span>
+                De{' '}
+                <span className="line-through decoration-ink-300">
+                  {formatCurrency(course.maxPrice!)}
+                </span>
               </span>
-            </span>
-            <span className="rounded-full bg-rose-50 px-2 py-0.5 font-bold text-bolsa-secondary">
-              -{discountPercentage}%
-            </span>
+              <span className="rounded-full bg-rose-50 px-2 py-0.5 font-bold text-bolsa-secondary">
+                -{priceAnchor.discountPct}%
+              </span>
+            </div>
+            {priceAnchor.totalSavings !== null && (
+              <p className="mt-0.5 text-[11px] text-emerald-600">
+                Economize {formatCurrency(priceAnchor.totalSavings)} até o fim do curso
+              </p>
+            )}
           </div>
         )}
 
         {/* Preço atual */}
         <div className="mb-4">
           <p className="text-[11px] text-ink-500 uppercase tracking-widest font-medium mb-1">
-            {course.academicLevel === 'POS_GRADUACAO' &&
-            typeof course.totalInstallment === 'number' &&
-            typeof course.minInstallmentValue === 'number'
-              ? 'até'
-              : 'a partir de'}
+            a partir de
           </p>
           <p className="text-2xl font-black text-bolsa-primary leading-none">
-            {course.academicLevel === 'POS_GRADUACAO' &&
-            typeof course.totalInstallment === 'number' &&
-            typeof course.minInstallmentValue === 'number' ? (
-              <span>{course.totalInstallment}x {course.minInstallmentValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+            {/* Pós/profissionalizante: parcela como mensalidade ("R$ X/mês"),
+                sem afirmar o número de parcelas — o parcelamento real (Nx)
+                fica pro checkout, que tem o dado do plano de pagamento
+                (decisão do CEO, 2026-09). */}
+            {hasInstallmentPlan(course) ? (
+              <span>
+                {course.minInstallmentValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                <span className="text-sm font-semibold text-ink-500">/mês</span>
+              </span>
             ) : (
               <span>
                 {(course.minPrice ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
@@ -363,18 +321,33 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
         </div>
 
         {/* CTA — cor do site: bolsa-secondary */}
-        <button
-          onClick={handleClick}
-          disabled={needsShiftSelection() && !selectedShift}
+        <a
+          href={destination.href || '/checkout/matricula'}
+          onClick={(e) => {
+            if (shiftBlocked) {
+              e.preventDefault()
+              return
+            }
+            void handleClick()
+          }}
+          aria-disabled={shiftBlocked || undefined}
           className={`w-full py-3 px-4 rounded-xl font-bold text-sm tracking-wide transition-all duration-200 flex items-center justify-center gap-2 ${
-            needsShiftSelection() && !selectedShift
-              ? 'bg-ink-100 text-ink-500 cursor-not-allowed'
+            shiftBlocked
+              ? 'bg-ink-100 text-ink-500 cursor-not-allowed pointer-events-none'
               : 'bg-bolsa-secondary hover:brightness-95 text-white active:scale-[.98] shadow-sm'
           }`}
         >
           <Lock size={15} strokeWidth={2.5} />
-          {needsShiftSelection() && !selectedShift ? 'Selecione o turno' : 'Garantir Bolsa'}
-        </button>
+          {shiftBlocked ? 'Selecione o turno' : 'Garantir Bolsa'}
+        </a>
+
+        {/* Trunfo universal: diferente de agregadores concorrentes, não
+            cobramos taxa de inscrição/pré-matrícula em nenhum trilho (ver
+            app/lib/checkout/matricula-charge.ts e EstacioCheckoutClient). */}
+        <p className="mt-2 flex items-center justify-center gap-1 text-[11px] text-ink-400">
+          <ShieldCheck size={12} className="flex-shrink-0" />
+          Sem taxa de inscrição
+        </p>
 
         {/* Seletor de turno */}
         {needsShiftSelection() && course.shiftOptions && (

@@ -172,6 +172,10 @@ model Lead {
   cpf         String? // Opcional: leads de teste vocacional não pedem CPF
   email       String
   phone       String
+  // Data de nascimento: o formulário sempre pediu, mas até 2026-08-11 o dado
+  // era enviado só à Cogna/Athena e descartado do nosso lado. @db.Date porque
+  // é data pura — sem hora, sem fuso, sem risco de virar o dia na conversão.
+  birthDate   DateTime? @db.Date
   courseNames String[] // Cursos de interesse
 
   // Dados do curso (se disponível)
@@ -448,9 +452,20 @@ model CityCourseOfferCache {
   id               String   @id @default(cuid())
   featuredCourseId String
   citySlug         String
+  // offerCount/minPrice/fetchedAt = fonte COGNA (Tartarus). Semântica original
+  // preservada: o corte de 14 dias do sitemap lê `fetchedAt` esperando isso.
   offerCount       Int      @default(0)
   minPrice         Float?
   fetchedAt        DateTime @default(now())
+  // Fonte ATHENA (YDUQS: Estácio, IBMEC, Wyden). Carimbo próprio porque as duas
+  // fontes falham de forma independente e podem ser gravadas em rodadas
+  // diferentes — atualizar um pelo outro faria número velho parecer fresco.
+  // Coluna separada (em vez de somar em offerCount) porque o rollout do gate é
+  // FASEADO: hoje só o Grupo A usa contagem mesclada. Ver resolveOfferCountForGate
+  // em app/cursos/[slug]/[city]/page.tsx antes de mudar quem lê o quê.
+  athenaOfferCount Int      @default(0)
+  athenaMinPrice   Float?
+  athenaFetchedAt  DateTime?
 
   @@unique([featuredCourseId, citySlug])
   @@index([citySlug])
@@ -477,6 +492,57 @@ model InstitutionCityOfferCache {
   @@index([citySlug])
   @@index([brand])
   @@index([offerCount])
+}
+
+// Maior desconto REAL por MARCA (nacional, graduação), calculado
+// PERIODICAMENTE por scripts/precompute-institution-max-discount.ts — nunca
+// no momento do render. /faculdades/[slug] LÊ este valor (título, meta
+// description, H1, resposta GEO e FAQ saem todos daqui, na mesma
+// renderização) em vez de derivar das ofertas ao vivo a cada visita.
+//
+// Por quê: a API do catálogo (Tartarus/Athena) falha de duas formas que
+// produzem zero — HTTP 400 embrulhando um 429 do parceiro (lança erro) e
+// HTTP 200 com lista vazia sob carga (não lança nada, escapa de qualquer
+// catch) — e a página tem ISR de 24h, então um zero de falha ficava
+// congelado como afirmação pública por um dia inteiro. Duas tentativas de
+// derivar isso no render foram revertidas por esse motivo (2026-09-02).
+//
+// O script SÓ faz upsert quando a medição não teve nenhuma falha de busca E
+// colheu amostra ≥ MIN_SAMPLE_TO_WRITE (ver o script) — uma medição ruim
+// PRESERVA o registro anterior em vez de sobrescrever com zero. Todo row
+// que existe nesta tabela é, por construção, uma medição confiável; a
+// leitura ainda revalida sampleSize contra o piso de evidência pra decidir
+// entre HAS_DISCOUNT/NO_DISCOUNT/UNKNOWN (defesa em profundidade).
+model InstitutionMaxDiscountCache {
+  id             String   @id @default(cuid())
+  /** Chave de marca normalizada (normalizeBrand → slug): "anhanguera", "ibmec", ... */
+  brand          String   @unique
+  /**
+   * Maior desconto % medido nas ofertas de graduação da marca — BRUTO, sem
+   * nenhum teto editorial aplicado (renomeado de `maxDiscountPct` em
+   * 2026-09-02: o nome antigo, combinado com o comentário "já truncado",
+   * fez o script gravar `Math.min(x, DISCOUNT_CEILING_PCT)` — quando
+   * DISCOUNT_CEILING_PCT subiu de 78 pra 80 (claims.ts), os valores
+   * persistidos ficaram travados em 78 até alguém reprocessar. O teto
+   * pertence à LEITURA (getBrandDiscountState/getDisplayDiscountPct em
+   * app/lib/utils/institution-discount.ts), não à gravação — assim, mudar a
+   * constante vale pro site inteiro sem reprocessar dado nenhum. 0 é um
+   * valor LEGÍTIMO (ex.: IBMEC) — só é gravado quando sampleSize comprova
+   * que não é um zero de falha (ver script).
+   */
+  maxDiscountPctRaw  Int
+  /** Nº de ofertas com desconto > 0 encontradas na medição (informativo). */
+  offersWithDiscount Int      @default(0)
+  /**
+   * Nº TOTAL de ofertas de graduação coletadas na medição — o denominador
+   * que dá evidência à leitura: sampleSize baixo demais faz a página cair
+   * no estado seguro (UNKNOWN) mesmo com um row presente, em vez de afirmar
+   * ausência de bolsa com pouca base.
+   */
+  sampleSize         Int
+  measuredAt         DateTime @default(now())
+
+  @@index([brand])
 }
 
 enum CourseType {
@@ -512,6 +578,14 @@ model Banner {
   linkUrl   String? // Link opcional ao clicar no banner
   order     Int      @default(0)
   isActive  Boolean  @default(true)
+  // Segmentação por site: chaves de `SiteKey` (bolsaclick | bolsamais | anhanguera).
+  // Array VAZIO = exibe em todos os sites (compatível com os banners já
+  // cadastrados antes desse campo existir, que sempre apareceram em todo lugar).
+  targetSites String[] @default([])
+  // Período de vigência opcional. NULL em qualquer um dos dois lados = sem
+  // limite naquele lado (ex.: só `endsAt` = "exibir até tal data").
+  startsAt  DateTime?
+  endsAt    DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

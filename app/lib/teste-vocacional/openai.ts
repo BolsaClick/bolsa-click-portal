@@ -1,4 +1,4 @@
-// Wrapper de OpenAI Chat Completions via fetch (sem SDK, consistente com Notealy/Resend).
+// Wrapper de OpenAI Chat Completions via fetch (sem SDK, consistente com Resend).
 // 2 modos:
 //   - streamChat: streaming pra UI do quiz (server-sent events parseados)
 //   - getStructuredRecommendations: call final com response_format JSON schema

@@ -315,6 +315,18 @@ export function getCityBySlug(slug: string): BrazilianCity | undefined {
   return BRAZILIAN_CITIES.find(city => city.slug === slug)
 }
 
+// Lookup reverso: nome de cidade (livre, como vem de query string — acentuado
+// ou não, qualquer capitalização) + UF -> BrazilianCity. Usado por
+// /curso/resultado pra descobrir se existe página em caminho equivalente
+// (/cursos/[slug]/[city]) pra essa combinação. Reaproveita o mesmo slugify()
+// usado pra gerar BRAZILIAN_CITIES, então não pode divergir do slug real da rota.
+export function getCityByNameAndState(cityName: string, state: string): BrazilianCity | undefined {
+  if (!cityName || !state) return undefined
+  const citySlug = slugify(cityName)
+  const stateUpper = state.trim().toUpperCase()
+  return BRAZILIAN_CITIES.find(city => city.slug === citySlug && city.state === stateUpper)
+}
+
 export function getAllCitySlugs(): string[] {
   return BRAZILIAN_CITIES.map(city => city.slug)
 }

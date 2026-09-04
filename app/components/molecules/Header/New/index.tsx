@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuth } from '@/app/contexts/AuthContext'
+import { PUBLIC_AUTH_ENTRYPOINTS_ENABLED } from '@/app/lib/auth/public-auth-visibility'
 import { LogOut, User } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -107,20 +108,26 @@ const HeaderNew: React.FC = () => {
                   )}
                 </div>
               ) : (
-                <>
-                  <Link
-                    href="/login"
-                    className="px-3 py-2 text-[14px] font-medium text-ink-900 hover:text-bolsa-secondary transition-colors whitespace-nowrap"
-                  >
-                    Entrar
-                  </Link>
-                  <Link
-                    href="/cadastro"
-                    className="inline-flex items-center px-4 xl:px-5 py-2.5 text-[13px] xl:text-[14px] font-semibold text-white bg-bolsa-secondary hover:bg-bolsa-secondary/90 rounded-full transition-colors shadow-sm whitespace-nowrap"
-                  >
-                    Cadastre-se grátis
-                  </Link>
-                </>
+                // Entrar / Cadastre-se escondidos enquanto
+                // PUBLIC_AUTH_ENTRYPOINTS_ENABLED for false: a conta não
+                // entrega valor de ida nem de volta e competia com o caminho
+                // da matrícula. Ver app/lib/auth/public-auth-visibility.ts.
+                PUBLIC_AUTH_ENTRYPOINTS_ENABLED && (
+                  <>
+                    <Link
+                      href="/login"
+                      className="px-3 py-2 text-[14px] font-medium text-ink-900 hover:text-bolsa-secondary transition-colors whitespace-nowrap"
+                    >
+                      Entrar
+                    </Link>
+                    <Link
+                      href="/cadastro"
+                      className="inline-flex items-center px-4 xl:px-5 py-2.5 text-[13px] xl:text-[14px] font-semibold text-white bg-bolsa-secondary hover:bg-bolsa-secondary/90 rounded-full transition-colors shadow-sm whitespace-nowrap"
+                    >
+                      Cadastre-se grátis
+                    </Link>
+                  </>
+                )
               )}
             </div>
           </div>
@@ -137,7 +144,7 @@ const HeaderNew: React.FC = () => {
         <Link href="/" className="flex-shrink-0">
           <Image src={logoColor} alt="Bolsa Click" width={108} height={36} priority className="h-[32px] w-auto" />
         </Link>
-        {!user && (
+        {!user && PUBLIC_AUTH_ENTRYPOINTS_ENABLED && (
           <Link
             href="/cadastro"
             className="px-4 py-2 bg-bolsa-secondary text-white rounded-full font-semibold text-[13px] whitespace-nowrap hover:bg-bolsa-secondary/90 transition-colors"

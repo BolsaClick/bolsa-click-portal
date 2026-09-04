@@ -1,11 +1,22 @@
 import axios from 'axios'
 
+// `TARTARUS_API_KEY` é segredo de servidor (NÃO NEXT_PUBLIC): quando setada,
+// vai como `x-api-key` nas chamadas ao Tartarus. Como este cliente é
+// importado tanto por rotas server-side (app/api/checkout/matricula/*, por
+// onde a matrícula passa a ir — ver achado 3.1.6 do SECURITY_AUDIT.md)
+// quanto por alguns componentes client ainda não migrados, no bundle do
+// navegador a env var fica undefined e o header não é enviado — mesmo padrão
+// já usado para `ELYSIUM_API_KEY` abaixo. O Tartarus ainda aceita chamadas
+// sem a chave nessas rotas, então o deploy não quebra antes dela existir
+// (ver env.example).
 export const tartarus = axios.create({
   baseURL: process.env.NEXT_PUBLIC_TARTARUS_API,
   headers: {
     'Content-Type': 'application/json',
+    ...(process.env.TARTARUS_API_KEY
+      ? { 'x-api-key': process.env.TARTARUS_API_KEY }
+      : {}),
   },
-
 })
 
 export const opencage = axios.create({

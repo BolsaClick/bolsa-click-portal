@@ -61,6 +61,10 @@ export default function CourseCardV2({ offer, href, ctaLabel = 'Garantir bolsa',
   )
   const needsShiftChoice = selectableShifts.length > 1
   const ctaBlocked = needsShiftChoice && !selectedShift
+  // Turno único não-virtual (ex.: presencial só de manhã): não há escolha
+  // pra fazer, mas o checkout precisa do valor mesmo assim — sem ele, o
+  // /checkout/matricula usa 'VIRTUAL' como default e distorce a oferta.
+  const singleShift = selectableShifts.length === 1 ? selectableShifts[0] : null
 
   const degree = degreeLabel(offer.academicDegree) ?? parsed.degreeFromName ?? null
   const level = academicLevelLabel(offer.academicLevel)
@@ -70,8 +74,9 @@ export default function CourseCardV2({ offer, href, ctaLabel = 'Garantir bolsa',
       ? offer.maxPrice - offer.minPrice
       : null
 
-  const finalHref = selectedShift
-    ? `${href}${href.includes('?') ? '&' : '?'}shift=${encodeURIComponent(selectedShift)}`
+  const shiftToSend = selectedShift || singleShift
+  const finalHref = shiftToSend
+    ? `${href}${href.includes('?') ? '&' : '?'}shift=${encodeURIComponent(shiftToSend)}`
     : href
 
   const locationLine = [
@@ -82,7 +87,7 @@ export default function CourseCardV2({ offer, href, ctaLabel = 'Garantir bolsa',
     .join('/')
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-[0_1px_2px_rgba(11,31,60,0.06)] transition-shadow duration-200 hover:shadow-[0_16px_36px_-16px_rgba(2,62,115,0.35)]">
+    <article className="group relative flex h-full flex-col rounded-2xl border border-ink-100 bg-white shadow-[0_1px_2px_rgba(11,31,60,0.06)] transition-shadow duration-200 hover:shadow-[0_16px_36px_-16px_rgba(2,62,115,0.35)]">
       {/* Instituição + modalidade */}
       <div className="flex items-center justify-between gap-3 px-5 pt-5">
         <Image

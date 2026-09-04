@@ -16,6 +16,8 @@
 // - SISU: vagas em instituições públicas, sem critério de renda — depende da nota
 //   de corte de cada curso/instituição.
 
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
+
 /**
  * Salário mínimo de referência (R$). Atualize quando o valor nacional mudar —
  * é o único número que precisa de manutenção manual aqui. Referência: 2025.
@@ -174,7 +176,7 @@ export function computeElegibilidade(input: SimuladorInput): ElegibilidadeResult
     nome: 'Bolsa própria de faculdades parceiras',
     status: 'provavel',
     resumo:
-      'Bolsas próprias de faculdades EAD e presenciais parceiras chegam a até 80% de desconto, sem nota de corte e sem exigência de renda. Veja as ofertas reais pro seu curso abaixo.',
+      `Bolsas próprias de faculdades EAD e presenciais parceiras chegam a até ${DISCOUNT_CEILING_PCT}% de desconto, sem nota de corte e sem exigência de renda. Veja as ofertas reais pro seu curso abaixo.`,
     criterio: 'Sem nota de corte e sem critério de renda — depende só da oferta ativa.',
     href: '/bolsas-de-estudo',
   })
@@ -199,13 +201,13 @@ function buildHeadline(p: {
     return 'Você provavelmente se qualifica pra bolsa integral do ProUni — e ainda tem bolsa própria como alternativa.'
   }
   if (p.enemQualifica && p.rendaPerCapitaSM <= 3) {
-    return 'Você tende a se qualificar pra ProUni parcial e FIES — além de bolsa própria de até 80%.'
+    return `Você tende a se qualificar pra ProUni parcial e FIES — além de bolsa própria de até ${DISCOUNT_CEILING_PCT}%.`
   }
   if (p.enemQualifica) {
-    return 'Sua renda passa do teto do ProUni/FIES, mas dá pra garantir bolsa própria de até 80% sem nota de corte.'
+    return `Sua renda passa do teto do ProUni/FIES, mas dá pra garantir bolsa própria de até ${DISCOUNT_CEILING_PCT}% sem nota de corte.`
   }
   if (!p.temEnem) {
-    return 'Sem ENEM, o caminho mais rápido é a bolsa própria de faculdades parceiras — até 80% de desconto, sem nota de corte.'
+    return `Sem ENEM, o caminho mais rápido é a bolsa própria de faculdades parceiras — até ${DISCOUNT_CEILING_PCT}% de desconto, sem nota de corte.`
   }
-  return 'Sua nota não atinge o mínimo de ProUni/FIES, mas a bolsa própria garante até 80% de desconto sem nota de corte.'
+  return `Sua nota não atinge o mínimo de ProUni/FIES, mas a bolsa própria garante até ${DISCOUNT_CEILING_PCT}% de desconto sem nota de corte.`
 }

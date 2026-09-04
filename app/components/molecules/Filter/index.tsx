@@ -12,6 +12,7 @@ import { getLocalities } from '@/app/lib/api/get-localites'
 import { ModalitySelect } from '../../atoms/ModalitySelect'
 import { GraduationCap, MapPin } from 'lucide-react'
 import { useGeoLocation } from '@/app/context/GeoLocationContext'
+import { brazilCityStateOrNull, isForbiddenGeoCity } from '@/app/lib/geo/brazil-location'
 import { ACADEMIC_LEVEL } from '@/app/lib/academic-level'
 import { useLastSearch } from '@/app/lib/personalization/hooks'
 
@@ -27,7 +28,20 @@ const educationLevels: { levels: FormValues['levels']; label: string }[] = [
   { levels: 'pos', label: 'Pós-graduação' },
   { levels: 'profissionalizante', label: 'Profissionalizante' }
 ]
-const Filter = () => {
+interface FilterProps {
+  /**
+   * Renderiza o título do card como `h1` em vez de `h2`.
+   *
+   * Existe porque este componente aparece em DUAS páginas: a home (onde ele é
+   * o topo da dobra e precisa carregar o único h1) e /bolsas-de-estudo (que
+   * tem h1 próprio). Promover o heading direto criaria h1 duplicado lá.
+   * Default `false` — quem não passa nada continua com h2, como sempre foi.
+   */
+  asPageHeading?: boolean
+}
+
+const Filter = ({ asPageHeading = false }: FilterProps) => {
+  const Heading = asPageHeading ? 'h1' : 'h2'
   const navigate = useRouter()
   const { city: geoCity, state: geoState } = useGeoLocation()
   const { saveSearch } = useLastSearch()
@@ -79,7 +93,7 @@ const Filter = () => {
     setValue('course', { id: '', name: '', slug: '' })
     setCourseError('')
   }
-  const { control, handleSubmit, watch, setValue } = useForm<FormValues>({
+  const { control, handleSubmit, watch, setValue, getValues } = useForm<FormValues>({
     defaultValues: {
       modalidade: 'EAD',
       levels: activeTab,
@@ -88,12 +102,23 @@ const Filter = () => {
     },
   })
 
-  // Preencher cidade/estado padrão com a localização da API de cidades (por IP), igual ao filtro da home
+  // Preencher cidade/estado só com localização brasileira. Nunca escrever
+  // Washington/DC (IP de datacenter) no ComboBox nem na query string — e não
+  // sobrescrever o que a pessoa já digitou (ex.: BH sem UF).
   useEffect(() => {
-    if (geoCity && geoState) {
-      setValue('city', { city: geoCity, state: geoState })
-    }
-  }, [geoCity, geoState, setValue])
+    const allowed = brazilCityStateOrNull(geoCity, geoState)
+    if (!allowed) return
+
+    const current = getValues('city')
+    const alreadyChosen =
+      typeof current === 'object' &&
+      current &&
+      brazilCityStateOrNull(current.city, current.state)
+    if (alreadyChosen) return
+    if (typeof current === 'string' && current.trim()) return
+
+    setValue('city', { city: allowed.city, state: allowed.state })
+  }, [geoCity, geoState, setValue, getValues])
 
   const { data: graduationCourses } = useQuery({
     queryFn: () => getShowCourses(academicLevelMap.graduacao),
@@ -214,16 +239,40 @@ const Filter = () => {
       return
     }
 
-    if (typeof data.city !== 'object' || !data.city.city || !data.city.state) {
-      setCityError('Selecione uma cidade da lista')
-      return
+    let selectedCity =
+      typeof data.city === 'object'
+        ? brazilCityStateOrNull(data.city.city, data.city.state)
+        : null
+
+    if (typeof data.city === 'string' && data.city.trim()) {
+      if (isForbiddenGeoCity(data.city)) {
+        // ComboBox still showing "Washington - DC" as typed text — drop it.
+        setValue('city', { city: '', state: '' })
+        selectedCity = null
+      } else {
+        const typed = normalizeOptionText(data.city)
+        const match = cityOptions.find((option: { city: string; state: string }) => {
+          const full = normalizeOptionText(`${option.city} - ${option.state}`)
+          const name = normalizeOptionText(option.city)
+          return full === typed || name === typed
+        })
+        selectedCity = match ? brazilCityStateOrNull(match.city, match.state) : null
+        if (!selectedCity) {
+          setCityError('Selecione uma cidade da lista')
+          return
+        }
+      }
+    } else if (typeof data.city === 'object' && (data.city.city || data.city.state) && !selectedCity) {
+      // Geo/ComboBox leaked DC/US — drop it instead of sending cidade=Washington.
+      setValue('city', { city: '', state: '' })
+      selectedCity = null
     }
 
     setCourseError('')
     setCityError('')
 
-    const city = data.city.city
-    const state = data.city.state
+    const city = selectedCity?.city ?? ''
+    const state = selectedCity?.state ?? ''
     const courseNameClean = selectedCourse.name ? removeCourseSuffix(selectedCourse.name) : ''
 
     // Construir URL com parâmetros - 'c' sempre primeiro se existir
@@ -243,9 +292,11 @@ const Filter = () => {
       }
     }
     
-    // Adicionar os outros parâmetros
-    params.push(`cidade=${encodeURIComponent(city)}`);
-    params.push(`estado=${encodeURIComponent(state)}`);
+    // Cidade é opcional (EAD / busca nacional). Nunca escrever DC/US.
+    if (city && state) {
+      params.push(`cidade=${encodeURIComponent(city)}`);
+      params.push(`estado=${encodeURIComponent(state)}`);
+    }
     
     // Garantir que a modalidade está no formato correto (EAD, PRESENCIAL, SEMIPRESENCIAL)
     const modalidadeFormatada = convertModalityToAPI(data.modalidade)
@@ -369,9 +420,9 @@ const Filter = () => {
               Busca de bolsas
             </span>
           </div>
-          <h2 className="font-display text-xl md:text-[26px] leading-tight font-semibold mb-1.5">
+          <Heading className="font-display text-xl md:text-[26px] leading-tight font-semibold mb-1.5">
             Encontre sua bolsa em segundos
-          </h2>
+          </Heading>
           <p className="text-white/75 text-[13px] md:text-[14px] max-w-xl leading-relaxed">
             Escolha o nível, digite o curso e a cidade. A gente compara as faculdades parceiras
             e mostra a melhor bolsa pra você.

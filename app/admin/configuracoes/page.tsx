@@ -163,11 +163,11 @@ export default function AdminConfiguracoesPage() {
                 type="text"
                 value={formData.whatsappNumber}
                 onChange={(e) => handleChange('whatsappNumber', e.target.value)}
-                placeholder="551153043216"
+                placeholder="551151230079"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bolsa-primary focus:border-transparent"
               />
               <p className="text-xs text-gray-400 mt-1">
-                Formato: código do país + DDD + número (ex: 551153043216)
+                Formato: código do país + DDD + número (ex: 551151230079)
               </p>
             </div>
             <div>

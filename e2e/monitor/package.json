@@ -1,0 +1,11 @@
+{
+  "name": "bolsa-click-monitor",
+  "private": true,
+  "description": "Monitor sintético diário dos 3 sites em produção (GitHub Actions + Playwright). Isolado do app pra instalar rápido no CI.",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}

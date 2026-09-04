@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { FeaturedCourseData } from '../cursos/_data/types'
 import { courseTypeLabel } from '../lib/courseTypeLabel'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 interface Props {
   careers: FeaturedCourseData[]
@@ -52,7 +53,7 @@ export default function CarreirasPageClient({ careers }: Props) {
             </h1>
             <p className="mt-6 text-lg md:text-xl text-ink-700 max-w-3xl leading-relaxed">
               Salário médio, mercado de trabalho, o que faz cada profissional e qual graduação seguir.
-              Dados das principais profissões brasileiras — com bolsa de até 80% pra começar.
+              Dados das principais profissões brasileiras — com bolsa de até {DISCOUNT_CEILING_PCT}% pra começar.
             </p>
 
             <dl className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-px bg-hairline border border-hairline">
@@ -66,7 +67,7 @@ export default function CarreirasPageClient({ careers }: Props) {
               </div>
               <div className="bg-white px-5 py-4">
                 <dt className="font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500">Bolsa até</dt>
-                <dd className="mt-1 font-display num-tabular text-2xl text-bolsa-secondary">80%</dd>
+                <dd className="mt-1 font-display num-tabular text-2xl text-bolsa-secondary">{DISCOUNT_CEILING_PCT}%</dd>
               </div>
               <div className="bg-white px-5 py-4">
                 <dt className="font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500">Cidades com polos</dt>

@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { FontesConsultadas } from '@/app/components/seo/FontesConsultadas'
 import { ProgramHub } from '../_components/ProgramHub'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 
@@ -63,7 +64,7 @@ const faqItems = [
   },
   {
     question: 'PROUNI vs Bolsa Click: qual escolher?',
-    answer: 'PROUNI tem critério rígido de renda e exige ENEM com nota mínima 450 (sem zerar redação). O Bolsa Click negocia bolsas diretamente com as faculdades parceiras (sem critério de renda, sem ENEM obrigatório em algumas), com descontos de até 80%. Em geral, se você se encaixa no PROUNI integral, vale tentar. Se não, ou se quer mais opções de curso/faculdade/cidade, o Bolsa Click é o caminho mais flexível.',
+    answer: `PROUNI tem critério rígido de renda e exige ENEM com nota mínima 450 (sem zerar redação). O Bolsa Click negocia bolsas diretamente com as faculdades parceiras (sem critério de renda, sem ENEM obrigatório em algumas), com descontos de até ${DISCOUNT_CEILING_PCT}%. Em geral, se você se encaixa no PROUNI integral, vale tentar. Se não, ou se quer mais opções de curso/faculdade/cidade, o Bolsa Click é o caminho mais flexível.`,
   },
   {
     question: 'Posso usar PROUNI em qualquer faculdade?',
@@ -75,7 +76,7 @@ const faqItems = [
   },
   {
     question: 'Não passei no PROUNI. E agora?',
-    answer: 'Você ainda tem caminhos: (1) tentar a próxima edição do PROUNI; (2) entrar pelo SISU em universidade pública; (3) usar o FIES para financiar a faculdade; (4) usar o Bolsa Click para conseguir desconto de até 80% direto com as faculdades parceiras, sem critério de renda.',
+    answer: `Você ainda tem caminhos: (1) tentar a próxima edição do PROUNI; (2) entrar pelo SISU em universidade pública; (3) usar o FIES para financiar a faculdade; (4) usar o Bolsa Click para conseguir desconto de até ${DISCOUNT_CEILING_PCT}% direto com as faculdades parceiras, sem critério de renda.`,
   },
 ]
 
@@ -211,7 +212,7 @@ export default function ProuniPage() {
         <li>
           <strong>Bolsa Click</strong>: sem critério de renda, sem ENEM obrigatório em
           muitas ofertas, com descontos negociados diretamente com as faculdades parceiras
-          (até 80% na mensalidade). <Link href="/bolsas-de-estudo">Confira as ofertas
+          (até {DISCOUNT_CEILING_PCT}% na mensalidade). <Link href="/bolsas-de-estudo">Confira as ofertas
           disponíveis</Link>.
         </li>
       </ul>

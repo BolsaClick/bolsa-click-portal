@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
       state: searchParams.get('state') ?? undefined,
       modality: searchParams.get('modality') ?? undefined,
       academicLevel: searchParams.get('academicLevel') ?? undefined,
+      brand: searchParams.get('brand') ?? undefined,
     })
 
     const data = offers

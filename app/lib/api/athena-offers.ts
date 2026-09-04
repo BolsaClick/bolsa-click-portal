@@ -1,7 +1,6 @@
 import { athena } from './axios'
 import type { Course } from '@/app/interface/course'
 import { titleCasePtBr } from '@/app/lib/utils/title-case'
-import { isServerFlagEnabled } from '@/app/lib/analytics/server-flags'
 
 /**
  * Client da API Athena — segunda fonte de ofertas (roteia YDUQS/Estácio).
@@ -16,10 +15,37 @@ import { isServerFlagEnabled } from '@/app/lib/analytics/server-flags'
  * contrato chegar (ver TODO no normalize).
  */
 
+/** nomeTurno cru YDUQS → turno canônico (mesmos valores dos cards Cogna). */
+const YDUQS_TURNO_ALIASES: Record<string, string> = {
+  NOITE: 'NOTURNO',
+  NOTURNO: 'NOTURNO',
+  MANHA: 'MATUTINO',
+  'MANHÃ': 'MATUTINO',
+  MATUTINO: 'MATUTINO',
+  TARDE: 'VESPERTINO',
+  VESPERTINO: 'VESPERTINO',
+  INTEGRAL: 'INTEGRAL',
+  VIRTUAL: 'VIRTUAL',
+  EAD: 'VIRTUAL',
+  'A DISTANCIA': 'VIRTUAL',
+  'A DISTÂNCIA': 'VIRTUAL',
+}
+
+function resolveShiftFromMetadata(nomeTurno: unknown): string {
+  if (typeof nomeTurno !== 'string' || !nomeTurno.trim()) return ''
+  return YDUQS_TURNO_ALIASES[nomeTurno.trim().toUpperCase()] ?? ''
+}
+
 /** Oferta crua devolvida pela busca da Athena (contrato real — /api/offers). */
 export interface AthenaOffer {
   /** uuid do Offer no catálogo da Athena (obrigatório para o checkout). */
   id?: string
+  /**
+   * Forma de ingresso da linha de catálogo desta oferta (1, 2 ou 3).
+   * O checkout usa isto para só oferecer formas que existem de fato — ver
+   * `metadata.codFormaIngresso`.
+   */
+  codFormaIngressoOferta?: number
   unitId?: string
   externalId?: string
   modality?: string
@@ -66,6 +92,15 @@ export interface AthenaOffer {
   metadata?: {
     codCurso?: number
     codCursoPai?: number
+    /**
+     * Forma de ingresso da LINHA de catálogo desta oferta (1, 2 ou 3).
+     *
+     * A Estácio só publica linhas para essas três formas. A YDUQS procura a
+     * oferta por um conjunto de propriedades que INCLUI a forma de ingresso —
+     * mandar uma forma sem linha correspondente devolve MS004 (oferta não
+     * encontrada), que é a recusa mais comum do checkout.
+     */
+    codFormaIngresso?: number
     /** Duração textual da oferta, ex.: "4 anos", "18 meses", "8 semestres". */
     duracao?: string
     [key: string]: unknown
@@ -79,6 +114,8 @@ export interface SearchAthenaOffersParams {
   state?: string
   modality?: string
   academicLevel?: string
+  /** Filtro de marca (substring do slug da instituição): "estacio", "ibmec", "wyden". */
+  brand?: string
 }
 
 /** Dados do aluno para a inscrição (CreateEnrollmentDto.student). */
@@ -155,7 +192,21 @@ interface AthenaCobranca {
 
 /** Resposta crua de POST /api/enrollments. */
 export interface AthenaEnrollmentResponse {
+  /**
+   * Status LOCAL da inscrição no athena-api: `SENT`, `FAILED`,
+   * `WAITING_PROVIDER_ADAPTER`, `PENDING_PROVIDER`.
+   *
+   * Importa muito: quando a YDUQS recusa, o athena-api NÃO estoura — ele
+   * captura o erro, grava `FAILED` e devolve 200 com este campo. Quem só olha
+   * o código HTTP conclui que deu certo.
+   */
   status?: string
+  /** Detalhe da recusa do parceiro. Presente quando `status` é FAILED. */
+  providerError?: {
+    message?: string
+    data?: { message?: string; errorCode?: string; statusCode?: number }
+    [key: string]: unknown
+  }
   numeroInscricao?: string
   providerEnrollmentId?: string
   providerResponse?: {
@@ -183,6 +234,32 @@ export interface AthenaCheckoutResult {
   dueDate: string | null
   /** true quando o CPF já estava inscrito (ATL016) — tratamos como sucesso. */
   alreadyEnrolled: boolean
+  /** Status local do athena-api. Só `SENT` significa que a instituição aceitou. */
+  status: string | null
+  /** Código do parceiro quando recusa (MS004 oferta inexistente, MS002 validação, ATL016 já inscrito). */
+  errorCode: string | null
+  /** Mensagem técnica do parceiro. Serve para log — nunca para a tela do candidato. */
+  providerMessage: string | null
+}
+
+/**
+ * A instituição aceitou a inscrição?
+ *
+ * Não basta o HTTP 200: o athena-api responde 200 mesmo quando a YDUQS recusa
+ * (ver `status` acima). Sem esta checagem o candidato via tela de sucesso sem
+ * link de pagamento, entrava no CRM como inscrito e ainda contava como
+ * conversão — medido em 2026-08-19: 16 das 23 inscrições dos últimos 30 dias
+ * eram recusas apresentadas como sucesso.
+ *
+ * ATL016 (CPF já inscrito) conta como aceite: a inscrição existe, é a mesma
+ * pessoa voltando.
+ */
+export function isEnrollmentAccepted(r: AthenaCheckoutResult): boolean {
+  if (r.alreadyEnrolled) return true
+  if (r.status && r.status !== 'SENT') return false
+  // Sem status (contrato antigo), cai no sinal observável: uma inscrição aceita
+  // sempre traz o número ou a cobrança.
+  return Boolean(r.numeroInscricao || r.paymentUrl || r.pixCode)
 }
 
 function num(v: number | null | undefined): number {
@@ -231,7 +308,12 @@ export function normalizeAthenaOffer(raw: AthenaOffer): Course {
   // priceTo = com desconto (preço "por"); priceFrom = sem desconto ("de").
   const minPrice = num(raw.priceTo) || num(raw.priceFrom)
   const maxPrice = num(raw.priceFrom) || minPrice
-  const shift = (raw.shift || '').toString()
+  // Turno: algumas ofertas chegam com shift null porque o nomeTurno cru da
+  // YDUQS usa aliases fora do enum ("NOITE", "MANHÃ") que o sync antigo não
+  // mapeava (corrigido lá, mas o catálogo só re-mapeia no próximo sync).
+  // Fallback: resolver aqui a partir do metadata.nomeTurno — o card sempre
+  // mostra o turno pros YDUQS (pedido do negócio, 2026-07-27).
+  const shift = (raw.shift || '').toString() || resolveShiftFromMetadata(raw.metadata?.nomeTurno)
 
   return {
     id: offerId || name,
@@ -264,6 +346,9 @@ export function normalizeAthenaOffer(raw: AthenaOffer): Course {
     // ("4 anos" → 48) pra renderizar o bloco "Período" igual aos cards Cogna.
     durationInMonths: raw.durationMonths ?? parseDuracaoToMonths(raw.metadata?.duracao),
     shiftOptions: shift ? [shift] : undefined,
+    // Forma de ingresso da linha de catálogo — define quais opções o checkout
+    // pode oferecer sem cair em MS004.
+    codFormaIngressoOferta: raw.metadata?.codFormaIngresso,
     // Preço por forma de ingresso — ver comentário em AthenaOffer.priceToForma2/3.
     // undefined enquanto o athena-api não implementar (checkout usa o default).
     priceForma2: raw.priceToForma2 ? num(raw.priceToForma2) : undefined,
@@ -273,20 +358,63 @@ export function normalizeAthenaOffer(raw: AthenaOffer): Course {
 
 /**
  * Busca ofertas Estácio na Athena por curso + cidade.
- * Degradação graciosa: em qualquer falha retorna [] (a busca Tartarus segue normal).
+ * Degradação graciosa por padrão: em qualquer falha retorna [] (a busca
+ * Tartarus segue normal) — comportamento INALTERADO pra todo caller existente.
+ *
+ * `opts.throwOnFailure` é aditivo e opt-in (default false/undefined): quando
+ * true, uma falha real (exceção após a chamada HTTP) é RELANÇADA em vez de
+ * engolida. Existe só pra quem precisa DISTINGUIR "não tem oferta" de "não
+ * consegui buscar" — ver `probeAthenaHealth` em
+ * app/cursos/[slug]/[city]/_data/city-offers.ts, único caller que passa esta
+ * opção hoje. Não cobre o outro modo de falha conhecido (HTTP 200 com lista
+ * vazia sob carga — não lança nada, indistinguível de ausência real numa
+ * chamada isolada; ver comentário em probeAthenaHealth).
  */
-export async function searchAthenaOffers(
+export interface AthenaSearchResult {
+  /** Ofertas da PRIMEIRA página apenas — a API pagina em 20 por padrão. */
+  offers: AthenaOffer[]
+  /**
+   * Total REAL de ofertas que casam com a busca, lido de `meta.total`.
+   *
+   * Não confundir com `offers.length`. A API responde
+   * `{ data: [...20], meta: { page, size, total, totalPages } }`, então contar o
+   * array devolve o TAMANHO DA PÁGINA, não o total. Pedagogia em Recife pela
+   * Estácio tem 56 ofertas e `data.length` diz 20 — subcontagem de quase 3x,
+   * silenciosa, que já levou dois diagnósticos independentes a conclusões
+   * erradas sobre a cobertura do catálogo.
+   */
+  total: number
+}
+
+/**
+ * Igual a `searchAthenaOffers`, mas devolve também o total real do envelope.
+ * Use quando o que importa é QUANTAS ofertas existem, não quais — contagem pra
+ * gate de indexação, cache, DATA_BLOCK editorial.
+ */
+export async function searchAthenaOffersWithMeta(
   params: SearchAthenaOffersParams,
-): Promise<AthenaOffer[]> {
-  if (!process.env.ATHENA_BASE_URL) return []
+  opts?: { throwOnFailure?: boolean },
+): Promise<AthenaSearchResult> {
+  // Config ausente NÃO é "não tem oferta". Quem pede `throwOnFailure` está
+  // gravando o resultado em algum lugar (cache, DATA_BLOCK) e precisa saber a
+  // diferença — devolver vazio aqui produz falso zero uniforme, que nenhum
+  // controle positivo consegue distinguir de ausência real. Para o resto dos
+  // chamadores (render de página), degradar em silêncio segue correto.
+  if (!process.env.ATHENA_BASE_URL) {
+    if (opts?.throwOnFailure) {
+      throw new Error(
+        'ATHENA_BASE_URL não está no ambiente — impossível medir oferta da Athena',
+      )
+    }
+    return { offers: [], total: 0 }
+  }
 
-  // Kill switch de negócio (2026-07-17): Estácio/YDUQS fica ESCONDIDA no site
-  // por padrão (foco em tráfego pago + contratação de CMO). Toggle global pela
-  // flag PostHog `estacio_enabled` (0% = off, 100% = on) — sem redeploy.
-  // Choke point único: some das buscas, vitrine, faculdades e city pages de uma
-  // vez. Fallback `false` = se o PostHog cair, mantém escondida (falha segura).
-  if (!(await isServerFlagEnabled('estacio_enabled', false))) return []
-
+  // O kill switch `estacio_enabled` (jul/2026) foi APOSENTADO em 2026-08-17:
+  // a Estácio é parceira permanente. Além de não fazer mais sentido, ele tinha
+  // um efeito colateral grave — como esta busca roda no BUILD das páginas
+  // estáticas de curso (revalidate 24h) e o fallback era `false`, qualquer
+  // instabilidade do PostHog durante o build congelava a Estácio fora do site
+  // por um dia inteiro, em silêncio. Foi exatamente o que aconteceu.
   try {
     const query: Record<string, string> = {}
     const courseName = cleanCourseNameForAthena(params.courseName)
@@ -295,9 +423,14 @@ export async function searchAthenaOffers(
     if (params.state?.trim()) query.state = params.state.trim()
     if (params.modality?.trim()) query.modality = params.modality.trim().toUpperCase()
     if (params.academicLevel?.trim()) query.academicLevel = params.academicLevel.trim()
+    if (params.brand?.trim()) query.brand = params.brand.trim().toLowerCase()
 
     // TODO(contrato): confirmar o path do endpoint de busca da Athena.
-    const response = await athena.get('api/offers', { params: query })
+    // Timeout de sanidade: o client `athena` não tem timeout global (o POST de
+    // inscrição pode legitimamente demorar), mas a BUSCA não pode segurar o
+    // SSR do resultado — medido 30s+ de streaming em query fria (2026-07-27)
+    // com esta chamada pendurada segurando o Promise.allSettled da busca.
+    const response = await athena.get('api/offers', { params: query, timeout: 15_000 })
 
     const data = response.data
     const list: AthenaOffer[] = Array.isArray(data)
@@ -311,11 +444,30 @@ export async function searchAthenaOffers(
     // Sem filtro de inscrevibilidade (decisão do negócio): mostrar tudo que a
     // Athena retorna, inclusive ofertas com split de curso. Eventual INT004 é
     // tratado/exibido no checkout (/api/athena-checkout → EstacioCheckoutClient).
-    return list
+    //
+    // `meta.total` é o total real; quando ausente (contrato mudou, resposta é
+    // array puro), cai pro tamanho da lista — subconta, mas nunca inventa.
+    const total =
+      typeof data?.meta?.total === 'number' ? data.meta.total : list.length
+
+    return { offers: list, total }
   } catch (error) {
     console.error('Erro ao buscar ofertas na Athena:', error)
-    return []
+    if (opts?.throwOnFailure) throw error
+    return { offers: [], total: 0 }
   }
+}
+
+/**
+ * Busca ofertas da Athena. Devolve só a primeira página (20 por padrão) — se o
+ * que você precisa é a CONTAGEM, use `searchAthenaOffersWithMeta`.
+ */
+export async function searchAthenaOffers(
+  params: SearchAthenaOffersParams,
+  opts?: { throwOnFailure?: boolean },
+): Promise<AthenaOffer[]> {
+  const { offers } = await searchAthenaOffersWithMeta(params, opts)
+  return offers
 }
 
 /**
@@ -362,6 +514,9 @@ export function extractCheckoutResult(
     null
   const code = (data.providerResponse?.code || '').toUpperCase()
 
+  const erro = data.providerError
+  const errorCode = erro?.data?.errorCode || code || null
+
   return {
     numeroInscricao:
       data.providerResponse?.numeroInscricao ||
@@ -372,6 +527,9 @@ export function extractCheckoutResult(
     pixCode: cobranca?.pix || null,
     amount: cobranca?.valorLiquido || cobranca?.valorBruto || null,
     dueDate: cobranca?.dataVencimento || null,
-    alreadyEnrolled: code === 'ATL016',
+    alreadyEnrolled: code === 'ATL016' || errorCode === 'ATL016',
+    status: data.status || null,
+    errorCode,
+    providerMessage: erro?.data?.message || erro?.message || null,
   }
 }

@@ -27,7 +27,7 @@ FIES, ENEM, escolha de curso e como conseguir bolsa em faculdade particular
 sem cair em golpe.
 
 Marketplace independente que trabalha com as maiores redes de ensino do país
-(Anhanguera, Unopar, Pitágoras, Unime, Ampli, Estácio), todas reconhecidas
+(Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden), todas reconhecidas
 pelo MEC. Inscrição grátis em https://www.bolsaclick.com.br.
 
 📚 Tirar dúvida sobre bolsa: https://www.bolsaclick.com.br/bolsas-de-estudo

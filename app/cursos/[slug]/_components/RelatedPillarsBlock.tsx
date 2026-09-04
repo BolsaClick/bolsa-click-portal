@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ArrowRight, Stethoscope, GraduationCap, ScrollText } from 'lucide-react'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 // Cursos da área de saúde (linkam pro pillar /bolsas/saude)
 const CURSOS_SAUDE = [
@@ -48,7 +49,7 @@ function getPillarsForCourse(slug: string, name: string): PillarLink[] {
       href: '/bolsas/saude',
       category: 'Pillar — Área da Saúde',
       title: 'Bolsas em faculdades de saúde',
-      description: `Veja todos os cursos de saúde com bolsa de até 80% — Psicologia, Enfermagem, Fisioterapia, Nutrição e mais.`,
+      description: `Veja todos os cursos de saúde com bolsa de até ${DISCOUNT_CEILING_PCT}% — Psicologia, Enfermagem, Fisioterapia, Nutrição e mais.`,
       icon: Stethoscope,
     })
   }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { stripForbiddenGeoParams } from "@/app/lib/geo/brazil-location";
 
 const IS_WARMUP =
   process.env.NEXT_PUBLIC_THEME === "bolsamais" &&
@@ -40,6 +41,30 @@ export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const host = (request.headers.get("host") || "").split(":")[0];
 
+  // ─── Proxy multimarca do admin, caminho da marca LOCAL ──────────────────
+  // `/api/admin/brand/x` vira `/api/admin/x` por REESCRITA, sem sair do
+  // processo. A marca remota não entra aqui: cai no route handler, que faz a
+  // única chamada HTTP que faz sentido (bolsamais.com.br).
+  //
+  // Por que reescrita e não auto-chamada: a versão anterior fazia o servidor
+  // buscar a si mesmo por HTTP. Medido em produção, 04/09 — a requisição
+  // interna CHEGAVA (o log mostrava as duas, externa e interna, autorizadas)
+  // mas a externa nunca respondia, e o edge devolvia 502 em 0,37s. Havia um
+  // `unhandledRejection` de Better Auth derrubando o processo no meio.
+  //
+  // Não interessa qual das duas coisas é a causa raiz: uma requisição que não
+  // precisa existir não pode falhar. Reescrita não abre socket, não depende de
+  // saber a porta (a app escuta na 8080, não na 3000) e não duplica a passagem
+  // pelo middleware.
+  if (pathname.startsWith("/api/admin/brand/")) {
+    const brand = request.cookies.get("bc_admin_brand")?.value;
+    if (!brand || brand === "bolsaclick") {
+      const url = request.nextUrl.clone();
+      url.pathname = pathname.replace("/api/admin/brand/", "/api/admin/");
+      return NextResponse.rewrite(url);
+    }
+  }
+
   // ─── Domínio ingressa.digital (landings de conversão / mídia paga) ───────────
   // ingressa.digital/{parceiro} → reescreve (URL limpa) pra /lp/{parceiro}.
   // /api, /_next e assets passam intactos; raiz vai pra uma landing default.
@@ -48,10 +73,43 @@ export function middleware(request: NextRequest) {
       pathname.startsWith("/api") ||
       pathname.startsWith("/_next") ||
       pathname.startsWith("/lp") ||
+      // Proxy do PostHog (analytics) e do UTMify (pixel) — ver rewrites() em
+      // next.config.ts. Sem isto, "/ingest/flags" (sem ponto no path) cai no
+      // ramo de rewrite pra "/lp/ingest/flags" logo abaixo e nunca chega no
+      // PostHog: analytics e feature flags saem 500 neste domínio.
+      pathname.startsWith("/ingest") ||
+      pathname.startsWith("/utm") ||
       pathname.includes(".");
     if (!passthrough) {
       const url = request.nextUrl.clone();
       url.pathname = pathname === "/" ? "/lp/anhanguera" : `/lp${pathname}`;
+      return NextResponse.rewrite(url);
+    }
+    return seoResponse(NextResponse.next());
+  }
+
+  // ─── Domínio pos.anhangueracursos.com.br (captação de PÓS Anhanguera) ─────
+  // Site dedicado a UMA marca/nível só (Anhanguera pós) — diferente do
+  // ingressa.digital (multi-parceiro, partner no 1º segmento da URL), aqui
+  // TODA a árvore de path pertence ao partner fixo `anhanguera-pos`:
+  // / → /lp/anhanguera-pos, /checkout → /lp/anhanguera-pos/checkout, etc.
+  if (
+    host === "pos.anhangueracursos.com.br" ||
+    host === "www.pos.anhangueracursos.com.br"
+  ) {
+    const passthrough =
+      pathname.startsWith("/api") ||
+      pathname.startsWith("/_next") ||
+      pathname.startsWith("/lp") ||
+      // Mesmo motivo do bloco ingressa.digital acima: sem isto o proxy do
+      // PostHog (/ingest) e do UTMify (/utm) quebra neste domínio também.
+      pathname.startsWith("/ingest") ||
+      pathname.startsWith("/utm") ||
+      pathname.includes(".");
+    if (!passthrough) {
+      const url = request.nextUrl.clone();
+      url.pathname =
+        pathname === "/" ? "/lp/anhanguera-pos" : `/lp/anhanguera-pos${pathname}`;
       return NextResponse.rewrite(url);
     }
     return seoResponse(NextResponse.next());
@@ -95,6 +153,16 @@ export function middleware(request: NextRequest) {
     target.search = "";
     target.searchParams.set("q", request.nextUrl.searchParams.get("q") || "");
     return NextResponse.redirect(target, 301);
+  }
+
+  // Datacenter geo leak (Washington/DC) must never reach the search API.
+  // 302 — not a 301 — so we don't freeze a stripped URL in crawler caches.
+  // Pedagogia + BH without UF is left intact (not a forbidden city/UF).
+  if (pathname === "/curso/resultado") {
+    const clean = publicRedirectUrl(request);
+    if (stripForbiddenGeoParams(clean.searchParams)) {
+      return seoResponse(NextResponse.redirect(clean, 302));
+    }
   }
 
   return seoResponse(NextResponse.next());

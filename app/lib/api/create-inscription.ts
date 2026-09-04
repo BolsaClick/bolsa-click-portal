@@ -48,6 +48,11 @@ export interface CreateInscriptionResponse {
   success?: boolean
 }
 
+export interface CanCreateInscriptionResponse {
+  inscriptionAllowed: boolean
+  message?: string
+}
+
 // Removida função mapDayToPortuguese - os dias devem ser enviados em inglês
 
 /**
@@ -60,6 +65,22 @@ export function getCognaErrorMessage(error: unknown): string | undefined {
     | { cognaError?: { message?: string }; message?: string }
     | undefined
   return data?.cognaError?.message ?? data?.message
+}
+
+/**
+ * Detalhe bruto do erro pra telemetria (checkout_inscription_failed): mensagens
+ * como "Não foi possível criar a inscrição" são genéricas — a causa real
+ * costuma estar no corpo/status da resposta. Trunca pra não estourar o evento.
+ */
+export function getCognaErrorDetails(error: unknown): { status?: number; body?: string } {
+  if (!isAxiosError(error)) return {}
+  let body: string | undefined
+  try {
+    body = JSON.stringify(error.response?.data)?.slice(0, 800)
+  } catch {
+    body = undefined
+  }
+  return { status: error.response?.status, body }
 }
 
 /**
@@ -94,6 +115,31 @@ export async function createInscription(
 }
 
 /**
+ * Verifica na Cogna se o CPF já possui inscrição ativa para essa oferta,
+ * ANTES de criar a inscrição de fato — trava de duplicidade no checkout.
+ * `idDMH` é o mesmo id usado em `offers.firstOption.idDMH` no
+ * create-inscription (offerDetails.dmhId), não o idDmhElastic (esse é
+ * específico do marketplace ATHENAS, endpoint separado).
+ *
+ * Chamada pensada para "fail-open": deixe o caller decidir o que fazer se a
+ * request falhar (rede/timeout/5xx) — não travar o candidato por uma falha
+ * de infraestrutura numa pré-checagem. A Cogna valida de novo, com força,
+ * no próprio create-inscription.
+ */
+export async function canCreateInscription(
+  cpf: string,
+  idDMH: string,
+  system: string = 'DC'
+): Promise<CanCreateInscriptionResponse> {
+  const cleanCpf = cpf.replace(/\D/g, '')
+  const response = await tartarus.get<CanCreateInscriptionResponse>(
+    'cogna/courses/can-create-inscription',
+    { params: { cpf: cleanCpf, system, idDMH } }
+  )
+  return response.data
+}
+
+/**
  * Helper para construir o payload de inscrição
  */
 export function buildInscriptionPayload(
@@ -116,6 +162,8 @@ export function buildInscriptionPayload(
   offerDetails: {
     dmhId?: string
     businessKey?: string
+    /** Fonte do catálogo vinda no topo do detalhe da oferta (ATHENAS, COSMOS…). */
+    source?: string
     dmhSource?: {
       businessKey?: string
       source?: string
@@ -183,7 +231,12 @@ export function buildInscriptionPayload(
                 : ['VESTIBULAR'],
         },
       },
-      offerSource: offerDetails.dmhSource?.source || 'ATHENAS',
+      // Fonte do catálogo. O `dmhSource` é nulo em todo o catálogo COSMOS
+      // (100% dos profissionalizantes), e sem o fallback abaixo a inscrição
+      // saía declarada como ATHENAS — informação errada, já que a própria
+      // oferta responde `source: "COSMOS"`. O padrão ATHENAS fica por último,
+      // para não mudar o comportamento de quem não manda fonte nenhuma.
+      offerSource: offerDetails.dmhSource?.source || offerDetails.source || 'ATHENAS',
       ...(paymentMethod && { paymentMethod }),
     },
     personalData: {

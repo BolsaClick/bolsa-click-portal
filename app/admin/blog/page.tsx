@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { useAdmin } from '@/app/contexts/AdminAuthContext'
+import { useBrand } from '../_components/BrandProvider'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -51,6 +52,7 @@ interface Pagination {
 export default function AdminBlogPage() {
   const { firebaseUser } = useAuth()
   const { hasPermission } = useAdmin()
+  const { config: activeBrand } = useBrand()
 
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [categories, setCategories] = useState<BlogCategory[]>([])
@@ -77,15 +79,23 @@ export default function AdminBlogPage() {
       if (search) params.set('search', search)
       if (categoryFilter) params.set('categoryId', categoryFilter)
 
-      const res = await fetch(`/api/admin/blog/posts?${params}`, {
+      const res = await fetch(`/api/admin/brand/blog/posts?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (res.ok) {
         const data = await res.json()
         setPosts(data.posts)
         setPagination(data.pagination)
+        setError(null)
+      } else {
+        // Lista vazia por falha na marca não é "sem post" — ver
+        // brandCallKind em app/lib/admin/brand-client.ts.
+        const data = await res.json().catch(() => null)
+        setPosts([])
+        setError(data?.error || `Erro ao carregar posts (HTTP ${res.status})`)
       }
     } catch {
+      setPosts([])
       setError('Erro ao carregar posts')
     } finally {
       setLoading(false)
@@ -96,7 +106,7 @@ export default function AdminBlogPage() {
     if (!firebaseUser) return
     try {
       const token = await firebaseUser.getIdToken()
-      const res = await fetch('/api/admin/blog/categories', {
+      const res = await fetch('/api/admin/brand/blog/categories', {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (res.ok) {
@@ -111,12 +121,12 @@ export default function AdminBlogPage() {
   useEffect(() => {
     fetchCategories()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firebaseUser])
+  }, [firebaseUser, activeBrand.id])
 
   useEffect(() => {
     fetchPosts(1)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firebaseUser, statusFilter, categoryFilter])
+  }, [firebaseUser, activeBrand.id, statusFilter, categoryFilter])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -127,7 +137,7 @@ export default function AdminBlogPage() {
     if (!firebaseUser) return
     try {
       const token = await firebaseUser.getIdToken()
-      await fetch(`/api/admin/blog/posts/${post.id}`, {
+      await fetch(`/api/admin/brand/blog/posts/${post.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -145,7 +155,7 @@ export default function AdminBlogPage() {
     if (!firebaseUser) return
     try {
       const token = await firebaseUser.getIdToken()
-      await fetch(`/api/admin/blog/posts/${post.id}`, {
+      await fetch(`/api/admin/brand/blog/posts/${post.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -163,7 +173,7 @@ export default function AdminBlogPage() {
     if (!firebaseUser || !confirm('Tem certeza que deseja excluir este post?')) return
     try {
       const token = await firebaseUser.getIdToken()
-      const res = await fetch(`/api/admin/blog/posts/${id}`, {
+      const res = await fetch(`/api/admin/brand/blog/posts/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -194,7 +204,12 @@ export default function AdminBlogPage() {
           <FileText className="text-bolsa-primary" size={28} />
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Blog</h2>
-            <p className="text-sm text-gray-500">Gerencie os artigos do blog</p>
+            <p className="text-sm text-gray-500">
+              Gerencie os artigos do blog — marca{' '}
+              <span className="font-medium" style={{ color: activeBrand.color }}>
+                {activeBrand.label}
+              </span>
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-3">

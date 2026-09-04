@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { brazilianLocationOrNull } from '@/app/lib/geo/brazil-location'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -13,11 +14,12 @@ type GeoResponse = {
   longitude?: number
 }
 
-const FALLBACK: GeoResponse = {
-  city: 'São Paulo',
-  region: 'SP',
-  country: 'Brasil',
-  countryCode: 'BR',
+/** Empty payload — client must not treat this as a city to write into the form. */
+const EMPTY: GeoResponse = {
+  city: '',
+  region: '',
+  country: '',
+  countryCode: '',
 }
 
 const fetchWithTimeout = async (url: string, ms = 4000): Promise<Response | null> => {
@@ -47,6 +49,19 @@ const extractClientIp = (req: NextRequest): string | null => {
   return null
 }
 
+function jsonLocation(loc: GeoResponse) {
+  return NextResponse.json<GeoResponse>(loc, {
+    headers: { 'Cache-Control': 'private, max-age=600' },
+  })
+}
+
+function jsonEmpty() {
+  return NextResponse.json<GeoResponse>(EMPTY, {
+    status: 200,
+    headers: { 'Cache-Control': 'no-store' },
+  })
+}
+
 export async function GET(req: NextRequest) {
   const ip = extractClientIp(req)
 
@@ -56,22 +71,16 @@ export async function GET(req: NextRequest) {
     const r = await fetchWithTimeout(url, 4500)
     if (r?.ok) {
       const data = await r.json()
-      if (data?.city && (data?.region || data?.region_code)) {
-        const lat = typeof data.latitude === 'number' ? data.latitude : Number(data.latitude)
-        const lng = typeof data.longitude === 'number' ? data.longitude : Number(data.longitude)
-        return NextResponse.json<GeoResponse>(
-          {
-            city: String(data.city),
-            region: String(data.region_code ?? data.region),
-            country: String(data.country_name ?? 'Brasil'),
-            countryCode: String(data.country_code ?? 'BR'),
-            ...(Number.isFinite(lat) && Number.isFinite(lng)
-              ? { latitude: lat, longitude: lng }
-              : {}),
-          },
-          { headers: { 'Cache-Control': 'private, max-age=600' } },
-        )
-      }
+      const loc = brazilianLocationOrNull({
+        city: data?.city,
+        region: data?.region,
+        regionCode: data?.region_code,
+        country: data?.country_name,
+        countryCode: data?.country_code,
+        latitude: data?.latitude,
+        longitude: data?.longitude,
+      })
+      if (loc) return jsonLocation(loc)
     }
   } catch {
     /* segue pro próximo */
@@ -83,28 +92,23 @@ export async function GET(req: NextRequest) {
     const r = await fetchWithTimeout(url, 4500)
     if (r?.ok) {
       const data = await r.json()
-      if (data?.success && data?.city && (data?.region || data?.region_code)) {
-        const lat = typeof data.latitude === 'number' ? data.latitude : undefined
-        const lng = typeof data.longitude === 'number' ? data.longitude : undefined
-        return NextResponse.json<GeoResponse>(
-          {
-            city: String(data.city),
-            region: String(data.region_code ?? data.region),
-            country: String(data.country ?? 'Brasil'),
-            countryCode: String(data.country_code ?? 'BR'),
-            ...(lat != null && lng != null ? { latitude: lat, longitude: lng } : {}),
-          },
-          { headers: { 'Cache-Control': 'private, max-age=600' } },
-        )
+      if (data?.success) {
+        const loc = brazilianLocationOrNull({
+          city: data?.city,
+          region: data?.region,
+          regionCode: data?.region_code,
+          country: data?.country,
+          countryCode: data?.country_code,
+          latitude: data?.latitude,
+          longitude: data?.longitude,
+        })
+        if (loc) return jsonLocation(loc)
       }
     }
   } catch {
-    /* segue pro fallback */
+    /* segue pro empty */
   }
 
-  // 3) Default
-  return NextResponse.json<GeoResponse>(FALLBACK, {
-    status: 200,
-    headers: { 'Cache-Control': 'no-store' },
-  })
+  // Foreign IP or lookup failure: do not invent a city (and never Washington, DC).
+  return jsonEmpty()
 }

@@ -11,6 +11,7 @@ import {
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { resolveCanonicalCourseSlug } from '@/app/lib/seo/slug-resolver'
 import { FeaturedCourseData } from '../_data/types'
+import { getCourseBySlug, getCoursePriceRange } from './_data/course-lookup'
 import {
   OffersComparisonTable,
   VisibleFaq,
@@ -25,6 +26,8 @@ import { getCourseReviewsAggregate } from '@/app/lib/get-course-reviews-aggregat
 import { getCurrentTheme } from '@/app/lib/themes'
 import { buildBrandedCourseCopy, canIndexBrandedCopy } from '@/app/lib/seo/branded-course-copy'
 import { absoluteUrl, publicRobots, seoSite } from '@/app/lib/seo/site-config'
+import { ogImageObject } from '@/app/lib/seo/schema-image'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -32,22 +35,6 @@ type Props = {
 
 // ISR: Revalidar a cada 1 hora (3600 segundos)
 export const revalidate = 86400
-
-// Helper para buscar curso do banco de dados
-async function getCourseBySlug(slug: string): Promise<FeaturedCourseData | null> {
-  try {
-    const course = await prisma.featuredCourse.findUnique({
-      where: {
-        slug,
-        isActive: true,
-      },
-    })
-    return course as FeaturedCourseData | null
-  } catch (error) {
-    console.error('Erro ao buscar curso do banco de dados:', error)
-    return null
-  }
-}
 
 // Helper para buscar todos os slugs para SSG
 async function getAllCourseSlugs(): Promise<string[]> {
@@ -69,42 +56,6 @@ export async function generateStaticParams() {
   return slugs.map((slug) => ({
     slug: slug,
   }))
-}
-
-// Helper para buscar preços das ofertas para SEO
-async function getCoursePriceRange(apiCourseName: string, nivel: string) {
-  try {
-    const apiResponse = await getShowFiltersCourses(
-      apiCourseName,
-      undefined,
-      undefined,
-      undefined,
-      nivel,
-      1,
-      20
-    )
-    const offers = apiResponse?.data || []
-    if (offers.length === 0) return { lowPrice: 0, highPrice: 0, offerCount: 0 }
-
-    const prices = offers
-      .map((o: { minPrice?: number; prices?: { withDiscount?: number; withoutDiscount?: number } }) =>
-        o.minPrice || o.prices?.withDiscount || 0
-      )
-      .filter((p: number) => p > 0)
-    const maxPrices = offers
-      .map((o: { maxPrice?: number; prices?: { withoutDiscount?: number } }) =>
-        o.maxPrice || o.prices?.withoutDiscount || 0
-      )
-      .filter((p: number) => p > 0)
-
-    return {
-      lowPrice: prices.length > 0 ? Math.min(...prices) : 0,
-      highPrice: maxPrices.length > 0 ? Math.max(...maxPrices) : 0,
-      offerCount: offers.length,
-    }
-  } catch {
-    return { lowPrice: 0, highPrice: 0, offerCount: 0 }
-  }
 }
 
 // Gerar metadata dinâmica (SEO)
@@ -138,8 +89,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const priceSuffix = lowPrice > 0 ? ` — de R$${lowPrice.toFixed(0)}/mês` : ''
   const titleSuffix =
     (lowPrice > 0
-      ? [priceSuffix, ' com até 80% de desconto', ' de até 80%', '']
-      : [' com até 80% de desconto', ' de até 80%', '']
+      ? [priceSuffix, ` com até ${DISCOUNT_CEILING_PCT}% de desconto`, ` de até ${DISCOUNT_CEILING_PCT}%`, '']
+      : [` com até ${DISCOUNT_CEILING_PCT}% de desconto`, ` de até ${DISCOUNT_CEILING_PCT}%`, '']
     ).find(
       (s) => titleBase.length + s.length + brandSuffixLen <= 60
     ) ?? ''
@@ -153,13 +104,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   let description =
     [
       lowPrice > 0 &&
-        `Bolsa de estudo para ${curso.name}${priceText}, com até 80% de desconto. Faculdades reconhecidas pelo MEC, no EAD ou presencial. Inscrição grátis.`,
-      `Bolsa de estudo para ${curso.name} com até 80% de desconto em faculdades reconhecidas pelo MEC, no EAD ou presencial. Inscrição grátis.`,
-      `Bolsa de até 80% para ${curso.name} em faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`,
+        `Bolsa de estudo para ${curso.name}${priceText}, com até ${DISCOUNT_CEILING_PCT}% de desconto. Faculdades reconhecidas pelo MEC, no EAD ou presencial. Inscrição grátis.`,
+      `Bolsa de estudo para ${curso.name} com até ${DISCOUNT_CEILING_PCT}% de desconto em faculdades reconhecidas pelo MEC, no EAD ou presencial. Inscrição grátis.`,
+      `Bolsa de até ${DISCOUNT_CEILING_PCT}% para ${curso.name} em faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`,
     ]
       .filter((d): d is string => Boolean(d))
       .find((d) => d.length <= 155) ??
-    `Bolsa de até 80% para ${curso.name} em faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`
+    `Bolsa de até ${DISCOUNT_CEILING_PCT}% para ${curso.name} em faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`
 
   const brandedCopy = buildBrandedCourseCopy({
     name: curso.name,
@@ -173,13 +124,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description = brandedCopy.metaDescription
   }
 
-  // Construir URL da imagem
-  const imageUrl = curso.imageUrl.startsWith('http')
-    ? curso.imageUrl
-    : absoluteUrl(curso.imageUrl)
+  // Rede de segurança: o degradê de sufixo acima cobre a maioria dos cursos,
+  // mas nomes de curso já longos por si só (comum em pós — ex: "Educação
+  // Especial com Ênfase em Deficiência Física e Motora") estouram os 60
+  // mesmo sem NENHUM complemento. Pra não truncar o nome do curso (dado do
+  // catálogo, aparece no H1 e no breadcrumb) nem regredir os títulos que já
+  // cabem, só quando o título + sufixo de marca passaria de 60 é que a marca
+  // é omitida via `absolute` (mesma técnica da home em app/(default)/page.tsx)
+  // — bypassa o `%s | <marca>` do layout pai em vez de mexer no texto.
+  const titleWithBrandLen = title.length + ` | ${getCurrentTheme().shortTitle}`.length
+  const titleMeta: Metadata['title'] = titleWithBrandLen <= 60 ? title : { absolute: title }
+
+  // Imagem de compartilhamento gerada por código (opengraph-image.tsx nesta
+  // mesma pasta) — a convenção de arquivo do Next tem precedência sobre
+  // `openGraph.images` para o card do WhatsApp/Facebook/LinkedIn, mas
+  // declaramos aqui também pra alimentar o twitter:image (Next não propaga
+  // opengraph-image pra lá sem um twitter-image.tsx dedicado) com o mesmo
+  // card de marca em vez da foto genérica de `curso.imageUrl`.
+  const ogCardUrl = absoluteUrl(`/cursos/${slug}/opengraph-image`)
 
   return {
-    title,
+    title: titleMeta,
     description,
     keywords: [
       ...curso.keywords,
@@ -205,7 +170,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: 'website',
       images: [
         {
-          url: imageUrl,
+          url: ogCardUrl,
           width: 1200,
           height: 630,
           alt: `${curso.name} - ${seoSite.name}`,
@@ -217,7 +182,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       site: seoSite.twitter,
       title,
       description,
-      images: [imageUrl],
+      images: [ogCardUrl],
     },
   }
 }
@@ -279,9 +244,10 @@ export default async function CursoPage({ params }: Props) {
   const nivelHref = cursoMetadata.nivel === 'GRADUACAO' ? '/graduacao' : '/pos-graduacao'
 
   // Build JSON-LD schemas for SEO
-  const imageUrl = cursoMetadata.imageUrl.startsWith('http')
-    ? cursoMetadata.imageUrl
-    : `https://www.bolsaclick.com.br${cursoMetadata.imageUrl}`
+  // ImageObject aponta pro card gerado por opengraph-image.tsx (mesmo que
+  // alimenta o og:image/twitter:image) — não a foto genérica de
+  // `cursoMetadata.imageUrl`, pra dado estruturado e preview social baterem.
+  const ogCardUrl = absoluteUrl(`/cursos/${slug}/opengraph-image`)
 
   const prices = (courseOffers || [])
     .map((o: { minPrice?: number; prices?: { withDiscount?: number } }) => o.minPrice || o.prices?.withDiscount || 0)
@@ -384,7 +350,7 @@ export default async function CursoPage({ params }: Props) {
         : new Date(cursoMetadata.updatedAt as string | number).toISOString(),
       inLanguage: 'pt-BR',
       url: `https://www.bolsaclick.com.br/cursos/${slug}`,
-      image: imageUrl,
+      image: ogImageObject(ogCardUrl, `${cursoMetadata.name} com bolsa de estudo de até ${DISCOUNT_CEILING_PCT}% — Bolsa Click`),
       hasCourseInstance: courseInstances,
       ...(lowPrice > 0 ? {
         offers: {

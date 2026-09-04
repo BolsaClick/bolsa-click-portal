@@ -1,15 +1,27 @@
 'use client'
 
 import { useCallback, useMemo, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { MapPin, Building2, ArrowLeft, ListFilter, LayoutGrid, LayoutList, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
+import { useIsDesktopViewport } from '@/app/lib/hooks/useIsDesktopViewport'
 import { normalizeAcademicLevel } from '@/app/lib/academic-level'
+import { brazilCityStateOrNull } from '@/app/lib/geo/brazil-location'
 import { titleCasePtBr } from '@/app/lib/utils/title-case'
-import FiltersPanel from './FiltersPanel'
 import GeoRedirect from './GeoRedirect'
 import { useResultsFilter } from './ResultsFilterContext'
 import { buildCourseNameForAPI } from './course-name'
+
+// Import dinâmico (chunk separado) — não só o MOUNT do FiltersPanel é
+// condicional a `isDesktop`/`showMobileFilters`, o próprio módulo (2
+// useQuery do react-query, PriceRangeSlider, vários useEffect) só é
+// baixado/parseado quando alguém realmente vai renderizá-lo. Com import
+// estático, o código entrava no bundle de qualquer forma e pagava parse+eval
+// na hidratação mesmo sem nunca montar o componente. `ssr: true` (padrão)
+// mantém o HTML do desktop idêntico a antes — o servidor ainda pode
+// renderizá-lo quando `isDesktop` vem `true` do palpite por User-Agent.
+const FiltersPanel = dynamic(() => import('./FiltersPanel'))
 
 const NIVEL_LABEL: Record<string, string> = {
   GRADUACAO: 'Graduação',
@@ -41,6 +53,8 @@ export interface ResultsCurrent {
   estado: string
   modalidade: string
   nivel: string
+  /** Labels de marca selecionados (separados por vírgula) — filtro server-side. */
+  marcas?: string
 }
 
 /**
@@ -51,13 +65,23 @@ export interface ResultsCurrent {
 export default function ResultsShell({
   current,
   children,
+  initialIsDesktop,
 }: {
   current: ResultsCurrent
   children: React.ReactNode
+  /**
+   * Palpite server-side (por User-Agent) de "é desktop?" — ver `page.tsx` e
+   * `isMobileUserAgent`. Decide se o <aside> já nasce com o FiltersPanel
+   * montado (desktop, igual sempre foi) ou vazio (celular: painel só monta
+   * quando o usuário abre o drawer). `useIsDesktopViewport` confirma via
+   * matchMedia no cliente e corrige o raro caso de UA ambíguo.
+   */
+  initialIsDesktop: boolean
 }) {
   const { curso, cursoNomeCompleto, cidade, estado, modalidade, nivel } = current
   const router = useRouter()
   const { trackEvent } = usePostHogTracking()
+  const isDesktop = useIsDesktopViewport(initialIsDesktop)
   const { viewMode, setViewMode, priceRange, setPriceRange, availableBrands, selectedBrands, toggleBrand } =
     useResultsFilter()
   const [showMobileFilters, setShowMobileFilters] = useState(false)
@@ -70,6 +94,10 @@ export default function ResultsShell({
       estado?: string
       modalidade?: string
       nivel?: string
+      /** Só entra na URL quando passado explicitamente — qualquer outra
+       *  mudança de busca derruba o filtro de marca (mesma regra do reset
+       *  client-side por searchKey). */
+      marcas?: string
     }) => {
       const params = new URLSearchParams()
 
@@ -93,6 +121,9 @@ export default function ResultsShell({
             ? newParams.estado.trim()
             : ''
           : estado || ''
+      const allowed = brazilCityStateOrNull(finalCidade, finalEstado)
+      const safeCidade = allowed?.city ?? ''
+      const safeEstado = allowed?.state ?? ''
       const finalModalidade =
         newParams.modalidade !== undefined
           ? newParams.modalidade && newParams.modalidade.trim()
@@ -105,12 +136,13 @@ export default function ResultsShell({
         params.set('c', finalC)
         if (finalCn) params.set('cn', finalCn)
       }
-      if (finalCidade) params.set('cidade', finalCidade)
-      if (finalEstado) params.set('estado', finalEstado)
+      if (safeCidade) params.set('cidade', safeCidade)
+      if (safeEstado) params.set('estado', safeEstado)
       if (finalModalidade) params.set('modalidade', finalModalidade)
       params.set('nivel', finalNivel)
+      if (newParams.marcas) params.set('marcas', newParams.marcas)
 
-      router.push(`/curso/resultado?${params.toString()}`)
+      router.push(`/curso/resultado?${params.toString()}`, { scroll: false })
     },
     [curso, cursoNomeCompleto, cidade, estado, modalidade, nivel, router],
   )
@@ -143,6 +175,14 @@ export default function ResultsShell({
   const handleBrandToggle = useCallback(
     (brand: string) => {
       toggleBrand(brand)
+      // Leva a seleção pra URL: a busca server-side restringe as FONTES por
+      // marca (Tartarus `brands`/Athena `brand`), senão marcas caras/pequenas
+      // (IBMEC, Wyden) nunca aparecem — a ordenação por preço as deixa fora
+      // da página 1 e o filtro client-side não tem o que mostrar.
+      const next = selectedBrands.includes(brand)
+        ? selectedBrands.filter((b) => b !== brand)
+        : [...selectedBrands, brand]
+      updateURL({ marcas: next.join(',') })
       trackEvent('course_filter_brand_changed', {
         brand,
         course_name: courseNameForAPI,
@@ -150,7 +190,7 @@ export default function ResultsShell({
         state: estado,
       })
     },
-    [toggleBrand, trackEvent, courseNameForAPI, cidade, estado],
+    [toggleBrand, selectedBrands, updateURL, trackEvent, courseNameForAPI, cidade, estado],
   )
 
   const handleModalityChange = useCallback(
@@ -356,9 +396,13 @@ export default function ResultsShell({
       {/* CONTEÚDO */}
       <section className="container mx-auto px-4 py-10 md:py-12">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* SIDEBAR FILTROS — sticky desktop */}
+          {/* SIDEBAR FILTROS — sticky desktop. `isDesktop` (não a classe CSS
+              `hidden lg:block`, que só afeta pintura) decide se o
+              FiltersPanel é montado: no celular ele nunca existe aqui, então
+              a hidratação não paga o custo de um painel invisível — e o
+              drawer mobile abaixo vira a ÚNICA cópia possível. */}
           <aside className="hidden lg:block lg:col-span-4 xl:col-span-3">
-            <div className="sticky top-24">{filtersPanel()}</div>
+            <div className="sticky top-24">{isDesktop && filtersPanel()}</div>
           </aside>
 
           {/* MOBILE FILTROS DRAWER */}

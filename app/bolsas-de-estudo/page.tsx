@@ -15,14 +15,31 @@ import ProUniAlternativasSection from './_components/ProUniAlternativasSection'
 import TrustBadges from './_components/TrustBadges'
 import { CALENDARIO_2026, classifyEvents } from './_data/calendario-2026'
 import { OFF_TOPIC_NOINDEX_SLUGS } from '@/app/lib/blog/noindex-slugs'
+import { ogImageObject } from '@/app/lib/seo/schema-image'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 
 // Datas de freshness pra Article schema + UI. Atualizar manualmente quando
 // fizer revisão editorial significativa do pillar (regra do roadmap M3/M5).
 const DATE_PUBLISHED = '2025-08-12'
-const DATE_MODIFIED = '2026-06-11'
-const DATE_MODIFIED_LABEL = '11 de junho de 2026'
+/**
+ * Tamanho do catálogo, para os claims numéricos da página.
+ *
+ * NÃO usar `TOP_CURSOS.length` para isso: aquilo é uma lista editorial curada
+ * de 20 cursos em destaque, e usá-la como "quantos cursos temos" fazia a
+ * página que disputa o head term anunciar 20 cursos — subvendendo o catálogo
+ * inteiro e parecendo um site pequeno para quem compara resultados.
+ *
+ * Medido em 2026-08-20 via `GET /api/courses?academicLevel=` nos três níveis:
+ * 190 graduação + 861 pós + 44 profissionalizantes = 1.093 nomes distintos.
+ * Publicamos "1.000+" porque é verificável e resiste ao catálogo variar.
+ * Refazer a medição antes de subir o número.
+ */
+const CURSOS_NO_CATALOGO = '1.000+'
+
+const DATE_MODIFIED = '2026-08-28'
+const DATE_MODIFIED_LABEL = '28 de agosto de 2026'
 
 // Autor real nomeado (E-E-A-T): Person verificável > Organization genérica.
 // sameAs: adicionar URL do LinkedIn pessoal quando disponível (1 linha).
@@ -39,8 +56,8 @@ export const metadata: Metadata = {
   // Sem "| Bolsa Click" aqui: o template do layout raiz (`%s | Bolsa Click`) já
   // anexa a marca uma vez. Repetir gerava "... | Bolsa Click | Bolsa Click" (92
   // chars, truncado no SERP). Título enxuto e front-loaded no head term.
-  title: 'Bolsas de Estudo até 80%: Compare Faculdades e Preços',
-  description: `Compare bolsas de estudo de até 80% em cursos de graduação, pós e tecnólogos. ${BRAZILIAN_CITIES.length} cidades, faculdades reconhecidas pelo MEC, EAD e presencial. ProUni, FIES e bolsa própria.`,
+  title: `Bolsas de Estudo até ${DISCOUNT_CEILING_PCT}%: Compare Faculdades e Preços`,
+  description: `Compare bolsas de estudo de até ${DISCOUNT_CEILING_PCT}% em graduação, pós e tecnólogo. ${BRAZILIAN_CITIES.length} cidades, faculdades reconhecidas pelo MEC. ProUni, FIES e bolsa própria.`,
   keywords: [
     'bolsa de estudo',
     'bolsas de estudo',
@@ -60,17 +77,25 @@ export const metadata: Metadata = {
   alternates: { canonical: `${SITE_URL}/bolsas-de-estudo` },
   openGraph: {
     title: 'Bolsas de Estudo no Brasil — Bolsa Click',
-    description: `Encontre cursos com até 80% de desconto em ${BRAZILIAN_CITIES.length} cidades.`,
+    description: `Encontre cursos com até ${DISCOUNT_CEILING_PCT}% de desconto em ${BRAZILIAN_CITIES.length} cidades.`,
     url: `${SITE_URL}/bolsas-de-estudo`,
     siteName: 'Bolsa Click',
     locale: 'pt_BR',
     type: 'website',
+    // A imagem vem de `opengraph-image.tsx` (convenção de arquivo do Next, que
+    // tem precedência sobre `images` daqui). Declarar as duas coisas só criaria
+    // dois donos para o mesmo og:image.
+    //
+    // O que NÃO pode voltar: `openGraph` sem imagem alguma. Declarar este objeto
+    // substitui o do layout raiz inteiro — não faz merge campo a campo —, e a
+    // página ficava sem preview em WhatsApp, Facebook e LinkedIn enquanto o
+    // twitter:card abaixo prometia `summary_large_image`.
   },
   twitter: {
     card: 'summary_large_image',
     site: '@bolsaclick',
     title: 'Bolsas de Estudo no Brasil — Bolsa Click',
-    description: `Encontre cursos com até 80% de desconto em ${BRAZILIAN_CITIES.length} cidades.`,
+    description: `Encontre cursos com até ${DISCOUNT_CEILING_PCT}% de desconto em ${BRAZILIAN_CITIES.length} cidades.`,
   },
 }
 
@@ -124,10 +149,10 @@ const PROGRAMAS = [
     nome: 'Bolsa própria',
     tipo: 'Faculdades parceiras',
     quemOferece: 'Faculdades privadas via Bolsa Click',
-    desconto: '25% a 85%',
+    desconto: `25% a ${DISCOUNT_CEILING_PCT}%`,
     requisitoNota: 'Não exige ENEM (ou processo seletivo próprio)',
     requisitoRenda: 'Sem critério de renda',
-    onde: 'Anhanguera, Estácio, Unopar, Pitágoras, Unime e outras parceiras',
+    onde: 'Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden',
     quando: 'Inscrição aberta o ano inteiro',
   },
 ]
@@ -146,7 +171,7 @@ const PASSOS = [
   {
     titulo: 'Escolha curso e modalidade',
     detalhe:
-      'Cursos EAD costumam ter os maiores descontos via bolsa própria (até 85% em faculdades parceiras), enquanto cursos presenciais têm desconto típico de 30% a 70%. Pós-graduação e cursos profissionalizantes também têm bolsas. Filtre por cidade, modalidade e área de interesse.',
+      `O teto atual do catálogo é ${DISCOUNT_CEILING_PCT}%, em EAD e presencial (o percentual varia por curso, unidade e modalidade). Pós-graduação e cursos profissionalizantes também têm bolsas. Filtre por cidade, modalidade e área de interesse.`,
   },
   {
     titulo: 'Prepare a documentação',
@@ -189,7 +214,7 @@ const FAQ_ITEMS = [
   {
     question: 'Posso conseguir bolsa sem ter feito o ENEM?',
     answer:
-      'Sim. Bolsas próprias de faculdades parceiras do Bolsa Click não exigem ENEM — você usa o processo seletivo da própria instituição, que em geral é uma redação ou prova simples feita online, com resultado em poucas horas e matrícula liberada em até 48h. O desconto não muda por causa disso: a bolsa de até 85% vale igualmente pra quem entra por vestibular online, por nota de ENEM antiga ou por aproveitamento do histórico do ensino médio. Quem tem ENEM de qualquer edição pode usá-lo só pra agilizar o ingresso, sem refazer prova. Já ProUni, FIES e SISU, por serem programas federais, exigem ENEM recente com nota mínima de 450 pontos e redação acima de zero — então, sem ENEM, o caminho realista é a bolsa própria, que fica com inscrição aberta o ano inteiro.',
+      `Sim. Bolsas próprias de faculdades parceiras do Bolsa Click não exigem ENEM — você usa o processo seletivo da própria instituição, que em geral é uma redação ou prova simples feita online, com resultado em poucas horas e matrícula liberada em até 48h. O desconto não muda por causa disso: a bolsa de até ${DISCOUNT_CEILING_PCT}% vale igualmente pra quem entra por vestibular online, por nota de ENEM antiga ou por aproveitamento do histórico do ensino médio. Quem tem ENEM de qualquer edição pode usá-lo só pra agilizar o ingresso, sem refazer prova. Já ProUni, FIES e SISU, por serem programas federais, exigem ENEM recente com nota mínima de 450 pontos e redação acima de zero — então, sem ENEM, o caminho realista é a bolsa própria, que fica com inscrição aberta o ano inteiro.`,
   },
   {
     question: 'Qual a nota mínima do ENEM pra ProUni?',
@@ -199,16 +224,16 @@ const FAQ_ITEMS = [
   {
     question: 'A bolsa do Bolsa Click é diferente do ProUni?',
     answer:
-      'Sim. O Bolsa Click é um marketplace que negocia bolsas próprias diretamente com faculdades particulares parceiras — não é programa do governo. Vantagem: sem nota de corte, sem critério de renda, inscrição aberta o ano inteiro, descontos de 25% a 85% (dependendo do curso e da modalidade). O Bolsa Click não substitui o ProUni — funciona como alternativa para quem não consegue ou não quer esperar o programa federal.',
+      `Sim. O Bolsa Click é um marketplace que negocia bolsas próprias diretamente com faculdades particulares parceiras — não é programa do governo. Vantagem: sem nota de corte, sem critério de renda, inscrição aberta o ano inteiro, descontos de 25% a ${DISCOUNT_CEILING_PCT}% (dependendo do curso e da modalidade). O Bolsa Click não substitui o ProUni — funciona como alternativa para quem não consegue ou não quer esperar o programa federal.`,
   },
   {
     question: 'Quais faculdades têm bolsa de estudo?',
-    answer: `O Bolsa Click trabalha com ${BRAZILIAN_CITIES.length}+ cidades e faculdades parceiras de alcance nacional (Anhanguera, Estácio, Unopar, Pitágoras, Unime e outras reconhecidas pelo MEC). Pelo ProUni e FIES, mais de 1.200 instituições particulares aderem aos programas federais. A disponibilidade da bolsa varia por curso, cidade e modalidade.`,
+    answer: `O Bolsa Click trabalha com ${BRAZILIAN_CITIES.length}+ cidades e faculdades parceiras de alcance nacional (Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden, reconhecidas pelo MEC). Pelo ProUni e FIES, mais de 1.200 instituições particulares aderem aos programas federais. A disponibilidade da bolsa varia por curso, cidade e modalidade.`,
   },
   {
     question: 'Bolsa de estudo serve pra EAD?',
     answer:
-      'Serve sim, e é onde os descontos costumam ser maiores. Cursos EAD em faculdades parceiras do Bolsa Click têm bolsas próprias de até 85% da mensalidade, e o ProUni também cobre cursos a distância desde 2017 — com os mesmos critérios de nota e renda do presencial. A vantagem econômica do EAD é dupla: a mensalidade base já é mais baixa que a do presencial (o custo operacional por aluno é menor) e o percentual de bolsa aplicado costuma ser maior, então o valor final fica na faixa de R$ 99 a R$ 250 por mês na maioria dos cursos do catálogo. O diploma EAD tem a mesma validade legal do presencial quando o curso é reconhecido pelo MEC, e cursos com componente prático (como os da área da saúde) usam polos presenciais pra laboratórios e estágios obrigatórios.',
+      `Serve sim, e é onde os descontos costumam ser maiores. Cursos EAD em faculdades parceiras do Bolsa Click têm bolsas próprias de até ${DISCOUNT_CEILING_PCT}% da mensalidade, e o ProUni também cobre cursos a distância desde 2017 — com os mesmos critérios de nota e renda do presencial. A vantagem econômica do EAD é dupla: a mensalidade base já é mais baixa que a do presencial (o custo operacional por aluno é menor) e o percentual de bolsa aplicado costuma ser maior, então o valor final fica na faixa de R$ 99 a R$ 250 por mês na maioria dos cursos do catálogo. O diploma EAD tem a mesma validade legal do presencial quando o curso é reconhecido pelo MEC, e cursos com componente prático (como os da área da saúde) usam polos presenciais pra laboratórios e estágios obrigatórios.`,
   },
   {
     question: 'Vale a pena ProUni ou bolsa própria de faculdade?',
@@ -247,12 +272,12 @@ const FAQ_ITEMS = [
   },
   {
     question: 'Qual a melhor faculdade com bolsa de estudo?',
-    answer: `Depende do curso, modalidade e cidade. Entre as parceiras do Bolsa Click, as maiores em alcance nacional são Anhanguera (presencial e EAD em ${BRAZILIAN_CITIES.length}+ cidades), Unopar (líder em EAD com mais de 800 polos), Estácio (forte presença nas capitais), Pitágoras e Unime. Todas reconhecidas pelo MEC. A "melhor" pra você é a que combina curso desejado + cidade + maior bolsa disponível.`,
+    answer: `Depende do curso, modalidade e cidade. Entre as parceiras do Bolsa Click, as maiores em alcance nacional são Anhanguera (presencial e EAD em ${BRAZILIAN_CITIES.length}+ cidades), Unopar (líder em EAD com mais de 800 polos), Estácio (forte presença nas capitais), Pitágoras, Unime e Wyden. Todas reconhecidas pelo MEC. A "melhor" pra você é a que combina curso desejado + cidade + maior bolsa disponível.`,
   },
   {
     question: 'Quanto economizo com bolsa de estudo?',
     answer:
-      'Com bolsa integral (ProUni 100% ou bolsa própria de 100%), a economia é o valor total do curso — em torno de R$ 60 mil a R$ 200 mil dependendo da graduação. Com bolsa de 50% a 85%, a economia varia de R$ 30 mil a R$ 150 mil. EAD com bolsa de 85% chega a custar R$ 80 a R$ 200 mensais, dependendo do curso.',
+      `Com bolsa integral (ProUni 100% ou bolsa própria de 100%), a economia é o valor total do curso — em torno de R$ 60 mil a R$ 200 mil dependendo da graduação. Com bolsa de 50% a ${DISCOUNT_CEILING_PCT}%, a economia varia de R$ 30 mil a R$ 150 mil. EAD com bolsa de ${DISCOUNT_CEILING_PCT}% chega a custar R$ 80 a R$ 200 mensais, dependendo do curso.`,
   },
   {
     question: 'Como sei se a bolsa de estudo é confiável?',
@@ -392,6 +417,10 @@ export default async function BolsasDeEstudoHubPage() {
     dateModified: DATE_MODIFIED,
     inLanguage: 'pt-BR',
     isAccessibleForFree: true,
+    image: ogImageObject(
+      `${SITE_URL}/bolsas-de-estudo/opengraph-image`,
+      `Bolsas de estudo de até ${DISCOUNT_CEILING_PCT}% em faculdades reconhecidas pelo MEC — Bolsa Click`,
+    ),
     author: {
       '@type': 'Person',
       '@id': `${SITE_URL}/sobre/equipe-editorial#rodrigo-silverio`,
@@ -475,7 +504,7 @@ export default async function BolsasDeEstudoHubPage() {
     '@type': 'Dataset',
     '@id': `${pageUrl}#bolsa-catalog`,
     name: 'Catálogo Bolsa Click — Bolsas de Estudo no Brasil 2026',
-    description: `Catálogo first-party de bolsas de estudo no Brasil em 2026: ${TOP_CURSOS.length}+ cursos de graduação, pós e tecnólogos cobertos em ${institutions.length} faculdades parceiras reconhecidas pelo MEC, com ofertas em ${BRAZILIAN_CITIES.length} cidades brasileiras. Dados atualizados em tempo real via API do catálogo, refletindo mensalidades, percentuais de bolsa, modalidades (EAD, presencial, semipresencial) e cobertura geográfica reais.`,
+    description: `Catálogo first-party de bolsas de estudo no Brasil em 2026: ${CURSOS_NO_CATALOGO} cursos de graduação, pós e tecnólogos cobertos em ${institutions.length} faculdades parceiras reconhecidas pelo MEC, com ofertas em ${BRAZILIAN_CITIES.length} cidades brasileiras. Dados atualizados em tempo real via API do catálogo, refletindo mensalidades, percentuais de bolsa, modalidades (EAD, presencial, semipresencial) e cobertura geográfica reais.`,
     url: pageUrl,
     license: 'https://creativecommons.org/licenses/by/4.0/',
     creator: {
@@ -608,7 +637,7 @@ export default async function BolsasDeEstudoHubPage() {
             Bolsas de Estudo no Brasil
           </h1>
           <p className="text-lg md:text-xl text-ink-700 max-w-3xl">
-            Encontre cursos de graduação e pós com até <strong>80% de desconto</strong> em
+            Encontre cursos de graduação e pós com até <strong>{DISCOUNT_CEILING_PCT}% de desconto</strong> em
             {' '}{institutions.length} faculdades parceiras, em {BRAZILIAN_CITIES.length}
             {' '}cidades. Compare ProUni, FIES e bolsas próprias e finalize a inscrição grátis pelo Bolsa Click.
           </p>
@@ -623,10 +652,10 @@ export default async function BolsasDeEstudoHubPage() {
             </time>
           </p>
           <div className="mt-8 flex flex-wrap gap-6 font-mono text-[12px] tracking-[0.16em] uppercase text-ink-500">
-            <span><strong className="text-ink-900 num-tabular">{TOP_CURSOS.length}+</strong> cursos</span>
+            <span><strong className="text-ink-900 num-tabular">{CURSOS_NO_CATALOGO}</strong> cursos</span>
             <span><strong className="text-ink-900 num-tabular">{institutions.length}</strong> faculdades</span>
             <span><strong className="text-ink-900 num-tabular">{BRAZILIAN_CITIES.length}</strong> cidades</span>
-            <span><strong className="text-ink-900 num-tabular">até 80%</strong> de desconto</span>
+            <span><strong className="text-ink-900 num-tabular">até {DISCOUNT_CEILING_PCT}%</strong> de desconto</span>
           </div>
         </div>
       </header>
@@ -640,7 +669,7 @@ export default async function BolsasDeEstudoHubPage() {
       <section className="bg-white py-10 md:py-12 border-b border-hairline" data-speakable="answer">
         <div className="container mx-auto px-4 max-w-3xl">
           <p className="text-lg md:text-xl text-ink-900 font-medium leading-relaxed">
-            Pra conseguir uma <strong>bolsa de estudo</strong> de 50% a 100% na faculdade no Brasil, o caminho mais rápido é candidatar-se ao <Link href="/prouni" className="underline decoration-1 underline-offset-4 hover:text-ink-700">ProUni</Link> com sua nota do ENEM (bolsa integral ou parcial em faculdades particulares) ou buscar bolsa própria em faculdades EAD parceiras, onde os descontos chegam a 85% sem nota de corte. Veja abaixo cada opção, requisitos e o passo-a-passo.
+            Pra conseguir uma <strong>bolsa de estudo</strong> de 50% a 100% na faculdade no Brasil, o caminho mais rápido é candidatar-se ao <Link href="/prouni" className="underline decoration-1 underline-offset-4 hover:text-ink-700">ProUni</Link> com sua nota do ENEM (bolsa integral ou parcial em faculdades particulares) ou buscar bolsa própria em faculdades EAD parceiras, onde os descontos chegam a {DISCOUNT_CEILING_PCT}% sem nota de corte. Veja abaixo cada opção, requisitos e o passo-a-passo.
           </p>
         </div>
       </section>
@@ -679,7 +708,7 @@ export default async function BolsasDeEstudoHubPage() {
               </h3>
               <p className="text-ink-700 text-[15px] leading-relaxed mb-5">
                 Não fez ENEM, não fecha o critério de renda ou perdeu a janela do ProUni? A
-                bolsa própria de faculdade parceira chega a 85% no EAD, sem nota de corte, com
+                bolsa própria de faculdade parceira chega a {DISCOUNT_CEILING_PCT}% no EAD, sem nota de corte, com
                 inscrição grátis e aberta o ano inteiro.
               </p>
               <Link
@@ -768,7 +797,7 @@ export default async function BolsasDeEstudoHubPage() {
                 </tr>
                 <tr className="border-b border-hairline">
                   <td className="py-3 px-3 text-ink-700">Desconto máximo — bolsa própria de parceiras</td>
-                  <td className="py-3 px-3 text-ink-900 font-medium num-tabular">85% (EAD) · 80% (presencial)</td>
+                  <td className="py-3 px-3 text-ink-900 font-medium num-tabular">{DISCOUNT_CEILING_PCT}%</td>
                   <td className="py-3 px-3 text-ink-500">Catálogo Bolsa Click, jun/2026</td>
                 </tr>
                 <tr className="border-b border-hairline">
@@ -809,8 +838,8 @@ export default async function BolsasDeEstudoHubPage() {
             <Link href="/prouni" className="underline decoration-1 underline-offset-4">ProUni</Link> e no{' '}
             <Link href="/fies" className="underline decoration-1 underline-offset-4">FIES</Link>{' '}
             (portal do MEC, usando a nota do ENEM) ou direto em faculdades particulares
-            parceiras pelo Bolsa Click, onde a bolsa própria chega a <strong>85% sem nota de
-            corte nem critério de renda</strong>. A inscrição é grátis e fica aberta o ano inteiro.
+            parceiras pelo Bolsa Click, onde a bolsa própria chega a <strong>{DISCOUNT_CEILING_PCT}% sem nota de
+            corte nem critério de renda</strong>. Cadastro grátis, sem taxa de adesão, o ano inteiro.
           </p>
           <p className="text-ink-700 leading-relaxed mt-3">
             Pela busca abaixo você compara as ofertas reais por curso, modalidade (EAD,
@@ -865,7 +894,7 @@ export default async function BolsasDeEstudoHubPage() {
           </div>
           <p className="text-ink-700 leading-relaxed mb-8 max-w-3xl text-[15px]">
             Compare bolsas nos cursos mais procurados pelas principais cidades do Brasil.
-            Descontos de até 80%, inscrição grátis e resultado em até 48h.
+            Descontos de até {DISCOUNT_CEILING_PCT}%, inscrição grátis e resultado em até 48h.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {TOP_CURSOS.slice(0, 6).map(curso => (
@@ -912,8 +941,7 @@ export default async function BolsasDeEstudoHubPage() {
             Diferente do ProUni e FIES (programas federais), a bolsa própria é negociada entre
             você e a faculdade via Bolsa Click, <strong>sem prova específica e sem critério de
             renda</strong> — basta o ENEM (qualquer edição) ou o processo seletivo da própria
-            instituição. A inscrição é grátis, e a bolsa vale durante todo o curso enquanto você
-            mantém a matrícula ativa e a aprovação acadêmica.
+            instituição. Cadastro grátis, sem taxa de adesão. O percentual e a duração seguem o contrato da oferta.
           </p>
         </div>
       </section>
@@ -1009,7 +1037,7 @@ export default async function BolsasDeEstudoHubPage() {
           <figure className="mt-10">
             <Image
               src="/assets/infografico-prouni-fies-bolsa-propria.svg"
-              alt="Infográfico comparando ProUni, FIES e bolsa própria: ProUni dá bolsa de 50% ou 100% com ENEM 450+ e renda até 1,5 salário mínimo per capita, inscrições em fevereiro e julho; FIES financia a mensalidade pra pagar após a formatura, com ENEM 450+ e renda até 3 salários mínimos; bolsa própria via Bolsa Click dá até 85% de desconto no EAD, sem ENEM e sem critério de renda, com inscrição grátis o ano inteiro"
+              alt={`Infográfico comparando ProUni, FIES e bolsa própria: ProUni dá bolsa de 50% ou 100% com ENEM 450+ e renda até 1,5 salário mínimo per capita, inscrições em fevereiro e julho; FIES financia a mensalidade pra pagar após a formatura, com ENEM 450+ e renda até 3 salários mínimos; bolsa própria via Bolsa Click dá até ${DISCOUNT_CEILING_PCT}% de desconto no EAD, sem ENEM e sem critério de renda, com inscrição grátis o ano inteiro`}
               width={1200}
               height={860}
               className="w-full h-auto border border-hairline"
@@ -1223,7 +1251,7 @@ export default async function BolsasDeEstudoHubPage() {
           <p className="text-ink-700 leading-relaxed">
             As faculdades parceiras do Bolsa Click aceitam ENEM como processo seletivo, mas{' '}
             <strong>não impõem nota mínima específica</strong>. Você pode usar o ENEM pra agilizar
-            o ingresso (sem fazer vestibular) e ainda assim conseguir bolsa de 25% a 85%. Pra quem
+            o ingresso (sem fazer vestibular) e ainda assim conseguir bolsa de 25% a {DISCOUNT_CEILING_PCT}%. Pra quem
             não fez o ENEM, o processo seletivo próprio da faculdade (geralmente uma redação online)
             substitui sem alterar o desconto.
           </p>
@@ -1238,12 +1266,12 @@ export default async function BolsasDeEstudoHubPage() {
       <section id="bolsa-ead" className="bg-paper py-12 md:py-16 border-b border-hairline">
         <div className="container mx-auto px-4 max-w-3xl prose prose-neutral">
           <h2 className="font-display text-2xl md:text-3xl font-semibold text-ink-900 mb-4">
-            Bolsas em faculdades EAD — até 85% de desconto
+            Bolsas em faculdades EAD — até {DISCOUNT_CEILING_PCT}% de desconto
           </h2>
           <p className="text-ink-700 leading-relaxed">
             Cursos a distância (EAD) são onde as bolsas próprias chegam aos maiores percentuais —
-            até <strong>85% de desconto</strong> em faculdades parceiras como Anhanguera, Unopar,
-            Pitágoras e Unime. Combinada com a mensalidade base de EAD (que já é mais baixa que a
+            até <strong>{DISCOUNT_CEILING_PCT}% de desconto</strong> em faculdades parceiras como Anhanguera, Unopar,
+            Pitágoras, Estácio, Unime e Wyden. Combinada com a mensalidade base de EAD (que já é mais baixa que a
             do presencial), a economia final é a maior do mercado privado.
           </p>
           <h3 className="font-display text-xl text-ink-900 mt-6 mb-3">Por que EAD tem bolsa maior</h3>

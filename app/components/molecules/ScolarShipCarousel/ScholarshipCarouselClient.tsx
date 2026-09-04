@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Book, Monitor, Clock, TrendingUp } from 'luc
 import './style.css';
 import Image from 'next/image';
 import Link from 'next/link';
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 interface CursoData {
   id: string;
@@ -183,7 +184,7 @@ const ScholarshipCarouselClient: React.FC<ScholarshipCarouselClientProps> = ({ c
           <div className="md:col-span-5 md:col-start-8 md:pt-3">
             <p className="text-ink-500 leading-relaxed text-[15px]">
               Os cursos mais buscados do Brasil com bolsas de até{' '}
-              <span className="text-ink-900 font-medium">80% de desconto</span>. Veja a duração,
+              <span className="text-ink-900 font-medium">{DISCOUNT_CEILING_PCT}% de desconto</span>. Veja a duração,
               salário médio e demanda do mercado.
             </p>
           </div>

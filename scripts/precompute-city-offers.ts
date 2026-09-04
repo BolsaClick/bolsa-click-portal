@@ -5,7 +5,11 @@
  * Itera FeaturedCourse enriquecido × top N cidades brasileiras, bate Tartarus
  * `cogna/courses/search` e cacheia offerCount + minPrice em CityCourseOfferCache.
  *
- * Cron recomendado: semanal (preços e disponibilidade variam pouco em janela curta).
+ * Cron: semanal (.github/workflows/precompute-city-offers.yml). A rodada é
+ * INCREMENTAL — só reconsulta o que passou de --max-age-days — e para sozinha em
+ * --time-budget-min. Revarrer os 76.320 pares toda semana era o que estourava o
+ * teto de 300min do runner: a rodada de 30/08 foi cancelada em 5h00m19s no meio,
+ * e as 30.900 linhas que ela não alcançou ficaram com medição de 23/08.
  *
  * Usado pra:
  *  - Sitemap filter: só emite URL se offerCount real ≥ 1 (lê do cache em vez
@@ -20,11 +24,18 @@
  *   npx tsx scripts/precompute-city-offers.ts --slug=direito-bacharelado
  *   npx tsx scripts/precompute-city-offers.ts --city-limit=50 --concurrency=4
  *   npx tsx scripts/precompute-city-offers.ts --course-limit=20
+ *   npx tsx scripts/precompute-city-offers.ts --max-age-days=6    # padrão: só o que envelheceu
+ *   npx tsx scripts/precompute-city-offers.ts --max-age-days=0    # revarredura completa
+ *   npx tsx scripts/precompute-city-offers.ts --time-budget-min=280
  */
 
 import { PrismaClient } from '@prisma/client'
 import axios from 'axios'
 import { BRAZILIAN_CITIES } from '../app/lib/constants/brazilian-cities'
+import {
+  searchAthenaOffersWithMeta,
+  normalizeAthenaOffer,
+} from '../app/lib/api/athena-offers'
 
 const args = Object.fromEntries(
   process.argv
@@ -41,6 +52,22 @@ const SINGLE_SLUG = typeof args.slug === 'string' ? args.slug : undefined
 const CITY_LIMIT = Number(args['city-limit']) || 100
 const CONCURRENCY = Math.max(1, Number(args.concurrency) || 2)
 const COURSE_LIMIT = Number(args['course-limit']) || 0
+// Só reconsulta o par curso×cidade cujo cache está mais velho que isto (ou que
+// nunca foi gravado). Corta a rodada de 76.320 pares pra alguns milhares — que é
+// o que fazia o job estourar o teto de 300min do Actions e morrer no meio: em
+// 30/08 ele foi cancelado em 5h00m19s deixando 30.900 linhas paradas em 23/08.
+// --max-age-days=0 revarre tudo (comportamento antigo).
+const MAX_AGE_DAYS =
+  args['max-age-days'] === undefined ? 6 : Number(args['max-age-days'])
+// Encerra limpo antes do teto do runner. Rodada morta pelo Actions não imprime
+// resumo e não deixa registro do que ficou faltando.
+const TIME_BUDGET_MIN = Number(args['time-budget-min']) || 0
+// A Athena (Estácio/IBMEC/Wyden) entra no cache junto com a Cogna. --skip-athena
+// volta ao comportamento Cogna-only, sem precisar reverter deploy.
+const SKIP_ATHENA = !!args['skip-athena']
+// Mesmas marcas que a sonda da city page consulta (city-offers.ts) — o cache
+// tem que medir o MESMO universo que a página renderiza, senão volta a divergir.
+const ATHENA_BRANDS = ['estacio', 'ibmec', 'wyden']
 const MAX_RETRIES = 3
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -113,14 +140,75 @@ async function fetchOffers(
       const prices = data
         .map((o) => o.minPrice ?? o.prices?.withDiscount ?? 0)
         .filter((p) => p > 0)
+      // `data.length` é o tamanho da PÁGINA (size=50), não o total. A Tartarus
+      // devolve `totalItems` no topo; sem ele, uma cidade com mais de 50 ofertas
+      // ficaria eternamente registrada como tendo exatamente 50.
+      const total =
+        typeof res.data?.totalItems === 'number' ? res.data.totalItems : data.length
       return {
-        offerCount: data.length,
+        offerCount: total,
         minPrice: prices.length ? Math.min(...prices) : null,
       }
     } catch (err) {
       lastErr = err instanceof Error ? err.message : String(err)
       // Backoff exponencial + jitter antes de retentar — suaviza rate-limit (429)
       // e timeouts que derrubaram ~66% das chamadas a concorrência alta.
+      if (attempt < MAX_RETRIES) {
+        await sleep(500 * 2 ** (attempt - 1) + Math.floor(Math.random() * 300))
+      }
+    }
+  }
+  return { offerCount: 0, minPrice: null, error: lastErr }
+}
+
+/**
+ * Ofertas da Athena (YDUQS) pro par curso×cidade, somando as marcas.
+ *
+ * `throwOnFailure: true` é o ponto todo: sem ele `searchAthenaOffers` degrada
+ * graciosamente e devolve lista vazia em caso de falha — que é indistinguível
+ * de "não tem oferta aqui" e viraria zero gravado. Com ele, falha vira exceção
+ * e o chamador pula a gravação em vez de mentir.
+ */
+async function fetchAthenaOffers(
+  courseName: string,
+  city: string,
+  state: string,
+  nivel: string,
+): Promise<FetchResult> {
+  let lastErr = 'unknown'
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const perBrand = await Promise.all(
+        ATHENA_BRANDS.map((brand) =>
+          searchAthenaOffersWithMeta(
+            { courseName, city, state, academicLevel: nivel, brand },
+            { throwOnFailure: true },
+          ),
+        ),
+      )
+      // Total REAL somado por marca (`meta.total`), não o tamanho das páginas.
+      // A Athena pagina em 20: contar as listas dava no máximo 60 pras três
+      // marcas, teto que "Pedagogia em Recife = 40" tinha batido sem avisar.
+      const offerCount = perBrand.reduce((sum, r) => sum + r.total, 0)
+      // O preço mínimo sai da primeira página de cada marca — é o que temos sem
+      // paginar tudo e quadruplicar de novo a carga na API. Pode superestimar o
+      // mínimo, nunca inventa valor: todo preço veio da API.
+      //
+      // Passa por `normalizeAthenaOffer` porque a Athena usa nomes de campo
+      // PRÓPRIOS — `priceTo` (com desconto) e `priceFrom` (sem) — e não os
+      // `minPrice`/`prices.withDiscount` da Tartarus. Ler os nomes da Cogna
+      // numa oferta da Athena devolve undefined em todo campo, e o resultado
+      // era `athenaMinPrice` nulo em 100% das linhas, sem erro nenhum.
+      const prices = perBrand
+        .flatMap((r) => r.offers)
+        .map((o) => normalizeAthenaOffer(o).minPrice ?? 0)
+        .filter((p) => p > 0)
+      return {
+        offerCount,
+        minPrice: prices.length ? Math.min(...prices) : null,
+      }
+    } catch (err) {
+      lastErr = err instanceof Error ? err.message : String(err)
       if (attempt < MAX_RETRIES) {
         await sleep(500 * 2 ** (attempt - 1) + Math.floor(Math.random() * 300))
       }
@@ -144,6 +232,27 @@ async function pMap<T, R>(
   })
   await Promise.all(workers)
   return results
+}
+
+/**
+ * Um lote inteiro sem nenhuma oferta tem duas explicações OPOSTAS: o curso não
+ * existe em nenhuma daquelas cidades (ausência real) ou a API entrou no modo de
+ * falha silencioso — HTTP 200 com lista vazia sob carga, que não lança nada e
+ * por isso não é distinguível numa chamada isolada. Um LOTE distingue: se a
+ * reconsulta de uma amostra, com folga, acha oferta onde o lote dizia zero, o
+ * vazio era falha. Na dúvida não grava — zero velho pode estar certo, zero
+ * falso está errado com cara de recente.
+ */
+async function zerosAreTrustworthy<C>(
+  succeeded: { city: C; r: FetchResult }[],
+  recheck: (city: C) => Promise<FetchResult>,
+): Promise<boolean> {
+  if (succeeded.length === 0) return true
+  if (succeeded.some(({ r }) => r.offerCount > 0)) return true
+  await sleep(5_000)
+  const sample = succeeded.slice(0, 3)
+  const rechecked = await pMap(sample, ({ city }) => recheck(city), 1)
+  return !rechecked.some((r) => r.offerCount > 0)
 }
 
 async function main() {
@@ -176,55 +285,221 @@ async function main() {
   console.log(`Total de pares: ${courses.length * cities.length}\n`)
 
   const startedAt = Date.now()
+  const deadline = TIME_BUDGET_MIN
+    ? startedAt + TIME_BUDGET_MIN * 60_000
+    : Number.POSITIVE_INFINITY
   let processed = 0
   let withOffers = 0
   let errors = 0
   let upserts = 0
   let skipped = 0
+  let suspectBatches = 0
+  let suspectAthena = 0
+  let athenaErrors = 0
+  let truncated = false
 
-  for (const [ci, course] of courses.entries()) {
+  // Idade do cache par a par, pra decidir o que ainda precisa ser consultado.
+  const cutoff =
+    MAX_AGE_DAYS > 0 ? new Date(Date.now() - MAX_AGE_DAYS * 86_400_000) : null
+  // Sempre carregado (mesmo com --max-age-days=0): além de decidir o que
+  // reconsultar, diz se a LINHA JÁ EXISTE — e linha nova só pode nascer com as
+  // duas fontes medidas, senão gravaria zero de uma fonte que não foi medida.
+  const cached = new Map<string, Date>()
+  {
+    const rows = await prisma.cityCourseOfferCache.findMany({
+      where: { featuredCourseId: { in: courses.map((c) => c.id) } },
+      select: { featuredCourseId: true, citySlug: true, fetchedAt: true },
+    })
+    for (const row of rows) {
+      cached.set(`${row.featuredCourseId}|${row.citySlug}`, row.fetchedAt)
+    }
+  }
+
+  // Mais velho primeiro: se a rodada for truncada, ela sempre avançou o que
+  // estava pior. É o que substitui um checkpoint — a rodada seguinte recomeça
+  // naturalmente pelo que ficou para trás, em vez de repetir o começo da fila.
+  const queue = courses
+    .map((course) => {
+      const pending = cutoff
+        ? cities.filter((city) => {
+            const at = cached.get(`${course.id}|${city.slug}`)
+            return !at || at < cutoff
+          })
+        : cities
+      let oldestAt = Number.POSITIVE_INFINITY
+      for (const city of pending) {
+        const at = cached.get(`${course.id}|${city.slug}`)
+        const t = at ? at.getTime() : 0
+        if (t < oldestAt) oldestAt = t
+      }
+      return { course, pending, oldestAt }
+    })
+    .filter((item) => item.pending.length > 0)
+    .sort((a, b) => a.oldestAt - b.oldestAt)
+
+  const totalPending = queue.reduce((sum, item) => sum + item.pending.length, 0)
+  console.log(
+    `Pares a consultar: ${totalPending} de ${courses.length * cities.length}` +
+      (cutoff
+        ? `  (cache com menos de ${MAX_AGE_DAYS}d preservado)`
+        : '  (revarredura completa)'),
+  )
+  console.log(`Cursos na fila: ${queue.length}\n`)
+
+  for (const [ci, { course, pending }] of queue.entries()) {
+    if (Date.now() > deadline) {
+      truncated = true
+      console.log(
+        `\n\nTeto de tempo (${TIME_BUDGET_MIN}min) atingido — encerrando limpo.`,
+      )
+      console.log(
+        `Faltaram ${queue.length - ci} cursos; a próxima rodada pega eles primeiro.`,
+      )
+      break
+    }
+
     const courseStarted = Date.now()
     process.stdout.write(
-      `\n[${ci + 1}/${courses.length}] ${course.slug.padEnd(50)} `,
+      `\n[${ci + 1}/${queue.length}] ${course.slug.padEnd(46)} ` +
+        `${String(pending.length).padStart(3)}p `,
     )
 
+    // Consulta o lote inteiro ANTES de gravar: a decisão de aceitar um zero
+    // depende da saúde do lote, e isso só dá pra avaliar com ele fechado.
+    // As duas fontes vão juntas — o cache tem que medir o mesmo universo que a
+    // página renderiza (Cogna + Athena), senão sitemap e página divergem, que
+    // é exatamente o que mantinha página com oferta Estácio fora do sitemap.
     const results = await pMap(
-      cities,
+      pending,
       async (city) => {
-        const r = await fetchOffers(
-          course.apiCourseName,
-          city.name,
-          city.state,
-          course.nivel,
-        )
-        processed++
-        if (r.error) errors++
-        if (r.offerCount > 0) withOffers++
+        const [r, a] = await Promise.all([
+          fetchOffers(course.apiCourseName, city.name, city.state, course.nivel),
+          SKIP_ATHENA
+            ? Promise.resolve<FetchResult>({
+                offerCount: 0,
+                minPrice: null,
+                error: 'skip-athena',
+              })
+            : fetchAthenaOffers(
+                course.apiCourseName,
+                city.name,
+                city.state,
+                course.nivel,
+              ),
+        ])
+        return { city, r, a }
+      },
+      CONCURRENCY,
+    )
 
-        // Só grava em SUCESSO. Em erro de fetch (rate-limit/timeout) NÃO gravar:
-        // gravar 0 criaria falso zero, jogando uma página com oferta pra noindex.
-        // Pular preserva o valor anterior do cache (se houver).
-        if (!DRY_RUN && !r.error) {
+    processed += results.length
+    errors += results.filter(({ r }) => r.error).length
+    withOffers += results.filter(
+      ({ r, a }) => (!r.error && r.offerCount > 0) || (!a.error && a.offerCount > 0),
+    ).length
+    if (!SKIP_ATHENA) {
+      athenaErrors += results.filter(({ a }) => a.error).length
+    }
+
+    // CONTROLE POSITIVO, por fonte — o guard que faltava.
+    //
+    // A falha que ESTOURA (400 embrulhando um 429, timeout) já era tratada:
+    // `error` faz pular a gravação. A SILENCIOSA não era: HTTP 200 com lista
+    // vazia sob carga chegava como sucesso e virava `offerCount = 0` gravado,
+    // jogando pra noindex uma página com oferta real. É a origem dos zeros
+    // concentrados por hora do relógio, que não são ausência de oferta.
+    //
+    // Avaliado por fonte porque elas falham de forma independente: a Cogna pode
+    // estar saudável enquanto a Athena está fora, e gravar só metade é melhor
+    // que pular tudo — desde que a metade não medida fique como estava.
+    const cognaTrusted = await zerosAreTrustworthy(
+      results.filter(({ r }) => !r.error).map(({ city, r }) => ({ city, r })),
+      (city) =>
+        fetchOffers(course.apiCourseName, city.name, city.state, course.nivel),
+    )
+    if (!cognaTrusted) {
+      suspectBatches++
+      process.stdout.write('COGNA SUSPEITA  ')
+    }
+
+    const athenaTrusted =
+      !SKIP_ATHENA &&
+      (await zerosAreTrustworthy(
+        results.filter(({ a }) => !a.error).map(({ city, a }) => ({ city, r: a })),
+        (city) =>
+          fetchAthenaOffers(
+            course.apiCourseName,
+            city.name,
+            city.state,
+            course.nivel,
+          ),
+      ))
+    if (!SKIP_ATHENA && !athenaTrusted) {
+      suspectAthena++
+      process.stdout.write('ATHENA SUSPEITA  ')
+    }
+
+    if (!DRY_RUN && (cognaTrusted || athenaTrusted)) {
+      await pMap(
+        results,
+        async ({ city, r, a }) => {
+          const writeCogna = cognaTrusted && !r.error
+          const writeAthena = athenaTrusted && !a.error
+          if (!writeCogna && !writeAthena) {
+            skipped++
+            return
+          }
+          // Linha nova exige as DUAS fontes: criar pela metade gravaria zero de
+          // uma fonte que não foi medida. Sem linha, a página cai no
+          // comportamento legado (busca ao vivo), que é o certo.
+          const exists = cached.has(`${course.id}|${city.slug}`)
+          if (!exists && !(writeCogna && writeAthena)) {
+            skipped++
+            return
+          }
           try {
-            await prisma.cityCourseOfferCache.upsert({
-              where: {
-                featuredCourseId_citySlug: {
+            if (exists) {
+              await prisma.cityCourseOfferCache.update({
+                where: {
+                  featuredCourseId_citySlug: {
+                    featuredCourseId: course.id,
+                    citySlug: city.slug,
+                  },
+                },
+                // `fetchedAt` continua significando "quando a Cogna foi medida"
+                // — o corte de 14 dias do sitemap depende disso. A Athena tem o
+                // próprio carimbo; atualizar um pelo outro faria número velho
+                // parecer fresco.
+                data: {
+                  ...(writeCogna
+                    ? {
+                        offerCount: r.offerCount,
+                        minPrice: r.minPrice,
+                        fetchedAt: new Date(),
+                      }
+                    : {}),
+                  ...(writeAthena
+                    ? {
+                        athenaOfferCount: a.offerCount,
+                        athenaMinPrice: a.minPrice,
+                        athenaFetchedAt: new Date(),
+                      }
+                    : {}),
+                },
+              })
+            } else {
+              await prisma.cityCourseOfferCache.create({
+                data: {
                   featuredCourseId: course.id,
                   citySlug: city.slug,
+                  offerCount: r.offerCount,
+                  minPrice: r.minPrice,
+                  athenaOfferCount: a.offerCount,
+                  athenaMinPrice: a.minPrice,
+                  athenaFetchedAt: new Date(),
                 },
-              },
-              create: {
-                featuredCourseId: course.id,
-                citySlug: city.slug,
-                offerCount: r.offerCount,
-                minPrice: r.minPrice,
-              },
-              update: {
-                offerCount: r.offerCount,
-                minPrice: r.minPrice,
-                fetchedAt: new Date(),
-              },
-            })
+              })
+            }
             upserts++
           } catch (dbErr) {
             errors++
@@ -234,25 +509,33 @@ async function main() {
               }`,
             )
           }
-        } else if (r.error) {
-          skipped++
-        }
-        return r
-      },
-      CONCURRENCY,
-    )
+        },
+        CONCURRENCY,
+      )
+    } else if (!cognaTrusted && !athenaTrusted) {
+      skipped += results.length
+    }
 
-    const cityWithOffers = results.filter((r) => r.offerCount > 0).length
+    const cityWithOffers = results.filter(
+      ({ r, a }) => r.offerCount > 0 || a.offerCount > 0,
+    ).length
     const courseElapsed = Math.round((Date.now() - courseStarted) / 1000)
     console.log(
-      `${String(cityWithOffers).padStart(3)}/${cities.length} c/oferta  ${courseElapsed}s`,
+      `${String(cityWithOffers).padStart(3)}/${pending.length} c/oferta  ${courseElapsed}s`,
     )
   }
 
   const elapsed = Math.round((Date.now() - startedAt) / 1000)
   console.log('\n═══════════════════════════════════════════════')
-  console.log(`  ✓ processados ${processed}  upserts ${upserts}  pulados(erro) ${skipped}`)
+  console.log(`  ✓ processados ${processed}  upserts ${upserts}  pulados ${skipped}`)
   console.log(`  c/oferta ${withOffers}  erros ${errors}  ${elapsed}s`)
+  console.log(
+    `  lotes suspeitos não gravados — Cogna ${suspectBatches}  Athena ${suspectAthena}`,
+  )
+  if (!SKIP_ATHENA) console.log(`  erros Athena ${athenaErrors}`)
+  if (truncated) {
+    console.log('  ATENÇÃO: rodada truncada pelo teto de tempo — fila incompleta.')
+  }
   console.log('═══════════════════════════════════════════════\n')
 }
 

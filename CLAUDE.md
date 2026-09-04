@@ -16,7 +16,7 @@ Comparações são permitidas em termos genéricos ("plataformas agregadoras", "
 
 - **.gov.br**: MEC, INEP, e-MEC, IBGE, CAGED, CBO, Ministério da Saúde, etc.
 - **Conselhos profissionais**: CFA, CRP, CFM, CREA, OAB, CFO, CFM, COREN
-- **Parceiros**: Anhanguera, Unopar, Pitágoras (sites institucionais)
+- **Parceiros**: Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden (sites institucionais)
 - **Mídia generalista**: G1, UOL, Folha de S.Paulo, Estadão, Valor Econômico
 
 Citar por nome, contextualmente. URLs externas só quando agregam informação não disponível em fontes oficiais.
@@ -45,9 +45,13 @@ Posts de blog e landing pages devem **responder a query principal nos primeiros 
 > "Antes de sair se inscrevendo em qualquer bolsa, é importante entender..."
 
 **Padrão correto** (resposta direta + contexto depois):
-> "Pra conseguir bolsa de 50% ou mais, o caminho mais rápido é candidatar-se ao Prouni via ENEM ou buscar bolsas próprias de faculdades EAD parceiras, onde os descontos chegam a 85% sem nota de corte. Veja como cada opção funciona..."
+> "Pra conseguir bolsa sem ENEM, o caminho é a bolsa própria das faculdades parceiras: Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. O desconto máximo no catálogo agora é [teto atual, ver `app/lib/copy/claims.ts`]. Cadastro grátis, sem taxa de adesão. Veja como cada opção funciona..."
 
-Aplicar tanto em posts novos quanto na revisão de posts existentes. O script `scripts/seed-blog-posts.ts` deve incluir essa regra no system prompt.
+Aplicar tanto em posts novos quanto na revisão de posts existentes. O script `scripts/seed-blog-posts.ts` deve incluir essa regra no system prompt, interpolando `DISCOUNT_CEILING_PCT` — nunca hardcodeando o número.
+
+### Lock de claims (teto e redes)
+
+Não hardcodear o teto de desconto em copy pública nem em prompts/skills que geram posts: sempre importar/interpolar `DISCOUNT_CEILING_PCT` de `app/lib/copy/claims.ts` (fonte de verdade, com a âncora real documentada no próprio arquivo). É proibido citar qualquer percentual de desconto/bolsa acima desse teto — já aconteceu por engano no passado. As 6 redes nomeáveis no hero: Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. Não citar Ampli. Não prometer "matrícula em 5 min" nem "bolsa vale o curso inteiro" como absoluto — usar "Cadastro grátis, sem taxa de adesão".
 
 ## Mascote (identidade visual)
 

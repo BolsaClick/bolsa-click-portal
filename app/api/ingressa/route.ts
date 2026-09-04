@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
-import { upsertNotealyContact } from '@/app/lib/api/notealy'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
-
-// Tag fixa do funil ingressa no Notealy (criada 2026-07-14). Hardcoded — não
-// depende de env.
-const NOTEALY_TAG_INGRESSA = '2efcf93c-f924-4b32-a3d0-37995d1b5d69'
+import { upsertCandidato } from '@/app/lib/api/attio'
+import { utmFromBody, utmFromRequest, mergeUtm } from '@/app/lib/analytics/utm'
 
 interface IngressaBody {
   name: string
   phone: string
+  /** Id anônimo estável da visita — ver app/lp/_shared/visitor-id.ts. */
+  visitorId?: string
   partner?: string
   partnerName?: string
   curso?: string | null
@@ -123,15 +122,23 @@ export async function POST(request: NextRequest) {
     console.error('Falha ao criar Lead (ingressa):', error)
   }
 
-  // 2) Notealy (best-effort).
+  // 2) CRM (best-effort). Este é o fluxo que motivou casar por TELEFONE em vez
+  // de email: a landing de mídia paga capta só nome e WhatsApp, e no objeto
+  // `people` padrão do Attio (único atributo único = email) este lead ficaria
+  // sem chave de casamento.
   try {
-    await upsertNotealyContact({
-      name: cleanName,
+    await upsertCandidato({
       phone: cleanPhone,
-      tagId: NOTEALY_TAG_INGRESSA,
+      name: cleanName,
+      brand: typeof body.partnerName === 'string' ? body.partnerName : partnerSlug,
+      courseName: cursoName || undefined,
+      estagio: 'lead',
+      origemFluxo: 'ingressa',
+      leadId: leadId || undefined,
+      utm: mergeUtm(utmFromBody(body.utm), utmFromRequest(request)),
     })
   } catch (error) {
-    console.error('⚠️ Notealy (ingressa) falhou:', error)
+    console.error('⚠️ Attio (ingressa) falhou:', error)
   }
 
   // 3) Meta CAPI (best-effort).
@@ -139,11 +146,61 @@ export async function POST(request: NextRequest) {
     await sendLeadToMeta({ leadId, name: cleanName, phone: cleanPhone, partner: partnerSlug, eventId: body.eventId, request })
   }
 
+  // 3.5) Funde a pessoa anônima da visita com a identificada.
+  //
+  // O `checkout_viewed` do espelho server-side foi gravado com o id do
+  // navegador; daqui pra frente a pessoa é o telefone. Sem este `$identify`
+  // com `$anon_distinct_id`, o PostHog trata as duas como pessoas distintas e
+  // a conversão visita→lead da landing fica impossível de calcular.
+  if (typeof body.visitorId === 'string' && body.visitorId) {
+    try {
+      await capturePostHogServerEvent({
+        event: '$identify',
+        distinctId: cleanPhone,
+        properties: { $anon_distinct_id: body.visitorId.slice(0, 64) },
+      })
+    } catch (error) {
+      console.error('⚠️ PostHog $identify (ingressa) falhou:', error)
+    }
+  }
+
   // 4) PostHog (best-effort) — mídia paga por parceiro era invisível no funil:
   // o lead chegava ao Meta (Pixel+CAPI) mas nunca ao PostHog. Mesmo eventId do
   // CAPI em $insert_id; distinct_id = telefone (único identificador do fluxo).
+  //
+  // Além do `lead_submitted` legado, espelha `checkout_identified` +
+  // `checkout_submitted` — o MESMO vocabulário do funil de checkout principal
+  // (app/lib/analytics/checkout-funnel.ts) — pra o funil do ingressa ser
+  // comparável ao do bolsaclick.com.br. Isso É o espelho server-side: o
+  // PostHog do browser só dispara sob consentimento de cookie (quase ninguém
+  // aceita), então sem isto o funil client-only ficava cego pra maioria dos
+  // leads. `brand`/`flow` seguem o mesmo shape de `baseProps` no client.
+  const partnerName = typeof body.partnerName === 'string' ? body.partnerName : undefined
+  const flow = partnerSlug === 'estacio' ? 'estacio' : 'matricula'
   if (leadId) {
+    const funnelProps = {
+      flow,
+      // Mesmo valor do client (LeadForm.tsx) — distingue este funil do
+      // checkout Cogna real, que também usa flow: 'matricula'.
+      checkout_flow: 'ingressa_lead_form',
+      brand: partnerName ?? partnerSlug,
+      course_name: cursoName ?? null,
+      source: 'ingressa',
+    }
     try {
+      await capturePostHogServerEvent({
+        event: 'checkout_identified',
+        distinctId: cleanPhone,
+        eventId: body.eventId ? `${body.eventId}_identified` : `ingressa_${leadId}_identified`,
+        properties: { ...funnelProps, has_phone: true, has_email: false },
+        personProperties: { name: cleanName, phone: cleanPhone },
+      })
+      await capturePostHogServerEvent({
+        event: 'checkout_submitted',
+        distinctId: cleanPhone,
+        eventId: body.eventId ? `${body.eventId}_submitted` : `ingressa_${leadId}_submitted`,
+        properties: funnelProps,
+      })
       await capturePostHogServerEvent({
         event: 'lead_submitted',
         distinctId: cleanPhone,
@@ -158,7 +215,7 @@ export async function POST(request: NextRequest) {
         },
       })
     } catch (error) {
-      console.error('⚠️ PostHog lead_submitted (ingressa) falhou:', error)
+      console.error('⚠️ PostHog (ingressa) falhou:', error)
     }
   }
 

@@ -1,12 +1,14 @@
 import Image from 'next/image'
 import { getTrustData } from '@/app/lib/trust'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const partners = [
   { name: 'Anhanguera', src: '/assets/logo-anhanguera-bolsa-click.svg', width: 160, height: 36 },
-  { name: 'Estácio', src: '/estacio-logo.png', width: 120, height: 36 },
   { name: 'Unopar', src: '/assets/logo-unopar.svg', width: 130, height: 36 },
   { name: 'Pitágoras', src: '/assets/logo-pitagoras.svg', width: 140, height: 36 },
+  { name: 'Estácio', src: '/estacio-logo.png', width: 120, height: 36 },
   { name: 'Unime', src: '/assets/logo-unime-p.png', width: 110, height: 36 },
+  { name: 'Wyden', src: '/assets/wyden.svg', width: 110, height: 36 },
 ]
 
 const marqueeItems = [...partners, ...partners, ...partners]
@@ -62,7 +64,7 @@ export default async function PartnersStrip() {
               <div className="text-[12px] text-ink-500 mt-1">{studentLabel.caption}</div>
             </div>
             <div>
-              <div className="font-display num-tabular text-3xl md:text-4xl text-bolsa-secondary">80%</div>
+              <div className="font-display num-tabular text-3xl md:text-4xl text-bolsa-secondary">{DISCOUNT_CEILING_PCT}%</div>
               <div className="text-[12px] text-ink-500 mt-1">desconto em bolsas</div>
             </div>
           </div>

@@ -5,21 +5,8 @@ import { Suspense, useEffect, useRef, useState } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
 import type { PostHog } from "posthog-js"
 import { useConsent } from "./ConsentProvider"
+import { whenIdle } from '@/app/lib/utils/when-idle'
 
-// Defere init pra reduzir INP: PostHog é carregado dinamicamente e
-// inicializado em requestIdleCallback (não compete com hidratação no
-// main thread). Reduz INP > 200ms reportado em 96 URLs no GSC.
-function whenIdle(cb: () => void): void {
-  if (typeof window === "undefined") return
-  const win = window as typeof window & {
-    requestIdleCallback?: (cb: () => void, opts?: { timeout?: number }) => number
-  }
-  if (typeof win.requestIdleCallback === "function") {
-    win.requestIdleCallback(cb, { timeout: 5000 })
-  } else {
-    setTimeout(cb, 1)
-  }
-}
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   const { hydrated, isCategoryEnabled } = useConsent()
@@ -32,6 +19,12 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
 
     const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY
     const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || "/ingest"
+    // ui_host é o domínio REAL do PostHog (dashboard), não o proxy — o SDK usa
+    // isso pra montar links (toolbar, "ver no PostHog"), que precisam apontar
+    // pra app.posthog.com/us.posthog.com e não pro nosso /ingest. Region-aware
+    // via env própria; default assume US (mesma região do NEXT_PUBLIC_POSTHOG_HOST
+    // atual, us.i.posthog.com).
+    const posthogUiHost = process.env.NEXT_PUBLIC_POSTHOG_UI_HOST || "https://us.posthog.com"
 
     if (!posthogKey) {
       console.warn("⚠️ NEXT_PUBLIC_POSTHOG_KEY não está definida")
@@ -46,7 +39,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
       const { default: posthog } = await import("posthog-js")
       posthog.init(posthogKey, {
       api_host: posthogHost,
-      ui_host: posthogHost,
+      ui_host: posthogUiHost,
       capture_pageview: false, // We capture pageviews manually
       capture_pageleave: true, // Enable pageleave capture
       debug: process.env.NODE_ENV === "development",
@@ -71,7 +64,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
           if (process.env.NODE_ENV === "development") {
             console.log("✅ PostHog loaded with feature flags enabled", {
               api_host: posthogHost,
-              ui_host: posthogHost,
+              ui_host: posthogUiHost,
             })
           }
         },

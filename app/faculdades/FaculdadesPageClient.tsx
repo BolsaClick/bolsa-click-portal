@@ -7,6 +7,7 @@ import { Search, MapPin, Star, GraduationCap, Building2 } from 'lucide-react'
 import Container from '@/app/components/atoms/Container'
 import Breadcrumb from '@/app/components/atoms/Breadcrumb'
 import type { InstitutionListItem } from './_data/types'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 type Props = {
   institutions: InstitutionListItem[]
@@ -43,7 +44,7 @@ export default function FaculdadesPageClient({ institutions }: Props) {
           </h1>
           <p className="text-white/90 mt-3 text-lg max-w-2xl">
             Conheça as instituições de ensino parceiras do Bolsa Click. Encontre bolsas de estudo
-            com até 80% de desconto em universidades reconhecidas pelo MEC.
+            com até {DISCOUNT_CEILING_PCT}% de desconto em universidades reconhecidas pelo MEC.
           </p>
 
           {/* Search */}

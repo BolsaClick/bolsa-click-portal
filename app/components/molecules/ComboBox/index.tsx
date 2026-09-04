@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Control, Controller, useWatch } from 'react-hook-form'
 import { ReactNode } from 'react'
+import { brazilCityStateOrNull } from '@/app/lib/geo/brazil-location'
 
 type CourseOption = {
   id: string
@@ -55,9 +56,11 @@ export const ComboBox = <T extends CourseOption | CityOption>({
         // É uma seleção de opção, atualizar o input
         setInputValue(fieldValue.name || '')
       } else if (fieldValue && typeof fieldValue === 'object' && 'city' in fieldValue) {
-        setInputValue(
-          fieldValue.city && fieldValue.state ? `${fieldValue.city} - ${fieldValue.state}` : '',
+        const allowed = brazilCityStateOrNull(
+          typeof fieldValue.city === 'string' ? fieldValue.city : '',
+          typeof fieldValue.state === 'string' ? fieldValue.state : '',
         )
+        setInputValue(allowed ? `${allowed.city} - ${allowed.state}` : '')
       } else if (typeof fieldValue === 'string') {
         setInputValue(fieldValue)
       } else if (fieldValue === null || fieldValue === undefined || fieldValue === '') {
@@ -182,10 +185,12 @@ export const ComboBox = <T extends CourseOption | CityOption>({
                         let selectedValue: any = null
 
                         if ('city' in option) {
-                          displayValue = `${option.city} - ${option.state}`
+                          const allowed = brazilCityStateOrNull(option.city, option.state)
+                          if (!allowed) return
+                          displayValue = `${allowed.city} - ${allowed.state}`
                           selectedValue = {
-                            city: option.city,
-                            state: option.state,
+                            city: allowed.city,
+                            state: allowed.state,
                           }
                         } else {
                           displayValue = option.name

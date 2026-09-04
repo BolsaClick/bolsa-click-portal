@@ -9,11 +9,11 @@
  */
 
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import CourseCardV2 from '../CourseCardV2'
 import CourseCardV2Skeleton from '../CourseCardV2Skeleton'
-import { offerResultHref, type CourseOffer } from '../course-offer'
+import { offerCheckoutHref, type CourseOffer } from '../course-offer'
 import Mascot from '../mascot/Mascot'
 import MascotPop from '../mascot/MascotPop'
 import styles from '../ui/reactive.module.css'
@@ -24,8 +24,9 @@ export interface CourseShelfProps {
   subtitle?: string
   offers: CourseOffer[]
   /**
-   * Destino fixo do CTA (ex.: preview). Omitido -> cada card linka pro
-   * resultado real do próprio curso (offerResultHref).
+   * Destino fixo do CTA (ex.: preview). Omitido -> cada card linka direto
+   * pro checkout da própria oferta (offerCheckoutHref) — decisão CEO: sem
+   * listagem intermediária, que é o maior vazamento medido do funil de SEO.
    */
   cardHref?: string
   emptyMessage?: string
@@ -44,12 +45,35 @@ export default function CourseShelf({
 }: CourseShelfProps) {
   const scrollerRef = useRef<HTMLUListElement>(null)
   const [popCount, setPopCount] = useState(0)
+  // Setas desabilitadas nas pontas — sem isso, o clique em "voltar" no início
+  // (ou "avançar" no fim) da prateleira não fazia nada visível, parecendo quebrado.
+  const [edges, setEdges] = useState({ atStart: true, atEnd: true })
 
   const scrollByCards = (direction: 1 | -1) => {
     const el = scrollerRef.current
     if (!el) return
     el.scrollBy({ left: direction * Math.round(el.clientWidth * 0.85), behavior: 'smooth' })
   }
+
+  useEffect(() => {
+    const el = scrollerRef.current
+    if (!el) return
+
+    const updateEdges = () => {
+      setEdges({
+        atStart: el.scrollLeft <= 4,
+        atEnd: el.scrollLeft >= el.scrollWidth - el.clientWidth - 4,
+      })
+    }
+
+    updateEdges()
+    el.addEventListener('scroll', updateEdges, { passive: true })
+    window.addEventListener('resize', updateEdges)
+    return () => {
+      el.removeEventListener('scroll', updateEdges)
+      window.removeEventListener('resize', updateEdges)
+    }
+  }, [offers])
 
   return (
     <section aria-labelledby={headingId} className="py-8">
@@ -73,7 +97,8 @@ export default function CourseShelf({
                 type="button"
                 onClick={() => scrollByCards(-1)}
                 aria-label={`Rolar ${title} para trás`}
-                className={`flex h-11 w-11 items-center justify-center rounded-full border border-ink-100 bg-white text-ink-700 hover:border-bolsa-primary hover:text-bolsa-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bolsa-primary ${styles.soft}`}
+                disabled={edges.atStart}
+                className={`flex h-11 w-11 items-center justify-center rounded-full border border-ink-100 bg-white text-ink-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bolsa-primary disabled:pointer-events-none disabled:opacity-30 hover:border-bolsa-primary hover:text-bolsa-primary ${styles.soft}`}
               >
                 <ChevronLeft size={20} aria-hidden />
               </button>
@@ -81,7 +106,8 @@ export default function CourseShelf({
                 type="button"
                 onClick={() => scrollByCards(1)}
                 aria-label={`Rolar ${title} para frente`}
-                className={`flex h-11 w-11 items-center justify-center rounded-full border border-ink-100 bg-white text-ink-700 hover:border-bolsa-primary hover:text-bolsa-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bolsa-primary ${styles.soft}`}
+                disabled={edges.atEnd}
+                className={`flex h-11 w-11 items-center justify-center rounded-full border border-ink-100 bg-white text-ink-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bolsa-primary disabled:pointer-events-none disabled:opacity-30 hover:border-bolsa-primary hover:text-bolsa-primary ${styles.soft}`}
               >
                 <ChevronRight size={20} aria-hidden />
               </button>
@@ -101,7 +127,7 @@ export default function CourseShelf({
               >
                 <CourseCardV2
                   offer={offer}
-                  href={cardHref ?? offerResultHref(offer)}
+                  href={cardHref ?? offerCheckoutHref(offer)}
                   onCtaClick={() => setPopCount((c) => c + 1)}
                 />
               </li>

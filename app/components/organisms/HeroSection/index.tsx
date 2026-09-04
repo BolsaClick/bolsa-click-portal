@@ -1,107 +1,61 @@
-import { prisma } from '@/app/lib/prisma'
+import { getActiveBanners } from '@/app/lib/banners'
 import HeroBannerSlider from './HeroBannerSlider'
 import Filter from '@/app/components/molecules/Filter'
 
 const Hero = async () => {
-  let banners: { id: string; title: string; subtitle: string | null; imageUrl: string; linkUrl: string | null }[] = []
+  let banners: Awaited<ReturnType<typeof getActiveBanners>> = []
   try {
-    banners = await prisma.banner.findMany({
-      where: { isActive: true },
-      orderBy: { order: 'asc' },
-      select: {
-        id: true,
-        title: true,
-        subtitle: true,
-        imageUrl: true,
-        linkUrl: true,
-      },
-    })
+    banners = await getActiveBanners()
   } catch {
     // Fallback to placeholder hero silently
   }
 
   const hasBanners = banners.length > 0
 
+  // A dobra tem DOIS blocos: banner e card de busca. O terceiro — h1, subtítulo
+  // e a linha de estatísticas — foi removido em 03/09 a pedido do Rodrigo: com o
+  // banner e a busca ali, o texto não estava puxando peso nenhum.
+  //
+  // O h1 não sumiu junto. Ele era o ÚNICO da home, que é a página disputando
+  // "bolsas de estudo", então passou pro título do card de busca via
+  // `asPageHeading` — ver o comentário na chamada do `Filter` abaixo.
+  //
+  // O card monta SOBRE o banner: parte dentro, parte fora. Antes eram 16px
+  // (`-mt-4`), que só encostava, e as duas peças liam como blocos empilhados.
+  // Agora ~1/3 do card fica sobre a arte, que é o que dá a costura. O banner
+  // resolve em ~1052px (ver HEIGHT_BUDGET_PX) contra os 896px do card: ~78px de
+  // moldura de cada lado, para o banner emoldurar em vez de competir.
+  //
+  // No mobile o banner é `hidden md:block` (nunca existiu arte pra celular), não
+  // ocupa espaço no flex, e a busca ganha uma folga normal em vez da negativa.
+  const searchTopSpacingClass = hasBanners
+    ? 'mt-4 md:mt-0 md:-mt-16 lg:-mt-24'
+    : 'mt-4 md:mt-6'
+
   return (
-    <section aria-label="Seção principal de destaque" className="relative bg-paper w-full overflow-x-clip">
-      {/* SLIDE AREA — banner do CMS (desktop apenas, segue config original) */}
-      {hasBanners && <HeroBannerSlider banners={banners} />}
-
-      {/* H1 transacional — SEMPRE renderizado (mobile-first SEO).
-          Quando há banner ativo no desktop, ele aparece como compact hero
-          abaixo do slider. Sem banner, vira o hero completo com gradient. */}
-      <div
-        className={
-          hasBanners
-            ? // Compacto quando há banner: barra fina abaixo do slider (visível mobile + desktop)
-              'relative w-full bg-gradient-to-br from-bolsa-primary via-bolsa-primary to-blue-900 py-6 md:py-8 overflow-hidden'
-            : // Hero completo quando NÃO há banner
-              'relative w-full bg-gradient-to-br from-bolsa-primary via-bolsa-primary to-blue-900 overflow-hidden'
-        }
-      >
-        {!hasBanners && (
-          <>
-            <div
-              aria-hidden="true"
-              className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-bolsa-secondary/20 blur-3xl"
-            />
-            <div
-              aria-hidden="true"
-              className="absolute -bottom-32 -left-24 w-[28rem] h-[28rem] rounded-full bg-blue-400/15 blur-3xl"
-            />
-          </>
-        )}
-        <div className={hasBanners ? 'container mx-auto px-4 relative' : 'container mx-auto px-4 py-16 md:py-24 relative'}>
-          <div className="max-w-3xl mx-auto text-center flex flex-col items-center">
-            <h1
-              className={
-                hasBanners
-                  ? 'font-display text-2xl md:text-3xl font-semibold text-white leading-tight mb-2'
-                  : 'font-display text-4xl md:text-5xl lg:text-6xl font-semibold text-white leading-[1.05] mb-4'
-              }
-            >
-              Bolsas de até <span className="text-bolsa-secondary">80%</span> nas{' '}
-              <span className="text-bolsa-secondary">maiores redes de ensino</span> do Brasil
-            </h1>
-            {!hasBanners && (
-              <p className="text-white/85 text-base md:text-lg max-w-2xl leading-relaxed mb-6">
-                Mensalidades a partir de R$99/mês em faculdades reconhecidas pelo MEC.
-                Sem ENEM, matrícula 100% online — compare grátis e inscreva-se em minutos.
-              </p>
-            )}
-            {/* Stats strip — densidade marketplace. Sempre visível, dá prova
-                social numérica antes do scroll. */}
-            <dl className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-white/95">
-              <div className="flex items-baseline gap-1.5">
-                <dt className="sr-only">Redes de ensino parceiras</dt>
-                <dd className="font-semibold text-base md:text-lg">6</dd>
-                <span className="text-white/70 text-sm md:text-base">redes parceiras</span>
-              </div>
-              <span aria-hidden="true" className="text-white/30">·</span>
-              <div className="flex items-baseline gap-1.5">
-                <dt className="sr-only">Cidades com polos</dt>
-                <dd className="font-semibold text-base md:text-lg">280+</dd>
-                <span className="text-white/70 text-sm md:text-base">cidades com polos</span>
-              </div>
-              <span aria-hidden="true" className="text-white/30">·</span>
-              <div className="flex items-baseline gap-1.5">
-                <dt className="sr-only">Desconto máximo</dt>
-                <dd className="font-semibold text-base md:text-lg">até 80%</dd>
-                <span className="text-white/70 text-sm md:text-base">de desconto</span>
-              </div>
-              <span aria-hidden="true" className="text-white/30">·</span>
-              <div className="flex items-baseline gap-1.5">
-                <dt className="sr-only">Mensalidade mínima com bolsa</dt>
-                <dd className="font-semibold text-base md:text-lg">a partir de R$99/mês</dd>
-              </div>
-            </dl>
+    <section aria-label="Seção principal de destaque" className="relative bg-mist w-full overflow-x-clip pb-16 md:pb-20">
+      <div className="relative flex flex-col pt-4 md:pt-6">
+        {/* BANNER — peça CONTIDA do parceiro (margem lateral, cantos
+            arredondados — ver `HeroBannerSlider`), não mais sangrada.
+            Só existe (e só ocupa espaço) em telas `md+`; sem banners
+            ativos, este bloco simplesmente não renderiza. */}
+        {hasBanners && (
+          <div className="order-1">
+            <HeroBannerSlider banners={banners} />
           </div>
-        </div>
-      </div>
+        )}
 
-      {/* FILTER — abaixo do hero/banner, sem flutuar */}
-      <div className="relative z-20 -mt-10 md:-mt-14 pb-16 md:pb-20">
-        <Filter />
+        {/* BUSCA — card do `Filter` (não alterado). Com banner, sobe 16px
+            pra costurar na borda inferior dele (`md:-mt-4`); sem banner,
+            seguido do conteúdo com uma folga normal, nunca negativa. */}
+        <div className={`relative z-20 order-2 ${searchTopSpacingClass}`}>
+          {/* `asPageHeading` move o h1 da home pra cá. O bloco de texto que o
+              carregava saiu da dobra (decisão do Rodrigo, 03/09: o banner e a
+              busca bastam ali), mas a home não pode ficar SEM h1 — ela é a
+              página que disputa "bolsas de estudo". */}
+          <Filter asPageHeading />
+        </div>
+
       </div>
     </section>
   )

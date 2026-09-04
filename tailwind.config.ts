@@ -76,6 +76,11 @@ module.exports = {
           warm: '#F4EFE5',
           cream: '#E8DFC8',
         },
+        // Neutro FRIO (não faz parte da família `paper`, que é quente) —
+        // fundo da dobra do Hero: cinza muito claro puxado pro azul da
+        // marca (`bolsa-primary` #023e73), no espírito da home do Quero
+        // Bolsa referenciada na decisão de produto de 2026-09.
+        mist: '#F4F6F9',
         emerald: emerald,
       },
        keyframes: {

@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { getOfferDetails, OfferDetails } from '@/app/lib/api/get-offer-details'
+import type { OfferDetails } from '@/app/lib/api/get-offer-details'
 import Skeleton from '@/app/components/atoms/Skeleton'
 import {
   ArrowLeft,
@@ -14,7 +14,6 @@ import {
   Clock,
   Check,
   ChevronDown,
-  X,
   Mail,
   Phone,
   Calendar,
@@ -25,21 +24,36 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useMemo, useState, useRef, Suspense } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { getCep } from '@/app/lib/api/get-cep'
 import { validarCPF } from '@/utils/cpf-validate'
 import { formatCurrency } from '@/utils/fomartCurrency'
+import { getPriceAnchor } from '@/app/lib/utils/price-anchor'
+import { isTotalPriceLevel } from '@/app/components/v2/course-offer'
 import { toast } from 'sonner'
 // [CUPOM] import { validateCoupon } from '@/app/lib/api/get-coupon'
 import { createLead } from '@/app/lib/api/create-lead'
-import { createInscription, buildInscriptionPayload, getCognaErrorMessage } from '@/app/lib/api/create-inscription'
-import { createMarketplaceInscription } from '@/app/lib/api/create-inscription-marketplace'
-import { validateVoucher, type ValidateVoucherResponse, type VoucherInstallment } from '@/app/lib/api/validate-voucher'
+import { validateEmailDeliverability } from '@/app/lib/api/validate-email'
+import { suggestEmailCorrection } from '@/app/lib/validation/email-typo'
+import { buildInscriptionPayload, getCognaErrorMessage, getCognaErrorDetails } from '@/app/lib/api/create-inscription'
+import type { ValidateVoucherResponse, VoucherInstallment } from '@/app/lib/api/validate-voucher'
+// As 5 chamadas abaixo saíam direto do navegador pro Tartarus, sem
+// autenticação (achado 3.1.6 do SECURITY_AUDIT.md — CRITICAL). Agora passam
+// por rotas /api/checkout/matricula/* (server-side); estes wrappers têm a
+// MESMA assinatura e retorno das funções antigas — só a chamada de rede
+// mudou de lugar, nenhuma lógica deste arquivo muda.
+import {
+  getOfferDetails,
+  canCreateInscription,
+  createInscription,
+  createMarketplaceInscription,
+  validateVoucher,
+} from '@/app/lib/api/checkout-client'
 import type { PosPaymentMethod, PosInstallment } from '@/app/lib/api/get-offer-details'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
+import { useMarketplaceFeatureFlag } from '@/app/lib/hooks/usePostHogFeatureFlags'
 import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { pushDataLayerEvent } from '@/app/lib/analytics/gtag'
 import { trackTikTok, trackTikTokDual } from '@/app/lib/analytics/ttq'
@@ -48,14 +62,22 @@ import {
   trackCheckoutViewed,
   trackCheckoutIdentified,
   trackCheckoutSubmitted,
+  trackCheckoutError,
+  reportInscriptionFailure,
 } from '@/app/lib/analytics/checkout-funnel'
 import { formatPhone } from '@/utils/formatters'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { Loader2 } from 'lucide-react'
-import { getMatriculaCharge } from '@/app/lib/checkout/matricula-charge'
 
 
-// Validação melhorada seguindo o exemplo
+// Captação mínima (fluxo acordado com a Cogna — parceiro autorizou
+// explicitamente): o formulário captura só os 5 campos que a Cogna cruza
+// com a Receita + contato (nome, CPF, data de nascimento, telefone, e-mail).
+// Os demais campos administrativos exigidos pelo payload da Cogna (RG,
+// gênero, ano de conclusão, endereço) vão com um valor padrão válido em
+// FORMATO — a própria instituição confirma os dados reais na matrícula
+// efetiva. Ver DADOS_ADMIN_PADRAO abaixo; um teste real de inscrição (HTTP
+// 201) já validou esse formato como aceito pela Cogna.
 const formSchema = z.object({
   email: z.string().email('Email inválido').min(1, 'Email é obrigatório'),
   name: z
@@ -67,11 +89,6 @@ const formSchema = z.object({
     .transform((val) => val.replace(/\D/g, ''))
     .refine((val) => val.length === 11, 'CPF inválido')
     .refine((val) => validarCPF(val), { message: 'CPF inválido' }),
-  rg: z
-    .string()
-    .optional()
-    .transform((val) => val?.replace(/[^a-zA-Z0-9]/g, '') || '')
-    .refine((val) => !val || (val.length >= 5 && val.length <= 15), 'RG inválido'),
   birthDate: z
     .string()
     .refine(
@@ -96,8 +113,6 @@ const formSchema = z.object({
       },
       { message: 'Data de nascimento inválida. O candidato deve ter mais de 15 anos.' }
     ),
-  schoolYear: z.string().optional(),
-  gender: z.enum(['masculino', 'feminino', 'outro']).optional(),
   phone: z
     .string()
     .transform((val) => val.replace(/\D/g, ''))
@@ -105,18 +120,28 @@ const formSchema = z.object({
       (val) => val.length === 11 && val[2] === '9',
       'Informe um celular válido no formato (99) 99999-9999'
     ),
-  cep: z
-    .string()
-    .transform((val) => val.replace(/\D/g, ''))
-    .refine((val) => val.length === 8, 'CEP inválido'),
-  address: z.string().min(3, 'Informe o endereço'),
-  addressNumber: z.string().min(1, 'Informe o número'),
-  neighborhood: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
 })
 
 type FormSchema = z.infer<typeof formSchema>
+
+/**
+ * Dados administrativos padrão exigidos pelo payload da Cogna, mas não
+ * capturados no formulário (captação mínima acordada com o parceiro). São
+ * válidos em FORMATO — a Cogna valida formato, não conteúdo, e confirma os
+ * dados reais do candidato na matrícula efetiva. NUNCA enviar estes valores
+ * ao CRM — só ao payload de inscrição da Cogna/Tartarus.
+ */
+const DADOS_ADMIN_PADRAO = {
+  rg: '000000000',
+  gender: 'masculino' as const,
+  schoolYear: '2020',
+  address: 'Avenida Paulista',
+  addressNumber: '1000',
+  neighborhood: 'Bela Vista',
+  cep: '01310100',
+  state: 'SP',
+  city: 'São Paulo',
+}
 
 // [CUPOM] Comentado para possível reativação futura
 // interface CouponData {
@@ -132,26 +157,30 @@ function MatriculaContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { trackEvent, identifyUser, setUserProperties } = usePostHogTracking()
-  const { user, firebaseUser, loading: authLoading, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth()
+  // Auth só pra autofill de quem JÁ está logado no site — o checkout não pede
+  // login nem cria conta (a matrícula não precisa; era atrito no funil).
+  const { user, firebaseUser, loading: authLoading } = useAuth()
 
 
-  const storedCheckoutParams = typeof window !== 'undefined'
-    ? (() => { try { return JSON.parse(localStorage.getItem('pendingCheckoutParams') || '') } catch { return null } })()
-    : null
+  // useMemo (não recalcula a cada tecla): este bloco reavaliava a cada
+  // re-render — o form abaixo re-renderiza a cada tecla digitada (watch()) —
+  // e um catch instrumentado ali dentro floodaria o PostHog a cada digitação.
+  const storedCheckoutParams = useMemo(() => {
+    if (typeof window === 'undefined') return null
+    try {
+      return JSON.parse(localStorage.getItem('pendingCheckoutParams') || '')
+    } catch (error) {
+      console.error('Erro ao ler pendingCheckoutParams do localStorage:', error)
+      trackCheckoutError(trackEvent, 'checkout_params_parse', error)
+      return null
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const groupId = searchParams.get('groupId') || searchParams.get('id') || storedCheckoutParams?.groupId
   const unitId = searchParams.get('unitId') || storedCheckoutParams?.unitId
   const modality = searchParams.get('modality') || storedCheckoutParams?.modality
   const shift = searchParams.get('shift') || storedCheckoutParams?.shift || 'VIRTUAL'
-
-  // Estados para login/registro no checkout
-  const [showAuthModal, setShowAuthModal] = useState(false)
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
-  const [authEmail, setAuthEmail] = useState('')
-  const [authPassword, setAuthPassword] = useState('')
-  const [authName, setAuthName] = useState('')
-  const [authError, setAuthError] = useState<string | null>(null)
-  const [isAuthLoading, setIsAuthLoading] = useState(false)
 
   const [expandedSections, setExpandedSections] = useState({
     dadosPessoais: true,
@@ -166,20 +195,58 @@ function MatriculaContent() {
   const [cpfValidationError, setCpfValidationError] = useState<string | null>(null)
   const [isValidatingCpf, setIsValidatingCpf] = useState(false)
   const [cpfValidationOk, setCpfValidationOk] = useState(false)
-  const [cpfExistsInDb, setCpfExistsInDb] = useState<boolean | null>(null)
-  const [cpfEmailHint, setCpfEmailHint] = useState<string | null>(null)
-  const [pendingCpfForRegistration, setPendingCpfForRegistration] = useState<string | null>(null)
+  // Trava de CPF já inscrito (Cogna, GET can-create-inscription). Guarda a
+  // mensagem amigável quando `inscriptionAllowed === false` — usada pra
+  // desabilitar o botão de envio e avisar o candidato. Falha de rede na
+  // checagem NÃO seta isso (fail-open, ver onBlur do CPF).
+  const [cpfInscriptionBlocked, setCpfInscriptionBlocked] = useState<string | null>(null)
   const [studentCreated, setStudentCreated] = useState(false)
   const [isCreatingStudent, setIsCreatingStudent] = useState(false)
+  // Desacoplado de studentCreated: /api/leads exige phone (diferente de
+  // /api/students, que trata phone como opcional). O estudante pode ser
+  // cadastrado antes do telefone existir; o lead (estágio 1 do CRM) só
+  // depois, quando o telefone estiver preenchido.
+  const [leadCreated, setLeadCreated] = useState(false)
   // Pós-graduação: método de pagamento e parcela (dia de vencimento fixo 10)
   const [posPaymentMethodType, setPosPaymentMethodType] = useState<string>('')
   const [posInstallmentId, setPosInstallmentId] = useState<string>('')
+  // `voucherCode`/`voucherValid`/`voucherData`/`voucherInstallments` são o
+  // ÚNICO cupom ATUALMENTE APLICADO (seja o GALENA+15 automático da pós, seja
+  // um voucher digitado à mão que validou). Regra de negócio: só é possível
+  // usar UM cupom por inscrição — nunca dois somados. Por isso um voucher
+  // manual válido SUBSTITUI o que estava aplicado (nunca se soma a ele), e o
+  // payload de envio só tem espaço pra um `voucher`/`voucherId` (ver onSubmit).
+  // `voucherInputValue` é só o texto do campo manual — desacoplado do
+  // aplicado pra digitar não apagar de cara um desconto já em vigor antes
+  // mesmo de clicar em Validar.
   const [voucherCode, setVoucherCode] = useState<string>('')
   const [voucherValidating, setVoucherValidating] = useState(false)
   const [voucherValid, setVoucherValid] = useState<boolean | null>(null)
   const [voucherMessage, setVoucherMessage] = useState<string>('')
+  const [voucherMessageType, setVoucherMessageType] = useState<'success' | 'warning' | 'error'>('error')
   const [voucherData, setVoucherData] = useState<ValidateVoucherResponse | null>(null)
   const [voucherInstallments, setVoucherInstallments] = useState<VoucherInstallment[]>([])
+  const [voucherInputValue, setVoucherInputValue] = useState<string>('')
+  // Proveniência do cupom hoje aplicado — dirige a UI ("valendo: automático"
+  // vs "valendo: seu voucher X") e se mostra o botão de restaurar o automático.
+  const [voucherSource, setVoucherSource] = useState<'auto' | 'manual' | null>(null)
+  // Snapshot do GALENA+15 automático, guardado à parte pra sempre dar pra
+  // voltar pra ele depois de aplicar (e se arrepender de) um voucher manual —
+  // sem isso a única saída seria recarregar a página e perder o formulário.
+  const [autoVoucherCode, setAutoVoucherCode] = useState<string>('')
+  const [autoVoucherData, setAutoVoucherData] = useState<ValidateVoucherResponse | null>(null)
+  const [autoVoucherInstallments, setAutoVoucherInstallments] = useState<VoucherInstallment[]>([])
+  // Ref espelhando `voucherSource`, lida (sem entrar nas deps) pelo efeito de
+  // auto-validação abaixo: se o CPF mudar depois de uma escolha manual, o
+  // efeito não deve reverter essa escolha em silêncio.
+  const voucherSourceRef = useRef<'auto' | 'manual' | null>(null)
+  useEffect(() => {
+    voucherSourceRef.current = voucherSource
+  }, [voucherSource])
+  // Pós-graduação: true enquanto o voucher GALENA+15 (obrigatório, aplicado
+  // sozinho) está sendo validado/retentado — trava o botão de "Finalizar
+  // matrícula" pra não correr com a inscrição antes da consulta voltar.
+  const [posVoucherAutoValidating, setPosVoucherAutoValidating] = useState(false)
   // Graduação: tipo de ingresso (ENEM ou VESTIBULAR)
   const [selectedIngressType, setSelectedIngressType] = useState<'ENEM' | 'VESTIBULAR'>('VESTIBULAR')
 
@@ -197,21 +264,18 @@ function MatriculaContent() {
       email: '',
       name: '',
       cpf: '',
-      rg: '',
       birthDate: '',
-      schoolYear: '',
-      gender: undefined,
       phone: '',
-      cep: '',
-      address: '',
-      addressNumber: '',
-      neighborhood: '',
-      city: '',
-      state: '',
     },
   })
 
   const watchedValues = watch()
+
+  // Sugestão de digitação do e-mail — nunca bloqueia, só sugere (ver
+  // app/lib/validation/email-typo.ts). Recalcula a cada troca do campo.
+  const emailTypoSuggestion = watchedValues.email
+    ? suggestEmailCorrection(watchedValues.email)
+    : null
 
 const isFormValidForPayment =
   !!watchedValues.email &&
@@ -219,10 +283,8 @@ const isFormValidForPayment =
   !!watchedValues.cpf &&
   !!watchedValues.birthDate &&
   !!watchedValues.phone &&
-  !!watchedValues.cep &&
-  !!watchedValues.address &&
-  !!watchedValues.addressNumber &&
   !cpfValidationError &&
+  !cpfInscriptionBlocked &&
   Object.keys(errors).length === 0
 
 
@@ -249,98 +311,6 @@ const isFormValidForPayment =
   }, [user, authLoading, setValue])
 
   // Funções de autenticação no checkout
-  const handleAuthWithGoogle = async () => {
-    setIsAuthLoading(true)
-    setAuthError(null)
-    try {
-      await signInWithGoogle()
-      setShowAuthModal(false)
-      toast.success('Login realizado com sucesso!')
-    } catch (error: unknown) {
-      const err = error as { message?: string }
-      setAuthError(err.message || 'Erro ao fazer login com Google')
-      toast.error('Erro ao fazer login com Google')
-    } finally {
-      setIsAuthLoading(false)
-    }
-  }
-
-  const handleAuthWithEmail = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsAuthLoading(true)
-    setAuthError(null)
-    try {
-      if (authMode === 'login') {
-        await signInWithEmail(authEmail, authPassword)
-        toast.success('Login realizado com sucesso!')
-      } else {
-        await signUpWithEmail(authEmail, authPassword, authName)
-        toast.success('Conta criada com sucesso!')
-      }
-      setShowAuthModal(false)
-      // Não limpar pendingCpfForRegistration aqui - será usado no useEffect abaixo
-    } catch (error: unknown) {
-      const err = error as { code?: string; message?: string }
-      let message = 'Erro ao processar'
-      if (err.code === 'auth/email-already-in-use') {
-        message = 'Este email já está em uso'
-      } else if (err.code === 'auth/invalid-email') {
-        message = 'Email inválido'
-      } else if (err.code === 'auth/weak-password') {
-        message = 'Senha muito fraca (mínimo 6 caracteres)'
-      } else if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
-        message = 'Email ou senha incorretos'
-      } else {
-        message = err.message || 'Erro ao processar'
-      }
-      setAuthError(message)
-      toast.error(message)
-    } finally {
-      setIsAuthLoading(false)
-    }
-  }
-
-  // Efeito para salvar CPF após login/registro
-  useEffect(() => {
-    const saveCpfAfterAuth = async () => {
-      if (user && firebaseUser && pendingCpfForRegistration && !user.cpf) {
-        try {
-          const idToken = await firebaseUser.getIdToken()
-          const formValues = getValues()
-
-          await fetch('/api/auth/profile', {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${idToken}`,
-            },
-            body: JSON.stringify({
-              cpf: pendingCpfForRegistration,
-              name: formValues.name || user.name,
-              phone: formValues.phone?.replace(/\D/g, '') || user.phone,
-            }),
-          })
-
-          console.log('✅ CPF salvo no perfil após autenticação')
-          setPendingCpfForRegistration(null)
-          setCpfExistsInDb(null)
-
-          // Atualizar o formulário se necessário
-          if (user.email && !formValues.email) {
-            setValue('email', user.email)
-          }
-          if (user.name && !formValues.name) {
-            setValue('name', user.name)
-          }
-        } catch (error) {
-          console.error('Erro ao salvar CPF após autenticação:', error)
-        }
-      }
-    }
-
-    saveCpfAfterAuth()
-  }, [user, firebaseUser, pendingCpfForRegistration, getValues, setValue])
-
   // Função para atualizar perfil do usuário no PostgreSQL
   const updateUserProfileInDB = async (data: FormSchema) => {
     if (!firebaseUser) return
@@ -364,23 +334,8 @@ const isFormValidForPayment =
       console.log('✅ Perfil do usuário atualizado no PostgreSQL')
     } catch (error) {
       console.error('Erro ao atualizar perfil:', error)
+      trackCheckoutError(trackEvent, 'profile_update', error)
       // Não bloquear o fluxo se falhar
-    }
-  }
-
-  const handleCepChange = async (cep: string) => {
-    const cleanCep = cep.replace(/\D/g, '')
-    if (cleanCep.length === 8) {
-      try {
-        const response = await getCep(cep)
-        const data = response.data
-        setValue('state', data.state)
-        setValue('city', data.city)
-        setValue('neighborhood', data.neighborhood || '')
-        setValue('address', data.street)
-      } catch (error) {
-        console.error('Erro ao buscar o CEP:', error)
-      }
     }
   }
 
@@ -419,6 +374,7 @@ const isFormValidForPayment =
       // Funil unificado — etapa 1 (ver app/lib/analytics/checkout-funnel.ts)
       trackCheckoutViewed(trackEvent, {
         flow: 'matricula',
+        checkoutFlow: 'cogna_matricula',
         academicLevel: offerDetails.academicLevel,
         brand: offerDetails.brand,
         modality: offerDetails.modality,
@@ -480,20 +436,22 @@ const isFormValidForPayment =
 
   // Função para tentar cadastrar o estudante quando necessário
   const tryCreateStudent = () => {
-    if (studentCreated || isCreatingStudent) {
+    if ((studentCreated && leadCreated) || isCreatingStudent) {
       return
     }
 
     const formValues = getValues()
 
-    // Verificar se os dados necessários estão preenchidos (phone é opcional)
+    // Verificar se os dados necessários estão preenchidos (phone é opcional
+    // pro /api/students, mas obrigatório pro /api/leads — ver abaixo)
     if (formValues.name && formValues.cpf && formValues.email) {
       handleCreateStudent()
     }
   }
 
   const handleCreateStudent = async () => {
-    // Verificar se os dados necessários estão preenchidos (phone é opcional)
+    // Verificar se os dados necessários estão preenchidos (phone é opcional
+    // só pro /api/students)
     const formValues = getValues()
 
     if (!formValues.name || !formValues.cpf || !formValues.email) {
@@ -501,79 +459,107 @@ const isFormValidForPayment =
       return
     }
 
-    // Verificar se já foi cadastrado
-    if (studentCreated) {
+    const cleanCpf = formValues.cpf.replace(/\D/g, '')
+    const cleanPhone = formValues.phone ? formValues.phone.replace(/\D/g, '') : ''
+
+    // Já cadastrado como estudante e, se havia telefone disponível, também
+    // como lead — nada mais a fazer.
+    if (studentCreated && (leadCreated || !cleanPhone)) {
       return
     }
 
     setIsCreatingStudent(true)
 
     try {
-      const cleanCpf = formValues.cpf.replace(/\D/g, '')
-      const cleanPhone = formValues.phone ? formValues.phone.replace(/\D/g, '') : ''
-
-      const studentData: Record<string, unknown> = {
-        name: formValues.name,
-        cpf: cleanCpf,
-        email: formValues.email,
-        courseNames: [offerDetails?.course || ''],
-        courseId: offerDetails?.courseId,
-        courseName: offerDetails?.course,
-        institutionName: offerDetails?.brand,
-        modalidade: offerDetails?.modality,
-      }
-      // Só inclui phone se existir
-      if (cleanPhone) {
-        studentData.phone = cleanPhone
-      }
-
-      // Cadastrar no /api/students (salva local + envia para Elysium)
-      const studentResponse = await fetch('/api/students', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(studentData),
-      })
-
-      if (studentResponse.ok) {
-        const data = await studentResponse.json()
-        console.log('✅ Estudante cadastrado com sucesso:', data)
-        if (data.elysiumId) {
-          console.log('✅ Cadastrado também no Elysium:', data.elysiumId)
-        }
-      }
-
-      // Também cadastrar como lead (mantém compatibilidade)
-      await createLead({
-        name: formValues.name,
-        cpf: cleanCpf,
-        email: formValues.email,
-        phone: cleanPhone || '',
-        courseNames: [offerDetails?.course || ''],
-        courseId: offerDetails?.courseId,
-        courseName: offerDetails?.course,
-        institutionName: offerDetails?.brand,
-        modalidade: offerDetails?.modality,
-      })
-
-      // TikTok Pixel + Events API - SubmitForm (lead capture)
-      void trackTikTokDual(
-        'SubmitForm',
-        {
-          content_id: offerDetails?.courseId,
-          content_name: offerDetails?.course,
-          content_type: 'product',
-        },
-        {
+      if (!studentCreated) {
+        const studentData: Record<string, unknown> = {
+          name: formValues.name,
+          cpf: cleanCpf,
           email: formValues.email,
-          phone: cleanPhone || undefined,
-          externalId: cleanCpf,
-        },
-      )
+          courseNames: [offerDetails?.course || ''],
+          courseId: offerDetails?.courseId,
+          courseName: offerDetails?.course,
+          institutionName: offerDetails?.brand,
+          modalidade: offerDetails?.modality,
+        }
+        // Só inclui phone se existir
+        if (cleanPhone) {
+          studentData.phone = cleanPhone
+        }
 
-      setStudentCreated(true)
-      console.log('✅ Lead cadastrado com sucesso')
+        // Cadastrar no /api/students (salva local + envia para Elysium)
+        const studentResponse = await fetch('/api/students', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(studentData),
+        })
+
+        if (studentResponse.ok) {
+          const data = await studentResponse.json()
+          console.log('✅ Estudante cadastrado com sucesso:', data)
+          if (data.elysiumId) {
+            console.log('✅ Cadastrado também no Elysium:', data.elysiumId)
+          }
+        }
+
+        setStudentCreated(true)
+      }
+
+      // Estágio 1 do CRM (/api/leads) exige name+cpf+email+phone — diferente
+      // de /api/students, que aceita phone vazio. Só disparamos quando o
+      // telefone já estiver preenchido, senão o endpoint responde 400. Isso
+      // fica pendente até o usuário preencher o telefone; tryCreateStudent
+      // é re-chamado nos handlers de foco/blur dos campos de contato.
+      if (cleanPhone && !leadCreated) {
+        await createLead({
+          name: formValues.name,
+          cpf: cleanCpf,
+          email: formValues.email,
+          phone: cleanPhone,
+          courseNames: [offerDetails?.course || ''],
+          courseId: offerDetails?.courseId,
+          courseName: offerDetails?.course,
+          institutionName: offerDetails?.brand,
+          modalidade: offerDetails?.modality,
+          // Nascimento: pedido no formulário desde sempre, mas até 2026-08-11
+          // ia só no payload da Cogna e era descartado do nosso lado.
+          birthDate: formValues.birthDate,
+          source: 'checkout-matricula',
+          // UTMs do localStorage da UTMify: sobrevivem à navegação, então
+          // pegam o clique que trouxe a pessoa mesmo que ela tenha navegado
+          // pelo site antes de chegar no checkout.
+          utm: readUtmifyParams() as unknown as Record<string, string | null>,
+          extraData: {
+            unidade: offerDetails?.unit,
+            cidade: offerDetails?.unitCity,
+            estado: offerDetails?.unitState,
+            turno: offerDetails?.shift,
+            nivel: offerDetails?.academicLevel,
+            oferta_source: offerDetails?.dmhSource?.source,
+          },
+        })
+
+        setLeadCreated(true)
+        console.log('✅ Lead cadastrado com sucesso')
+
+        // TikTok Pixel + Events API - SubmitForm (lead capture)
+        void trackTikTokDual(
+          'SubmitForm',
+          {
+            content_id: offerDetails?.courseId,
+            content_name: offerDetails?.course,
+            content_type: 'product',
+          },
+          {
+            email: formValues.email,
+            phone: cleanPhone,
+            externalId: cleanCpf,
+          },
+        )
+      }
     } catch (error: unknown) {
       console.error('Erro ao cadastrar estudante:', error)
+      trackCheckoutError(trackEvent, 'student_lead_create', error)
       // Não mostrar erro para o usuário, apenas logar
       // O cadastro pode falhar silenciosamente
     } finally {
@@ -583,8 +569,33 @@ const isFormValidForPayment =
 
   const monthlyFee = offerDetails?.montlyFeeTo || 0
 
+  // Pós-graduação e profissionalizante: montlyFeeFrom/montlyFeeTo (apesar do
+  // nome) vêm de priceWithoutDiscount/priceWithDiscount — já são o TOTAL do
+  // curso, não mensalidade (confirmado contra o Tartarus/Cogna). Graduação
+  // (ATHENAS) é a única onde esses campos são mesmo mensalidade.
+  const offerIsTotalPriceLevel = isTotalPriceLevel(offerDetails?.academicLevel)
+
+  // Ancoragem de preço (riscado + % + economia total até o fim do curso) —
+  // usa os preços reais da oferta (nunca inventa desconto). Duração vem de
+  // offerDetails.duration quando a API manda (Cogna). priceIsTotal evita
+  // multiplicar um total por duração de novo (isso inflava "Economize" até
+  // igualar o "De" — bug real visto neste painel, 2026-08/09).
+  const priceAnchor = getPriceAnchor({
+    from: offerDetails?.montlyFeeFrom,
+    to: monthlyFee,
+    durationMonths: offerDetails?.duration,
+    priceIsTotal: offerIsTotalPriceLevel,
+  })
+
   const offerSource = offerDetails?.dmhSource?.source
   const isAthenasSource = offerSource === 'ATHENAS'
+
+  // Kill switch (decisão de negócio, 2026-08): createMarketplaceInscription
+  // duplicava a inscrição na Cogna para ofertas ATHENAS (uma via
+  // createInscription normal + outra via marketplace, canalVendas.id=141).
+  // Nasce OFF — flag 'marketplace_enabled' no PostHog, mesmo nome usado no
+  // lado servidor (confirm-matricula.ts). Religa subindo a flag pra 100%.
+  const marketplaceEnabled = useMarketplaceFeatureFlag()
 
   // Cobrança da matrícula no checkout transparente: DESATIVADA (decisão de
   // negócio) para graduação EAD/semipresencial de ofertas ATHENAS — a Cogna
@@ -594,7 +605,6 @@ const isFormValidForPayment =
   // O pagamento de verdade fica com a Cogna (payment-link deles, quando
   // integrado) — enquanto isso não existe, a inscrição é criada direto e o
   // aluno vai pra tela de sucesso sem pagar nada aqui.
-  const matriculaCharge = getMatriculaCharge(offerDetails)
 
   // Níveis que usam seleção de método de pagamento + voucher via Tartarus.
   // Graduação continua pagando direto na instituição (botão simples).
@@ -603,9 +613,26 @@ const isFormValidForPayment =
       || offerDetails?.academicLevel === 'CURSO_PROFISSIONALIZANTE')
     && (offerDetails?.paymentMethods?.length ?? 0) > 0
 
-  // Campo de voucher digitado à mão: liberado somente no checkout profissionalizante.
-  // Pós-graduação continua com o voucher GALENA+15 aplicado automaticamente (sem campo manual).
-  const showVoucherField = offerDetails?.academicLevel === 'CURSO_PROFISSIONALIZANTE'
+  // Campo de voucher digitado à mão: liberado nos dois níveis Cosmos (pós e
+  // profissionalizante) — só essas ofertas suportam
+  // POST /api/v1/offers/validate-voucher na Cogna. Graduação é ATHENAS e não
+  // tem voucher; mostrar o campo lá prometeria o que a API não entrega.
+  // Na pós, o manual convive com o GALENA+15 automático (ver useEffect
+  // abaixo e `handleValidateVoucher`): o automático é o padrão, um voucher
+  // manual válido o substitui, e um manual inválido/indisponível NÃO derruba
+  // o automático já aplicado.
+  //
+  // DECISÃO DE NEGÓCIO (CEO, não limitação técnica): na pós, o campo só
+  // aparece com PIX ou Cartão Recorrente selecionados. A resposta real da
+  // Cogna traz desconto de voucher pro BOLETO também (mesmo % do PIX,
+  // `totalDiscont`/`discountPercentage` no payload) — a Cogna aceita, nós
+  // que optamos por não oferecer voucher em boleto/crédito comum na pós. Se
+  // um dia acharem isso "quebrado" e forem consertar: NÃO é bug, é escolha
+  // comercial. Mudar exige decisão de negócio, não só código.
+  const isPosVoucherPaymentType = posPaymentMethodType === 'PIX' || posPaymentMethodType === 'CREDITO_RECORRENCIA'
+  const showVoucherField =
+    offerDetails?.academicLevel === 'CURSO_PROFISSIONALIZANTE'
+    || (offerDetails?.academicLevel === 'POS_GRADUACAO' && isPosVoucherPaymentType)
 
   // Auto-selecionar boleto 18x para pós-graduação
   useEffect(() => {
@@ -621,34 +648,123 @@ const isFormValidForPayment =
     }
   }, [offerDetails])
 
-  // Auto-validar voucher GALENA+15 para pós-graduação
+  // Auto-validar voucher GALENA+15 para pós-graduação.
+  //
+  // Corrida de tempo original: essa validação é assíncrona e o botão de
+  // envio não esperava por ela. Se a request falhasse por rede, voltasse
+  // inválida, ou simplesmente não tivesse terminado ainda, o submit seguia
+  // sem `voucherCode`/`voucherData` — e a Cogna recusa com 400
+  // ("paymentMethod.voucher must be a string") porque `paymentMethod` foi
+  // enviado sem `voucher`. Aqui: (1) uma retentativa com backoff curto antes
+  // de desistir, em vez de engolir o erro em silêncio; (2) `posVoucherAutoValidating`
+  // fica true do início até o resultado final (sucesso ou falha após a
+  // retentativa), e o botão de submit trava enquanto isso (ver JSX do CTA).
   const watchedCpf = watchedValues.cpf
   useEffect(() => {
     if (!offerDetails || offerDetails.academicLevel !== 'POS_GRADUACAO') return
     if (!posInstallmentId) return
+    // Regra do cupom único: se a pessoa já escolheu um voucher manual, essa
+    // revalidação automática (disparada por edição do CPF, por ex.) NÃO pode
+    // reverter a escolha dela em silêncio. `voucherSourceRef` (não
+    // `voucherSource` em deps, de propósito, pra não reexecutar o efeito
+    // quando a fonte muda) resolve isso.
+    if (voucherSourceRef.current === 'manual') return
     const cpf = (watchedCpf || '').replace(/\D/g, '')
     if (cpf.length !== 11) return
 
-    const autoValidateVoucher = async () => {
+    let cancelled = false
+
+    const tryValidateOnce = async (): Promise<ValidateVoucherResponse | null> => {
       try {
         const result = await validateVoucher('GALENA+15', cpf, posInstallmentId)
-        const isValid = result.isValid ?? false
-        if (isValid) {
-          setVoucherCode('GALENA+15')
-          setVoucherValid(true)
-          setVoucherData(result)
-          const matchingMethod = result.paymentMethods?.find(pm => pm.type === 'BOLETO')
-            || result.paymentMethods?.[0]
-          if (matchingMethod) {
-            setVoucherInstallments(matchingMethod.installments)
-          }
+        if (result.status === 200 && (result.data?.isValid ?? false)) {
+          return result.data
         }
+        return null
       } catch (err) {
         console.error('Erro ao validar voucher GALENA+15:', err)
+        trackCheckoutError(trackEvent, 'voucher_auto_validate', err)
+        return null
       }
     }
+
+    const autoValidateVoucher = async () => {
+      setPosVoucherAutoValidating(true)
+      setVoucherValid(null)
+
+      let result = await tryValidateOnce()
+      if (!result && !cancelled) {
+        await new Promise((resolve) => setTimeout(resolve, 500))
+        if (cancelled) return
+        result = await tryValidateOnce()
+      }
+      if (cancelled) return
+
+      if (result) {
+        const matchingMethod = result.paymentMethods?.find(pm => pm.type === 'BOLETO')
+          || result.paymentMethods?.[0]
+        const installments = matchingMethod?.installments ?? []
+        setVoucherCode('GALENA+15')
+        setVoucherValid(true)
+        setVoucherData(result)
+        setVoucherInstallments(installments)
+        setVoucherSource('auto')
+        // Snapshot separado do automático — sobrevive mesmo depois que um
+        // voucher manual substituir o `voucherCode`/`voucherData` acima,
+        // pra sempre dar pra restaurar (ver `handleRestoreAutoVoucher`).
+        setAutoVoucherCode('GALENA+15')
+        setAutoVoucherData(result)
+        setAutoVoucherInstallments(installments)
+      } else {
+        // Esgotou a retentativa: marca como inválido pra travar o submit no
+        // onSubmit (ver checagem `pos_voucher_indisponivel`) em vez de deixar
+        // o payload seguir sem voucher pra Cogna recusar.
+        setVoucherValid(false)
+        setVoucherData(null)
+      }
+      setPosVoucherAutoValidating(false)
+    }
     autoValidateVoucher()
-  }, [offerDetails, posInstallmentId, watchedCpf])
+
+    return () => {
+      cancelled = true
+    }
+  }, [offerDetails, posInstallmentId, watchedCpf, trackEvent])
+
+  // Reage à troca de forma de pagamento na pós quando ela derruba o campo de
+  // voucher (ver `isPosVoucherPaymentType`/`showVoucherField`: só existe em
+  // PIX/Cartão Recorrente). Se um voucher MANUAL estava valendo e a pessoa
+  // muda pra boleto/crédito comum, esse desconto deixa de fazer sentido ali
+  // — escolhemos REVERTER pro automático (GALENA+15, sempre disponível na
+  // pós) em vez de BLOQUEAR a troca de forma de pagamento: travar a pessoa
+  // numa forma só pra não perder um voucher manual seria pior UX do que
+  // trocar por um desconto que ainda existe, com aviso claro do porquê.
+  // Nunca deixa a pessoa achando que o desconto manual "continua valendo"
+  // numa forma que nem mostra mais o campo.
+  useEffect(() => {
+    if (offerDetails?.academicLevel !== 'POS_GRADUACAO') return
+    if (voucherSource !== 'manual') return
+    if (isPosVoucherPaymentType) return
+    if (autoVoucherData) {
+      setVoucherCode(autoVoucherCode)
+      setVoucherValid(true)
+      setVoucherData(autoVoucherData)
+      setVoucherInstallments(autoVoucherInstallments)
+      setVoucherSource('auto')
+      setVoucherInputValue('')
+      setVoucherMessage('')
+      toast(`O voucher manual só vale com PIX ou Cartão Recorrente — voltamos para o desconto automático GALENA+15 nesta forma de pagamento.`)
+    } else {
+      setVoucherValid(false)
+      setVoucherData(null)
+      setVoucherInstallments([])
+      setVoucherSource(null)
+      setVoucherInputValue('')
+      setVoucherMessage('')
+      toast.error('O voucher aplicado não vale para essa forma de pagamento e foi removido.')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [posPaymentMethodType, offerDetails?.academicLevel])
 
   // [CUPOM] Funções de cupom comentadas para possível reativação futura
   // const applyCouponToMatricula = () => {
@@ -681,50 +797,245 @@ const isFormValidForPayment =
   //     toast.success(...)
   //   } catch (err) { ... }
   // }
-  // Função para validar voucher
+  // Número da parcela (18x, 24x etc.) hoje selecionada — usado tanto pra
+  // achar a linha certa nas parcelas com desconto quanto pra comparar dois
+  // cupons pela mesma quantidade de parcelas.
+  const getSelectedInstallmentNumber = (): number | undefined => {
+    if (!offerDetails || !posInstallmentId) return undefined
+    const methods = offerDetails.paymentMethods as PosPaymentMethod[] | undefined
+    const pm = methods?.find((p) => p.type === posPaymentMethodType)
+    return pm?.installments.find((i) => i.id === posInstallmentId)?.number
+  }
+
+  // Rótulo curto de forma de pagamento, usado nas mensagens de voucher (o
+  // mesmo texto que já aparecia nos botões de forma de pagamento).
+  const voucherPaymentMethodLabel = (type: string): string =>
+    type === 'CREDITO' ? 'Crédito' : type === 'BOLETO' ? 'Boleto' : type === 'PIX' ? 'PIX' : type === 'CREDITO_RECORRENCIA' ? 'Cartão Recorrente' : type === 'VOUCHER' ? 'Voucher' : type
+
+  // As duas formas de pagamento que aceitam voucher manual na pós (ver
+  // `isPosVoucherPaymentType`/`showVoucherField` — decisão de negócio, não
+  // limitação técnica: a Cogna também dá desconto de voucher no boleto).
+  const VOUCHER_ELIGIBLE_PAYMENT_TYPES = ['PIX', 'CREDITO_RECORRENCIA']
+
+  // Parcela completa (não só o número) hoje selecionada — usada pro bloco de
+  // preço da sidebar reagir à escolha de parcelas (ver "Bloco de preço"
+  // abaixo). Sem voucher, é o único jeito de saber o valor real da
+  // mensalidade que a pessoa vai pagar: `montlyFeeTo` é o TOTAL do curso
+  // (ver `offerIsTotalPriceLevel`), não o valor da parcela escolhida.
+  const getSelectedInstallment = (): PosInstallment | undefined => {
+    if (!offerDetails || !posInstallmentId) return undefined
+    const methods = offerDetails.paymentMethods as PosPaymentMethod[] | undefined
+    const pm = methods?.find((p) => p.type === posPaymentMethodType)
+    return pm?.installments.find((i) => i.id === posInstallmentId)
+  }
+
+  // Validação manual de voucher (campo digitado), Cosmos-only (pós e
+  // profissionalizante). Feedback honesto por status HTTP, conforme a doc da
+  // Cogna — nunca colapsa em "erro" genérico:
+  //   200 -> aplica e mostra o desconto. Regra do cupom único: SUBSTITUI o
+  //          que estava aplicado antes (inclusive o GALENA+15 automático da
+  //          pós) — nunca soma. Se der pra comparar o desconto na mesma
+  //          quantidade de parcelas, mostra se melhorou ou piorou.
+  //   204 -> "nenhum voucher disponível pra este CPF" — NÃO mexe no que já
+  //          estava aplicado (mantém o GALENA+15 automático, se houver)
+  //   400 -> "inválido/expirado" — idem, preserva o que já estava aplicado
+  //   500/rede -> "não conseguimos validar agora" — idem, preserva
+  // Ou seja: só o caminho de sucesso (200) toca em voucherCode/voucherValid/
+  // voucherData/voucherInstallments/voucherSource. Todo caminho de falha só
+  // atualiza a mensagem do campo, deixando intacto o desconto já em vigor —
+  // pra não derrubar o automático da pós por causa de uma tentativa manual
+  // malsucedida.
+  //
+  // Achado em produção: um voucher (ex: INOVIT.26) pode devolver 200/isValid
+  // no teste direto da API mas 400 aqui — porque `paymentPlanId` na Cogna
+  // não é "a oferta", é UM PARCELAMENTO específico (ver doc: `paymentPlanId`
+  // = "ID do plano de pagamento"). Um voucher preso ao plano de 18x recusa
+  // (400) se validado contra o id do plano de 1x/6x/12x, mesmo sendo um
+  // código válido. Por isso, antes de declarar "inválido/expirado": se a
+  // 1ª tentativa (parcela hoje selecionada) falhar, tenta os outros
+  // parcelamentos disponíveis nas formas que aceitam voucher (PIX/Cartão
+  // Recorrente) até um aceitar. Se algum aceitar, a UI troca forma/parcela
+  // pra esse plano e avisa — em vez de deixar a pessoa adivinhando qual
+  // parcelamento faz o cupom funcionar.
   const handleValidateVoucher = async () => {
-    if (!voucherCode.trim()) return
+    const code = voucherInputValue.trim()
+    if (!code) return
     const cpf = (getValues('cpf') || '').replace(/\D/g, '')
-    if (!cpf) {
-      setVoucherValid(false)
-      setVoucherMessage('Preencha o CPF antes de validar o voucher.')
+    if (cpf.length !== 11) {
+      setVoucherMessageType('error')
+      setVoucherMessage('Preencha um CPF válido antes de validar o voucher.')
       return
     }
     if (!posInstallmentId) {
-      setVoucherValid(false)
-      setVoucherMessage('Selecione a parcela antes de validar o voucher.')
+      setVoucherMessageType('error')
+      setVoucherMessage('Selecione a forma de pagamento e a parcela antes de validar o voucher.')
       return
     }
+    // Captura o que está valendo ANTES de sobrescrever — é a base da
+    // comparação "melhorou ou piorou" e do texto "substituiu o cupom X".
+    const previousCode = voucherValid && voucherData ? voucherCode : null
+    const previousInstallments = voucherValid && voucherData ? voucherInstallments : []
+    const selectedNumber = getSelectedInstallmentNumber()
+
     setVoucherValidating(true)
-    setVoucherValid(null)
     setVoucherMessage('')
-    setVoucherData(null)
-    setVoucherInstallments([])
     try {
-      const result = await validateVoucher(voucherCode.trim(), cpf, posInstallmentId)
-      const isValid = result.isValid ?? false
-      setVoucherValid(isValid)
-      if (isValid && result.paymentMethods?.length) {
-        setVoucherData(result)
-        // Pegar parcelas do método que bate com o selecionado
-        const matchingMethod = result.paymentMethods.find((pm) => pm.type === posPaymentMethodType)
-          || result.paymentMethods[0]
-        if (matchingMethod) {
-          setVoucherInstallments(matchingMethod.installments)
-          setVoucherMessage(`Voucher aplicado! ${matchingMethod.discountPercentage}% de desconto.`)
-        } else {
-          setVoucherMessage('Voucher válido!')
+      let result = await validateVoucher(code, cpf, posInstallmentId)
+      let matchedType = posPaymentMethodType
+      let matchedInstallment: PosInstallment | undefined
+
+      const isSuccess = (r: typeof result) => r.status === 200 && (r.data?.isValid ?? false) && !!r.data
+
+      // Só vale tentar outros parcelamentos quando a Cogna respondeu 400
+      // ("inválido/expirado/parâmetros ausentes" — inclui plano errado). Um
+      // 204 ("nenhum voucher pra este CPF") não depende de parcela: repetir
+      // com outro `paymentPlanId` não muda a resposta, só gasta chamadas.
+      if (result.status === 400) {
+        console.warn(
+          `Voucher "${code}" recusado no plano ${posInstallmentId} (${posPaymentMethodType}, ${selectedNumber ?? '?'}x) — tentando outros parcelamentos.`
+        )
+        const methods = (offerDetails?.paymentMethods as PosPaymentMethod[] | undefined) ?? []
+        const candidates = methods
+          .filter((pm) => VOUCHER_ELIGIBLE_PAYMENT_TYPES.includes(pm.type))
+          .flatMap((pm) => pm.installments.map((inst) => ({ type: pm.type, inst })))
+          .filter(({ inst }) => inst.id !== posInstallmentId)
+
+        for (const { type, inst } of candidates) {
+          const attempt = await validateVoucher(code, cpf, inst.id)
+          if (isSuccess(attempt)) {
+            result = attempt
+            matchedType = type
+            matchedInstallment = inst
+            break
+          }
         }
-      } else {
-        setVoucherMessage(result.message || 'Voucher inválido.')
       }
-    } catch {
-      setVoucherValid(false)
-      setVoucherMessage('Erro ao validar voucher. Tente novamente.')
+
+      if (isSuccess(result) && result.data) {
+        const data = result.data
+        const matchingMethod = data.paymentMethods?.find((pm) => pm.type === matchedType)
+          || data.paymentMethods?.[0]
+        const newInstallments = matchingMethod?.installments ?? []
+
+        // Regra do cupom único: um voucher manual válido SUBSTITUI o que
+        // estava aplicado — nunca soma. Só um cupom vai pro payload de envio
+        // (ver onSubmit: `voucher`/`voucherId` vêm sempre de `voucherData`,
+        // que a partir daqui é só o do voucher recém-validado).
+        setVoucherCode(code)
+        setVoucherValid(true)
+        setVoucherData(data)
+        setVoucherInstallments(newInstallments)
+        setVoucherSource('manual')
+
+        // O voucher só validou num parcelamento diferente do selecionado —
+        // troca a forma/parcela pra essa, em vez de aplicar um desconto que
+        // não bate com o que está marcado na tela.
+        if (matchedInstallment) {
+          setPosPaymentMethodType(matchedType)
+          setPosInstallmentId(matchedInstallment.id)
+        }
+
+        // Compara o desconto na mesma quantidade de parcelas, se os dois
+        // lados tiverem dado pra comparar (a API não garante cobertura das
+        // mesmas parcelas entre dois vouchers diferentes — quando não dá,
+        // não inventamos comparação, só omitimos essa parte da mensagem).
+        const compareNumber = matchedInstallment ? matchedInstallment.number : selectedNumber
+        const newPct = compareNumber !== undefined
+          ? newInstallments.find((v) => v.number === compareNumber)?.discountPercentage
+          : matchingMethod?.discountPercentage
+        const prevPct = previousCode && compareNumber !== undefined && !matchedInstallment
+          ? previousInstallments.find((v) => v.number === compareNumber)?.discountPercentage
+          : undefined
+
+        const baseMsg = matchingMethod
+          ? `Voucher aplicado! ${matchingMethod.discountPercentage}% de desconto.`
+          : 'Voucher aplicado!'
+        const replacedMsg = previousCode
+          ? ` Substituiu o cupom "${previousCode}" — só um cupom vale por vez.`
+          : ''
+        const switchedMsg = matchedInstallment
+          ? ` Esse voucher vale para ${matchedInstallment.number}x via ${voucherPaymentMethodLabel(matchedType)} — ajustamos a forma de pagamento e a parcela pra você.`
+          : ''
+
+        if (prevPct !== undefined && newPct !== undefined && prevPct !== newPct) {
+          const melhorou = newPct > prevPct
+          setVoucherMessageType(melhorou ? 'success' : 'warning')
+          setVoucherMessage(
+            `${baseMsg}${replacedMsg} Desconto passou de ${prevPct}% para ${newPct}%`
+            + (melhorou ? ' — melhor que o anterior.' : ' — PIOR que o anterior. Prefere manter o de antes? Use "Voltar para o automático" abaixo.')
+          )
+        } else {
+          setVoucherMessageType('success')
+          setVoucherMessage(`${baseMsg}${replacedMsg}${switchedMsg}`)
+        }
+      } else if (result.status === 204) {
+        setVoucherMessageType('error')
+        setVoucherMessage('Nenhum voucher disponível para este CPF.')
+      } else {
+        // 400 (ou 200 com isValid=false) em TODOS os parcelamentos tentados:
+        // agora sim, inválido/expirado. `result.data?.message` é texto que
+        // vem de fora (Tartarus/Cogna) — pode incluir detalhe técnico
+        // (endpoint, status HTTP) que nunca deve chegar pra quem usa. Loga
+        // pra depuração, mostra só uma mensagem nossa, amigável.
+        if (result.data?.message) {
+          console.error('Voucher recusado pela Cogna:', result.data.message)
+        }
+        setVoucherMessageType('error')
+        setVoucherMessage('Voucher inválido ou expirado.')
+      }
+    } catch (err) {
+      console.error('Erro ao validar voucher manual:', err)
+      trackCheckoutError(trackEvent, 'voucher_manual_validate', err)
+      setVoucherMessageType('error')
+      setVoucherMessage('Não conseguimos validar agora, tente de novo.')
     } finally {
       setVoucherValidating(false)
     }
   }
+
+  // Desfaz um cupom manual e restaura o GALENA+15 automático — a saída
+  // pedida pra quem aplicou um voucher manual e se arrependeu (ou ficou com
+  // desconto pior) sem precisar recarregar a página e perder o formulário.
+  const handleRestoreAutoVoucher = () => {
+    if (!autoVoucherData) return
+    setVoucherCode(autoVoucherCode)
+    setVoucherValid(true)
+    setVoucherData(autoVoucherData)
+    setVoucherInstallments(autoVoucherInstallments)
+    setVoucherSource('auto')
+    setVoucherInputValue('')
+    setVoucherMessageType('success')
+    setVoucherMessage('Desconto automático GALENA+15 restaurado.')
+  }
+
+  // Dois destaques do voucher aplicado que hoje ficam invisíveis (só dá pra
+  // ver olhando linha a linha da tabela de parcelas). Sempre calculados a
+  // partir do que a API devolveu — nunca número fixo no código.
+
+  // 1ª parcela grátis: `installmentValue: 0`/`discountPercentage: 100` na
+  // parcela 1 do método hoje selecionado.
+  const voucherFirstInstallmentFree = voucherValid
+    ? voucherInstallments.find((i) => i.number === 1 && i.installmentValue === 0)
+    : undefined
+
+  // Cartão Recorrente costuma dar desconto maior que PIX no mesmo voucher
+  // (ver evidência: 29,17% x 19,72%). Compara os dois métodos que o campo de
+  // voucher realmente oferece na pós (PIX/Cartão Recorrente — decisão de
+  // negócio, ver `VOUCHER_ELIGIBLE_PAYMENT_TYPES`); só mostra quando o
+  // recorrente é de fato melhor E a pessoa não está nele já.
+  const voucherRecorrenteAdvantage = (() => {
+    if (!voucherValid || !voucherData?.paymentMethods?.length) return null
+    if (posPaymentMethodType === 'CREDITO_RECORRENCIA') return null
+    const recorrente = voucherData.paymentMethods.find((pm) => pm.type === 'CREDITO_RECORRENCIA')
+    const pix = voucherData.paymentMethods.find((pm) => pm.type === 'PIX')
+    if (!recorrente || !pix) return null
+    if (recorrente.totalValueWithDiscount >= pix.totalValueWithDiscount) return null
+    return {
+      economia: pix.totalValueWithDiscount - recorrente.totalValueWithDiscount,
+      recorrentePct: recorrente.discountPercentage,
+      pixPct: pix.discountPercentage,
+    }
+  })()
 
   // Função para criar a matrícula (inscrição direta, sem pagamento no checkout)
   const createInscriptionAfterPayment = async (data: FormSchema) => {
@@ -739,28 +1050,32 @@ const isFormValidForPayment =
         if (stored) {
           try {
             paymentMethod = JSON.parse(stored) as { id: string; dueDay: string; voucher?: string; voucherId?: number }
-          } catch {
-            // ignore
+          } catch (error) {
+            console.error('Erro ao ler pendingPosPaymentMethod do localStorage:', error)
+            trackCheckoutError(trackEvent, 'payment_method_parse', error)
           }
         }
       }
 
       const inscriptionPayload = buildInscriptionPayload(
         {
+          // Capturados de verdade no formulário (captação mínima).
           name: data.name,
           cpf: data.cpf,
-          gender: data.gender || 'masculino',
-          schoolYear: data.schoolYear || String(new Date().getFullYear()),
-          rg: data.rg || '',
           birthDate: data.birthDate,
           email: data.email,
           phone: data.phone,
-          address: data.address,
-          addressNumber: data.addressNumber,
-          neighborhood: data.neighborhood,
-          city: data.city || '',
-          state: data.state || '',
-          cep: data.cep,
+          // Administrativos NÃO capturados — valor padrão válido em formato;
+          // a Cogna confirma os dados reais na matrícula efetiva.
+          gender: DADOS_ADMIN_PADRAO.gender,
+          schoolYear: DADOS_ADMIN_PADRAO.schoolYear,
+          rg: DADOS_ADMIN_PADRAO.rg,
+          address: DADOS_ADMIN_PADRAO.address,
+          addressNumber: DADOS_ADMIN_PADRAO.addressNumber,
+          neighborhood: DADOS_ADMIN_PADRAO.neighborhood,
+          city: DADOS_ADMIN_PADRAO.city,
+          state: DADOS_ADMIN_PADRAO.state,
+          cep: DADOS_ADMIN_PADRAO.cep,
         },
         {
           dmhId: offerDetails.dmhId,
@@ -791,6 +1106,32 @@ const isFormValidForPayment =
           modality: offerDetails.modality,
           dmhSource: offerDetails.dmhSource,
           idDmhElastic: offerDetails.idDmhElastic,
+        })
+        // Falha ANTES da Cogna, e igualmente cara: o candidato preencheu tudo e
+        // não vira inscrição. Sem este report ela não aparecia em lugar nenhum
+        // (só console.error) e o funil contabilizava como abandono comum.
+        trackEvent('checkout_inscription_failed', {
+          course_id: offerDetails.courseId,
+          course_name: offerDetails.course,
+          brand: offerDetails.brand,
+          modality: offerDetails.modality,
+          dmh_source: offerDetails.dmhSource?.source,
+          error_message: 'oferta sem dmhId',
+          cogna_known_error: false,
+        })
+        reportInscriptionFailure({
+          flow: 'matricula',
+          cpf: data.cpf,
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          courseName: offerDetails.course,
+          courseId: offerDetails.courseId,
+          brand: offerDetails.brand,
+          modalidade: offerDetails.modality,
+          city: offerDetails.unitCity,
+          source: offerDetails.dmhSource?.source,
+          errorMessage: 'oferta sem dmhId',
         })
         toast.error('Essa oferta não está disponível para inscrição no momento. Tente outra unidade ou volte mais tarde.')
         return
@@ -825,7 +1166,9 @@ const isFormValidForPayment =
           phone: data.phone.replace(/\D/g, ''),
         })
 
-        // Notealy (estágio 2): marca o contato como "inscrito". Não-bloqueante.
+        // PostHog server-side (enrollment_completed_server):
+        // marca o contato como "inscrito" e mede a conversão real independente
+        // de consentimento de cookie. Não-bloqueante.
         fetch('/api/leads/confirm-inscription', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -834,24 +1177,29 @@ const isFormValidForPayment =
             email: data.email,
             phone: data.phone.replace(/\D/g, ''),
             cpf: data.cpf.replace(/\D/g, ''),
+            courseName: offerDetails?.course,
+            courseId: offerDetails?.courseId,
+            brand: offerDetails?.brand,
+            modalidade: offerDetails?.modality,
+            city: offerDetails?.unitCity,
+            source: offerDetails?.dmhSource?.source,
+            inscriptionId: response.id,
+            // Turno e valores da oferta: sem eles a mensagem de recuperação
+            // não consegue dizer o que a pessoa está prestes a perder
+            // ("R$ 108,38 em Nutrição, no polo X"), que é o que faz ela voltar.
+            shift: offerDetails?.shift,
+            monthlyPrice: offerDetails?.montlyFeeTo,
+            enrollmentFee: offerDetails?.subscriptionValue,
           }),
-        }).catch((e) => console.error('Notealy confirm falhou:', e))
+        }).catch((e) => {
+          console.error('Confirmação de inscrição falhou:', e)
+          trackCheckoutError(trackEvent, 'confirm_inscription_server', e)
+        })
 
-        // Notealy: graduação EAD/semi ATHENAS sem cobrança no site (decisão de
-        // negócio — a Cogna cobra depois via payment-link deles). Marca
-        // "Pendente Pagamento" pra diferenciar de quem já pagou. Não-bloqueante.
-        if (matriculaCharge.chargeable) {
-          fetch('/api/leads/pending-payment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: data.name,
-              email: data.email,
-              phone: data.phone.replace(/\D/g, ''),
-              cpf: data.cpf.replace(/\D/g, ''),
-            }),
-          }).catch((e) => console.error('Notealy pendente pagamento falhou:', e))
-        }
+        // O marcador "Pendente Pagamento" saiu em 2026-08-11 junto com o CRM
+        // (troca de fornecedor). Ele distinguia a graduação EAD/semi ATHENAS,
+        // que por decisão de negócio não é cobrada no site — a Cogna cobra
+        // depois pelo payment-link dela. Sinal a reconstruir no CRM novo.
 
         // Atualizar perfil do usuário no PostgreSQL (se estiver logado)
         if (firebaseUser) {
@@ -888,71 +1236,81 @@ const isFormValidForPayment =
             console.log('✅ Inscrição salva no banco de dados')
           } catch (enrollError) {
             console.error('Erro ao salvar inscrição no banco:', enrollError)
+            trackCheckoutError(trackEvent, 'enrollment_save', enrollError)
             // Não bloquear o fluxo se falhar
           }
         }
 
         // Para ofertas ATHENAS, criar inscrição no marketplace
         if (isAthenasSource && offerDetails?.idDmhElastic) {
-          console.log('📝 Criando inscrição no marketplace ATHENAS...')
-          try {
-            const marketplaceResult = await createMarketplaceInscription(
-              {
-                name: data.name,
-                cpf: data.cpf,
-                email: data.email,
-                phone: data.phone,
-                rg: data.rg,
-                birthDate: data.birthDate,
-                gender: data.gender || 'masculino',
-                cep: data.cep,
-                address: data.address,
-                addressNumber: data.addressNumber,
-                neighborhood: data.neighborhood || '',
-                city: data.city || '',
-                state: data.state || '',
-                ingressType: selectedIngressType,
-                schoolYear: data.schoolYear || String(new Date().getFullYear()),
-                acceptTerms: true,
-                acceptEmail: true,
-                acceptSms: true,
-                acceptWhatsapp: true,
-              },
-              offerDetails
-            )
+          // Kill switch (decisão de negócio, 2026-08): createMarketplaceInscription
+          // está DESATIVADA — ela duplicava a inscrição na Cogna para ofertas
+          // ATHENAS (uma via createInscription normal, acima, + outra via
+          // marketplace/canalVendas.id=141). Nasce OFF; religa subindo a flag
+          // PostHog 'marketplace_enabled' pra 100% (mesma flag do lado servidor,
+          // em confirm-matricula.ts). NÃO apagar createMarketplaceInscription
+          // nem o endpoint — só parar de chamar enquanto a flag está off.
+          if (marketplaceEnabled) {
+            console.log('📝 Criando inscrição no marketplace ATHENAS...')
+            try {
+              const marketplaceResult = await createMarketplaceInscription(
+                {
+                  // Capturados de verdade no formulário (captação mínima).
+                  name: data.name,
+                  cpf: data.cpf,
+                  email: data.email,
+                  phone: data.phone,
+                  birthDate: data.birthDate,
+                  // Administrativos NÃO capturados — valor padrão válido em
+                  // formato; a Cogna confirma os dados reais na matrícula efetiva.
+                  rg: DADOS_ADMIN_PADRAO.rg,
+                  gender: DADOS_ADMIN_PADRAO.gender,
+                  cep: DADOS_ADMIN_PADRAO.cep,
+                  address: DADOS_ADMIN_PADRAO.address,
+                  addressNumber: DADOS_ADMIN_PADRAO.addressNumber,
+                  neighborhood: DADOS_ADMIN_PADRAO.neighborhood,
+                  city: DADOS_ADMIN_PADRAO.city,
+                  state: DADOS_ADMIN_PADRAO.state,
+                  ingressType: selectedIngressType,
+                  schoolYear: DADOS_ADMIN_PADRAO.schoolYear,
+                  acceptTerms: true,
+                  acceptEmail: true,
+                  acceptSms: true,
+                  acceptWhatsapp: true,
+                },
+                offerDetails
+              )
 
-            if (marketplaceResult.success) {
-              console.log('✅ Inscrição no marketplace ATHENAS criada com sucesso')
-              // ATUALIZAÇÃO (decisão de negócio): graduação EAD/semi ATHENAS não
-              // cobra mais no site, então esse ramo agora roda para TODAS as
-              // ofertas ATHENAS com idDmhElastic, não só as raras não-chargeable
-              // (histórico: antes disso, o submit retornava cedo em
-              // `matriculaCharge.chargeable` e a inscrição marketplace vinha de
-              // `confirmPaidMatricula`, pós-pagamento — isso não existe mais
-              // pra este segmento).
-              trackEvent('marketplace_inscription_created', {
-                course_id: offerDetails.courseId,
-                course_name: offerDetails.course,
-                idDmhElastic: offerDetails.idDmhElastic,
-              })
-
-              // Funil unificado — etapa 3 (ramo graduação/ATHENAS).
-              // Cobre o ponto cego: `marketplace_inscription_created` disparava
-              // ~1x/90d; `checkout_submitted` dá o sinal confiável do envio.
-              trackCheckoutSubmitted(trackEvent, {
-                flow: 'matricula',
-                academicLevel: offerDetails.academicLevel,
-                brand: offerDetails.brand,
-                modality: offerDetails.modality,
-                courseId: offerDetails.courseId,
-                courseName: offerDetails.course,
-              })
-            } else {
-              console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceResult.error)
+              if (marketplaceResult.success) {
+                console.log('✅ Inscrição no marketplace ATHENAS criada com sucesso')
+                trackEvent('marketplace_inscription_created', {
+                  course_id: offerDetails.courseId,
+                  course_name: offerDetails.course,
+                  idDmhElastic: offerDetails.idDmhElastic,
+                })
+              } else {
+                console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceResult.error)
+                trackCheckoutError(trackEvent, 'marketplace_inscription', marketplaceResult.error)
+              }
+            } catch (marketplaceError) {
+              console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceError)
+              trackCheckoutError(trackEvent, 'marketplace_inscription', marketplaceError)
             }
-          } catch (marketplaceError) {
-            console.error('⚠️ Erro ao criar inscrição no marketplace:', marketplaceError)
           }
+
+          // Funil unificado — etapa 3 (ramo graduação/ATHENAS). Fica FORA do
+          // gate acima de propósito: o candidato enviou o checkout independente
+          // de a chamada ao marketplace estar ligada ou não — não queremos que
+          // desativar o marketplace crie um ponto cego no funil de conversão.
+          trackCheckoutSubmitted(trackEvent, {
+            flow: 'matricula',
+            checkoutFlow: 'cogna_matricula',
+            academicLevel: offerDetails.academicLevel,
+            brand: offerDetails.brand,
+            modality: offerDetails.modality,
+            courseId: offerDetails.courseId,
+            courseName: offerDetails.course,
+          })
         }
 
         // Montar params para a página de sucesso antes de limpar o localStorage
@@ -963,6 +1321,7 @@ const isFormValidForPayment =
         // ID de transação único para evitar duplicação de conversões no GTM
         params.set('transactionId', `BC-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`)
 
+
         if (offerDetails.course) {
           params.set('course', offerDetails.course)
         }
@@ -970,6 +1329,16 @@ const isFormValidForPayment =
         const hasPlans =
           (level === 'POS_GRADUACAO' || level === 'CURSO_PROFISSIONALIZANTE')
           && (offerDetails.paymentMethods?.length ?? 0) > 0
+        // Id da inscrição no parceiro: é com ele que a tela de sucesso gera o
+        // link de pagamento da Cogna (passo 7). Sem ele o candidato termina o
+        // fluxo sem nenhum caminho para pagar — que era o comportamento até
+        // 2026-08-24. Vale para graduação E pós: nos dois a inscrição é criada
+        // com `response.id`, e o payment-link gera o checkout. A diferença fica
+        // na tela de sucesso — pós embuti em iframe (kroton.platosedu.io),
+        // graduação abre em nova aba (pay.anhanguera.com bloqueia embed).
+        if (response.id) {
+          params.set('inscriptionId', String(response.id))
+        }
         if (!hasPlans) {
           // Graduação (ou nível sem planos retornados): mensalidade direto à instituição
           params.set('monthlyFee', String(monthlyFee))
@@ -1012,6 +1381,46 @@ const isFormValidForPayment =
     } catch (error: unknown) {
       console.error('Erro ao criar matrícula:', error)
       const cognaMsg = getCognaErrorMessage(error)
+      // Sinal no funil: sem isso a falha era invisível no PostHog e só
+      // aparecia como re-submits (38 submits de 8 pessoas em jul/2026).
+      const errorDetails = getCognaErrorDetails(error)
+      trackEvent('checkout_inscription_failed', {
+        course_id: offerDetails?.courseId,
+        course_name: offerDetails?.course,
+        brand: offerDetails?.brand,
+        modality: offerDetails?.modality,
+        dmh_source: offerDetails?.dmhSource?.source,
+        error_message: cognaMsg ?? (error instanceof Error ? error.message : String(error)),
+        cogna_known_error: cognaMsg != null,
+        // Mensagens da Cogna são genéricas ("Não foi possível criar a
+        // inscrição") — a causa real vem no corpo/status da resposta.
+        error_status: errorDetails.status,
+        error_body: errorDetails.body,
+      })
+
+      // Mesmo sinal, porém server-to-server: o trackEvent acima só existe se a
+      // pessoa aceitou o banner de cookie (quase ninguém no checkout aceita),
+      // então sozinho ele deixava a recusa da Cogna invisível — sem CPF, sem
+      // nome, sem motivo. Este report não depende de consent e é o que permite
+      // reconciliar as inscrições recusadas com o parceiro.
+      reportInscriptionFailure({
+        flow: 'matricula',
+        cpf: data.cpf,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        courseName: offerDetails?.course,
+        courseId: offerDetails?.courseId,
+        brand: offerDetails?.brand,
+        modalidade: offerDetails?.modality,
+        city: offerDetails?.unitCity,
+        source: offerDetails?.dmhSource?.source,
+        errorMessage: cognaMsg ?? (error instanceof Error ? error.message : String(error)),
+        errorStatus: errorDetails.status,
+        errorBody: errorDetails.body,
+        cognaKnownError: cognaMsg != null,
+      })
+
       toast.error(cognaMsg ?? 'Erro ao finalizar matrícula. Entre em contato com o suporte.')
     }
   }
@@ -1023,8 +1432,29 @@ const isFormValidForPayment =
       return
     }
 
+    // Trava de CPF já inscrito na Cogna — defesa em profundidade (o botão já
+    // vem desabilitado nesse estado, mas o form pode ser submetido por
+    // outros meios, ex. Enter).
+    if (cpfInscriptionBlocked) {
+      toast.error(cpfInscriptionBlocked)
+      return
+    }
+
     if (!offerDetails) {
       toast.error('Detalhes da oferta não encontrados.')
+      return
+    }
+
+    // Domínio sem MX não recebe e-mail nenhum — erro comprovado, não
+    // suspeita. A criação da inscrição (Cogna, via Tartarus) acontece direto
+    // do browser mais abaixo, sem passar pela nossa API — esta é a checagem
+    // de servidor que gateia o cadastro antes disso. Fail-open embutido: só
+    // bloqueia quando a consulta DNS PROVA que o domínio não tem MX; timeout
+    // ou erro de rede deixa passar (ver app/lib/validation/email-mx.ts e
+    // app/lib/api/validate-email.ts).
+    const emailCheck = await validateEmailDeliverability(data.email)
+    if (!emailCheck.ok) {
+      toast.error(emailCheck.error ?? 'Não conseguimos validar esse e-mail. Confira se está correto.')
       return
     }
 
@@ -1046,16 +1476,49 @@ const isFormValidForPayment =
         toast.error('Plano de pagamento inválido.')
         return
       }
+
+      const isPosGraduacao = offerDetails.academicLevel === 'POS_GRADUACAO'
+      const hasValidVoucher = !!(voucherCode.trim() && voucherValid && voucherData)
+
+      // Pós-graduação: o voucher GALENA+15 é obrigatório (aplicado sozinho, ver
+      // useEffect acima) e a Cogna exige `paymentMethod.voucher` como string
+      // sempre que `paymentMethod` é enviado. Sem voucher confirmado, não crie
+      // a inscrição — é a corrida de tempo do 400 relatado no PostHog.
+      if (isPosGraduacao && !hasValidVoucher) {
+        trackEvent('pos_voucher_indisponivel', {
+          course_id: offerDetails.courseId,
+          academic_level: offerDetails.academicLevel,
+          was_still_validating: posVoucherAutoValidating,
+        })
+        toast.error('Não conseguimos aplicar as condições da sua oferta agora. Tente novamente em instantes.')
+        return
+      }
+
       if (typeof window !== 'undefined') {
-        const pmData: { id: string; dueDay: string; voucher?: string; voucherId?: number } = { id: posInstallmentId, dueDay: '10' }
-        if (voucherCode.trim() && voucherValid && voucherData) {
-          pmData.voucher = voucherData.code || voucherCode.trim()
-          pmData.voucherId = voucherData.id
+        if (hasValidVoucher) {
+          // Regra do cupom único: `voucher`/`voucherId` vêm sempre de um
+          // `voucherData` só — o automático (GALENA+15) OU o manual, nunca os
+          // dois juntos, porque `voucherData` é sempre sobrescrito por inteiro
+          // (nunca mesclado) tanto no useEffect de auto-validação quanto em
+          // `handleValidateVoucher`/`handleRestoreAutoVoucher`. Não existe
+          // caminho de código que monte um payload com dois vouchers.
+          const pmData: { id: string; dueDay: string; voucher: string; voucherId?: number } = {
+            id: posInstallmentId,
+            dueDay: '10',
+            voucher: voucherData!.code || voucherCode.trim(),
+            voucherId: voucherData!.id,
+          }
+          localStorage.setItem('pendingPosPaymentMethod', JSON.stringify(pmData))
+        } else {
+          // Profissionalizante sem voucher: o voucher é opcional aqui, mas a
+          // mesma API rejeita `paymentMethod` sem `voucher` (string obrigatória
+          // quando o campo existe). Não há confirmação no código de qual é o
+          // comportamento correto sem voucher — a opção conservadora é não
+          // mandar `paymentMethod` nenhum (ver createInscriptionAfterPayment,
+          // que trata a ausência dessa chave no localStorage como "sem
+          // paymentMethod"), em vez de arriscar o mesmo 400.
+          localStorage.removeItem('pendingPosPaymentMethod')
         }
-        localStorage.setItem(
-          'pendingPosPaymentMethod',
-          JSON.stringify(pmData)
-        )
       }
     }
 
@@ -1067,6 +1530,7 @@ const isFormValidForPayment =
     // Funil unificado — etapa 3 (ramo pós/profissionalizante)
     trackCheckoutSubmitted(trackEvent, {
       flow: 'matricula',
+      checkoutFlow: 'cogna_matricula',
       academicLevel: offerDetails.academicLevel,
       brand: offerDetails.brand,
       modality: offerDetails.modality,
@@ -1130,8 +1594,6 @@ const isFormValidForPayment =
     return sh
   }
 
-  const yearOptions = Array.from({ length: 25 }, (_, i) => new Date().getFullYear() - i)
-
   if (isLoading) {
     // Optimistic preview: pull course name and price from the previously
     // viewed course in localStorage so the user sees the offer immediately
@@ -1140,8 +1602,18 @@ const isFormValidForPayment =
       ? (() => {
           try {
             const raw = localStorage.getItem('selectedCourse')
-            return raw ? JSON.parse(raw) as { name?: string; brand?: string; minPrice?: number } : null
-          } catch {
+            return raw
+              ? JSON.parse(raw) as {
+                  name?: string
+                  brand?: string
+                  minPrice?: number
+                  academicLevel?: string
+                  minInstallmentValue?: number
+                }
+              : null
+          } catch (error) {
+            console.error('Erro ao ler selectedCourse do localStorage:', error)
+            trackCheckoutError(trackEvent, 'course_cache_read', error)
             return null
           }
         })()
@@ -1239,22 +1711,35 @@ const isFormValidForPayment =
               </div>
 
               {cachedCourse?.minPrice ? (
-                <div className="bg-paper-warm border border-hairline rounded-2xl p-5 mb-5">
-                  <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 mb-2 block">
-                    Mensalidade com bolsa
-                  </span>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-[14px] text-ink-700 font-medium">R$</span>
-                    <span className="font-display num-tabular text-[40px] font-bold text-bolsa-secondary leading-none">
-                      {cachedCourse.minPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
-                    <span className="text-[12px] text-ink-500">/mês</span>
-                  </div>
-                  <p className="text-[11px] text-ink-500 mt-3 italic inline-flex items-center gap-2">
-                    <span className="inline-block w-2 h-2 rounded-full bg-bolsa-secondary animate-pulse" />
-                    Confirmando valores com a instituição…
-                  </p>
-                </div>
+                (() => {
+                  // Preview otimista (localStorage) de pós/profissionalizante:
+                  // cachedCourse.minPrice é o TOTAL do curso, não mensalidade
+                  // (mesmo campo de app/components/v2/course-offer.ts). Sem a
+                  // parcela em cache, não afirma "/mês" sobre um total.
+                  const isTotal = isTotalPriceLevel(cachedCourse.academicLevel)
+                  const showMonthly = !isTotal || typeof cachedCourse.minInstallmentValue === 'number'
+                  const displayValue = isTotal && typeof cachedCourse.minInstallmentValue === 'number'
+                    ? cachedCourse.minInstallmentValue
+                    : cachedCourse.minPrice
+                  return (
+                    <div className="bg-paper-warm border border-hairline rounded-2xl p-5 mb-5">
+                      <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 mb-2 block">
+                        {isTotal && !showMonthly ? 'Valor total do curso' : 'Mensalidade com bolsa'}
+                      </span>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-[14px] text-ink-700 font-medium">R$</span>
+                        <span className="font-display num-tabular text-[40px] font-bold text-bolsa-secondary leading-none">
+                          {displayValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                        {showMonthly && <span className="text-[12px] text-ink-500">/mês</span>}
+                      </div>
+                      <p className="text-[11px] text-ink-500 mt-3 italic inline-flex items-center gap-2">
+                        <span className="inline-block w-2 h-2 rounded-full bg-bolsa-secondary animate-pulse" />
+                        Confirmando valores com a instituição…
+                      </p>
+                    </div>
+                  )
+                })()
               ) : (
                 <div className="bg-paper-warm border border-hairline rounded-2xl p-5 mb-5">
                   <SkeletonBlock className="h-3 w-32 mb-3" />
@@ -1348,11 +1833,7 @@ const isFormValidForPayment =
               watchedValues.name &&
               cpfValidationOk
             )
-            const contatoOk = !!(
-              watchedValues.phone &&
-              watchedValues.cep &&
-              watchedValues.address
-            )
+            const contatoOk = !!watchedValues.phone
             const steps = [
               { n: '01', label: 'Estudante', done: dadosOk, active: !dadosOk },
               { n: '02', label: 'Contato', done: contatoOk, active: dadosOk && !contatoOk },
@@ -1406,37 +1887,6 @@ const isFormValidForPayment =
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
           {/* Coluna Esquerda - Formulário */}
           <div className="lg:col-span-7 bg-white border border-hairline rounded-2xl overflow-hidden shadow-[0_30px_60px_-40px_rgba(11,31,60,0.18)]">
-            {/* Mini-prompt de login (compacto, não bloqueia atenção) */}
-            {!user && !authLoading && (
-              <div className="px-6 py-3 border-b border-hairline bg-paper-warm/40 flex items-center justify-end gap-3 font-mono text-[11px] tracking-[0.12em] uppercase">
-                <span className="text-ink-500 normal-case tracking-normal">Já tem conta?</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAuthMode('login')
-                    setShowAuthModal(true)
-                  }}
-                  className="font-semibold text-ink-900 hover:text-bolsa-secondary transition-colors normal-case tracking-normal"
-                >
-                  Entrar
-                </button>
-                <span className="text-ink-300">·</span>
-                <button
-                  type="button"
-                  onClick={handleAuthWithGoogle}
-                  className="font-semibold text-ink-700 hover:text-ink-900 transition-colors inline-flex items-center gap-1.5 normal-case tracking-normal"
-                >
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                  </svg>
-                  Google
-                </button>
-              </div>
-            )}
-
             {/* Banner mostrando que está logado */}
             {user && (
               <div className="bg-paper-warm border-b border-hairline px-6 py-4">
@@ -1510,16 +1960,31 @@ const isFormValidForPayment =
                         </label>
                         <input
                           type="email"
+                          autoComplete="email"
                           {...register('email')}
                           placeholder="seuemail@exemplo.com"
                           className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
                         />
                         {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+                        {!errors.email && emailTypoSuggestion && (
+                          <p className="text-amber-600 text-xs mt-1">
+                            Você quis dizer{' '}
+                            <button
+                              type="button"
+                              className="underline font-medium hover:text-amber-700"
+                              onClick={() => setValue('email', emailTypoSuggestion, { shouldValidate: true })}
+                            >
+                              {emailTypoSuggestion}
+                            </button>
+                            ?
+                          </p>
+                        )}
                       </div>
                       <div>
                         <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Nome Completo</label>
                         <input
                           type="text"
+                          autoComplete="name"
                           {...register('name')}
                           placeholder="Ex: Rodrigo Silva"
                           className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
@@ -1547,6 +2012,7 @@ const isFormValidForPayment =
                                   field.onChange(masked)
                                   if (cpfValidationOk) setCpfValidationOk(false)
                                   if (cpfValidationError) setCpfValidationError(null)
+                                  if (cpfInscriptionBlocked) setCpfInscriptionBlocked(null)
                                 }}
                                 onBlur={async (e) => {
                                   field.onBlur()
@@ -1555,28 +2021,16 @@ const isFormValidForPayment =
                                     setIsValidatingCpf(true)
                                     setCpfValidationError(null)
                                     setCpfValidationOk(false)
-                                    setCpfExistsInDb(null)
-                                    setCpfEmailHint(null)
+                                    setCpfInscriptionBlocked(null)
                                     try {
-                                      // 1. Verificar se CPF já existe no nosso banco de dados
+                                      // Consulta se o CPF já existe no banco — só alimenta o
+                                      // tracking; a matrícula não exige conta.
                                       const dbCheckResponse = await fetch('/api/auth/check-cpf', {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
                                         body: JSON.stringify({ cpf: cleanCpf }),
                                       })
                                       const dbCheckResult = await dbCheckResponse.json()
-
-                                      if (dbCheckResult.exists) {
-                                        // CPF já cadastrado no nosso banco
-                                        setCpfExistsInDb(true)
-                                        setCpfEmailHint(dbCheckResult.emailHint)
-                                        // Não bloquear, apenas informar
-                                        // O usuário será obrigado a fazer login depois
-                                      } else {
-                                        setCpfExistsInDb(false)
-                                        // Salvar CPF para pre-preencher no cadastro
-                                        setPendingCpfForRegistration(cleanCpf)
-                                      }
 
                                       setCpfValidationError(null)
                                       setCpfValidationOk(true)
@@ -1597,6 +2051,7 @@ const isFormValidForPayment =
                                         trackEvent,
                                         {
                                           flow: 'matricula',
+                                          checkoutFlow: 'cogna_matricula',
                                           academicLevel: offerDetails?.academicLevel,
                                           brand: offerDetails?.brand,
                                           modality: offerDetails?.modality,
@@ -1605,8 +2060,13 @@ const isFormValidForPayment =
                                           email: getValues('email') || undefined,
                                           phone: getValues('phone') || undefined,
                                           name: getValues('name') || undefined,
+                                          // CPF já validado neste ponto: vira o
+                                          // distinct_id AQUI, não só no sucesso —
+                                          // é o que faz a falha da Cogna ter dono.
+                                          cpf: cleanCpf,
                                         },
                                         setUserProperties,
+                                        identifyUser,
                                       )
 
                                       // Facebook Pixel + Conversions API - AddPaymentInfo (dados pessoais preenchidos + CPF validado)
@@ -1649,12 +2109,36 @@ const isFormValidForPayment =
                                         value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
                                         currency: 'BRL',
                                       })
+
+                                      // Trava de CPF já inscrito (Cogna): GET can-create-inscription.
+                                      // Isolada num try próprio — falha de rede/infra aqui NÃO bloqueia
+                                      // o candidato (fail-open); a Cogna valida de novo, com força, no
+                                      // create-inscription final.
+                                      if (offerDetails?.dmhId) {
+                                        try {
+                                          const inscriptionCheck = await canCreateInscription(cleanCpf, offerDetails.dmhId)
+                                          if (inscriptionCheck.inscriptionAllowed === false) {
+                                            const blockedMessage =
+                                              inscriptionCheck.message || 'Este CPF já possui uma inscrição ativa.'
+                                            setCpfInscriptionBlocked(blockedMessage)
+                                            toast.error(blockedMessage)
+                                            trackEvent('cpf_inscription_blocked', {
+                                              course_id: offerDetails?.courseId,
+                                              course_name: offerDetails?.course,
+                                            })
+                                          }
+                                        } catch (checkError: unknown) {
+                                          console.error('Erro ao verificar inscrição existente na Cogna (fail-open, não bloqueia):', checkError)
+                                          trackCheckoutError(trackEvent, 'cpf_inscription_check', checkError)
+                                        }
+                                      }
                                     } catch (error: unknown) {
                                       console.error('Erro ao validar CPF:', error)
                                       const axiosError = error as { response?: { data?: { message?: string } }; message?: string }
                                       const errorMessage = axiosError.response?.data?.message || axiosError.message || 'Erro ao validar CPF. Tente novamente.'
                                       setCpfValidationError(errorMessage)
                                       toast.error(errorMessage)
+                                      trackCheckoutError(trackEvent, 'cpf_validation', error)
                                     } finally {
                                       setIsValidatingCpf(false)
                                     }
@@ -1662,8 +2146,9 @@ const isFormValidForPayment =
                                 }}
                                 placeholder="000.000.000-00"
                                 maxLength={14}
+                                inputMode="numeric"
                                 className={`w-full px-3 py-2 pr-9 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary ${
-                                  cpfValidationError
+                                  cpfValidationError || cpfInscriptionBlocked
                                     ? 'border-red-500'
                                     : cpfValidationOk
                                       ? 'border-green-500'
@@ -1674,7 +2159,7 @@ const isFormValidForPayment =
                                 {isValidatingCpf && (
                                   <Loader2 size={16} className="text-bolsa-primary animate-spin" aria-label="Validando CPF" />
                                 )}
-                                {!isValidatingCpf && cpfValidationOk && (
+                                {!isValidatingCpf && cpfValidationOk && !cpfInscriptionBlocked && (
                                   <Check size={16} className="text-green-600" aria-label="CPF validado" />
                                 )}
                               </div>
@@ -1682,7 +2167,7 @@ const isFormValidForPayment =
                               {isValidatingCpf && (
                                 <p className="text-blue-500 text-xs mt-1">Validando CPF...</p>
                               )}
-                              {!isValidatingCpf && cpfValidationOk && (
+                              {!isValidatingCpf && cpfValidationOk && !cpfInscriptionBlocked && (
                                 <p className="text-green-600 text-xs mt-1">CPF validado — você pode continuar.</p>
                               )}
                             </div>
@@ -1690,39 +2175,8 @@ const isFormValidForPayment =
                         />
                         {errors.cpf && <p className="text-red-500 text-xs mt-1">{errors.cpf.message}</p>}
                         {cpfValidationError && <p className="text-red-500 text-xs mt-1">{cpfValidationError}</p>}
-                        {/* Mensagem quando CPF já existe no nosso banco */}
-                        {cpfExistsInDb && !user && (
-                          <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
-                            <p className="text-xs text-blue-800">
-                              Este CPF já possui uma conta.
-                              {cpfEmailHint && <span> Email: {cpfEmailHint}</span>}
-                            </p>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setAuthMode('login')
-                                setShowAuthModal(true)
-                              }}
-                              className="mt-1 text-xs text-bolsa-primary font-medium hover:underline"
-                            >
-                              Fazer login (opcional)
-                            </button>
-                          </div>
-                        )}
+                        {cpfInscriptionBlocked && <p className="text-red-500 text-xs mt-1">{cpfInscriptionBlocked}</p>}
                       </div>
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">RG</label>
-                        <input
-                          type="text"
-                          {...register('rg')}
-                          placeholder="Ex: 12.345.678-9"
-                          maxLength={15}
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        />
-                        {errors.rg && <p className="text-red-500 text-xs mt-1">{errors.rg.message}</p>}
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <div>
                         <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
                           <Calendar size={14} className="inline mr-1" /> Data de Nascimento
@@ -1743,37 +2197,13 @@ const isFormValidForPayment =
                               }}
                               placeholder="DD-MM-AAAA"
                               maxLength={10}
+                              inputMode="numeric"
+                              autoComplete="bday"
                               className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
                             />
                           )}
                         />
                         {errors.birthDate && <p className="text-red-500 text-xs mt-1">{errors.birthDate.message}</p>}
-                      </div>
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
-                          <GraduationCap size={14} className="inline mr-1" /> Ano de Conclusão
-                        </label>
-                        <select
-                          {...register('schoolYear')}
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        >
-                          <option value="">Selecione</option>
-                          {yearOptions.map((year) => (
-                            <option key={year} value={year}>{year}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Gênero</label>
-                        <select
-                          {...register('gender')}
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        >
-                          <option value="">Selecione</option>
-                          <option value="masculino">Masculino</option>
-                          <option value="feminino">Feminino</option>
-                          <option value="outro">Outro</option>
-                        </select>
                       </div>
                     </div>
                   </div>
@@ -1802,7 +2232,7 @@ const isFormValidForPayment =
                         02 · Contato
                       </span>
                       <h2 className="font-display text-[18px] text-ink-900 leading-tight">
-                        Telefone e endereço
+                        Telefone
                       </h2>
                     </div>
                   </div>
@@ -1817,128 +2247,35 @@ const isFormValidForPayment =
                 </button>
                 {expandedSections.contato && (
                   <div className="px-6 pb-6 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
-                          <Phone size={14} className="inline mr-1" /> Telefone
-                        </label>
-                        <Controller
-                          control={control}
-                          name="phone"
-                          render={({ field }) => (
-                            <input
-                              value={field.value}
-                              onChange={(e) => field.onChange(formatPhone(e.target.value))}
-                              onFocus={() => {
-                                // Tentar cadastrar quando o usuário focar no campo
-                                tryCreateStudent()
-                              }}
-                              onBlur={() => {
-                                // Tentar cadastrar quando o usuário sair do campo
-                                tryCreateStudent()
-                              }}
-                              placeholder="(00) 00000-0000"
-                              maxLength={15}
-                              className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                            />
-                          )}
-                        />
-                        {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
-                      </div>
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">CEP</label>
-                        <Controller
-                          name="cep"
-                          control={control}
-                          render={({ field }) => (
-                            <input
-                              value={field.value}
-                              onChange={(e) => {
-                                const masked = e.target.value
-                                  .replace(/\D/g, '')
-                                  .replace(/(\d{5})(\d)/, '$1-$2')
-                                  .slice(0, 9)
-                                field.onChange(masked)
-                                if (masked.replace(/\D/g, '').length === 8) {
-                                  handleCepChange(masked)
-                                }
-                              }}
-                              onFocus={() => {
-                                // Tentar cadastrar quando o usuário focar no campo
-                                tryCreateStudent()
-                              }}
-                              onBlur={() => {
-                                // Tentar cadastrar quando o usuário sair do campo
-                                tryCreateStudent()
-                              }}
-                              placeholder="00000-000"
-                              maxLength={9}
-                              className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                            />
-                          )}
-                        />
-                        {errors.cep && <p className="text-red-500 text-xs mt-1">{errors.cep.message}</p>}
-                      </div>
-                    </div>
                     <div>
-                      <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Endereço</label>
-                      <input
-                        type="text"
-                        {...register('address')}
-                        onFocus={() => {
-                          // Tentar cadastrar quando o usuário focar no campo
-                          tryCreateStudent()
-                        }}
-                        onBlur={() => {
-                          // Tentar cadastrar quando o usuário sair do campo
-                          tryCreateStudent()
-                        }}
-                        placeholder="Ex: Avenida Paulista"
-                        className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
+                      <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
+                        <Phone size={14} className="inline mr-1" /> Telefone
+                      </label>
+                      <Controller
+                        control={control}
+                        name="phone"
+                        render={({ field }) => (
+                          <input
+                            value={field.value}
+                            onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                            onFocus={() => {
+                              // Tentar cadastrar quando o usuário focar no campo
+                              tryCreateStudent()
+                            }}
+                            onBlur={() => {
+                              // Tentar cadastrar quando o usuário sair do campo
+                              tryCreateStudent()
+                            }}
+                            placeholder="(00) 00000-0000"
+                            maxLength={15}
+                            type="tel"
+                            inputMode="numeric"
+                            autoComplete="tel"
+                            className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
+                          />
+                        )}
                       />
-                      {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>}
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Número</label>
-                        <input
-                          type="text"
-                          {...register('addressNumber')}
-                          placeholder="1106"
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        />
-                        {errors.addressNumber && <p className="text-red-500 text-xs mt-1">{errors.addressNumber.message}</p>}
-                      </div>
-                      <div className="col-span-2">
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Bairro</label>
-                        <input
-                          type="text"
-                          {...register('neighborhood')}
-                          placeholder="Ex: Centro"
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Cidade</label>
-                        <input
-                          type="text"
-                          {...register('city')}
-                          placeholder="Ex: São Paulo"
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        />
-                      </div>
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Estado</label>
-                        <input
-                          type="text"
-                          {...register('state')}
-                          placeholder="Ex: SP"
-                          maxLength={2}
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        />
-                      </div>
+                      {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
                     </div>
                   </div>
                 )}
@@ -2101,28 +2438,62 @@ const isFormValidForPayment =
                             O valor da matrícula e das mensalidades será pago diretamente à instituição de ensino.
                           </p>
 
-                          {/* Voucher — digitação manual liberada somente no profissionalizante */}
+                          {/* Dois argumentos de venda do voucher hoje aplicado (manual OU o
+                              GALENA+15 automático) que ficam escondidos na tabela de parcelas —
+                              fora do bloco do campo pra aparecer mesmo em BOLETO/Crédito, onde
+                              o campo manual não existe mas o GALENA+15 automático continua
+                              valendo. Valores sempre vindos da API, nunca fixos no código. */}
+                          {voucherFirstInstallmentFree && (
+                            <p className="text-xs mt-2 text-green-700 font-medium">
+                              🎉 1ª parcela sai de graça — R$ 0,00 (era {formatCurrency(voucherFirstInstallmentFree.originalInstallmentValue)}).
+                            </p>
+                          )}
+                          {voucherRecorrenteAdvantage && (
+                            <p className="text-xs mt-2 text-blue-700">
+                              💳 Pagando por <strong>Cartão Recorrente</strong> esse voucher rende mais: {voucherRecorrenteAdvantage.recorrentePct}%
+                              de desconto (contra {voucherRecorrenteAdvantage.pixPct}% no PIX) — economia de {formatCurrency(voucherRecorrenteAdvantage.economia)} no total.
+                            </p>
+                          )}
+
+                          {/* Voucher — digitação manual liberada nos dois níveis Cosmos
+                              (pós e profissionalizante); graduação (ATHENAS) não tem esse campo.
+                              Na pós, só aparece com PIX/Cartão Recorrente selecionados — decisão
+                              de negócio, ver `isPosVoucherPaymentType`. */}
                           {showVoucherField && (
                           <div className="mt-4 p-3 border border-dashed border-gray-300 rounded-lg bg-gray-50">
-                            <label className="block text-xs font-medium text-gray-700 mb-2">Possui um voucher?</label>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Possui um voucher?</label>
+                            {/* Regra do cupom único, sempre visível — a pessoa precisa saber
+                                ANTES de aplicar que um novo código troca o atual, não soma. */}
+                            <p className="text-[11px] text-gray-500 mb-2">
+                              Só é possível usar um cupom por inscrição. Validar um novo código aqui
+                              troca o cupom atualmente aplicado — nunca soma aos dois.
+                            </p>
+                            {/* Deixa claro qual desconto está valendo antes de a pessoa mexer no campo —
+                                relevante sobretudo na pós, onde o GALENA+15 já pode estar aplicado sozinho. */}
+                            {voucherValid && voucherCode && (
+                              <p className="text-xs text-gray-600 mb-2">
+                                Hoje está valendo:{' '}
+                                <strong>
+                                  {voucherCode === 'GALENA+15' ? 'desconto automático GALENA+15' : `voucher ${voucherCode}`}
+                                </strong>
+                                .
+                              </p>
+                            )}
                             <div className="flex gap-2">
                               <input
                                 type="text"
-                                value={voucherCode}
+                                value={voucherInputValue}
                                 onChange={(e) => {
-                                  setVoucherCode(e.target.value)
-                                  setVoucherValid(null)
+                                  setVoucherInputValue(e.target.value)
                                   setVoucherMessage('')
-                                  setVoucherData(null)
-                                  setVoucherInstallments([])
-                                                              }}
+                                }}
                                 placeholder="Digite o código do voucher"
                                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
                               />
                               <button
                                 type="button"
                                 onClick={handleValidateVoucher}
-                                disabled={voucherValidating || !voucherCode.trim()}
+                                disabled={voucherValidating || !voucherInputValue.trim()}
                                 className="px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                               >
                                 {voucherValidating ? (
@@ -2133,22 +2504,51 @@ const isFormValidForPayment =
                               </button>
                             </div>
                             {voucherMessage && (
-                              <p className={`text-xs mt-2 ${voucherValid ? 'text-green-600' : 'text-red-600'}`}>
+                              <p
+                                className={`text-xs mt-2 ${
+                                  voucherMessageType === 'success'
+                                    ? 'text-green-600'
+                                    : voucherMessageType === 'warning'
+                                      ? 'text-amber-600'
+                                      : 'text-red-600'
+                                }`}
+                              >
                                 {voucherMessage}
                               </p>
+                            )}
+                            {/* Volta pro automático — a saída pra quem aplicou manual e se
+                                arrependeu (ou ficou com desconto pior), sem recarregar a página. */}
+                            {voucherSource === 'manual' && autoVoucherData && (
+                              <button
+                                type="button"
+                                onClick={handleRestoreAutoVoucher}
+                                className="mt-2 text-xs text-blue-600 underline hover:text-blue-800"
+                              >
+                                Voltar para o desconto automático (GALENA+15)
+                              </button>
                             )}
                           </div>
                           )}
 
                           <button
                             type="submit"
-                            disabled={isSubmitting || !posInstallmentId}
-                            className="group w-full mt-4 inline-flex items-center justify-center gap-3 bg-bolsa-secondary text-white py-4 px-6 rounded-full font-semibold text-[15px] hover:bg-bolsa-secondary/90 disabled:bg-ink-300 disabled:cursor-not-allowed shadow-lg shadow-bolsa-secondary/25 hover:shadow-bolsa-secondary/40 transition-all duration-300"
+                            disabled={
+                              isSubmitting
+                              || !posInstallmentId
+                              || !!cpfInscriptionBlocked
+                              || (offerDetails?.academicLevel === 'POS_GRADUACAO' && posVoucherAutoValidating)
+                            }
+                            className="checkout-step-cta group w-full mt-4 inline-flex items-center justify-center gap-3 bg-bolsa-secondary text-white py-4 px-6 rounded-full font-semibold text-[15px] hover:bg-bolsa-secondary/90 disabled:bg-ink-300 disabled:cursor-not-allowed shadow-lg shadow-bolsa-secondary/25 hover:shadow-bolsa-secondary/40 transition-all duration-300"
                           >
                             {isSubmitting ? (
                               <span className="inline-flex items-center justify-center gap-2">
                                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                                 Processando…
+                              </span>
+                            ) : offerDetails?.academicLevel === 'POS_GRADUACAO' && posVoucherAutoValidating ? (
+                              <span className="inline-flex items-center justify-center gap-2">
+                                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                Verificando condições…
                               </span>
                             ) : (
                               <>
@@ -2169,7 +2569,7 @@ const isFormValidForPayment =
                           <button
                             type="submit"
                             disabled={isSubmitting || !isFormValidForPayment}
-                            className="group w-full inline-flex items-center justify-center gap-3 bg-bolsa-secondary text-white py-4 px-6 rounded-full font-semibold text-[15px] hover:bg-bolsa-secondary/90 disabled:bg-ink-300 disabled:cursor-not-allowed shadow-lg shadow-bolsa-secondary/25 hover:shadow-bolsa-secondary/40 transition-all duration-300"
+                            className="checkout-step-cta group w-full inline-flex items-center justify-center gap-3 bg-bolsa-secondary text-white py-4 px-6 rounded-full font-semibold text-[15px] hover:bg-bolsa-secondary/90 disabled:bg-ink-300 disabled:cursor-not-allowed shadow-lg shadow-bolsa-secondary/25 hover:shadow-bolsa-secondary/40 transition-all duration-300"
                           >
                             {isSubmitting ? (
                               <span className="inline-flex items-center justify-center gap-2">
@@ -2210,7 +2610,9 @@ const isFormValidForPayment =
             {/* Bloco de preço */}
             <div className="bg-paper-warm border border-hairline rounded-2xl p-5 mb-5 relative overflow-hidden">
               <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 mb-2 block">
-                Mensalidade com bolsa
+                {offerIsTotalPriceLevel && !(voucherValid && voucherInstallments.length > 0) && !getSelectedInstallment()
+                  ? 'Valor total do curso'
+                  : 'Mensalidade com bolsa'}
               </span>
 
               {voucherValid && voucherInstallments.length > 0 ? (
@@ -2242,7 +2644,46 @@ const isFormValidForPayment =
                     </>
                   )
                 })()
-              ) : !(voucherValid && voucherInstallments.length > 0) && offerDetails?.montlyFeeFrom && offerDetails.montlyFeeFrom > monthlyFee ? (
+              ) : offerIsTotalPriceLevel ? (
+                /* Pós/profissionalizante sem voucher: montlyFeeTo é o TOTAL
+                   do curso (não mensalidade — ver offerIsTotalPriceLevel).
+                   Antes de escolher a parcela, mostra o total honesto (sem
+                   "/mês"). Depois de escolher, reage à seleção e mostra a
+                   mensalidade REAL daquela parcela (installmentValue) — não
+                   ficava mais parado em montlyFeeTo quando a pessoa trocava
+                   de parcela (bug relatado no checkout, 2026-09). O
+                   De/-%/Economize compara o TOTAL cheio x TOTAL com bolsa —
+                   sempre correto, independente da parcela escolhida. */
+                (() => {
+                  const selectedInstallment = getSelectedInstallment()
+                  return (
+                    <>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-[14px] text-ink-700 font-medium">R$</span>
+                        <span className="font-display num-tabular text-[40px] font-bold text-bolsa-secondary leading-none">
+                          {(selectedInstallment ? selectedInstallment.installmentValue : monthlyFee).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                        {selectedInstallment && <span className="text-[12px] text-ink-500">/mês</span>}
+                      </div>
+                      {priceAnchor && (
+                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <span className="text-[12px] text-ink-300 line-through num-tabular">
+                            De {formatCurrency(offerDetails?.montlyFeeFrom || 0)}
+                          </span>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-bolsa-secondary text-white text-[10px] font-bold tracking-wide">
+                            −{priceAnchor.discountPct}%
+                          </span>
+                        </div>
+                      )}
+                      {priceAnchor?.totalSavings != null && (
+                        <p className="text-[11px] text-emerald-600 mt-1.5">
+                          Economize {formatCurrency(priceAnchor.totalSavings)} até o fim do curso
+                        </p>
+                      )}
+                    </>
+                  )
+                })()
+              ) : offerDetails?.montlyFeeFrom && offerDetails.montlyFeeFrom > monthlyFee ? (
                 <>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-[14px] text-ink-700 font-medium">R$</span>
@@ -2259,6 +2700,11 @@ const isFormValidForPayment =
                       −{Math.round(((offerDetails.montlyFeeFrom - monthlyFee) / offerDetails.montlyFeeFrom) * 100)}%
                     </span>
                   </div>
+                  {priceAnchor?.totalSavings != null && (
+                    <p className="text-[11px] text-emerald-600 mt-1.5">
+                      Economize {formatCurrency(priceAnchor.totalSavings)} até o fim do curso
+                    </p>
+                  )}
                 </>
               ) : (
                 <div className="flex items-baseline gap-1.5">
@@ -2343,144 +2789,6 @@ const isFormValidForPayment =
         </div>
       </div>
 
-      {/* Modal de Login/Registro */}
-      {showAuthModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="text-lg font-bold text-gray-900">
-                {authMode === 'login' ? 'Entrar na sua conta' : 'Criar nova conta'}
-              </h3>
-              <button
-                onClick={() => setShowAuthModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X size={18} className="text-gray-500" />
-              </button>
-            </div>
-            <div className="p-4 space-y-4">
-              {/* Login com Google */}
-              <button
-                type="button"
-                onClick={handleAuthWithGoogle}
-                disabled={isAuthLoading}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                <span className="font-medium">Continuar com Google</span>
-              </button>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">ou</span>
-                </div>
-              </div>
-
-              {/* Info do CPF que será vinculado */}
-              {pendingCpfForRegistration && (
-                <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                  <p className="text-xs text-blue-800">
-                    <strong>CPF:</strong> {pendingCpfForRegistration.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
-                  </p>
-                  <p className="text-xs text-blue-600 mt-1">
-                    Este CPF será vinculado à sua conta após o cadastro.
-                  </p>
-                </div>
-              )}
-
-              {/* Formulário de Email */}
-              <form onSubmit={handleAuthWithEmail} className="space-y-3">
-                {authMode === 'register' && (
-                  <div>
-                    <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Nome completo</label>
-                    <input
-                      type="text"
-                      value={authName}
-                      onChange={(e) => setAuthName(e.target.value)}
-                      placeholder="Seu nome"
-                      required
-                      className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                    />
-                  </div>
-                )}
-                <div>
-                  <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Email</label>
-                  <input
-                    type="email"
-                    value={authEmail}
-                    onChange={(e) => setAuthEmail(e.target.value)}
-                    placeholder="seu@email.com"
-                    required
-                    className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Senha</label>
-                  <input
-                    type="password"
-                    value={authPassword}
-                    onChange={(e) => setAuthPassword(e.target.value)}
-                    placeholder="Sua senha"
-                    required
-                    minLength={6}
-                    className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                  />
-                </div>
-
-                {authError && (
-                  <p className="text-red-500 text-xs">{authError}</p>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={isAuthLoading}
-                  className="w-full bg-bolsa-primary text-white py-3 rounded-xl font-semibold hover:bg-bolsa-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center"
-                >
-                  {isAuthLoading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    authMode === 'login' ? 'Entrar' : 'Criar conta'
-                  )}
-                </button>
-              </form>
-
-              <p className="text-center text-sm text-gray-600">
-                {authMode === 'login' ? (
-                  <>
-                    Não tem conta?{' '}
-                    <button
-                      type="button"
-                      onClick={() => setAuthMode('register')}
-                      className="text-bolsa-primary font-medium hover:underline"
-                    >
-                      Criar conta
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    Já tem conta?{' '}
-                    <button
-                      type="button"
-                      onClick={() => setAuthMode('login')}
-                      className="text-bolsa-primary font-medium hover:underline"
-                    >
-                      Entrar
-                    </button>
-                  </>
-                )}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

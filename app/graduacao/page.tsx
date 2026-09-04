@@ -2,15 +2,24 @@
 import { Metadata } from 'next'
 import GraduacaoClient from './GraduacaoClient';
 import { getVitrine } from '@/app/lib/api/get-vitrine'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
+import { ogImageObject } from '@/app/lib/seo/schema-image'
 
 export const revalidate = 3600
+
+// Card gerado por código (opengraph-image.tsx nesta pasta) — a convenção de
+// arquivo tem precedência sobre `openGraph.images` abaixo pro og:image; aqui
+// alimenta também o twitter:image e o ImageObject do schema, então os três
+// lugares batem.
+const OG_CARD_URL = 'https://www.bolsaclick.com.br/graduacao/opengraph-image'
 
 const jsonLdSchema = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
   name: 'Cursos de Graduação com Bolsa de Estudo',
-  description: 'Descubra cursos de graduação presenciais, EAD e semipresenciais com bolsas de estudo de até 80% em diversas áreas do conhecimento. Bacharelado, Licenciatura e Tecnólogo.',
+  description: `Descubra cursos de graduação presenciais, EAD e semipresenciais com bolsas de estudo de até ${DISCOUNT_CEILING_PCT}% em diversas áreas do conhecimento. Bacharelado, Licenciatura e Tecnólogo.`,
   url: 'https://www.bolsaclick.com.br/graduacao',
+  image: ogImageObject(OG_CARD_URL, `Cursos de graduação com bolsa de estudo de até ${DISCOUNT_CEILING_PCT}% — Bacharelado, Licenciatura e Tecnólogo — Bolsa Click`),
   provider: {
     '@type': 'Organization',
     name: 'Bolsa Click',
@@ -42,8 +51,8 @@ const jsonLdSchema = {
 }
 
 export const metadata: Metadata = {
-  title: 'Bolsa de Estudo em Faculdades - Graduação com até 80% de Desconto',
-  description: 'Encontre bolsa de estudo em faculdades para graduação com até 80% de desconto. Desconto em faculdade para bacharelado, licenciatura e tecnólogo. Cadastre-se grátis!',
+  title: `Bolsa de Estudo em Faculdades - Graduação com até ${DISCOUNT_CEILING_PCT}% de Desconto`,
+  description: `Encontre bolsa de estudo em faculdades para graduação com até ${DISCOUNT_CEILING_PCT}% de desconto. Desconto em faculdade para bacharelado, licenciatura e tecnólogo. Cadastre-se grátis!`,
   keywords: [
     'bolsa de estudo graduação',
     'bolsa de estudos graduação',
@@ -77,15 +86,15 @@ export const metadata: Metadata = {
     canonical: 'https://www.bolsaclick.com.br/graduacao',
   },
   openGraph: {
-    title: 'Bolsa de Estudo em Faculdades - Graduação com até 80% de Desconto',
-    description: 'Encontre bolsa de estudo em faculdades para graduação. Desconto em faculdade de até 80% para bacharelado, licenciatura e tecnólogo. Cadastre-se grátis!',
+    title: `Bolsa de Estudo em Faculdades - Graduação com até ${DISCOUNT_CEILING_PCT}% de Desconto`,
+    description: `Encontre bolsa de estudo em faculdades para graduação. Desconto em faculdade de até ${DISCOUNT_CEILING_PCT}% para bacharelado, licenciatura e tecnólogo. Cadastre-se grátis!`,
     url: 'https://www.bolsaclick.com.br/graduacao',
     siteName: 'Bolsa Click',
     locale: 'pt_BR',
     type: 'website',
     images: [
       {
-        url: 'https://www.bolsaclick.com.br/assets/og-image-bolsaclick.png',
+        url: OG_CARD_URL,
         width: 1200,
         height: 630,
         alt: 'Bolsas de Estudo para Graduação - Bolsa Click',
@@ -95,9 +104,9 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     site: '@bolsaclick',
-    title: 'Bolsa de Estudo em Faculdades - Graduação com até 80% de Desconto',
-    description: 'Graduação com bolsa de estudo? Encontre a sua na Bolsa Click. Desconto em faculdade de até 80%. Cadastre-se grátis!',
-    images: ['https://www.bolsaclick.com.br/assets/og-image-bolsaclick.png'],
+    title: `Bolsa de Estudo em Faculdades - Graduação com até ${DISCOUNT_CEILING_PCT}% de Desconto`,
+    description: `Graduação com bolsa de estudo? Encontre a sua na Bolsa Click. Desconto em faculdade de até ${DISCOUNT_CEILING_PCT}%. Cadastre-se grátis!`,
+    images: [OG_CARD_URL],
   },
 };
 

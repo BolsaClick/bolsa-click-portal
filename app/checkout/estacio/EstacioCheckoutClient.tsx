@@ -21,12 +21,18 @@ import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { pushDataLayerEvent } from '@/app/lib/analytics/gtag'
 import { createLead } from '@/app/lib/api/create-lead'
+import { readUtmifyParams } from '@/app/lib/analytics/utmify-client'
 import { titleCasePtBr } from '@/app/lib/utils/title-case'
+import { getPriceAnchor } from '@/app/lib/utils/price-anchor'
+import { formatCurrency } from '@/utils/fomartCurrency'
 import {
   trackCheckoutViewed,
   trackCheckoutSubmitted,
   trackCheckoutIdentified,
+  trackCheckoutError,
+  reportInscriptionFailure,
 } from '@/app/lib/analytics/checkout-funnel'
+import { suggestEmailCorrection } from '@/app/lib/validation/email-typo'
 
 /** Máscaras simples (CPF / telefone / CEP). */
 const maskCpf = (v: string) =>
@@ -123,7 +129,7 @@ const labelClass =
 export default function EstacioCheckoutClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { trackEvent, setUserProperties } = usePostHogTracking()
+  const { trackEvent, setUserProperties, identifyUser } = usePostHogTracking()
 
   const offer = useMemo(
     () => ({
@@ -143,11 +149,25 @@ export default function EstacioCheckoutClient() {
       // próprio na API de ofertas; formas 1/7/24 sempre usam o preço "price"
       // (default) acima. Opcionais: enquanto o athena-api não mandar esses 2
       // campos, o checkout cai graciosamente no preço único de sempre.
+      // Forma de ingresso da LINHA de catálogo desta oferta (1, 2 ou 3). Define
+      // quais opções podem ser oferecidas — ver `formasSuportadas` abaixo.
+      codFormaIngressoOferta: searchParams.get('codFormaIngressoOferta')
+        ? Number(searchParams.get('codFormaIngressoOferta'))
+        : undefined,
       priceForma2: searchParams.get('priceForma2')
         ? Number(searchParams.get('priceForma2'))
         : undefined,
       priceForma3: searchParams.get('priceForma3')
         ? Number(searchParams.get('priceForma3'))
+        : undefined,
+      // Preço cheio ("de") e duração — pra ancoragem de preço (ver
+      // app/lib/utils/price-anchor.ts). Opcionais: quando o card não manda
+      // (ex.: oferta sem desconto real), o checkout mostra só o preço.
+      maxPrice: searchParams.get('maxPrice')
+        ? Number(searchParams.get('maxPrice'))
+        : undefined,
+      durationInMonths: searchParams.get('durationInMonths')
+        ? Number(searchParams.get('durationInMonths'))
         : undefined,
     }),
     [searchParams],
@@ -174,19 +194,60 @@ export default function EstacioCheckoutClient() {
     return offer.price
   }, [form.codFormaIngresso, offer])
 
-  // Forma 2 (Transferência Externa) e 3 (MSV Externa) só aparecem quando essa
-  // oferta específica tem preço próprio pra elas — sem isso, oferecer a opção
-  // sugeriria uma diferenciação de preço que não existe pra esse curso (Rodrigo,
-  // 2026-07-27). 24/7/4/5/6 ficam sempre visíveis: por design sempre usam o
-  // preço padrão da oferta, não dependem de dado por forma.
+  // Ancoragem de preço (riscado + % + economia total) só faz sentido pro
+  // preço default: offer.maxPrice é o "de" da forma padrão (1/7/24/4/5/6).
+  // Formas 2/3 têm preço próprio sem "de" correspondente — não inventamos
+  // desconto pra elas.
+  const priceAnchor = useMemo(() => {
+    if (displayPrice !== offer.price) return null
+    return getPriceAnchor({
+      from: offer.maxPrice,
+      to: offer.price,
+      durationMonths: offer.durationInMonths,
+    })
+  }, [displayPrice, offer])
+
+  /**
+   * Formas de ingresso que ESTA oferta suporta de verdade.
+   *
+   * A YDUQS não busca a oferta por id — ela busca por um conjunto de
+   * propriedades que INCLUI a forma de ingresso. Oferecer uma forma sem linha
+   * de catálogo correspondente devolve MS004 ("oferta não encontrada") e a
+   * inscrição morre.
+   *
+   * O catálogo da Estácio só publica linhas para as formas 1, 2 e 3. As formas
+   * 24 (Simplificado) e 7 (ENEM) não são linhas próprias: a YDUQS as resolve
+   * como a família {1,7,24} sobre a linha de forma 1. Já 4, 5 e 6 são enviados
+   * literalmente e não têm linha nenhuma — nas duas tentativas com 6, as duas
+   * falharam com MS004.
+   *
+   * Até 2026-08-19 esta lista assumia que 24/7/4/5/6 estavam sempre
+   * disponíveis. Para uma oferta publicada só como Transferência Externa
+   * (forma 2), o candidato aceitava o padrão 24 e caía em MS004 — 7 de 8 casos
+   * medidos. Agora a lista parte da forma da própria oferta.
+   *
+   * Sem o parâmetro (link antigo, já indexado) assume-se a forma 1, que é o
+   * comportamento anterior — não vale quebrar quem chega por um link velho.
+   */
+  const formasSuportadas = useMemo(() => {
+    const base = offer.codFormaIngressoOferta ?? 1
+    const formas = new Set<number>()
+    if (base === 1) {
+      formas.add(24)
+      formas.add(CODIGO_VESTIBULAR_ENEM)
+    } else {
+      formas.add(base)
+    }
+    // 2 e 3 entram quando o catálogo mandou preço próprio pra elas — é a prova
+    // de que a linha existe para este grupo de oferta.
+    if (offer.priceForma2 !== undefined) formas.add(2)
+    if (offer.priceForma3 !== undefined) formas.add(3)
+    return formas
+  }, [offer.codFormaIngressoOferta, offer.priceForma2, offer.priceForma3])
+
   const visibleFormaIngressoOptions = useMemo(
-    () =>
-      FORMA_INGRESSO_OPTIONS.filter((option) => {
-        if (option.value === 2) return offer.priceForma2 !== undefined
-        if (option.value === 3) return offer.priceForma3 !== undefined
-        return true
-      }),
-    [offer.priceForma2, offer.priceForma3],
+    () => FORMA_INGRESSO_OPTIONS.filter((option) => formasSuportadas.has(option.value)),
+    [formasSuportadas],
   )
 
   const [submitting, setSubmitting] = useState(false)
@@ -213,6 +274,7 @@ export default function EstacioCheckoutClient() {
     // Funil unificado — etapa 1 (fluxo Estácio)
     trackCheckoutViewed(trackEvent, {
       flow: 'estacio',
+      checkoutFlow: 'estacio_checkout',
       brand: offer.brand,
       modality: offer.modality,
       offerId: offer.offerId,
@@ -239,6 +301,20 @@ export default function EstacioCheckoutClient() {
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }))
 
+  // Sugestão de digitação do e-mail — nunca bloqueia, só sugere (ver
+  // app/lib/validation/email-typo.ts).
+  const emailTypoSuggestion = form.email ? suggestEmailCorrection(form.email) : null
+
+  // O padrão do formulário é 24, que vale para a maioria das ofertas mas não
+  // para todas: numa linha de catálogo publicada só como Transferência Externa
+  // (forma 2), enviar 24 devolve MS004 e a inscrição morre. Quando o padrão não
+  // está entre as formas suportadas, cai na primeira que a oferta aceita.
+  useEffect(() => {
+    if (visibleFormaIngressoOptions.length === 0) return
+    if (formasSuportadas.has(form.codFormaIngresso)) return
+    setForm((prev) => ({ ...prev, codFormaIngresso: visibleFormaIngressoOptions[0].value }))
+  }, [formasSuportadas, visibleFormaIngressoOptions, form.codFormaIngresso])
+
   // Autofill de endereço via ViaCEP ao completar o CEP (8 dígitos).
   const handleCepBlur = async () => {
     const digits = form.zipCode.replace(/\D/g, '')
@@ -256,8 +332,10 @@ export default function EstacioCheckoutClient() {
           state: data.uf || prev.state,
         }))
       }
-    } catch {
-      // silencioso — usuário preenche manualmente
+    } catch (error) {
+      // silencioso pro usuário — preenche manualmente. Mas era mudo pro
+      // PostHog também: sem sinal nenhum de quando o ViaCEP falha.
+      trackCheckoutError(trackEvent, 'cep_autofill', error)
     } finally {
       setCepLoading(false)
     }
@@ -311,7 +389,7 @@ export default function EstacioCheckoutClient() {
 
     setSubmitting(true)
 
-    // Notealy (estágio 1): cadastra o contato como lead sem bloquear a inscrição.
+    // Persiste o contato como lead (tabela Lead) sem bloquear a inscrição.
     void createLead({
       name: form.name.trim(),
       cpf: form.cpf.replace(/\D/g, ''),
@@ -322,7 +400,53 @@ export default function EstacioCheckoutClient() {
       courseName: offer.courseName,
       institutionName: offer.brand,
       modalidade: offer.modality,
-    }).catch((leadError) => console.error('Notealy lead falhou:', leadError))
+      birthDate: form.birthDate || undefined,
+      source: 'checkout-estacio',
+      utm: readUtmifyParams() as unknown as Record<string, string | null>,
+      // O formulário da Estácio é o mais completo que temos — endereço, RG,
+      // gênero, ano de conclusão. Tudo isso ia só pra Athena e não ficava com
+      // a gente; sem coluna própria, vai em extraData.
+      extraData: {
+        rg: form.rg.trim() || undefined,
+        genero: form.gender || undefined,
+        ano_conclusao: form.graduationYear || undefined,
+        forma_ingresso: form.codFormaIngresso,
+        endereco: {
+          cep: form.zipCode.replace(/\D/g, '') || undefined,
+          logradouro: form.street.trim() || undefined,
+          numero: form.number.trim() || undefined,
+          bairro: form.neighborhood.trim() || undefined,
+          cidade: form.city.trim() || undefined,
+          estado: form.state.trim().toUpperCase() || undefined,
+        },
+        nivel: offer.academicLevel || undefined,
+      },
+    }).catch((leadError) => {
+      console.error('Registro de lead falhou:', leadError)
+      trackCheckoutError(trackEvent, 'estacio_lead_create', leadError)
+    })
+
+    // Funil unificado — etapa 2: identifica ANTES de enviar pra Estácio.
+    // Estava depois do sucesso, o que só identificava quem já tinha convertido:
+    // justamente quem a gente menos precisa rastrear. Aqui, quem falhar já sai
+    // do anonimato e o evento de falha nasce amarrado ao CPF.
+    trackCheckoutIdentified(
+      trackEvent,
+      {
+        flow: 'estacio',
+        checkoutFlow: 'estacio_checkout',
+        brand: offer.brand,
+        modality: offer.modality,
+        offerId: offer.offerId,
+        courseName: offer.courseName,
+        email: form.email.trim() || undefined,
+        phone: form.mobile.replace(/\D/g, '') || undefined,
+        name: form.name.trim() || undefined,
+        cpf: form.cpf,
+      },
+      setUserProperties,
+      identifyUser,
+    )
 
     try {
       const res = await fetch('/api/athena-checkout', {
@@ -376,7 +500,8 @@ export default function EstacioCheckoutClient() {
         already_enrolled: !!data?.alreadyEnrolled,
       })
 
-      // Notealy (estágio 2): marca o contato como "inscrito". Não-bloqueante.
+      // PostHog server-side (enrollment_completed_server): mede a conversão
+      // real independente de consentimento de cookie. Não-bloqueante.
       fetch('/api/leads/confirm-inscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -386,32 +511,30 @@ export default function EstacioCheckoutClient() {
           phone: form.mobile.replace(/\D/g, ''),
           cpf: form.cpf.replace(/\D/g, ''),
           courseName: offer.courseName,
+          courseId: offer.offerId,
           brand: offer.brand,
           modalidade: offer.modality,
           city: offer.city,
+          source: 'YDUQS',
+          inscriptionId: data?.numeroInscricao,
+          // Dados da cobrança, para o CRM conseguir recuperar quem não pagar.
+          // Diferente da Cogna, a Estácio devolve uma URL de verdade — e ela é
+          // opaca, não dá pra reconstruir a partir do número da inscrição.
+          // Se não guardarmos agora, ela se perde quando a aba fecha.
+          paymentUrl: data?.paymentUrl,
+          monthlyPrice: displayPrice,
+          enrollmentFee: data?.amount,
         }),
-      }).catch((confirmError) => console.error('Notealy confirm falhou:', confirmError))
-
-      // Funil unificado — etapa 2 (fluxo Estácio): contato preenchido →
-      // identifica no PostHog antes do evento de inscrição (habilita retargeting).
-      trackCheckoutIdentified(
-        trackEvent,
-        {
-          flow: 'estacio',
-          brand: offer.brand,
-          modality: offer.modality,
-          offerId: offer.offerId,
-          courseName: offer.courseName,
-          email: form.email.trim() || undefined,
-          phone: form.mobile.replace(/\D/g, '') || undefined,
-          name: form.name.trim() || undefined,
-        },
-        setUserProperties,
-      )
+      }).catch((confirmError) => {
+        console.error('Confirmação de inscrição falhou:', confirmError)
+        trackCheckoutError(trackEvent, 'estacio_confirm_inscription_server', confirmError)
+      })
 
       // Funil unificado — etapa 3 (fluxo Estácio): inscrição criada.
+      // (a etapa 2 / identificação agora acontece antes do envio, acima)
       trackCheckoutSubmitted(trackEvent, {
         flow: 'estacio',
+        checkoutFlow: 'estacio_checkout',
         brand: offer.brand,
         modality: offer.modality,
         offerId: offer.offerId,
@@ -455,7 +578,36 @@ export default function EstacioCheckoutClient() {
       if (data?.dueDate) params.set('dueDate', String(data.dueDate))
       router.push(`/checkout/estacio/sucesso?${params.toString()}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao concluir a inscrição.')
+      const message = err instanceof Error ? err.message : 'Erro ao concluir a inscrição.'
+
+      // Este catch era 100% mudo: a inscrição na Estácio falhava, o candidato
+      // via a mensagem de erro na tela e sumia do funil sem deixar rastro
+      // nenhum — nem evento, nem CPF, nem motivo. Mesmo par de sinais do fluxo
+      // Cogna: evento no client (sob consent) + report server-side (sempre).
+      trackEvent('checkout_inscription_failed', {
+        flow: 'estacio',
+        course_name: offer.courseName,
+        offer_id: offer.offerId,
+        brand: offer.brand,
+        modality: offer.modality,
+        error_message: message,
+      })
+      reportInscriptionFailure({
+        flow: 'estacio',
+        cpf: form.cpf,
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.mobile,
+        courseName: offer.courseName,
+        courseId: offer.offerId,
+        brand: offer.brand,
+        modalidade: offer.modality,
+        city: offer.city,
+        source: 'YDUQS',
+        errorMessage: message,
+      })
+
+      setError(message)
       setSubmitting(false)
     }
   }
@@ -550,6 +702,19 @@ export default function EstacioCheckoutClient() {
                     <label className={labelClass}><Mail size={12} className="inline mr-1" />E-mail</label>
                     <input type="email" className={inputClass} value={form.email}
                       onChange={(e) => set('email', e.target.value)} placeholder="seuemail@exemplo.com" />
+                    {emailTypoSuggestion && (
+                      <p className="text-amber-600 text-xs mt-1">
+                        Você quis dizer{' '}
+                        <button
+                          type="button"
+                          className="underline font-medium hover:text-amber-700"
+                          onClick={() => set('email', emailTypoSuggestion)}
+                        >
+                          {emailTypoSuggestion}
+                        </button>
+                        ?
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className={labelClass}>Celular</label>
@@ -716,7 +881,7 @@ export default function EstacioCheckoutClient() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="group mt-5 w-full inline-flex items-center justify-center gap-3 bg-bolsa-secondary text-white py-4 px-6 rounded-full font-semibold text-[15px] hover:bg-bolsa-secondary/90 disabled:bg-ink-300 disabled:cursor-not-allowed shadow-lg shadow-bolsa-secondary/25 hover:shadow-bolsa-secondary/40 transition-all duration-300"
+                  className="checkout-step-cta group mt-5 w-full inline-flex items-center justify-center gap-3 bg-bolsa-secondary text-white py-4 px-6 rounded-full font-semibold text-[15px] hover:bg-bolsa-secondary/90 disabled:bg-ink-300 disabled:cursor-not-allowed shadow-lg shadow-bolsa-secondary/25 hover:shadow-bolsa-secondary/40 transition-all duration-300"
                 >
                   {submitting ? (
                     <span className="inline-flex items-center justify-center gap-2">
@@ -754,6 +919,16 @@ export default function EstacioCheckoutClient() {
                 <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 mb-2 block">
                   Mensalidade com bolsa
                 </span>
+                {priceAnchor && (
+                  <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span className="text-[12px] text-ink-300 line-through num-tabular">
+                      De {formatCurrency(offer.maxPrice!)}
+                    </span>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-bolsa-secondary text-white text-[10px] font-bold tracking-wide">
+                      −{priceAnchor.discountPct}%
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-[14px] text-ink-700 font-medium">R$</span>
                   <span className="font-display num-tabular text-[40px] font-bold text-bolsa-secondary leading-none">
@@ -761,6 +936,11 @@ export default function EstacioCheckoutClient() {
                   </span>
                   <span className="text-[12px] text-ink-500">/mês</span>
                 </div>
+                {priceAnchor?.totalSavings !== null && priceAnchor?.totalSavings !== undefined && (
+                  <p className="text-[11px] text-emerald-600 mt-1.5">
+                    Economize {formatCurrency(priceAnchor.totalSavings)} até o fim do curso
+                  </p>
+                )}
                 {(form.codFormaIngresso === 2 || form.codFormaIngresso === 3) &&
                   displayPrice !== offer.price &&
                   offer.price > 0 && (

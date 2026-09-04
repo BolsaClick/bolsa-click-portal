@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { cache } from 'react'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/app/lib/prisma'
 import { getCurrentTheme } from '@/app/lib/themes'
@@ -9,10 +10,12 @@ import {
   buildAggregateRatingSchema,
 } from '@/app/lib/reviews'
 import { getInstitutionCourses } from '@/app/lib/api/get-institution-courses'
+import { getFeaturedCourseSlugMap } from '@/app/lib/api/featured-course-slugs'
 import FaculdadePageClient from './FaculdadePageClient'
 import { ReviewList } from './_components/ReviewList'
 import { ReviewForm } from './_components/ReviewForm'
 import { BRAND_CONTENT } from './_data/brand-content'
+import { getDisplayDiscountPct } from '@/app/lib/utils/institution-discount'
 
 const theme = getCurrentTheme()
 
@@ -23,6 +26,28 @@ async function getInstitution(slug: string) {
     where: { slug },
   })
 }
+
+/**
+ * Desconto máximo REAL da marca — LÊ InstitutionMaxDiscountCache (populado
+ * por scripts/precompute-institution-max-discount.ts), nunca deriva de uma
+ * busca ao vivo aqui. Memoizado por request (`cache` do React): generateMetadata
+ * e o componente da página chamam esta mesma função e recebem o MESMO valor,
+ * garantindo que título, meta description, H1, resposta GEO e FAQ nunca
+ * divirjam entre si na mesma renderização (era exatamente esse o sintoma dos
+ * dois reverts anteriores). try/catch cobre o período antes da migration ser
+ * aplicada em algum ambiente — tabela ainda não existe → null → fallback
+ * seguro (teto do catálogo, ver getDisplayDiscountPct).
+ */
+const getBrandDiscountRow = cache(async (brandSlug: string) => {
+  try {
+    return await prisma.institutionMaxDiscountCache.findUnique({
+      where: { brand: brandSlug },
+      select: { maxDiscountPctRaw: true, sampleSize: true },
+    })
+  } catch {
+    return null
+  }
+})
 
 export async function generateStaticParams() {
   const institutions = await prisma.institution.findMany({
@@ -46,14 +71,27 @@ export async function generateMetadata({
     }
   }
 
+  // Mesmo valor persistido usado no corpo (H1/GEO/FAQ) — nunca um teto
+  // genérico solto aqui. Só entra em jogo quando a instituição NÃO tem
+  // metaTitle/metaDescription curados no banco (todas as 7 marcas de hoje
+  // têm); existe pra instituições futuras sem copy editorial ainda.
+  const discountPctForMeta = getDisplayDiscountPct(await getBrandDiscountRow(slug))
+  const hasDiscountForMeta = discountPctForMeta > 0
+
   // Strip any trailing "| Bolsa Click" baked into DB metaTitle so the root
   // metadata template (`%s | Bolsa Click`) doesn't double the suffix.
-  const rawTitle = institution.metaTitle || `Faculdade ${institution.name} - Bolsas de Estudo com até 80% de Desconto`
+  const rawTitle =
+    institution.metaTitle ||
+    (hasDiscountForMeta
+      ? `Faculdade ${institution.name} - Bolsas de Estudo com até ${discountPctForMeta}% de Desconto`
+      : `Faculdade ${institution.name}${institution.mecRating ? ` - Nota ${institution.mecRating} no MEC` : ''} - Cursos e Mensalidades`)
   const cleanTitle = rawTitle.replace(/\s*\|\s*Bolsa Click\s*$/i, '').trim()
   const title = `${cleanTitle} | ${theme.shortTitle}`
   const description =
     institution.metaDescription ||
-    `Encontre bolsas de estudo na faculdade ${institution.name} com até 80% de desconto. ${institution.description}`
+    (hasDiscountForMeta
+      ? `Encontre bolsas de estudo na faculdade ${institution.name} com até ${discountPctForMeta}% de desconto. ${institution.description}`
+      : `Veja os cursos, mensalidades reais e nota MEC da faculdade ${institution.name}. ${institution.description}`)
 
   return {
     title: { absolute: title },
@@ -93,13 +131,36 @@ export default async function FaculdadeDetailPage({
     notFound()
   }
 
+  // Mapa nome→slug dos cursos enriquecidos (/cursos/[slug]), pro link "Ver
+  // detalhes do curso" no card — mesmo padrão de SearchResultsData.tsx. Busca
+  // em paralelo com as ofertas da instituição; falha aqui não pode derrubar
+  // a página da faculdade: cai pra {} e os cards simplesmente não mostram o
+  // link secundário.
+  const courseSlugMapPromise = getFeaturedCourseSlugMap().catch((error) => {
+    console.error('Erro ao buscar mapa de slugs de cursos (faculdade):', error)
+    return {} as Record<string, string>
+  })
+
   const reviewSummary = await getInstitutionReviewSummary(institution.id)
   const aggregateRating = buildAggregateRatingSchema(reviewSummary)
   const institutionCourses = await getInstitutionCourses(institution.name)
+  const courseSlugMap = await courseSlugMapPromise
+
+  // Desconto REAL da marca — lido de InstitutionMaxDiscountCache (memoizado
+  // por request, mesma chamada que generateMetadata acima já disparou),
+  // nunca derivado das ofertas ao vivo. Guia toda a copy de bolsa abaixo
+  // (schema, header, corpo, FAQ), incluindo o conteúdo único por marca
+  // (Fase 3). 0 só acontece com evidência positiva de ausência (ex.: IBMEC);
+  // sem medição confiável, cai no teto do catálogo — nunca em branco.
+  const discountPct = getDisplayDiscountPct(await getBrandDiscountRow(institution.slug))
+  const hasDiscount = discountPct > 0
 
   // Conteúdo editorial único da marca (Fase 3). Null se a marca ainda não tem
-  // conteúdo dedicado → template cai no fallback templado.
-  const brandContent = BRAND_CONTENT[institution.slug] ?? null
+  // conteúdo dedicado, OU se ela não tem desconto real hoje — o passo a
+  // passo "como conseguir bolsa" fica sem sentido pra quem não tem bolsa pra
+  // oferecer; nesse caso cai no fallback templado (honesto sobre desconto
+  // zero). Sem exceção por slug — a decisão é 100% guiada pelo dado.
+  const brandContent = hasDiscount ? (BRAND_CONTENT[institution.slug]?.(discountPct) ?? null) : null
 
   // Faixa de preço REAL das ofertas (anti-hallucination: só preços vindos da API,
   // nunca inventado). Alimenta AggregateOffer pra rich result + citabilidade em IA.
@@ -155,7 +216,9 @@ export default async function FaculdadeDetailPage({
     },
     {
       q: `Como conseguir bolsa de estudo na Faculdade ${institution.name}?`,
-      a: `Para conseguir bolsa de estudo na Faculdade ${institution.name}, basta acessar o Bolsa Click, buscar pelo curso desejado, escolher a melhor oferta e se inscrever gratuitamente. As bolsas podem chegar a até 80% de desconto.`,
+      a: hasDiscount
+        ? `Para conseguir bolsa de estudo na Faculdade ${institution.name}, basta acessar o Bolsa Click, buscar pelo curso desejado, escolher a melhor oferta e se inscrever gratuitamente. As bolsas podem chegar a até ${discountPct}% de desconto.`
+        : `Hoje as ofertas de graduação da Faculdade ${institution.name} listadas no Bolsa Click não têm desconto — a mensalidade exibida é o valor cheio da instituição. Você pode comparar com outras faculdades parceiras que têm bolsa própria ativa.`,
     },
     {
       q: `Quais cursos a Faculdade ${institution.name} oferece?`,
@@ -167,7 +230,9 @@ export default async function FaculdadeDetailPage({
     },
     {
       q: `Quanto custa estudar na Faculdade ${institution.name}?`,
-      a: `Os valores das mensalidades na Faculdade ${institution.name} variam de acordo com o curso e a modalidade escolhida. Pelo Bolsa Click, você encontra bolsas de estudo com descontos de até 80% nas mensalidades, tornando o ensino superior muito mais acessível.`,
+      a: hasDiscount
+        ? `Os valores das mensalidades na Faculdade ${institution.name} variam de acordo com o curso e a modalidade escolhida. Pelo Bolsa Click, você encontra bolsas de estudo com descontos de até ${discountPct}% nas mensalidades, tornando o ensino superior muito mais acessível.`
+        : `Os valores das mensalidades na Faculdade ${institution.name} variam de acordo com o curso e a modalidade escolhida. Hoje essas mensalidades são o valor cheio da instituição, sem desconto — confira os preços reais de cada curso na seção de ofertas acima.`,
     },
     {
       q: `A Faculdade ${institution.name} tem cursos EAD?`,
@@ -232,6 +297,8 @@ export default async function FaculdadeDetailPage({
         institution={institution}
         initialCourses={institutionCourses}
         brandContent={brandContent}
+        courseSlugMap={courseSlugMap}
+        discountPct={discountPct}
       />
 
       {/* id="avaliacoes": âncora dos CTAs pós-matrícula (success pages) que

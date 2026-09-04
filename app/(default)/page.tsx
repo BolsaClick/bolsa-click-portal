@@ -17,16 +17,24 @@ import { courseAreaPose } from '../components/v2/mascot/course-area'
 import ReactiveCta, { reactiveClasses } from '../components/v2/ui/ReactiveCta'
 import { loadBlogPosts, loadShelf } from '../lib/home/vitrine'
 import { getCurrentTheme } from '../lib/themes'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
+import { seoSite } from '../lib/seo/site-config'
 
 export const revalidate = 3600
 
 const theme = getCurrentTheme()
+// Card gerado por código (opengraph-image.tsx nesta pasta). Desenhado pro
+// tema bolsaclick (ver nota em app/lib/og/shared.tsx); nos outros temas
+// (mesmo repo, NEXT_PUBLIC_THEME) mantém o fallback estático `theme.ogImage`
+// pra não vazar a marca Bolsa Click pro og:image/twitter:image deles.
+const ogCardUrl = seoSite.key === 'bolsaclick' ? `${theme.siteUrl}/opengraph-image` : theme.ogImage
 
 // Title lidera com o head-term "bolsa de estudo" — a home é a página de maior
 // autoridade do domínio e deve carregar o termo que queremos rankear.
 // Padrão atual (decisão 2026-07): "Bolsa de Estudo nas Maiores Redes de Ensino
 // do Brasil" — mantém o termo, DIFERENCIA o padrão da pillar /bolsas-de-estudo
-// (que usa 'Bolsas de Estudo até 80%: Compare...') e alinha com o H1 do hero.
+// (que usa "Bolsas de Estudo até {DISCOUNT_CEILING_PCT}%: Compare...", ver
+// app/lib/copy/claims.ts) e alinha com o H1 do hero.
 // NÃO reverter pra title só de marca por medo de canibalizar /bolsas-de-estudo:
 // canibalização exige mesma INTENÇÃO + conteúdo, não só overlap de keyword. A
 // home é hub de marca (navegacional/institucional) e a pillar é ferramenta de
@@ -40,9 +48,9 @@ export const metadata: Metadata = {
   // rotas filhas). Sem isso, "%s | Bolsa Click" era colado por cima de um valor
   // que já terminava em "Bolsa Click" → marca duplicada no <title>.
   title: {
-    absolute: 'Bolsa de Estudo nas Maiores Redes de Ensino do Brasil | Bolsa Click',
+    absolute: 'Bolsa de Estudo nas Maiores Redes de Ensino | Bolsa Click',
   },
-  description: 'Bolsa de estudo de até 80% em faculdades como Anhanguera, Estácio e Unopar, todas reconhecidas pelo MEC. Inscrição grátis, no EAD ou presencial.',
+  description: `Bolsa de estudo de até ${DISCOUNT_CEILING_PCT}% em Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden, reconhecidas pelo MEC. Cadastro grátis, sem taxa. EAD ou presencial.`,
   keywords: [
     'bolsa de estudo',
     'bolsa de estudos',
@@ -57,7 +65,7 @@ export const metadata: Metadata = {
     'faculdades com desconto',
     'faculdade com desconto',
     'bolsa para faculdade',
-    'bolsa de estudo até 80%',
+    `bolsa de estudo até ${DISCOUNT_CEILING_PCT}%`,
     'bolsa de estudo online',
     'bolsa de estudo EAD',
     'bolsa de estudo presencial',
@@ -80,7 +88,7 @@ export const metadata: Metadata = {
     siteName: theme.name,
     images: [
       {
-        url: theme.ogImage,
+        url: ogCardUrl,
         width: 1200,
         height: 630,
         alt: theme.name,
@@ -94,7 +102,7 @@ export const metadata: Metadata = {
     site: theme.twitter,
     title: theme.title,
     description: theme.description,
-    images: [theme.ogImage],
+    images: [ogCardUrl],
   },
   icons: {
     icon: theme.favicon,
@@ -150,8 +158,8 @@ export default async function HomePage() {
   // de mostrar oferta inventada ou buraco por 1h.
   const [popular, eadOffers, blogPosts] = await Promise.all([
     // "Mais procurados": com cidade a API usa o endpoint real /offers/most-searched
-    loadShelf({ city: 'SAO PAULO', state: 'SP' }),
-    loadShelf({ modality: 'EAD' }),
+    loadShelf({ city: 'SAO PAULO', state: 'SP' }, 'mais-procurados'),
+    loadShelf({ modality: 'EAD' }, 'bolsas-ead'),
     loadBlogPosts(),
   ])
 
@@ -164,7 +172,7 @@ export default async function HomePage() {
         "name": "Como funcionam as bolsas de estudo do Bolsa Click?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "O Bolsa Click conecta estudantes a bolsas de estudo de até 80% de desconto nas maiores redes de ensino do Brasil — Anhanguera, Unopar, Pitágoras, Unime e Estácio. Você pode buscar por curso, cidade e modalidade, comparar preços e se cadastrar gratuitamente para garantir sua bolsa."
+          "text": `O Bolsa Click conecta estudantes a bolsas de estudo de até ${DISCOUNT_CEILING_PCT}% de desconto nas maiores redes de ensino do Brasil — Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden. Cadastro grátis, sem taxa de adesão. Você pode buscar por curso, cidade e modalidade, comparar preços e se cadastrar para garantir sua bolsa.`
         }
       },
       {
@@ -220,7 +228,7 @@ export default async function HomePage() {
         "name": "Existem bolsas EAD disponíveis?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Sim! O Bolsa Click oferece milhares de bolsas EAD com descontos de até 80%. Os cursos a distância possuem diploma reconhecido pelo MEC, igual ao presencial. Estude de casa, no seu ritmo."
+          "text": `Sim! O Bolsa Click oferece milhares de bolsas EAD com descontos de até ${DISCOUNT_CEILING_PCT}%. Os cursos a distância possuem diploma reconhecido pelo MEC, igual ao presencial. Estude de casa, no seu ritmo.`
         }
       }
     ]

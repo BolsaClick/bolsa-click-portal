@@ -10,7 +10,18 @@ const PRIVATE_PATHS = [
   '/minha-conta/',
   '/favoritos',
   '/recuperar-senha',
+  // Rotas de preview interno — não são conteúdo público, não devem ser rastreadas.
+  '/dev/',
 ]
+
+// `/api/og/` gera a imagem de compartilhamento de `/curso/resultado` (a
+// página mais visitada do site é dirigida por query string, não por
+// segmento de rota — não dá pra usar a convenção `opengraph-image.tsx`, que
+// não recebe searchParams; ver app/api/og/resultado/route.tsx). Path mais
+// específico que '/api/' — pelas regras padrão de robots.txt (Google, e os
+// crawlers de IA abaixo seguem a mesma convenção), o `allow` mais específico
+// vence o `disallow` genérico, então isso NÃO reabre o resto de `/api/`.
+const PUBLIC_IMAGE_PATHS = ['/api/og/']
 
 export default function robots(): MetadataRoute.Robots {
   // OAI-SearchBot = ChatGPT browse/search (≠ GPTBot que é treinamento)
@@ -39,14 +50,14 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: '/',
+        allow: ['/', ...PUBLIC_IMAGE_PATHS],
         disallow: PRIVATE_PATHS,
       },
       // Permitir explicitamente crawlers de IA — o site é citável e queremos
       // visibilidade em ChatGPT, Claude, Perplexity e Google AI Overviews.
       ...aiCrawlers.map((userAgent) => ({
         userAgent,
-        allow: '/',
+        allow: ['/', ...PUBLIC_IMAGE_PATHS],
         disallow: PRIVATE_PATHS,
       })),
     ],

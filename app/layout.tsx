@@ -9,8 +9,10 @@ import { GatedVercelAnalytics } from './components/providers/GatedVercelAnalytic
 import { WebVitalsReporter } from './components/providers/WebVitalsReporter'
 import './globals.css'
 import { business } from './lib/constants/business'
+import { DISCOUNT_CEILING_PCT } from './lib/copy/claims'
 import { getCurrentTheme } from './lib/themes'
 import { publicRobots, seoSite } from './lib/seo/site-config'
+import { ogImageObject } from './lib/seo/schema-image'
 
 // font-display: optional reduz CLS — se a fonte web não carregar dentro de
 // ~100ms, fica com o fallback definitivamente (sem reflow tardio). Trade-off:
@@ -39,6 +41,10 @@ const fraunces = Fraunces({
 })
 
 const theme = getCurrentTheme()
+// Mesmo card gerado por opengraph-image.tsx da home usado no og:image/
+// twitter:image de app/(default)/page.tsx — ver nota lá sobre o guard por
+// tema (o card é desenhado pro bolsaclick).
+const ogCardUrl = seoSite.key === 'bolsaclick' ? `${theme.siteUrl}/opengraph-image` : theme.ogImage
 
 const gtmId = process.env.NEXT_PUBLIC_GTM_ID || ''
 const ga4Id = process.env.NEXT_PUBLIC_GA4_ID || ''
@@ -67,7 +73,7 @@ export const metadata: Metadata = {
     'faculdades com desconto',
     'faculdade com desconto',
     'bolsa para faculdade',
-    'bolsa de estudo até 80%',
+    `bolsa de estudo até ${DISCOUNT_CEILING_PCT}%`,
     'bolsa de estudo online',
     'bolsa de estudo EAD',
     'bolsa de estudo presencial',
@@ -152,14 +158,14 @@ const jsonLd = [
     alternateName: seoSite.alternateNames,
     ...(business.legalName && { legalName: business.legalName }),
     ...(business.cnpj && { taxID: business.cnpj, vatID: business.cnpj }),
-    description: 'Plataforma brasileira de bolsas de estudo com até 80% de desconto em faculdades e universidades. Graduação, pós-graduação, cursos técnicos e EAD.',
+    description: `Plataforma brasileira de bolsas de estudo com até ${DISCOUNT_CEILING_PCT}% de desconto em faculdades e universidades. Graduação, pós-graduação, cursos técnicos e EAD.`,
     url: theme.siteUrl,
     logo: seoSite.logo,
-    image: theme.ogImage,
+    image: ogImageObject(ogCardUrl, `${seoSite.name}: bolsas de estudo de até ${DISCOUNT_CEILING_PCT}% em faculdades reconhecidas pelo MEC`),
     naics: '611710',
     industry: 'Educação Superior',
     knowsAbout: ['bolsas de estudo', 'educação superior', 'faculdades', 'graduação', 'pós-graduação', 'EAD'],
-    slogan: 'Bolsas de estudo com até 80% de desconto',
+    slogan: `Bolsas de estudo com até ${DISCOUNT_CEILING_PCT}% de desconto`,
     // Banda anual (YYYY) — schema.org aceita; evita data inventada (CLAUDE.md).
     // Atualizar quando data exata de constituição estiver disponível em env.
     foundingDate: '2024',
@@ -173,6 +179,7 @@ const jsonLd = [
       'https://www.facebook.com/bolsaclickbrasil',
       'https://www.linkedin.com/company/bolsa-click',
       'https://x.com/bolsaclick',
+      'https://www.reclameaqui.com.br/empresa/bolsa-click/',
     ],
     areaServed: {
       '@type': 'Country',
@@ -215,7 +222,7 @@ const jsonLd = [
   {
     '@context': 'https://schema.org',
     '@type': 'EducationalOccupationalProgram',
-    name: 'Bolsas de estudo com até 80% de desconto',
+    name: `Bolsas de estudo com até ${DISCOUNT_CEILING_PCT}% de desconto`,
     // Schema.org: aceita "online" | "onsite" | "blended" (NOT "presencial"/"semipresencial").
     educationalProgramMode: ['online', 'onsite', 'blended'],
     occupationalCredentialAwarded: [
@@ -239,7 +246,7 @@ const jsonLd = [
         '@type': 'Country',
         name: 'Brasil',
       },
-      description: 'Inscreva-se gratuitamente para obter bolsas de estudo em universidades e escolas com até 80% de desconto.',
+      description: `Inscreva-se gratuitamente para obter bolsas de estudo em universidades e escolas com até ${DISCOUNT_CEILING_PCT}% de desconto.`,
     },
   },
 ]

@@ -1,7 +1,10 @@
 import { tartarus } from "./axios"
 import { getMostSearchedCourses } from "./get-most-searched-courses"
 import { normalizeAcademicLevel } from "../academic-level"
-import { normalizeBrand } from "../utils/brand"
+import { normalizeBrand, cognaBrandParam, yduqsBrandSlug } from "../utils/brand"
+
+/** Marcas YDUQS consultadas quando o usuário não filtrou por marca. */
+const ALL_YDUQS_BRAND_SLUGS = ['estacio', 'ibmec', 'wyden']
 
 interface Course {
   modality?: string
@@ -31,6 +34,18 @@ export type OfferSource = 'cogna' | 'estacio'
 const SOURCE_TIMEOUT_MS = 15_000
 
 /**
+ * Traduz os labels de marca selecionados (?marcas=) em filtros por FONTE.
+ * `active` = pelo menos um label reconhecido; labels desconhecidos sozinhos
+ * desligam o roteamento (comportamento de hoje, filtro client-side cobre).
+ */
+function resolveBrandFilter(brands?: string[]) {
+  const labels = (brands ?? []).map((b) => b.trim()).filter(Boolean)
+  const cogna = labels.map(cognaBrandParam).filter((b): b is string => !!b)
+  const yduqs = labels.map(yduqsBrandSlug).filter((b): b is string => !!b)
+  return { cogna, yduqs, active: cogna.length > 0 || yduqs.length > 0 }
+}
+
+/**
  * Busca curso+cidade pública: mescla a fonte Tartarus (Cogna) com as ofertas
  * Estácio (via Athena), na mesma lista. As ofertas Athena entram apenas na
  * página 1 (a paginação client-side roda sobre o array combinado); falha de
@@ -47,15 +62,27 @@ export async function getShowFiltersCourses(
   modality?: string,
   academicLevelInput: string = 'GRADUACAO',
   page: number = 1,
-  size: number = 10
+  size: number = 10,
+  /** Labels de marca normalizados (?marcas=) — restringe as FONTES no servidor. */
+  brands?: string[]
 ) {
   const academicLevel = normalizeAcademicLevel(academicLevelInput)
+  const brandFilter = resolveBrandFilter(brands)
+  // Com filtro ativo, fonte sem marca selecionada nem é consultada: Cogna sem
+  // marca Cogna vira resultado vazio; Athena sem marca YDUQS é pulada.
+  const skipTartarus = brandFilter.active && brandFilter.cogna.length === 0
+  const skipAthena = brandFilter.active && brandFilter.yduqs.length === 0
 
   const [tartarusResult, athenaResult] = await Promise.allSettled([
-    getTartarusFilteredCourses(courseName, city, state, modality, academicLevel, page, size),
+    skipTartarus
+      ? Promise.resolve({ data: [] as CourseWithPrices[], totalItems: 0, totalPages: 0 })
+      : getTartarusFilteredCourses(
+          courseName, city, state, modality, academicLevel, page, size,
+          brandFilter.cogna.length ? brandFilter.cogna : undefined,
+        ),
     // Athena só na primeira página, pra não repetir as mesmas ofertas em páginas seguintes.
-    page === 1
-      ? fetchAthenaOffers({ courseName, city, state, modality, academicLevel })
+    page === 1 && !skipAthena
+      ? fetchAthenaOffers({ courseName, city, state, modality, academicLevel }, brandFilter.yduqs)
       : Promise.resolve([] as CourseWithPrices[]),
   ])
 
@@ -166,40 +193,88 @@ export async function getShowFiltersCourses(
  * Promise.allSettled do getShowFiltersCourses — assim ele distingue
  * "Athena sem ofertas" de "Athena fora do ar" e sinaliza resultado parcial.
  */
-async function fetchAthenaOffers(params: {
-  courseName?: string
-  city?: string
-  state?: string
-  modality?: string
-  academicLevel?: string
-}): Promise<CourseWithPrices[]> {
+async function fetchAthenaOffers(
+  params: {
+    courseName?: string
+    city?: string
+    state?: string
+    modality?: string
+    academicLevel?: string
+  },
+  /** Termos de marca YDUQS ("estacio"/"ibmec"/"wyden") — uma consulta por
+   *  marca em paralelo, deduplicada por offerId. Vazio = sem filtro. */
+  yduqsBrands: string[] = [],
+): Promise<CourseWithPrices[]> {
+  // Sem filtro de marca, consultamos marca a marca em vez de uma consulta
+  // aberta — porque a consulta ABERTA é justamente a que quebra na Athena.
+  //
+  // Medido em 2026-08-17 (curso "Psicologia"):
+  //   sem brand          -> HTTP 500 em 10,7s
+  //   brand=estacio      -> 200 em 2,8s, 20 ofertas
+  //   brand=wyden        -> 200 em 1,9s, 20 ofertas
+  //   brand=ibmec        -> 200 em 0,2s, 0 ofertas
+  //
+  // O cliente tem timeout de 15s, então a consulta aberta estourava e o
+  // Promise.allSettled degradava em silêncio: a página de curso ficava só com
+  // ofertas Cogna e a Estácio sumia sem erro visível. Era o caso de
+  // /cursos/psicologia-bacharelado.
+  //
+  // MITIGAÇÃO, não correção: o 500 é um defeito do athena-api e está reportado.
+  // Quando ele for corrigido, dá pra voltar à consulta única — mas consultar
+  // por marca também paraleliza, então provavelmente não vale reverter.
+  const brandTerms: (string | undefined)[] = yduqsBrands.length
+    ? yduqsBrands
+    : ALL_YDUQS_BRAND_SLUGS
+
   // No servidor (SSR/RSC), chama a Athena direto — sem round-trip HTTP pra si
   // mesmo (e sem depender de uma URL relativa, que não existe fora do browser).
   // Import dinâmico: mantém athena-offers.ts (e o client axios `athena`) fora
   // do bundle client, já que esse branch nunca roda lá (guard acima).
   if (typeof window === 'undefined') {
     const { searchAthenaOffers, normalizeAthenaOffer } = await import('./athena-offers')
-    const offers = await searchAthenaOffers(params)
-    return offers
+    const perBrand = await Promise.all(
+      brandTerms.map((brand) => searchAthenaOffers({ ...params, brand })),
+    )
+    const seen = new Set<string>()
+    return perBrand
+      .flat()
+      .filter((o) => {
+        const id = String(o.id ?? '')
+        if (!id || seen.has(id)) return false
+        seen.add(id)
+        return true
+      })
       .map(normalizeAthenaOffer)
       .filter((c) => !!c.offerId) as unknown as CourseWithPrices[]
   }
 
-  const qs = new URLSearchParams()
-  if (params.courseName?.trim()) qs.set('courseName', params.courseName.trim())
-  if (params.city?.trim()) qs.set('city', params.city.trim())
-  if (params.state?.trim()) qs.set('state', params.state.trim())
-  if (params.modality?.trim()) qs.set('modality', params.modality.trim())
-  if (params.academicLevel?.trim()) qs.set('academicLevel', params.academicLevel.trim())
+  const fetchOne = async (brand?: string): Promise<CourseWithPrices[]> => {
+    const qs = new URLSearchParams()
+    if (params.courseName?.trim()) qs.set('courseName', params.courseName.trim())
+    if (params.city?.trim()) qs.set('city', params.city.trim())
+    if (params.state?.trim()) qs.set('state', params.state.trim())
+    if (params.modality?.trim()) qs.set('modality', params.modality.trim())
+    if (params.academicLevel?.trim()) qs.set('academicLevel', params.academicLevel.trim())
+    if (brand) qs.set('brand', brand)
 
-  const res = await fetch(`/api/athena-offers?${qs.toString()}`, {
-    signal: AbortSignal.timeout(SOURCE_TIMEOUT_MS),
-  })
-  if (!res.ok) {
-    throw new Error(`Athena offers respondeu ${res.status}`)
+    const res = await fetch(`/api/athena-offers?${qs.toString()}`, {
+      signal: AbortSignal.timeout(SOURCE_TIMEOUT_MS),
+    })
+    if (!res.ok) {
+      throw new Error(`Athena offers respondeu ${res.status}`)
+    }
+    const json = await res.json()
+    return Array.isArray(json?.data) ? (json.data as CourseWithPrices[]) : []
   }
-  const json = await res.json()
-  return Array.isArray(json?.data) ? (json.data as CourseWithPrices[]) : []
+
+  const perBrand = await Promise.all(brandTerms.map(fetchOne))
+  const seen = new Set<string>()
+  return perBrand.flat().filter((o) => {
+    const id = String((o as { offerId?: string }).offerId ?? '')
+    if (!id || seen.has(id)) return false
+    seen.add(id)
+    return true
+  })
 }
 
 async function getTartarusFilteredCourses(
@@ -209,15 +284,18 @@ async function getTartarusFilteredCourses(
   modality: string | undefined,
   academicLevel: string,
   page: number = 1,
-  size: number = 10
+  size: number = 10,
+  /** Marcas Cogna (enum Tartarus: ANHANGUERA, UNOPAR, …) — vai direto na busca. */
+  cognaBrands?: string[]
 ) {
 
   // Se NÃO houver courseName (undefined, null, string vazia ou só espaços), usar a API de cursos mais buscados
   // Exceto para pós-graduação: o endpoint /offers/most-searched pode não retornar POS; usar sempre cogna/courses/search
+  // Com filtro de marca, pular o most-searched (ele não filtra por marca) e ir direto na busca.
   const hasCourseName = courseName && courseName.trim() && courseName.trim().length > 0
   const isPosGraduation = academicLevel === 'POS_GRADUACAO'
 
-  if (!hasCourseName && !isPosGraduation) {
+  if (!hasCourseName && !isPosGraduation && !cognaBrands?.length) {
     if (city && city.trim()) {
       try {
         const mostSearched = await getMostSearchedCourses(city)
@@ -313,6 +391,11 @@ async function getTartarusFilteredCourses(
     if (['EAD', 'PRESENCIAL', 'SEMIPRESENCIAL'].includes(modalityUpper)) {
       params.modality = [modalityUpper]
     }
+  }
+
+  // Filtro de marca server-side (?marcas= na URL de resultado).
+  if (cognaBrands?.length) {
+    params.brands = cognaBrands
   }
 
   // Serializador customizado para remover colchetes dos arrays

@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { getCityFromOurAPIByIP } from '@/app/lib/api/get-city-from-api-by-ip'
+import { brazilCityStateOrNull } from '@/app/lib/geo/brazil-location'
 import { isBot } from '@/app/lib/utils/is-bot'
 
 type LocationData = {
@@ -35,22 +36,24 @@ export const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
     const detectLocation = async () => {
       try {
         const location = await getCityFromOurAPIByIP()
+        const allowed = brazilCityStateOrNull(location?.city, location?.state)
 
-        if (location) {
-          setCity(location.city)
-          setRegion(location.state)
-          setState(location.state)
-          setTown(location.city)
+        if (allowed) {
+          setCity(allowed.city)
+          setRegion(allowed.state)
+          setState(allowed.state)
+          setTown(allowed.city)
         } else {
+          // Foreign IP, DC/US, or lookup miss: keep city empty (placeholder).
+          setCity(null)
+          setRegion(null)
+          setState(null)
+          setTown(null)
           setError('Não foi possível obter a localização.')
         }
       } catch (err) {
         console.error('Erro ao detectar localização por IP:', err)
         setError('Não foi possível obter a localização.')
-        setCity('São Paulo')
-        setRegion('SP')
-        setState('SP')
-        setTown('São Paulo')
       }
     }
 

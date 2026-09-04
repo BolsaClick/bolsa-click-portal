@@ -1,4 +1,5 @@
 import Container from '../../atoms/Container'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const cards = [
   {
@@ -16,7 +17,7 @@ const cards = [
   {
     number: '03',
     label: 'Desconto',
-    title: 'Até 80% de bolsa.',
+    title: `Até ${DISCOUNT_CEILING_PCT}% de bolsa.`,
     description: 'Compare ofertas entre faculdades e descubra a que cabe no seu bolso.',
   },
 ]

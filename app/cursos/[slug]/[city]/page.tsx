@@ -1,15 +1,16 @@
 import { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 import { cache } from 'react'
-import { unstable_cache } from 'next/cache'
 import { prisma } from '@/app/lib/prisma'
-import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { resolveCanonicalCourseSlug } from '@/app/lib/seo/slug-resolver'
-import { shouldIndexCityPage } from '@/app/lib/seo/city-page-gate'
+import { shouldIndexCityPage, MIN_TREND_SCORE_FOR_HIGH_DEMAND } from '@/app/lib/seo/city-page-gate'
 import { durationToIso8601 } from '@/app/lib/seo/schema-helpers'
 import { buildBrandedCourseCopy, canIndexBrandedCopy } from '@/app/lib/seo/branded-course-copy'
 import { absoluteUrl, publicRobots, seoSite } from '@/app/lib/seo/site-config'
-import { FeaturedCourseData } from '../../_data/types'
+import { ogImageObject } from '@/app/lib/seo/schema-image'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
+import { getCourseBySlug } from '../_data/course-lookup'
+import { getCityCourseOffers, priceRangeFromOffers, probeAthenaHealth } from './_data/city-offers'
 import { BRAZILIAN_CITIES, getCityBySlug } from '@/app/lib/constants/brazilian-cities'
 import {
   OffersComparisonTable,
@@ -31,69 +32,11 @@ type Props = {
 // ISR: Revalidar a cada 1 hora
 export const revalidate = 86400
 
-// Helper para buscar curso do banco de dados
-const getCourseBySlug = cache(async (slug: string): Promise<FeaturedCourseData | null> => {
-  try {
-    const course = await prisma.featuredCourse.findUnique({
-      where: {
-        slug,
-        isActive: true,
-      },
-    })
-    return course as FeaturedCourseData | null
-  } catch (error) {
-    console.error('Erro ao buscar curso do banco de dados:', error)
-    return null
-  }
-})
-
 // Não gerar páginas no build para evitar sobrecarregar o banco/API
 // Todas as city pages são geradas on-demand na primeira visita e cacheadas via ISR (1h)
 export async function generateStaticParams() {
   return []
 }
-
-// Busca ofertas de cidade. Retorna offers + flag fromFallback indicando se
-// caímos na busca nacional por falta de estoque local. unstable_cache persiste
-// o resultado da API tartarus por 10 min entre renders; react.cache deduplicar
-// dentro do mesmo request (generateMetadata + page component).
-const _getCityCourseOffersBase = unstable_cache(
-  async (
-    apiCourseName: string,
-    cityName: string,
-    stateUF: string,
-    nivel: string,
-  ) => {
-    try {
-      const cityResponse = await getShowFiltersCourses(
-        apiCourseName, cityName, stateUF, undefined, nivel, 1, 20
-      )
-      const cityOffers = cityResponse?.data || []
-      if (cityOffers.length > 0) {
-        return { offers: cityOffers, fromFallback: false }
-      }
-
-      const generalResponse = await getShowFiltersCourses(
-        apiCourseName, undefined, undefined, undefined, nivel, 1, 20
-      )
-      return { offers: generalResponse?.data || [], fromFallback: true }
-    } catch (error) {
-      console.error(`Erro ao buscar ofertas para ${apiCourseName} em ${cityName}:`, error)
-      try {
-        const fallbackResponse = await getShowFiltersCourses(
-          apiCourseName, undefined, undefined, undefined, nivel, 1, 20
-        )
-        return { offers: fallbackResponse?.data || [], fromFallback: true }
-      } catch {
-        return { offers: [], fromFallback: true }
-      }
-    }
-  },
-  ['city-course-offers'],
-  { revalidate: 600 },
-)
-
-const getCityCourseOffers = cache(_getCityCourseOffersBase)
 
 // Lê a contagem de ofertas PRECOMPUTADA (CityCourseOfferCache) — mesma fonte que
 // o sitemap usa pra decidir quais URLs emitir. A página passa a decidir
@@ -109,26 +52,190 @@ const getCachedOfferCount = cache(async (
   try {
     const row = await prisma.cityCourseOfferCache.findUnique({
       where: { featuredCourseId_citySlug: { featuredCourseId, citySlug } },
-      select: { offerCount: true },
+      select: { offerCount: true, athenaOfferCount: true },
     })
-    return row?.offerCount ?? null
+    if (!row) return null
+    // MESCLADO (Cogna + Athena), desde 04/09. Era `offerCount` sozinho, que é
+    // só a Cogna — e foi essa leitura parcial que manteve página com oferta
+    // real da Estácio presa em noindex. Medido no banco antes da mudança:
+    // 2.948 combinações viram noindex → index só por passar a somar.
+    //
+    // `athenaOfferCount` é 0 tanto pra "não tem oferta" quanto pra "ainda não
+    // medida" (athenaFetchedAt null). Somar zero nos dois casos é o lado
+    // seguro: nunca indexa por dado que não existe, e a linha entra sozinha
+    // assim que a varredura semanal a alcançar.
+    return row.offerCount + row.athenaOfferCount
   } catch {
     return null
   }
 })
 
-function priceRangeFromOffers(offers: unknown[]) {
-  const prices = (offers as { minPrice?: number; prices?: { withDiscount?: number } }[])
-    .map(o => o.minPrice || o.prices?.withDiscount || 0)
-    .filter(p => p > 0)
-  const maxPrices = (offers as { maxPrice?: number; prices?: { withoutDiscount?: number } }[])
-    .map(o => o.maxPrice || o.prices?.withoutDiscount || 0)
-    .filter(p => p > 0)
-  return {
-    lowPrice: prices.length > 0 ? Math.min(...prices) : 0,
-    highPrice: maxPrices.length > 0 ? Math.max(...maxPrices) : 0,
-    offerCount: offers.length,
+/**
+ * Resolve a contagem de ofertas que alimenta o gate de indexação
+ * (shouldIndexCityPage) — ver app/lib/seo/city-page-gate.ts.
+ *
+ * ROLLOUT FASEADO (2026-09-02, fix/gate-considera-athena) — LEIA ANTES DE MEXER:
+ *
+ * O cache CityCourseOfferCache só é populado por scripts/precompute-city-offers.ts,
+ * que consulta SOMENTE a Tartarus (Cogna). A busca ao vivo (liveOfferCount,
+ * acima) já mescla Cogna + Athena (Estácio/IBMEC/Wyden) — é a mesma lista que a
+ * página renderiza. Isso criava uma classe de página com oferta Estácio real na
+ * tela mas presa em noindex porque o cache Cogna-only está travado em 0 (ver
+ * dimensionamento no relatório da tarefa "gate considera Athena").
+ *
+ * Dimensionamento (medido + extrapolado, 2026-08-31/09-01) apontou ~4.000-4.500
+ * páginas noindex→index no total se TODO curso passasse a usar a contagem ao
+ * vivo mesclada de uma vez. Decisão deliberada: liberar só o "Grupo A" nesta
+ * rodada — cursos de ALTA DEMANDA (trendScore >= MIN_TREND_SCORE_FOR_HIGH_DEMAND,
+ * o mesmo corte que o próprio gate já usa pra dispensar oferta abundante). É o
+ * ÚNICO grupo medido ao vivo (amostra de 15 combos zerados no cache Cogna,
+ * 10 delas — 67% — tinham oferta Athena real; ~1.580 páginas estimadas).
+ *
+ * Cursos abaixo do corte (trendScore < MIN_TREND_SCORE_FOR_HIGH_DEMAND — os
+ * "Grupo B" do relatório, ~2.860 páginas estimadas só por EXTRAPOLAÇÃO, nunca
+ * medidas ao vivo) continuam no comportamento antigo: cache Cogna-only, com
+ * fallback à busca ao vivo só quando a linha do cache não existe. Isso é
+ * INTENCIONAL, não uma limitação esquecida — a ideia é validar a curva do
+ * Grupo A no Search Console por 2-3 semanas antes de liberar o resto. Pra
+ * expandir o rollout depois: relaxar (ou remover) a condição isHighDemandCourse
+ * abaixo — não precisa mexer no gate em si nem nos thresholds de qualidade
+ * (MIN_OFFERS_TO_INDEX etc. não mudam).
+ *
+ * Sem kill switch pra tratar aqui: a flag estacio_enabled que existia em
+ * app/lib/api/athena-offers.ts foi aposentada em 2026-08-17 (Estácio é
+ * parceira permanente) — liveOfferCount já reflete exatamente o que a busca
+ * ao vivo devolve, sem esconder nada atrás de flag.
+ *
+ * BLINDAGEM CONTRA FALHA DE BUSCA (2026-09-03) — LEIA ANTES DE MEXER:
+ *
+ * Pro Grupo A, liveOfferCount vem de uma busca AO VIVO a cada revalidação
+ * ISR (24h) — diferente do cache Cogna-only do Grupo B/C, que só é
+ * sobrescrito por um script batch. Se a Athena falhar (ou devolver 200 com
+ * lista vazia sob carga — ver athena-offers.ts) NO EXATO INSTANTE da
+ * revalidação, liveOfferCount despenca pra um valor que pode não refletir a
+ * oferta real, e a página fica presa nesse estado errado por até 24h — o
+ * mesmo defeito de "zero por falha vira zero definitivo" que já mordeu a
+ * copy de desconto (ver app/lib/utils/institution-discount.ts). Princípio
+ * idêntico ao de lá: noindex só com evidência POSITIVA de ausência, nunca
+ * com um zero que pode ter vindo de falha.
+ *
+ * Mitigação, em camadas (nunca REBAIXA por causa de falha; na dúvida, mantém
+ * a evidência mais forte já disponível):
+ *   1. Se liveOfferCount JÁ basta pra indexar (shouldIndexCityPage), usa
+ *      direto — evidência positiva não precisa de sonda extra.
+ *   2. Senão, olha o cache Cogna-only (mesma fonte do Grupo B/C). Se ELE já
+ *      basta sozinho, usa — Cogna não depende da Athena, então essa leitura
+ *      não pode ter sido vítima da falha que estamos blindando.
+ *   3. Só nesse ponto (zona ambígua: nem live nem cache bastam) chama
+ *      probeAthenaHealth — sonda leve e cacheada (10min) que reusa a MESMA
+ *      chamada Athena com throwOnFailure, pra distinguir "Athena respondeu e
+ *      não achou nada" (evidência real de ausência — confia no zero, cai no
+ *      shouldIndexCityPage normal) de "Athena lançou uma exceção agora" (não
+ *      confia: devolve o piso mínimo que o próprio shouldIndexCityPage já
+ *      aceita pra alta demanda — offerCount=1 —, NUNCA cachedOfferCount, que
+ *      nesse ponto já sabemos insuficiente e não protegeria nada pra uma
+ *      página que só é Grupo A por causa da Athena).
+ *
+ * LIMITE CONHECIDO (não fechado nesta rodada): a sonda só pega o modo de
+ * falha "exceção" — o modo "200 vazio sob carga" não lança nada, e uma
+ * chamada isolada não distingue isso de ausência real (ver comentário em
+ * probeAthenaHealth, city-offers.ts). Nesse caso raro e não coberto, uma
+ * página do Grupo A que dependia SÓ da Athena (cache Cogna também
+ * insuficiente) ainda pode cair pra noindex por até 24h — janela idêntica à
+ * que já existia ANTES desta blindagem (nunca pior), só que agora restrita a
+ * essa interseção estreita em vez de qualquer falha Athena.
+ *
+ * RISCO RESIDUAL DO PASSO 3 (aceito de propósito, ver relatório da tarefa):
+ * se a Athena ficar fora do ar por DIAS (não só o instante da revalidação),
+ * uma página do Grupo A sem oferta nenhuma (nem Cogna nem Athena, desde
+ * sempre) pode ficar indexada por engano até a Athena voltar — o preço da
+ * assimetria "falha nunca rebaixa" quando a falha não é transitória.
+ * Mitigação completa exigiria persistir uma contagem mesclada Cogna+Athena
+ * com o mesmo gate "nunca escreve com falha" do
+ * precompute-institution-max-discount.ts — próximo passo, fora de escopo
+ * aqui — e/ou alertar sobre falhas repetidas de probeAthenaHealth.
+ */
+async function resolveOfferCountForGate(params: {
+  featuredCourseId: string
+  citySlug: string
+  trendScore: number
+  liveOfferCount: number
+  apiCourseName: string
+  cityName: string
+  stateUF: string
+  nivel: string
+  fromFallback: boolean
+}): Promise<number> {
+  const {
+    featuredCourseId,
+    citySlug,
+    trendScore,
+    liveOfferCount,
+    apiCourseName,
+    cityName,
+    stateUF,
+    nivel,
+    fromFallback,
+  } = params
+  const isHighDemandCourse = trendScore >= MIN_TREND_SCORE_FOR_HIGH_DEMAND
+
+  if (!isHighDemandCourse) {
+    // Grupo B/C. O rollout faseado acabou aqui: o cache agora é MESCLADO
+    // (ver getCachedOfferCount), então esses cursos param de decidir por uma
+    // contagem que enxergava só a Cogna.
+    //
+    // Note que continua sendo o CACHE, não busca ao vivo — é o que o
+    // comentário original pedia como "médio prazo": contagem mesclada
+    // persistida, com o gate de "nunca grava zero vindo de falha" do
+    // precompute. Sem sonda por request, sem oscilação por lentidão de API.
+    const cachedOfferCount = await getCachedOfferCount(featuredCourseId, citySlug)
+    return cachedOfferCount ?? liveOfferCount
   }
+
+  // Grupo A — passo 1: evidência positiva já basta, sem sonda.
+  if (shouldIndexCityPage(liveOfferCount, trendScore)) {
+    return liveOfferCount
+  }
+
+  // Grupo A — passo 2: o cache Cogna-only (não depende da Athena) já basta
+  // sozinho — não precisa saber se a Athena está saudável.
+  const cachedOfferCount = await getCachedOfferCount(featuredCourseId, citySlug)
+  if (cachedOfferCount !== null && shouldIndexCityPage(cachedOfferCount, trendScore)) {
+    return cachedOfferCount
+  }
+
+  // Grupo A — passo 3: zona ambígua (nem live nem cache bastam). Só aqui vale
+  // a pena pagar a sonda extra (mesma janela de cache de 10min do fetch de
+  // conteúdo, então não dobra tráfego a cada request — só por revalidação).
+  const athenaHealthy = await probeAthenaHealth(apiCourseName, cityName, stateUF, nivel, !fromFallback)
+  if (!athenaHealthy) {
+    // Falha CONFIRMADA (exceção real) bem na hora da revalidação — não temos
+    // como saber se a página é legitimamente vazia ou se é a Athena falhando
+    // por acidente. "Falha nunca rebaixa" (requisito da tarefa): devolver
+    // cachedOfferCount aqui NÃO protegeria nada — pra uma página que só é
+    // Grupo A por causa da Athena, o cache Cogna-only já era insuficiente
+    // (é POR ISSO que chegamos no passo 3), então cairia no mesmo zero de
+    // sempre e a blindagem não faria diferença nenhuma.
+    //
+    // Em vez disso, devolve o PISO mínimo que shouldIndexCityPage já aceita
+    // pra curso de alta demanda (trendScore >= MIN_TREND_SCORE_FOR_HIGH_DEMAND,
+    // sempre verdade aqui — Grupo A): offerCount >= 1. Não é uma contagem
+    // "real" — só alimenta o booleano de indexação (nunca aparece em
+    // title/description/schema, que usam offers.length de verdade, não
+    // offerCountForGate). Risco residual, aceito de propósito: se a Athena
+    // ficar fora do ar por DIAS (não só o instante da revalidação), uma
+    // página do Grupo A que nunca teve oferta nenhuma pode ficar indexada
+    // por engano até a Athena voltar — mitigar monitorando probeAthenaHealth
+    // (falhas repetidas = alerta) e, no médio prazo, persistindo uma
+    // contagem mesclada Cogna+Athena com o mesmo gate "nunca escreve com
+    // falha" do precompute-institution-max-discount.ts (ver relatório).
+    return 1
+  }
+
+  // Athena respondeu sem exceção: o zero é evidência POSITIVA de ausência
+  // (mesmo princípio de NO_DISCOUNT em institution-discount.ts) — confia na
+  // contagem mesclada ao vivo, que é a mesma que a página renderiza.
+  return liveOfferCount
 }
 
 // Gerar metadata dinâmica (SEO) com cidade
@@ -161,8 +268,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const priceSuffix = lowPrice > 0 ? ` — de R$${lowPrice.toFixed(0)}/mês` : ''
   const titleSuffix =
     (lowPrice > 0
-      ? [priceSuffix, ' com bolsa de até 80%', ' com bolsa', '']
-      : [' com bolsa de até 80%', ' com bolsa', '']
+      ? [priceSuffix, ` com bolsa de até ${DISCOUNT_CEILING_PCT}%`, ' com bolsa', '']
+      : [` com bolsa de até ${DISCOUNT_CEILING_PCT}%`, ' com bolsa', '']
     ).find(
       (s) => titleBase.length + s.length + brandSuffixLen <= 60
     ) ?? ''
@@ -176,14 +283,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   let description =
     [
       lowPrice > 0 &&
-        `Bolsa de estudo para ${curso.name} em ${cityUf}${priceText}, com até 80% de desconto. Faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`,
-      `Bolsa de estudo para ${curso.name} em ${cityUf} com até 80% de desconto. Faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`,
-      `Bolsa de até 80% para ${curso.name} em ${cityUf}, no EAD ou presencial, em faculdades com nota MEC. Inscrição grátis.`,
-      `Bolsa de até 80% para ${curso.name} em ${cityData.name}, no EAD ou presencial. Inscrição grátis.`,
+        `Bolsa de estudo para ${curso.name} em ${cityUf}${priceText}, com até ${DISCOUNT_CEILING_PCT}% de desconto. Faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`,
+      `Bolsa de estudo para ${curso.name} em ${cityUf} com até ${DISCOUNT_CEILING_PCT}% de desconto. Faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`,
+      `Bolsa de até ${DISCOUNT_CEILING_PCT}% para ${curso.name} em ${cityUf}, no EAD ou presencial, em faculdades com nota MEC. Inscrição grátis.`,
+      `Bolsa de até ${DISCOUNT_CEILING_PCT}% para ${curso.name} em ${cityData.name}, no EAD ou presencial. Inscrição grátis.`,
     ]
       .filter((d): d is string => Boolean(d))
       .find((d) => d.length <= 155) ??
-    `Bolsa de até 80% para ${curso.name} em ${cityData.name}, no EAD ou presencial. Inscrição grátis.`
+    `Bolsa de até ${DISCOUNT_CEILING_PCT}% para ${curso.name} em ${cityData.name}, no EAD ou presencial. Inscrição grátis.`
   const brandedCopy = buildBrandedCourseCopy({
     name: curso.name,
     fullName: curso.fullName,
@@ -202,21 +309,30 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const nationalUrl = absoluteUrl(`/cursos/${slug}`)
 
   // Indexação inteligente via gate compartilhado (app/lib/seo/city-page-gate.ts):
-  // exige MIN_OFFERS_TO_INDEX=2 ofertas locais, ou trendScore ≥ 60 pra páginas
-  // sem oferta suficiente. Páginas com 0 ou 1 oferta são thin content em escala
-  // e viram noindex,follow + canonical pra versão nacional.
+  // exige MIN_OFFERS_TO_INDEX=2 ofertas locais, ou trendScore ≥
+  // MIN_TREND_SCORE_FOR_HIGH_DEMAND pra páginas sem oferta suficiente. Páginas
+  // com 0 ou 1 oferta são thin content em escala e viram noindex,follow +
+  // canonical pra versão nacional.
   const trendScore = curso.trendScore ?? 0
-  // Prioriza o cache precomputado (estável, mesma fonte do sitemap). Só usa a
-  // contagem ao vivo quando não há linha no cache ainda (sem regressão).
-  const liveOfferCount = fromFallback ? 0 : offers.length
-  const cachedOfferCount = await getCachedOfferCount(curso.id, citySlug)
-  const offerCountForGate = cachedOfferCount ?? liveOfferCount
+  const offerCountForGate = await resolveOfferCountForGate({
+    featuredCourseId: curso.id,
+    citySlug,
+    trendScore,
+    liveOfferCount: fromFallback ? 0 : offers.length,
+    apiCourseName: curso.apiCourseName,
+    cityName: cityData.name,
+    stateUF: cityData.state,
+    nivel: curso.nivel,
+    fromFallback,
+  })
   const shouldIndex = shouldIndexCityPage(offerCountForGate, trendScore)
   const canonical = shouldIndex ? pageUrl : nationalUrl
 
-  const imageUrl = curso.imageUrl.startsWith('http')
-    ? curso.imageUrl
-    : absoluteUrl(curso.imageUrl)
+  // Imagem gerada por código (opengraph-image.tsx nesta pasta) — mesma URL
+  // pro og:image (via convenção de arquivo, que tem precedência sobre
+  // `openGraph.images` aqui embaixo), pro twitter:image e pro `ImageObject`
+  // do schema.org, em vez da foto genérica de `curso.imageUrl`.
+  const ogCardUrl = absoluteUrl(`/cursos/${slug}/${citySlug}/opengraph-image`)
 
   return {
     title,
@@ -252,7 +368,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: 'website',
       images: [
         {
-          url: imageUrl,
+          url: ogCardUrl,
           width: 1200,
           height: 630,
           alt: `${curso.name} em ${cityData.name} - Bolsa Click`,
@@ -264,7 +380,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       site: '@bolsaclick',
       title,
       description,
-      images: [imageUrl],
+      images: [ogCardUrl],
     },
   }
 }
@@ -298,14 +414,21 @@ export default async function CursoCidadePage({ params }: Props) {
   )
 
   // Mesma lógica de indexação inteligente do generateMetadata (via gate
-  // compartilhado). Repete aqui porque Schema Course/FAQ não deve ser emitido
-  // em URLs noindex.
+  // compartilhado + resolveOfferCountForGate). Repete aqui porque Schema
+  // Course/FAQ não deve ser emitido em URLs noindex.
   const trendScore = cursoMetadata.trendScore ?? 0
-  // Mesma fonte de verdade do generateMetadata e do sitemap: cache precomputado,
-  // com fallback à contagem ao vivo só em cache miss.
-  const liveOfferCount = fromFallback ? 0 : (courseOffers?.length ?? 0)
-  const cachedOfferCount = await getCachedOfferCount(cursoMetadata.id, citySlug)
-  const shouldIndex = shouldIndexCityPage(cachedOfferCount ?? liveOfferCount, trendScore)
+  const offerCountForGate = await resolveOfferCountForGate({
+    featuredCourseId: cursoMetadata.id,
+    citySlug,
+    trendScore,
+    liveOfferCount: fromFallback ? 0 : (courseOffers?.length ?? 0),
+    apiCourseName: cursoMetadata.apiCourseName,
+    cityName: cityData.name,
+    stateUF: cityData.state,
+    nivel: cursoMetadata.nivel,
+    fromFallback,
+  })
+  const shouldIndex = shouldIndexCityPage(offerCountForGate, trendScore)
 
   // Outras cidades para internal linking (exclui a cidade atual)
   const otherCities = BRAZILIAN_CITIES
@@ -315,9 +438,9 @@ export default async function CursoCidadePage({ params }: Props) {
   const nivelLabel = cursoMetadata.nivel === 'GRADUACAO' ? 'Graduação' : 'Pós-graduação'
   const nivelHref = cursoMetadata.nivel === 'GRADUACAO' ? '/graduacao' : '/pos-graduacao'
   const pageUrl = `https://www.bolsaclick.com.br/cursos/${slug}/${citySlug}`
-  const imageUrl = cursoMetadata.imageUrl.startsWith('http')
-    ? cursoMetadata.imageUrl
-    : `https://www.bolsaclick.com.br${cursoMetadata.imageUrl}`
+  // ImageObject aponta pro card gerado por opengraph-image.tsx — mesma imagem
+  // do og:image/twitter:image, não a foto genérica de `cursoMetadata.imageUrl`.
+  const ogCardUrl = absoluteUrl(`/cursos/${slug}/${citySlug}/opengraph-image`)
 
   const prices = (courseOffers || [])
     .map((o: { minPrice?: number; prices?: { withDiscount?: number } }) => o.minPrice || o.prices?.withDiscount || 0)
@@ -378,7 +501,10 @@ export default async function CursoCidadePage({ params }: Props) {
       : new Date(cursoMetadata.updatedAt as string | number).toISOString(),
     inLanguage: 'pt-BR',
     url: pageUrl,
-    image: imageUrl,
+    image: ogImageObject(
+      ogCardUrl,
+      `${cursoMetadata.name} em ${cityData.name}-${cityData.state} com bolsa de estudo de até ${DISCOUNT_CEILING_PCT}% — Bolsa Click`,
+    ),
     locationCreated: {
       '@type': 'Place',
       address: { '@type': 'PostalAddress', addressLocality: cityData.name, addressRegion: cityData.state, addressCountry: 'BR' },
@@ -508,8 +634,8 @@ export default async function CursoCidadePage({ params }: Props) {
               acceptedAnswer: {
                 '@type': 'Answer',
                 text: lowPrice > 0
-                  ? `Em ${cityData.name}-${cityData.state}, o curso de ${cursoMetadata.name} pode ser encontrado a partir de R$ ${lowPrice.toFixed(2)} por mês com bolsa pelo Bolsa Click, com descontos de até 80%.`
-                  : `O Bolsa Click oferece bolsas de até 80% de desconto para ${cursoMetadata.name} em ${cityData.name}. Cadastre-se grátis para ver as ofertas.`,
+                  ? `Em ${cityData.name}-${cityData.state}, o curso de ${cursoMetadata.name} pode ser encontrado a partir de R$ ${lowPrice.toFixed(2)} por mês com bolsa pelo Bolsa Click, com descontos de até ${DISCOUNT_CEILING_PCT}%.`
+                  : `O Bolsa Click oferece bolsas de até ${DISCOUNT_CEILING_PCT}% de desconto para ${cursoMetadata.name} em ${cityData.name}. Cadastre-se grátis para ver as ofertas.`,
               },
             },
             {

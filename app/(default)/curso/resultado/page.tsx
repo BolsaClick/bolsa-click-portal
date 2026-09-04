@@ -1,10 +1,17 @@
 import { Metadata } from 'next'
 import { Suspense } from 'react'
+import { headers } from 'next/headers'
 import { ACADEMIC_LEVEL, isProfissionalizanteLevel, normalizeAcademicLevel } from '@/app/lib/academic-level'
+import { brazilCityStateOrNull } from '@/app/lib/geo/brazil-location'
+import { capitalizeText, removeCourseSuffix, extractCourseSuffix } from '@/app/lib/seo/course-search-params'
+import { isMobileUserAgent } from '@/app/lib/utils/is-mobile-ua'
+import { getFeaturedCourseSlugByNameAndLevel } from '@/app/lib/api/featured-course-slugs'
+import { getCityByNameAndState } from '@/app/lib/constants/brazilian-cities'
 import { ResultsFilterProvider } from './ResultsFilterContext'
 import ResultsShell from './ResultsShell'
 import ResultsSkeleton from './ResultsSkeleton'
 import SearchResultsData from './SearchResultsData'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,23 +21,6 @@ const ESTADOS_BRASIL = new Set([
   'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
 ])
 
-function capitalizeText(text: string) {
-  return text
-    .toLowerCase()
-    .replace(/(^\w{1})|(\s+\w{1})/g, (match) => match.toUpperCase())
-}
-
-function removeCourseSuffix(name: string) {
-  return name
-    .replace(/ - (Bacharelado|Licenciatura|Tecn[oó]logo)$/i, '')
-    .trim()
-}
-
-function extractCourseSuffix(name: string): string | null {
-  const match = name.match(/ - (Bacharelado|Licenciatura|Tecn[oó]logo)$/i)
-  return match ? match[1] : null
-}
-
 type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
@@ -39,8 +29,11 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const params = await searchParams
   const curso = typeof params.c === 'string' ? params.c : ''
   const cursoNomeCompleto = typeof params.cn === 'string' ? params.cn : ''
-  const cidade = typeof params.cidade === 'string' ? params.cidade : ''
-  const estado = typeof params.estado === 'string' ? params.estado : ''
+  const cidadeRaw = typeof params.cidade === 'string' ? params.cidade : ''
+  const estadoRaw = typeof params.estado === 'string' ? params.estado : ''
+  const allowedLocation = brazilCityStateOrNull(cidadeRaw, estadoRaw)
+  const cidade = allowedLocation?.city ?? ''
+  const estado = allowedLocation?.state ?? ''
   const modalidade = typeof params.modalidade === 'string' ? params.modalidade : 'EAD'
   const nivel = typeof params.nivel === 'string' ? params.nivel : 'GRADUACAO'
 
@@ -86,12 +79,12 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   // Se não houver curso selecionado, usar título genérico "Buscar cursos"
   // Nota: O layout principal adiciona " | Bolsa Click" automaticamente via template
   const title = hasCourseSelected
-    ? `Bolsa de Estudo em ${courseName} - Faculdades ${modalidadeFormatted}${locationText} com até 80% de Desconto`
+    ? `Bolsa de Estudo em ${courseName} - Faculdades ${modalidadeFormatted}${locationText} com até ${DISCOUNT_CEILING_PCT}% de Desconto`
     : 'Bolsa de Estudo em Faculdades | Buscar Cursos'
 
   const description = hasCourseSelected
-    ? `Encontre bolsa de estudo em ${courseName} (${modalidadeFormatted})${locationText}. Desconto em faculdade de até 80% nas principais instituições do Brasil. Compare preços e garanta sua bolsa. Cadastre-se grátis!`
-    : 'Busque e compare bolsas de estudo em faculdades de todo Brasil. Desconto em faculdade de até 80% para graduação, pós-graduação e cursos técnicos. Cadastre-se grátis!'
+    ? `Encontre bolsa de estudo em ${courseName} (${modalidadeFormatted})${locationText}. Desconto em faculdade de até ${DISCOUNT_CEILING_PCT}% nas principais instituições do Brasil. Compare preços e garanta sua bolsa. Cadastre-se grátis!`
+    : `Busque e compare bolsas de estudo em faculdades de todo Brasil. Desconto em faculdade de até ${DISCOUNT_CEILING_PCT}% para graduação, pós-graduação e cursos técnicos. Cadastre-se grátis!`
 
   // Construir URL canônica auto-referencial e normalizada
   // Normalização: sempre usar 'c' limpo e 'cn' separado (se aplicável)
@@ -119,9 +112,46 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   canonicalParams.set('modalidade', modalidade)
   canonicalParams.set('nivel', normalizeAcademicLevel(nivel))
   
-  // URL canônica auto-referencial: sempre aponta para a própria página com www
-  // Normalizada para evitar múltiplas URLs apontando para o mesmo conteúdo
-  const canonicalUrl = `https://www.bolsaclick.com.br/curso/resultado?${canonicalParams.toString()}`
+  // URL canônica auto-referencial (fallback): aponta para a própria página com
+  // www, normalizada pra evitar múltiplas URLs apontando pro mesmo conteúdo.
+  const selfCanonicalUrl = `https://www.bolsaclick.com.br/curso/resultado?${canonicalParams.toString()}`
+
+  // DUPLICAÇÃO CURSO×CIDADE (porta em query string vs porta em caminho):
+  // quando c+cidade+estado mapeiam pra um curso e uma cidade que existem no
+  // catálogo, essa busca é o MESMO conteúdo da página em caminho
+  // /cursos/[slug]/[city] — que já aplica o gate de qualidade
+  // (shouldIndexCityPage, em app/lib/seo/city-page-gate.ts) e decide sozinha
+  // se indexa a si mesma ou canonicaliza pra nacional. Por isso apontamos o
+  // canonical PRA FORA (pra lá) em vez de manter auto-referencial: migra o
+  // sinal de ranking pra URL correta em vez de simplesmente descartá-lo.
+  //
+  // NÃO troque isso por noindex "pra simplificar" — foi decisão deliberada:
+  // noindex faria o tráfego orgânico que já aponta pra essa URL em query
+  // string simplesmente sumir; canonical faz ele migrar. Ver o diagnóstico de
+  // ~21k páginas não indexadas por esse motivo (duplicação sem canonical
+  // cruzada entre as duas portas).
+  //
+  // Quando curso ou cidade não existem no catálogo (ou faltam parâmetros),
+  // NÃO inventamos slug: mantém o canonical auto-referencial de sempre.
+  let canonicalUrl = selfCanonicalUrl
+  if (shouldIndex) {
+    const resolvedNivel = normalizeAcademicLevel(nivel)
+    const [pathCourseSlug, cityData] = await Promise.all([
+      getFeaturedCourseSlugByNameAndLevel(curso, resolvedNivel),
+      Promise.resolve(getCityByNameAndState(cidade, estado)),
+    ])
+    if (pathCourseSlug && cityData) {
+      canonicalUrl = `https://www.bolsaclick.com.br/cursos/${pathCourseSlug}/${cityData.slug}`
+    }
+  }
+
+  // Imagem de compartilhamento: página mais visitada do site, mas dirigida
+  // por query string (não segmento de rota) — `opengraph-image.tsx` só
+  // recebe `params`, nunca `searchParams`, então a convenção de arquivo não
+  // dá conta aqui. Uma Route Handler comum (não a convenção de metadata) lê
+  // a mesma query e gera a imagem sob demanda. Reaproveita `canonicalParams`
+  // — a imagem reflete exatamente o que a URL canônica descreve.
+  const ogImageUrl = `https://www.bolsaclick.com.br/api/og/resultado?${canonicalParams.toString()}`
 
   const keywords = [
     courseName && `bolsa de estudo ${courseName}`,
@@ -192,26 +222,54 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
       siteName: 'Bolsa Click',
       locale: 'pt_BR',
       type: 'website',
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: hasCourseSelected
+            ? `Bolsa de estudo em ${courseName}${locationText} — Bolsa Click`
+            : 'Bolsa de estudo em faculdades — Bolsa Click',
+        },
+      ],
     },
     twitter: {
       card: 'summary_large_image',
       site: '@bolsaclick',
       title,
       description,
+      images: [ogImageUrl],
     },
   }
 }
 
 export default async function CursosPage({ searchParams }: Props) {
   const params = await searchParams
+  // Palpite de "é desktop?" por User-Agent — decide se o servidor já manda o
+  // FiltersPanel (pesado: 2 useQuery + vários useEffect) dentro do <aside>.
+  // No celular real ele nasce ausente e nunca é montado/hidratado à toa (o
+  // <aside> continua escondido por CSS via `hidden lg:block`, mas hoje
+  // renderizava o painel inteiro mesmo assim). No desktop nasce presente,
+  // IDÊNTICO ao HTML de hoje. `useIsDesktopViewport` corrige no cliente via
+  // matchMedia se o UA for ambíguo — ver ResultsShell.tsx.
+  const requestHeaders = await headers()
+  const initialIsDesktop = !isMobileUserAgent(requestHeaders.get('user-agent'))
   const curso = typeof params.c === 'string' ? params.c : ''
   const cursoNomeCompleto = typeof params.cn === 'string' ? params.cn : ''
-  const cidade = typeof params.cidade === 'string' ? params.cidade : ''
-  const estado = typeof params.estado === 'string' ? params.estado : ''
+  const cidadeRaw = typeof params.cidade === 'string' ? params.cidade : ''
+  const estadoRaw = typeof params.estado === 'string' ? params.estado : ''
+  const allowedLocation = brazilCityStateOrNull(cidadeRaw, estadoRaw)
+  const cidade = allowedLocation?.city ?? ''
+  const estado = allowedLocation?.state ?? ''
   const modalidade = typeof params.modalidade === 'string' ? params.modalidade : ''
   const nivel = typeof params.nivel === 'string' ? params.nivel : 'GRADUACAO'
+  // Filtro de marca server-side (labels normalizados, separados por vírgula).
+  // Vive na URL pra busca no servidor poder restringir as FONTES — marcas
+  // caras/pequenas (IBMEC, Wyden) nunca chegam à página 1 na ordenação por
+  // preço, então filtrar só client-side não tinha o que mostrar.
+  const marcas = typeof params.marcas === 'string' ? params.marcas : ''
 
-  const current = { curso, cursoNomeCompleto, cidade, estado, modalidade, nivel }
+  const current = { curso, cursoNomeCompleto, cidade, estado, modalidade, nivel, marcas }
   const searchKey = `${curso}|${cursoNomeCompleto}|${cidade}|${estado}|${modalidade}|${normalizeAcademicLevel(nivel)}`
 
   const courseNameClean = curso ? removeCourseSuffix(curso) : ''
@@ -259,8 +317,11 @@ export default async function CursosPage({ searchParams }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
       />
-      <ResultsFilterProvider searchKey={searchKey}>
-        <ResultsShell current={current}>
+      <ResultsFilterProvider
+        searchKey={searchKey}
+        initialBrands={marcas ? marcas.split(',').filter(Boolean) : []}
+      >
+        <ResultsShell current={current} initialIsDesktop={initialIsDesktop}>
           <Suspense fallback={<ResultsSkeleton />}>
             <SearchResultsData current={current} />
           </Suspense>

@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 
 interface ResultsFilterState {
   viewMode: 'grid' | 'list'
@@ -24,19 +24,29 @@ const ResultsFilterCtx = createContext<ResultsFilterState | null>(null)
  */
 export function ResultsFilterProvider({
   searchKey,
+  initialBrands,
   children,
 }: {
   /** Muda a cada busca nova (curso/cidade/modalidade/nível) — reseta o filtro de marca. */
   searchKey: string
+  /** Marcas vindas da URL (?marcas=) — deep-link/refresh chega com o filtro já aplicado. */
+  initialBrands?: string[]
   children: React.ReactNode
 }) {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [availableBrands, setAvailableBrands] = useState<string[]>([])
-  const [selectedBrands, setSelectedBrands] = useState<string[]>([])
+  const [selectedBrands, setSelectedBrands] = useState<string[]>(initialBrands ?? [])
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000])
 
   // Resetar marcas selecionadas quando a busca muda (curso/cidade/modalidade/nível).
+  // Pula o primeiro render: no deep-link o estado inicial já veio da URL e o
+  // efeito não pode apagá-lo.
+  const mountedRef = useRef(false)
   useEffect(() => {
+    if (!mountedRef.current) {
+      mountedRef.current = true
+      return
+    }
     setSelectedBrands([])
   }, [searchKey])
 

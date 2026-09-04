@@ -1,17 +1,25 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AnimatePresence } from 'framer-motion'
+import { usePathname } from 'next/navigation'
 import { useConsent } from '../../providers/ConsentProvider'
 import { CONSENT_OPEN_EVENT } from '@/app/lib/consent/storage'
+import { isInscriptionRoute } from '@/app/lib/consent/inscription-route'
 import { CookieBanner } from './CookieBanner'
 import { CookiePreferences } from './CookiePreferences'
 
 export default function CookieConsent() {
+  const pathname = usePathname()
   const { hydrated, hasDecision, categories, acceptAll, rejectAll, save } =
     useConsent()
   const [prefsOpen, setPrefsOpen] = useState(false)
-  const [forceHidden, setForceHidden] = useState(false)
+
+  // Hide on every inscription rail — not only /checkout/estacio.
+  // Also trust window.location (mobile / error remounts can briefly report
+  // an empty usePathname while the URL is still /checkout/matricula).
+  // No AnimatePresence: the exit fade left a fixed overlay on top of step 02/03.
+  const hideBannerOnRoute = isInscriptionRoute(pathname)
+  const showBanner = hydrated && !hasDecision && !prefsOpen && !hideBannerOnRoute
 
   useEffect(() => {
     const open = () => setPrefsOpen(true)
@@ -19,41 +27,25 @@ export default function CookieConsent() {
     return () => window.removeEventListener(CONSENT_OPEN_EVENT, open)
   }, [])
 
-  const showBanner = !hasDecision && !prefsOpen
-
   useEffect(() => {
-    if (showBanner) {
-      setForceHidden(false)
-      return
+    const root = document.documentElement
+    root.classList.toggle('cookie-banner-visible', showBanner)
+    return () => {
+      root.classList.remove('cookie-banner-visible')
     }
-    // A saída do banner anima via requestAnimationFrame (framer-motion), que o
-    // browser suspende por completo com a aba em segundo plano — sem esse
-    // fallback o banner some do AnimatePresence mas fica preso em tela
-    // indefinidamente. setTimeout ainda dispara (só com clamp) em aba oculta,
-    // ao contrário do rAF, então força o hard-hide bem depois da transição
-    // normal (300ms) já ter tido chance de terminar sozinha.
-    const timer = setTimeout(() => setForceHidden(true), 500)
-    return () => clearTimeout(timer)
   }, [showBanner])
 
   if (!hydrated) return null
 
   return (
     <>
-      <div
-        aria-hidden={!showBanner || undefined}
-        className={forceHidden ? 'invisible pointer-events-none' : undefined}
-      >
-        <AnimatePresence>
-          {showBanner && (
-            <CookieBanner
-              onAcceptAll={acceptAll}
-              onReject={rejectAll}
-              onCustomize={() => setPrefsOpen(true)}
-            />
-          )}
-        </AnimatePresence>
-      </div>
+      {showBanner ? (
+        <CookieBanner
+          onAcceptAll={acceptAll}
+          onReject={rejectAll}
+          onCustomize={() => setPrefsOpen(true)}
+        />
+      ) : null}
 
       <CookiePreferences
         open={prefsOpen}

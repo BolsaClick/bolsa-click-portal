@@ -13,11 +13,12 @@ import {
 } from 'lucide-react'
 import type { VitrineCourse } from '@/app/lib/api/get-vitrine'
 import { getBrandLogo } from '@/app/lib/brand-logos'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const STATS = [
   { value: '6', label: 'redes de ensino parceiras' },
   { value: '280+', label: 'cidades com polos' },
-  { value: 'até 80%', label: 'de desconto em bolsas' },
+  { value: `até ${DISCOUNT_CEILING_PCT}%`, label: 'de desconto em bolsas' },
   { value: '100%', label: 'sem necessidade de ENEM' },
 ]
 
@@ -87,7 +88,7 @@ const FAQ = [
   },
   {
     q: 'Como funciona a bolsa de estudo?',
-    a: 'Você busca o curso, compara preços e descontos de até 80%, escolhe a melhor opção e garante sua bolsa. Cadastro 100% gratuito.',
+    a: `Você busca o curso, compara preços e descontos de até ${DISCOUNT_CEILING_PCT}%, escolhe a melhor opção e garante sua bolsa. Cadastro 100% gratuito.`,
   },
 ]
 
@@ -416,7 +417,7 @@ export default function GraduacaoClient({ offers }: Props) {
                     'Diploma reconhecido pelo MEC, aceito em todo o Brasil',
                     'Acesso a concursos públicos e cargos de gestão',
                     'Especialização e pós-graduação como próximos passos',
-                    'Bolsas de até 80% no Bolsa Click — sem ENEM, cadastro grátis',
+                    `Bolsas de até ${DISCOUNT_CEILING_PCT}% no Bolsa Click — sem ENEM, cadastro grátis`,
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-3">
                       <span className="flex-shrink-0 mt-0.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-bolsa-secondary/10 text-bolsa-secondary">

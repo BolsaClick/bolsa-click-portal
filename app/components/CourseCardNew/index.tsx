@@ -1,17 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Course } from "@/app/interface/course"
-import { postSearch } from "@/app/lib/api/post-search"
+import { hasInstallmentPlan, isTotalPriceLevel } from '@/app/components/v2/course-offer'
 import { useFavorites } from "@/app/lib/hooks/useFavorites"
 import { usePostHogTracking } from "@/app/lib/hooks/usePostHogTracking"
-import { trackFbqDual } from "@/app/lib/analytics/fbq"
-import { pushDataLayerEvent } from "@/app/lib/analytics/gtag"
-import { trackTikTok } from "@/app/lib/analytics/ttq"
+import { useCourseSelection } from "@/app/lib/hooks/useCourseSelection"
+import { courseNeedsShiftSelection, resolveCourseModality, buildCourseCheckoutDestination } from "@/app/lib/checkout/course-destination"
 import { getAcademicLevelLabel } from "@/app/lib/academic-level"
-import { Building2, Clock, Heart, MapPin } from "lucide-react"
+import { getPriceAnchor } from "@/app/lib/utils/price-anchor"
+import { brandMecKey } from "@/app/lib/utils/brand"
+import { formatCurrency } from "@/utils/fomartCurrency"
+import { Building2, Clock, Heart, MapPin, ShieldCheck, Star } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 import { useState, useMemo } from "react"
 import { usePathname } from "next/navigation"
-import { toast } from "sonner"
 import { useFeatureFlags } from "@/app/lib/hooks/usePostHogFeatureFlags"
 import CourseCardRedesign from "./Redesign"
 
@@ -22,6 +24,10 @@ interface CourseCardProps {
   triggerSubmit?: () => void
   viewMode: 'grid' | 'list';
   isPos?: boolean
+  /** Slug de /cursos/[slug] quando o curso tem página de detalhe enriquecida (FeaturedCourse). */
+  detailSlug?: string
+  /** Marca (chave slugificada via brandMecKey) → nota MEC (1-5). Sem o dado, o selo não aparece. */
+  mecRatings?: Record<string, number>
 }
 
 type CourseInfo = {
@@ -34,7 +40,9 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
   course,
   viewMode,
   courseName,
-  isPos
+  isPos,
+  detailSlug,
+  mecRatings
 }) => {
   const { featureFlags, isFeatureFlagLoading } = useFeatureFlags()
   const useRedesign = useMemo(
@@ -44,11 +52,11 @@ const CourseCardNew: React.FC<CourseCardProps> = ({
 
   // Se feature flag está ativa, usar novo design
   if (useRedesign) {
-    return <CourseCardRedesign course={course} courseName={courseName} />
+    return <CourseCardRedesign course={course} courseName={courseName} detailSlug={detailSlug} mecRatings={mecRatings} />
   }
 
   // Caso contrário, manter design original
-  return <CourseCardOriginal course={course} viewMode={viewMode} courseName={courseName} isPos={isPos} />
+  return <CourseCardOriginal course={course} viewMode={viewMode} courseName={courseName} isPos={isPos} detailSlug={detailSlug} mecRatings={mecRatings} />
 }
 
 // Renomear componente original
@@ -56,178 +64,39 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
   course,
   viewMode,
   courseName,
-  isPos
+  isPos,
+  detailSlug,
+  mecRatings
 }) => {
   const { isFavorite, toggleFavorite } = useFavorites()
   const pathname = usePathname()
   const { trackEvent } = usePostHogTracking()
+  const { selectCourse } = useCourseSelection('resultado')
 
   // Estado para seleção de turno
   const [selectedShift, setSelectedShift] = useState<string>('')
 
   // Obter modalidade do curso (não precisa selecionar)
-  const courseModality = course.modality?.toUpperCase() || course.commercialModality?.toUpperCase() || ''
+  const courseModality = resolveCourseModality(course)
 
   // Verificar se precisa mostrar seletor de turno (não virtual e tem múltiplas opções)
-  const needsShiftSelection = () => {
-    // Só mostrar se tiver businessKey e unitId
-    if (!course.businessKey || !course.unitId) {
-      return false
-    }
+  const needsShiftSelection = () => courseNeedsShiftSelection(course)
 
-    // Não mostrar se for virtual
-    const isVirtual = course.shiftOptions?.some(s => s.toUpperCase() === 'VIRTUAL') ||
-      course.classShift?.toUpperCase() === 'VIRTUAL'
-    if (isVirtual) {
-      return false
-    }
-
-    // Só mostrar seletor se tiver MÚLTIPLOS turnos (mais de 1)
-    // Se tiver apenas 1 turno, não mostrar seletor, usar automaticamente
-    const hasMultipleShifts = course.shiftOptions && course.shiftOptions.length > 1
-
-    return hasMultipleShifts
-  }
-
+  // Destino + tracking vêm do hook compartilhado (useCourseSelection): mesmo
+  // comportamento aqui, no card das landings de SEO e na página de cidade.
   const handleClick = async () => {
-    // Se precisa selecionar turno mas ainda não selecionou
-    if (needsShiftSelection() && !selectedShift) {
-      toast.error('Por favor, selecione o turno')
-      trackEvent('course_card_click_blocked', {
-        reason: 'shift_not_selected',
-        course_id: course.id,
-        course_name: course.name,
-        course_brand: course.brand,
-        modality: courseModality,
+    await selectCourse(course, {
+      selectedShift,
+      extraProps: {
         view_mode: viewMode,
-      })
-      return
-    }
-
-    // Trilho YDUQS (Estácio via Athena): checkout por inscrição (não passa pelo /checkout/matricula).
-    if (course.source === 'YDUQS') {
-      trackEvent('course_selected', {
-        course_id: course.id,
-        course_name: course.name,
-        course_brand: course.brand,
-        academic_level: course.academicLevel,
-        modality: courseModality,
-        price: course.minPrice,
-        city: course.city,
-        state: course.uf || course.unitState,
-        source: 'YDUQS',
-        view_mode: viewMode,
-      })
-
-      const params = new URLSearchParams()
-      if (course.offerId) params.set('offerId', course.offerId)
-      if (course.name) params.set('courseName', course.name)
-      if (course.brand) params.set('brand', course.brand)
-      const athenaModality = courseModality || course.modality || course.commercialModality || ''
-      if (athenaModality) params.set('modality', athenaModality)
-      if (course.minPrice) params.set('price', String(course.minPrice))
-      if (course.city) params.set('city', course.city)
-      const athenaState = course.uf || course.unitState || ''
-      if (athenaState) params.set('state', athenaState)
-      if (course.academicLevel) params.set('academicLevel', course.academicLevel)
-      // Endereço da unidade — opcional, pro checkout mostrar onde fica
-      // (relevante pra presencial/semipresencial).
-      if (course.unitAddress) params.set('unitAddress', course.unitAddress)
-      if (course.unitDistrict) params.set('unitDistrict', course.unitDistrict)
-      if (course.unitPostalCode) params.set('unitPostalCode', course.unitPostalCode)
-      // Preço por forma de ingresso (2/3) — opcional, ver Course.priceForma2/3.
-      if (course.priceForma2) params.set('priceForma2', String(course.priceForma2))
-      if (course.priceForma3) params.set('priceForma3', String(course.priceForma3))
-
-      localStorage.setItem('selectedCourse', JSON.stringify(course))
-      window.location.href = `/checkout/estacio?${params.toString()}`
-      return
-    }
-
-    // Enviar dados para o endpoint de search antes de redirecionar
-    if (course.id && course.unitId) {
-      try {
-        await postSearch(
-          String(course.id),
-          course.unitId,
-          course
-        )
-        // Não mostrar toast de sucesso para não atrapalhar o fluxo
-        // O erro já é logado internamente na função postSearch
-      } catch (error) {
-        // Erro já foi tratado dentro de postSearch, apenas continuar o fluxo
-        console.error('Erro ao enviar dados para search:', error)
-      }
-    }
-
-    // Construir URL com parâmetros essenciais para compartilhamento
-    const params = new URLSearchParams()
-
-    // Parâmetros obrigatórios: groupId (course.id), unitId, modality, shift
-    if (course.id) params.set('groupId', String(course.id))
-    if (course.unitId) params.set('unitId', course.unitId)
-
-    const finalModality = courseModality || course.modality || course.commercialModality || ''
-    if (finalModality) params.set('modality', finalModality)
-
-    // Usar turno selecionado, ou classShift, ou o único turno disponível (quando há apenas 1 opção)
-    const singleShift = course.shiftOptions && course.shiftOptions.length === 1 ? course.shiftOptions[0] : null
-    const finalShift = selectedShift || course.classShift || singleShift || ''
-    if (finalShift) params.set('shift', finalShift)
-
-    // Track course selection
-    trackEvent('course_selected', {
-      course_id: course.id,
-      course_name: course.name,
-      course_brand: course.brand,
-      academic_level: course.academicLevel,
-      modality: finalModality,
-      shift: finalShift,
-      price: course.minPrice,
-      city: course.city,
-      state: course.uf || course.unitState,
-      unit_id: course.unitId,
-      is_pos: isPos,
-      view_mode: viewMode,
-      is_favorite: isFavorite(course),
-    })
-
-    // Facebook Pixel + Conversions API - ViewContent (curso selecionado)
-    void trackFbqDual('ViewContent', {
-      content_name: course.name,
-      content_type: 'product',
-      content_ids: course.id ? [String(course.id)] : undefined,
-      value: course.minPrice || 0,
-      currency: 'BRL',
-    })
-
-    // GA4 ecommerce (dataLayer/GTM) - select_item, paridade com o ViewContent acima.
-    pushDataLayerEvent('select_item', {
-      ecommerce: {
-        currency: 'BRL',
-        value: course.minPrice || 0,
-        items: [
-          {
-            item_id: course.id ? String(course.id) : undefined,
-            item_name: course.name,
-            item_brand: course.brand,
-          },
-        ],
+        is_pos: isPos,
+        is_favorite: isFavorite(course),
       },
     })
-
-    // TikTok Pixel - ViewContent
-    trackTikTok('ViewContent', {
-      content_id: course.id,
-      content_name: course.name,
-      content_type: 'product',
-      value: course.minPrice || 0,
-      currency: 'BRL',
-    })
-
-    // Redirecionar para checkout (pós e graduação usam a mesma página de matrícula)
-    window.location.href = `/checkout/matricula?${params.toString()}`
   }
+
+  const destination = buildCourseCheckoutDestination(course, selectedShift)
+  const shiftBlocked = needsShiftSelection() && !selectedShift
 
   const capitalizeFirstLetter = (text: string) => {
     if (!text) return ''
@@ -269,14 +138,20 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
 
 
   const courseParsed = parseCourseName(courseName || course.name);
-  const hasDiscount = Boolean(
-    course.minPrice > 0 &&
-    typeof course.maxPrice === 'number' &&
-    course.maxPrice > course.minPrice
-  )
-  const discountPercentage = hasDiscount
-    ? Math.floor((1 - course.minPrice / course.maxPrice!) * 100)
-    : 0
+  // Nota MEC real da instituição (Institution.mecRating, 1-5) — sem o dado
+  // pro brand, undefined e o selo simplesmente não aparece (nunca inventa).
+  const mecRating = mecRatings?.[brandMecKey(course.brand)]
+  // Pós-graduação e profissionalizante: minPrice/maxPrice já são o TOTAL do
+  // curso (priceWithDiscount/priceWithoutDiscount no Tartarus), não
+  // mensalidade — a economia é a diferença simples, sem multiplicar por
+  // duração de novo (isso inflava "Economize" até igualar o "De"). Graduação
+  // continua mensal, então mantém a multiplicação por duração.
+  const priceAnchor = getPriceAnchor({
+    from: course.maxPrice,
+    to: course.minPrice,
+    durationMonths: course.durationInMonths ?? course.duration,
+    priceIsTotal: isTotalPriceLevel(course.academicLevel),
+  })
 
   // Função para determinar o turno baseado em shiftOptions
   const getShiftLabel = (shiftOptions?: string[]): string => {
@@ -297,12 +172,24 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
   const renderUniversityImage = (universityName: string) => {
     // Match por substring: marcas YDUQS vêm como nome completo (ex.: "UNIVERSIDADE ESTÁCIO DE SÁ").
     const n = (universityName || '').toLowerCase()
+    // UNAES é a marca que a Cogna usa em todo o catálogo profissionalizante
+    // (COSMOS) — 2.000 ofertas, país inteiro. Faz parte da família Anhanguera
+    // e não tem logo próprio no repositório, então usa o da Anhanguera
+    // (decisão do Rodrigo, 2026-08-20). Vem ANTES do teste de 'anhanguera'
+    // só por clareza de leitura; as duas strings não colidem.
+    if (n.includes('unaes')) return '/assets/logo-anhanguera-bolsa-click.svg'
     if (n.includes('anhanguera')) return '/assets/logo-anhanguera-bolsa-click.svg'
     if (n.includes('unopar')) return '/assets/logo-unopar.svg'
     if (n.includes('pitagoras') || n.includes('pitágoras')) return '/assets/logo-pitagoras.svg'
     if (n.includes('unime')) return '/assets/logo-unime-p.png'
     if (n.includes('estacio') || n.includes('estácio')) return '/estacio-logo.png'
     if (n.includes('wyden')) return '/assets/wyden.svg'
+    if (n.includes('ibmec')) return '/assets/logo-ibmec.svg'
+    // UNIC, como a UNAES, é da família Anhanguera e não tem logo próprio
+    // aqui (decisão do Rodrigo, 2026-08-20). Fica por ÚLTIMO de propósito:
+    // 'unic' é curto e casaria dentro de nomes de outras marcas se viesse
+    // antes — as marcas YDUQS chegam como nome completo da unidade.
+    if (n.includes('unic')) return '/assets/logo-anhanguera-bolsa-click.svg'
     return '/assets/logo-bolsa-click-rosa.png'
   }
 
@@ -421,6 +308,27 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
             {courseParsed.name || course.name}
           </h3>
 
+          {/* Link secundário pra quem ainda está em dúvida — não compete com
+              o CTA principal (Inscreva-se), só dá saída pra grade/carreira/FAQ
+              do curso. Só aparece quando há página enriquecida (FeaturedCourse). */}
+          {detailSlug && (
+            <Link
+              href={`/cursos/${detailSlug}`}
+              prefetch={false}
+              onClick={(e) => {
+                e.stopPropagation()
+                trackEvent('course_details_clicked', {
+                  course_name: course.name,
+                  brand: course.brand,
+                  detail_slug: detailSlug,
+                })
+              }}
+              className="mt-0.5 inline-block w-fit text-[12px] text-bolsa-primary hover:underline"
+            >
+              Ver detalhes do curso
+            </Link>
+          )}
+
           {/* Grau • nível */}
           <div className="mt-1 flex min-h-[1.25rem] flex-wrap items-center gap-x-1.5 text-sm text-neutral-500">
             {course.academicDegree && (
@@ -459,6 +367,14 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
               </p>
             )}
           </div>
+
+          {/* Nota MEC real (Institution.mecRating) — só aparece com dado */}
+          {typeof mecRating === 'number' && (
+            <div className="mt-1 flex items-center gap-1" title={`Nota MEC: ${mecRating} de 5`}>
+              <Star size={13} className="text-amber-500" fill="currentColor" />
+              <span className="text-xs font-semibold text-neutral-700">Nota MEC {mecRating}</span>
+            </div>
+          )}
 
           {/* Chips: modalidade, turno, duração */}
           <div className="mt-3 flex min-h-[2rem] flex-wrap items-center gap-2">
@@ -539,26 +455,29 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
             itemScope
             itemType="https://schema.org/CourseInstance"
           >
-            {hasDiscount && (
-              <div className="mb-1.5 flex items-center gap-2 text-xs text-neutral-500">
-                <span>
-                  De{' '}
-                  <span className="line-through decoration-neutral-400">
-                    {course.maxPrice!.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            {priceAnchor && (
+              <div className="mb-1.5">
+                <div className="flex items-center gap-2 text-xs text-neutral-500">
+                  <span>
+                    De{' '}
+                    <span className="line-through decoration-neutral-400">
+                      {formatCurrency(course.maxPrice!)}
+                    </span>
                   </span>
-                </span>
-                <span className="rounded-full bg-rose-50 px-2 py-0.5 font-semibold text-bolsa-secondary">
-                  -{discountPercentage}%
-                </span>
+                  <span className="rounded-full bg-rose-50 px-2 py-0.5 font-semibold text-bolsa-secondary">
+                    -{priceAnchor.discountPct}%
+                  </span>
+                </div>
+                {priceAnchor.totalSavings !== null && (
+                  <p className="mt-0.5 text-[11px] text-emerald-600">
+                    Economize {formatCurrency(priceAnchor.totalSavings)} até o fim do curso
+                  </p>
+                )}
               </div>
             )}
             <div className="mb-3">
               <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-neutral-500">
-                {course.academicLevel === 'POS_GRADUACAO' &&
-                  typeof course.totalInstallment === 'number' &&
-                  typeof course.minInstallmentValue === 'number'
-                  ? 'Até'
-                  : 'A partir de'}
+                A partir de
               </span>
               <span
                 className="mt-0.5 block text-[26px] font-bold leading-none text-emerald-500"
@@ -566,15 +485,19 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
                 itemScope
                 itemType="https://schema.org/Offer"
               >
-                {course.academicLevel === 'POS_GRADUACAO' &&
-                  typeof course.totalInstallment === 'number' &&
-                  typeof course.minInstallmentValue === 'number' ? (
+                {/* Pós/profissionalizante: mostra a parcela como mensalidade
+                    ("R$ X/mês"), sem afirmar o número de parcelas — o
+                    parcelamento real (Nx) fica pro checkout, que tem o dado
+                    do plano de pagamento (decisão do CEO, 2026-09). Evita a
+                    contradição de "18x R$134,10" (R$2.413,80) somar mais que
+                    o preço riscado "De" (que é o TOTAL do curso). */}
+                {hasInstallmentPlan(course) ? (
                   <span itemProp="price">
-                    {course.totalInstallment}x de{' '}
                     {course.minInstallmentValue.toLocaleString('pt-BR', {
                       style: 'currency',
                       currency: 'BRL',
                     })}
+                    <span className="text-sm font-semibold text-neutral-500">/mês</span>
                   </span>
                 ) : (
                   <span itemProp="price">
@@ -587,22 +510,41 @@ const CourseCardOriginal: React.FC<CourseCardProps> = ({
               </span>
             </div>
 
-            <button
-              onClick={handleClick}
-              disabled={needsShiftSelection() && !selectedShift}
+            <a
+              href={destination.href || '/checkout/matricula'}
+              onClick={(e) => {
+                if (shiftBlocked) {
+                  e.preventDefault()
+                  return
+                }
+                // Do not preventDefault: href is the enrollment URL. Tracking
+                // still runs; if JS is slow/broken the browser still navigates.
+                void handleClick()
+              }}
+              aria-disabled={shiftBlocked || undefined}
               title={
-                needsShiftSelection() && !selectedShift
+                shiftBlocked
                   ? "Selecione o turno"
                   : "Avançar para matrícula"
               }
               aria-label="Avançar para matrícula"
-              className={`w-full rounded-lg py-3 px-4 font-semibold transition-all duration-300 ${needsShiftSelection() && !selectedShift
-                  ? 'cursor-not-allowed bg-gray-300 text-white'
+              className={`block w-full rounded-lg py-3 px-4 font-semibold text-center transition-all duration-300 ${shiftBlocked
+                  ? 'cursor-not-allowed bg-gray-300 text-white pointer-events-none'
                   : 'bg-emerald-500 text-white hover:bg-emerald-600 hover:shadow-lg'
                 }`}
             >
-              {needsShiftSelection() && !selectedShift ? 'Selecione o turno' : 'Inscreva-se'}
-            </button>
+              {shiftBlocked ? 'Selecione o turno' : 'Inscreva-se'}
+            </a>
+
+            {/* Trunfo universal: diferente de agregadores concorrentes, não
+                cobramos taxa de inscrição/pré-matrícula em nenhum trilho
+                (ver app/lib/checkout/matricula-charge.ts e
+                EstacioCheckoutClient — pagamento, quando existe, é sempre da
+                mensalidade contratada, direto com a instituição). */}
+            <p className="mt-2 flex items-center justify-center gap-1 text-[11px] text-neutral-400">
+              <ShieldCheck size={12} className="flex-shrink-0" />
+              Sem taxa de inscrição
+            </p>
 
             <div className="mt-3 flex items-center text-xs text-neutral-400">
               <MapPin size={14} className="mr-1.5 flex-shrink-0" />

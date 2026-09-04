@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 // Página de interceptação de intenção (GEO/E-E-A-T). Captura a versão GENÉRICA de
 // "como funciona [plataforma de bolsa] / desconto em faculdade" — sem citar concorrentes
@@ -47,15 +48,15 @@ const FAQ = [
   },
   {
     q: 'Como funciona um site de bolsa de estudo?',
-    a: 'Uma plataforma de bolsa reúne, em um só lugar, ofertas de desconto de várias faculdades. Você pesquisa o curso, a cidade e a modalidade, e vê o desconto de cada instituição antes de decidir. O cadastro é gratuito e a matrícula segue direto com a faculdade escolhida. O Bolsa Click trabalha com as maiores redes de ensino do país — Anhanguera, Unopar, Pitágoras, Unime e Estácio —, todas reconhecidas pelo MEC.',
+    a: 'Uma plataforma de bolsa reúne, em um só lugar, ofertas de desconto de várias faculdades. Você pesquisa o curso, a cidade e a modalidade, e vê o desconto de cada instituição antes de decidir. O cadastro é gratuito e a matrícula segue direto com a faculdade escolhida. O Bolsa Click trabalha com as maiores redes de ensino do país — Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden —, todas reconhecidas pelo MEC.',
   },
   {
     q: 'Preciso de nota do ENEM para conseguir bolsa?',
     a: 'Depende do tipo. Nas bolsas próprias negociadas via plataforma, normalmente não é preciso nota do ENEM nem comprovar renda — basta o processo seletivo da própria faculdade. O ENEM é exigido nos programas federais ProUni e FIES, que seguem regras do MEC. Por isso muitos estudantes conseguem desconto mesmo sem ter feito o ENEM.',
   },
   {
-    q: 'A bolsa vale por todo o curso?',
-    a: 'Sim. Nas bolsas próprias, o desconto contratado vale do primeiro ao último semestre, enquanto você mantém a matrícula ativa e a aprovação acadêmica. Você não precisa renovar o benefício a cada período nem disputá-lo de novo: o percentual acompanha você até a conclusão do curso.',
+    q: 'Por quanto tempo vale a bolsa?',
+    a: 'O percentual e a duração seguem o contrato da faculdade da oferta escolhida. Cadastro no Bolsa Click é grátis, sem taxa de adesão. Confira as condições de cada oferta antes de matricular.',
   },
 ]
 
@@ -123,7 +124,7 @@ export default function ComoFuncionaBolsaDeEstudo() {
           <p className="text-ink-700 leading-relaxed">
             Há dois grandes caminhos. A <strong>bolsa própria</strong> é o desconto negociado com a
             faculdade — normalmente sem exigir nota do ENEM nem critério de renda, com descontos que
-            chegam a 80% na mensalidade. Os <strong>programas federais</strong>, como{' '}
+            chegam a {DISCOUNT_CEILING_PCT}% na mensalidade. Os <strong>programas federais</strong>, como{' '}
             <Link href="/prouni" className="underline decoration-1 underline-offset-4">ProUni</Link> e{' '}
             <Link href="/fies" className="underline decoration-1 underline-offset-4">FIES</Link>, são
             geridos pelo MEC, exigem nota do ENEM e têm regras próprias de renda e seleção. São rotas

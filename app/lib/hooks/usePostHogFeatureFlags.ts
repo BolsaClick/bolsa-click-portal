@@ -56,10 +56,19 @@ export function usePostHogFeatureFlag(flagKey: string, defaultValue: boolean | s
 }
 
 /**
- * Hook específico para feature flag de marketplace
+ * Hook específico para a feature flag 'marketplace_enabled' (kill switch).
+ *
+ * Decisão de negócio (2026-08): a chamada createMarketplaceInscription
+ * (create-inscription-marketplace, canalVendas.id=141) foi DESATIVADA porque
+ * cria uma inscrição DUPLICADA na Cogna para ofertas ATHENAS — uma via
+ * createInscription normal + outra via marketplace. Nasce OFF (default
+ * `false`): com a flag desligada (estado atual) o marketplace não dispara.
+ * Religável subindo esta mesma flag no PostHog para 100% — mesma flag do
+ * lado servidor em confirm-matricula.ts (isServerFlagEnabled('marketplace_enabled', false)).
+ * NÃO apagar createMarketplaceInscription nem o endpoint — só parar de chamar.
  */
 export function useMarketplaceFeatureFlag() {
-  const { flagValue } = usePostHogFeatureFlag('marketplace', false)
+  const { flagValue } = usePostHogFeatureFlag('marketplace_enabled', false)
   return flagValue as boolean
 }
 
@@ -113,7 +122,7 @@ export function useFeatureFlags() {
       try {
         const flags: Record<string, boolean | string> = {
           'course_card_redesign_v2': posthog.isFeatureEnabled('course_card_redesign_v2') ?? false,
-          'marketplace': posthog.isFeatureEnabled('marketplace') ?? false,
+          'marketplace_enabled': posthog.isFeatureEnabled('marketplace_enabled') ?? false,
           'pix-before-enrollment': posthog.isFeatureEnabled('pix-before-enrollment') ?? false,
           'pix_enabled': posthog.isFeatureEnabled('pix_enabled') ?? true,
           'whatsapp_enabled': posthog.isFeatureEnabled('whatsapp_enabled') ?? false,

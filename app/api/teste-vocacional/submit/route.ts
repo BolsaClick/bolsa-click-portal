@@ -5,8 +5,10 @@ import {
   type ChatMessage,
   type Recommendation,
 } from '@/app/lib/teste-vocacional/openai'
-import { upsertNotealyContact } from '@/app/lib/api/notealy'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
+import { upsertCandidato } from '@/app/lib/api/attio'
+import { utmFromRequest } from '@/app/lib/analytics/utm'
+import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
 import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
 import {
   computeUserProfile,
@@ -46,19 +48,53 @@ function checkSubmitLimit(ip: string): boolean {
   return true
 }
 
+/**
+ * Casamento tolerante de slug entre o que a IA devolve e o que o matching
+ * espera.
+ *
+ * O repo tem DUAS convenções de slug pros mesmos 20 cursos: COURSE_PROFILES
+ * (usado por matchCourses, e portanto o que vai no prompt) usa "psicologia",
+ * enquanto TOP_CURSOS/catálogo usa "psicologia-bacharelado". A IA recebe o
+ * slug sem sufixo e devolve COM — ela "corrige" pro formato que reconhece.
+ *
+ * Sem normalizar, nenhuma recomendação casava: as 3 eram descartadas e
+ * substituídas pelo texto genérico do preenchimento abaixo. O efeito era
+ * pagar a chamada da OpenAI e jogar a resposta fora — invisível, porque a
+ * página continuava mostrando 3 cursos corretos (o matching determinístico
+ * acerta os cursos; só a justificativa personalizada se perdia).
+ *
+ * Tolerar aqui é mais robusto que ajustar o prompt: modelo de linguagem varia
+ * de resposta, e o código não deve quebrar por causa de um sufixo. Conferido
+ * que remover o sufixo não colide nenhum slug em nenhuma das duas listas.
+ */
+const DEGREE_SUFFIX = /-(bacharelado|licenciatura|tecnologo|tecnico)$/
+
+function baseSlug(slug: string): string {
+  return slug.trim().toLowerCase().replace(DEGREE_SUFFIX, '')
+}
+
 function sanitizeRecommendations(
   raw: Recommendation[],
   expectedSlugs: string[]
 ): Recommendation[] {
   const expectedSet = new Set(expectedSlugs)
+  // Índice normalizado → slug esperado. Exato tem prioridade; o normalizado só
+  // entra quando o exato não bate, pra não perder precisão se um dia as duas
+  // listas passarem a usar a mesma convenção.
+  const byBase = new Map<string, string>()
+  for (const s of expectedSlugs) byBase.set(baseSlug(s), s)
+
   const seen = new Set<string>()
   const valid: Recommendation[] = []
 
   for (const r of raw) {
-    if (!expectedSet.has(r.courseSlug) || seen.has(r.courseSlug)) continue
-    seen.add(r.courseSlug)
+    const slug = expectedSet.has(r.courseSlug)
+      ? r.courseSlug
+      : byBase.get(baseSlug(r.courseSlug ?? ''))
+    if (!slug || seen.has(slug)) continue
+    seen.add(slug)
     valid.push({
-      courseSlug: r.courseSlug,
+      courseSlug: slug,
       matchPercent: Math.max(50, Math.min(100, Math.round(r.matchPercent))),
       reasoning: String(r.reasoning).slice(0, 600),
     })
@@ -180,6 +216,28 @@ export async function POST(request: NextRequest) {
       matchPercent: m.score,
       reasoning: 'Curso alinhado com seu perfil vocacional.',
     }))
+
+    // Alarme de degradação silenciosa.
+    //
+    // Este fallback protege o servidor (a rota nunca devolve 500), mas o
+    // candidato recebe a MESMA justificativa genérica que todo mundo — o teste
+    // vocacional deixa de ser personalizado sem nada indicar isso. Em agosto de
+    // 2026 ficou dias assim, por falta de crédito na OpenAI, e só foi
+    // descoberto por acaso.
+    //
+    // Server-side de propósito: o evento não pode depender de consentimento de
+    // cookie, senão justamente a falha fica invisível.
+    void capturePostHogServerEvent({
+      event: 'vocational_ai_fallback',
+      distinctId: cleanPhone,
+      properties: {
+        // Mensagem crua do provedor — é o que distingue falta de saldo
+        // (insufficient_quota) de chave inválida ou modelo sem acesso.
+        error_message: error instanceof Error ? error.message : String(error),
+        holland_code: profile.hollandCode,
+        source_side: 'server',
+      },
+    }).catch((e) => console.error('⚠️ PostHog (vocational_ai_fallback) falhou:', e))
   }
 
   const recommendations = sanitizeRecommendations(rawRecommendations, topSlugs)
@@ -228,16 +286,20 @@ export async function POST(request: NextRequest) {
     console.error('Falha ao criar Lead:', error)
   }
 
-  // 5) Notealy sync (best-effort)
+  // 5) CRM (best-effort — o Lead acima já garantiu o contato).
   try {
-    await upsertNotealyContact({
+    await upsertCandidato({
+      phone: cleanPhone,
       name: name.trim(),
       email: email.toLowerCase().trim(),
-      phone: cleanPhone,
-      tagId: process.env.NOTEALY_TAG_TESTE_VOCACIONAL,
+      courseName: courseNames[0],
+      estagio: 'lead',
+      origemFluxo: 'teste-vocacional',
+      leadId: leadId || undefined,
+      utm: utmFromRequest(request),
     })
   } catch (error) {
-    console.error('⚠️ Falha ao sincronizar com Notealy:', error)
+    console.error('⚠️ Attio (teste vocacional) falhou:', error)
   }
 
   // 6) Meta CAPI — Lead (best-effort)

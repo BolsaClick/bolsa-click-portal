@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import type { Institution } from '@prisma/client'
 import type { Course } from '@/app/interface/course'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 interface UnitInfo {
   unitName: string
@@ -94,8 +95,8 @@ export default function FaculdadeCidadeClient({
               </h1>
               <p className="mt-5 text-lg md:text-xl text-ink-700 max-w-3xl leading-relaxed">
                 {fromFallback
-                  ? `Veja como funciona a ${institution.name} em ${cityName}-${cityState} e como conseguir bolsa de estudo de até 80%.`
-                  : `${offers.length} ${offers.length === 1 ? 'curso disponível' : 'cursos disponíveis'} na ${institution.name} em ${cityName}-${cityState}, com bolsa de até 80% pelo Bolsa Click. ${units.length > 0 ? `${units.length} ${units.length === 1 ? 'polo' : 'polos'} físicos identificados.` : 'Cursos presenciais, EAD e semipresenciais.'}`}
+                  ? `Veja como funciona a ${institution.name} em ${cityName}-${cityState} e como conseguir bolsa de estudo de até ${DISCOUNT_CEILING_PCT}%.`
+                  : `${offers.length} ${offers.length === 1 ? 'curso disponível' : 'cursos disponíveis'} na ${institution.name} em ${cityName}-${cityState}, com bolsa de até ${DISCOUNT_CEILING_PCT}% pelo Bolsa Click. ${units.length > 0 ? `${units.length} ${units.length === 1 ? 'polo' : 'polos'} físicos identificados.` : 'Cursos presenciais, EAD e semipresenciais.'}`}
               </p>
 
               {!fromFallback && (
@@ -114,7 +115,7 @@ export default function FaculdadeCidadeClient({
                   </div>
                   <div className="bg-white px-4 py-3">
                     <dt className="font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500">Bolsa até</dt>
-                    <dd className="mt-1 font-display num-tabular text-xl text-bolsa-secondary">80%</dd>
+                    <dd className="mt-1 font-display num-tabular text-xl text-bolsa-secondary">{DISCOUNT_CEILING_PCT}%</dd>
                   </div>
                 </dl>
               )}
@@ -258,8 +259,8 @@ export default function FaculdadeCidadeClient({
               {
                 q: `Quanto custa a ${institution.name} em ${cityName}?`,
                 a: lowPrice > 0
-                  ? `As mensalidades começam em R$ ${formatBRL(lowPrice)} com bolsa pelo Bolsa Click, com descontos de até 80%. O valor varia conforme o curso e a modalidade escolhida.`
-                  : `As mensalidades variam por curso e modalidade. Pelo Bolsa Click, você consegue bolsa de até 80% em qualquer curso disponível na ${institution.name}.`,
+                  ? `As mensalidades começam em R$ ${formatBRL(lowPrice)} com bolsa pelo Bolsa Click, com descontos de até ${DISCOUNT_CEILING_PCT}%. O valor varia conforme o curso e a modalidade escolhida.`
+                  : `As mensalidades variam por curso e modalidade. Pelo Bolsa Click, você consegue bolsa de até ${DISCOUNT_CEILING_PCT}% em qualquer curso disponível na ${institution.name}.`,
               },
               {
                 q: `A ${institution.name} em ${cityName} é EAD ou presencial?`,
@@ -267,7 +268,7 @@ export default function FaculdadeCidadeClient({
               },
               {
                 q: `Como me inscrever na ${institution.name} em ${cityName}?`,
-                a: `A inscrição é totalmente gratuita pelo Bolsa Click. Escolha o curso, compare as ofertas disponíveis, garanta sua bolsa de até 80% e faça matrícula direto pelo site, sem custo de processo seletivo.`,
+                a: `A inscrição é totalmente gratuita pelo Bolsa Click. Escolha o curso, compare as ofertas disponíveis, garanta sua bolsa de até ${DISCOUNT_CEILING_PCT}% e faça matrícula direto pelo site, sem custo de processo seletivo.`,
               },
             ].map((item, i) => (
               <details key={i} className="group py-5">

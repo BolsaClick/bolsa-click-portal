@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { GraduationCap, Clock, Wallet, Sparkles, ArrowRight } from 'lucide-react'
 import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 export const revalidate = 3600
 
@@ -36,7 +37,7 @@ const FAQ_ITEMS = [
   {
     question: 'Qual a faculdade EAD mais barata do Brasil?',
     answer:
-      'As faculdades EAD mais baratas com bolsa pelo Bolsa Click têm mensalidade a partir de R$ 99/mês, em cursos tecnólogos como Análise e Desenvolvimento de Sistemas, Gestão de RH e Pedagogia. O valor exato depende do curso, da unidade e do turno — bacharelados (4-5 anos) custam um pouco mais que tecnólogos (2-2,5 anos). Em todos os casos, a bolsa chega a 80% sobre o valor cheio e a inscrição é gratuita, sem ENEM.',
+      `As faculdades EAD mais baratas com bolsa pelo Bolsa Click têm mensalidade a partir de R$ 99/mês, em cursos tecnólogos como Análise e Desenvolvimento de Sistemas, Gestão de RH e Pedagogia. O valor exato depende do curso, da unidade e do turno — bacharelados (4-5 anos) custam um pouco mais que tecnólogos (2-2,5 anos). Em todos os casos, a bolsa chega a ${DISCOUNT_CEILING_PCT}% sobre o valor cheio e a inscrição é gratuita, sem ENEM.`,
   },
   {
     question: 'Faculdade EAD é reconhecida pelo MEC?',
@@ -56,7 +57,7 @@ const FAQ_ITEMS = [
   {
     question: 'Quanto custa uma faculdade EAD com bolsa?',
     answer:
-      'Mensalidades de faculdade EAD com bolsa pelo Bolsa Click começam a partir de R$ 99/mês em parceiras como Anhanguera, Unopar e Pitágoras. Descontos chegam a 80% sobre o valor cheio. Cursos tecnólogos (2-2,5 anos) tendem a ser mais baratos que bacharelados (4-5 anos).',
+      `Mensalidades de faculdade EAD com bolsa pelo Bolsa Click começam a partir de R$ 99/mês em parceiras como Anhanguera, Unopar e Pitágoras. Descontos chegam a ${DISCOUNT_CEILING_PCT}% sobre o valor cheio. Cursos tecnólogos (2-2,5 anos) tendem a ser mais baratos que bacharelados (4-5 anos).`,
   },
   {
     question: 'Como funciona a graduação EAD na prática?',
@@ -86,7 +87,7 @@ const jsonLdSchemas = [
     '@type': 'CollectionPage',
     name: 'Faculdade EAD com Bolsa de Estudo',
     description:
-      'Faculdades EAD parceiras com bolsa de até 80%, das maiores redes de ensino do país. Graduação a distância reconhecida pelo MEC. Inscrição grátis, sem ENEM.',
+      `Faculdades EAD parceiras com bolsa de até ${DISCOUNT_CEILING_PCT}%, das maiores redes de ensino do país. Graduação a distância reconhecida pelo MEC. Inscrição grátis, sem ENEM.`,
     url: `${SITE_URL}/faculdade-ead`,
     provider: {
       '@type': 'EducationalOrganization',
@@ -114,9 +115,9 @@ const jsonLdSchemas = [
 ]
 
 export const metadata: Metadata = {
-  title: 'Faculdade EAD Mais Barata: Bolsa de até 80%',
+  title: `Faculdade EAD Mais Barata: Bolsa de até ${DISCOUNT_CEILING_PCT}%`,
   description:
-    'A faculdade EAD mais barata começa a partir de R$ 99/mês com bolsa de até 80% pelo Bolsa Click — em graduações reconhecidas pelo MEC como Administração, Pedagogia e ADS. Inscrição grátis, sem ENEM.',
+    `A faculdade EAD mais barata começa a partir de R$ 99/mês com bolsa de até ${DISCOUNT_CEILING_PCT}% pelo Bolsa Click — em graduações reconhecidas pelo MEC como Administração, Pedagogia e ADS. Inscrição grátis, sem ENEM.`,
   keywords: [
     'faculdade ead',
     'faculdade ead mais barata',
@@ -130,9 +131,9 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: `${SITE_URL}/faculdade-ead` },
   openGraph: {
-    title: 'Faculdade EAD Mais Barata: Bolsa de até 80% | Bolsa Click',
+    title: `Faculdade EAD Mais Barata: Bolsa de até ${DISCOUNT_CEILING_PCT}% | Bolsa Click`,
     description:
-      'A faculdade EAD mais barata parte de R$ 99/mês com bolsa de até 80%, reconhecida pelo MEC, nas maiores redes de ensino do país. Inscrição grátis, sem ENEM.',
+      `A faculdade EAD mais barata parte de R$ 99/mês com bolsa de até ${DISCOUNT_CEILING_PCT}%, reconhecida pelo MEC, nas maiores redes de ensino do país. Inscrição grátis, sem ENEM.`,
     url: `${SITE_URL}/faculdade-ead`,
     siteName: 'Bolsa Click',
     locale: 'pt_BR',
@@ -165,7 +166,7 @@ export default function FaculdadeEadPage() {
             </p>
             <h1 className="font-display text-4xl md:text-5xl lg:text-[64px] font-semibold text-white leading-[1.05] mb-5">
               Faculdade EAD mais barata{' '}
-              <span className="italic text-white/85">com bolsa de até 80% de desconto</span>
+              <span className="italic text-white/85">com bolsa de até {DISCOUNT_CEILING_PCT}% de desconto</span>
             </h1>
             <p className="text-white/80 text-base md:text-lg max-w-2xl mx-auto leading-relaxed mb-8">
               Compare as faculdades EAD das maiores redes do país (Anhanguera, Estácio, Unopar, Pitágoras)

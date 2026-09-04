@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { ProgramHub } from '../_components/ProgramHub'
+import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 
 const SITE_URL = 'https://www.bolsaclick.com.br'
 
@@ -55,7 +56,7 @@ const faqItems = [
   },
   {
     question: 'Posso usar a nota do ENEM para entrar em faculdade particular?',
-    answer: 'Sim, e essa é uma das formas mais usadas. Muitas faculdades privadas (incluindo as parceiras do Bolsa Click) aceitam o ENEM no lugar do vestibular tradicional e ainda oferecem bolsa de até 80% combinando ENEM + Bolsa Click.',
+    answer: `Sim, e essa é uma das formas mais usadas. Muitas faculdades privadas (incluindo as parceiras do Bolsa Click) aceitam o ENEM no lugar do vestibular tradicional e ainda oferecem bolsa de até ${DISCOUNT_CEILING_PCT}% combinando ENEM + Bolsa Click.`,
   },
   {
     question: 'Qual a nota mínima do ENEM para conseguir bolsa?',
@@ -85,7 +86,7 @@ export default function EnemPage() {
       slug="enem"
       title="ENEM"
       h1={`ENEM ${ANO}: Datas, Inscrição e Como Usar Sua Nota`}
-      lede="O Exame Nacional do Ensino Médio é a principal porta de entrada para universidades públicas e privadas no Brasil. Veja como funciona, quando acontece e como transformar sua nota em bolsa de até 80%."
+      lede={`O Exame Nacional do Ensino Médio é a principal porta de entrada para universidades públicas e privadas no Brasil. Veja como funciona, quando acontece e como transformar sua nota em bolsa de até ${DISCOUNT_CEILING_PCT}%.`}
       articleSummary={`Guia completo do ENEM ${ANO}: datas, inscrição, estrutura da prova, cálculo da nota TRI, redação e como usar a nota em SISU, PROUNI, FIES e nas faculdades parceiras Bolsa Click.`}
       datePublished={DATA_PUBLISHED}
       dateModified={DATA_MODIFIED}
@@ -175,7 +176,7 @@ export default function EnemPage() {
         </li>
         <li>
           <strong>Faculdades particulares via Bolsa Click</strong>: a maioria das parceiras
-          aceita ENEM no lugar de vestibular e ainda dá bolsa de até 80% combinando a nota
+          aceita ENEM no lugar de vestibular e ainda dá bolsa de até {DISCOUNT_CEILING_PCT}% combinando a nota
           com nossas ofertas exclusivas. <Link href="/bolsas-de-estudo">Veja as bolsas
           disponíveis</Link>.
         </li>

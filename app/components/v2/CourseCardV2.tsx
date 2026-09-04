@@ -87,7 +87,7 @@ export default function CourseCardV2({ offer, href, ctaLabel = 'Garantir bolsa',
     .join('/')
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-[0_1px_2px_rgba(11,31,60,0.06)] transition-shadow duration-200 hover:shadow-[0_16px_36px_-16px_rgba(2,62,115,0.35)]">
+    <article className="group relative flex h-full flex-col rounded-2xl border border-ink-100 bg-white shadow-[0_1px_2px_rgba(11,31,60,0.06)] transition-shadow duration-200 hover:shadow-[0_16px_36px_-16px_rgba(2,62,115,0.35)]">
       {/* Instituição + modalidade */}
       <div className="flex items-center justify-between gap-3 px-5 pt-5">
         <Image

@@ -52,9 +52,19 @@ const getCachedOfferCount = cache(async (
   try {
     const row = await prisma.cityCourseOfferCache.findUnique({
       where: { featuredCourseId_citySlug: { featuredCourseId, citySlug } },
-      select: { offerCount: true },
+      select: { offerCount: true, athenaOfferCount: true },
     })
-    return row?.offerCount ?? null
+    if (!row) return null
+    // MESCLADO (Cogna + Athena), desde 04/09. Era `offerCount` sozinho, que é
+    // só a Cogna — e foi essa leitura parcial que manteve página com oferta
+    // real da Estácio presa em noindex. Medido no banco antes da mudança:
+    // 2.948 combinações viram noindex → index só por passar a somar.
+    //
+    // `athenaOfferCount` é 0 tanto pra "não tem oferta" quanto pra "ainda não
+    // medida" (athenaFetchedAt null). Somar zero nos dois casos é o lado
+    // seguro: nunca indexa por dado que não existe, e a linha entra sozinha
+    // assim que a varredura semanal a alcançar.
+    return row.offerCount + row.athenaOfferCount
   } catch {
     return null
   }
@@ -170,7 +180,14 @@ async function resolveOfferCountForGate(params: {
   const isHighDemandCourse = trendScore >= MIN_TREND_SCORE_FOR_HIGH_DEMAND
 
   if (!isHighDemandCourse) {
-    // Grupo B/C (fora do rollout desta rodada): comportamento antigo, inalterado.
+    // Grupo B/C. O rollout faseado acabou aqui: o cache agora é MESCLADO
+    // (ver getCachedOfferCount), então esses cursos param de decidir por uma
+    // contagem que enxergava só a Cogna.
+    //
+    // Note que continua sendo o CACHE, não busca ao vivo — é o que o
+    // comentário original pedia como "médio prazo": contagem mesclada
+    // persistida, com o gate de "nunca grava zero vindo de falha" do
+    // precompute. Sem sonda por request, sem oscilação por lentidão de API.
     const cachedOfferCount = await getCachedOfferCount(featuredCourseId, citySlug)
     return cachedOfferCount ?? liveOfferCount
   }

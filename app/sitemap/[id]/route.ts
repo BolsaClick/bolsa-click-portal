@@ -107,7 +107,13 @@ async function buildStaticSitemap(): Promise<SitemapEntry[]> {
     const staleCutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
     const rows = await withTimeout(
       prisma.cityCourseOfferCache.findMany({
-        where: { offerCount: { gt: 0 }, fetchedAt: { gte: staleCutoff } },
+        // Mesclado: `offerCount` é só a Cogna. Uma cidade que só tem oferta
+        // da Estácio some daqui se filtrar por ele sozinho — mesma leitura
+        // parcial que prendia página em noindex (ver getCachedOfferCount).
+        where: {
+          OR: [{ offerCount: { gt: 0 } }, { athenaOfferCount: { gt: 0 } }],
+          fetchedAt: { gte: staleCutoff },
+        },
         distinct: ['citySlug'],
         select: { citySlug: true },
       }),
@@ -215,7 +221,7 @@ async function buildCourseCitiesSitemap(): Promise<SitemapEntry[]> {
           orderBy: { trendScore: 'desc' },
         }),
         prisma.cityCourseOfferCache.findMany({
-          select: { featuredCourseId: true, citySlug: true, offerCount: true },
+          select: { featuredCourseId: true, citySlug: true, offerCount: true, athenaOfferCount: true },
         }),
       ]),
       10_000,
@@ -233,7 +239,10 @@ async function buildCourseCitiesSitemap(): Promise<SitemapEntry[]> {
         inner = new Map()
         cacheByCourse.set(row.featuredCourseId, inner)
       }
-      inner.set(row.citySlug, row.offerCount)
+      // Soma as duas fontes: é a MESMA contagem que a página usa pra decidir
+      // index/noindex. Se divergirem, volta o mismatch "URL no sitemap mas
+      // página noindex" que a auditoria de 2026-07 pegou como Critical #3.
+      inner.set(row.citySlug, row.offerCount + row.athenaOfferCount)
     }
 
     return courses

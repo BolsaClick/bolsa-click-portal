@@ -16,17 +16,10 @@ const CookieConsent = dynamic(
   () => import('../organisms/CookieConsent'),
   { ssr: false },
 )
-const WatiWhatsappWidget = dynamic(
-  () => import('../WatiWhatsappWidget').then((m) => m.WatiWhatsappWidget),
-  { ssr: false },
-)
 const VocationalTab = dynamic(
   () => import('../VocationalTab').then((m) => m.VocationalTab),
   { ssr: false },
 )
-const ExitIntentModal = dynamic(() => import('../organisms/ExitIntentModal'), {
-  ssr: false,
-})
 
 export function DeferredWidgets() {
   const pathname = usePathname()
@@ -64,10 +57,8 @@ export function DeferredWidgets() {
       <Toaster richColors position="top-right" />
       {onInscription ? null : (
         <>
-          <WatiWhatsappWidget />
           <VocationalTab />
           <CookieConsent />
-          <ExitIntentModal />
         </>
       )}
     </>

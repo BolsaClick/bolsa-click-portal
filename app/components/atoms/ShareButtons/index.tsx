@@ -1,6 +1,6 @@
 'use client'
 
-import { Link2, MessageCircle } from 'lucide-react'
+import { Link2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface ShareButtonsProps {
@@ -18,7 +18,6 @@ export default function ShareButtons({ url, title }: ShareButtonsProps) {
     }
   }
 
-  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${title} - ${url}`)}`
   const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`
 
   return (
@@ -32,16 +31,6 @@ export default function ShareButtons({ url, title }: ShareButtonsProps) {
         <Link2 size={14} />
         Copiar
       </button>
-      <a
-        href={whatsappUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-green-700 bg-green-50 rounded-full hover:bg-green-100 transition"
-        title="Compartilhar no WhatsApp"
-      >
-        <MessageCircle size={14} />
-        WhatsApp
-      </a>
       <a
         href={twitterUrl}
         target="_blank"

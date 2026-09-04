@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createHmac, timingSafeEqual } from 'crypto'
-import { confirmPaidMatricula } from '@/app/lib/checkout/confirm-matricula'
+import { confirmPaidTransaction } from '@/app/lib/checkout/confirm-payment'
 
 /**
  * Webhook de pagamento confirmado. Chamado pelo Elysium (orquestrador) quando a
@@ -81,7 +81,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Autenticado (HMAC do Elysium ou secret) → confiamos no sinal de pago.
-    const result = await confirmPaidMatricula(String(externalTransactionId), {
+    // O roteador decide qual confirmação roda (matrícula Cogna ou Estácio) a
+    // partir de `metadata.checkoutFlow` — é este caminho que garante a
+    // inscrição de quem pagou e fechou a aba.
+    const result = await confirmPaidTransaction(String(externalTransactionId), {
       trustPaid: authed,
     })
 

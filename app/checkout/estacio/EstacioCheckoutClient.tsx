@@ -33,6 +33,8 @@ import {
   reportInscriptionFailure,
 } from '@/app/lib/analytics/checkout-funnel'
 import { suggestEmailCorrection } from '@/app/lib/validation/email-typo'
+import EstacioPayment, { type EstacioChargeContext } from './EstacioPayment'
+import type { CreateEnrollmentInput } from '@/app/lib/api/athena-offers'
 
 /** Máscaras simples (CPF / telefone / CEP). */
 const maskCpf = (v: string) =>
@@ -126,7 +128,17 @@ const inputClass =
 const labelClass =
   'block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5'
 
-export default function EstacioCheckoutClient() {
+interface EstacioCheckoutClientProps {
+  /**
+   * Taxa de matrícula do Bolsa Click, em CENTAVOS. Vem do server component
+   * (page.tsx), que lê a constante do servidor — o cliente nunca calcula nem
+   * envia esse valor: quem cobra é o /api/athena-checkout/charge, com o valor
+   * dele. A prop existe só para a tela exibir o mesmo número que será cobrado.
+   */
+  taxaEmCentavos: number
+}
+
+export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckoutClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { trackEvent, setUserProperties, identifyUser } = usePostHogTracking()
@@ -252,6 +264,17 @@ export default function EstacioCheckoutClient() {
 
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  /**
+   * Etapa da tela. `form` = dados do candidato; `payment` = cobrança da taxa
+   * de matrícula do Bolsa Click. A inscrição na Estácio NÃO acontece aqui —
+   * ela roda no servidor, depois que o pagamento confirma
+   * (confirm-estacio.ts), justamente pra ninguém ser inscrito sem pagar nem
+   * pagar sem ser inscrito.
+   */
+  const [stage, setStage] = useState<'form' | 'payment'>('form')
+  const [chargeContext, setChargeContext] = useState<EstacioChargeContext | null>(null)
+  const [confirmError, setConfirmError] = useState<string | null>(null)
+  const [confirming, setConfirming] = useState(false)
   const [cepLoading, setCepLoading] = useState(false)
   const [expanded, setExpanded] = useState({
     dados: true,
@@ -448,175 +471,230 @@ export default function EstacioCheckoutClient() {
       identifyUser,
     )
 
-    try {
-      const res = await fetch('/api/athena-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          offerId: offer.offerId,
-          student: {
-            name: form.name.trim(),
-            cpf: form.cpf.replace(/\D/g, ''),
-            email: form.email.trim(),
-            mobile: form.mobile.replace(/\D/g, ''),
-            gender: form.gender || undefined,
-            rg: form.rg.trim() || undefined,
-            birthDate: form.birthDate || undefined,
-          },
-          address: {
-            street: form.street.trim(),
-            number: form.number.trim(),
-            neighborhood: form.neighborhood.trim(),
-            zipCode: form.zipCode.replace(/\D/g, ''),
-            state: form.state.trim().toUpperCase(),
-            city: form.city.trim(),
-          },
-          options: {
-            useEnem: form.codFormaIngresso === CODIGO_VESTIBULAR_ENEM,
-            graduationYear: form.graduationYear ? Number(form.graduationYear) : undefined,
-            acceptTerms: form.acceptTerms,
-            codFormaIngresso:
-              offer.academicLevel === 'POS_GRADUACAO'
-                ? CODIGO_INSCRICAO_POS_TECNICO
-                : form.codFormaIngresso,
-            // Sem checkbox individual pro candidato (decisão do Rodrigo,
-            // 2026-07-23) — coberto pelo aceite geral dos termos.
-            acceptReceiveEmail: true,
-            acceptReceiveSMS: true,
-            acceptReceiveWhatsApp: true,
-          },
-        }),
-      })
+    // Payload da inscrição montado AGORA (formulário em mãos), mas executado
+    // só depois que a taxa for paga: o servidor guarda este payload na
+    // Transaction (metadata.estacio) e cria a inscrição na confirmação do
+    // pagamento. Ninguém é inscrito sem pagar, nem paga sem ser inscrito.
+    const enrollment: CreateEnrollmentInput = {
+      offerId: offer.offerId,
+      student: {
+        name: form.name.trim(),
+        cpf: form.cpf.replace(/\D/g, ''),
+        email: form.email.trim(),
+        mobile: form.mobile.replace(/\D/g, ''),
+        gender: form.gender || undefined,
+        rg: form.rg.trim() || undefined,
+        birthDate: form.birthDate || undefined,
+      },
+      address: {
+        street: form.street.trim(),
+        number: form.number.trim(),
+        neighborhood: form.neighborhood.trim(),
+        zipCode: form.zipCode.replace(/\D/g, ''),
+        state: form.state.trim().toUpperCase(),
+        city: form.city.trim(),
+      },
+      options: {
+        useEnem: form.codFormaIngresso === CODIGO_VESTIBULAR_ENEM,
+        graduationYear: form.graduationYear ? Number(form.graduationYear) : undefined,
+        acceptTerms: form.acceptTerms,
+        codFormaIngresso:
+          offer.academicLevel === 'POS_GRADUACAO'
+            ? CODIGO_INSCRICAO_POS_TECNICO
+            : form.codFormaIngresso,
+        // Sem checkbox individual pro candidato (decisão do Rodrigo,
+        // 2026-07-23) — coberto pelo aceite geral dos termos.
+        acceptReceiveEmail: true,
+        acceptReceiveSMS: true,
+        acceptReceiveWhatsApp: true,
+      },
+    }
 
-      const data = await res.json()
-      if (!res.ok) {
-        throw new Error(data?.error || 'Não foi possível concluir a inscrição.')
-      }
-
-      trackEvent('estacio_enrollment_created', {
-        offer_id: offer.offerId,
-        course_name: offer.courseName,
-        numero_inscricao: data?.numeroInscricao ?? undefined,
-        already_enrolled: !!data?.alreadyEnrolled,
-      })
-
-      // PostHog server-side (enrollment_completed_server): mede a conversão
-      // real independente de consentimento de cookie. Não-bloqueante.
-      fetch('/api/leads/confirm-inscription', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name.trim(),
-          email: form.email.trim(),
-          phone: form.mobile.replace(/\D/g, ''),
-          cpf: form.cpf.replace(/\D/g, ''),
-          courseName: offer.courseName,
-          courseId: offer.offerId,
-          brand: offer.brand,
-          modalidade: offer.modality,
-          city: offer.city,
-          source: 'YDUQS',
-          inscriptionId: data?.numeroInscricao,
-          // Dados da cobrança, para o CRM conseguir recuperar quem não pagar.
-          // Diferente da Cogna, a Estácio devolve uma URL de verdade — e ela é
-          // opaca, não dá pra reconstruir a partir do número da inscrição.
-          // Se não guardarmos agora, ela se perde quando a aba fecha.
-          paymentUrl: data?.paymentUrl,
-          monthlyPrice: displayPrice,
-          enrollmentFee: data?.amount,
-        }),
-      }).catch((confirmError) => {
-        console.error('Confirmação de inscrição falhou:', confirmError)
-        trackCheckoutError(trackEvent, 'estacio_confirm_inscription_server', confirmError)
-      })
-
-      // Funil unificado — etapa 3 (fluxo Estácio): inscrição criada.
-      // (a etapa 2 / identificação agora acontece antes do envio, acima)
-      trackCheckoutSubmitted(trackEvent, {
-        flow: 'estacio',
-        checkoutFlow: 'estacio_checkout',
-        brand: offer.brand,
-        modality: offer.modality,
+    setChargeContext({
+      enrollment,
+      offer: {
         offerId: offer.offerId,
         courseName: offer.courseName,
-      })
-
-      // Meta Pixel + Conversions API - Lead (inscrição Estácio; pagamento externo).
-      // event_id pela inscrição quando houver, para dedup/idempotência.
-      void trackFbqDual(
-        'Lead',
-        {
-          content_name: offer.courseName,
-          content_ids: offer.offerId ? [String(offer.offerId)] : undefined,
-          content_type: 'product',
-          currency: 'BRL',
-        },
-        {
-          email: form.email.trim() || undefined,
-          phone: form.mobile.replace(/\D/g, '') || undefined,
-          externalId: form.cpf.replace(/\D/g, '') || undefined,
-          firstName: form.name.trim().split(/\s+/)[0] || undefined,
-        },
-        data?.numeroInscricao ? `estacio_${data.numeroInscricao}` : undefined,
-      )
-
-      // GA4 (dataLayer/GTM) - generate_lead, paridade com o Lead do Meta acima.
-      // value só quando a oferta traz preço (o Lead do Meta também não fixa valor).
-      // Usa displayPrice (preço da forma de ingresso escolhida), não offer.price
-      // fixo, pra CPL/ROAS refletirem o valor real que o candidato viu.
-      pushDataLayerEvent('generate_lead', {
-        currency: 'BRL',
-        ...(displayPrice > 0 ? { value: displayPrice } : {}),
-      })
-
-      const params = new URLSearchParams()
-      if (offer.courseName) params.set('course', offer.courseName)
-      if (data?.numeroInscricao) params.set('numeroInscricao', String(data.numeroInscricao))
-      if (data?.paymentUrl) params.set('paymentUrl', String(data.paymentUrl))
-      if (data?.pixCode) params.set('pixCode', String(data.pixCode))
-      if (data?.amount) params.set('amount', String(data.amount))
-      if (data?.dueDate) params.set('dueDate', String(data.dueDate))
-      router.push(`/checkout/estacio/sucesso?${params.toString()}`)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao concluir a inscrição.'
-
-      // Este catch era 100% mudo: a inscrição na Estácio falhava, o candidato
-      // via a mensagem de erro na tela e sumia do funil sem deixar rastro
-      // nenhum — nem evento, nem CPF, nem motivo. Mesmo par de sinais do fluxo
-      // Cogna: evento no client (sob consent) + report server-side (sempre).
-      trackEvent('checkout_inscription_failed', {
-        flow: 'estacio',
-        course_name: offer.courseName,
-        offer_id: offer.offerId,
         brand: offer.brand,
         modality: offer.modality,
-        error_message: message,
-      })
-      reportInscriptionFailure({
-        flow: 'estacio',
-        cpf: form.cpf,
-        name: form.name.trim(),
-        email: form.email.trim(),
-        phone: form.mobile,
-        courseName: offer.courseName,
-        courseId: offer.offerId,
-        brand: offer.brand,
-        modalidade: offer.modality,
         city: offer.city,
-        source: 'YDUQS',
-        errorMessage: message,
-      })
+        state: offer.state,
+        academicLevel: offer.academicLevel,
+        monthlyPrice: displayPrice > 0 ? displayPrice : undefined,
+      },
+    })
+    setStage('payment')
+    setSubmitting(false)
 
-      setError(message)
-      setSubmitting(false)
+    trackEvent('estacio_taxa_payment_viewed', {
+      offer_id: offer.offerId,
+      course_name: offer.courseName,
+      brand: offer.brand,
+      amount_in_cents: taxaEmCentavos,
+    })
+  }
+
+  /**
+   * Taxa paga (PIX confirmado ou cartão aprovado). Daqui em diante quem manda
+   * é o servidor: /api/athena-checkout/confirm valida o pagamento no Elysium,
+   * cria a inscrição na Athena e, se a Estácio recusar, estorna a taxa. O
+   * webhook do Elysium percorre o MESMO caminho de forma independente e
+   * idempotente — fechar a aba agora não perde a inscrição.
+   */
+  const handlePaid = async (externalTransactionId: string) => {
+    setConfirming(true)
+    setConfirmError(null)
+
+    const espera = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+    for (let attempt = 0; attempt < 6; attempt++) {
+      try {
+        const res = await fetch('/api/athena-checkout/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ externalTransactionId }),
+        })
+        const data = await res.json().catch(() => null)
+
+        // 202 = pagamento ainda não confirmado no Elysium (ou outra chamada
+        // está processando esta transação agora). Não é erro: repete.
+        if (res.status === 202) {
+          await espera(2000)
+          continue
+        }
+
+        if (res.ok && data?.status === 'ok') {
+          const checkout = (data.checkout ?? {}) as {
+            numeroInscricao?: string | null
+            paymentUrl?: string | null
+            pixCode?: string | null
+            amount?: string | null
+            dueDate?: string | null
+            alreadyEnrolled?: boolean
+          }
+
+          trackEvent('estacio_enrollment_created', {
+            offer_id: offer.offerId,
+            course_name: offer.courseName,
+            numero_inscricao: checkout.numeroInscricao ?? undefined,
+            already_enrolled: !!checkout.alreadyEnrolled,
+          })
+
+          // Funil unificado — etapa 3 (fluxo Estácio): inscrição criada.
+          trackCheckoutSubmitted(trackEvent, {
+            flow: 'estacio',
+            checkoutFlow: 'estacio_checkout',
+            brand: offer.brand,
+            modality: offer.modality,
+            offerId: offer.offerId,
+            courseName: offer.courseName,
+          })
+
+          // Meta Pixel + Conversions API - Lead (inscrição Estácio; o curso é
+          // pago na instituição). event_id pela inscrição, para dedup.
+          void trackFbqDual(
+            'Lead',
+            {
+              content_name: offer.courseName,
+              content_ids: offer.offerId ? [String(offer.offerId)] : undefined,
+              content_type: 'product',
+              currency: 'BRL',
+            },
+            {
+              email: form.email.trim() || undefined,
+              phone: form.mobile.replace(/\D/g, '') || undefined,
+              externalId: form.cpf.replace(/\D/g, '') || undefined,
+              firstName: form.name.trim().split(/\s+/)[0] || undefined,
+            },
+            checkout.numeroInscricao ? `estacio_${checkout.numeroInscricao}` : undefined,
+          )
+
+          // GA4 (dataLayer/GTM) - generate_lead, paridade com o Lead do Meta.
+          pushDataLayerEvent('generate_lead', {
+            currency: 'BRL',
+            ...(displayPrice > 0 ? { value: displayPrice } : {}),
+          })
+
+          const params = new URLSearchParams()
+          if (offer.courseName) params.set('course', offer.courseName)
+          if (checkout.numeroInscricao) params.set('numeroInscricao', String(checkout.numeroInscricao))
+          if (checkout.paymentUrl) params.set('paymentUrl', String(checkout.paymentUrl))
+          if (checkout.pixCode) params.set('pixCode', String(checkout.pixCode))
+          if (checkout.amount) params.set('amount', String(checkout.amount))
+          if (checkout.dueDate) params.set('dueDate', String(checkout.dueDate))
+          // Taxa do Bolsa Click já paga — a tela de sucesso mostra as duas
+          // cobranças separadas (a nossa, paga; a da Estácio, a pagar).
+          params.set('taxa', String(taxaEmCentavos))
+          router.push(`/checkout/estacio/sucesso?${params.toString()}`)
+          return
+        }
+
+        if (res.status === 422) {
+          const reason: string =
+            data?.reason || 'Não foi possível concluir sua inscrição nesta oferta.'
+          const estorno = data?.refunded
+            ? ' A taxa de matrícula foi estornada — o valor volta pelo mesmo meio de pagamento.'
+            : ' Nosso time já foi avisado e vai devolver a taxa de matrícula.'
+
+          trackEvent('checkout_inscription_failed', {
+            flow: 'estacio',
+            course_name: offer.courseName,
+            offer_id: offer.offerId,
+            brand: offer.brand,
+            modality: offer.modality,
+            error_message: reason,
+            refunded: !!data?.refunded,
+            paid_before_enrollment: true,
+          })
+          reportInscriptionFailure({
+            flow: 'estacio',
+            cpf: form.cpf,
+            name: form.name.trim(),
+            email: form.email.trim(),
+            phone: form.mobile,
+            courseName: offer.courseName,
+            courseId: offer.offerId,
+            brand: offer.brand,
+            modalidade: offer.modality,
+            city: offer.city,
+            source: 'YDUQS',
+            errorMessage: reason,
+          })
+
+          setConfirmError(`${reason}${estorno}`)
+          setConfirming(false)
+          return
+        }
+
+        await espera(2000)
+      } catch (err) {
+        trackCheckoutError(trackEvent, 'estacio_confirm_enrollment', err)
+        await espera(2000)
+      }
     }
+
+    setConfirmError(
+      'Seu pagamento foi registrado, mas não conseguimos confirmar a inscrição agora. Não pague de novo — fale com a gente pelo WhatsApp que resolvemos (inscrição ou devolução da taxa).',
+    )
+    setConfirming(false)
   }
 
   const steps = [
-    { n: '01', label: 'Estudante', done: dadosOk, active: !dadosOk },
-    { n: '02', label: 'Endereço', done: enderecoOk, active: dadosOk && !enderecoOk },
-    { n: '03', label: 'Ingresso', done: false, active: dadosOk && enderecoOk },
+    { n: '01', label: 'Estudante', done: dadosOk, active: stage === 'form' && !dadosOk },
+    { n: '02', label: 'Endereço', done: enderecoOk, active: stage === 'form' && dadosOk && !enderecoOk },
+    {
+      n: '03',
+      label: 'Ingresso',
+      done: stage === 'payment',
+      active: stage === 'form' && dadosOk && enderecoOk,
+    },
+    { n: '04', label: 'Pagamento', done: false, active: stage === 'payment' },
   ]
+
+  const taxaFormatada = (taxaEmCentavos / 100).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  })
 
   return (
     <div className="min-h-screen bg-paper pt-20 md:pt-24">
@@ -640,7 +718,9 @@ export default function EstacioCheckoutClient() {
             <span className="italic text-ink-700">em poucos passos.</span>
           </h1>
           <p className="text-ink-500 text-[14px] md:text-[15px] mt-3 leading-relaxed max-w-2xl">
-            Complete seus dados pra finalizar a inscrição. O valor da matrícula e das mensalidades é pago diretamente à instituição.
+            Complete seus dados e pague a taxa de matrícula do Bolsa Click ({taxaFormatada}) pra
+            gente enviar sua inscrição. A matrícula e as mensalidades do curso continuam sendo
+            pagas diretamente à instituição.
           </p>
 
           {/* Stepper editorial */}
@@ -683,6 +763,49 @@ export default function EstacioCheckoutClient() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
           {/* Coluna Esquerda - Formulário */}
           <div className="lg:col-span-7 bg-white border border-hairline rounded-2xl overflow-hidden shadow-[0_30px_60px_-40px_rgba(11,31,60,0.18)]">
+            {stage === 'payment' && chargeContext ? (
+              <div className="p-6 md:p-7">
+                {!confirming && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStage('form')
+                      setConfirmError(null)
+                    }}
+                    className="inline-flex items-center gap-2 font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 hover:text-ink-900 transition-colors mb-5"
+                  >
+                    <ArrowLeft size={12} />
+                    Editar meus dados
+                  </button>
+                )}
+
+                <h2 className="font-display text-2xl text-ink-900 leading-tight">
+                  Taxa de matrícula do Bolsa Click
+                </h2>
+                <p className="mt-2 mb-5 text-[13px] leading-relaxed text-ink-500">
+                  São {taxaFormatada}, cobrados por nós, para enviar sua inscrição à {offer.brand}.
+                  Essa taxa <span className="text-ink-900">não é a matrícula do curso</span>: a
+                  cobrança da instituição (matrícula e mensalidades) é separada e aparece na próxima
+                  tela, logo depois da inscrição confirmada.
+                </p>
+
+                <EstacioPayment
+                  amountInCents={taxaEmCentavos}
+                  customer={{
+                    name: form.name.trim(),
+                    cpf: form.cpf,
+                    email: form.email.trim(),
+                    phone: form.mobile,
+                    postalCode: form.zipCode,
+                    addressNumber: form.number.trim(),
+                  }}
+                  context={chargeContext}
+                  onPaid={handlePaid}
+                  externalError={confirmError}
+                  confirming={confirming}
+                />
+              </div>
+            ) : (
             <form onSubmit={handleSubmit}>
               {/* 01 · Dados do aluno */}
               <Section
@@ -890,16 +1013,18 @@ export default function EstacioCheckoutClient() {
                     </span>
                   ) : (
                     <>
-                      Concluir inscrição
+                      Ir para o pagamento da taxa
                       <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
                     </>
                   )}
                 </button>
                 <p className="text-center text-[11px] text-ink-400 mt-3">
-                  Após a inscrição, você será levado à página de pagamento da instituição.
+                  Próximo passo: pagar a taxa de matrícula do Bolsa Click ({taxaFormatada}). A
+                  inscrição é enviada à instituição assim que o pagamento confirmar.
                 </p>
               </Section>
             </form>
+            )}
           </div>
 
           {/* Coluna Direita - Resumo da oferta */}
@@ -961,10 +1086,13 @@ export default function EstacioCheckoutClient() {
                 </span>
                 <div className="min-w-0">
                   <p className="text-[12px] font-semibold text-ink-900 mb-1">
-                    Matrícula e mensalidade na instituição
+                    São duas cobranças diferentes
                   </p>
                   <p className="text-[12px] text-ink-500 leading-relaxed">
-                    O valor da matrícula e das mensalidades será pago diretamente à instituição de ensino. Nenhuma taxa é cobrada neste checkout.
+                    <span className="font-semibold text-ink-900">{taxaFormatada}</span> é a taxa de
+                    matrícula do Bolsa Click, paga aqui, uma única vez, para enviarmos sua
+                    inscrição. A matrícula e as mensalidades do curso são cobradas à parte, pela
+                    própria instituição — o boleto/PIX dela chega logo depois da inscrição.
                   </p>
                 </div>
               </div>

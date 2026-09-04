@@ -391,6 +391,70 @@ export interface AthenaSearchResult {
  * Use quando o que importa é QUANTAS ofertas existem, não quais — contagem pra
  * gate de indexação, cache, DATA_BLOCK editorial.
  */
+export interface AthenaCourseSummary {
+  id: string
+  name: string
+  slug?: string
+  academicLevel?: string
+  academicDegree?: string
+  offerCount?: number
+}
+
+/**
+ * Lista os CURSOS DISTINTOS que casam com o filtro, via `api/courses`.
+ *
+ * Existe porque `api/offers` não serve pro "modo descoberta" (busca por cidade
+ * sem curso escolhido). Medido em 04/09, Estácio EAD em São Paulo: 21.544
+ * ofertas, mas a API devolve AGRUPADA — as 100 primeiras cobrem só 2 cursos.
+ * Deduplicar uma página de ofertas por nome, que era o que a busca fazia,
+ * mostrava 2 cursos de 261. Paginar não resolve: testado com size 20, 50 e 100,
+ * sempre 2.
+ *
+ * `api/courses` responde a pergunta certa — "que cursos existem aqui?" — já sem
+ * duplicata e com o total real. Não traz preço; quem precisa enriquece depois,
+ * só pros itens visíveis.
+ */
+export async function listAthenaCourses(
+  params: SearchAthenaOffersParams & { page?: number; size?: number },
+  opts?: { throwOnFailure?: boolean },
+): Promise<{ courses: AthenaCourseSummary[]; total: number }> {
+  if (!process.env.ATHENA_BASE_URL) {
+    if (opts?.throwOnFailure) {
+      throw new Error('ATHENA_BASE_URL não está no ambiente')
+    }
+    return { courses: [], total: 0 }
+  }
+  try {
+    const query: Record<string, string> = {}
+    if (params.city?.trim()) query.city = params.city.trim()
+    if (params.state?.trim()) query.state = params.state.trim()
+    if (params.modality?.trim()) query.modality = params.modality.trim().toUpperCase()
+    if (params.academicLevel?.trim()) query.academicLevel = params.academicLevel.trim()
+    if (params.brand?.trim()) query.brand = params.brand.trim().toLowerCase()
+    if (params.page) query.page = String(params.page)
+    if (params.size) query.size = String(params.size)
+
+    const res = await athena.get('api/courses', { params: query, timeout: 15_000 })
+    const data = res.data
+    const list: AthenaCourseSummary[] = (Array.isArray(data?.data) ? data.data : []).map(
+      (c: Record<string, unknown>) => ({
+        id: String(c.id ?? ''),
+        name: String(c.name ?? ''),
+        slug: c.slug as string | undefined,
+        academicLevel: c.academicLevel as string | undefined,
+        academicDegree: c.academicDegree as string | undefined,
+        offerCount: (c._count as { offers?: number } | undefined)?.offers,
+      }),
+    )
+    const total = typeof data?.meta?.total === 'number' ? data.meta.total : list.length
+    return { courses: list, total }
+  } catch (error) {
+    console.error('Erro ao listar cursos na Athena:', error)
+    if (opts?.throwOnFailure) throw error
+    return { courses: [], total: 0 }
+  }
+}
+
 export async function searchAthenaOffersWithMeta(
   params: SearchAthenaOffersParams,
   opts?: { throwOnFailure?: boolean },

@@ -101,40 +101,10 @@ export interface CallBrandApiOptions {
   authHeaderForLocal?: string | null
 }
 
-/**
- * Origem da auto-chamada da marca LOCAL.
- *
- * Nunca a origem pública. Em produção `request.nextUrl.origin` é
- * `https://www.bolsaclick.com.br`, então o servidor sairia pro Cloudflare e
- * voltaria pro próprio container só pra falar consigo mesmo — medido em 04/09:
- * o proxy devolvia 502 com corpo HTML do edge enquanto a rota direta devolvia
- * 200. Em dev nunca aparece, porque lá a origem já é interna.
- *
- * NÃO depende de `PORT` existir: `railway variables` não lista PORT neste
- * projeto, e uma correção que só funcionasse com ela seria um deploy inútil.
- * Quando a origem recebida já é loopback (dev, qualquer porta), usa ela como
- * está. Quando é externa (produção), fala com 127.0.0.1 na PORT do runtime ou
- * na 3000, que é o padrão do `next start`.
- *
- * O middleware não atrapalha: todos os desvios dele são condicionados a
- * hostnames específicos, e 127.0.0.1 não casa com nenhum.
- */
-function localOrigin(fallback: string): string {
-  try {
-    const { hostname } = new URL(fallback)
-    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') {
-      return fallback
-    }
-    return `http://127.0.0.1:${process.env.PORT || 3000}`
-  } catch {
-    return fallback
-  }
-}
-
 export async function callBrandApi<T = unknown>(
   options: CallBrandApiOptions
 ): Promise<BrandCallResult<T>> {
-  const { brand, path, method = 'GET', body, originForLocal, authHeaderForLocal } = options
+  const { brand, path, method = 'GET', body } = options
 
   if (!path.startsWith('/api/admin')) {
     return {
@@ -155,18 +125,17 @@ export async function callBrandApi<T = unknown>(
   const headers: Record<string, string> = {}
 
   if (config.kind === 'local') {
-    url = `${localOrigin(originForLocal)}${path}`
-    if (authHeaderForLocal) {
-      headers.Authorization = authHeaderForLocal
-    } else if (process.env.ADMIN_PANEL_API_KEY) {
-      headers['X-Admin-Api-Key'] = process.env.ADMIN_PANEL_API_KEY
-    } else {
-      return {
-        ok: false,
-        kind: 'unavailable',
-        message:
-          'Marca local sem credencial pra auto-chamada: nem Authorization foi repassado, nem ADMIN_PANEL_API_KEY está configurada neste servidor.',
-      }
+    // A marca local NUNCA chega aqui: o middleware reescreve
+    // `/api/admin/brand/x` pra `/api/admin/x` antes do route handler rodar.
+    // Se chegou, o middleware deixou de casar esse caminho — e a resposta certa
+    // é dizer isso, não reabrir a auto-chamada por HTTP que derrubava o
+    // processo em produção (ver comentário no middleware).
+    return {
+      ok: false,
+      kind: 'http_error',
+      status: 500,
+      message:
+        'Marca local não deveria chegar ao proxy: a reescrita do middleware não foi aplicada. Ver o bloco /api/admin/brand em middleware.ts.',
     }
   } else {
     const remote = config as RemoteBrandConfig

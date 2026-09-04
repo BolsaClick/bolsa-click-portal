@@ -4,7 +4,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Container from '../../atoms/Container';
 import { business } from '@/app/lib/constants/business';
-import { WhatsAppSocialIcon, WhatsAppPhoneLink } from './WhatsAppContactLink';
 import { ManageCookiesButton } from './ManageCookiesButton'
 import { ReclameAquiSeal } from './ReclameAquiSeal';
 import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
@@ -243,7 +242,6 @@ const Footer: React.FC = () => {
               >
                 <Linkedin size={18} />
               </a>
-              <WhatsAppSocialIcon />
               <a
                 href="https://www.reclameaqui.com.br/empresa/bolsa-click/"
                 target="_blank"
@@ -377,7 +375,6 @@ const Footer: React.FC = () => {
           <div>
             <h3 className="text-white font-medium text-sm mb-4">Contato</h3>
             <address className="not-italic space-y-3">
-              <WhatsAppPhoneLink />
               <a
                 href="mailto:contato@bolsaclick.com.br"
                 className="flex items-center text-neutral-300 text-sm hover:text-white transition-colors"

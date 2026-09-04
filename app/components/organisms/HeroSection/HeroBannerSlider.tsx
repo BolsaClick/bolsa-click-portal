@@ -117,8 +117,9 @@ const CEILING_WIDTH_PX = 1680
  * retrato num desktop largo), os controles não colam nas bordas exatas da
  * imagem — ver ressalva no relatório da task.
  *
- * CONTIDO, não sangrado (decisão de produto, 2026-09, referência: home do
- * Quero Bolsa): a faixa não toca mais a borda da viewport. O contêiner
+ * CONTIDO, não sangrado (decisão de produto, 2026-09, referência trazida
+ * pelo Rodrigo: a home de um agregador concorrente): a faixa não toca mais
+ * a borda da viewport. O contêiner
  * externo (`mx-auto w-full max-w-screen-lg px-4 sm:px-6 lg:px-8`) é o MESMO
  * container padrão do resto do site (`app/(default)/page.tsx`), pra alinhar
  * com o card de busca e as seções abaixo. Dentro dele, a matemática de

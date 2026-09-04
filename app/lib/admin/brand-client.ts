@@ -104,20 +104,31 @@ export interface CallBrandApiOptions {
 /**
  * Origem da auto-chamada da marca LOCAL.
  *
- * Não pode ser a origem pública. Em produção `request.nextUrl.origin` é
+ * Nunca a origem pública. Em produção `request.nextUrl.origin` é
  * `https://www.bolsaclick.com.br`, então o servidor sairia pro Cloudflare e
- * voltaria pro próprio container pra falar consigo mesmo — caro no melhor caso
- * e, medido em 04/09, quebrado no pior: o proxy devolvia 502 com corpo HTML do
- * edge enquanto a rota direta devolvia 200. Localmente nunca aparece, porque lá
- * a origem já é `http://localhost:PORT` — foi por isso que passou nos testes.
+ * voltaria pro próprio container só pra falar consigo mesmo — medido em 04/09:
+ * o proxy devolvia 502 com corpo HTML do edge enquanto a rota direta devolvia
+ * 200. Em dev nunca aparece, porque lá a origem já é interna.
  *
- * Com `PORT` definido (Railway define), fala com 127.0.0.1 e não sai do
- * container. O middleware não atrapalha: todos os desvios dele são
- * condicionados a hostnames específicos, e 127.0.0.1 não casa com nenhum.
+ * NÃO depende de `PORT` existir: `railway variables` não lista PORT neste
+ * projeto, e uma correção que só funcionasse com ela seria um deploy inútil.
+ * Quando a origem recebida já é loopback (dev, qualquer porta), usa ela como
+ * está. Quando é externa (produção), fala com 127.0.0.1 na PORT do runtime ou
+ * na 3000, que é o padrão do `next start`.
+ *
+ * O middleware não atrapalha: todos os desvios dele são condicionados a
+ * hostnames específicos, e 127.0.0.1 não casa com nenhum.
  */
 function localOrigin(fallback: string): string {
-  const port = process.env.PORT
-  return port ? `http://127.0.0.1:${port}` : fallback
+  try {
+    const { hostname } = new URL(fallback)
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') {
+      return fallback
+    }
+    return `http://127.0.0.1:${process.env.PORT || 3000}`
+  } catch {
+    return fallback
+  }
 }
 
 export async function callBrandApi<T = unknown>(

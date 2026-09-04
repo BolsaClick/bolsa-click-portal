@@ -101,6 +101,25 @@ export interface CallBrandApiOptions {
   authHeaderForLocal?: string | null
 }
 
+/**
+ * Origem da auto-chamada da marca LOCAL.
+ *
+ * Não pode ser a origem pública. Em produção `request.nextUrl.origin` é
+ * `https://www.bolsaclick.com.br`, então o servidor sairia pro Cloudflare e
+ * voltaria pro próprio container pra falar consigo mesmo — caro no melhor caso
+ * e, medido em 04/09, quebrado no pior: o proxy devolvia 502 com corpo HTML do
+ * edge enquanto a rota direta devolvia 200. Localmente nunca aparece, porque lá
+ * a origem já é `http://localhost:PORT` — foi por isso que passou nos testes.
+ *
+ * Com `PORT` definido (Railway define), fala com 127.0.0.1 e não sai do
+ * container. O middleware não atrapalha: todos os desvios dele são
+ * condicionados a hostnames específicos, e 127.0.0.1 não casa com nenhum.
+ */
+function localOrigin(fallback: string): string {
+  const port = process.env.PORT
+  return port ? `http://127.0.0.1:${port}` : fallback
+}
+
 export async function callBrandApi<T = unknown>(
   options: CallBrandApiOptions
 ): Promise<BrandCallResult<T>> {
@@ -125,7 +144,7 @@ export async function callBrandApi<T = unknown>(
   const headers: Record<string, string> = {}
 
   if (config.kind === 'local') {
-    url = `${originForLocal}${path}`
+    url = `${localOrigin(originForLocal)}${path}`
     if (authHeaderForLocal) {
       headers.Authorization = authHeaderForLocal
     } else if (process.env.ADMIN_PANEL_API_KEY) {

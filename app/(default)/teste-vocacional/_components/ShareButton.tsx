@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Share2, Loader2, X, Check, Copy, MessageCircle, Twitter, Linkedin } from 'lucide-react'
+import { Share2, Loader2, X, Check, Copy, Twitter, Linkedin } from 'lucide-react'
 import type { ProfileResult } from './ResultCards'
 
 interface ShareButtonProps {
@@ -142,16 +142,6 @@ export function ShareButton({ profile }: ShareButtonProps) {
             </p>
 
             <ul className="grid grid-cols-2 gap-2 mb-4">
-              <li>
-                <a
-                  href={`https://wa.me/?text=${text}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-hairline rounded-md hover:bg-paper text-sm text-ink-900"
-                >
-                  <MessageCircle size={16} className="text-green-600" /> WhatsApp
-                </a>
-              </li>
               <li>
                 <a
                   href={`https://twitter.com/intent/tweet?text=${text}`}

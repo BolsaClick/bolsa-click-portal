@@ -950,10 +950,14 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
                             </span>
                             <ChevronDown size={14} className="text-ink-400 flex-shrink-0" />
                           </ListboxButton>
+                          {/* z-[1300] não é número mágico: o CTA do passo usa
+                              .checkout-step-cta (z-index 1200, para vencer o banner
+                              de cookies em 1100). Abaixo disso, o botão cobre as
+                              opções abertas — era o que acontecia com z-20. */}
                           <ListboxOptions
                             anchor="bottom start"
                             transition
-                            className="w-[var(--button-width)] z-20 mt-1 rounded-xl border border-hairline bg-white py-1 shadow-lg focus:outline-none transition duration-100 ease-in data-[closed]:opacity-0"
+                            className="w-[var(--button-width)] z-[1300] mt-1 rounded-xl border border-hairline bg-white py-1 shadow-lg focus:outline-none transition duration-100 ease-in data-[closed]:opacity-0"
                           >
                             {visibleFormaIngressoOptions.map((option) => (
                               <ListboxOption

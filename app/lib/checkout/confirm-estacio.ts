@@ -73,20 +73,54 @@ function asObject(value: unknown): Record<string, unknown> {
 }
 
 /**
- * Podemos assumir a inscrição desta transação?
+ * Assume a inscrição desta transação de forma ATÔMICA, carimbando
+ * `estacioClaimedAt`. Devolve true só para quem ganhou.
  *
- * Sim quando NINGUÉM está dentro dela: ou não existe marca de claim (a
- * transação virou PAID por fora — sync de status, ajuste no admin — e portanto
- * nenhuma confirmação está rodando), ou a marca é velha o bastante para ser
- * órfã. Não quando a marca é recente: aí outra chamada está criando a
- * inscrição neste exato momento.
+ * Assume quando NINGUÉM está dentro dela: sem marca de claim (a transação
+ * virou PAID por fora — sync de status, ajuste no admin — e nenhuma
+ * confirmação está rodando), ou marca velha o bastante para ser órfã.
+ *
+ * É compare-and-swap em SQL de propósito. A versão óbvia — ler o metadata,
+ * decidir em JS, depois escrever — NÃO é um claim: dois callers que leem "sem
+ * claim" no mesmo instante passam os dois. O webhook e o polling do cliente
+ * chegando juntos é exatamente isso. Um único UPDATE com a condição no WHERE
+ * trava a linha e elege um só.
+ *
+ * `jsonb_set` altera apenas esta chave, então metadata escrito em paralelo por
+ * outro caminho não é sobrescrito — o que o spread em JS faria.
  */
-function claimLivreOuOrfao(metadata: Record<string, unknown>): boolean {
-  const claimedAt = metadata.estacioClaimedAt
-  if (typeof claimedAt !== 'string') return true
-  const ts = Date.parse(claimedAt)
-  if (Number.isNaN(ts)) return true
-  return Date.now() - ts > CLAIM_ORFAO_MS
+async function assumirClaim(txId: string, externalTransactionId: string): Promise<boolean> {
+  const agora = new Date()
+  const corte = new Date(agora.getTime() - CLAIM_ORFAO_MS).toISOString()
+  try {
+    const linhas = await prisma.$executeRaw`
+      UPDATE "Transaction"
+      SET metadata = jsonb_set(
+        COALESCE(metadata, '{}'::jsonb),
+        '{estacioClaimedAt}',
+        to_jsonb(${agora.toISOString()}::text),
+        true
+      )
+      WHERE id = ${txId}
+        AND (
+          metadata->>'estacioClaimedAt' IS NULL
+          OR metadata->>'estacioClaimedAt' < ${corte}
+        )
+    `
+    if (linhas === 1) {
+      console.warn(
+        '⚠️ confirm-estacio: transação paga sem inscrição — assumindo e criando a inscrição',
+        { externalTransactionId },
+      )
+      return true
+    }
+    return false
+  } catch (e) {
+    // Sem claim não há garantia de execução única: devolver `pending` (webhook
+    // e cliente repetem) é melhor que arriscar inscrição em dobro.
+    console.error('⚠️ confirm-estacio: falha ao assumir o claim', externalTransactionId, e)
+    return false
+  }
 }
 
 /**
@@ -147,15 +181,12 @@ export async function confirmPaidEstacio(
       const freshMeta = asObject(fresh?.metadata)
       const freshResult = freshMeta.estacioResult as EstacioConfirmResult | undefined
       if (freshResult) return { ...freshResult, alreadyDone: true } as EstacioConfirmResult
-      if (!claimLivreOuOrfao(freshMeta)) return { status: 'pending' }
-      await renovarClaim(tx.id, freshMeta, externalTransactionId)
+      if (!(await assumirClaim(tx.id, externalTransactionId))) return { status: 'pending' }
     }
-  } else if (!claimLivreOuOrfao(metadata)) {
-    // Já está PAID, sem resultado e o claim é recente: outra chamada está
-    // dentro da inscrição neste exato momento.
+  } else if (!(await assumirClaim(tx.id, externalTransactionId))) {
+    // Já PAID e sem resultado: ou outra chamada está dentro da inscrição agora,
+    // ou o claim falhou. Nos dois casos o certo é o caller repetir.
     return { status: 'pending' }
-  } else {
-    await renovarClaim(tx.id, metadata, externalTransactionId)
   }
 
   const cpfDigits = tx.cpf.replace(/\D/g, '')
@@ -336,31 +367,6 @@ export async function confirmPaidEstacio(
   const result: EstacioConfirmResult = { status: 'ok', checkout }
   await persistResult(tx.id, metadata, result)
   return result
-}
-
-/**
- * Recuperação de claim órfão: marca o novo dono e segue para a inscrição.
- * Não é atômico (o claim de status já foi consumido), mas reduz a janela de
- * duas recuperações simultâneas a milissegundos — e repetir a inscrição é
- * seguro por causa do ATL016.
- */
-async function renovarClaim(
-  txId: string,
-  metadata: Record<string, unknown>,
-  externalTransactionId: string,
-): Promise<void> {
-  console.warn(
-    '⚠️ confirm-estacio: transação paga sem inscrição e sem claim ativo — assumindo e (re)criando a inscrição',
-    { externalTransactionId },
-  )
-  try {
-    await prisma.transaction.update({
-      where: { id: txId },
-      data: { metadata: { ...metadata, estacioClaimedAt: new Date().toISOString() } as object },
-    })
-  } catch (e) {
-    console.error('⚠️ confirm-estacio: falha ao renovar o claim órfão', txId, e)
-  }
 }
 
 async function persistResult(

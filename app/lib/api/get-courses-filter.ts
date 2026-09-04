@@ -113,19 +113,26 @@ export async function getShowFiltersCourses(
       : new Error('Falha ao carregar as ofertas (Cogna e Estácio indisponíveis)')
   }
 
-  // Modo descoberta (sem curso): deduplicar ofertas Athena por nome de curso —
-  // evita dezenas de polos do mesmo curso ("PEDAGOGIA" repetido) na vitrine.
-  // Com curso específico, mantemos todas as unidades.
+  // Modo descoberta (sem curso): a lista de cursos vem de `api/courses`, não de
+  // ofertas deduplicadas.
+  //
+  // Antes isto deduplicava as ofertas da página 1 por nome, o que parecia certo
+  // — não repetir "PEDAGOGIA" uma vez por polo — mas media o catálogo por uma
+  // amostra que não o representa. Medido em 04/09, Estácio EAD em São Paulo:
+  // 21.544 ofertas, e as 100 primeiras cobrem 2 cursos, porque a API devolve
+  // agrupada. A vitrine mostrava 2 de 261. Testado com size 20, 50 e 100:
+  // sempre 2, então paginar não era saída.
+  //
+  // O preço é enriquecido depois, só pros itens que cabem na página visível —
+  // `api/courses` não devolve preço, e buscar oferta pros 261 seria absurdo.
   const hasCourseName = !!(courseName && courseName.trim())
-  if (!hasCourseName && athenaOffers.length > 0) {
-    const seenNames = new Set<string>()
-    athenaOffers = athenaOffers.filter((o) => {
-      const key = String((o as { name?: string }).name ?? '').trim().toUpperCase()
-      if (!key) return true
-      if (seenNames.has(key)) return false
-      seenNames.add(key)
-      return true
-    })
+  if (!hasCourseName && typeof window === 'undefined') {
+    const enriquecidos = await listarCursosAthena(
+      { city, state, modality, academicLevel },
+      brandFilter.yduqs,
+      size,
+    )
+    if (enriquecidos.length > 0) athenaOffers = enriquecidos
   }
 
   const tartarusData: CourseWithPrices[] = Array.isArray(tartarus?.data)
@@ -193,6 +200,69 @@ export async function getShowFiltersCourses(
  * Promise.allSettled do getShowFiltersCourses — assim ele distingue
  * "Athena sem ofertas" de "Athena fora do ar" e sinaliza resultado parcial.
  */
+/**
+ * Cursos DISTINTOS da Athena pro modo descoberta, com preço só nos visíveis.
+ *
+ * Duas etapas de propósito:
+ *  1. `api/courses` devolve a lista correta e sem duplicata (261 pra Estácio
+ *     EAD em São Paulo, contra os 2 que a dedução por ofertas entregava).
+ *  2. o preço vem de uma consulta de oferta POR CURSO, e só pros `limite`
+ *     primeiros — os que cabem na página. Buscar preço dos 261 seriam 261
+ *     chamadas por busca; buscar de nenhum deixaria o card exibindo R$ 0,00.
+ *
+ * Falha de uma marca ou de um preço não derruba a lista: o curso entra sem
+ * preço, que é melhor que sumir da vitrine.
+ */
+async function listarCursosAthena(
+  params: { city?: string; state?: string; modality?: string; academicLevel?: string },
+  yduqsBrands: string[],
+  limite: number,
+): Promise<CourseWithPrices[]> {
+  const { listAthenaCourses, searchAthenaOffersWithMeta, normalizeAthenaOffer } = await import(
+    './athena-offers'
+  )
+  const marcas = yduqsBrands.length ? yduqsBrands : ALL_YDUQS_BRAND_SLUGS
+
+  const porMarca = await Promise.all(
+    marcas.map((brand) =>
+      listAthenaCourses({ ...params, brand, size: Math.max(limite, 20) })
+        .then((r) => r.courses.map((c) => ({ ...c, brand })))
+        .catch(() => []),
+    ),
+  )
+
+  const vistos = new Set<string>()
+  const distintos = porMarca.flat().filter((c) => {
+    const chave = c.name.trim().toUpperCase()
+    if (!chave || vistos.has(chave)) return false
+    vistos.add(chave)
+    return true
+  })
+
+  // Busca preço pro DOBRO da página. Nem todo curso de `api/courses` casa uma
+  // oferta em `api/offers` (o nome passa por `cleanCourseNameForAthena` e nem
+  // sempre bate), e sem folga a página vinha incompleta: medido, 6 itens numa
+  // página de 10. Com folga, a página enche e todo card sai com preço.
+  const visiveis = distintos.slice(0, limite * 2)
+  const comOferta = await Promise.all(
+    visiveis.map(async (c) => {
+      try {
+        const { offers } = await searchAthenaOffersWithMeta({
+          ...params,
+          courseName: c.name,
+          brand: c.brand,
+        })
+        const primeira = offers[0]
+        return primeira ? normalizeAthenaOffer(primeira) : null
+      } catch {
+        return null
+      }
+    }),
+  )
+
+  return comOferta.filter(Boolean).slice(0, limite) as unknown as CourseWithPrices[]
+}
+
 async function fetchAthenaOffers(
   params: {
     courseName?: string

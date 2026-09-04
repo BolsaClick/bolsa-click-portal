@@ -1,0 +1,34 @@
+# Pega dinheiro cobrado que não virou inscrição.
+#
+# O job FALHA quando há crítico → o GitHub notifica os watchers do repo por
+# email, sem credencial extra. Slack e email dedicado são opcionais (secrets
+# abaixo); sem eles o alerta continua existindo, só chega pelo GitHub.
+#
+# Cadência de 30min é deliberada: com tráfego pago rodando e taxa cobrada em
+# toda tentativa Estácio, descobrir 6h depois já é tarde demais.
+name: checkout-watchdog
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  watchdog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: watchdog
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.TRACKING_ALERT_SLACK_WEBHOOK }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ALERT_EMAIL_TO: ${{ secrets.TRACKING_ALERT_EMAIL_TO }}
+          ALERT_EMAIL_FROM: ${{ secrets.TRACKING_ALERT_EMAIL_FROM }}
+        run: node scripts/checkout-watchdog.mjs

@@ -104,7 +104,7 @@ export interface CallBrandApiOptions {
 export async function callBrandApi<T = unknown>(
   options: CallBrandApiOptions
 ): Promise<BrandCallResult<T>> {
-  const { brand, path, method = 'GET', body, originForLocal, authHeaderForLocal } = options
+  const { brand, path, method = 'GET', body } = options
 
   if (!path.startsWith('/api/admin')) {
     return {
@@ -125,18 +125,17 @@ export async function callBrandApi<T = unknown>(
   const headers: Record<string, string> = {}
 
   if (config.kind === 'local') {
-    url = `${originForLocal}${path}`
-    if (authHeaderForLocal) {
-      headers.Authorization = authHeaderForLocal
-    } else if (process.env.ADMIN_PANEL_API_KEY) {
-      headers['X-Admin-Api-Key'] = process.env.ADMIN_PANEL_API_KEY
-    } else {
-      return {
-        ok: false,
-        kind: 'unavailable',
-        message:
-          'Marca local sem credencial pra auto-chamada: nem Authorization foi repassado, nem ADMIN_PANEL_API_KEY está configurada neste servidor.',
-      }
+    // A marca local NUNCA chega aqui: o middleware reescreve
+    // `/api/admin/brand/x` pra `/api/admin/x` antes do route handler rodar.
+    // Se chegou, o middleware deixou de casar esse caminho — e a resposta certa
+    // é dizer isso, não reabrir a auto-chamada por HTTP que derrubava o
+    // processo em produção (ver comentário no middleware).
+    return {
+      ok: false,
+      kind: 'http_error',
+      status: 500,
+      message:
+        'Marca local não deveria chegar ao proxy: a reescrita do middleware não foi aplicada. Ver o bloco /api/admin/brand em middleware.ts.',
     }
   } else {
     const remote = config as RemoteBrandConfig

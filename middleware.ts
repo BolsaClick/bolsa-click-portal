@@ -41,6 +41,30 @@ export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const host = (request.headers.get("host") || "").split(":")[0];
 
+  // ─── Proxy multimarca do admin, caminho da marca LOCAL ──────────────────
+  // `/api/admin/brand/x` vira `/api/admin/x` por REESCRITA, sem sair do
+  // processo. A marca remota não entra aqui: cai no route handler, que faz a
+  // única chamada HTTP que faz sentido (bolsamais.com.br).
+  //
+  // Por que reescrita e não auto-chamada: a versão anterior fazia o servidor
+  // buscar a si mesmo por HTTP. Medido em produção, 04/09 — a requisição
+  // interna CHEGAVA (o log mostrava as duas, externa e interna, autorizadas)
+  // mas a externa nunca respondia, e o edge devolvia 502 em 0,37s. Havia um
+  // `unhandledRejection` de Better Auth derrubando o processo no meio.
+  //
+  // Não interessa qual das duas coisas é a causa raiz: uma requisição que não
+  // precisa existir não pode falhar. Reescrita não abre socket, não depende de
+  // saber a porta (a app escuta na 8080, não na 3000) e não duplica a passagem
+  // pelo middleware.
+  if (pathname.startsWith("/api/admin/brand/")) {
+    const brand = request.cookies.get("bc_admin_brand")?.value;
+    if (!brand || brand === "bolsaclick") {
+      const url = request.nextUrl.clone();
+      url.pathname = pathname.replace("/api/admin/brand/", "/api/admin/");
+      return NextResponse.rewrite(url);
+    }
+  }
+
   // ─── Domínio ingressa.digital (landings de conversão / mídia paga) ───────────
   // ingressa.digital/{parceiro} → reescreve (URL limpa) pra /lp/{parceiro}.
   // /api, /_next e assets passam intactos; raiz vai pra uma landing default.

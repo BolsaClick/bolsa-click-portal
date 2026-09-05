@@ -46,7 +46,10 @@ export async function getBolsaClickLogoDataUri(): Promise<string> {
   if (cachedLogoDataUri && cachedLogoKey === seoSite.key) return cachedLogoDataUri
   const relativePath =
     seoSite.key === 'bolsaclick'
-      ? 'public/assets/logo-bolsa-click-dark.png'
+      ? // Marca atual do Bolsa Click. O `-dark` que estava aqui é o logo
+        // antigo; ficou no OG por herança e era o que aparecia em toda
+        // partilha de link — WhatsApp, LinkedIn, X, prévia do Google.
+        'public/assets/logo-bolsa-click-rosa.png'
       : `public${new URL(seoSite.logo).pathname}`
   const logo = await readFile(path.join(process.cwd(), relativePath))
   cachedLogoDataUri = `data:image/png;base64,${logo.toString('base64')}`

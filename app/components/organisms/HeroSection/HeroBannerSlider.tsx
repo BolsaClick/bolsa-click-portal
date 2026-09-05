@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
+import { HERO_CONTAINER_CLASS } from '@/app/lib/layout/hero-container'
+
 interface Banner {
   id: string
   title: string
@@ -21,7 +23,7 @@ interface HeroBannerSliderProps {
 // Troca automática a cada 6s. Pausa sozinho quando a aba está em segundo
 // plano, quando o `prefers-reduced-motion` do sistema pede menos movimento,
 // e por alguns segundos sempre que a pessoa interage (arrasta, clica nas
-// setas/traços, foca por teclado) — pra não competir com o gesto dela.
+// setas, foca por teclado) — pra não competir com o gesto dela.
 const AUTOPLAY_MS = 6000
 const RESUME_AFTER_INTERACTION_MS = 9000
 
@@ -109,7 +111,7 @@ const CEILING_WIDTH_PX = 1680
  * concorrentes na mesma área — o carrossel só exibe a imagem. O H1 + prova
  * social do site vivem numa faixa própria, ANTES daqui (ver `HeroSection`).
  *
- * Setas e traços de paginação: ficam num overlay `mx-auto max-w-[1680px]`
+ * Setas de navegação: ficam num overlay `mx-auto max-w-[1680px]`
  * (mesmo teto da caixa da imagem) centralizado sobre a faixa — não presas
  * às bordas literais da viewport. Isso mantém os controles próximos da
  * imagem no caso comum (bordas próximas ao teto), mas é um compromisso
@@ -119,18 +121,23 @@ const CEILING_WIDTH_PX = 1680
  *
  * CONTIDO, não sangrado (decisão de produto, 2026-09, referência trazida
  * pelo Rodrigo: a home de um agregador concorrente): a faixa não toca mais
- * a borda da viewport. O contêiner
- * externo (`mx-auto w-full max-w-screen-lg px-4 sm:px-6 lg:px-8`) é o MESMO
- * container padrão do resto do site (`app/(default)/page.tsx`), pra alinhar
- * com o card de busca e as seções abaixo. Dentro dele, a matemática de
- * orçamento de altura/largura por proporção (acima) continua idêntica — o
- * `min(100%, ...)` da largura de cada slide agora resolve `100%` como o
- * espaço já com margem, então nunca precisa de alteração. A única mudança
- * é estética: cantos arredondados (`rounded-2xl`) na caixa de cada slide.
+ * a borda da viewport. O contêiner externo é o `HERO_CONTAINER_CLASS`
+ * (`app/lib/layout/hero-container.ts`), COMPARTILHADO com o card de busca
+ * (`Filter`) e com a fila de selos do `HeroSection`: o CEO decidiu em 09/2026
+ * que banner e card têm a MESMA largura, com as bordas laterais batendo. Não
+ * chumbe `max-w`/padding aqui — mexa na constante, que os três acompanham.
+ * Dentro dele, a matemática de orçamento de altura/largura por proporção
+ * (acima) continua idêntica — o `min(100%, ...)` da largura de cada slide
+ * resolve `100%` como o espaço já com margem, então nunca precisa de
+ * alteração. A única mudança é estética: cantos arredondados (`rounded-2xl`)
+ * na caixa de cada slide.
  */
 export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
   const trackRef = useRef<HTMLDivElement>(null)
   const slideRefs = useRef<(HTMLDivElement | null)[]>([])
+  // Os traços de paginação saíram em 09/2026 (pedido do Rodrigo). `currentIndex`
+  // NÃO foi junto: ele ainda alimenta a rotação automática, o destaque do slide
+  // ativo e as setas — só o indicador visual deixou de existir.
   const [currentIndex, setCurrentIndex] = useState(0)
   const [reducedMotion, setReducedMotion] = useState(false)
   const pausedRef = useRef(false)
@@ -218,7 +225,7 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
           não `fixed` — já ocupa espaço próprio no fluxo do documento, então
           nenhuma compensação manual é necessária aqui. */}
       <div
-        className="relative mx-auto w-full max-w-screen-xl px-4 sm:px-6 lg:px-8"
+        className={`relative ${HERO_CONTAINER_CLASS}`}
         role="region"
         aria-roledescription="carrossel"
         aria-label="Banners promocionais"
@@ -315,39 +322,6 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
               <ChevronRight size={20} />
             </button>
 
-            {/* TRAÇOS de paginação, no alto à direita — não mais bolinhas no
-                rodapé. Duas razões, nessa ordem:
-
-                1. O card de busca agora monta sobre a BASE do banner (ver
-                   HeroSection), e a base central é justamente onde as
-                   bolinhas ficavam. Elas passariam a viver atrás do card.
-                2. Traço de largura fixa comunica "quantos slides existem e
-                   em qual estou" melhor que bolinha, porque a barra ativa
-                   preenche em vez de só mudar de cor.
-
-                Largura igual pra todos: o estado ativo é o PREENCHIMENTO, não
-                o tamanho. Bolinha que estica no ativo faz a régua inteira
-                dançar a cada troca. */}
-            <div className="pointer-events-auto absolute right-4 top-4 z-[5] flex gap-1.5 md:right-6 md:top-5">
-              {banners.map((_, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => goTo(index)}
-                  className="group py-2"
-                  aria-label={`Ir para o banner ${index + 1} de ${banners.length}`}
-                  aria-current={index === currentIndex}
-                >
-                  <span
-                    className={`block h-1 w-8 rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.35)] transition-colors duration-300 md:w-10 ${
-                      index === currentIndex
-                        ? 'bg-white'
-                        : 'bg-white/40 group-hover:bg-white/70'
-                    }`}
-                  />
-                </button>
-              ))}
-            </div>
           </div>
         )}
       </div>

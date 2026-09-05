@@ -15,6 +15,7 @@ import { useGeoLocation } from '@/app/context/GeoLocationContext'
 import { brazilCityStateOrNull, isForbiddenGeoCity } from '@/app/lib/geo/brazil-location'
 import { ACADEMIC_LEVEL } from '@/app/lib/academic-level'
 import { useLastSearch } from '@/app/lib/personalization/hooks'
+import { HERO_CONTAINER_CLASS } from '@/app/lib/layout/hero-container'
 
 type FormValues = {
   modalidade: 'EAD' | 'PRESENCIAL' | 'SEMIPRESENCIAL'
@@ -322,29 +323,32 @@ const Filter = ({ asPageHeading = false }: FilterProps) => {
     setSearchCity(value)
   }, 300)
 
+  // Abas de nível: texto normal (não mais caixa alta em `font-mono`), ativa
+  // em azul-marinho com sublinhado; uma hairline única corre por baixo de
+  // todas, de ponta a ponta do card.
   const renderLevelTabs = () => (
-    <div className="grid grid-cols-3 border-b border-hairline">
-      {educationLevels.map((level, idx) => {
-        const isActive = activeTab === level.levels
-        const isLast = idx === educationLevels.length - 1
-        return (
-          <button
-            key={level.levels}
-            className={`relative flex-1 min-w-0 py-3.5 px-1.5 sm:py-5 sm:px-4 text-center text-[10px] sm:text-[13px] leading-tight tracking-[0.06em] sm:tracking-wide font-medium font-mono uppercase transition-colors whitespace-nowrap overflow-hidden text-ellipsis
-              ${!isLast ? 'border-r border-hairline' : ''}
-              ${isActive ? 'text-ink-900' : 'text-ink-500 hover:text-ink-900'}`}
-            onClick={() => handleLevelChange(level.levels)}
-            type="button"
-          >
-            {level.label}
-            <span
-              className={`absolute -bottom-px left-0 right-0 h-[2px] bg-ink-900 transition-transform duration-300 origin-center ${
-                isActive ? 'scale-x-100' : 'scale-x-0'
-              }`}
-            />
-          </button>
-        )
-      })}
+    <div className="border-b border-hairline">
+      <div className="flex gap-3 sm:gap-8 overflow-x-auto px-5 sm:px-6 md:px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {educationLevels.map((level) => {
+          const isActive = activeTab === level.levels
+          return (
+            <button
+              key={level.levels}
+              className={`relative shrink-0 whitespace-nowrap py-3.5 sm:py-4 text-[12px] sm:text-[15px] font-medium transition-colors
+                ${isActive ? 'text-bolsa-primary' : 'text-ink-500 hover:text-bolsa-primary'}`}
+              onClick={() => handleLevelChange(level.levels)}
+              type="button"
+            >
+              {level.label}
+              <span
+                className={`absolute -bottom-px left-0 right-0 h-[2px] bg-bolsa-primary transition-transform duration-300 origin-center ${
+                  isActive ? 'scale-x-100' : 'scale-x-0'
+                }`}
+              />
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 
@@ -352,9 +356,17 @@ const Filter = ({ asPageHeading = false }: FilterProps) => {
 
   const showModality = activeTab === 'graduacao'
 
+  // A partir de `md` o botão é o QUARTO elemento da linha dos campos
+  // (curso / cidade / modalidade / buscar), não mais um bloco solto embaixo.
+  // No mobile essa linha não cabe: volta a empilhar, com o botão em largura
+  // total no fim — daí o grid de uma coluna como base.
+  const fieldsGridClass = showModality
+    ? 'md:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,9.5rem)_auto]'
+    : 'md:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_auto]'
+
   const renderSearchForm = () => (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
-      <div className={`grid grid-cols-1 gap-4 ${showModality ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <div className={`grid grid-cols-1 gap-3 md:items-start ${fieldsGridClass}`}>
         <div className="w-full">
           <ComboBox
             key={`course-${activeTab}`}
@@ -393,46 +405,54 @@ const Filter = ({ asPageHeading = false }: FilterProps) => {
             />
           </div>
         )}
-      </div>
 
-      <button
-        type="submit"
-        className="group relative w-full md:w-auto md:self-end px-7 py-3.5 bg-ink-900 hover:bg-bolsa-secondary text-white font-semibold text-[14px] tracking-wide rounded-full transition-colors duration-300"
-      >
-        <span className="relative z-10 flex items-center justify-center gap-3">
+        {/* `md:h-[50px]` casa com a altura dos campos (py-3 + borda), pra o
+            botão terminar exatamente na mesma linha de base que eles. */}
+        <button
+          type="submit"
+          className="group inline-flex w-full items-center justify-center gap-2.5 whitespace-nowrap rounded-full bg-bolsa-secondary px-7 py-3.5 text-[15px] font-bold text-white transition-colors duration-300 hover:bg-bolsa-secondary/90 md:h-[50px] md:w-auto md:py-0"
+        >
           Buscar bolsas
           <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
-        </span>
-      </button>
+        </button>
+      </div>
     </form>
   )
 
+  // Mesmo container do banner da dobra — ver `HERO_CONTAINER_CLASS`. As bordas
+  // laterais do card TÊM que bater com as do banner (decisão do CEO, 09/2026):
+  // as duas peças leem como um bloco só.
   return (
-    <div className="container mx-auto px-4 z-40 relative">
-      <div className="max-w-4xl mx-auto w-full bg-white border border-hairline rounded-2xl shadow-[0_30px_60px_-30px_rgba(11,31,60,0.18)]">
-        {/* Cabeçalho navy editorial */}
-        <div className="bg-bolsa-primary px-6 md:px-8 py-6 md:py-7 text-white rounded-t-2xl">
-          <div className="flex items-center gap-2.5 mb-2">
-            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-bolsa-secondary text-white">
-              <GraduationCap size={16} />
+    <div className={`${HERO_CONTAINER_CLASS} z-40 relative`}>
+      <div className="w-full bg-white border border-hairline rounded-2xl shadow-[0_30px_60px_-30px_rgba(11,31,60,0.18)]">
+        {/* Cabeçalho CLARO: era um bloco `bg-bolsa-primary` cheio, com
+            sobrancelha "BUSCA DE BOLSAS" e um parágrafo de duas linhas.
+            Trocado em 09/2026 pela referência aprovada — branco, integrado ao
+            resto do card, sem faixa de cor. O que sobreviveu do bloco antigo
+            é o disco vermelho com o capelo, agora à esquerda do título.
+
+            O `Heading` continua sendo o h1 da home quando `asPageHeading` é
+            true (ver a prop): é a página que disputa "bolsas de estudo". */}
+        <div className="px-5 sm:px-6 md:px-8 pt-6 md:pt-8 pb-5 md:pb-6">
+          <div className="flex items-center gap-3 md:gap-4">
+            <span className="inline-flex h-10 w-10 md:h-12 md:w-12 shrink-0 items-center justify-center rounded-full bg-bolsa-secondary text-white">
+              <GraduationCap size={22} />
             </span>
-            <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-white/70">
-              Busca de bolsas
-            </span>
+            <div className="min-w-0">
+              <Heading className="font-display text-[20px] md:text-[28px] leading-tight font-semibold text-bolsa-primary">
+                Encontre sua bolsa de estudos
+              </Heading>
+              <p className="mt-1 text-ink-500 text-[13px] md:text-[15px] leading-snug">
+                Compare cursos e descontos em segundos.
+              </p>
+            </div>
           </div>
-          <Heading className="font-display text-xl md:text-[26px] leading-tight font-semibold mb-1.5">
-            Encontre sua bolsa em segundos
-          </Heading>
-          <p className="text-white/75 text-[13px] md:text-[14px] max-w-xl leading-relaxed">
-            Escolha o nível, digite o curso e a cidade. A gente compara as faculdades parceiras
-            e mostra a melhor bolsa pra você.
-          </p>
         </div>
 
         {/* Tabs e form */}
-        <div className="bg-white">
+        <div className="bg-white rounded-b-2xl">
           {renderLevelTabs()}
-          <div className="p-6 md:p-8">
+          <div className="px-5 sm:px-6 md:px-8 py-5 md:py-6">
             {renderSearchForm()}
           </div>
         </div>

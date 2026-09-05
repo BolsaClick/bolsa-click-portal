@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { ArrowRight } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -13,8 +12,7 @@ import CourseShelf from '../components/v2/home/CourseShelf'
 import GeoShelf from '../components/v2/home/GeoShelf'
 import RelatedShelf from '../components/v2/home/RelatedShelf'
 import Mascot from '../components/v2/mascot/Mascot'
-import { courseAreaPose } from '../components/v2/mascot/course-area'
-import ReactiveCta, { reactiveClasses } from '../components/v2/ui/ReactiveCta'
+import ReactiveCta from '../components/v2/ui/ReactiveCta'
 import { loadBlogPosts, loadShelf } from '../lib/home/vitrine'
 import { getCurrentTheme } from '../lib/themes'
 import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
@@ -115,14 +113,6 @@ export const metadata: Metadata = {
 
 // Chips de categoria — links REAIS do funil (/curso/resultado lê cn/nivel,
 // não courseName/academicLevel; conferido no ResultsShell).
-const CATEGORIES = [
-  { name: 'Administração', query: 'Administração' },
-  { name: 'Enfermagem', query: 'Enfermagem' },
-  { name: 'Pedagogia', query: 'Pedagogia' },
-  { name: 'Direito', query: 'Direito' },
-  { name: 'Psicologia', query: 'Psicologia' },
-  { name: 'Engenharias', query: 'Engenharia' },
-] as const
 
 const PARTNER_LOGOS = [
   { name: 'Anhanguera', src: '/assets/logo-anhanguera-bolsa-click.svg' },
@@ -246,34 +236,6 @@ export default async function HomePage() {
       <div id="busca">
         <HeroSection />
       </div>
-
-      {/* Categorias — navegação browsing-first com Bob por área */}
-      <section aria-label="Categorias de cursos" className="border-b border-ink-100 bg-white">
-        <div className="mx-auto w-full max-w-screen-lg px-4 py-5 sm:px-6 lg:px-8">
-          <ul className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6 lg:mx-0 lg:justify-between lg:overflow-visible lg:px-0 [scrollbar-width:thin]">
-            {CATEGORIES.map((category) => (
-              <li key={category.name} className="shrink-0 snap-start">
-                <a
-                  href={`/curso/resultado?cn=${encodeURIComponent(category.query)}&nivel=GRADUACAO`}
-                  className={`flex min-h-[48px] items-center gap-2.5 rounded-xl border border-ink-100 bg-white px-4 text-[14px] font-semibold text-ink-900 hover:border-bolsa-primary hover:text-bolsa-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bolsa-primary ${reactiveClasses.soft}`}
-                >
-                  <Mascot pose={courseAreaPose(category.query)} size={34} className="-my-1" />
-                  {category.name}
-                </a>
-              </li>
-            ))}
-            <li className="shrink-0 snap-start">
-              <a
-                href="/graduacao"
-                className={`flex min-h-[48px] items-center gap-2 rounded-xl bg-bolsa-primary/5 px-4 text-[14px] font-bold text-bolsa-primary hover:bg-bolsa-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bolsa-primary ${reactiveClasses.soft}`}
-              >
-                Ver todos
-                <ArrowRight size={16} aria-hidden />
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
 
       <PersonaReturnBanner />
 

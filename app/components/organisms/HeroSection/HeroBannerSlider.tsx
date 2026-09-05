@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
@@ -133,12 +134,37 @@ const CEILING_WIDTH_PX = 1680
  * na caixa de cada slide.
  */
 export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
+  const { trackEvent } = usePostHogTracking()
+
+  /**
+   * Impressões JÁ contadas nesta visita, por id de banner.
+   *
+   * O carrossel gira sozinho a cada AUTOPLAY_MS, então o mesmo banner volta a
+   * ficar ativo várias vezes numa sessão. Contar cada volta infla a impressão,
+   * e CTR com denominador inflado mente para baixo — o parceiro pareceria pior
+   * do que é. Uma impressão por banner por visualização de página.
+   */
+  const impressoesContadas = useRef<Set<string>>(new Set())
+
   const trackRef = useRef<HTMLDivElement>(null)
   const slideRefs = useRef<(HTMLDivElement | null)[]>([])
   // Os traços de paginação saíram em 09/2026 (pedido do Rodrigo). `currentIndex`
   // NÃO foi junto: ele ainda alimenta a rotação automática, o destaque do slide
   // ativo e as setas — só o indicador visual deixou de existir.
   const [currentIndex, setCurrentIndex] = useState(0)
+
+  useEffect(() => {
+    const banner = banners[currentIndex]
+    if (!banner || impressoesContadas.current.has(banner.id)) return
+    impressoesContadas.current.add(banner.id)
+    trackEvent('banner_viewed', {
+      banner_id: banner.id,
+      banner_title: banner.title,
+      banner_position: currentIndex + 1,
+      banner_total: banners.length,
+      banner_has_link: Boolean(banner.linkUrl),
+    })
+  }, [currentIndex, banners, trackEvent])
   const [reducedMotion, setReducedMotion] = useState(false)
   const pausedRef = useRef(false)
   const resumeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -287,6 +313,23 @@ export default function HeroBannerSlider({ banners }: HeroBannerSliderProps) {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block"
+                    // O evento sai no clique e NÃO segura a navegação: o link
+                    // abre em aba nova, então a página atual sobrevive e o
+                    // PostHog termina de enviar. Nada de preventDefault aqui —
+                    // atrasar o destino para garantir o evento troca conversão
+                    // por medição, que é o negócio errado.
+                    onClick={() =>
+                      trackEvent('banner_clicked', {
+                        banner_id: banner.id,
+                        banner_title: banner.title,
+                        banner_position: index + 1,
+                        banner_total: banners.length,
+                        banner_link: banner.linkUrl,
+                        // Distingue o banner que a pessoa procurou (navegou até
+                        // ele) do que a rotação entregou. Muda a leitura do CTR.
+                        banner_era_ativo: index === currentIndex,
+                      })
+                    }
                     // Roving tabindex: só o slide ativo entra no fluxo de Tab.
                     // Evita que quem navega por teclado precise passar por
                     // todos os slides escondidos fora da viewport pra chegar

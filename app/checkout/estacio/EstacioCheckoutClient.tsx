@@ -643,6 +643,44 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
           // Taxa do Bolsa Click já paga — a tela de sucesso mostra as duas
           // cobranças separadas (a nossa, paga; a da Estácio, a pagar).
           params.set('taxa', String(taxaEmCentavos))
+
+          // Meta — Purchase TAMBÉM pelo navegador.
+          //
+          // O servidor já dispara este evento (confirm-estacio.ts). Ele sozinho
+          // bastaria se o pixel aceitasse CAPI — mas o pixel que as campanhas
+          // usam pertence a uma conta pessoal, e CAPI só funciona em pixel de
+          // business. Sem este disparo, a compra do Estácio simplesmente não
+          // chega lá.
+          //
+          // Dispara AQUI, não na tela de sucesso: este ponto é o único que sabe
+          // as duas coisas ao mesmo tempo — que o pagamento confirmou e que a
+          // Estácio ACEITOU a inscrição. Na tela de sucesso não daria para
+          // distinguir de uma recusa já estornada, e contaríamos venda que não
+          // existiu.
+          //
+          // `event_id` = externalTransactionId, IDÊNTICO ao do servidor. Nos
+          // pixels que recebem os dois lados a Meta dedupa e conta uma vez; nos
+          // que só recebem navegador, este é o único que chega. Mudar este id
+          // sem mudar o de confirm-estacio.ts faz a mesma compra contar duas
+          // vezes e a campanha otimizar por receita inflada.
+          void trackFbqDual(
+            'Purchase',
+            {
+              currency: 'BRL',
+              // A TAXA cobrada por nós, não a mensalidade do curso.
+              value: taxaEmCentavos / 100,
+              content_name: offer.courseName,
+              content_type: 'product',
+              content_ids: offer.offerId ? [String(offer.offerId)] : undefined,
+            },
+            {
+              email: form.email.trim() || undefined,
+              phone: form.mobile.replace(/\D/g, '') || undefined,
+              externalId: form.cpf.replace(/\D/g, '') || undefined,
+            },
+            externalTransactionId,
+          )
+
           router.push(`/checkout/estacio/sucesso?${params.toString()}`)
           return
         }

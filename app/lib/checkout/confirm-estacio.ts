@@ -5,6 +5,7 @@ import { runAthenaEnrollment } from '@/app/lib/checkout/athena-enrollment'
 import { refundElysiumCharge } from '@/app/lib/api/elysium-refund'
 import { upsertCandidato } from '@/app/lib/api/attio'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
+import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 
 /**
  * Confirmação do checkout Estácio: a taxa de matrícula do Bolsa Click
@@ -362,6 +363,49 @@ export async function confirmPaidEstacio(
       externalTransactionId,
       e,
     )
+  }
+
+  // Meta — Purchase. A taxa de matrícula do Bolsa Click é uma compra de fato:
+  // dinheiro que entrou, com valor conhecido. Até aqui o pixel NUNCA tinha
+  // recebido um Purchase (medido: zero em todo o histórico), e as campanhas
+  // otimizam justamente por esse evento — pediam à Meta que encontrasse gente
+  // parecida com compradores sem nunca ter mostrado um comprador.
+  //
+  // Sai do SERVIDOR, depois do pagamento confirmado E da inscrição aceita:
+  // é o único ponto em que as duas coisas são verdade ao mesmo tempo. Disparar
+  // no navegador, na tela de sucesso, contaria também quem a Estácio recusou
+  // e cujo dinheiro foi estornado.
+  //
+  // `eventId` = externalTransactionId, o mesmo do fluxo Cogna
+  // (confirm-matricula.ts). Uma transação, um Purchase, mesmo que webhook e
+  // polling cheguem juntos — a Meta dedupa por esse id.
+  try {
+    const [primeiroNome, ...restoNome] = tx.name.trim().split(/\s+/)
+    await sendFacebookEvent({
+      eventName: 'Purchase',
+      eventId: externalTransactionId,
+      userData: {
+        email: tx.email,
+        phone: phoneDigits,
+        externalId: cpfDigits,
+        firstName: primeiroNome || undefined,
+        lastName: restoNome.length ? restoNome.join(' ') : undefined,
+      },
+      customData: {
+        currency: 'BRL',
+        // Valor da TAXA cobrada por nós, não da mensalidade do curso — é o que
+        // efetivamente entrou. Inflar aqui com o preço do curso envenenaria o
+        // ROAS e faria a Meta comprar tráfego caro demais.
+        value: tx.amountInCents / 100,
+        content_name: blob.offer.courseName || 'Taxa de matrícula Estácio',
+        content_type: 'product',
+        ...(blob.offer.offerId ? { content_ids: [String(blob.offer.offerId)] } : {}),
+      },
+    })
+  } catch (e) {
+    // Best-effort, como todo o resto do rastreio: perder o evento é ruim,
+    // derrubar a inscrição de quem já pagou é pior.
+    console.error('⚠️ confirm-estacio: Meta Purchase falhou', externalTransactionId, e)
   }
 
   const result: EstacioConfirmResult = { status: 'ok', checkout }

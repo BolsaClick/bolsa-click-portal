@@ -286,6 +286,24 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
     setExpanded((prev) => ({ ...prev, [key]: !prev[key] }))
 
   useEffect(() => {
+    // Meta — InitiateCheckout. Faltava: o checkout Estácio só emitia `Lead`, no
+    // fim, então tudo que acontecia entre abrir e concluir era invisível para a
+    // Meta. Sem esta etapa não dá para medir onde o funil pago vaza, e é
+    // justamente ela que tem volume suficiente para a campanha aprender.
+    void trackFbqDual(
+      'InitiateCheckout',
+      {
+        content_name: offer.courseName,
+        content_ids: offer.offerId ? [String(offer.offerId)] : undefined,
+        content_type: 'product',
+        currency: 'BRL',
+      },
+      undefined,
+      // Um InitiateCheckout por oferta por carregamento. Sem id estável a Meta
+      // contaria de novo a cada recarga da página.
+      offer.offerId ? `estacio_ic_${offer.offerId}` : undefined,
+    )
+
     trackEvent('estacio_checkout_viewed', {
       offer_id: offer.offerId,
       course_name: offer.courseName,

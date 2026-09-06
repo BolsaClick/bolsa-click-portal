@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { Check, Copy, CreditCard, Loader2, Lock, QrCode, ShieldCheck, X } from 'lucide-react'
 import QRCode from 'react-qr-code'
 import type { CreateEnrollmentInput } from '@/app/lib/api/athena-offers'
@@ -163,6 +164,31 @@ export default function EstacioPayment({
         }
         setCharges((prev) => ({ ...prev, [m]: charge }))
 
+        // Meta — AddPaymentInfo. Dispara quando a COBRANÇA foi criada, não
+        // quando a pessoa clica no método: só aqui existe intenção confirmada
+        // pelo servidor, com id de transação. Marcar no clique contaria quem
+        // só passeou pelas abas Pix/Cartão.
+        //
+        // `eventId` pela transação, para o Pix (que cria cobrança e espera) não
+        // contar duas vezes se a pessoa voltar e gerar de novo.
+        void trackFbqDual(
+          'AddPaymentInfo',
+          {
+            content_name: context?.offer?.courseName || 'Taxa de matrícula Estácio',
+            content_type: 'product',
+            currency: 'BRL',
+            value: amountInCents / 100,
+            payment_method: m,
+            ...(context?.offer?.offerId ? { content_ids: [String(context.offer.offerId)] } : {}),
+          },
+          {
+            email: customer.email || undefined,
+            phone: customer.phone.replace(/\D/g, '') || undefined,
+            externalId: customer.cpf.replace(/\D/g, '') || undefined,
+          },
+          charge.externalTransactionId ? `estacio_api_${charge.externalTransactionId}` : undefined,
+        )
+
         if (m === 'card') {
           const status = String(data.status || '').toUpperCase()
           if (data.paid === true || status === 'PAID') {
@@ -179,7 +205,7 @@ export default function EstacioPayment({
         setLoadingMethod(null)
       }
     },
-    [customer, context, confirmPaid],
+    [customer, context, confirmPaid, amountInCents],
   )
 
   const handlePix = useCallback(async () => {

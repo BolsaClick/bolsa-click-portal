@@ -75,11 +75,17 @@ export interface MarketplaceInscriptionPayload {
  * Cria inscrição no marketplace ATHENAS após pagamento confirmado
  * @param formData - Dados do formulário de checkout
  * @param offerDetails - Detalhes da oferta
+ * @param opts.canalVendasId - Canal de vendas (default 141, herdado do fork —
+ *   NUNCA mudar o default: é o canal do portal principal, ver
+ *   reference_anhanguera_sem_marketplace na memória do CEO). A campanha
+ *   ingressa.digital (app/lp/**) passa 88 explicitamente — canal próprio dela,
+ *   confirmado pelo CEO em 2026-08-26 — sem afetar quem não passa a opção.
  * @returns Resposta da API
  */
 export async function createMarketplaceInscription(
   formData: MarketplaceInscriptionData,
   offerDetails: OfferDetails,
+  opts?: { canalVendasId?: number },
 ): Promise<{ success: boolean; data?: unknown; error?: string }> {
   try {
     // Validar se temos o idDmhElastic
@@ -152,7 +158,9 @@ export async function createMarketplaceInscription(
           },
         },
         canalVendas: {
-          id: 141, // ID fixo do canal de vendas Bolsa Click
+          // Default 141 = canal herdado do fork (portal principal). ingressa.digital
+          // passa 88 (canal próprio da campanha) via opts.canalVendasId.
+          id: opts?.canalVendasId ?? 141,
         },
         idTipoProva: 2, // Vestibular online
         // Faltava no payload — o DTO do tartarus-bff (@IsString()) exige

@@ -13,7 +13,6 @@ import {
 import type { OfferDetails } from '@/app/lib/api/get-offer-details'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
 import { upsertCandidato } from '@/app/lib/api/attio'
-import { refundElysiumCharge } from '@/app/lib/api/elysium-refund'
 
 /**
  * Canal de vendas próprio da campanha ingressa.digital (Cogna/Anhanguera).
@@ -60,7 +59,7 @@ export interface CampaignConfirmBlob {
 export type CampaignConfirmResult =
   | { status: 'ok'; inscriptionId: string | null; alreadyDone?: boolean }
   | { status: 'pending' }
-  | { status: 'refused'; reason: string; refunded: boolean; alreadyDone?: boolean }
+  | { status: 'refused'; reason: string; alreadyDone?: boolean }
 
 /**
  * Janela em que um claim é considerado "alguém está processando agora". Passado
@@ -127,8 +126,16 @@ async function assumirClaim(txId: string, externalTransactionId: string): Promis
 
 /**
  * Confirma o pagamento da campanha (idempotente) e, só então, cria a
- * inscrição na Cogna. Recusa da Cogna → estorno best-effort + Attio "pago,
- * inscrição recusada" + PostHog `campaign_enrollment_refused`.
+ * inscrição na Cogna. Recusa da Cogna → a taxa NÃO é estornada: fica registrada
+ * no Attio como "pago, inscrição recusada" (+ PostHog
+ * `campaign_enrollment_refused`) para o time resolver na mão.
+ *
+ * Decisão do CEO em 2026-09-07, contrariando o padrão dos outros checkouts
+ * pagos (Estácio e Cogna/matrícula estornam automaticamente): aqui a recusa
+ * quase sempre é a oferta ter saído do ar, e o candidato continua querendo
+ * estudar — o time reaproveita a taxa em outra oferta em vez de devolver e
+ * perder a venda. O que NÃO pode acontecer é a recusa passar despercebida: por
+ * isso o registro no CRM é o passo obrigatório deste caminho, não o estorno.
  *
  * Idempotência em três camadas:
  *  1. Resultado da inscrição persistido em `metadata.campaignResult` — uma
@@ -143,13 +150,13 @@ async function assumirClaim(txId: string, externalTransactionId: string): Promis
  * cliente bate em `/api/checkout/status/[transactionId]`, que sincroniza o
  * status do Elysium e grava PAID no banco ANTES de a confirmação rodar. Sem
  * ela, `claim.count` é 0 para todos os callers e a função devolve `pending`
- * para sempre — cobrado, sem inscrição e sem estorno.
+ * para sempre — cobrado, sem inscrição e sem ninguém avisado.
  */
 export async function confirmPaidCampaign(
   externalTransactionId: string,
 ): Promise<CampaignConfirmResult> {
   const tx = await prisma.transaction.findFirst({ where: { externalTransactionId } })
-  if (!tx) return { status: 'refused', reason: 'not_found', refunded: false }
+  if (!tx) return { status: 'refused', reason: 'not_found' }
 
   const metadata = asObject(tx.metadata)
   const existingResult = metadata.campaignResult as CampaignConfirmResult | undefined
@@ -225,7 +232,6 @@ export async function confirmPaidCampaign(
     const result: CampaignConfirmResult = {
       status: 'refused',
       reason: 'Cobrança confirmada, mas faltam os dados da inscrição. Nosso time foi avisado.',
-      refunded: false,
     }
     await persistResult(tx.id, metadata, result)
     return result
@@ -250,9 +256,13 @@ export async function confirmPaidCampaign(
     })
   }
 
-  // Recusa: estorno best-effort + Attio + PostHog.
+  // Recusa: sem estorno (ver doc acima) — o dinheiro fica e a pendência vira
+  // tarefa humana. Attio primeiro, porque é ele que faz alguém ver isso.
   if (!inscriptionId) {
-    const refund = await refundElysiumCharge(externalTransactionId)
+    console.error(
+      '💰 confirm-campaign: taxa PAGA e inscrição RECUSADA — registrado no Attio para resolução manual',
+      { externalTransactionId, motivo: inscriptionError },
+    )
 
     try {
       await upsertCandidato({
@@ -266,9 +276,7 @@ export async function confirmPaidCampaign(
         city: blob.attio.city,
         estagio: 'inscricao_recusada',
         origemFluxo: 'ingressa',
-        motivoRecusa: `Pago (R$ ${(tx.amountInCents / 100).toFixed(2)}), inscrição recusada pela Cogna: ${inscriptionError}. Estorno ${
-          refund.ok ? 'confirmado no Elysium' : 'FALHOU — estornar manualmente no gateway'
-        }.`,
+        motivoRecusa: `Pago (R$ ${(tx.amountInCents / 100).toFixed(2)}), inscrição recusada pela Cogna: ${inscriptionError}. Valor NÃO estornado — resolver com o candidato (outra oferta ou inscrição manual).`,
         taxaPaga: new Date(),
         shift: blob.attio.shift,
         monthlyPrice: blob.attio.monthlyPrice,
@@ -286,7 +294,9 @@ export async function confirmPaidCampaign(
         properties: {
           transaction_id: externalTransactionId,
           reason: inscriptionError || null,
-          refunded: refund.ok,
+          // Sempre true: esta campanha não estorna. Mantido explícito pro
+          // relatório distinguir da recusa dos outros checkouts, que estornam.
+          charge_kept: true,
           course_name: blob.attio.courseName || null,
           brand: blob.attio.brand || null,
           partner: blob.partner,
@@ -299,7 +309,6 @@ export async function confirmPaidCampaign(
     const result: CampaignConfirmResult = {
       status: 'refused',
       reason: inscriptionError || 'Não foi possível concluir sua inscrição.',
-      refunded: refund.ok,
     }
     await persistResult(tx.id, metadata, result)
     return result

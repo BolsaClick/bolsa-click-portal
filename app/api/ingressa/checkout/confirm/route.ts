@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { status: 'refused', reason: result.reason, refunded: result.refunded },
+      { status: 'refused', reason: result.reason },
       { status: 422 },
     )
   } catch (error) {

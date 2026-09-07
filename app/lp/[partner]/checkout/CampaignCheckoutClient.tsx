@@ -78,7 +78,7 @@ interface Props {
 type ConfirmState =
   | { kind: 'idle' }
   | { kind: 'confirming' }
-  | { kind: 'refused'; reason: string; refunded: boolean }
+  | { kind: 'refused'; reason: string }
   | { kind: 'error'; message: string }
 
 export default function CampaignCheckoutClient({ partner, partnerName, brandColor, amountInCents }: Props) {
@@ -176,7 +176,7 @@ export default function CampaignCheckoutClient({ partner, partnerName, brandColo
           return
         }
         if (res.status === 422) {
-          setConfirmState({ kind: 'refused', reason: data?.reason || 'Não foi possível concluir sua inscrição.', refunded: !!data?.refunded })
+          setConfirmState({ kind: 'refused', reason: data?.reason || 'Não foi possível concluir sua inscrição.' })
           return
         }
         setConfirmState({ kind: 'error', message: 'Não conseguimos confirmar sua inscrição agora. Fale com a gente pelo WhatsApp — seu pagamento está registrado.' })
@@ -214,11 +214,11 @@ export default function CampaignCheckoutClient({ partner, partnerName, brandColo
         partner={partner}
         title="Inscrição não confirmada"
         message={confirmState.reason}
-        footnote={
-          confirmState.refunded
-            ? 'O valor pago já foi estornado.'
-            : 'Já iniciamos o estorno do valor pago — se ele não aparecer no seu extrato em alguns dias, fale com a gente.'
-        }
+        // Sem promessa de estorno: a campanha não estorna (ver
+        // confirm-campaign.ts). O pagamento está registrado e a pendência já
+        // foi pro CRM — prometer devolução aqui criaria uma expectativa que o
+        // time não vai cumprir, e é isso que vira reclamação.
+        footnote={"Seu pagamento está registrado e nosso time já foi avisado — entramos em contato pra concluir sua inscrição."}
       />
     )
   }

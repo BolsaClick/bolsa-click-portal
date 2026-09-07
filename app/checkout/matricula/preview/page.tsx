@@ -25,18 +25,63 @@ export default function MatriculaPaymentPreview() {
         </p>
         <div className="rounded-2xl border border-hairline bg-white p-6 shadow-[0_30px_60px_-40px_rgba(11,31,60,0.18)]">
           <MatriculaPayment
-            amountInCents={14990}
+            amountInCents={1990}
             customer={{
               name: 'Maria Teste da Silva',
               cpf: '111.444.777-35',
               email: 'maria.teste@example.com',
               phone: '(11) 99999-0000',
             }}
-            description="Matrícula - Curso de Teste (preview)"
-            metadata={{ courseId: 'preview', courseName: 'Curso de Teste', institutionName: 'Anhanguera' }}
+            context={{
+              offer: {
+                courseId: 'preview',
+                courseName: 'Curso de Teste',
+                institutionName: 'Anhanguera',
+              },
+              // Blob mínimo só para o preview compilar: o servidor recusaria
+              // esta cobrança (idDMH vazio) antes de cobrar qualquer coisa.
+              confirm: {
+                inscriptionPayload: {
+                  inscription: {
+                    acceptTerms: true,
+                    acceptReceiveEmail: true,
+                    acceptReceiveSMS: true,
+                    acceptReceiveWhatsApp: true,
+                    graduationYear: 2015,
+                    offers: {
+                      firstOption: {
+                        idDMH: '',
+                        businessKey: '',
+                        academicLevel: 'GRADUACAO',
+                        ingressType: ['VESTIBULAR'],
+                      },
+                    },
+                    offerSource: 'ATHENAS',
+                  },
+                  personalData: {
+                    name: 'Maria Teste da Silva',
+                    cpf: '11144477735',
+                    gender: 'F',
+                    highSchoolGraduationYear: 2015,
+                    rg: '000000000',
+                    birthDate: '01-01-1995',
+                    email: 'maria.teste@example.com',
+                    mobile: '11999990000',
+                    address: {
+                      street: 'Rua Teste',
+                      number: '1',
+                      neighborhood: 'Centro',
+                      zipCode: '01001000',
+                      state: 'SP',
+                      city: 'São Paulo',
+                    },
+                  },
+                },
+              },
+            }}
             formReady
             onRequireData={() => toast.error('Preencha seus dados (preview)')}
-            onPaid={() => toast.success('onPaid disparado — aqui a inscrição seria criada')}
+            onPaid={(id) => toast.success(`onPaid disparado (${id}) — aqui a inscrição seria criada`)}
           />
         </div>
         <p className="mt-4 text-[12px] leading-relaxed text-ink-500">

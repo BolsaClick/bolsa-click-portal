@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { trackFbqDual } from '@/app/lib/analytics/fbq'
-import { pushDataLayerEvent } from '@/app/lib/analytics/gtag'
 import {
   BadgeCheck,
   Barcode,
@@ -16,6 +15,25 @@ import {
   ShieldCheck,
   X,
 } from 'lucide-react'
+// Type-only: apagado em tempo de compilação, não puxa o servidor (prisma) para
+// o bundle do cliente. Importar daqui — e não redeclarar a forma do blob — é o
+// que impede o payload da inscrição divergir entre quem monta (esta tela) e
+// quem consome (confirm-matricula.ts) sem ninguém perceber.
+import type { MatriculaConfirmBlob } from '@/app/lib/checkout/confirm-matricula'
+
+/**
+ * Pagamento da taxa de matrícula do Bolsa Click no checkout Cogna/ATHENAS.
+ *
+ * A cobrança vem ANTES da inscrição (ver `taxa-cogna.ts` e
+ * `confirm-matricula.ts`): este componente só cria a cobrança e avisa o pai via
+ * `onPaid`; quem cria a inscrição na Cogna é o servidor, depois de o pagamento
+ * confirmar.
+ *
+ * O polling NÃO usa /api/checkout/status/[id] de propósito: aquela rota
+ * sincroniza o status local para PAID e roubaria o claim atômico da
+ * confirmação (ver confirm-matricula.ts). Quem diz se pagou aqui é a própria
+ * rota de confirmação, que já valida no Elysium.
+ */
 
 type Method = 'pix' | 'card' | 'boleto'
 
@@ -39,18 +57,39 @@ interface Customer {
   addressNumber?: string
 }
 
+/**
+ * Tudo que a cobrança precisa saber. `confirm` é o payload que o servidor
+ * guarda em `Transaction.metadata.confirm` e usa para inscrever DEPOIS do
+ * pagamento — inclusive com a aba fechada.
+ */
+export interface MatriculaChargeContext {
+  confirm: MatriculaConfirmBlob
+  offer: {
+    courseId?: string
+    courseName?: string
+    institutionName?: string
+  }
+}
+
 interface MatriculaPaymentProps {
-  /** Valor da matrícula em centavos. */
+  /**
+   * Valor da TAXA em centavos — vem do servidor (page.tsx), nunca do cliente,
+   * e é só para exibição: quem cobra é `/api/checkout/matricula/charge`, com o
+   * valor fixo dele.
+   */
   amountInCents: number
   customer: Customer
-  description: string
-  metadata?: Record<string, unknown>
+  context: MatriculaChargeContext
   /** Dados pessoais válidos (libera a geração da cobrança). */
   formReady: boolean
   /** Chamado quando o usuário tenta pagar sem os dados preenchidos. */
   onRequireData: () => void
-  /** Chamado quando o pagamento é confirmado — o pai cria a inscrição. */
-  onPaid: () => void
+  /** Chamado quando o pagamento é detectado — o pai confirma a inscrição. */
+  onPaid: (externalTransactionId: string) => void
+  /** Erro reportado pelo pai (ex.: recusa da Cogna depois do pagamento). */
+  externalError?: string | null
+  /** Enquanto o pai confirma a inscrição, o componente mostra "confirmando". */
+  confirming?: boolean
 }
 
 interface ChargeState {
@@ -63,10 +102,21 @@ interface ChargeState {
 
 const POLL_INTERVAL_MS = 4000
 
+/**
+ * Métodos OFERECIDOS. Boleto ficou de fora: neste fluxo a taxa é cobrada antes
+ * da inscrição e, se a Cogna recusar, precisamos estornar. O Elysium/AbacatePay
+ * NÃO reembolsa boleto transparente (devolve 422 refund_not_supported; só PIX e
+ * cartão têm estorno automático). Sem essa rede de segurança, uma recusa em
+ * boleto deixaria o aluno pago, sem inscrição, esperando estorno manual.
+ * Mesma decisão já em produção no checkout Estácio.
+ *
+ * O código de boleto abaixo continua no arquivo (UI e handlers) porque nada
+ * mais o alcança — `method` só pode ser 'pix' ou 'card'. NÃO reintroduzir
+ * boleto aqui sem antes confirmar o estorno automático no Elysium.
+ */
 const METHODS: Array<{ id: Method; label: string; icon: typeof QrCode; hint: string }> = [
   { id: 'pix', label: 'Pix', icon: QrCode, hint: 'Na hora' },
   { id: 'card', label: 'Cartão', icon: CreditCard, hint: 'Crédito' },
-  { id: 'boleto', label: 'Boleto', icon: Barcode, hint: 'Até 3 dias' },
 ]
 
 /** BRL exato (sem o ".99" do formatter de catálogo). */
@@ -84,11 +134,12 @@ function toDataUri(base64: string | undefined): string | undefined {
 export default function MatriculaPayment({
   amountInCents,
   customer,
-  description,
-  metadata,
+  context,
   formReady,
   onRequireData,
   onPaid,
+  externalError,
+  confirming,
 }: MatriculaPaymentProps) {
   const [method, setMethod] = useState<Method>('pix')
   const [charges, setCharges] = useState<Partial<Record<Method, ChargeState>>>({})
@@ -102,85 +153,71 @@ export default function MatriculaPayment({
   const onPaidRef = useRef(onPaid)
   onPaidRef.current = onPaid
 
-  const confirmPaid = useCallback(async (externalId?: string) => {
-    if (paidRef.current) return
+  /**
+   * Pagamento detectado. NÃO dispara Purchase aqui: pagar a taxa ainda não é
+   * uma venda — a Cogna pode recusar a inscrição e a taxa ser estornada. O
+   * Purchase (navegador e servidor, com o mesmo `event_id`) sai só depois da
+   * inscrição aceita: no pai (`handlePaid`) e em `confirm-matricula.ts`.
+   */
+  const confirmPaid = useCallback((externalId?: string) => {
+    if (!externalId || paidRef.current) return
     paidRef.current = true
     setPaid(true)
     setPixOpen(false)
+    onPaidRef.current(externalId)
+  }, [])
 
-    // Meta Pixel + Conversions API - Purchase. eventID = externalId dedupa com
-    // o Purchase server-side disparado em confirmPaidMatricula (mesmo id).
-    const [firstName, ...rest] = (customer.name || '').trim().split(/\s+/)
-    const courseId = typeof metadata?.courseId === 'string' ? metadata.courseId : undefined
-    const courseName = typeof metadata?.courseName === 'string' ? metadata.courseName : description
-    void trackFbqDual(
-      'Purchase',
-      {
-        content_name: courseName,
-        content_ids: courseId ? [courseId] : undefined,
-        content_type: 'product',
-        value: (amountInCents || 0) / 100,
-        currency: 'BRL',
-      },
-      {
-        email: customer.email,
-        phone: customer.phone,
-        externalId: customer.cpf.replace(/\D/g, ''),
-        firstName: firstName || undefined,
-        lastName: rest.length ? rest.join(' ') : undefined,
-      },
-      externalId,
-    )
-
-    // GA4 ecommerce (dataLayer/GTM) - purchase, paridade com o Purchase acima.
-    // transaction_id = mesmo externalId do gateway (dedup nativo do GA4).
-    pushDataLayerEvent('purchase', {
-      ecommerce: {
-        transaction_id: externalId,
-        currency: 'BRL',
-        value: (amountInCents || 0) / 100,
-        items: [
-          {
-            item_id: courseId,
-            item_name: courseName,
-          },
-        ],
-      },
-    })
-
-    // Dispara a confirmação server-side (cria inscrição + atualiza CRM).
-    // Idempotente: o webhook do gateway/Elysium também cobre (aba fechada).
-    if (externalId) {
-      try {
-        await fetch('/api/payments/confirm', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ externalTransactionId: externalId }),
-        })
-      } catch {
-        /* o webhook server-side cobre */
-      }
-    }
-    onPaidRef.current()
-  }, [amountInCents, customer, description, metadata])
+  /**
+   * Meta — AddPaymentInfo. Dispara quando a COBRANÇA foi criada, não quando a
+   * pessoa clica no método: só aqui existe intenção confirmada pelo servidor,
+   * com id de transação. Marcar no clique contaria quem só passeou pelas abas.
+   *
+   * `eventId` pela transação, para o Pix (que cria cobrança e espera) não
+   * contar duas vezes se a pessoa voltar e gerar de novo.
+   */
+  const emitAddPaymentInfo = useCallback(
+    (m: Method, externalTransactionId?: string) => {
+      void trackFbqDual(
+        'AddPaymentInfo',
+        {
+          content_name: context.offer.courseName || 'Taxa de matrícula Bolsa Click',
+          content_type: 'product',
+          currency: 'BRL',
+          value: (amountInCents || 0) / 100,
+          payment_method: m,
+          ...(context.offer.courseId ? { content_ids: [String(context.offer.courseId)] } : {}),
+        },
+        {
+          email: customer.email || undefined,
+          phone: customer.phone.replace(/\D/g, '') || undefined,
+          externalId: customer.cpf.replace(/\D/g, '') || undefined,
+        },
+        externalTransactionId ? `cogna_api_${externalTransactionId}` : undefined,
+      )
+    },
+    [amountInCents, context, customer],
+  )
 
   const createCharge = useCallback(
     async (m: Method): Promise<ChargeState | null> => {
       setLoadingMethod(m)
       setError(null)
       try {
-        const res = await fetch('/api/checkout', {
+        // Valor NÃO vai no corpo: quem decide quanto cobrar é o servidor
+        // (TAXA_MATRICULA_COGNA_CENTAVOS). Ver /api/checkout/matricula/charge.
+        const res = await fetch('/api/checkout/matricula/charge', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name: customer.name,
-            cpf: customer.cpf,
-            email: customer.email,
-            phone: customer.phone,
-            amountInCents,
-            description,
+            customer: {
+              name: customer.name,
+              cpf: customer.cpf.replace(/\D/g, ''),
+              email: customer.email,
+              phone: customer.phone.replace(/\D/g, ''),
+            },
+            offer: context.offer,
+            confirm: context.confirm,
             paymentMethod: m,
-            metadata,
           }),
         })
         const data = await res.json()
@@ -195,6 +232,7 @@ export default function MatriculaPayment({
             data.boleto?.barCode ?? data.boletoBarCode ?? data.barCode ?? data.boleto?.lineCode,
         }
         setCharges((prev) => ({ ...prev, [m]: charge }))
+        emitAddPaymentInfo(m, charge.externalTransactionId)
         return charge
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Erro ao gerar cobrança.')
@@ -203,7 +241,7 @@ export default function MatriculaPayment({
         setLoadingMethod(null)
       }
     },
-    [amountInCents, customer, description, metadata]
+    [customer, context, emitAddPaymentInfo]
   )
 
   const ensureData = useCallback(() => {
@@ -237,16 +275,19 @@ export default function MatriculaPayment({
       setError(null)
       try {
         const cpfDigits = customer.cpf.replace(/\D/g, '')
-        const res = await fetch('/api/checkout', {
+        // Valor NÃO vai no corpo: quem decide quanto cobrar é o servidor.
+        const res = await fetch('/api/checkout/matricula/charge', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name: customer.name,
-            cpf: cpfDigits,
-            email: customer.email,
-            phone: customer.phone.replace(/\D/g, ''),
-            amountInCents,
-            description,
+            customer: {
+              name: customer.name,
+              cpf: cpfDigits,
+              email: customer.email,
+              phone: customer.phone.replace(/\D/g, ''),
+            },
+            offer: context.offer,
+            confirm: context.confirm,
             paymentMethod: 'card',
             installmentCount: installments,
             creditCard: card,
@@ -258,7 +299,6 @@ export default function MatriculaPayment({
               addressNumber: customer.addressNumber || 'S/N',
               mobilePhone: customer.phone.replace(/\D/g, ''),
             },
-            metadata,
           }),
         })
         const data = await res.json()
@@ -267,11 +307,12 @@ export default function MatriculaPayment({
 
         const id: string | undefined = data.transactionId
         if (id) setCharges((prev) => ({ ...prev, card: { externalTransactionId: id } }))
+        emitAddPaymentInfo('card', id)
 
         // Cartão Asaas é síncrono: resposta já traz paid/status.
         const status = String(data.status || '').toUpperCase()
         if (data.paid === true || status === 'PAID') {
-          void confirmPaid(id)
+          confirmPaid(id)
         } else if (status === 'FAILED') {
           setError('Pagamento recusado. Confira os dados do cartão ou tente outro.')
         }
@@ -282,7 +323,7 @@ export default function MatriculaPayment({
         setLoadingMethod(null)
       }
     },
-    [ensureData, customer, amountInCents, description, metadata, confirmPaid]
+    [ensureData, customer, context, confirmPaid, emitAddPaymentInfo]
   )
 
   const handleCopy = useCallback(async (key: string, text: string) => {
@@ -295,7 +336,12 @@ export default function MatriculaPayment({
     }
   }, [])
 
-  // Polling de status para PIX/boleto e cartão em análise de risco (PENDING).
+  // Polling: pergunta à rota de confirmação se o pagamento já caiu. 202 =
+  // ainda não; ok/recusa = o pai assume (via onPaid) e mostra o resultado.
+  //
+  // NÃO usar /api/checkout/status/[id] aqui: aquela rota sincroniza o status
+  // local para PAID e roubaria o claim atômico da confirmação, deixando o
+  // aluno pago e sem inscrição (ver confirm-matricula.ts).
   const pollables = useMemo(
     () =>
       (['pix', 'card', 'boleto'] as Method[])
@@ -310,11 +356,16 @@ export default function MatriculaPayment({
     const tick = async () => {
       for (const id of pollables) {
         try {
-          const res = await fetch(`/api/checkout/status/${id}`)
-          if (!res.ok) continue
-          const data = await res.json()
-          if (active && String(data.status).toUpperCase() === 'PAID') {
-            void confirmPaid(id)
+          const res = await fetch('/api/checkout/matricula/confirm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ externalTransactionId: id }),
+          })
+          // 200 = inscrição criada; 422 = pagou e a Cogna recusou (o pai mostra
+          // a recusa + estorno). 202 (pendente) e 5xx (falha transitória)
+          // mantêm o polling — nunca dizemos "pago" por um erro de servidor.
+          if (active && (res.ok || res.status === 422)) {
+            confirmPaid(id)
             return
           }
         } catch {
@@ -338,11 +389,15 @@ export default function MatriculaPayment({
           <Check className="h-7 w-7" strokeWidth={2.5} />
           <span className="absolute inset-0 animate-ping rounded-full bg-bolsa-secondary/30" />
         </span>
-        <p className="font-display text-xl text-ink-900">Pagamento confirmado</p>
-        <p className="flex items-center gap-2 text-sm text-ink-500">
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          Finalizando sua matrícula…
-        </p>
+        <p className="font-display text-xl text-ink-900">Taxa de matrícula paga</p>
+        {externalError ? (
+          <p className="max-w-sm px-6 text-sm text-bolsa-secondary">{externalError}</p>
+        ) : (
+          <p className="flex items-center gap-2 text-sm text-ink-500">
+            {confirming !== false && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+            Enviando sua inscrição para a instituição…
+          </p>
+        )}
       </div>
     )
   }
@@ -351,15 +406,18 @@ export default function MatriculaPayment({
 
   return (
     <div className="space-y-5">
-      {/* Comprovante: valor da matrícula */}
+      {/* Comprovante: valor da TAXA do Bolsa Click (≠ matrícula do curso) */}
       <div className="hairline rounded-2xl bg-paper-warm/70 px-5 py-4">
         <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-500">
-          Valor da matrícula
+          Taxa de matrícula Bolsa Click
         </p>
         <p className="font-display num-tabular text-3xl leading-tight text-ink-900">
           {formatCents(amountInCents)}
         </p>
-        <p className="mt-0.5 text-[12px] text-ink-500">Pago uma única vez para garantir sua vaga.</p>
+        <p className="mt-0.5 text-[12px] text-ink-500">
+          Cobrados uma única vez, aqui, para enviar sua inscrição. A matrícula e as mensalidades do
+          curso são pagas à instituição, à parte.
+        </p>
       </div>
 
       {/* Seletor de método */}
@@ -367,7 +425,7 @@ export default function MatriculaPayment({
         <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.22em] text-ink-500">
           Forma de pagamento
         </p>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {METHODS.map(({ id, label, icon: Icon, hint }) => {
             const active = method === id
             return (

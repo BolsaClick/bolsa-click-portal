@@ -156,22 +156,29 @@ export default async function PartnerLanding({
     }
   }
 
-  // Grid de ofertas: só do trilho YDUQS (Athena) — é o que traz unidade,
-  // turno e duração reais pra sustentar o card. Ofertas Tartarus (Cogna) sem
-  // esses campos ficam de fora do grid (mas ainda contam pro "a partir de"
-  // mais simples de baixo, como fallback).
+  // Grid de ofertas: trilho YDUQS (Athena/Estácio, inscrição direta) OU
+  // Cogna/Tartarus (fonte ausente/'TARTARUS') com unidade + modalidade — é o
+  // que sustenta tanto o card quanto o checkout pago da campanha
+  // (/lp/{partner}/checkout, ver OfferCard.buildCampaignCheckoutHref, que
+  // precisa de groupId=id + unitId). Ofertas Cogna sem unitId ficam de fora do
+  // grid (mas ainda contam pro "a partir de" mais simples de baixo).
   const offerItems: OfferCardData[] = courses
-    .filter((c) => c.source === 'YDUQS' && Number(c.minPrice ?? 0) > 0)
+    .filter((c) => {
+      if (Number(c.minPrice ?? 0) <= 0) return false
+      if (c.source === 'YDUQS') return true
+      return Boolean(c.unitId && c.modality)
+    })
     .map((c) => {
       const meta = catalogByKey.get(normalizeCourseNameKey(c.name))
+      const isYduqs = c.source === 'YDUQS'
       return {
         id: String(c.offerId || c.id),
         name: c.name,
         courseType: meta && COURSE_TYPES.has(meta.type) ? (meta.type as OfferCardData['courseType']) : null,
         academicLevel: c.academicLevel,
         modality: c.modality,
-        shift: c.shiftOptions?.[0],
-        durationMonths: c.durationInMonths,
+        shift: c.shiftOptions?.[0] || c.classShift,
+        durationMonths: c.durationInMonths ?? c.duration,
         minPrice: Number(c.minPrice),
         maxPrice: typeof c.maxPrice === 'number' ? c.maxPrice : undefined,
         unitName: c.unitName,
@@ -186,6 +193,12 @@ export default async function PartnerLanding({
         codFormaIngressoOferta: c.codFormaIngressoOferta,
         priceForma2: c.priceForma2,
         priceForma3: c.priceForma3,
+        // Discriminador do trilho de conversão do card: YDUQS segue a
+        // inscrição direta de sempre; Cogna vai pro checkout pago da campanha,
+        // que precisa de groupId + unitId pra reabrir a oferta.
+        source: isYduqs ? 'YDUQS' : 'TARTARUS',
+        groupId: isYduqs ? undefined : String(c.id),
+        unitId: isYduqs ? undefined : c.unitId,
       }
     })
 

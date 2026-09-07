@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { MapPin, Clock3 } from 'lucide-react'
+import { MapPin, Clock3, CreditCard } from 'lucide-react'
 import { formatCurrency } from '@/utils/fomartCurrency'
 import { getPriceAnchor } from '@/app/lib/utils/price-anchor'
 
@@ -38,6 +38,17 @@ export interface OfferCardData {
   codFormaIngressoOferta?: number
   priceForma2?: number
   priceForma3?: number
+  /**
+   * Fonte da oferta (mesmo discriminador de `Course.source`, ver
+   * app/interface/course.ts). 'YDUQS' = Estácio (trilho por inscrição direta,
+   * /checkout/estacio). Ausente/'TARTARUS' = Cogna — trilho do checkout pago
+   * da campanha (/lp/{partner}/checkout, ver buildCampaignCheckoutHref).
+   */
+  source?: 'YDUQS' | 'TARTARUS'
+  /** Course.id (groupId) — só ofertas Cogna, exigido por getOfferDetails. */
+  groupId?: string
+  /** Só ofertas Cogna — exigido por getOfferDetails junto com groupId. */
+  unitId?: string
 }
 
 const COURSE_TYPE_LABEL: Record<string, string> = {
@@ -121,6 +132,32 @@ export function buildEstacioCheckoutHref(o: OfferCardData): string {
   return `/checkout/estacio?${params.toString()}`
 }
 
+/**
+ * Checkout pago da campanha (Cogna/Anhanguera): mesmo contrato de
+ * groupId/unitId/modality/shift que /checkout/matricula usa pra buscar a
+ * oferta (getOfferDetails) — ver app/lp/[partner]/checkout/page.tsx.
+ */
+export function buildCampaignCheckoutHref(o: OfferCardData, partner: string): string {
+  const params = new URLSearchParams()
+  if (o.groupId) params.set('groupId', o.groupId)
+  if (o.unitId) params.set('unitId', o.unitId)
+  if (o.modality) params.set('modality', o.modality)
+  if (o.shift) params.set('shift', o.shift)
+  if (o.name) params.set('courseName', o.name)
+  if (o.brand) params.set('brand', o.brand)
+  if (o.minPrice) params.set('price', String(o.minPrice))
+  if (o.unitCity) params.set('city', o.unitCity)
+  if (o.unitState) params.set('state', o.unitState)
+  if (o.academicLevel) params.set('academicLevel', o.academicLevel)
+  if (typeof o.durationMonths === 'number') params.set('durationInMonths', String(o.durationMonths))
+  return `/lp/${partner}/checkout?${params.toString()}`
+}
+
+/** true quando o card tem o mínimo pra ir direto pro checkout pago da campanha. */
+function isCampaignReady(o: OfferCardData): boolean {
+  return o.source !== 'YDUQS' && !!o.groupId && !!o.unitId && !!o.modality
+}
+
 interface OfferCardProps {
   offer: OfferCardData
   partner: string
@@ -135,7 +172,21 @@ export function OfferCard({ offer, partner, brandColor }: OfferCardProps) {
   })
   const meta = metadataLine(offer)
   const location = locationLabel(offer)
-  const detailsHref = offer.slug ? `/lp/${partner}/${offer.slug}` : buildEstacioCheckoutHref(offer)
+  const campaignReady = isCampaignReady(offer)
+  // Estácio (YDUQS) segue o trilho de detalhe/inscrição direta que já existia.
+  // Cogna (TARTARUS/ausente) com dados suficientes vai direto pro checkout
+  // pago da campanha — sem passo de "detalhes" no meio, pra não perder o
+  // clique antes da cobrança de R$ 58,90.
+  const detailsHref =
+    offer.source === 'YDUQS'
+      ? offer.slug
+        ? `/lp/${partner}/${offer.slug}`
+        : buildEstacioCheckoutHref(offer)
+      : campaignReady
+        ? buildCampaignCheckoutHref(offer, partner)
+        : offer.slug
+          ? `/lp/${partner}/${offer.slug}`
+          : `/lp/${partner}`
 
   return (
     <li className="bg-white border border-hairline rounded-2xl p-5 flex flex-col gap-3 hover:shadow-[0_20px_45px_-32px_rgba(11,31,60,0.35)] transition-shadow">
@@ -185,8 +236,17 @@ export function OfferCard({ offer, partner, brandColor }: OfferCardProps) {
         className="mt-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full text-white text-[13px] font-semibold hover:opacity-90"
         style={{ backgroundColor: brandColor }}
       >
-        <Clock3 size={13} />
-        Ver detalhes do curso
+        {campaignReady ? (
+          <>
+            <CreditCard size={13} />
+            Garantir minha vaga
+          </>
+        ) : (
+          <>
+            <Clock3 size={13} />
+            Ver detalhes do curso
+          </>
+        )}
       </Link>
     </li>
   )

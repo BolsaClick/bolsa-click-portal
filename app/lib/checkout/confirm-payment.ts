@@ -1,6 +1,7 @@
 import { prisma } from '@/app/lib/prisma'
 import { confirmPaidMatricula, type ConfirmResult } from '@/app/lib/checkout/confirm-matricula'
 import { confirmPaidEstacio, ESTACIO_CHECKOUT_FLOW } from '@/app/lib/checkout/confirm-estacio'
+import { confirmPaidCampaign, CAMPAIGN_CHECKOUT_FLOW } from '@/app/lib/checkout/confirm-campaign'
 
 /**
  * Roteia a confirmação de pagamento para o fluxo dono da transação.
@@ -9,6 +10,8 @@ import { confirmPaidEstacio, ESTACIO_CHECKOUT_FLOW } from '@/app/lib/checkout/co
  * próprio "o que fazer depois de pagar":
  *  - `metadata.checkoutFlow === 'estacio'` → inscrição na Athena/YDUQS, com
  *    estorno se a Estácio recusar (`confirm-estacio.ts`);
+ *  - `metadata.checkoutFlow === 'campaign'` → inscrição na Cogna pela campanha
+ *    ingressa.digital, com estorno na recusa (`confirm-campaign.ts`);
  *  - qualquer outro → fluxo Cogna/matrícula de sempre (`confirm-matricula.ts`),
  *    que é o comportamento histórico e continua sendo o default.
  *
@@ -42,6 +45,25 @@ export async function confirmPaidTransaction(
     // Normaliza para o contrato de ConfirmResult, que é o que webhook e
     // /api/payments/confirm respondem hoje. A tela do checkout Estácio usa a
     // rota própria (/api/athena-checkout/confirm), que devolve o detalhe.
+    if (result.status === 'ok') {
+      return { ok: true, status: 'PAID', alreadyDone: result.alreadyDone }
+    }
+    if (result.status === 'pending') {
+      return { ok: false, status: 'PENDING' }
+    }
+    return {
+      ok: false,
+      status: 'REFUSED',
+      alreadyDone: result.alreadyDone,
+      reason: result.reason,
+    }
+  }
+
+  if (checkoutFlow === CAMPAIGN_CHECKOUT_FLOW) {
+    // Mesma normalização do ramo Estácio: o webhook e /api/payments/confirm
+    // respondem ConfirmResult. A tela da campanha usa a rota própria
+    // (/api/ingressa/checkout/confirm), que devolve o detalhe da recusa.
+    const result = await confirmPaidCampaign(externalTransactionId)
     if (result.status === 'ok') {
       return { ok: true, status: 'PAID', alreadyDone: result.alreadyDone }
     }

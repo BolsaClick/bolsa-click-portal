@@ -111,11 +111,21 @@ export function sanitizeCheckoutErrorMessage(message: string): string {
  * que o arquivo chamador já usa. Nunca deixa a telemetria derrubar o
  * checkout: qualquer falha aqui dentro é engolida.
  */
-export function trackCheckoutError(track: TrackFn, step: string, error: unknown): void {
+export function trackCheckoutError(
+  track: TrackFn,
+  step: string,
+  error: unknown,
+  // Opcional só para não quebrar chamador antigo — PASSE SEMPRE. Sem ele o
+  // erro chega sem fluxo e não dá para dizer qual checkout quebrou: medido em
+  // 2026-09-08, 9 de 9 `checkout_error` desde 04/09 estavam sem fluxo, num
+  // painel em que todos os outros eventos do funil já o carregavam.
+  checkoutFlow?: string,
+): void {
   try {
     const rawMessage = error instanceof Error ? error.message : String(error)
     track('checkout_error', {
       step,
+      checkout_flow: checkoutFlow,
       error_message: sanitizeCheckoutErrorMessage(rawMessage),
       error_name: error instanceof Error ? error.name : undefined,
     })
@@ -214,6 +224,31 @@ export function reportInscriptionFailure(payload: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   }).catch((e) => console.error('Report de falha de inscrição não enviado:', e))
+}
+
+/**
+ * Etapa 2.5 — um PASSO do formulário foi concluído.
+ *
+ * Existe porque entre "abriu o checkout" e "enviou o formulário" havia um vão
+ * cego: em 2026-09-08, 25 pessoas abriram o checkout Estácio e 4 chegaram ao
+ * fim do formulário. Os 84% que sumiram no meio não deixavam evento nenhum, e
+ * não dava para dizer se travaram nos dados pessoais, no endereço ou na forma
+ * de ingresso — só que tinham ido embora. Sem isso, "o formulário derruba o
+ * funil" é palpite, não medida.
+ *
+ * Dispara UMA vez por passo, na primeira vez que ele fica válido (é derivado
+ * do estado do formulário, não de clique — o candidato pode preencher em
+ * qualquer ordem, e voltar atrás não deve contar de novo).
+ */
+export function trackCheckoutStepCompleted(
+  track: TrackFn,
+  ctx: CheckoutContext & { stepNumber: number; stepName: string },
+): void {
+  track('checkout_step_completed', {
+    ...baseProps(ctx),
+    step_number: ctx.stepNumber,
+    step_name: ctx.stepName,
+  })
 }
 
 /** Etapa 3 — a inscrição foi enviada/criada (qualquer fluxo). */

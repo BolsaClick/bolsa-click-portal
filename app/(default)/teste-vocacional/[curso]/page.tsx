@@ -17,6 +17,26 @@ type Props = { params: Promise<{ curso: string }> }
 
 export const revalidate = 86400 // 24h — conteúdo estático
 
+/**
+ * Slug fora de `generateStaticParams` devolve 404 DE VERDADE.
+ *
+ * Sem isto, medido em producao em 2026-09-08: qualquer slug inexistente nesta
+ * rota devolvia **HTTP 200** com a tela de "nao encontrado". O corpo era o 404
+ * certo, so o status nao - soft 404, o pior dos dois mundos: o Google recebe
+ * 200, entende que a URL e valida e a MANTEM no indice, sem conteudo.
+ *
+ * `false` (e nao `true`) porque a lista e `Object.keys(COURSE_PROFILES)` - constante no codigo, nao ha
+ * curso de perfil fora dela.
+ * Slug fora da lista e lixo - link velho, bot varrendo - e merece 404
+ * imediato, sem custo de render.
+ *
+ * NAO copie isto para rotas de lista ABERTA: `/blog/[slug]` recebe ~3 posts
+ * por dia do robo de conteudo, `/cursos/[slug]` resolve slug canonico
+ * alternativo, e `/faculdades/[slug]/em/[city]` tem `generateStaticParams`
+ * devolvendo `[]`. Em qualquer uma delas, `false` mataria pagina boa.
+ */
+export const dynamicParams = false
+
 export async function generateStaticParams() {
   return Object.keys(COURSE_PROFILES).map(curso => ({ curso }))
 }

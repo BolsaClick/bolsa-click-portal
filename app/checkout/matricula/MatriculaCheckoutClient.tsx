@@ -62,6 +62,7 @@ import {
   trackCheckoutViewed,
   trackCheckoutIdentified,
   trackCheckoutSubmitted,
+  trackCheckoutStepCompleted,
   trackCheckoutError,
   reportInscriptionFailure,
 } from '@/app/lib/analytics/checkout-funnel'
@@ -297,6 +298,13 @@ function MatriculaContent({ taxaEmCentavos }: { taxaEmCentavos: number }) {
     ? suggestEmailCorrection(watchedValues.email)
     : null
 
+// Passos do stepper — no corpo do componente, e não dentro do JSX, porque o
+// `useEffect` que mede o abandono por passo precisa observá-los. O stepper
+// continua sendo a única coisa que os DESENHA; aqui eles só passam a ser
+// observáveis.
+const dadosOk = !!(watchedValues.email && watchedValues.name && cpfValidationOk)
+const contatoOk = !!watchedValues.phone
+
 const isFormValidForPayment =
   !!watchedValues.email &&
   !!watchedValues.name &&
@@ -436,6 +444,37 @@ const isFormValidForPayment =
       })
     }
   }, [offerDetails, trackEvent])
+
+  // Onde o formulário perde gente. Espelha o do checkout Estácio: cada passo
+  // avisa quando fica válido pela PRIMEIRA vez. `useRef` porque as flags são
+  // recalculadas a cada tecla e o candidato pode voltar atrás para corrigir —
+  // sem a trava, um campo apagado e redigitado contaria o passo de novo.
+  //
+  // O passo 03 (pagamento) não entra aqui: quem o alcança já emite
+  // `checkout_identified` e depois `checkout_submitted`.
+  const passosEmitidos = useRef<Set<number>>(new Set())
+  useEffect(() => {
+    if (!offerDetails) return
+    const passos: Array<{ ok: boolean; n: number; nome: string }> = [
+      { ok: dadosOk, n: 1, nome: 'estudante' },
+      { ok: contatoOk, n: 2, nome: 'contato' },
+    ]
+    for (const passo of passos) {
+      if (!passo.ok || passosEmitidos.current.has(passo.n)) continue
+      passosEmitidos.current.add(passo.n)
+      trackCheckoutStepCompleted(trackEvent, {
+        flow: 'matricula',
+        checkoutFlow: 'cogna_matricula',
+        academicLevel: offerDetails.academicLevel,
+        brand: offerDetails.brand,
+        modality: offerDetails.modality,
+        courseId: offerDetails.courseId,
+        courseName: offerDetails.course,
+        stepNumber: passo.n,
+        stepName: passo.nome,
+      })
+    }
+  }, [dadosOk, contatoOk, offerDetails, trackEvent])
 
   useEffect(() => {
     if (offerDetails) {
@@ -2194,12 +2233,6 @@ const isFormValidForPayment =
 
           {/* Stepper editorial — sincronizado com as 3 sections do form */}
           {(() => {
-            const dadosOk = !!(
-              watchedValues.email &&
-              watchedValues.name &&
-              cpfValidationOk
-            )
-            const contatoOk = !!watchedValues.phone
             const steps = [
               { n: '01', label: 'Estudante', done: dadosOk, active: !dadosOk },
               { n: '02', label: 'Contato', done: contatoOk, active: dadosOk && !contatoOk },

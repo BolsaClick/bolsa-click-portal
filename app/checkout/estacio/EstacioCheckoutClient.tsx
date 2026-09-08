@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/react'
@@ -29,6 +29,7 @@ import {
   trackCheckoutViewed,
   trackCheckoutSubmitted,
   trackCheckoutIdentified,
+  trackCheckoutStepCompleted,
   trackCheckoutError,
   reportInscriptionFailure,
 } from '@/app/lib/analytics/checkout-funnel'
@@ -376,7 +377,7 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
     } catch (error) {
       // silencioso pro usuário — preenche manualmente. Mas era mudo pro
       // PostHog também: sem sinal nenhum de quando o ViaCEP falha.
-      trackCheckoutError(trackEvent, 'cep_autofill', error)
+      trackCheckoutError(trackEvent, 'cep_autofill', error, 'estacio_checkout')
     } finally {
       setCepLoading(false)
     }
@@ -397,6 +398,37 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
     form.city.trim() &&
     form.state.trim()
   )
+
+  // Onde o formulário perde gente. Cada passo do stepper avisa quando fica
+  // válido pela PRIMEIRA vez — `useRef` porque o cálculo acima roda a cada
+  // tecla digitada e o candidato pode voltar atrás para corrigir: sem a trava,
+  // um campo apagado e redigitado contaria o passo de novo e inflaria o degrau
+  // que a gente está justamente tentando medir.
+  //
+  // O passo 03 (forma de ingresso) não tem flag própria: ele é o envio do
+  // formulário, e quem o conclui já emite `checkout_identified`.
+  const passosEmitidos = useRef<Set<number>>(new Set())
+  useEffect(() => {
+    if (!offer) return
+    const passos: Array<{ ok: boolean; n: number; nome: string }> = [
+      { ok: dadosOk, n: 1, nome: 'estudante' },
+      { ok: enderecoOk, n: 2, nome: 'endereco' },
+    ]
+    for (const passo of passos) {
+      if (!passo.ok || passosEmitidos.current.has(passo.n)) continue
+      passosEmitidos.current.add(passo.n)
+      trackCheckoutStepCompleted(trackEvent, {
+        flow: 'estacio',
+        checkoutFlow: 'estacio_checkout',
+        brand: offer.brand,
+        modality: offer.modality,
+        offerId: offer.offerId,
+        courseName: offer.courseName,
+        stepNumber: passo.n,
+        stepName: passo.nome,
+      })
+    }
+  }, [dadosOk, enderecoOk, offer, trackEvent])
 
   const validate = (): string | null => {
     if (!offer.offerId) return 'Oferta inválida. Volte e selecione o curso novamente.'
@@ -464,7 +496,7 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
       },
     }).catch((leadError) => {
       console.error('Registro de lead falhou:', leadError)
-      trackCheckoutError(trackEvent, 'estacio_lead_create', leadError)
+      trackCheckoutError(trackEvent, 'estacio_lead_create', leadError, 'estacio_checkout')
     })
 
     // Funil unificado — etapa 2: identifica ANTES de enviar pra Estácio.
@@ -724,7 +756,7 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
 
         await espera(2000)
       } catch (err) {
-        trackCheckoutError(trackEvent, 'estacio_confirm_enrollment', err)
+        trackCheckoutError(trackEvent, 'estacio_confirm_enrollment', err, 'estacio_checkout')
         await espera(2000)
       }
     }

@@ -83,6 +83,11 @@ useEffect(() => {
     // enrollment_paid_confirmed server-side.
     trackEnrollmentConverted(trackEvent, {
       flow: 'matricula',
+      // Identificador PRÓPRIO, não o do checkout Cogna: esta é a tela de
+      // sucesso genérica e nenhum código do repo navega mais pra cá (só
+      // link antigo/externo chega). Reaproveitar 'cogna_matricula' aqui
+      // contaminaria o funil daquele checkout com tráfego de outra origem.
+      checkoutFlow: 'checkout_success_page',
       brand: brand || undefined,
       courseName: course || undefined,
       source: 'checkout_success_page',

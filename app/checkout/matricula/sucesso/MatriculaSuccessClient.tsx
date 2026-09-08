@@ -39,6 +39,11 @@ export default function MatriculaSuccessClient() {
     // sucesso, independente do ramo). Cobre a graduação, antes invisível.
     trackEnrollmentConverted(trackEvent, {
       flow: 'matricula',
+      // Sem isto a CONVERSÃO chega sem fluxo e não dá pra dizer qual checkout
+      // deu dinheiro: medido em 2026-09-08, 7 de 7 `enrollment_converted`
+      // desde 03/09 estavam sem `checkout_flow`, enquanto todo o resto do
+      // funil já o carregava — o funil abria por fluxo e fechava anônimo.
+      checkoutFlow: 'cogna_matricula',
       academicLevel: isPos ? 'POS_GRADUACAO' : isGraduacao ? 'GRADUACAO' : undefined,
       courseName: course || undefined,
       value: monthlyFee ?? undefined,

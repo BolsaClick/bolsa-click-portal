@@ -50,6 +50,11 @@ export default function EstacioSuccessClient() {
     // Funil unificado — etapa 4: conversão final do fluxo Estácio.
     trackEnrollmentConverted(trackEvent, {
       flow: 'estacio',
+      // Sem isto a CONVERSÃO chega sem fluxo e não dá pra dizer qual checkout
+      // deu dinheiro: medido em 2026-09-08, 7 de 7 `enrollment_converted`
+      // desde 03/09 estavam sem `checkout_flow`, enquanto todo o resto do
+      // funil já o carregava — o funil abria por fluxo e fechava anônimo.
+      checkoutFlow: 'estacio_checkout',
       courseName: course || undefined,
       value: amount ? Number(amount) || undefined : undefined,
     })

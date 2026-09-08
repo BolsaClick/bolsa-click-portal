@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { trackFbqDual } from '@/app/lib/analytics/fbq'
+import { trackFbqDual, metaBrowserIds } from '@/app/lib/analytics/fbq'
 import {
   BadgeCheck,
   Barcode,
@@ -218,6 +218,9 @@ export default function MatriculaPayment({
             offer: context.offer,
             confirm: context.confirm,
             paymentMethod: m,
+            // Ids do navegador para o `Purchase` que sai da CONFIRMAÇÃO, por
+            // webhook/polling — lá o `_fbc` já não existe. Ver `meta-attribution.ts`.
+            metaIds: metaBrowserIds(),
           }),
         })
         const data = await res.json()
@@ -289,6 +292,9 @@ export default function MatriculaPayment({
             offer: context.offer,
             confirm: context.confirm,
             paymentMethod: 'card',
+            // Ids do navegador para o `Purchase` que sai da CONFIRMAÇÃO, por
+            // webhook/polling — lá o `_fbc` já não existe. Ver `meta-attribution.ts`.
+            metaIds: metaBrowserIds(),
             installmentCount: installments,
             creditCard: card,
             creditCardHolderInfo: {

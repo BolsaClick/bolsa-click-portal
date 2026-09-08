@@ -10,6 +10,11 @@ import {
   type MatriculaConfirmBlob,
 } from '@/app/lib/checkout/confirm-matricula'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
+import {
+  META_ATTRIBUTION_KEY,
+  metaAttributionFromRequest,
+  type MetaBrowserIds,
+} from '@/app/lib/analytics/meta-attribution'
 
 /**
  * POST /api/checkout/matricula/charge — passo 1 do checkout Cogna pago: cria a
@@ -70,6 +75,8 @@ interface CognaChargeBody {
   installmentCount?: number
   creditCard?: CreditCard
   creditCardHolderInfo?: CreditCardHolderInfo
+  /** `_fbp`/`_fbc` do navegador, para o Purchase que sai da confirmação. */
+  metaIds?: MetaBrowserIds
 }
 
 export async function POST(request: NextRequest) {
@@ -83,6 +90,7 @@ export async function POST(request: NextRequest) {
       installmentCount,
       creditCard,
       creditCardHolderInfo,
+      metaIds,
     } = body || ({} as CognaChargeBody)
 
     // Validação dos obrigatórios da INSCRIÇÃO antes de cobrar: um dado que a
@@ -162,6 +170,9 @@ export async function POST(request: NextRequest) {
         checkoutFlow: COGNA_MATRICULA_CHECKOUT_FLOW,
         confirm,
         elysium: response.data,
+        // Atribuição da Meta capturada AQUI, com o navegador ainda presente.
+        // A confirmação roda por webhook/polling e não teria como obtê-la.
+        [META_ATTRIBUTION_KEY]: metaAttributionFromRequest(request, metaIds),
       }
       try {
         const pixQrCode = response.data?.pixQrCode

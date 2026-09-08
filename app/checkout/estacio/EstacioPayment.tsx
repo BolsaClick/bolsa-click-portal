@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { trackFbqDual } from '@/app/lib/analytics/fbq'
+import { trackFbqDual, metaBrowserIds } from '@/app/lib/analytics/fbq'
 import { Check, Copy, CreditCard, Loader2, Lock, QrCode, ShieldCheck, X } from 'lucide-react'
 import QRCode from 'react-qr-code'
 import type { CreateEnrollmentInput } from '@/app/lib/api/athena-offers'
@@ -138,6 +138,9 @@ export default function EstacioPayment({
             enrollment: context.enrollment,
             offer: context.offer,
             paymentMethod: m,
+            // Ids do navegador para o `Purchase` que sai da CONFIRMAÇÃO, por
+            // webhook/polling — lá o `_fbc` já não existe. Ver `meta-attribution.ts`.
+            metaIds: metaBrowserIds(),
             ...(m === 'card' && cardFields
               ? {
                   installmentCount: 1,

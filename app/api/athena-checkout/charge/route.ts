@@ -12,6 +12,11 @@ import {
   type EstacioConfirmBlob,
 } from '@/app/lib/checkout/confirm-estacio'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
+import {
+  META_ATTRIBUTION_KEY,
+  metaAttributionFromRequest,
+  type MetaBrowserIds,
+} from '@/app/lib/analytics/meta-attribution'
 
 /**
  * POST /api/athena-checkout/charge — passo 1 do checkout Estácio pago: cria a
@@ -57,12 +62,14 @@ interface EstacioChargeBody {
   installmentCount?: number
   creditCard?: CreditCard
   creditCardHolderInfo?: CreditCardHolderInfo
+  /** `_fbp`/`_fbc` do navegador, para o Purchase que sai da confirmação. */
+  metaIds?: MetaBrowserIds
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as EstacioChargeBody
-    const { enrollment, offer, paymentMethod = 'pix', installmentCount, creditCard, creditCardHolderInfo } = body || {}
+    const { enrollment, offer, paymentMethod = 'pix', installmentCount, creditCard, creditCardHolderInfo, metaIds } = body || {}
 
     // Validação dos obrigatórios da INSCRIÇÃO antes de cobrar: um dado que a
     // Athena recusaria depois viraria taxa paga + estorno, com o candidato
@@ -159,6 +166,9 @@ export async function POST(request: NextRequest) {
         checkoutFlow: ESTACIO_CHECKOUT_FLOW,
         estacio: blob,
         elysium: response.data,
+        // Atribuição da Meta capturada AQUI, com o navegador ainda presente.
+        // A confirmação roda por webhook/polling e não teria como obtê-la.
+        [META_ATTRIBUTION_KEY]: metaAttributionFromRequest(request, metaIds),
       }
       try {
         const pixQrCode = response.data?.pixQrCode

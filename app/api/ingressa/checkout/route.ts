@@ -7,6 +7,11 @@ import type { OfferDetails, PosPaymentMethod } from '@/app/lib/api/get-offer-det
 import { CAMPAIGN_CHARGE_AMOUNT_CENTS, campaignChargeDescription } from '@/app/lib/checkout/campaign-charge'
 import { DADOS_ADMIN_PADRAO } from '@/app/lib/checkout/dados-admin-padrao'
 import { CAMPAIGN_CHECKOUT_FLOW, type CampaignConfirmBlob } from '@/app/lib/checkout/confirm-campaign'
+import {
+  META_ATTRIBUTION_KEY,
+  metaAttributionFromRequest,
+  type MetaBrowserIds,
+} from '@/app/lib/analytics/meta-attribution'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
 
 /**
@@ -59,6 +64,8 @@ interface CampaignCheckoutBody {
   partnerName?: string
   visitorId?: string
   utm?: Record<string, string>
+  /** `_fbp`/`_fbc` do navegador, para o Purchase que sai da confirmação. */
+  metaIds?: MetaBrowserIds
 }
 
 function isNonEmptyString(v: unknown): v is string {
@@ -108,6 +115,7 @@ export async function POST(request: NextRequest) {
       partnerName,
       visitorId,
       utm,
+      metaIds,
     } = body
 
     if (
@@ -267,12 +275,21 @@ export async function POST(request: NextRequest) {
     if (externalTransactionId) {
       try {
         const pixQrCode = response.data?.pixQrCode
+        // Atribuição da Meta capturada AQUI, com o navegador ainda presente. O
+        // `Purchase` sai da confirmação (webhook/polling), quando não há mais
+        // cookie `_fbc` nem headers do visitante. Ver `meta-attribution.ts`.
+        const transactionMetadata = {
+          checkoutFlow: CAMPAIGN_CHECKOUT_FLOW,
+          campaign: campaignBlob,
+          elysium: response.data,
+          [META_ATTRIBUTION_KEY]: metaAttributionFromRequest(request, metaIds),
+        }
         await prisma.transaction.upsert({
           where: { externalTransactionId },
           update: {
             pixBrCode: pixQrCode?.brCode ?? undefined,
             pixQrCodeBase64: pixQrCode?.brCodeBase64 ?? undefined,
-            metadata: { checkoutFlow: CAMPAIGN_CHECKOUT_FLOW, campaign: campaignBlob, elysium: response.data } as object,
+            metadata: transactionMetadata as object,
           },
           create: {
             name,
@@ -288,7 +305,7 @@ export async function POST(request: NextRequest) {
             institutionName,
             pixBrCode: pixQrCode?.brCode ?? undefined,
             pixQrCodeBase64: pixQrCode?.brCodeBase64 ?? undefined,
-            metadata: { checkoutFlow: CAMPAIGN_CHECKOUT_FLOW, campaign: campaignBlob, elysium: response.data } as object,
+            metadata: transactionMetadata as object,
           },
         })
       } catch (persistError) {

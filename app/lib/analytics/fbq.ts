@@ -1,4 +1,7 @@
 import { readConsent } from '@/app/lib/consent/storage'
+// Só o tipo: `meta-attribution.ts` importa `next/server`, que não pode entrar
+// no bundle do cliente. `import type` é apagado na compilação.
+import type { MetaBrowserIds } from '@/app/lib/analytics/meta-attribution'
 
 type FbqFn = (...args: unknown[]) => void
 
@@ -57,6 +60,26 @@ function resolveFbc(): string | undefined {
   if (cookie) return cookie
   if (!fbclidDaChegada) return undefined
   return `fb.1.${Date.now()}.${fbclidDaChegada}`
+}
+
+/**
+ * Os ids de navegador para quem vai disparar um evento FORA da request — o
+ * `Purchase` server-side, que sai do webhook/polling da confirmação, quando
+ * este navegador já não existe mais.
+ *
+ * Quem chama manda isto no corpo do `/charge`, e a rota persiste em
+ * `Transaction.metadata.metaAttribution` (ver `meta-attribution.ts`). O
+ * servidor também lê `_fbp`/`_fbc` dos cookies da própria request; o valor
+ * daqui é o que cobre o caso em que o cookie NÃO existe — pixel carregado
+ * depois do consentimento, com o `fbc` montado a partir do `fbclid` da URL.
+ *
+ * Gateado por `marketingAllowed()`, igual a `trackFbqDual`: sem consentimento
+ * de marketing o checkout segue normal e o `Purchase` continua saindo, só sem
+ * os ids de navegador.
+ */
+export function metaBrowserIds(): MetaBrowserIds {
+  if (!marketingAllowed()) return {}
+  return { fbp: readCookie('_fbp'), fbc: resolveFbc() }
 }
 
 function newEventId(): string {

@@ -17,6 +17,7 @@ import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
 import { upsertCandidato } from '@/app/lib/api/attio'
 import { isServerFlagEnabled } from '@/app/lib/analytics/server-flags'
 import { refundElysiumCharge } from '@/app/lib/api/elysium-refund'
+import { readMetaAttribution } from '@/app/lib/analytics/meta-attribution'
 
 /**
  * Confirmação do checkout Cogna/ATHENAS (`/checkout/matricula`): a taxa de
@@ -552,6 +553,11 @@ export async function confirmPaidMatricula(
   // compra contar duas vezes e a campanha otimizar por receita inflada.
   try {
     const [firstName, ...rest] = tx.name.trim().split(/\s+/)
+    // Capturados na criação da cobrança (`/api/checkout/matricula/charge`),
+    // porque aqui não há mais navegador: sem `fbc` a Meta não liga esta compra
+    // ao anúncio que a gerou, e sem IP/user-agent o payload `website` pode ser
+    // recusado por incompleto. Ver `meta-attribution.ts`.
+    const atribuicao = readMetaAttribution(metadata)
     await sendFacebookEvent({
       eventName: 'Purchase',
       eventId: externalTransactionId,
@@ -561,6 +567,10 @@ export async function confirmPaidMatricula(
         externalId: cpfDigits,
         firstName: firstName || undefined,
         lastName: rest.length ? rest.join(' ') : undefined,
+        fbp: atribuicao.fbp,
+        fbc: atribuicao.fbc,
+        clientIp: atribuicao.clientIp,
+        userAgent: atribuicao.userAgent,
       },
       customData: {
         currency: 'BRL',
@@ -572,6 +582,7 @@ export async function confirmPaidMatricula(
         content_type: 'product',
         ...(tx.courseId ? { content_ids: [tx.courseId] } : {}),
       },
+      ...(atribuicao.eventSourceUrl ? { eventSourceUrl: atribuicao.eventSourceUrl } : {}),
     })
   } catch (e) {
     // Best-effort, como todo o resto do rastreio: perder o evento é ruim,

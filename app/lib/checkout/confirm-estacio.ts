@@ -6,6 +6,7 @@ import { refundElysiumCharge } from '@/app/lib/api/elysium-refund'
 import { upsertCandidato } from '@/app/lib/api/attio'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
+import { readMetaAttribution } from '@/app/lib/analytics/meta-attribution'
 
 /**
  * Confirmação do checkout Estácio: a taxa de matrícula do Bolsa Click
@@ -381,6 +382,11 @@ export async function confirmPaidEstacio(
   // polling cheguem juntos — a Meta dedupa por esse id.
   try {
     const [primeiroNome, ...restoNome] = tx.name.trim().split(/\s+/)
+    // Capturados na criação da cobrança (`/api/athena-checkout/charge`), porque
+    // aqui não há mais navegador: sem `fbc` a Meta não liga esta compra ao
+    // anúncio que a gerou, e sem IP/user-agent o payload `website` pode ser
+    // recusado por incompleto. Ver `meta-attribution.ts`.
+    const atribuicao = readMetaAttribution(metadata)
     await sendFacebookEvent({
       eventName: 'Purchase',
       eventId: externalTransactionId,
@@ -390,6 +396,10 @@ export async function confirmPaidEstacio(
         externalId: cpfDigits,
         firstName: primeiroNome || undefined,
         lastName: restoNome.length ? restoNome.join(' ') : undefined,
+        fbp: atribuicao.fbp,
+        fbc: atribuicao.fbc,
+        clientIp: atribuicao.clientIp,
+        userAgent: atribuicao.userAgent,
       },
       customData: {
         currency: 'BRL',
@@ -401,6 +411,7 @@ export async function confirmPaidEstacio(
         content_type: 'product',
         ...(blob.offer.offerId ? { content_ids: [String(blob.offer.offerId)] } : {}),
       },
+      ...(atribuicao.eventSourceUrl ? { eventSourceUrl: atribuicao.eventSourceUrl } : {}),
     })
   } catch (e) {
     // Best-effort, como todo o resto do rastreio: perder o evento é ruim,

@@ -21,6 +21,26 @@ const theme = getCurrentTheme()
 
 export const revalidate = 86400
 
+/**
+ * Slug fora de `generateStaticParams` devolve 404 DE VERDADE.
+ *
+ * Sem isto, medido em produção em 2026-09-08: qualquer slug inexistente nesta
+ * rota devolvia **HTTP 200** com a tela de "não encontrado". O corpo era o 404
+ * certo, só o status não — soft 404, o pior dos dois mundos: o Google recebe
+ * 200, entende que a URL é válida e a MANTÉM no índice, sem conteúdo.
+ *
+ * `false` (e não `true`) porque a lista vem de `prisma.institution.findMany({ isActive: true })` — o
+ * catálogo de parceiras é pequeno, fechado e só muda por seed.
+ * Slug fora da lista é lixo — link velho, marca que saiu, bot varrendo — e
+ * merece 404 imediato, sem custo de render.
+ *
+ * NÃO copie isto para rotas de lista ABERTA: `/blog/[slug]` recebe ~3 posts
+ * por dia do robô de conteúdo, `/cursos/[slug]` resolve slug canônico
+ * alternativo, e `/faculdades/[slug]/em/[city]` tem `generateStaticParams`
+ * devolvendo `[]`. Em qualquer uma delas, `false` mataria página boa.
+ */
+export const dynamicParams = false
+
 async function getInstitution(slug: string) {
   return prisma.institution.findUnique({
     where: { slug },

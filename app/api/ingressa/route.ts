@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
+import { metaAttributionFromRequest } from '@/app/lib/analytics/meta-attribution'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
 import { upsertCandidato } from '@/app/lib/api/attio'
 import { utmFromBody, utmFromRequest, mergeUtm } from '@/app/lib/analytics/utm'
@@ -45,10 +46,12 @@ async function sendLeadToMeta(params: {
 }) {
   try {
     const [firstName, ...rest] = params.name.trim().split(/\s+/)
-    const clientIp =
-      params.request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-      params.request.headers.get('x-real-ip') ??
-      undefined
+    // IP, user-agent e — o que faltava — os cookies `_fbp`/`_fbc`. Diferente do
+    // `Purchase`, aqui estamos DENTRO da request do visitante, então os cookies
+    // saem de graça. O `_fbc` é o id do clique no anúncio: sem ele a Meta não
+    // liga este Lead à campanha que o gerou. Ler o cookie é implicitamente
+    // gateado por consentimento — ele só existe se o pixel chegou a carregar.
+    const atribuicao = metaAttributionFromRequest(params.request)
     await sendFacebookEvent({
       eventName: 'Lead',
       // Mesmo eventID do Pixel do browser → o Meta deduplica (não conta 2×).
@@ -57,8 +60,10 @@ async function sendLeadToMeta(params: {
         phone: params.phone,
         firstName: firstName || undefined,
         lastName: rest.length ? rest.join(' ') : undefined,
-        clientIp,
-        userAgent: params.request.headers.get('user-agent') ?? undefined,
+        fbp: atribuicao.fbp,
+        fbc: atribuicao.fbc,
+        clientIp: atribuicao.clientIp,
+        userAgent: atribuicao.userAgent,
       },
       customData: {
         ...(params.partner ? { content_name: params.partner } : {}),
@@ -66,7 +71,7 @@ async function sendLeadToMeta(params: {
         content_type: 'product',
       },
       actionSource: 'website',
-      eventSourceUrl: params.request.headers.get('referer') ?? undefined,
+      eventSourceUrl: atribuicao.eventSourceUrl,
     })
   } catch (error) {
     console.error('⚠️ Meta CAPI Lead (ingressa) falhou:', error)

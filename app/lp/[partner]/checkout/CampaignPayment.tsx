@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Copy, CreditCard, Loader2, Lock, QrCode, ShieldCheck, X } from 'lucide-react'
 import type { OfferDetails } from '@/app/lib/api/get-offer-details'
 import { DADOS_ADMIN_PADRAO } from '@/app/lib/checkout/dados-admin-padrao'
+import { metaBrowserIds } from '@/app/lib/analytics/fbq'
 
 /**
  * Pagamento do checkout pago da campanha ingressa.digital — fork enxuto de
@@ -131,6 +132,9 @@ export default function CampaignPayment({
             partnerName: context.partnerName,
             visitorId: context.visitorId,
             utm: context.utm,
+            // Ids do navegador para o `Purchase` que sai da CONFIRMAÇÃO, por
+            // webhook/polling — lá o `_fbc` já não existe. Ver `meta-attribution.ts`.
+            metaIds: metaBrowserIds(),
             ...(m === 'card' && cardFields
               ? {
                   installmentCount: installments || 1,

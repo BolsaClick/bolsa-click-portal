@@ -13,6 +13,8 @@ import {
 import type { OfferDetails } from '@/app/lib/api/get-offer-details'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
 import { upsertCandidato } from '@/app/lib/api/attio'
+import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
+import { readMetaAttribution } from '@/app/lib/analytics/meta-attribution'
 
 /**
  * Canal de vendas próprio da campanha ingressa.digital (Cogna/Anhanguera).
@@ -225,6 +227,56 @@ export async function confirmPaidCampaign(
     })
   } catch (e) {
     console.error('⚠️ confirm-campaign: PostHog campaign_payment_paid falhou', externalTransactionId, e)
+  }
+
+  // Meta — Purchase. A campanha cobra R$ 58,90 e, até aqui, NUNCA reportava
+  // compra nenhuma à Meta: nem pelo browser, nem pela CAPI. As campanhas que
+  // pagam por este tráfego otimizavam sem jamais ter visto um comprador.
+  //
+  // Sai AQUI, no pagamento confirmado — e não depois da inscrição aceita, como
+  // fazem `confirm-estacio.ts` e `confirm-matricula.ts`. A diferença não é
+  // descuido: lá a recusa do parceiro dispara estorno, então contar a compra
+  // antes contaria dinheiro que volta. Nesta campanha a taxa NÃO é estornada
+  // (decisão do CEO em 2026-09-07, ver doc de `confirmPaidCampaign`): recusada
+  // ou não a inscrição, o dinheiro entrou e a receita é real. Amarrar o
+  // Purchase à inscrição aqui esconderia da Meta justamente a venda que o
+  // time depois reaproveita em outra oferta.
+  //
+  // `eventId` = externalTransactionId, mesmo padrão dos outros dois fluxos:
+  // webhook e polling chegando juntos produzem UM Purchase. Este fluxo não tem
+  // contraparte no navegador, então não há id a compartilhar com o pixel.
+  try {
+    const [primeiroNome, ...restoNome] = tx.name.trim().split(/\s+/)
+    const atribuicao = readMetaAttribution(metadata)
+    await sendFacebookEvent({
+      eventName: 'Purchase',
+      eventId: externalTransactionId,
+      userData: {
+        email: tx.email,
+        phone: phoneDigits,
+        externalId: cpfDigits,
+        firstName: primeiroNome || undefined,
+        lastName: restoNome.length ? restoNome.join(' ') : undefined,
+        fbp: atribuicao.fbp,
+        fbc: atribuicao.fbc,
+        clientIp: atribuicao.clientIp,
+        userAgent: atribuicao.userAgent,
+      },
+      customData: {
+        currency: 'BRL',
+        // A TAXA cobrada por nós, não a mensalidade do curso — é o que
+        // efetivamente entrou. Inflar aqui envenenaria o ROAS.
+        value: tx.amountInCents / 100,
+        content_name: tx.courseName || blob?.attio.courseName || 'Taxa da campanha',
+        content_type: 'product',
+        ...(tx.courseId ? { content_ids: [tx.courseId] } : {}),
+      },
+      ...(atribuicao.eventSourceUrl ? { eventSourceUrl: atribuicao.eventSourceUrl } : {}),
+    })
+  } catch (e) {
+    // Best-effort, como todo o resto do rastreio: perder o evento é ruim,
+    // derrubar a inscrição de quem já pagou é pior.
+    console.error('⚠️ confirm-campaign: Meta Purchase falhou', externalTransactionId, e)
   }
 
   if (!blob?.inscriptionPayload) {

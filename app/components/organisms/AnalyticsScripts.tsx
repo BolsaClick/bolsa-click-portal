@@ -11,6 +11,7 @@ type Props = {
   ga4Id?: string
   facebookPixelIds?: string[]
   tiktokPixelId?: string
+  utmifyPixelId?: string
 }
 
 /**
@@ -41,7 +42,7 @@ const logScriptError = (label: string) => (event: unknown) => {
   }
 }
 
-export function AnalyticsScripts({ gtmId, ga4Id, facebookPixelIds, tiktokPixelId }: Props) {
+export function AnalyticsScripts({ gtmId, ga4Id, facebookPixelIds, tiktokPixelId, utmifyPixelId }: Props) {
   const { hydrated, isCategoryEnabled, versionKey } = useConsent()
   const hasRenderedSinceHydration = useRef(false)
 
@@ -200,6 +201,31 @@ export function AnalyticsScripts({ gtmId, ga4Id, facebookPixelIds, tiktokPixelId
           strategy={scriptStrategy}
           crossOrigin="anonymous"
           onError={logScriptError('UTMify')}
+        />
+      )}
+
+      {/* UTMify Pixel (marketing) — atribuição própria da UTMify, separada do
+          script de UTM acima. window.pixelId precisa existir antes do load do
+          pixel.js (é assim que o loader oficial deles funciona); passa por
+          /utm/ pelo mesmo motivo do script acima: mesma origem, sem bloqueio
+          de ad-blocker. */}
+      {marketing && utmifyPixelId && (
+        <Script
+          id="utmify-pixel"
+          key={`utmify-pixel-${versionKey}`}
+          strategy={scriptStrategy}
+          onError={logScriptError('UTMify Pixel')}
+        >
+          {`window.pixelId = '${utmifyPixelId}';`}
+        </Script>
+      )}
+      {marketing && utmifyPixelId && (
+        <Script
+          src="/utm/scripts/pixel/pixel.js"
+          key={`utmify-pixel-loader-${versionKey}`}
+          strategy={scriptStrategy}
+          crossOrigin="anonymous"
+          onError={logScriptError('UTMify Pixel loader')}
         />
       )}
     </>

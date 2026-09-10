@@ -518,7 +518,7 @@ export async function confirmPaidMatricula(
       products: [
         {
           id: blob?.utmify?.productId || tx.courseId || externalTransactionId,
-          name: blob?.utmify?.productName || tx.courseName || 'Taxa de matrícula',
+          name: blob?.utmify?.productName || tx.courseName || 'Taxa da plataforma',
           quantity: 1,
           priceInCents: tx.amountInCents,
         },
@@ -578,7 +578,7 @@ export async function confirmPaidMatricula(
         // efetivamente entrou. Inflar aqui com o preço do curso envenenaria o
         // ROAS e faria a Meta comprar tráfego caro demais.
         value: tx.amountInCents / 100,
-        content_name: tx.courseName || offerDetails?.course || 'Taxa de matrícula',
+        content_name: tx.courseName || offerDetails?.course || 'Taxa da plataforma',
         content_type: 'product',
         ...(tx.courseId ? { content_ids: [tx.courseId] } : {}),
       },
@@ -603,7 +603,7 @@ export async function confirmPaidMatricula(
         transaction_id: externalTransactionId,
         value: tx.amountInCents / 100,
         currency: 'BRL',
-        course_name: tx.courseName || offerDetails?.course || 'Taxa de matrícula',
+        course_name: tx.courseName || offerDetails?.course || 'Taxa da plataforma',
         course_id: tx.courseId || null,
         payment_method: tx.paymentMethod,
         inscription_id: inscriptionId,

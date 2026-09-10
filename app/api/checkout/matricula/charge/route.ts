@@ -18,7 +18,7 @@ import {
 
 /**
  * POST /api/checkout/matricula/charge — passo 1 do checkout Cogna pago: cria a
- * cobrança da taxa de matrícula do Bolsa Click (R$ 19,90) no Elysium e
+ * cobrança da taxa da plataforma Bolsa Click (R$ 19,90) no Elysium e
  * persiste tudo que a confirmação precisa para criar a inscrição na Cogna
  * DEPOIS do pagamento — nunca antes.
  *

@@ -1,5 +1,5 @@
 /**
- * Taxa de matrícula do Bolsa Click no checkout Cogna/ATHENAS
+ * Taxa da plataforma Bolsa Click no checkout Cogna/ATHENAS
  * (`/checkout/matricula`).
  *
  * Decisão de negócio (CEO, 2026-09-06): a cobrança neste fluxo tinha sido
@@ -8,11 +8,17 @@
  * ANTES de criar a inscrição, com a mesma mecânica já em produção no checkout
  * Estácio (cobra → inscreve → estorna se o parceiro recusar).
  *
+ * Renomeada de "taxa de matrícula" pra "taxa da plataforma" em 2026-09-10: o
+ * nome antigo prendia a cobrança à ideia de matrícula, mas ela é cobrada por
+ * qualquer segmento elegível — e passou a incluir presencial (ver
+ * `matricula-charge.ts`), não só EAD/semipresencial.
+ *
  * IMPORTANTE — esta taxa é NOSSA e é ADICIONAL. A matrícula e as mensalidades
- * do CURSO continuam sendo pagas à instituição (payment-link da Cogna, na tela
- * de sucesso). O aluno paga as duas coisas, e as telas precisam deixar isso
- * explícito — sem isso ele acha que foi cobrado duas vezes pela mesma coisa e
- * abre chargeback.
+ * do CURSO continuam sendo pagas à instituição (payment-link da Cogna, agora
+ * apresentado ainda NO CHECKOUT, antes de qualquer tela de sucesso — ver
+ * `stage === 'institution'` em `MatriculaCheckoutClient.tsx`). O aluno paga
+ * as duas coisas, e as telas precisam deixar isso explícito — sem isso ele
+ * acha que foi cobrado duas vezes pela mesma coisa e abre chargeback.
  *
  * NÃO confundir com `getMatriculaCharge()` (matricula-charge.ts): aquele
  * decide APENAS *se* o segmento cobra (graduação + EAD/semi + ATHENAS). O
@@ -59,9 +65,15 @@ export const TAXA_MATRICULA_COGNA_CENTAVOS = resolveTaxaEmCentavos(
   process.env.TAXA_MATRICULA_COGNA_CENTAVOS,
 )
 
-/** Descrição da cobrança no gateway (Asaas/AbacatePay) e no extrato do aluno. */
+/**
+ * Descrição da cobrança no gateway (Asaas/AbacatePay) e no extrato do aluno.
+ *
+ * Nome da função e da env var (`TAXA_MATRICULA_COGNA_CENTAVOS`) ficam como
+ * estão — mudar identificador é risco desnecessário (call sites, env var em
+ * produção). O que muda é só o texto que o aluno vê no extrato.
+ */
 export function taxaMatriculaCognaDescription(courseName?: string | null): string {
   return courseName
-    ? `Taxa de matrícula Bolsa Click — ${courseName}`
-    : 'Taxa de matrícula Bolsa Click'
+    ? `Taxa da plataforma Bolsa Click — ${courseName}`
+    : 'Taxa da plataforma Bolsa Click'
 }

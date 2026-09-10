@@ -13,6 +13,19 @@ import type { OfferDetails } from '@/app/lib/api/get-offer-details'
  */
 const CHARGEABLE_MODALITIES = new Set(['EAD', 'SEMIPRESENCIAL', 'PRESENCIAL'])
 
+/**
+ * Níveis acadêmicos que cobram a taxa da plataforma. Decisão do negócio,
+ * 2026-09-10: pós-graduação e curso profissionalizante entraram junto de
+ * graduação — volume mensal de checkout_viewed é baixo pra ambos hoje
+ * (pós ~3-19/mês crescendo, profissionalizante ~0-5/mês), decisão direta do
+ * Rodrigo mesmo assim, não recomendação técnica.
+ *
+ * Confirmado antes de codar: pós/profissionalizante usam o MESMO vocabulário
+ * de modalidade (EAD/SEMIPRESENCIAL/PRESENCIAL) que graduação — testado
+ * contra a API real da Tartarus, não presumido.
+ */
+const CHARGEABLE_ACADEMIC_LEVELS = new Set(['GRADUACAO', 'POS_GRADUACAO', 'CURSO_PROFISSIONALIZANTE'])
+
 /** Fonte da oferta que habilita cobrança da matrícula no portal. */
 const CHARGEABLE_SOURCE = 'ATHENAS'
 
@@ -35,9 +48,15 @@ export interface MatriculaCharge {
  * Decide se uma oferta deve cobrar a taxa da plataforma no checkout.
  *
  * Regra (definida com o negócio, atualizada 2026-09-10):
- *  - Cobra quando: graduação + modalidade EAD/semipresencial/presencial +
- *    fonte ATHENAS. Ofertas não-ATHENAS continuam sem cobrança (inscrição
- *    direta) — não temos taxa fixa configurada pra elas.
+ *  - Cobra quando: nível acadêmico em graduação/pós-graduação/curso
+ *    profissionalizante + modalidade EAD/semipresencial/presencial + fonte
+ *    ATHENAS. Ofertas não-ATHENAS continuam sem cobrança (inscrição direta)
+ *    — não temos taxa fixa configurada pra elas.
+ *  - Pra pós/profissionalizante, essa taxa (R$ 19,90) é cobrança DIFERENTE
+ *    da mensalidade real do curso: a mensalidade continua sendo cobrada pela
+ *    Cogna via o mesmo mecanismo de payment-link (PaymentLinkCard) que já
+ *    existe pra graduação, embutido em iframe pra esses dois níveis
+ *    (EMBEDDABLE_HOSTS em PaymentLinkCard.tsx) — não é uma terceira UI.
  *  - `amountInCents` aqui é só INFORMATIVO (preço da oferta, pra telas que
  *    ainda usem esse número pra exibir algo). NUNCA é o valor cobrado — quem
  *    cobra é `TAXA_MATRICULA_COGNA_CENTAVOS`, fixo no servidor, independente
@@ -58,7 +77,7 @@ export function getMatriculaCharge(
   const source = (offerDetails.dmhSource?.source ?? '').trim().toUpperCase()
 
   const chargeable =
-    academicLevel === 'GRADUACAO' &&
+    CHARGEABLE_ACADEMIC_LEVELS.has(academicLevel) &&
     CHARGEABLE_MODALITIES.has(modality) &&
     source === CHARGEABLE_SOURCE
 

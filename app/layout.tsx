@@ -52,6 +52,7 @@ const facebookPixelIds = process.env.NEXT_PUBLIC_FB_PIXEL_IDS
   ? process.env.NEXT_PUBLIC_FB_PIXEL_IDS.split(',')
   : []
 const tiktokPixelId = process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID || ''
+const utmifyPixelId = process.env.NEXT_PUBLIC_UTMIFY_PIXEL_ID || ''
 
 export const metadata: Metadata = {
   title: {
@@ -299,7 +300,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${montserrat.className} antialiased`}>
         <ConsentProvider>
-          <AnalyticsScripts gtmId={gtmId} ga4Id={ga4Id} facebookPixelIds={facebookPixelIds} tiktokPixelId={tiktokPixelId} />
+          <AnalyticsScripts
+            gtmId={gtmId}
+            ga4Id={ga4Id}
+            facebookPixelIds={facebookPixelIds}
+            tiktokPixelId={tiktokPixelId}
+            utmifyPixelId={utmifyPixelId}
+          />
 
           <GatedVercelAnalytics />
           <WebVitalsReporter />

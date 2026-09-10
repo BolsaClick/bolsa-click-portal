@@ -22,7 +22,7 @@ import {
 import type { MatriculaConfirmBlob } from '@/app/lib/checkout/confirm-matricula'
 
 /**
- * Pagamento da taxa de matrícula do Bolsa Click no checkout Cogna/ATHENAS.
+ * Pagamento da taxa da plataforma no checkout Cogna/ATHENAS.
  *
  * A cobrança vem ANTES da inscrição (ver `taxa-cogna.ts` e
  * `confirm-matricula.ts`): este componente só cria a cobrança e avisa o pai via
@@ -180,7 +180,7 @@ export default function MatriculaPayment({
       void trackFbqDual(
         'AddPaymentInfo',
         {
-          content_name: context.offer.courseName || 'Taxa de matrícula Bolsa Click',
+          content_name: context.offer.courseName || 'Taxa da plataforma Bolsa Click',
           content_type: 'product',
           currency: 'BRL',
           value: (amountInCents || 0) / 100,
@@ -400,7 +400,7 @@ export default function MatriculaPayment({
           <Check className="h-7 w-7" strokeWidth={2.5} />
           <span className="absolute inset-0 animate-ping rounded-full bg-bolsa-secondary/30" />
         </span>
-        <p className="font-display text-xl text-ink-900">Taxa de matrícula paga</p>
+        <p className="font-display text-xl text-ink-900">Taxa da plataforma paga</p>
         {externalError ? (
           <p className="max-w-sm px-6 text-sm text-bolsa-secondary">{externalError}</p>
         ) : (
@@ -417,10 +417,10 @@ export default function MatriculaPayment({
 
   return (
     <div className="space-y-5">
-      {/* Comprovante: valor da TAXA do Bolsa Click (≠ matrícula do curso) */}
+      {/* Comprovante: valor da TAXA DA PLATAFORMA (≠ matrícula do curso) */}
       <div className="hairline rounded-2xl bg-paper-warm/70 px-5 py-4">
         <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-500">
-          Taxa de matrícula Bolsa Click
+          Taxa da plataforma Bolsa Click
         </p>
         <p className="font-display num-tabular text-3xl leading-tight text-ink-900">
           {formatCents(amountInCents)}

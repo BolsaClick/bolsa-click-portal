@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   Award,
   ArrowRight,
+  CheckCircle2,
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -70,6 +71,7 @@ import { formatPhone } from '@/utils/formatters'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { Loader2 } from 'lucide-react'
 import MatriculaPayment, { type MatriculaChargeContext } from './MatriculaPayment'
+import PaymentLinkCard from './sucesso/PaymentLinkCard'
 import { getMatriculaCharge } from '@/app/lib/checkout/matricula-charge'
 // Type-only (apagado na compilação): garante que o blob montado aqui é
 // exatamente o que `confirm-matricula.ts` lê depois do pagamento.
@@ -656,7 +658,7 @@ const isFormValidForPayment =
   // lado servidor (confirm-matricula.ts). Religa subindo a flag pra 100%.
   const marketplaceEnabled = useMarketplaceFeatureFlag()
 
-  // Cobrança da TAXA do Bolsa Click no checkout transparente: RELIGADA em
+  // Cobrança da TAXA DA PLATAFORMA no checkout transparente: RELIGADA em
   // 2026-09 (decisão de negócio, CEO). O acordo em que a Cogna dobrava a
   // comissão em troca de o pagamento não ser coletado no nosso site acabou.
   //
@@ -669,14 +671,33 @@ const isFormValidForPayment =
 
   /**
    * Etapa da tela quando há cobrança. `form` = dados do candidato;
-   * `payment` = cobrança da taxa. A inscrição na Cogna NÃO acontece aqui — ela
-   * roda no servidor, depois que o pagamento confirma (confirm-matricula.ts),
-   * justamente pra ninguém ser inscrito sem pagar nem pagar sem ser inscrito.
+   * `payment` = cobrança da taxa da plataforma; `institution` = pagamento da
+   * matrícula/mensalidade NA INSTITUIÇÃO (Cogna gera o link de pagamento só
+   * depois de a inscrição existir do lado deles — não temos como antecipar
+   * essa chamada, ver PaymentLinkCard.tsx). A inscrição na Cogna NÃO acontece
+   * na tela — ela roda no servidor, depois que a NOSSA cobrança confirma
+   * (confirm-matricula.ts), justamente pra ninguém ser inscrito sem pagar a
+   * taxa nem pagar a taxa sem ser inscrito.
+   *
+   * O que muda aqui (2026-09-10): antes, depois de pagar a taxa, o candidato
+   * ia direto para uma página de "sucesso" que só ENTÃO mostrava o pagamento
+   * da instituição — dava a impressão de ter sido inscrito antes de pagar
+   * (era só a taxa que tinha essa ordem certa; a mensalidade do curso vinha
+   * depois). Agora o pagamento da instituição é o próximo passo DESTA MESMA
+   * tela, antes de qualquer tela de "sucesso" aparecer.
    */
-  const [stage, setStage] = useState<'form' | 'payment'>('form')
+  const [stage, setStage] = useState<'form' | 'payment' | 'institution'>('form')
   const [chargeContext, setChargeContext] = useState<MatriculaChargeContext | null>(null)
   const [confirmError, setConfirmError] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
+  /**
+   * Params da página de sucesso, montados no momento em que a taxa confirma —
+   * mas só navegamos pra lá depois que o candidato passar (ou pular, de
+   * propósito) pelo passo de pagamento da instituição.
+   */
+  const [successParams, setSuccessParams] = useState<{ url: string; inscriptionId: string | null } | null>(
+    null,
+  )
   /**
    * Dados EXATOS com que o blob foi montado e a cobrança criada. `watch()` segue
    * o formulário vivo; depois de pagar, o que vale é o que foi cobrado — usar o
@@ -1220,7 +1241,7 @@ const isFormValidForPayment =
     marketplace: { data: buildMarketplaceData(data), offerDetails: offer },
     utmify: {
       productId: offer.courseId || '',
-      productName: offer.course || 'Taxa de matrícula',
+      productName: offer.course || 'Taxa da plataforma',
       tracking: readUtmifyParams(),
     },
   })
@@ -1909,13 +1930,14 @@ const isFormValidForPayment =
           const params = new URLSearchParams()
           params.set('transactionId', externalTransactionId)
           if (offerDetails?.course) params.set('course', offerDetails.course)
-          // Id da inscrição no parceiro: é com ele que a tela de sucesso gera o
-          // link de pagamento da Cogna (passo 7). Sem ele o candidato termina o
-          // fluxo sem nenhum caminho para pagar.
+          // Id da inscrição no parceiro: é com ele que o passo de pagamento da
+          // instituição (aqui e na tela de sucesso, como reforço) gera o link
+          // de pagamento da Cogna. Sem ele o candidato termina o fluxo sem
+          // nenhum caminho para pagar.
           if (inscriptionId) params.set('inscriptionId', inscriptionId)
           params.set('monthlyFee', String(monthlyFee))
           params.set('installmentDescription', `Mensalidade ${formatCurrency(monthlyFee)}/mês`)
-          // Taxa do Bolsa Click já paga — a tela de sucesso mostra as duas
+          // Taxa da plataforma já paga — a tela de sucesso mostra as duas
           // cobranças separadas (a nossa, paga; a da instituição, a pagar).
           params.set('taxa', String(taxaEmCentavos))
 
@@ -1926,7 +1948,16 @@ const isFormValidForPayment =
             localStorage.removeItem('pendingCheckoutParams')
           }
 
-          router.push(`/checkout/matricula/sucesso?${params.toString()}`)
+          // NÃO navega ainda. A taxa está paga e a inscrição, criada — mas o
+          // candidato só vê a tela de sucesso DEPOIS de passar pelo pagamento
+          // da instituição, que é o próximo passo aqui mesmo (stage
+          // 'institution'). Ver o comentário na declaração de `stage`.
+          setSuccessParams({
+            url: `/checkout/matricula/sucesso?${params.toString()}`,
+            inscriptionId,
+          })
+          setStage('institution')
+          setExpandedSections({ dadosPessoais: false, contato: false, pagamento: false })
           return
         }
 
@@ -1934,8 +1965,8 @@ const isFormValidForPayment =
           const reason: string =
             data?.reason || 'Não foi possível concluir sua inscrição nesta oferta.'
           const estorno = data?.refunded
-            ? ' A taxa de matrícula foi estornada — o valor volta pelo mesmo meio de pagamento.'
-            : ' Nosso time já foi avisado e vai devolver a taxa de matrícula.'
+            ? ' A taxa da plataforma foi estornada — o valor volta pelo mesmo meio de pagamento.'
+            : ' Nosso time já foi avisado e vai devolver a taxa da plataforma.'
 
           trackEvent('checkout_inscription_failed', {
             flow: 'matricula',
@@ -2219,7 +2250,7 @@ const isFormValidForPayment =
           <p className="text-ink-500 text-[14px] md:text-[15px] mt-3 leading-relaxed max-w-2xl">
             {cobraTaxa ? (
               <>
-                Complete seus dados pra garantir sua vaga. A taxa do Bolsa Click de{' '}
+                Complete seus dados pra garantir sua vaga. A taxa da plataforma de{' '}
                 {formatTaxaCentavos(taxaEmCentavos)} é paga aqui, uma única vez; a matrícula e as
                 mensalidades do curso são pagas diretamente à instituição.
               </>
@@ -2766,8 +2797,11 @@ const isFormValidForPayment =
                   <div className="px-6 pb-6 space-y-4">
                     {/* Segmento COM taxa, depois do submit: cobrança do Bolsa
                         Click. A inscrição na Cogna só acontece depois que este
-                        pagamento confirmar (confirm-matricula.ts). */}
-                    {cobraTaxa && stage === 'payment' && chargeContext ? (
+                        pagamento confirmar (confirm-matricula.ts). Uma vez que
+                        `stage` vira 'institution' (taxa já paga), nada deste
+                        bloco — nem o formulário, nem o botão de pagar a taxa —
+                        deve voltar a aparecer; o passo 04, logo abaixo, assume. */}
+                    {stage !== 'institution' && (cobraTaxa && stage === 'payment' && chargeContext ? (
                       <>
                         {!confirming && !confirmError && (
                           <button
@@ -2790,7 +2824,7 @@ const isFormValidForPayment =
                         )}
 
                         <p className="text-[13px] leading-relaxed text-ink-500">
-                          Esta é a taxa do Bolsa Click, cobrada aqui uma única vez para enviar sua
+                          Esta é a taxa da plataforma, cobrada aqui uma única vez para enviar sua
                           inscrição à {offerDetails.brand}. Ela{' '}
                           <span className="text-ink-900">não é a matrícula do curso</span>: a
                           matrícula e as mensalidades continuam sendo pagas à instituição, em
@@ -3020,7 +3054,7 @@ const isFormValidForPayment =
                           <p className="text-sm text-gray-600">
                             {cobraTaxa ? (
                               <>
-                                Você paga aqui a taxa do Bolsa Click de{' '}
+                                Você paga aqui a taxa da plataforma de{' '}
                                 <strong>{formatTaxaCentavos(taxaEmCentavos)}</strong>, uma única
                                 vez, e nós enviamos sua inscrição à instituição. A matrícula e as
                                 mensalidades do curso continuam sendo pagas diretamente à
@@ -3055,7 +3089,57 @@ const isFormValidForPayment =
                             )}
                           </button>
                         </>
-                      )}
+                      ))}
+
+                    {/* Passo 04 · pagamento da instituição — aparece AQUI, no
+                        mesmo formulário, logo depois de a taxa confirmar.
+                        Antes disso o candidato só via essa opção na tela de
+                        sucesso, o que dava a impressão de ter sido inscrito
+                        antes de pagar a matrícula do curso. O inscrição em si
+                        continua exigindo o `businessKey` da Cogna, gerado só
+                        depois de criada do lado deles — isso não muda (ver
+                        PaymentLinkCard.tsx); o que muda é que o candidato não
+                        vê nenhuma tela de "sucesso" antes de chegar aqui. */}
+                    {stage === 'institution' && successParams && (
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2 text-sm text-bolsa-secondary">
+                          <CheckCircle2 size={16} />
+                          <span>Taxa da plataforma paga — falta a matrícula na instituição.</span>
+                        </div>
+                        {successParams.inscriptionId ? (
+                          <PaymentLinkCard
+                            inscriptionId={successParams.inscriptionId}
+                            onEvent={trackEvent}
+                          />
+                        ) : (
+                          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                            <p className="text-sm font-medium text-amber-900">
+                              Estamos preparando seu pagamento
+                            </p>
+                            <p className="text-sm text-amber-800 mt-1">
+                              Assim que ficar pronto enviamos por e-mail e WhatsApp. Sua inscrição
+                              já está registrada — nada se perde.
+                            </p>
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => router.push(successParams.url)}
+                          className="checkout-step-cta group w-full inline-flex items-center justify-center gap-3 bg-bolsa-secondary text-white py-4 px-6 rounded-full font-semibold text-[15px] hover:bg-bolsa-secondary/90 transition-all duration-300"
+                        >
+                          Continuar
+                          <ArrowRight
+                            size={16}
+                            className="transition-transform duration-300 group-hover:translate-x-1"
+                          />
+                        </button>
+                        <p className="text-xs text-ink-500 text-center">
+                          Você não precisa terminar o pagamento agora para continuar — sua
+                          inscrição já está garantida e o link de pagamento também chega por
+                          e-mail e WhatsApp.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -3208,7 +3292,7 @@ const isFormValidForPayment =
                       <ul className="text-[12px] text-ink-500 leading-relaxed space-y-1">
                         <li>
                           <strong className="text-ink-900">
-                            Taxa do Bolsa Click — {formatTaxaCentavos(taxaEmCentavos)}
+                            Taxa da plataforma — {formatTaxaCentavos(taxaEmCentavos)}
                           </strong>
                           : paga aqui, uma única vez, para enviar sua inscrição à instituição.
                         </li>

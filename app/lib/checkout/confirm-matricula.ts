@@ -12,12 +12,10 @@ import {
 } from '@/app/lib/api/create-inscription-marketplace'
 import type { OfferDetails } from '@/app/lib/api/get-offer-details'
 import { sendUtmifyOrder, paymentMethodToUtmify } from '@/app/lib/api/utmify'
-import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
 import { upsertCandidato } from '@/app/lib/api/attio'
 import { isServerFlagEnabled } from '@/app/lib/analytics/server-flags'
 import { refundElysiumCharge } from '@/app/lib/api/elysium-refund'
-import { readMetaAttribution } from '@/app/lib/analytics/meta-attribution'
 
 /**
  * Confirmação do checkout Cogna/ATHENAS (`/checkout/matricula`): a taxa de
@@ -540,55 +538,25 @@ export async function confirmPaidMatricula(
     console.error('❌ confirm-matricula: UTMify falhou', externalTransactionId, e)
   }
 
-  // ── 5) Meta — Purchase server-side (chega mesmo com aba fechada) ────────
+  // ── 5) Meta — Purchase REMOVIDO daqui de propósito (2026-09-10) ─────────
   //
-  // Sai daqui, depois do pagamento confirmado E da inscrição aceita: é o único
-  // ponto em que as duas coisas são verdade ao mesmo tempo. Disparar antes
-  // contaria também quem a Cogna recusou e cujo dinheiro foi estornado.
+  // Até aqui, o Purchase ia pro Meta CAPI por este arquivo E pelo navegador
+  // (MatriculaCheckoutClient.tsx), com o MESMO event_id (externalTransactionId)
+  // — a Meta dedupava os dois como uma venda só. Isso mudou quando a UTMify
+  // ligou a integração dela com o Meta Ads no mesmo pixel (3830716730578943):
+  // ela manda o PRÓPRIO Purchase pro CAPI a partir do pedido que o item (4)
+  // acima já envia (sendUtmifyOrder, status 'paid') — com um event_id gerado
+  // por ela, que NUNCA vai bater com o nosso. Sem controle sobre o event_id
+  // da UTMify, manter os dois lados fazia a mesma venda contar 2x pro Meta.
   //
-  // `eventId` = externalTransactionId, IDÊNTICO ao Purchase do navegador
-  // (app/checkout/matricula/MatriculaCheckoutClient.tsx) e ao do fluxo Estácio.
-  // Uma transação, um Purchase, mesmo que webhook e polling cheguem juntos — a
-  // Meta dedupa por esse id. Mudar este id sem mudar o do navegador faz a mesma
-  // compra contar duas vezes e a campanha otimizar por receita inflada.
-  try {
-    const [firstName, ...rest] = tx.name.trim().split(/\s+/)
-    // Capturados na criação da cobrança (`/api/checkout/matricula/charge`),
-    // porque aqui não há mais navegador: sem `fbc` a Meta não liga esta compra
-    // ao anúncio que a gerou, e sem IP/user-agent o payload `website` pode ser
-    // recusado por incompleto. Ver `meta-attribution.ts`.
-    const atribuicao = readMetaAttribution(metadata)
-    await sendFacebookEvent({
-      eventName: 'Purchase',
-      eventId: externalTransactionId,
-      userData: {
-        email: tx.email,
-        phone: phoneDigits,
-        externalId: cpfDigits,
-        firstName: firstName || undefined,
-        lastName: rest.length ? rest.join(' ') : undefined,
-        fbp: atribuicao.fbp,
-        fbc: atribuicao.fbc,
-        clientIp: atribuicao.clientIp,
-        userAgent: atribuicao.userAgent,
-      },
-      customData: {
-        currency: 'BRL',
-        // Valor da TAXA cobrada por nós, não da mensalidade do curso — é o que
-        // efetivamente entrou. Inflar aqui com o preço do curso envenenaria o
-        // ROAS e faria a Meta comprar tráfego caro demais.
-        value: tx.amountInCents / 100,
-        content_name: tx.courseName || offerDetails?.course || 'Taxa da plataforma',
-        content_type: 'product',
-        ...(tx.courseId ? { content_ids: [tx.courseId] } : {}),
-      },
-      ...(atribuicao.eventSourceUrl ? { eventSourceUrl: atribuicao.eventSourceUrl } : {}),
-    })
-  } catch (e) {
-    // Best-effort, como todo o resto do rastreio: perder o evento é ruim,
-    // derrubar a inscrição de quem já pagou é pior.
-    console.error('❌ confirm-matricula: Meta CAPI Purchase falhou', externalTransactionId, e)
-  }
+  // Decisão do negócio: a UTMify vira a ÚNICA fonte de Purchase pro Meta neste
+  // fluxo (ela existe justamente pra pegar venda que o pixel perde — melhor
+  // fit pro problema real do que manter os dois). O Purchase do navegador
+  // também foi removido, em MatriculaCheckoutClient.tsx.
+  //
+  // NÃO se aplica ao Estácio nem à campanha ingressa: nenhum dos dois chama
+  // sendUtmifyOrder, então a UTMify não vê essas vendas — o Purchase deles
+  // continua sendo só nosso, sem duplicação.
 
   // ── 6) PostHog — conversão server-side ──────────────────────────────────
   // O funil browser perde quem fecha a aba antes da página de sucesso.

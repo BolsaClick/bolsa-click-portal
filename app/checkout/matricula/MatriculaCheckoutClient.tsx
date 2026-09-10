@@ -1875,41 +1875,17 @@ const isFormValidForPayment =
             }
           }
 
-          // Meta — Purchase TAMBÉM pelo navegador.
+          // Meta — Purchase do navegador REMOVIDO daqui de propósito (2026-09-10).
           //
-          // O servidor já dispara este evento (confirm-matricula.ts). Ele
-          // sozinho bastaria se o pixel aceitasse CAPI — mas o pixel que as
-          // campanhas usam pertence a uma conta pessoal, e CAPI só funciona em
-          // pixel de business. Sem este disparo, a compra não chega lá.
-          //
-          // Dispara AQUI, não na tela de sucesso: este ponto é o único que sabe
-          // as duas coisas ao mesmo tempo — que o pagamento confirmou e que a
-          // Cogna ACEITOU a inscrição. Na tela de sucesso não daria para
-          // distinguir de uma recusa já estornada, e contaríamos venda que não
-          // existiu.
-          //
-          // `event_id` = externalTransactionId, IDÊNTICO ao do servidor. Nos
-          // pixels que recebem os dois lados a Meta dedupa e conta uma vez; nos
-          // que só recebem navegador, este é o único que chega. Mudar este id
-          // sem mudar o de confirm-matricula.ts faz a mesma compra contar duas
-          // vezes e a campanha otimizar por receita inflada.
-          void trackFbqDual(
-            'Purchase',
-            {
-              currency: 'BRL',
-              // A TAXA cobrada por nós, não a mensalidade do curso.
-              value: taxaEmCentavos / 100,
-              content_name: offerDetails?.course,
-              content_type: 'product',
-              content_ids: offerDetails?.courseId ? [String(offerDetails.courseId)] : undefined,
-            },
-            {
-              email: submitted?.email,
-              phone: submitted?.phone,
-              externalId: (submitted?.cpf || '').replace(/\D/g, ''),
-            },
-            externalTransactionId,
-          )
+          // A UTMify ligou a integração dela com o Meta Ads no mesmo pixel
+          // (3830716730578943) e passou a mandar o PRÓPRIO Purchase pro CAPI a
+          // partir do pedido que confirm-matricula.ts já envia pra ela — com um
+          // event_id que nunca bate com o nosso. Manter os dois lados fazia a
+          // mesma venda contar 2x pro Meta. Decisão do negócio: a UTMify vira a
+          // única fonte de Purchase pro Meta neste fluxo (ela existe justamente
+          // pra pegar venda que o pixel perde). O Purchase server-side também
+          // foi removido, em confirm-matricula.ts — ver o comentário lá pro
+          // raciocínio completo.
 
           // GA4 ecommerce (dataLayer/GTM) — purchase, paridade com o Purchase
           // acima. transaction_id = mesmo id do gateway (dedup nativo do GA4).

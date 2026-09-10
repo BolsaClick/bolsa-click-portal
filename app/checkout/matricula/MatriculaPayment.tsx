@@ -370,7 +370,12 @@ export default function MatriculaPayment({
           // 200 = inscrição criada; 422 = pagou e a Cogna recusou (o pai mostra
           // a recusa + estorno). 202 (pendente) e 5xx (falha transitória)
           // mantêm o polling — nunca dizemos "pago" por um erro de servidor.
-          if (active && (res.ok || res.status === 422)) {
+          //
+          // `res.ok` é true para QUALQUER 2xx — inclui o 202 de "ainda
+          // pendente" (ver route.ts), que por isso batia aqui na primeira
+          // consulta e confirmava um pagamento que nunca aconteceu. Checar o
+          // status exato é o que faz o comentário acima virar verdade.
+          if (active && (res.status === 200 || res.status === 422)) {
             confirmPaid(id)
             return
           }

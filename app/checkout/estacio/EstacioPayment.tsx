@@ -7,7 +7,7 @@ import QRCode from 'react-qr-code'
 import type { CreateEnrollmentInput } from '@/app/lib/api/athena-offers'
 
 /**
- * Pagamento da taxa de matrícula do Bolsa Click no checkout Estácio.
+ * Pagamento da taxa da plataforma no checkout Estácio.
  *
  * Fork enxuto de `app/checkout/matricula/MatriculaPayment.tsx` (PIX + cartão,
  * sem boleto — R$ 19,90 que levam 3 dias para compensar atrasariam a inscrição
@@ -177,7 +177,7 @@ export default function EstacioPayment({
         void trackFbqDual(
           'AddPaymentInfo',
           {
-            content_name: context?.offer?.courseName || 'Taxa de matrícula Estácio',
+            content_name: context?.offer?.courseName || 'Taxa da plataforma Estácio',
             content_type: 'product',
             currency: 'BRL',
             value: amountInCents / 100,
@@ -289,7 +289,7 @@ export default function EstacioPayment({
           <Check className="h-7 w-7" strokeWidth={2.5} />
           <span className="absolute inset-0 animate-ping rounded-full bg-bolsa-secondary/30" />
         </span>
-        <p className="font-display text-xl text-ink-900">Taxa de matrícula paga</p>
+        <p className="font-display text-xl text-ink-900">Taxa da plataforma paga</p>
         {externalError ? (
           <p className="max-w-sm px-6 text-sm text-bolsa-secondary">{externalError}</p>
         ) : (
@@ -306,7 +306,7 @@ export default function EstacioPayment({
     <div className="space-y-5">
       <div className="rounded-2xl border border-hairline bg-white px-5 py-4">
         <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-500">
-          Taxa de matrícula Bolsa Click
+          Taxa da plataforma Bolsa Click
         </p>
         <p className="font-display num-tabular text-3xl leading-tight text-ink-900">
           {formatCents(amountInCents)}
@@ -585,7 +585,7 @@ function PixQrModal({
       >
         <div className="flex items-center justify-between px-6 pt-5">
           <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-500">
-            Pix · Taxa de matrícula
+            Pix · Taxa da plataforma
           </span>
           <button
             type="button"

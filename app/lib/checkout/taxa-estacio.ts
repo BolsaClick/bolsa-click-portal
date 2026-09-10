@@ -1,15 +1,21 @@
 /**
- * Taxa de matrícula do Bolsa Click no checkout Estácio/YDUQS.
+ * Taxa da plataforma Bolsa Click no checkout Estácio/YDUQS.
  *
  * Decisão de negócio (CEO, 2026-09-04): R$ 19,90 cobrados pelo Bolsa Click
  * ANTES de criar a inscrição na Athena — mesma mecânica da campanha
  * ingressa.digital (cobra → inscreve → estorna se o parceiro recusar).
  *
+ * Renomeada de "taxa de matrícula" pra "taxa da plataforma" em 2026-09-10 —
+ * mesmo motivo do lado Cogna (ver taxa-cogna.ts): a cobrança não é
+ * específica de matrícula.
+ *
  * IMPORTANTE — esta taxa é NOSSA e é ADICIONAL. No fim do fluxo a própria
  * Estácio emite a cobrança dela (`cobranca.valorLiquido`, com PIX e
- * `urlPagamentoQuote`), que vai para a YDUQS. O aluno paga as duas coisas, e
- * as telas precisam deixar isso explícito — sem isso o aluno acha que foi
- * cobrado duas vezes pela mesma coisa e abre chargeback.
+ * `urlPagamentoQuote`), que vai para a YDUQS — apresentada ainda NO
+ * CHECKOUT, antes de qualquer tela de sucesso (ver `stage === 'institution'`
+ * em `EstacioCheckoutClient.tsx`). O aluno paga as duas coisas, e as telas
+ * precisam deixar isso explícito — sem isso o aluno acha que foi cobrado
+ * duas vezes pela mesma coisa e abre chargeback.
  *
  * NUNCA reaproveitar esta constante nos outros checkouts: o portal principal
  * (Cogna/ATHENAS) decide em `matricula-charge.ts`, com regra própria.
@@ -53,9 +59,15 @@ export const TAXA_MATRICULA_ESTACIO_CENTAVOS = resolveTaxaEmCentavos(
   process.env.TAXA_MATRICULA_ESTACIO_CENTAVOS,
 )
 
-/** Descrição da cobrança no gateway (Asaas/AbacatePay) e no extrato do aluno. */
+/**
+ * Descrição da cobrança no gateway (Asaas/AbacatePay) e no extrato do aluno.
+ *
+ * Nome da função e da env var (`TAXA_MATRICULA_ESTACIO_CENTAVOS`) ficam como
+ * estão — mudar identificador é risco desnecessário. O que muda é só o
+ * texto que o aluno vê no extrato.
+ */
 export function taxaMatriculaEstacioDescription(courseName?: string | null): string {
   return courseName
-    ? `Taxa de matrícula Bolsa Click — ${courseName}`
-    : 'Taxa de matrícula Bolsa Click'
+    ? `Taxa da plataforma Bolsa Click — ${courseName}`
+    : 'Taxa da plataforma Bolsa Click'
 }

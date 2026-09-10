@@ -16,7 +16,7 @@ import { mensagemDaRecusa } from '@/app/lib/checkout/athena-enrollment'
  * ATL016 (CPF já inscrito) é tratado como sucesso: a Athena devolve a inscrição/link existente.
  *
  * LEGADO desde 2026-09-04: o checkout Estácio do portal NÃO passa mais por
- * aqui. Ele cobra a taxa de matrícula do Bolsa Click antes
+ * aqui. Ele cobra a taxa da plataforma antes
  * (/api/athena-checkout/charge) e cria a inscrição só depois do pagamento
  * confirmar (/api/athena-checkout/confirm → confirm-estacio.ts). Esta rota
  * segue de pé para inscrição SEM cobrança (uso interno/suporte); a lógica de

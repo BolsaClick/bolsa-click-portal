@@ -1,10 +1,17 @@
 import type { OfferDetails } from '@/app/lib/api/get-offer-details'
 
 /**
- * Modalidades que cobram a matrícula no checkout (graduação ATHENAS).
- * Presencial fica de fora — não cobramos no portal.
+ * Modalidades que cobram a taxa da plataforma no checkout (graduação
+ * ATHENAS). Decisão do negócio, 2026-09-10: PRESENCIAL entrou junto de
+ * EAD/SEMIPRESENCIAL — valor unitário baixo (R$ 19,90), mas o cálculo é por
+ * volume ("se tivermos 1k de matrículas fica bom"), e volume só existe
+ * cobrando todo mundo, não só quem é EAD.
+ *
+ * Só muda O GATE (`chargeable`). O valor cobrado nunca sai daqui — é sempre
+ * `TAXA_MATRICULA_COGNA_CENTAVOS` (taxa-cogna.ts), fixo no servidor. Ver o
+ * aviso no `amountInCents` abaixo.
  */
-const CHARGEABLE_MODALITIES = new Set(['EAD', 'SEMIPRESENCIAL'])
+const CHARGEABLE_MODALITIES = new Set(['EAD', 'SEMIPRESENCIAL', 'PRESENCIAL'])
 
 /** Fonte da oferta que habilita cobrança da matrícula no portal. */
 const CHARGEABLE_SOURCE = 'ATHENAS'
@@ -25,13 +32,16 @@ export interface MatriculaCharge {
 }
 
 /**
- * Decide se uma oferta deve cobrar a matrícula no checkout e quanto.
+ * Decide se uma oferta deve cobrar a taxa da plataforma no checkout.
  *
- * Regra (definida com o negócio):
- *  - Cobra quando: graduação + modalidade EAD/semipresencial + fonte ATHENAS.
- *  - Presencial e ofertas não-ATHENAS continuam sem cobrança (inscrição direta).
- *  - Valor = matrícula (`subscriptionValue`); se vier 0/nulo, cobra a 1ª
- *    mensalidade (`montlyFeeTo`). Oferta elegível sempre tem cobrança.
+ * Regra (definida com o negócio, atualizada 2026-09-10):
+ *  - Cobra quando: graduação + modalidade EAD/semipresencial/presencial +
+ *    fonte ATHENAS. Ofertas não-ATHENAS continuam sem cobrança (inscrição
+ *    direta) — não temos taxa fixa configurada pra elas.
+ *  - `amountInCents` aqui é só INFORMATIVO (preço da oferta, pra telas que
+ *    ainda usem esse número pra exibir algo). NUNCA é o valor cobrado — quem
+ *    cobra é `TAXA_MATRICULA_COGNA_CENTAVOS`, fixo no servidor, independente
+ *    do preço do curso. Ver o aviso em `taxa-cogna.ts`.
  */
 export function getMatriculaCharge(
   offerDetails: Pick<

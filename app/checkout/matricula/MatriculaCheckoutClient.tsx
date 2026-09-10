@@ -776,7 +776,9 @@ const isFormValidForPayment =
     const tryValidateOnce = async (): Promise<ValidateVoucherResponse | null> => {
       try {
         const result = await validateVoucher('GALENA+15', cpf, posInstallmentId)
-        if (result.status === 200 && (result.data?.isValid ?? false)) {
+        // 201 também é sucesso — a Cogna responde os dois pra voucher
+        // válido, só a doc promete 200 (ver comentário em validate-voucher.ts).
+        if (result.status < 300 && (result.data?.isValid ?? false)) {
           return result.data
         }
         return null
@@ -983,7 +985,10 @@ const isFormValidForPayment =
       let matchedType = posPaymentMethodType
       let matchedInstallment: PosInstallment | undefined
 
-      const isSuccess = (r: typeof result) => r.status === 200 && (r.data?.isValid ?? false) && !!r.data
+      // status < 300 (não só 200 exato) — a Cogna responde 201 pra voucher
+      // válido além do 200 documentado (ver comentário em validate-voucher.ts).
+      // isValid continua sendo quem decide de fato; o status é só o portão.
+      const isSuccess = (r: typeof result) => r.status < 300 && (r.data?.isValid ?? false) && !!r.data
 
       // Só vale tentar outros parcelamentos quando a Cogna respondeu 400
       // ("inválido/expirado/parâmetros ausentes" — inclui plano errado). Um

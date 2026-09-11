@@ -9,6 +9,8 @@ import { unstable_cache } from 'next/cache'
 import { cache } from 'react'
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { searchAthenaOffers } from '@/app/lib/api/athena-offers'
+import { filterSameCourse } from '@/app/lib/utils/course-name-key'
+import type { Course } from '@/app/interface/course'
 
 // Busca ofertas de cidade. Retorna offers + flag fromFallback indicando se
 // caímos na busca nacional por falta de estoque local. unstable_cache persiste
@@ -25,7 +27,9 @@ const _getCityCourseOffersBase = unstable_cache(
       const cityResponse = await getShowFiltersCourses(
         apiCourseName, cityName, stateUF, undefined, nivel, 1, 20
       )
-      const cityOffers = cityResponse?.data || []
+      // A busca por nome traz outros cursos (Psicologia → Psicopedagogia): sem
+      // o filtro, "Psicologia em X" listava e precificava psicopedagogia.
+      const cityOffers = filterSameCourse<Course>(cityResponse?.data || [], apiCourseName)
       if (cityOffers.length > 0) {
         return { offers: cityOffers, fromFallback: false }
       }
@@ -33,14 +37,14 @@ const _getCityCourseOffersBase = unstable_cache(
       const generalResponse = await getShowFiltersCourses(
         apiCourseName, undefined, undefined, undefined, nivel, 1, 20
       )
-      return { offers: generalResponse?.data || [], fromFallback: true }
+      return { offers: filterSameCourse<Course>(generalResponse?.data || [], apiCourseName), fromFallback: true }
     } catch (error) {
       console.error(`Erro ao buscar ofertas para ${apiCourseName} em ${cityName}:`, error)
       try {
         const fallbackResponse = await getShowFiltersCourses(
           apiCourseName, undefined, undefined, undefined, nivel, 1, 20
         )
-        return { offers: fallbackResponse?.data || [], fromFallback: true }
+        return { offers: filterSameCourse<Course>(fallbackResponse?.data || [], apiCourseName), fromFallback: true }
       } catch {
         return { offers: [], fromFallback: true }
       }

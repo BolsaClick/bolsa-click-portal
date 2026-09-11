@@ -12,6 +12,7 @@ import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { resolveCanonicalCourseSlug } from '@/app/lib/seo/slug-resolver'
 import { FeaturedCourseData } from '../_data/types'
 import { getCourseBySlug, getCoursePriceRange } from './_data/course-lookup'
+import { filterSameCourse } from '@/app/lib/utils/course-name-key'
 import {
   OffersComparisonTable,
   VisibleFaq,
@@ -250,7 +251,9 @@ export default async function CursoPage({ params }: Props) {
   ])
 
   if (offersResult.status === 'fulfilled') {
-    courseOffers = offersResult.value?.data || []
+    // A busca por nome traz outros cursos (Psicologia → Psicopedagogia) — sem o
+    // filtro, a lista, o AggregateOffer e o lowPrice do JSON-LD misturam os dois.
+    courseOffers = filterSameCourse(offersResult.value?.data || [], cursoMetadata.apiCourseName)
   }
   if (relatedResult.status === 'fulfilled') {
     relatedCourses = relatedResult.value

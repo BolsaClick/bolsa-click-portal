@@ -10,13 +10,17 @@ import {
   Building2,
   BookOpen,
   Check,
+  CheckCircle2,
   ChevronDown,
+  Copy,
+  ExternalLink,
   GraduationCap,
   Loader2,
   Mail,
   MapPin,
   User,
 } from 'lucide-react'
+import QRCode from 'react-qr-code'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { pushDataLayerEvent } from '@/app/lib/analytics/gtag'
@@ -131,7 +135,7 @@ const labelClass =
 
 interface EstacioCheckoutClientProps {
   /**
-   * Taxa de matrícula do Bolsa Click, em CENTAVOS. Vem do server component
+   * Taxa da plataforma Bolsa Click, em CENTAVOS. Vem do server component
    * (page.tsx), que lê a constante do servidor — o cliente nunca calcula nem
    * envia esse valor: quem cobra é o /api/athena-checkout/charge, com o valor
    * dele. A prop existe só para a tela exibir o mesmo número que será cobrado.
@@ -267,15 +271,36 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
   const [error, setError] = useState<string | null>(null)
   /**
    * Etapa da tela. `form` = dados do candidato; `payment` = cobrança da taxa
-   * de matrícula do Bolsa Click. A inscrição na Estácio NÃO acontece aqui —
-   * ela roda no servidor, depois que o pagamento confirma
-   * (confirm-estacio.ts), justamente pra ninguém ser inscrito sem pagar nem
-   * pagar sem ser inscrito.
+   * da plataforma; `institution` = pagamento da matrícula NA ESTÁCIO — ao
+   * contrário da Cogna, o `paymentUrl`/`pixCode` já vêm na PRÓPRIA resposta
+   * que confirma a inscrição (não tem lookup assíncrono separado), então dá
+   * pra mostrar de imediato, sem polling. A inscrição na Estácio NÃO
+   * acontece na tela — ela roda no servidor, depois que a NOSSA cobrança
+   * confirma (confirm-estacio.ts), justamente pra ninguém ser inscrito sem
+   * pagar a taxa nem pagar a taxa sem ser inscrito.
+   *
+   * O que muda aqui (2026-09-10): antes, depois de pagar a taxa, o
+   * candidato ia direto pra uma página de "sucesso" que só ENTÃO mostrava o
+   * pagamento da matrícula na Estácio — dava a impressão de ter sido
+   * inscrito antes de pagar o curso. Agora esse pagamento é o próximo passo
+   * DESTA MESMA tela, antes de qualquer tela de "sucesso" aparecer.
    */
-  const [stage, setStage] = useState<'form' | 'payment'>('form')
+  const [stage, setStage] = useState<'form' | 'payment' | 'institution'>('form')
   const [chargeContext, setChargeContext] = useState<EstacioChargeContext | null>(null)
   const [confirmError, setConfirmError] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
+  /**
+   * Dados de pagamento da matrícula na Estácio + a URL de sucesso pra onde
+   * navegamos quando o candidato terminar (ou pular) esse passo.
+   */
+  const [institutionPayment, setInstitutionPayment] = useState<{
+    successUrl: string
+    paymentUrl: string | null
+    pixCode: string | null
+    amount: string | null
+    dueDate: string | null
+  } | null>(null)
+  const [institutionPixCopied, setInstitutionPixCopied] = useState(false)
   const [cepLoading, setCepLoading] = useState(false)
   const [expanded, setExpanded] = useState({
     dados: true,
@@ -672,7 +697,7 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
           if (checkout.pixCode) params.set('pixCode', String(checkout.pixCode))
           if (checkout.amount) params.set('amount', String(checkout.amount))
           if (checkout.dueDate) params.set('dueDate', String(checkout.dueDate))
-          // Taxa do Bolsa Click já paga — a tela de sucesso mostra as duas
+          // Taxa da plataforma já paga — a tela de sucesso mostra as duas
           // cobranças separadas (a nossa, paga; a da Estácio, a pagar).
           params.set('taxa', String(taxaEmCentavos))
 
@@ -713,7 +738,20 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
             externalTransactionId,
           )
 
-          router.push(`/checkout/estacio/sucesso?${params.toString()}`)
+          // NÃO navega ainda. A taxa está paga e a inscrição, criada — mas o
+          // candidato só vê a tela de sucesso DEPOIS de passar pelo
+          // pagamento da matrícula na Estácio, que é o próximo passo aqui
+          // mesmo (stage 'institution'). Ver o comentário na declaração de
+          // `stage`. Diferente da Cogna, já temos tudo (paymentUrl/pixCode)
+          // nesta mesma resposta — sem lookup assíncrono.
+          setInstitutionPayment({
+            successUrl: `/checkout/estacio/sucesso?${params.toString()}`,
+            paymentUrl: checkout.paymentUrl ?? null,
+            pixCode: checkout.pixCode ?? null,
+            amount: checkout.amount ?? null,
+            dueDate: checkout.dueDate ?? null,
+          })
+          setStage('institution')
           return
         }
 
@@ -721,8 +759,8 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
           const reason: string =
             data?.reason || 'Não foi possível concluir sua inscrição nesta oferta.'
           const estorno = data?.refunded
-            ? ' A taxa de matrícula foi estornada — o valor volta pelo mesmo meio de pagamento.'
-            : ' Nosso time já foi avisado e vai devolver a taxa de matrícula.'
+            ? ' A taxa da plataforma foi estornada — o valor volta pelo mesmo meio de pagamento.'
+            : ' Nosso time já foi avisado e vai devolver a taxa da plataforma.'
 
           trackEvent('checkout_inscription_failed', {
             flow: 'estacio',
@@ -776,7 +814,7 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
       done: stage === 'payment',
       active: stage === 'form' && dadosOk && enderecoOk,
     },
-    { n: '04', label: 'Pagamento', done: false, active: stage === 'payment' },
+    { n: '04', label: 'Pagamento', done: false, active: stage === 'payment' || stage === 'institution' },
   ]
 
   const taxaFormatada = (taxaEmCentavos / 100).toLocaleString('pt-BR', {
@@ -806,7 +844,7 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
             <span className="italic text-ink-700">em poucos passos.</span>
           </h1>
           <p className="text-ink-500 text-[14px] md:text-[15px] mt-3 leading-relaxed max-w-2xl">
-            Complete seus dados e pague a taxa de matrícula do Bolsa Click ({taxaFormatada}) pra
+            Complete seus dados e pague a taxa da plataforma ({taxaFormatada}) pra
             gente enviar sua inscrição. A matrícula e as mensalidades do curso continuam sendo
             pagas diretamente à instituição.
           </p>
@@ -868,7 +906,7 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
                 )}
 
                 <h2 className="font-display text-2xl text-ink-900 leading-tight">
-                  Taxa de matrícula do Bolsa Click
+                  Taxa da plataforma
                 </h2>
                 <p className="mt-2 mb-5 text-[13px] leading-relaxed text-ink-500">
                   São {taxaFormatada}, cobrados por nós, para enviar sua inscrição à {offer.brand}.
@@ -892,6 +930,92 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
                   externalError={confirmError}
                   confirming={confirming}
                 />
+              </div>
+            ) : stage === 'institution' && institutionPayment ? (
+              <div className="p-6 md:p-7 space-y-5">
+                <div className="flex items-center gap-2 text-sm text-bolsa-secondary">
+                  <CheckCircle2 size={16} />
+                  <span>Taxa da plataforma paga — falta a matrícula na Estácio.</span>
+                </div>
+
+                {institutionPayment.pixCode ? (
+                  <div className="rounded-lg border border-hairline p-4">
+                    <h3 className="font-medium text-ink-900 mb-1 text-center">
+                      Pague a matrícula da Estácio com PIX
+                    </h3>
+                    <p className="text-xs text-center text-ink-500 mb-4">
+                      Cobrança da instituição — não é a taxa da plataforma, que já está paga.
+                    </p>
+                    <div className="flex justify-center mb-4">
+                      <div className="p-3 bg-white border border-hairline rounded-xl shadow-sm inline-block">
+                        <QRCode
+                          value={institutionPayment.pixCode}
+                          size={180}
+                          bgColor="#ffffff"
+                          fgColor="#000000"
+                          level="M"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-center text-ink-500 mb-3">
+                      Escaneie o QR code com o app do seu banco
+                    </p>
+                    <div className="border-t border-hairline pt-3 mt-3">
+                      <p className="text-xs text-ink-500 mb-1 font-medium">Ou copie o código PIX:</p>
+                      <p className="text-xs text-ink-400 mb-2 break-all bg-paper-warm rounded p-2 font-mono leading-relaxed">
+                        {institutionPayment.pixCode}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard?.writeText(institutionPayment.pixCode || '').then(() => {
+                            setInstitutionPixCopied(true)
+                            setTimeout(() => setInstitutionPixCopied(false), 2000)
+                          })
+                        }}
+                        className="inline-flex items-center gap-2 text-sm font-medium text-bolsa-secondary hover:brightness-90"
+                      >
+                        <Copy className="w-4 h-4" />
+                        {institutionPixCopied ? 'Copiado!' : 'Copiar código PIX'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                    <p className="text-sm font-medium text-amber-900">
+                      Estamos preparando seu pagamento
+                    </p>
+                    <p className="text-sm text-amber-800 mt-1">
+                      Assim que ficar pronto enviamos por e-mail. Sua inscrição já está
+                      registrada — nada se perde.
+                    </p>
+                  </div>
+                )}
+
+                {institutionPayment.paymentUrl && (
+                  <a
+                    href={institutionPayment.paymentUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-hairline py-3 px-6 text-[14px] font-medium text-ink-900 hover:bg-paper-warm transition-colors"
+                  >
+                    Pagar a matrícula na Estácio
+                    <ExternalLink size={14} />
+                  </a>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => router.push(institutionPayment.successUrl)}
+                  className="checkout-step-cta group w-full inline-flex items-center justify-center gap-3 bg-bolsa-secondary text-white py-4 px-6 rounded-full font-semibold text-[15px] hover:bg-bolsa-secondary/90 transition-all duration-300"
+                >
+                  Continuar
+                  <ArrowRight size={16} />
+                </button>
+                <p className="text-xs text-ink-500 text-center">
+                  Você não precisa terminar o pagamento agora para continuar — sua inscrição já
+                  está garantida e o link de pagamento também chega por e-mail.
+                </p>
               </div>
             ) : (
             <form onSubmit={handleSubmit}>
@@ -1111,7 +1235,7 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
                   )}
                 </button>
                 <p className="text-center text-[11px] text-ink-400 mt-3">
-                  Próximo passo: pagar a taxa de matrícula do Bolsa Click ({taxaFormatada}). A
+                  Próximo passo: pagar a taxa da plataforma ({taxaFormatada}). A
                   inscrição é enviada à instituição assim que o pagamento confirmar.
                 </p>
               </Section>
@@ -1181,8 +1305,8 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
                     São duas cobranças diferentes
                   </p>
                   <p className="text-[12px] text-ink-500 leading-relaxed">
-                    <span className="font-semibold text-ink-900">{taxaFormatada}</span> é a taxa de
-                    matrícula do Bolsa Click, paga aqui, uma única vez, para enviarmos sua
+                    <span className="font-semibold text-ink-900">{taxaFormatada}</span> é a taxa da
+                    plataforma, paga aqui, uma única vez, para enviarmos sua
                     inscrição. A matrícula e as mensalidades do curso são cobradas à parte, pela
                     própria instituição — o boleto/PIX dela chega logo depois da inscrição.
                   </p>

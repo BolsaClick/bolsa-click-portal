@@ -9,7 +9,7 @@ import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 import { readMetaAttribution } from '@/app/lib/analytics/meta-attribution'
 
 /**
- * Confirmação do checkout Estácio: a taxa de matrícula do Bolsa Click
+ * Confirmação do checkout Estácio: a taxa da plataforma
  * (R$ 19,90) é cobrada ANTES e a inscrição na Athena/YDUQS só acontece aqui,
  * depois de o pagamento confirmar.
  *
@@ -366,7 +366,7 @@ export async function confirmPaidEstacio(
     )
   }
 
-  // Meta — Purchase. A taxa de matrícula do Bolsa Click é uma compra de fato:
+  // Meta — Purchase. A taxa da plataforma é uma compra de fato:
   // dinheiro que entrou, com valor conhecido. Até aqui o pixel NUNCA tinha
   // recebido um Purchase (medido: zero em todo o histórico), e as campanhas
   // otimizam justamente por esse evento — pediam à Meta que encontrasse gente
@@ -407,7 +407,7 @@ export async function confirmPaidEstacio(
         // efetivamente entrou. Inflar aqui com o preço do curso envenenaria o
         // ROAS e faria a Meta comprar tráfego caro demais.
         value: tx.amountInCents / 100,
-        content_name: blob.offer.courseName || 'Taxa de matrícula Estácio',
+        content_name: blob.offer.courseName || 'Taxa da plataforma Estácio',
         content_type: 'product',
         ...(blob.offer.offerId ? { content_ids: [String(blob.offer.offerId)] } : {}),
       },

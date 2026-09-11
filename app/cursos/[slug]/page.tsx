@@ -27,7 +27,7 @@ import { getCurrentTheme } from '@/app/lib/themes'
 import { buildBrandedCourseCopy, canIndexBrandedCopy } from '@/app/lib/seo/branded-course-copy'
 import { absoluteUrl, publicRobots, seoSite } from '@/app/lib/seo/site-config'
 import { ogImageObject } from '@/app/lib/seo/schema-image'
-import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
+import { DISCOUNT_CEILING_PCT, isMecPresencialOnly } from '@/app/lib/copy/claims'
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -101,16 +101,32 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // e os mais longos pra abertura compacta. Duração e salário saíram daqui — não
   // são a intenção de quem busca "bolsa <curso>" e estouravam o limite.
   const priceText = lowPrice > 0 ? ` a partir de R$ ${lowPrice.toFixed(0)}/mês` : ''
+  // "No EAD ou presencial" é falso pra curso que o MEC só permite presencial
+  // (Psicologia, Enfermagem, Direito, Medicina, Odontologia) — promessa de
+  // modalidade que não existe no catálogo real, no snippet que o Google
+  // mostra. Ver MEC_PRESENCIAL_ONLY_COURSES.
+  //
+  // Pra esses cursos, a frase troca inteira — "reconhecidas pelo MEC"/"com
+  // nota MEC" + "no EAD ou presencial" citaria o MEC duas vezes de propósitos
+  // diferentes (credenciamento × restrição de modalidade) no mesmo trecho.
+  // Nos demais cursos, o texto de cada template não muda.
+  const mecPresencial = isMecPresencialOnly(curso.name)
+  const faculdadesClauseLonga = mecPresencial
+    ? 'faculdades — curso somente presencial, conforme norma do MEC'
+    : 'faculdades reconhecidas pelo MEC, no EAD ou presencial'
+  const faculdadesClauseCurta = mecPresencial
+    ? 'faculdades — só presencial, norma do MEC'
+    : 'faculdades com nota MEC, no EAD ou presencial'
   let description =
     [
       lowPrice > 0 &&
-        `Bolsa de estudo para ${curso.name}${priceText}, com até ${DISCOUNT_CEILING_PCT}% de desconto. Faculdades reconhecidas pelo MEC, no EAD ou presencial. Inscrição grátis.`,
-      `Bolsa de estudo para ${curso.name} com até ${DISCOUNT_CEILING_PCT}% de desconto em faculdades reconhecidas pelo MEC, no EAD ou presencial. Inscrição grátis.`,
-      `Bolsa de até ${DISCOUNT_CEILING_PCT}% para ${curso.name} em faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`,
+        `Bolsa de estudo para ${curso.name}${priceText}, com até ${DISCOUNT_CEILING_PCT}% de desconto. ${faculdadesClauseLonga.charAt(0).toUpperCase()}${faculdadesClauseLonga.slice(1)}. Inscrição grátis.`,
+      `Bolsa de estudo para ${curso.name} com até ${DISCOUNT_CEILING_PCT}% de desconto em ${faculdadesClauseLonga}. Inscrição grátis.`,
+      `Bolsa de até ${DISCOUNT_CEILING_PCT}% para ${curso.name} em ${faculdadesClauseCurta}. Inscrição grátis.`,
     ]
       .filter((d): d is string => Boolean(d))
       .find((d) => d.length <= 155) ??
-    `Bolsa de até ${DISCOUNT_CEILING_PCT}% para ${curso.name} em faculdades com nota MEC, no EAD ou presencial. Inscrição grátis.`
+    `Bolsa de até ${DISCOUNT_CEILING_PCT}% para ${curso.name} em ${faculdadesClauseCurta}. Inscrição grátis.`
 
   const brandedCopy = buildBrandedCourseCopy({
     name: curso.name,

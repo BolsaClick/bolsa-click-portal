@@ -36,3 +36,34 @@ export const PARTNER_NETWORKS_LIST =
   'Anhanguera, Unopar, Pitágoras, Estácio, Unime e Wyden'
 
 export const WEDGE_NO_FEE = 'Cadastro grátis, sem taxa de adesão'
+
+/**
+ * Cursos que não podem ser ofertados em EAD por norma do MEC — só existem
+ * presenciais no catálogo real. Medido em 2026-09-04 (Psicologia, Enfermagem,
+ * Direito: 0 ofertas EAD em São Paulo, preço presencial ~3x o de um EAD
+ * comparável — ver decisão "Cursos que não podem ser EAD carregam a promessa
+ * de preço errada" no cofre) e confirmado de novo em 2026-09-10 via auditoria
+ * SXO das 15 páginas de curso mais visitadas (Odontologia entrou na mesma
+ * lista; Medicina já era conhecida como MEC-restrita e tem `FeaturedCourse`
+ * própria no catálogo).
+ *
+ * Comparar por `curso.name` (ex.: "Psicologia"), não por slug — o slug pode
+ * ter sufixo de grau ("psicologia-bacharelado").
+ *
+ * Lista deliberadamente conservadora: só os 5 cursos com essa restrição já
+ * MEDIDA no catálogo real entram aqui. Não adicionar curso por suposição
+ * (Fisioterapia, Nutrição, Farmácia, Veterinária, Biomedicina também são
+ * regulados por conselho profissional e provavelmente têm a mesma restrição,
+ * mas isso não foi verificado contra o catálogo — verificar antes de incluir).
+ */
+export const MEC_PRESENCIAL_ONLY_COURSES = [
+  'Psicologia',
+  'Enfermagem',
+  'Direito',
+  'Medicina',
+  'Odontologia',
+] as const
+
+export function isMecPresencialOnly(courseName: string): boolean {
+  return (MEC_PRESENCIAL_ONLY_COURSES as readonly string[]).includes(courseName)
+}

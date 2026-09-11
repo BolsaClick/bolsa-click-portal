@@ -12,6 +12,7 @@
  */
 import { prisma } from '@/app/lib/prisma'
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
+import { filterSameCourse } from '@/app/lib/utils/course-name-key'
 import { FeaturedCourseData } from '../../_data/types'
 
 export async function getCourseBySlug(slug: string): Promise<FeaturedCourseData | null> {
@@ -40,7 +41,9 @@ export async function getCoursePriceRange(apiCourseName: string, nivel: string) 
       1,
       20
     )
-    const offers = apiResponse?.data || []
+    // A busca por nome traz outros cursos junto (Psicologia → Psicopedagogia);
+    // sem esse filtro o menor preço de OUTRO curso vira o "de R$ X/mês" do title.
+    const offers = filterSameCourse(apiResponse?.data || [], apiCourseName)
     if (offers.length === 0) return { lowPrice: 0, highPrice: 0, offerCount: 0 }
 
     const prices = offers

@@ -6,6 +6,7 @@ import { prisma } from '@/app/lib/prisma'
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { searchAthenaOffers, normalizeAthenaOffer } from '@/app/lib/api/athena-offers'
 import { normalizeBrand } from '@/app/lib/utils/brand'
+import { filterSameCourse } from '@/app/lib/utils/course-name-key'
 import type { Course } from '@/app/interface/course'
 import { BRAND_CONTENT } from '@/app/faculdades/[slug]/_data/brand-content'
 import { LeadForm } from '../_components/LeadForm'
@@ -64,7 +65,9 @@ async function fetchBrandCoursePrice(brandName: string, apiCourseName: string, n
       .then((list) => list.map(normalizeAthenaOffer) as Course[])
       .catch(() => [] as Course[]),
   ])
-  const prices = [...tartarus, ...athena]
+  // Tartarus casa o nome por prefixo e a Athena por substring: sem conferir o
+  // curso, a landing de Pedagogia exibia o preço de uma Psicopedagogia.
+  const prices = filterSameCourse([...tartarus, ...athena], apiCourseName)
     .filter((o) => normalizeBrand(o.brand) === brandKey)
     .map((o) => Number(o.minPrice ?? 0))
     .filter((p) => p > 0)

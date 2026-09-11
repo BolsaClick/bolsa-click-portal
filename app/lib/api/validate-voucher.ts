@@ -34,6 +34,14 @@ export interface ValidateVoucherResponse {
 //   500 -> erro interno
 // 200/204/400 são respostas do fluxo de negócio, não exceções — só 500 e
 // falha de rede devem virar `catch()` pra quem chama.
+//
+// Observado em produção (2026-09-10, payload real: voucher GALENA+15
+// marcado "inválido" no site enquanto a Cogna respondia isValid:true): a
+// Cogna às vezes devolve 201 pra voucher válido, não só o 200 documentado.
+// Quem decide "válido" de fato é `data?.isValid`, não o código HTTP — o
+// status aqui é só o portão de "é uma resposta de sucesso" antes de olhar o
+// corpo. Ver `isSuccess`/`isValid` em MatriculaCheckoutClient.tsx: aceitam
+// qualquer 2xx (< 300), não só 200 exato.
 export interface ValidateVoucherResult {
   status: number
   data: ValidateVoucherResponse | null

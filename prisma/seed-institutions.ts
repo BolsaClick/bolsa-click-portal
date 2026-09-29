@@ -335,12 +335,81 @@ Os diferenciais do IBMEC incluem: nota 5 no MEC (nota máxima), corpo docente 10
     isActive: false,
     order: 7,
   },
+  {
+    // Só PÓS EAD: a Cogna vende a "Pós-Graduação Digital" do Mackenzie
+    // (parceria anunciada pelo próprio Mackenzie em 04/04/2024). Nenhuma
+    // graduação no catálogo — por isso academicLevels só com POS_GRADUACAO,
+    // que faz /faculdades/[slug] buscar e falar de pós (primaryAcademicLevel).
+    // Fatos verificados em 2026-09-29 (fontes nos comentários abaixo). Copy
+    // SEM promessa de desconto: as 43 ofertas medidas não têm bolsa — o valor
+    // real vem de InstitutionMaxDiscountCache, nunca daqui.
+    slug: 'mackenzie',
+    name: 'Mackenzie',
+    shortName: 'MACKENZIE',
+    fullName: 'Universidade Presbiteriana Mackenzie',
+    description:
+      'A Universidade Presbiteriana Mackenzie é uma das instituições de ensino mais tradicionais do Brasil, com origem em 1870 em São Paulo. Tem Conceito Institucional 5 no MEC, a nota máxima, e oferece pós-graduação 100% digital em parceria com a Cogna.',
+    // Fontes: mackenzie.br (história, recredenciamento CI 5 em 2023, parceria
+    // Cogna 2024, RUF 2024), INEP IGC 2023 (faixa 4, cód. e-MEC 22).
+    longDescription: `A Universidade Presbiteriana Mackenzie tem origem na Escola Americana, fundada em 1870 em São Paulo pelos missionários presbiterianos George e Mary Ann Chamberlain. A Escola de Engenharia Mackenzie começou em 1896, e a instituição foi reconhecida como universidade em 1952. É mantida pelo Instituto Presbiteriano Mackenzie, entidade sem fins lucrativos ligada à Igreja Presbiteriana do Brasil.
+
+A sede fica no Campus Higienópolis, na Rua da Consolação, em São Paulo. A universidade também tem campi em Alphaville (Barueri) e Campinas. O mesmo instituto mantém faculdades próprias no Rio de Janeiro, em Brasília e em Curitiba.
+
+No recredenciamento de 2023, o MEC deu ao Mackenzie o Conceito Institucional 5, a nota máxima, válido por 10 anos. O Índice Geral de Cursos (IGC) mais recente divulgado pelo INEP, de 2023, é 4. No Ranking Universitário Folha (RUF) de 2024, o Mackenzie foi a melhor universidade privada do estado de São Paulo e a 5ª privada do país.
+
+Desde 2024, o Mackenzie oferece a Pós-Graduação Digital, com cursos de especialização lato sensu 100% online: o conteúdo acadêmico é do Mackenzie e a plataforma é da Cogna Educação. É essa pós EAD que aparece no Bolsa Click, com cursos de 12 meses em áreas como Direito, Gestão, Educação, Tecnologia, Saúde e Engenharia.
+
+No Bolsa Click você vê a mensalidade real de cada especialização antes de se inscrever. Hoje essas ofertas não têm bolsa de desconto: o valor exibido é o preço cheio da instituição.`,
+    founded: 1870,
+    type: 'PRIVADA' as const,
+    campusCount: null,
+    studentCount: null,
+    coursesOffered: null,
+    headquartersCity: 'São Paulo',
+    headquartersState: 'SP',
+    // Conceito Institucional (CI) 5 — recredenciamento 2023 (mackenzie.br).
+    mecRating: 5,
+    emecLink: 'https://emec.mec.gov.br/emec/consulta-cadastro/detalhamento/d96957f455f6405d14c6542552b0f6eb/MjI=',
+    modalities: ['EAD'],
+    academicLevels: ['POS_GRADUACAO'],
+    highlights: [
+      'Conceito Institucional 5 no MEC, a nota máxima (recredenciamento 2023)',
+      'Origem em 1870: uma das instituições de ensino mais antigas do Brasil',
+      'Melhor universidade privada do estado de São Paulo no RUF 2024',
+      'Pós-graduação 100% online, com conteúdo do Mackenzie e plataforma da Cogna',
+      'Especializações de 12 meses em Direito, Gestão, Educação, Tecnologia e Saúde',
+      'Sede no Campus Higienópolis, em São Paulo',
+    ],
+    logoUrl: '/assets/logo-mackenzie.png',
+    imageUrl: '',
+    imageAlt: 'Logo da Universidade Presbiteriana Mackenzie',
+    keywords: [
+      'mackenzie', 'universidade mackenzie', 'faculdade mackenzie',
+      'mackenzie pós-graduação', 'mackenzie pós ead', 'pós-graduação digital mackenzie',
+      'mackenzie ead', 'mackenzie especialização', 'mackenzie mensalidade',
+      'mackenzie nota mec', 'universidade presbiteriana mackenzie',
+    ],
+    metaTitle: 'Pós-Graduação EAD Mackenzie - Cursos, Mensalidades e Nota MEC',
+    metaDescription:
+      'Pós-graduação 100% online da Universidade Presbiteriana Mackenzie (CI 5 no MEC). Veja as especializações, a mensalidade real de cada curso e inscreva-se grátis pelo Bolsa Click.',
+    isActive: true,
+    order: 8,
+  },
 ]
 
 async function main() {
-  console.log('Seeding institutions...')
+  // --only=slug1,slug2 → upsert só dessas (ex.: marca nova), sem regravar
+  // as outras com o texto do seed por cima de ajustes feitos no admin.
+  const onlyArg = process.argv.find((a) => a.startsWith('--only='))
+  const only = onlyArg ? new Set(onlyArg.slice('--only='.length).split(',').map((s) => s.trim())) : null
+  const selected = only ? institutions.filter((i) => only.has(i.slug)) : institutions
+  if (only && selected.length !== only.size) {
+    throw new Error(`--only com slug desconhecido: ${[...only].filter((s) => !institutions.some((i) => i.slug === s)).join(', ')}`)
+  }
 
-  for (const institution of institutions) {
+  console.log(`Seeding institutions${only ? ` (só ${[...only].join(', ')})` : ''}...`)
+
+  for (const institution of selected) {
     const result = await prisma.institution.upsert({
       where: { slug: institution.slug },
       update: institution,

@@ -302,6 +302,7 @@ async function buildInstitutionsSitemap(): Promise<SitemapEntry[]> {
             shortName: true,
             fullName: true,
             hasCityPages: true,
+            academicLevels: true,
             updatedAt: true,
           },
         }),
@@ -325,7 +326,9 @@ async function buildInstitutionsSitemap(): Promise<SitemapEntry[]> {
       })
     }
 
-    const sortedByRecency = [...institutions].sort(
+    // Comparação só entre marcas com graduação — mesma regra de
+    // COMPARABLE_INSTITUTION (app/lib/utils/comparable-institution.ts).
+    const sortedByRecency = institutions.filter((i) => i.academicLevels.includes('GRADUACAO')).sort(
       (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()
     )
 

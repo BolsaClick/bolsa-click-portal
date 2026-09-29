@@ -20,6 +20,7 @@ import CourseCardNew from '@/app/components/CourseCardNew'
 import { Course } from '@/app/interface/course'
 import { normalizeCourseNameKey } from '@/app/lib/utils/course-name-key'
 import type { InstitutionData } from '../_data/types'
+import { primaryAcademicLevel } from '../_data/primary-level'
 import type { BrandContent } from './_data/brand-content'
 
 type Props = {
@@ -81,6 +82,7 @@ const modalityDetail: Record<string, { title: (n: string) => string; body: (n: s
 
 export default function FaculdadePageClient({ institution, initialCourses, brandContent, courseSlugMap, discountPct }: Props) {
   const hasDiscount = discountPct > 0
+  const { level: primaryLevel, label: primaryLevelLabel } = primaryAcademicLevel(institution.academicLevels)
   const [selectedModality, setSelectedModality] = useState<string>('')
   const [visibleCount, setVisibleCount] = useState(6)
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(0)
@@ -125,7 +127,7 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
       q: `Como conseguir bolsa de estudo na ${institution.name}?`,
       a: hasDiscount
         ? `Pelo Bolsa Click: busca o curso, escolhe a melhor oferta e se inscreve grátis. As bolsas chegam a ${discountPct}% de desconto.`
-        : `Hoje as ofertas de graduação da ${institution.name} no Bolsa Click não têm desconto — a mensalidade listada é o valor cheio da instituição. Você pode comparar com outras faculdades parceiras que têm bolsa própria ativa.`,
+        : `Hoje as ofertas de ${primaryLevelLabel} da ${institution.name} no Bolsa Click não têm desconto — a mensalidade listada é o valor cheio da instituição. Você pode comparar com outras faculdades parceiras que têm bolsa própria ativa.`,
     },
     {
       q: `Quais cursos a Faculdade ${institution.name} oferece?`,
@@ -261,7 +263,7 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
                 </>
               ) : (
                 <>
-                  A {institution.name} não tem bolsa própria ativa nas ofertas de graduação
+                  A {institution.name} não tem bolsa própria ativa nas ofertas de {primaryLevelLabel}
                   listadas aqui hoje — as mensalidades mostradas são o valor cheio da
                   instituição{institution.mecRating ? `, nota ${institution.mecRating} no MEC` : ''}. Compare os cursos e preços reais abaixo, ou veja outras
                   faculdades parceiras com desconto ativo.
@@ -508,7 +510,7 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
                     pra essa instituição agora.
                   </p>
                   <Link
-                    href="/curso/resultado?nivel=GRADUACAO"
+                    href={`/curso/resultado?nivel=${primaryLevel}`}
                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-bolsa-secondary text-white font-semibold rounded-full text-[13px] hover:bg-bolsa-secondary/90 transition-colors"
                   >
                     Ver todas as bolsas
@@ -642,7 +644,7 @@ export default function FaculdadePageClient({ institution, initialCourses, brand
                     <ArrowRight size={14} />
                   </a>
                   <Link
-                    href="/curso/resultado?nivel=GRADUACAO"
+                    href={`/curso/resultado?nivel=${primaryLevel}`}
                     className="inline-flex items-center justify-center gap-2 w-full mt-2 px-5 py-3 border border-white/20 text-white font-semibold rounded-full text-[13px] hover:bg-white/10 transition-colors"
                   >
                     Buscar outros cursos

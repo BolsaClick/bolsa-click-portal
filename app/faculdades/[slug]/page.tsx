@@ -16,6 +16,8 @@ import { ReviewList } from './_components/ReviewList'
 import { ReviewForm } from './_components/ReviewForm'
 import { BRAND_CONTENT } from './_data/brand-content'
 import { getDisplayDiscountPct } from '@/app/lib/utils/institution-discount'
+import { primaryAcademicLevel } from '../_data/primary-level'
+import { COMPARABLE_INSTITUTION } from '@/app/lib/utils/comparable-institution'
 
 const theme = getCurrentTheme()
 
@@ -138,9 +140,11 @@ export default async function FaculdadeDetailPage({
 }) {
   const { slug } = await params
   const institution = await getInstitution(slug)
-  const otherInstitutions = institution
+  // Links "Compare X com outras" → /comparar, que só existe entre marcas com
+  // graduação (COMPARABLE_INSTITUTION). Marca só de pós não ganha a seção.
+  const otherInstitutions = institution?.academicLevels.includes('GRADUACAO')
     ? await prisma.institution.findMany({
-        where: { isActive: true, slug: { not: slug } },
+        where: { ...COMPARABLE_INSTITUTION, slug: { not: slug } },
         select: { slug: true, name: true },
         orderBy: { order: 'asc' },
         take: 5,
@@ -163,7 +167,8 @@ export default async function FaculdadeDetailPage({
 
   const reviewSummary = await getInstitutionReviewSummary(institution.id)
   const aggregateRating = buildAggregateRatingSchema(reviewSummary)
-  const institutionCourses = await getInstitutionCourses(institution.name)
+  const { level: primaryLevel, label: primaryLevelLabel } = primaryAcademicLevel(institution.academicLevels)
+  const institutionCourses = await getInstitutionCourses(institution.name, { academicLevel: primaryLevel })
   const courseSlugMap = await courseSlugMapPromise
 
   // Desconto REAL da marca — lido de InstitutionMaxDiscountCache (memoizado
@@ -238,7 +243,7 @@ export default async function FaculdadeDetailPage({
       q: `Como conseguir bolsa de estudo na Faculdade ${institution.name}?`,
       a: hasDiscount
         ? `Para conseguir bolsa de estudo na Faculdade ${institution.name}, basta acessar o Bolsa Click, buscar pelo curso desejado, escolher a melhor oferta e se inscrever gratuitamente. As bolsas podem chegar a até ${discountPct}% de desconto.`
-        : `Hoje as ofertas de graduação da Faculdade ${institution.name} listadas no Bolsa Click não têm desconto — a mensalidade exibida é o valor cheio da instituição. Você pode comparar com outras faculdades parceiras que têm bolsa própria ativa.`,
+        : `Hoje as ofertas de ${primaryLevelLabel} da Faculdade ${institution.name} listadas no Bolsa Click não têm desconto — a mensalidade exibida é o valor cheio da instituição. Você pode comparar com outras faculdades parceiras que têm bolsa própria ativa.`,
     },
     {
       q: `Quais cursos a Faculdade ${institution.name} oferece?`,

@@ -75,8 +75,8 @@ const DELAY_MS = Number(args.delay ?? 400)
  *  rodada real. Default: todos (22). NÃO usar em produção (amostra cai). */
 const COURSE_LIMIT = Number(args['course-limit'] ?? 0) || undefined
 
-/** Marcas suportadas — mesmos 7 slugs de Institution.slug no banco. */
-const ALL_BRAND_SLUGS = ['anhanguera', 'unopar', 'pitagoras', 'unime', 'estacio', 'wyden', 'ibmec'] as const
+/** Marcas suportadas — mesmos slugs de Institution.slug no banco. */
+const ALL_BRAND_SLUGS = ['anhanguera', 'unopar', 'pitagoras', 'unime', 'estacio', 'wyden', 'ibmec', 'mackenzie'] as const
 type BrandSlug = (typeof ALL_BRAND_SLUGS)[number]
 
 const BRAND_SLUG_TO_LABEL: Record<BrandSlug, string> = {
@@ -87,8 +87,18 @@ const BRAND_SLUG_TO_LABEL: Record<BrandSlug, string> = {
   estacio: 'Estácio',
   wyden: 'Wyden',
   ibmec: 'IBMEC',
+  mackenzie: 'Mackenzie',
 }
-const COGNA_BRANDS = new Set<BrandSlug>(['anhanguera', 'unopar', 'pitagoras', 'unime'])
+const COGNA_BRANDS = new Set<BrandSlug>(['anhanguera', 'unopar', 'pitagoras', 'unime', 'mackenzie'])
+
+/**
+ * Marcas que o Bolsa Click só vende em PÓS — medidas numa única busca larga
+ * por marca (POS_GRADUACAO), porque os TOP_CURSOS são nomes de graduação e
+ * devolveriam amostra zero → PRESERVE eterno → a página herdaria o teto do
+ * catálogo ("até 80%") sem a marca ter bolsa. Mackenzie (set/2026): 43
+ * especializações EAD, todas sem desconto.
+ */
+const POS_ONLY_BRANDS = new Set<BrandSlug>(['mackenzie'])
 
 const requestedBrands =
   typeof args.brands === 'string'
@@ -141,17 +151,20 @@ const paramsSerializer = (p: Record<string, string | number | string[]>) => {
  *  que pareceria "buscou e não achou nada" (é exatamente essa confusão que
  *  causou os 2 reverts). */
 async function fetchCognaCourseBrand(
-  courseName: string,
+  courseName: string | undefined,
   cognaBrand: string,
+  academicLevel = 'GRADUACAO',
 ): Promise<{ offers: RawOffer[]; failed: boolean }> {
   totalCalls++
   try {
     const res = await tartarus.get('cogna/courses/search', {
       params: {
         page: 1,
-        size: 50,
-        academicLevel: ['GRADUACAO'],
-        courseName,
+        // Busca larga (sem curso) de marca só-pós: uma página grande cobre o
+        // catálogo inteiro da marca (Mackenzie: 43).
+        size: courseName ? 50 : 200,
+        academicLevel: [academicLevel],
+        ...(courseName ? { courseName } : {}),
         brands: [cognaBrand],
       },
       paramsSerializer,
@@ -235,16 +248,21 @@ async function measureBrand(brandSlug: BrandSlug): Promise<BrandMeasurement> {
   let maxDiscountPctRaw = 0
   let hadFailure = false
 
-  const cursos = COURSE_LIMIT ? TOP_CURSOS.slice(0, COURSE_LIMIT) : TOP_CURSOS
+  const isPosOnly = POS_ONLY_BRANDS.has(brandSlug)
+  const cursos = isPosOnly
+    ? [{ apiCourseName: undefined }]
+    : COURSE_LIMIT
+      ? TOP_CURSOS.slice(0, COURSE_LIMIT)
+      : TOP_CURSOS
 
   for (const curso of cursos) {
     if (aborted) break
 
     const result =
       isCogna && cognaBrand
-        ? await fetchCognaCourseBrand(curso.apiCourseName, cognaBrand)
+        ? await fetchCognaCourseBrand(curso.apiCourseName, cognaBrand, isPosOnly ? 'POS_GRADUACAO' : 'GRADUACAO')
         : !isCogna && yduqsBrand
-          ? await fetchAthenaCourseBrand(curso.apiCourseName, yduqsBrand)
+          ? await fetchAthenaCourseBrand(curso.apiCourseName ?? '', yduqsBrand)
           : { offers: [] as RawOffer[], failed: true }
 
     if (result.failed) {

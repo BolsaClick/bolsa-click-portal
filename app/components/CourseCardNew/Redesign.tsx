@@ -66,6 +66,7 @@ const CourseCardRedesign: React.FC<CourseCardProps> = ({
     if (n.includes('estacio') || n.includes('estácio')) return '/estacio-logo.png'
     if (n.includes('wyden')) return '/assets/wyden.svg'
     if (n.includes('ibmec')) return '/assets/logo-ibmec.svg'
+    if (n.includes('mackenzie')) return '/assets/logo-mackenzie.png'
     // UNIC, como a UNAES, é da família Anhanguera e não tem logo próprio
     // aqui (decisão do Rodrigo, 2026-08-20). Fica por ÚLTIMO de propósito:
     // 'unic' é curto e casaria dentro de nomes de outras marcas se viesse

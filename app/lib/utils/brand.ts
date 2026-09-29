@@ -14,6 +14,7 @@ export function normalizeBrand(brand?: string): string {
   if (n.includes('estacio') || n.includes('estácio')) return 'Estácio'
   if (n.includes('ibmec')) return 'IBMEC'
   if (n.includes('wyden')) return 'Wyden'
+  if (n.includes('mackenzie')) return 'Mackenzie'
   return brand!
     .split(' ')
     .map((w) => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w))
@@ -29,6 +30,7 @@ const COGNA_BRAND_PARAM: Record<string, string> = {
   Unopar: 'UNOPAR',
   'Pitágoras': 'PITAGORAS',
   Unime: 'UNIME',
+  Mackenzie: 'MACKENZIE',
 }
 export function cognaBrandParam(label: string): string | null {
   return COGNA_BRAND_PARAM[label] ?? null

@@ -147,6 +147,7 @@ export function brandLogoSrc(brand: string): string {
   if (n.includes('estacio') || n.includes('estácio')) return '/estacio-logo.png'
   if (n.includes('wyden')) return '/assets/wyden.svg'
   if (n.includes('ibmec')) return '/assets/logo-ibmec.svg'
+  if (n.includes('mackenzie')) return '/assets/logo-mackenzie.png'
   return '/assets/logo-bolsa-click-rosa.png'
 }
 

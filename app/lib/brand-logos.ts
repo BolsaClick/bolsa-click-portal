@@ -10,6 +10,7 @@ export const BRAND_LOGOS: Record<string, string> = {
   ESTACIO: '/estacio-logo.png',
   WYDEN: '/assets/wyden.svg',
   IBMEC: '/assets/logo-ibmec.svg',
+  MACKENZIE: '/assets/logo-mackenzie.png',
 }
 
 /**

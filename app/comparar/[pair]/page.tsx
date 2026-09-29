@@ -11,6 +11,7 @@ import { Course } from '@/app/interface/course'
 import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
 import { VisibleFaq } from '@/app/cursos/[slug]/_seo/CourseSeoSections'
 import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
+import { COMPARABLE_INSTITUTION } from '@/app/lib/utils/comparable-institution'
 
 const theme = getCurrentTheme()
 
@@ -105,7 +106,7 @@ function computeBrandStats(offers: Course[], brandName: string): BrandStats {
 
 export async function generateStaticParams() {
   const institutions = await prisma.institution.findMany({
-    where: { isActive: true },
+    where: COMPARABLE_INSTITUTION,
     select: { slug: true },
     orderBy: { slug: 'asc' },
   })
@@ -126,7 +127,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const [a, b] = canonicalOrder(parsed.slugA, parsed.slugB)
 
   const institutions = await prisma.institution.findMany({
-    where: { slug: { in: [a, b] }, isActive: true },
+    where: { slug: { in: [a, b] }, ...COMPARABLE_INSTITUTION },
     select: { name: true, fullName: true, slug: true },
   })
 
@@ -182,7 +183,7 @@ export default async function CompareInstitutionsPage({ params }: Props) {
   }
 
   const institutions = await prisma.institution.findMany({
-    where: { slug: { in: [a, b] }, isActive: true },
+    where: { slug: { in: [a, b] }, ...COMPARABLE_INSTITUTION },
   })
 
   if (institutions.length !== 2) notFound()
@@ -330,7 +331,7 @@ export default async function CompareInstitutionsPage({ params }: Props) {
 
   // Outras comparações pra cross-link
   const allOthers = await prisma.institution.findMany({
-    where: { isActive: true, slug: { notIn: [a, b] } },
+    where: { ...COMPARABLE_INSTITUTION, slug: { notIn: [a, b] } },
     select: { slug: true, name: true },
     take: 4,
   })

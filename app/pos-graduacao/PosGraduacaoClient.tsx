@@ -68,6 +68,7 @@ const PARTNERS = [
   { name: 'Unopar', src: '/assets/logo-unopar.svg' },
   { name: 'Pitágoras', src: '/assets/logo-pitagoras.svg' },
   { name: 'Unime', src: '/assets/logo-unime-p.png' },
+  { name: 'Mackenzie', src: '/assets/logo-mackenzie.png' },
 ]
 
 const FAQ = [

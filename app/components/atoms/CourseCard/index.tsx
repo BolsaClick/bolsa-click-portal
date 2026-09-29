@@ -28,6 +28,8 @@ const CourseCard: React.FC<CourseCardProps> = ({
         return '/assets/logo-unopar.svg'
       case 'pitagoras':
         return '/assets/logo-pitagoras.svg'
+      case 'mackenzie':
+        return '/assets/logo-mackenzie.png'
 
       default:
         return '/assets/logo-bolsa-click-rosa.png'

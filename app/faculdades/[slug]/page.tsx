@@ -17,6 +17,7 @@ import { ReviewForm } from './_components/ReviewForm'
 import { BRAND_CONTENT } from './_data/brand-content'
 import { getDisplayDiscountPct } from '@/app/lib/utils/institution-discount'
 import { primaryAcademicLevel } from '../_data/primary-level'
+import { hasInstallmentPlan, isTotalPriceLevel } from '@/app/components/v2/course-offer'
 import { COMPARABLE_INSTITUTION } from '@/app/lib/utils/comparable-institution'
 
 const theme = getCurrentTheme()
@@ -189,11 +190,23 @@ export default async function FaculdadeDetailPage({
 
   // Faixa de preço REAL das ofertas (anti-hallucination: só preços vindos da API,
   // nunca inventado). Alimenta AggregateOffer pra rich result + citabilidade em IA.
+  // Preço MENSAL de cada oferta — mesma regra do card (hasInstallmentPlan /
+  // isTotalPriceLevel): na graduação minPrice já é a mensalidade; na pós e no
+  // profissionalizante minPrice é o TOTAL do curso, e o valor mensal é a
+  // parcela (minInstallmentValue). Sem isso, o schema da Mackenzie (só pós)
+  // dizia "a partir de R$ 6047/mês" — o curso inteiro rotulado de mensalidade.
   const offerPrices = institutionCourses
-    .map((c) => c.minPrice ?? 0)
+    .map((c) =>
+      hasInstallmentPlan(c)
+        ? c.minInstallmentValue
+        : isTotalPriceLevel(c.academicLevel)
+          ? 0 // total sem plano de parcelas conhecido: não vira "/mês"
+          : (c.minPrice ?? 0),
+    )
     .filter((p) => p > 0)
   const lowPrice = offerPrices.length ? Math.min(...offerPrices) : null
   const highPrice = offerPrices.length ? Math.max(...offerPrices) : null
+  const priceNoun = institutionCourses.some((c) => hasInstallmentPlan(c)) ? 'Parcelas' : 'Mensalidades'
 
   const educationalOrgSchema = {
     '@context': 'https://schema.org',
@@ -223,9 +236,9 @@ export default async function FaculdadeDetailPage({
         lowPrice,
         ...(highPrice && highPrice !== lowPrice && { highPrice }),
         offerCount: institutionCourses.length,
-        category: 'Bolsa de estudo',
+        ...(hasDiscount && { category: 'Bolsa de estudo' }),
         availability: 'https://schema.org/InStock',
-        description: `Mensalidades com bolsa de estudo na ${institution.name} a partir de R$ ${lowPrice.toFixed(0)}/mês.`,
+        description: `${priceNoun}${hasDiscount ? ' com bolsa de estudo' : ''} na ${institution.name} a partir de R$ ${lowPrice.toFixed(0)}/mês.`,
       },
     }),
   }

@@ -1,0 +1,63 @@
+# Refaz as vitrines (home, /faculdades, /faculdades/[slug]) depois de cada
+# deploy de produção na Railway.
+#
+# Por quê: essas páginas são pré-renderizadas no build. Se a Athena/Tartarus
+# falham durante o build, as prateleiras saem vazias e ficam assim até o
+# próximo ciclo de ISR — 1h na home, 24h nas páginas de faculdade (deploy de
+# 30/09: home sem prateleira nenhuma e /faculdades/* sem cursos).
+#
+# Gatilho: o status de commit que a Railway publica ("bolsa click -
+# bolsa-click-portal"). Depois de revalidar, pede a home duas vezes (a 1ª
+# dispara a regeneração, a 2ª lê o resultado) e confere se as prateleiras
+# voltaram; se não, espera e tenta de novo (APIs ainda instáveis).
+#
+# Requer o secret REVALIDATE_SECRET no GitHub com o MESMO valor da variável
+# REVALIDATE_SECRET do serviço na Railway.
+name: revalidate-after-deploy
+
+on:
+  status:
+  workflow_dispatch:
+
+jobs:
+  revalidate:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.context == 'bolsa click - bolsa-click-portal' &&
+       github.event.state == 'success' &&
+       contains(github.event.branches.*.name, 'main'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SITE: https://www.bolsaclick.com.br
+      REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+    steps:
+      - name: Revalidar e conferir as prateleiras
+        run: |
+          if [ -z "$REVALIDATE_SECRET" ]; then
+            echo "::error::secret REVALIDATE_SECRET não configurado no GitHub"
+            exit 1
+          fi
+          for attempt in 1 2 3 4; do
+            echo "Tentativa $attempt"
+            status=$(curl -s -o /tmp/resp.json -w '%{http_code}' -X POST \
+              -H "x-revalidate-secret: $REVALIDATE_SECRET" "$SITE/api/revalidate")
+            cat /tmp/resp.json; echo
+            if [ "$status" != "200" ]; then
+              echo "::error::/api/revalidate respondeu $status"
+              exit 1
+            fi
+            # 1ª requisição dispara a regeneração (stale-while-revalidate);
+            # a 2ª, depois de dar tempo pro render, já lê a página nova.
+            curl -s -o /dev/null --max-time 90 "$SITE/" || true
+            sleep 45
+            shelves=$(curl -s --max-time 90 "$SITE/" | grep -o 'id="shelf-[a-z-]*"' | sort -u | wc -l)
+            echo "Prateleiras na home: $shelves"
+            if [ "$shelves" -ge 2 ]; then
+              echo "Vitrines de volta."
+              exit 0
+            fi
+            sleep 120
+          done
+          echo "::warning::A home continua sem prateleiras depois de 4 tentativas. Athena/Tartarus provavelmente fora do ar."
+          exit 1

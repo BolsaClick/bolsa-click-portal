@@ -10,10 +10,11 @@ import ScholarshipInfoSection from '../components/organisms/ScholarshipInfoSecti
 import BlogTeaser from '../components/v2/home/BlogTeaser'
 import CourseShelf from '../components/v2/home/CourseShelf'
 import GeoShelf from '../components/v2/home/GeoShelf'
+import MackenzieShowcase from '../components/v2/home/MackenzieShowcase'
 import RelatedShelf from '../components/v2/home/RelatedShelf'
 import Mascot from '../components/v2/mascot/Mascot'
 import ReactiveCta from '../components/v2/ui/ReactiveCta'
-import { loadBlogPosts, loadShelf } from '../lib/home/vitrine'
+import { loadBlogPosts, loadBrandPosShelf, loadShelf } from '../lib/home/vitrine'
 import { getCurrentTheme } from '../lib/themes'
 import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 import { seoSite } from '../lib/seo/site-config'
@@ -115,6 +116,7 @@ export const metadata: Metadata = {
 // não courseName/academicLevel; conferido no ResultsShell).
 
 const PARTNER_LOGOS = [
+  { name: 'Mackenzie', src: '/assets/logo-mackenzie-horizontal.png' },
   { name: 'Anhanguera', src: '/assets/logo-anhanguera-bolsa-click.svg' },
   { name: 'Unopar', src: '/assets/logo-unopar.svg' },
   { name: 'Pitágoras', src: '/assets/logo-pitagoras.svg' },
@@ -146,11 +148,12 @@ export default async function HomePage() {
   // Vitrine server-side (Cogna + Estácio, dedupe por curso). Renderiza na
   // revalidação (revalidate 3600) — falha de API esconde a prateleira em vez
   // de mostrar oferta inventada ou buraco por 1h.
-  const [popular, eadOffers, blogPosts] = await Promise.all([
+  const [popular, eadOffers, blogPosts, mackenzieOffers] = await Promise.all([
     // "Mais procurados": com cidade a API usa o endpoint real /offers/most-searched
     loadShelf({ city: 'SAO PAULO', state: 'SP' }, 'mais-procurados'),
     loadShelf({ modality: 'EAD' }, 'bolsas-ead'),
     loadBlogPosts(),
+    loadBrandPosShelf('Mackenzie', 'mackenzie-pos'),
   ])
 
   const faqSchema = {
@@ -239,6 +242,10 @@ export default async function HomePage() {
 
       <PersonaReturnBanner />
 
+      {/* Destaque da Mackenzie (marca nova, só pós EAD, sem bolsa) logo
+          abaixo da busca — pedido de negócio de dar visibilidade à marca. */}
+      <MackenzieShowcase offers={mackenzieOffers} />
+
       {/* ===== Prateleiras (vitrine de produto) ===== */}
       <div className="bg-paper pt-4">
         {/* Personalizada: última busca salva (LGPD-gated; sem consentimento/
@@ -259,10 +266,10 @@ export default async function HomePage() {
       {/* Strip de logos das redes parceiras */}
       <section aria-label="Redes parceiras" className="border-y border-ink-100 bg-white">
         <div className="mx-auto w-full max-w-screen-lg px-4 py-5 sm:px-6 lg:px-8">
-          <ul className="flex items-center gap-10 overflow-x-auto pb-1 lg:justify-between lg:gap-6 lg:overflow-visible [scrollbar-width:thin]">
+          <ul className="flex items-center gap-10 overflow-x-auto pb-1 xl:justify-between xl:gap-6 xl:overflow-visible [scrollbar-width:thin]">
             <li className="shrink-0">
               <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-500">
-                6 redes parceiras
+                {PARTNER_LOGOS.length} redes parceiras
                 <br />
                 em 280+ cidades
               </p>

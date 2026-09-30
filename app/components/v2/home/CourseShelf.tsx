@@ -29,6 +29,9 @@ export interface CourseShelfProps {
    * listagem intermediária, que é o maior vazamento medido do funil de SEO.
    */
   cardHref?: string
+  /** Texto do CTA dos cards. Default do card: "Garantir bolsa" — passe outro
+   *  quando a oferta não tem bolsa (ex.: pós da Mackenzie, sem desconto). */
+  ctaLabel?: string
   emptyMessage?: string
   /** id pro aria-labelledby da section */
   headingId: string
@@ -40,6 +43,7 @@ export default function CourseShelf({
   subtitle,
   offers,
   cardHref,
+  ctaLabel,
   emptyMessage = 'Nenhuma oferta carregada agora — use a busca lá em cima.',
   headingId,
 }: CourseShelfProps) {
@@ -128,6 +132,7 @@ export default function CourseShelf({
                 <CourseCardV2
                   offer={offer}
                   href={cardHref ?? offerCheckoutHref(offer)}
+                  ctaLabel={ctaLabel}
                   onCtaClick={() => setPopCount((c) => c + 1)}
                 />
               </li>

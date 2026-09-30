@@ -50,6 +50,10 @@ export interface OfferDetailsResponse {
       priceWithoutDiscount: number
       priceWithDiscount: number
       enrollmentPrice: number
+      /** Pós/profissionalizante: valor da menor parcela do plano (ex.: 377 em 24x). */
+      minInstallmentValue?: number | null
+      /** Pós/profissionalizante: nº de parcelas do plano de `minInstallmentValue`. */
+      totalInstallment?: number | null
       discountPercentage: number
       installments: Array<unknown>
       paymentMethods: PosPaymentMethod[]
@@ -129,6 +133,15 @@ export interface OfferDetails {
   }
   /** Pós-graduação: métodos de pagamento e parcelas */
   paymentMethods?: PosPaymentMethod[]
+  /**
+   * Pós/profissionalizante: parcela de referência da oferta (a mesma que o
+   * card da busca mostra como "Nx de R$ X" — ver `hasInstallmentPlan` em
+   * app/components/v2/course-offer.ts). Em pós, `montlyFeeFrom/To` são o
+   * TOTAL do curso; o que a pessoa paga por mês é esta parcela. Ausente
+   * quando a API não manda — nunca é derivada de total ÷ duração.
+   */
+  minInstallmentValue?: number
+  totalInstallment?: number
   /** Tipos de ingresso (ex.: ["ISENTO_VESTIBULAR"] para pós). Se mais de um, enviar todos na inscrição. */
   ingressType?: string[]
   /** ID DMH Elastic para criar inscrição no marketplace ATHENAS */
@@ -202,6 +215,8 @@ function mapOfferDetailsResponse(
       source: (response.dmhSource as { source?: string })?.source,
     } : undefined,
     paymentMethods: response.basePricing?.default?.paymentMethods ?? [],
+    minInstallmentValue: base?.minInstallmentValue ?? undefined,
+    totalInstallment: base?.totalInstallment ?? undefined,
     ingressType: response.ingressType,
     idDmhElastic: response.idDmhElastic || undefined,
   }

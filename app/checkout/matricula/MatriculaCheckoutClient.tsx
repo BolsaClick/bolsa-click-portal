@@ -32,7 +32,7 @@ import { z } from 'zod'
 import { validarCPF } from '@/utils/cpf-validate'
 import { formatCurrency } from '@/utils/fomartCurrency'
 import { getPriceAnchor } from '@/app/lib/utils/price-anchor'
-import { isTotalPriceLevel } from '@/app/components/v2/course-offer'
+import { hasInstallmentPlan, isTotalPriceLevel } from '@/app/components/v2/course-offer'
 import { toast } from 'sonner'
 // [CUPOM] import { validateCoupon } from '@/app/lib/api/get-coupon'
 import { createLead } from '@/app/lib/api/create-lead'
@@ -648,6 +648,25 @@ const isFormValidForPayment =
     priceIsTotal: offerIsTotalPriceLevel,
   })
 
+  // Desconto REAL da oferta: preço cheio estritamente maior que o preço com
+  // bolsa. Mackenzie, por exemplo, vem com 0% (from === to) — nesse caso não
+  // se fala em "bolsa" nem em "desconto válido para todas as mensalidades".
+  const offerHasRealDiscount = monthlyFee > 0 && (offerDetails?.montlyFeeFrom ?? 0) > monthlyFee
+
+  // Pós/profissionalizante: parcela de referência da oferta (minInstallmentValue
+  // em totalInstallment vezes — a mesma do card "24x de R$ 377,00" da busca).
+  // É o que a pessoa paga por mês; montlyFeeTo é o TOTAL do curso. Só existe
+  // quando a API manda os dois números — sem eles, NÃO dividimos o total pela
+  // duração para inventar uma mensalidade (bug real anterior); a sidebar
+  // mostra o total, rotulado como total.
+  const posReferencePlan =
+    offerDetails
+    && hasInstallmentPlan(offerDetails)
+    && offerDetails.minInstallmentValue > 0
+    && offerDetails.totalInstallment > 0
+      ? { value: offerDetails.minInstallmentValue, count: offerDetails.totalInstallment }
+      : null
+
   const offerSource = offerDetails?.dmhSource?.source
   const isAthenasSource = offerSource === 'ATHENAS'
 
@@ -928,6 +947,37 @@ const isFormValidForPayment =
     const methods = offerDetails.paymentMethods as PosPaymentMethod[] | undefined
     const pm = methods?.find((p) => p.type === posPaymentMethodType)
     return pm?.installments.find((i) => i.id === posInstallmentId)
+  }
+
+  // Bloco de preço da sidebar para pós/profissionalizante sem voucher. Ordem:
+  //  1. parcela escolhida no formulário (valor real daquela parcela);
+  //  2. parcela de referência da oferta (antes de escolher — o auto-select de
+  //     boleto 18x não acontece quando a oferta não tem 18x, ex.: Mackenzie);
+  //  3. total do curso, rotulado como total, quando a API não manda parcela.
+  // `discountPct` só é > 0 quando há desconto de verdade naquela forma de
+  // pagamento — o boleto da Anhanguera, por ex., vem com 0% enquanto o cartão
+  // recorrente tem 10%; mostrar "−10%" ao lado da parcela do boleto mentiria.
+  const getPosSidebarPrice = ():
+    | { kind: 'installment'; value: number; count: number; discountPct: number }
+    | { kind: 'total'; value: number } => {
+    const selected = getSelectedInstallment()
+    if (selected) {
+      return {
+        kind: 'installment',
+        value: selected.installmentValue,
+        count: selected.number,
+        discountPct: selected.discountPercentage > 0 ? Math.round(selected.discountPercentage) : 0,
+      }
+    }
+    if (posReferencePlan) {
+      return {
+        kind: 'installment',
+        value: posReferencePlan.value,
+        count: posReferencePlan.count,
+        discountPct: offerHasRealDiscount && priceAnchor ? priceAnchor.discountPct : 0,
+      }
+    }
+    return { kind: 'total', value: monthlyFee }
   }
 
   // Validação manual de voucher (campo digitado), Cosmos-only (pós e
@@ -2013,6 +2063,7 @@ const isFormValidForPayment =
                   name?: string
                   brand?: string
                   minPrice?: number
+                  maxPrice?: number
                   academicLevel?: string
                   minInstallmentValue?: number
                 }
@@ -2130,7 +2181,11 @@ const isFormValidForPayment =
                   return (
                     <div className="bg-paper-warm border border-hairline rounded-2xl p-5 mb-5">
                       <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 mb-2 block">
-                        {isTotal && !showMonthly ? 'Valor total do curso' : 'Mensalidade com bolsa'}
+                        {isTotal && !showMonthly
+                          ? 'Valor total do curso'
+                          : isTotal && !(typeof cachedCourse.maxPrice === 'number' && cachedCourse.maxPrice > cachedCourse.minPrice)
+                            ? 'Mensalidade' // pós sem desconto real: sem "com bolsa"
+                            : 'Mensalidade com bolsa'}
                       </span>
                       <div className="flex items-baseline gap-1.5">
                         <span className="text-[14px] text-ink-700 font-medium">R$</span>
@@ -3143,9 +3198,17 @@ const isFormValidForPayment =
             {/* Bloco de preço */}
             <div className="bg-paper-warm border border-hairline rounded-2xl p-5 mb-5 relative overflow-hidden">
               <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-ink-500 mb-2 block">
-                {offerIsTotalPriceLevel && !(voucherValid && voucherInstallments.length > 0) && !getSelectedInstallment()
-                  ? 'Valor total do curso'
-                  : 'Mensalidade com bolsa'}
+                {(() => {
+                  // Graduação e voucher aplicado: rótulo de sempre. Pós sem
+                  // voucher: "com bolsa" só se houver desconto real na forma
+                  // de pagamento mostrada; total só quando não há parcela.
+                  if (!offerIsTotalPriceLevel || (voucherValid && voucherInstallments.length > 0)) {
+                    return 'Mensalidade com bolsa'
+                  }
+                  const posPrice = getPosSidebarPrice()
+                  if (posPrice.kind === 'total') return 'Valor total do curso'
+                  return posPrice.discountPct > 0 ? 'Mensalidade com bolsa' : 'Mensalidade'
+                })()}
               </span>
 
               {voucherValid && voucherInstallments.length > 0 ? (
@@ -3180,23 +3243,49 @@ const isFormValidForPayment =
               ) : offerIsTotalPriceLevel ? (
                 /* Pós/profissionalizante sem voucher: montlyFeeTo é o TOTAL
                    do curso (não mensalidade — ver offerIsTotalPriceLevel).
-                   Antes de escolher a parcela, mostra o total honesto (sem
-                   "/mês"). Depois de escolher, reage à seleção e mostra a
-                   mensalidade REAL daquela parcela (installmentValue) — não
-                   ficava mais parado em montlyFeeTo quando a pessoa trocava
-                   de parcela (bug relatado no checkout, 2026-09). O
-                   De/-%/Economize compara o TOTAL cheio x TOTAL com bolsa —
-                   sempre correto, independente da parcela escolhida. */
+                   O dono do negócio pediu a PARCELA "/mês", não o total: o
+                   total assusta (R$ 8.062,00 em vez de 24x de R$ 503,00).
+                   Mostra a parcela escolhida ou, antes da escolha, a parcela
+                   de referência da oferta (ver getPosSidebarPrice). Sem
+                   parcela conhecida, cai no total honesto, sem "/mês".
+                   Com parcela, NÃO mostramos "De R$ X riscado / Economize":
+                   esses números comparam TOTAIS à vista, e o parcelado sai
+                   mais caro que o à vista — ficaria enganoso ao lado de um
+                   valor mensal. Fica só o % de bolsa da forma de pagamento. */
                 (() => {
-                  const selectedInstallment = getSelectedInstallment()
+                  const posPrice = getPosSidebarPrice()
+                  if (posPrice.kind === 'installment') {
+                    return (
+                      <>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-[14px] text-ink-700 font-medium">R$</span>
+                          <span className="font-display num-tabular text-[40px] font-bold text-bolsa-secondary leading-none">
+                            {posPrice.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                          <span className="text-[12px] text-ink-500">/mês</span>
+                        </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                          {/* Só o nº de parcelas: `formatCurrency` é o formatter de
+                              catálogo e força ",99" (377,00 viraria 377,99). */}
+                          <span className="text-[12px] text-ink-500 num-tabular">
+                            em {posPrice.count}x
+                          </span>
+                          {posPrice.discountPct > 0 && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-bolsa-secondary text-white text-[10px] font-bold tracking-wide">
+                              −{posPrice.discountPct}% de bolsa
+                            </span>
+                          )}
+                        </div>
+                      </>
+                    )
+                  }
                   return (
                     <>
                       <div className="flex items-baseline gap-1.5">
                         <span className="text-[14px] text-ink-700 font-medium">R$</span>
                         <span className="font-display num-tabular text-[40px] font-bold text-bolsa-secondary leading-none">
-                          {(selectedInstallment ? selectedInstallment.installmentValue : monthlyFee).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {posPrice.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
-                        {selectedInstallment && <span className="text-[12px] text-ink-500">/mês</span>}
                       </div>
                       {priceAnchor && (
                         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -3320,10 +3409,14 @@ const isFormValidForPayment =
               </li>
             </ul>
 
-            {/* Disclaimer do desconto */}
-            <p className="text-[11px] text-ink-500 leading-relaxed mb-5">
-              <span className="text-bolsa-secondary font-semibold">*</span> Desconto válido para todas as mensalidades, exceto rematrículas e dependências.
-            </p>
+            {/* Disclaimer do desconto — só quando existe desconto. Em pós sem
+                bolsa (Mackenzie vem com 0%) a frase sugeria um desconto que
+                não existe. Graduação mantém o comportamento de antes. */}
+            {(!offerIsTotalPriceLevel || offerHasRealDiscount || (voucherValid && voucherInstallments.length > 0)) && (
+              <p className="text-[11px] text-ink-500 leading-relaxed mb-5">
+                <span className="text-bolsa-secondary font-semibold">*</span> Desconto válido para todas as mensalidades, exceto rematrículas e dependências.
+              </p>
+            )}
 
             {/* Sinais de confiança */}
             <ul className="space-y-3">

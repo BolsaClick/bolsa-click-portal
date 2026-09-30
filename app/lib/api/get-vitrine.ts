@@ -1,6 +1,6 @@
 import { tartarus } from './axios'
 import { searchAthenaOffers, normalizeAthenaOffer } from './athena-offers'
-import { normalizeBrand, cognaBrandParam } from '../utils/brand'
+import { normalizeBrand, cognaBrandParam, yduqsBrandSlug } from '../utils/brand'
 
 export type VitrineLevel = 'GRADUACAO' | 'POS_GRADUACAO' | 'CURSO_PROFISSIONALIZANTE'
 
@@ -52,9 +52,11 @@ type VitrineSlot = {
   /** Fonte da oferta. 'YDUQS' busca na Athena (Estácio); default Cogna (Tartarus). */
   source?: 'COGNA' | 'YDUQS'
   /**
-   * Marca Cogna (label: 'Mackenzie', 'Unopar', …) — vai no filtro `brands`.
-   * Sem ela a busca devolve a oferta que vier primeiro, quase sempre
-   * Anhanguera: a vitrine de pós era 100% Anhanguera por isso.
+   * Marca (label: 'Mackenzie', 'Unopar', 'Estácio', 'Wyden', …). Cogna vai no
+   * filtro `brands` do Tartarus; YDUQS vai no filtro `brand` da Athena.
+   * Sem ela a busca devolve a oferta que vier primeiro — quase sempre
+   * Anhanguera na Cogna (a vitrine de pós era 100% Anhanguera por isso) e,
+   * na Athena, Wyden em vez de Estácio.
    */
   brand?: string
 }
@@ -75,12 +77,14 @@ const SLOTS_BY_LEVEL: Record<VitrineLevel, VitrineSlot[]> = {
   ],
   // Uma marca por card (pedido de negócio 30/09: "Estácio, Anhanguera,
   // Mackenzie, todas"). Cursos conferidos no catálogo de cada marca.
+  // Slots YDUQS: a Athena casa `courseName` COM acento ("gestao de pessoas"
+  // devolve 0 ofertas, "Gestão de Pessoas" devolve ~9 mil) — não tirar o acento.
   POS_GRADUACAO: [
     { courseName: 'mba gestao empresarial', brand: 'Anhanguera' },
     { courseName: 'controladoria', brand: 'Mackenzie' },
-    { courseName: 'gestao de pessoas', source: 'YDUQS' },
+    { courseName: 'Gestão de Pessoas', source: 'YDUQS', brand: 'Estácio' },
     { courseName: 'psicologia', brand: 'Unopar' },
-    { courseName: 'neurociencia', brand: 'Mackenzie' },
+    { courseName: 'Marketing', source: 'YDUQS', brand: 'Wyden' },
     { courseName: 'direito digital', brand: 'Pitágoras' },
   ],
   CURSO_PROFISSIONALIZANTE: [
@@ -176,10 +180,12 @@ async function fetchOne(level: VitrineLevel, slot: VitrineSlot): Promise<Vitrine
 // mensalidade (consistente com o card de graduação, que não divide por duração).
 async function fetchOneYduqs(level: VitrineLevel, slot: VitrineSlot): Promise<VitrineCourse | null> {
   try {
+    const brandSlug = slot.brand ? yduqsBrandSlug(slot.brand) : null
     const list = await searchAthenaOffers({
       courseName: slot.courseName,
       academicLevel: level,
       modality: slot.modality,
+      ...(brandSlug ? { brand: brandSlug } : {}),
     })
     const offers = list.map(normalizeAthenaOffer).filter((o) => !!o.offerId)
     if (offers.length === 0) return null

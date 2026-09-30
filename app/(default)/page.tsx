@@ -115,6 +115,7 @@ export const metadata: Metadata = {
 // não courseName/academicLevel; conferido no ResultsShell).
 
 const PARTNER_LOGOS = [
+  { name: 'Mackenzie', src: '/assets/logo-mackenzie-horizontal.png' },
   { name: 'Anhanguera', src: '/assets/logo-anhanguera-bolsa-click.svg' },
   { name: 'Unopar', src: '/assets/logo-unopar.svg' },
   { name: 'Pitágoras', src: '/assets/logo-pitagoras.svg' },
@@ -259,10 +260,10 @@ export default async function HomePage() {
       {/* Strip de logos das redes parceiras */}
       <section aria-label="Redes parceiras" className="border-y border-ink-100 bg-white">
         <div className="mx-auto w-full max-w-screen-lg px-4 py-5 sm:px-6 lg:px-8">
-          <ul className="flex items-center gap-10 overflow-x-auto pb-1 lg:justify-between lg:gap-6 lg:overflow-visible [scrollbar-width:thin]">
+          <ul className="flex items-center gap-10 overflow-x-auto pb-1 xl:justify-between xl:gap-6 xl:overflow-visible [scrollbar-width:thin]">
             <li className="shrink-0">
               <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-500">
-                6 redes parceiras
+                {PARTNER_LOGOS.length} redes parceiras
                 <br />
                 em 280+ cidades
               </p>

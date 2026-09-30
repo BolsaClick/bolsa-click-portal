@@ -126,7 +126,7 @@ export async function getShowFiltersCourses(
   // O preço é enriquecido depois, só pros itens que cabem na página visível —
   // `api/courses` não devolve preço, e buscar oferta pros 261 seria absurdo.
   const hasCourseName = !!(courseName && courseName.trim())
-  if (!hasCourseName && typeof window === 'undefined') {
+  if (!hasCourseName && !skipAthena && typeof window === 'undefined') {
     const enriquecidos = await listarCursosAthena(
       { city, state, modality, academicLevel },
       brandFilter.yduqs,

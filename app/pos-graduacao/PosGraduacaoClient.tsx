@@ -105,6 +105,7 @@ const buildOfferHref = (o: VitrineCourse) => {
   params.set('c', o.searchTerm)
   params.set('nivel', o.academicLevel)
   if (o.modality) params.set('modalidade', o.modality)
+  if (o.brandFilter) params.set('marcas', o.brandFilter)
   return `/curso/resultado?${params.toString()}`
 }
 
@@ -226,12 +227,13 @@ export default function PosGraduacaoClient({ offers }: Props) {
             <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 items-stretch stagger-rise">
               {offers.map((o) => {
                 const logo = getBrandLogo(o.brand)
-                const monthly = o.durationInMonths && o.durationInMonths > 0
-                  ? o.minPrice / o.durationInMonths
-                  : o.minPrice
-                const monthlyFull = o.durationInMonths && o.durationInMonths > 0
-                  ? o.maxPrice / o.durationInMonths
-                  : o.maxPrice
+                // Athena (Estácio) já manda mensal; Cogna manda o TOTAL do curso.
+                const divideBy = !o.priceIsMonthly && o.durationInMonths && o.durationInMonths > 0
+                  ? o.durationInMonths
+                  : 1
+                const monthly = o.minPrice / divideBy
+                const monthlyFull = o.maxPrice / divideBy
+                const hasDiscount = o.discountPct > 0
                 return (
                   <li key={`${o.id}-${o.searchTerm}-${o.modality}`} className="h-full">
                     <Link
@@ -288,16 +290,27 @@ export default function PosGraduacaoClient({ offers }: Props) {
                       <div className="mt-auto border-t border-hairline pt-4 flex items-end justify-between">
                         <div>
                           <div className="text-[11px] text-ink-500 uppercase tracking-wide font-medium">
-                            Mensalidade com bolsa
+                            {o.installments ? 'Parcelamento' : hasDiscount ? 'Mensalidade com bolsa' : 'Mensalidade'}
                           </div>
-                          <div className="flex items-baseline gap-1 mt-1">
-                            <span className="text-[13px] text-ink-700 font-medium">R$</span>
-                            <span className="font-display num-tabular text-3xl font-bold text-bolsa-secondary leading-none">
-                              {formatPrice(monthly)}
-                            </span>
-                            <span className="text-[12px] text-ink-500">/mês</span>
-                          </div>
-                          {monthlyFull > monthly && (
+                          {o.installments ? (
+                            // Plano real da Cogna (ex.: Mackenzie 24x de R$ 566) — mesma
+                            // regra do CourseCardV2; total ÷ duração inventaria uma mensalidade.
+                            <div className="flex items-baseline gap-1 mt-1">
+                              <span className="text-[13px] text-ink-700 font-medium">{o.installments.count}x de R$</span>
+                              <span className="font-display num-tabular text-3xl font-bold text-bolsa-secondary leading-none">
+                                {formatPrice(o.installments.value)}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="flex items-baseline gap-1 mt-1">
+                              <span className="text-[13px] text-ink-700 font-medium">R$</span>
+                              <span className="font-display num-tabular text-3xl font-bold text-bolsa-secondary leading-none">
+                                {formatPrice(monthly)}
+                              </span>
+                              <span className="text-[12px] text-ink-500">/mês</span>
+                            </div>
+                          )}
+                          {!o.installments && hasDiscount && monthlyFull > monthly && (
                             <div className="text-[12px] text-ink-300 line-through num-tabular mt-1">
                               De R$ {formatPrice(monthlyFull)}
                             </div>

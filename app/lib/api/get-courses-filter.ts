@@ -6,6 +6,22 @@ import { normalizeBrand, cognaBrandParam, yduqsBrandSlug } from "../utils/brand"
 /** Marcas YDUQS consultadas quando o usuário não filtrou por marca. */
 const ALL_YDUQS_BRAND_SLUGS = ['estacio', 'ibmec', 'wyden']
 
+/**
+ * Marcas Cogna pequenas que somem na busca sem filtro de marca.
+ *
+ * O Tartarus devolve as ofertas Cogna de 50 em 50 num universo de ~2.000, e a
+ * 1ª página é toda Anhanguera: medido em 30/09, "Controladoria" pós EAD em SP
+ * não trazia nenhuma Mackenzie — nem no filtro de marcas, que é montado a
+ * partir dos resultados. Com `brands` a oferta existe (24x de R$ 566).
+ * Na página 1, sem filtro de marca, cada marca daqui é buscada à parte e entra
+ * no mesmo rodízio por marca que já mistura Cogna e Estácio. `levels` evita
+ * chamada inútil: a Mackenzie só vende pós.
+ */
+const BURIED_COGNA_BRANDS: { label: string; levels: string[] }[] = [
+  { label: 'Mackenzie', levels: ['POS_GRADUACAO'] },
+]
+const BURIED_BRAND_SIZE = 4
+
 interface Course {
   modality?: string
   commercialModality?: string
@@ -73,7 +89,14 @@ export async function getShowFiltersCourses(
   const skipTartarus = brandFilter.active && brandFilter.cogna.length === 0
   const skipAthena = brandFilter.active && brandFilter.yduqs.length === 0
 
-  const [tartarusResult, athenaResult] = await Promise.allSettled([
+  const buriedBrands =
+    page === 1 && !brandFilter.active
+      ? BURIED_COGNA_BRANDS.filter((b) => b.levels.includes(academicLevel))
+          .map((b) => cognaBrandParam(b.label))
+          .filter((b): b is string => !!b)
+      : []
+
+  const [tartarusResult, athenaResult, buriedResult] = await Promise.allSettled([
     skipTartarus
       ? Promise.resolve({ data: [] as CourseWithPrices[], totalItems: 0, totalPages: 0 })
       : getTartarusFilteredCourses(
@@ -84,6 +107,14 @@ export async function getShowFiltersCourses(
     page === 1 && !skipAthena
       ? fetchAthenaOffers({ courseName, city, state, modality, academicLevel }, brandFilter.yduqs)
       : Promise.resolve([] as CourseWithPrices[]),
+    // Uma chamada por marca: com várias no mesmo `brands`, a mais vendida
+    // ocuparia o BURIED_BRAND_SIZE inteiro de novo.
+    Promise.all(
+      buriedBrands.map((brand) =>
+        getTartarusFilteredCourses(courseName, city, state, modality, academicLevel, 1, BURIED_BRAND_SIZE, [brand])
+          .then((r) => (Array.isArray(r?.data) ? (r.data as CourseWithPrices[]) : [])),
+      ),
+    ).then((lists) => lists.flat()),
   ])
 
   const failedSources: OfferSource[] = []
@@ -141,6 +172,19 @@ export async function getShowFiltersCourses(
       ? (tartarus as CourseWithPrices[])
       : []
 
+  // Marcas pequenas (BURIED_COGNA_BRANDS): falha aqui não vira failedSources —
+  // a busca principal da Cogna já respondeu; só perde o reforço. Ofertas que
+  // já vieram na página principal não entram duas vezes.
+  if (buriedResult.status === 'rejected') {
+    console.error('Erro ao buscar marcas pequenas (Tartarus):', buriedResult.reason)
+  }
+  const seenIds = new Set(tartarusData.map((o) => (o as { id?: unknown }).id).filter(Boolean))
+  const buriedOffers =
+    buriedResult.status === 'fulfilled'
+      ? buriedResult.value.filter((o) => !seenIds.has((o as { id?: unknown }).id))
+      : []
+  athenaOffers = [...buriedOffers, ...athenaOffers]
+
   if (athenaOffers.length === 0) {
     if (failedSources.length === 0) {
       return tartarus
@@ -182,7 +226,9 @@ export async function getShowFiltersCourses(
     typeof (tartarus as { totalItems?: number })?.totalItems === 'number'
       ? (tartarus as { totalItems: number }).totalItems
       : tartarusData.length
-  const totalItems = baseTotalItems + athenaOffers.length
+  // As ofertas das marcas pequenas já contam no totalItems do Tartarus (só
+  // estavam enterradas em páginas distantes) — somar de novo inventaria página.
+  const totalItems = baseTotalItems + athenaOffers.length - buriedOffers.length
 
   return {
     ...(typeof tartarus === 'object' && !Array.isArray(tartarus) ? tartarus : {}),

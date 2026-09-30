@@ -15,7 +15,6 @@ import { balanceByBrand } from '@/app/components/v2/home/balance-by-brand'
 import { toCourseOffer } from '@/app/components/v2/home/featured-offers'
 import type { BlogTeaserPost } from '@/app/components/v2/home/BlogTeaser'
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
-import { getInstitutionCourses } from '@/app/lib/api/get-institution-courses'
 import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
 import { normalizeBrand } from '@/app/lib/utils/brand'
 import { prisma } from '@/app/lib/prisma'
@@ -144,41 +143,6 @@ export async function loadShelf(
       deduped.push(offer)
     }
     const result = balanceByBrand(deduped, 8)
-    if (result.length === 0) {
-      reportEmptyShelf(shelfName, params, 'sem-ofertas-apos-filtro')
-    }
-    return result
-  } catch (error) {
-    reportEmptyShelf(
-      shelfName,
-      params,
-      error instanceof Error ? error.message : 'erro-desconhecido',
-    )
-    return []
-  }
-}
-
-/**
- * Prateleira de pós de UMA marca (hoje, o destaque da Mackenzie na home).
- * Reusa getInstitutionCourses — a mesma busca da página /faculdades/[slug],
- * com filtro `brands` no Tartarus, 1 oferta por curso e cache de 1h — em vez
- * de loadShelf, que é fixo em graduação e balanceia marcas. Falha -> [].
- */
-export async function loadBrandPosShelf(
-  brandName: string,
-  shelfName: string,
-  limit = 10,
-): Promise<CourseOffer[]> {
-  const params = { brand: brandName, academicLevel: 'POS_GRADUACAO' }
-  try {
-    const courses = await Promise.race([
-      getInstitutionCourses(brandName, { academicLevel: 'POS_GRADUACAO' }),
-      shelfTimeout(SHELF_TIMEOUT_MS),
-    ])
-    const result = courses
-      .map(toCourseOffer)
-      .filter((offer): offer is CourseOffer => offer !== null)
-      .slice(0, limit)
     if (result.length === 0) {
       reportEmptyShelf(shelfName, params, 'sem-ofertas-apos-filtro')
     }

@@ -1,6 +1,6 @@
 import { tartarus } from './axios'
 import { searchAthenaOffers, normalizeAthenaOffer } from './athena-offers'
-import { normalizeBrand } from '../utils/brand'
+import { normalizeBrand, cognaBrandParam, yduqsBrandSlug } from '../utils/brand'
 
 export type VitrineLevel = 'GRADUACAO' | 'POS_GRADUACAO' | 'CURSO_PROFISSIONALIZANTE'
 
@@ -17,6 +17,16 @@ export type VitrineCourse = {
   uf: string | null
   searchTerm: string
   academicLevel: VitrineLevel
+  /**
+   * Plano parcelado (pós/profissionalizante Cogna): minPrice é o TOTAL do
+   * curso e o que o aluno paga é `count`x de `value` — mesma regra do
+   * CourseCardV2 (hasInstallmentPlan). Ausente = sem plano conhecido.
+   */
+  installments?: { count: number; value: number }
+  /** minPrice/maxPrice já são mensais (Athena/YDUQS) — não dividir pela duração. */
+  priceIsMonthly?: boolean
+  /** Label da marca pro filtro `marcas` do link: sem ele, marca pequena some na busca. */
+  brandFilter?: string
 }
 
 type ApiCourse = {
@@ -30,6 +40,8 @@ type ApiCourse = {
   maxPrice?: number
   city?: string
   uf?: string
+  totalInstallment?: number
+  minInstallmentValue?: number
 }
 
 type Modality = 'EAD' | 'PRESENCIAL' | 'SEMIPRESENCIAL'
@@ -39,6 +51,14 @@ type VitrineSlot = {
   modality?: Modality
   /** Fonte da oferta. 'YDUQS' busca na Athena (Estácio); default Cogna (Tartarus). */
   source?: 'COGNA' | 'YDUQS'
+  /**
+   * Marca (label: 'Mackenzie', 'Unopar', 'Estácio', 'Wyden', …). Cogna vai no
+   * filtro `brands` do Tartarus; YDUQS vai no filtro `brand` da Athena.
+   * Sem ela a busca devolve a oferta que vier primeiro — quase sempre
+   * Anhanguera na Cogna (a vitrine de pós era 100% Anhanguera por isso) e,
+   * na Athena, Wyden em vez de Estácio.
+   */
+  brand?: string
 }
 
 // Slots curados por nível. Cada slot vira 1 card. Modalidade opcional —
@@ -55,13 +75,17 @@ const SLOTS_BY_LEVEL: Record<VitrineLevel, VitrineSlot[]> = {
     { courseName: 'direito' },
     { courseName: 'Enfermagem', source: 'YDUQS' },
   ],
+  // Uma marca por card (pedido de negócio 30/09: "Estácio, Anhanguera,
+  // Mackenzie, todas"). Cursos conferidos no catálogo de cada marca.
+  // Slots YDUQS: a Athena casa `courseName` COM acento ("gestao de pessoas"
+  // devolve 0 ofertas, "Gestão de Pessoas" devolve ~9 mil) — não tirar o acento.
   POS_GRADUACAO: [
-    { courseName: 'mba gestao empresarial' },
-    { courseName: 'mba marketing' },
-    { courseName: 'gestao de pessoas' },
-    { courseName: 'psicologia' },
-    { courseName: 'direito digital' },
-    { courseName: 'pedagogia empresarial' },
+    { courseName: 'mba gestao empresarial', brand: 'Anhanguera' },
+    { courseName: 'controladoria', brand: 'Mackenzie' },
+    { courseName: 'Gestão de Pessoas', source: 'YDUQS', brand: 'Estácio' },
+    { courseName: 'psicologia', brand: 'Unopar' },
+    { courseName: 'Marketing', source: 'YDUQS', brand: 'Wyden' },
+    { courseName: 'direito digital', brand: 'Pitágoras' },
   ],
   CURSO_PROFISSIONALIZANTE: [
     { courseName: 'cuidador' },
@@ -92,6 +116,10 @@ async function fetchOne(level: VitrineLevel, slot: VitrineSlot): Promise<Vitrine
     }
     if (slot.modality) {
       params.modality = [slot.modality]
+    }
+    const brandParam = slot.brand ? cognaBrandParam(slot.brand) : null
+    if (brandParam) {
+      params.brands = [brandParam]
     }
 
     const { data } = await tartarus.get<{ data?: ApiCourse[] }>('cogna/courses/search', {
@@ -137,6 +165,10 @@ async function fetchOne(level: VitrineLevel, slot: VitrineSlot): Promise<Vitrine
       uf: c.uf ?? null,
       searchTerm: slot.courseName,
       academicLevel: level,
+      ...(level !== 'GRADUACAO' && c.totalInstallment && c.minInstallmentValue
+        ? { installments: { count: c.totalInstallment, value: c.minInstallmentValue } }
+        : {}),
+      ...(brandParam && slot.brand ? { brandFilter: slot.brand } : {}),
     }
   } catch (error) {
     console.error(`[vitrine] erro buscando "${slot.courseName}" (${level}/${slot.modality ?? 'any'}):`, error)
@@ -148,10 +180,12 @@ async function fetchOne(level: VitrineLevel, slot: VitrineSlot): Promise<Vitrine
 // mensalidade (consistente com o card de graduação, que não divide por duração).
 async function fetchOneYduqs(level: VitrineLevel, slot: VitrineSlot): Promise<VitrineCourse | null> {
   try {
+    const brandSlug = slot.brand ? yduqsBrandSlug(slot.brand) : null
     const list = await searchAthenaOffers({
       courseName: slot.courseName,
       academicLevel: level,
       modality: slot.modality,
+      ...(brandSlug ? { brand: brandSlug } : {}),
     })
     const offers = list.map(normalizeAthenaOffer).filter((o) => !!o.offerId)
     if (offers.length === 0) return null
@@ -184,6 +218,8 @@ async function fetchOneYduqs(level: VitrineLevel, slot: VitrineSlot): Promise<Vi
       uf: offer.uf ?? offer.unitState ?? null,
       searchTerm: slot.courseName,
       academicLevel: level,
+      priceIsMonthly: true,
+      brandFilter: normalizeBrand(offer.brand) || 'Estácio',
     }
   } catch (error) {
     console.error(`[vitrine] Athena erro "${slot.courseName}" (${level}):`, error)

@@ -10,11 +10,10 @@ import ScholarshipInfoSection from '../components/organisms/ScholarshipInfoSecti
 import BlogTeaser from '../components/v2/home/BlogTeaser'
 import CourseShelf from '../components/v2/home/CourseShelf'
 import GeoShelf from '../components/v2/home/GeoShelf'
-import MackenzieShowcase from '../components/v2/home/MackenzieShowcase'
 import RelatedShelf from '../components/v2/home/RelatedShelf'
 import Mascot from '../components/v2/mascot/Mascot'
 import ReactiveCta from '../components/v2/ui/ReactiveCta'
-import { loadBlogPosts, loadBrandPosShelf, loadShelf } from '../lib/home/vitrine'
+import { loadBlogPosts, loadShelf } from '../lib/home/vitrine'
 import { getCurrentTheme } from '../lib/themes'
 import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 import { seoSite } from '../lib/seo/site-config'
@@ -148,12 +147,11 @@ export default async function HomePage() {
   // Vitrine server-side (Cogna + Estácio, dedupe por curso). Renderiza na
   // revalidação (revalidate 3600) — falha de API esconde a prateleira em vez
   // de mostrar oferta inventada ou buraco por 1h.
-  const [popular, eadOffers, blogPosts, mackenzieOffers] = await Promise.all([
+  const [popular, eadOffers, blogPosts] = await Promise.all([
     // "Mais procurados": com cidade a API usa o endpoint real /offers/most-searched
     loadShelf({ city: 'SAO PAULO', state: 'SP' }, 'mais-procurados'),
     loadShelf({ modality: 'EAD' }, 'bolsas-ead'),
     loadBlogPosts(),
-    loadBrandPosShelf('Mackenzie', 'mackenzie-pos'),
   ])
 
   const faqSchema = {
@@ -241,10 +239,6 @@ export default async function HomePage() {
       </div>
 
       <PersonaReturnBanner />
-
-      {/* Destaque da Mackenzie (marca nova, só pós EAD, sem bolsa) logo
-          abaixo da busca — pedido de negócio de dar visibilidade à marca. */}
-      <MackenzieShowcase offers={mackenzieOffers} />
 
       {/* ===== Prateleiras (vitrine de produto) ===== */}
       <div className="bg-paper pt-4">

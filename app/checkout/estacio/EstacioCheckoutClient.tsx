@@ -40,6 +40,7 @@ import {
 import { suggestEmailCorrection } from '@/app/lib/validation/email-typo'
 import EstacioPayment, { type EstacioChargeContext } from './EstacioPayment'
 import type { CreateEnrollmentInput } from '@/app/lib/api/athena-offers'
+import { PAYMENTS_DISABLED } from '@/app/lib/checkout/payments-disabled'
 
 /** Máscaras simples (CPF / telefone / CEP). */
 const maskCpf = (v: string) =>
@@ -585,6 +586,14 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
       },
     }
 
+    // Interruptor geral (payments-disabled.ts): sem taxa, inscreve direto na
+    // Athena — o trilho de antes da taxa (PR #108) — e vai para o sucesso sem
+    // nenhuma tela de pagamento.
+    if (PAYMENTS_DISABLED) {
+      await enrollWithoutPayment(enrollment)
+      return
+    }
+
     setChargeContext({
       enrollment,
       offer: {
@@ -607,6 +616,100 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
       brand: offer.brand,
       amount_in_cents: taxaEmCentavos,
     })
+  }
+
+  /** Inscrição direta na Athena, sem cobrança (pagamentos desligados). */
+  const enrollWithoutPayment = async (enrollment: CreateEnrollmentInput) => {
+    try {
+      const res = await fetch('/api/athena-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(enrollment),
+      })
+      const data = await res.json().catch(() => null)
+
+      if (!res.ok) {
+        const reason: string =
+          data?.error || 'Não foi possível concluir sua inscrição nesta oferta.'
+        trackEvent('checkout_inscription_failed', {
+          flow: 'estacio',
+          course_name: offer.courseName,
+          offer_id: offer.offerId,
+          brand: offer.brand,
+          modality: offer.modality,
+          error_message: reason,
+          paid_before_enrollment: false,
+        })
+        reportInscriptionFailure({
+          flow: 'estacio',
+          cpf: form.cpf,
+          name: form.name.trim(),
+          email: form.email.trim(),
+          phone: form.mobile,
+          courseName: offer.courseName,
+          courseId: offer.offerId,
+          brand: offer.brand,
+          modalidade: offer.modality,
+          city: offer.city,
+          source: 'YDUQS',
+          errorMessage: reason,
+        })
+        setError(reason)
+        setSubmitting(false)
+        return
+      }
+
+      const numeroInscricao: string | null =
+        data?.numeroInscricao ||
+        data?.providerResponse?.numeroInscricao ||
+        data?.providerEnrollmentId ||
+        null
+
+      trackEvent('estacio_enrollment_created', {
+        offer_id: offer.offerId,
+        course_name: offer.courseName,
+        numero_inscricao: numeroInscricao ?? undefined,
+        payments_disabled: true,
+      })
+      trackCheckoutSubmitted(trackEvent, {
+        flow: 'estacio',
+        checkoutFlow: 'estacio_checkout',
+        brand: offer.brand,
+        modality: offer.modality,
+        offerId: offer.offerId,
+        courseName: offer.courseName,
+      })
+      void trackFbqDual(
+        'Lead',
+        {
+          content_name: offer.courseName,
+          content_ids: offer.offerId ? [String(offer.offerId)] : undefined,
+          content_type: 'product',
+          currency: 'BRL',
+        },
+        {
+          email: form.email.trim() || undefined,
+          phone: form.mobile.replace(/\D/g, '') || undefined,
+          externalId: form.cpf.replace(/\D/g, '') || undefined,
+          firstName: form.name.trim().split(/\s+/)[0] || undefined,
+        },
+        numeroInscricao ? `estacio_${numeroInscricao}` : undefined,
+      )
+      pushDataLayerEvent('generate_lead', {
+        currency: 'BRL',
+        ...(displayPrice > 0 ? { value: displayPrice } : {}),
+      })
+
+      // Sem paymentUrl/pixCode/taxa: a tela de sucesso não mostra pagamento.
+      const params = new URLSearchParams()
+      if (offer.courseName) params.set('course', offer.courseName)
+      if (numeroInscricao) params.set('numeroInscricao', String(numeroInscricao))
+      router.push(`/checkout/estacio/sucesso?${params.toString()}`)
+    } catch (err) {
+      trackCheckoutError(trackEvent, 'estacio_direct_enrollment', err, 'estacio_checkout')
+      setError('Não conseguimos enviar sua inscrição agora. Tente de novo em instantes.')
+      setSubmitting(false)
+    }
   }
 
   /**
@@ -814,7 +917,9 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
       done: stage === 'payment',
       active: stage === 'form' && dadosOk && enderecoOk,
     },
-    { n: '04', label: 'Pagamento', done: false, active: stage === 'payment' || stage === 'institution' },
+    ...(PAYMENTS_DISABLED
+      ? []
+      : [{ n: '04', label: 'Pagamento', done: false, active: stage === 'payment' || stage === 'institution' }]),
   ]
 
   const taxaFormatada = (taxaEmCentavos / 100).toLocaleString('pt-BR', {
@@ -844,9 +949,18 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
             <span className="italic text-ink-700">em poucos passos.</span>
           </h1>
           <p className="text-ink-500 text-[14px] md:text-[15px] mt-3 leading-relaxed max-w-2xl">
-            Complete seus dados e pague a taxa da plataforma ({taxaFormatada}) pra
-            gente enviar sua inscrição. A matrícula e as mensalidades do curso continuam sendo
-            pagas diretamente à instituição.
+            {PAYMENTS_DISABLED ? (
+              <>
+                Complete seus dados pra gente enviar sua inscrição. A matrícula e as
+                mensalidades do curso são tratadas diretamente com a instituição.
+              </>
+            ) : (
+              <>
+                Complete seus dados e pague a taxa da plataforma ({taxaFormatada}) pra
+                gente enviar sua inscrição. A matrícula e as mensalidades do curso continuam sendo
+                pagas diretamente à instituição.
+              </>
+            )}
           </p>
 
           {/* Stepper editorial */}
@@ -1229,15 +1343,17 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
                     </span>
                   ) : (
                     <>
-                      Ir para o pagamento da taxa
+                      {PAYMENTS_DISABLED ? 'Enviar inscrição' : 'Ir para o pagamento da taxa'}
                       <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
                     </>
                   )}
                 </button>
-                <p className="text-center text-[11px] text-ink-400 mt-3">
-                  Próximo passo: pagar a taxa da plataforma ({taxaFormatada}). A
-                  inscrição é enviada à instituição assim que o pagamento confirmar.
-                </p>
+                {!PAYMENTS_DISABLED && (
+                  <p className="text-center text-[11px] text-ink-400 mt-3">
+                    Próximo passo: pagar a taxa da plataforma ({taxaFormatada}). A
+                    inscrição é enviada à instituição assim que o pagamento confirmar.
+                  </p>
+                )}
               </Section>
             </form>
             )}
@@ -1295,6 +1411,7 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
               </div>
             )}
 
+            {!PAYMENTS_DISABLED && (
             <div className="bg-bolsa-primary/5 border border-bolsa-primary/15 rounded-xl p-4 mb-5">
               <div className="flex items-start gap-3">
                 <span className="flex-shrink-0 w-5 h-5 rounded-full bg-bolsa-primary text-white flex items-center justify-center font-bold text-[11px]">
@@ -1313,6 +1430,7 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
                 </div>
               </div>
             </div>
+            )}
 
             <ul className="space-y-2.5">
               <li className="flex items-center gap-3 text-[13px] text-ink-700">

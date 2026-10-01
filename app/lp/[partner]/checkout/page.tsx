@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/app/lib/prisma'
 import { isPartner, brandColorFor, institutionSlugFor } from '../../_shared/partners'
 import { CAMPAIGN_CHARGE_AMOUNT_CENTS } from '@/app/lib/checkout/campaign-charge'
+import { PAYMENTS_DISABLED } from '@/app/lib/checkout/payments-disabled'
 import CampaignCheckoutClient from './CampaignCheckoutClient'
 
 export const metadata: Metadata = {
@@ -27,6 +28,9 @@ export default async function CampaignCheckoutPage({
 }) {
   const { partner } = await params
   if (!isPartner(partner)) notFound()
+  // Pagamentos desligados (payments-disabled.ts): checkout pago fora do ar —
+  // links antigos/anúncios caem nas ofertas da landing (captura de lead).
+  if (PAYMENTS_DISABLED) redirect(`/lp/${partner}`)
 
   const inst = await prisma.institution.findUnique({ where: { slug: institutionSlugFor(partner) } })
   if (!inst || !inst.isActive) notFound()

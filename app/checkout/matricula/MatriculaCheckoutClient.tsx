@@ -73,6 +73,7 @@ import { Loader2 } from 'lucide-react'
 import MatriculaPayment, { type MatriculaChargeContext } from './MatriculaPayment'
 import PaymentLinkCard from './sucesso/PaymentLinkCard'
 import { getMatriculaCharge } from '@/app/lib/checkout/matricula-charge'
+import { PAYMENTS_DISABLED } from '@/app/lib/checkout/payments-disabled'
 // Type-only (apagado na compilação): garante que o blob montado aqui é
 // exatamente o que `confirm-matricula.ts` lê depois do pagamento.
 import type { MatriculaConfirmBlob } from '@/app/lib/checkout/confirm-matricula'
@@ -686,7 +687,9 @@ const isFormValidForPayment =
   // matrícula/mensalidade da OFERTA — o preço do curso — e NÃO é usado aqui:
   // quanto cobrar é `TAXA_MATRICULA_COGNA_CENTAVOS`, fixo no servidor e
   // recebido por prop em `taxaEmCentavos` só para exibição.
-  const cobraTaxa = getMatriculaCharge(offerDetails).chargeable
+  // Interruptor geral (payments-disabled.ts): com pagamentos desligados, todo
+  // segmento segue o trilho sem taxa (inscrição direta).
+  const cobraTaxa = !PAYMENTS_DISABLED && getMatriculaCharge(offerDetails).chargeable
 
   /**
    * Etapa da tela quando há cobrança. `form` = dados do candidato;

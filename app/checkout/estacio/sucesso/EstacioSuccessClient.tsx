@@ -9,18 +9,22 @@ import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { trackTikTokDual } from '@/app/lib/analytics/ttq'
 import { trackEnrollmentConverted } from '@/app/lib/analytics/checkout-funnel'
+import { PAYMENTS_DISABLED } from '@/app/lib/checkout/payments-disabled'
 
 export default function EstacioSuccessClient() {
   const searchParams = useSearchParams()
   const course = searchParams.get('course')
   const numeroInscricao = searchParams.get('numeroInscricao')
-  const paymentUrl = searchParams.get('paymentUrl')
-  const pixCode = searchParams.get('pixCode')
-  const amount = searchParams.get('amount')
-  const dueDate = searchParams.get('dueDate')
+  // Pagamentos desligados (payments-disabled.ts): ignora qualquer dado de
+  // cobrança na URL — a tela não mostra pagamento nenhum.
+  const param = (key: string) => (PAYMENTS_DISABLED ? null : searchParams.get(key))
+  const paymentUrl = param('paymentUrl')
+  const pixCode = param('pixCode')
+  const amount = param('amount')
+  const dueDate = param('dueDate')
   // Taxa da plataforma (centavos) — já PAGA neste checkout.
   // Ausente em links antigos, e aí a tela simplesmente não mostra o bloco.
-  const taxaCentavos = Number(searchParams.get('taxa') ?? '')
+  const taxaCentavos = Number(param('taxa') ?? '')
   const taxaPaga =
     Number.isFinite(taxaCentavos) && taxaCentavos > 0
       ? (taxaCentavos / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -97,9 +101,11 @@ export default function EstacioSuccessClient() {
           </div>
           <h1 className="text-2xl font-bold text-gray-800">Inscrição realizada com sucesso!</h1>
           <p className="text-gray-600 mt-2">
-            {taxaPaga
-              ? 'A taxa da plataforma está paga. Falta agora o pagamento do curso, que é feito na instituição.'
-              : 'Falta só um passo: finalize o pagamento da matrícula na instituição.'}
+            {PAYMENTS_DISABLED
+              ? 'Sua inscrição foi enviada à Estácio. Acompanhe seu e-mail para os próximos passos.'
+              : taxaPaga
+                ? 'A taxa da plataforma está paga. Falta agora o pagamento do curso, que é feito na instituição.'
+                : 'Falta só um passo: finalize o pagamento da matrícula na instituição.'}
           </p>
         </div>
 
@@ -234,11 +240,15 @@ export default function EstacioSuccessClient() {
                   A taxa da plataforma ({taxaPaga}) já está paga — nada a fazer aqui.
                 </li>
               )}
-              <li>
-                Agora pague a matrícula do curso na página da instituição: é uma cobrança separada,
-                da Estácio.
-              </li>
-              <li>Você pode pagar via PIX ou boleto, conforme as opções exibidas lá.</li>
+              {!PAYMENTS_DISABLED && (
+                <>
+                  <li>
+                    Agora pague a matrícula do curso na página da instituição: é uma cobrança separada,
+                    da Estácio.
+                  </li>
+                  <li>Você pode pagar via PIX ou boleto, conforme as opções exibidas lá.</li>
+                </>
+              )}
               <li>Verifique seu e-mail para acompanhar os próximos passos.</li>
             </ul>
           </div>
@@ -263,7 +273,9 @@ export default function EstacioSuccessClient() {
             </>
           ) : (
             <p className="text-center text-sm text-gray-500">
-              Você receberá por e-mail as instruções para finalizar o pagamento.
+              {PAYMENTS_DISABLED
+                ? 'Você receberá por e-mail os próximos passos da sua inscrição.'
+                : 'Você receberá por e-mail as instruções para finalizar o pagamento.'}
             </p>
           )}
         </div>

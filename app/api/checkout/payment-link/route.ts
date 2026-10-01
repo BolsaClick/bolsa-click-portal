@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { PAYMENTS_DISABLED, PAYMENTS_DISABLED_MESSAGE } from '@/app/lib/checkout/payments-disabled'
 import { resolvePaymentLinkCached } from '@/app/lib/api/cogna-payment-link'
 import { upsertCandidato } from '@/app/lib/api/attio'
 
@@ -20,6 +21,10 @@ export const dynamic = 'force-dynamic'
  * chamadas volta `pending` e precisa ser repetida.
  */
 export async function POST(request: NextRequest) {
+  // Pagamentos desligados (payments-disabled.ts): nenhuma cobrança nova.
+  if (PAYMENTS_DISABLED) {
+    return NextResponse.json({ error: PAYMENTS_DISABLED_MESSAGE }, { status: 503 })
+  }
   try {
     const body = await request.json()
     const inscriptionId = body?.inscriptionId

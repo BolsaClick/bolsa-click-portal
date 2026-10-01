@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { MapPin, Clock3, CreditCard } from 'lucide-react'
 import { formatCurrency } from '@/utils/fomartCurrency'
 import { getPriceAnchor } from '@/app/lib/utils/price-anchor'
+import { PAYMENTS_DISABLED } from '@/app/lib/checkout/payments-disabled'
 
 /**
  * Item de oferta pronto pra exibição no grid — já resolvido a partir de
@@ -155,6 +156,9 @@ export function buildCampaignCheckoutHref(o: OfferCardData, partner: string): st
 
 /** true quando o card tem o mínimo pra ir direto pro checkout pago da campanha. */
 function isCampaignReady(o: OfferCardData): boolean {
+  // Pagamentos desligados (payments-disabled.ts): sem checkout pago, o card
+  // volta ao trilho de detalhe/lead que existia antes do #119.
+  if (PAYMENTS_DISABLED) return false
   return o.source !== 'YDUQS' && !!o.groupId && !!o.unitId && !!o.modality
 }
 

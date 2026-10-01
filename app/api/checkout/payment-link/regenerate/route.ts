@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { PAYMENTS_DISABLED, PAYMENTS_DISABLED_MESSAGE } from '@/app/lib/checkout/payments-disabled'
 import { timingSafeEqual } from 'crypto'
 import {
   createPaymentLink,
@@ -74,6 +75,10 @@ function authorize(request: NextRequest): NextResponse | null {
 }
 
 export async function POST(request: NextRequest) {
+  // Pagamentos desligados (payments-disabled.ts): nenhuma cobrança nova.
+  if (PAYMENTS_DISABLED) {
+    return NextResponse.json({ error: PAYMENTS_DISABLED_MESSAGE }, { status: 503 })
+  }
   const denied = authorize(request)
   if (denied) return denied
 

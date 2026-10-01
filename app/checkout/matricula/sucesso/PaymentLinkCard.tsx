@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { CreditCard, Loader2, QrCode, ShieldCheck } from 'lucide-react'
 import { trackCheckoutError } from '@/app/lib/analytics/checkout-funnel'
+import { PAYMENTS_DISABLED } from '@/app/lib/checkout/payments-disabled'
 
 /**
  * Passo 7 da integração com a Cogna: apresentar o pagamento na tela de sucesso.
@@ -40,13 +41,21 @@ type State =
 /** Espera crescente: o businessKey é gerado pela Cogna depois da inscrição. */
 const RETRY_DELAYS_MS = [1_500, 3_000, 5_000, 8_000]
 
-export default function PaymentLinkCard({
-  inscriptionId,
-  onEvent,
-}: {
+type PaymentLinkCardProps = {
   inscriptionId: string
   onEvent?: (name: string, props?: Record<string, string | number | boolean | null | undefined>) => void
-}) {
+}
+
+/**
+ * Com o interruptor geral ligado (payments-disabled.ts), nenhuma tela mostra o
+ * pagamento da instituição — nem busca o link na Cogna.
+ */
+export default function PaymentLinkCard(props: PaymentLinkCardProps) {
+  if (PAYMENTS_DISABLED) return null
+  return <PaymentLinkCardContent {...props} />
+}
+
+function PaymentLinkCardContent({ inscriptionId, onEvent }: PaymentLinkCardProps) {
   const [state, setState] = useState<State>({ kind: 'loading' })
   const onEventRef = useRef(onEvent)
   onEventRef.current = onEvent

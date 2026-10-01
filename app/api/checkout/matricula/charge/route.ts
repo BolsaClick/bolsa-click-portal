@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { PAYMENTS_DISABLED, PAYMENTS_DISABLED_MESSAGE } from '@/app/lib/checkout/payments-disabled'
 import { elysium } from '@/app/lib/api/axios'
 import { prisma } from '@/app/lib/prisma'
 import {
@@ -80,6 +81,10 @@ interface CognaChargeBody {
 }
 
 export async function POST(request: NextRequest) {
+  // Pagamentos desligados (payments-disabled.ts): nenhuma cobrança nova.
+  if (PAYMENTS_DISABLED) {
+    return NextResponse.json({ error: PAYMENTS_DISABLED_MESSAGE }, { status: 503 })
+  }
   try {
     const body = (await request.json()) as CognaChargeBody
     const {

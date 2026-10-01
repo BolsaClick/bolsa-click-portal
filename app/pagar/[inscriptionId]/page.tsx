@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import PagarRedirectClient from './PagarRedirectClient'
+import { PAYMENTS_DISABLED } from '@/app/lib/checkout/payments-disabled'
 
 export const metadata: Metadata = {
   title: 'Pagamento da sua inscrição',
@@ -32,7 +33,13 @@ export default async function PagarPage({
 
   return (
     <main className="min-h-[60vh] flex items-center justify-center p-6">
-      {valid ? (
+      {PAYMENTS_DISABLED ? (
+        // Pagamentos desligados (payments-disabled.ts).
+        <p className="text-ink-600 text-sm text-center">
+          O pagamento pelo Bolsa Click está temporariamente indisponível. A instituição vai
+          enviar as instruções da sua matrícula por e-mail.
+        </p>
+      ) : valid ? (
         <PagarRedirectClient inscriptionId={inscriptionId} />
       ) : (
         <p className="text-ink-600 text-sm">Link de pagamento inválido.</p>

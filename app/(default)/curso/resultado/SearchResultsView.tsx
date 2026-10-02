@@ -20,6 +20,7 @@ import CourseCardNew from '@/app/components/CourseCardNew'
 import { Course } from '@/app/interface/course'
 import { useResultsFilter } from './ResultsFilterContext'
 import { buildCourseNameForAPI } from './course-name'
+import { dedupeFallback } from './fallback-alternatives'
 import type { ResultsCurrent } from './ResultsShell'
 
 export interface ShowCoursesResult {
@@ -43,23 +44,6 @@ function formatModalidade(value: string): string {
     default:
       return value
   }
-}
-
-/** Dedup por id+modalidade, descartando a modalidade que o usuário já buscou (retornou 0). */
-function dedupeFallback(list: ShowCoursesResult | undefined, blockedModality: string): Course[] {
-  const items = (list?.data || []) as Array<Course & { commercialModality?: string | null }>
-  const blocked = blockedModality.toUpperCase()
-  const seen = new Set<string>()
-  return items
-    .filter((c) => {
-      const mod = (c.commercialModality || c.modality || '').toUpperCase()
-      if (blocked && mod === blocked) return false
-      const key = `${c.id ?? ''}-${mod}`
-      if (seen.has(key)) return false
-      seen.add(key)
-      return true
-    })
-    .slice(0, 6)
 }
 
 export default function SearchResultsView({
@@ -266,7 +250,16 @@ export default function SearchResultsView({
   const paginatedCourses = filteredByPrice.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
   const totalPages = Math.ceil(filteredByPrice.length / ITEMS_PER_PAGE)
 
-  const fallbackCourses = useMemo(() => dedupeFallback(fallbackData, modalidade || ''), [fallbackData, modalidade])
+  // Chave do curso buscado (mesma normalização aplicada ao nome da oferta).
+  const searchedCourseKey = useMemo(
+    () => (courseNameForAPI ? normalizeCourseNameKey(courseNameForAPI) : ''),
+    [courseNameForAPI],
+  )
+
+  const fallbackCourses = useMemo(
+    () => dedupeFallback(fallbackData, modalidade || '', searchedCourseKey),
+    [fallbackData, modalidade, searchedCourseKey],
+  )
 
   // Link secundário "Ver detalhes do curso" (/cursos/[slug]) — só aparece
   // quando o nome do curso da oferta casa com um FeaturedCourse enriquecido.
@@ -460,7 +453,7 @@ export default function SearchResultsView({
                 {fallbackCourses.map((course, index) => (
                   <li key={`fb-${course.id ?? index}-${index}`} className="h-full">
                     <CourseCardNew
-                      courseName={courseDisplayName || course.name || ''}
+                      courseName={course.name || courseDisplayName || ''}
                       course={course}
                       setFormData={(name: string, value: unknown) => setValue(name, value)}
                       viewMode={viewMode}

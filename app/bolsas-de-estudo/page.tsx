@@ -1589,6 +1589,31 @@ export default async function BolsasDeEstudoHubPage() {
         </div>
       </section>
 
+      {/* Estudo próprio. Fica nesta página porque é a de maior autoridade do
+          site no tema (e a que já carrega Dataset schema): quem chega aqui
+          procurando panorama de bolsa é exatamente quem cita dado. Link
+          contextual, não de rodapé, pra passar relevância além de rastreio. */}
+      <section id="estudo-proprio" className="bg-paper py-12 md:py-16 border-b border-hairline">
+        <div className="container mx-auto px-4 max-w-3xl">
+          <div className="hairline-b pb-3 mb-6">
+            <h2 className="font-mono text-[11px] tracking-[0.22em] uppercase text-ink-700">
+              Estudo próprio
+            </h2>
+          </div>
+          <p className="text-ink-700 leading-relaxed mb-4">
+            Os números desta página saem do catálogo do Bolsa Click, não de estimativa de
+            mercado. Reunimos esse levantamento num estudo aberto, com metodologia descrita e
+            dado por cidade e por curso.
+          </p>
+          <Link
+            href="/estudos/panorama-bolsa-2026"
+            className="font-display text-[17px] text-ink-900 underline underline-offset-4 hover:text-bolsa-primary"
+          >
+            Panorama da Bolsa de Estudo no Brasil 2026
+          </Link>
+        </div>
+      </section>
+
       <VisibleFaq
         items={FAQ_ITEMS}
         heading="Perguntas frequentes sobre bolsas de estudo"

@@ -104,8 +104,13 @@ export async function loadShelf(
   shelfName: string = 'unnamed',
 ): Promise<CourseOffer[]> {
   try {
-    const [cognaResult, athenaRaw] = (await Promise.race([
-      Promise.all([
+    // allSettled, NUNCA Promise.all: as duas fontes são independentes e uma
+    // prateleira com só uma delas ainda é uma prateleira honesta. Com
+    // Promise.all, a rejeição da Cogna descartava o resultado JÁ RESOLVIDO da
+    // Estácio e zerava a prateleira inteira — causa raiz do sumiço de
+    // "Mais procurados" quando a Cogna devolve 429/400 ao Tartarus.
+    const [cognaSettled, athenaSettled] = (await Promise.race([
+      Promise.allSettled([
         getShowFiltersCourses(
           undefined,
           params.city,
@@ -118,7 +123,30 @@ export async function loadShelf(
         loadAthenaOffersServer(params),
       ]),
       shelfTimeout(SHELF_TIMEOUT_MS),
-    ])) as [{ data?: unknown[] }, unknown[]]
+    ])) as [
+      PromiseSettledResult<{ data?: unknown[] }>,
+      PromiseSettledResult<unknown[]>,
+    ]
+
+    const cognaResult =
+      cognaSettled.status === 'fulfilled' ? cognaSettled.value : undefined
+    const athenaRaw =
+      athenaSettled.status === 'fulfilled' ? athenaSettled.value : []
+
+    // Guardado pra virar o motivo do log quando a prateleira terminar vazia:
+    // "sem-ofertas-apos-filtro" mentiria sobre uma fonte que caiu.
+    const sourceFailure =
+      cognaSettled.status === 'rejected'
+        ? cognaSettled.reason instanceof Error
+          ? cognaSettled.reason.message
+          : String(cognaSettled.reason)
+        : null
+    if (sourceFailure) {
+      console.error(
+        `[home vitrine] fonte Cogna falhou na prateleira "${shelfName}" (seguindo com as demais):`,
+        sourceFailure,
+      )
+    }
 
     const all = [
       ...(Array.isArray(cognaResult?.data) ? cognaResult.data : []),
@@ -144,7 +172,11 @@ export async function loadShelf(
     }
     const result = balanceByBrand(deduped, 8)
     if (result.length === 0) {
-      reportEmptyShelf(shelfName, params, 'sem-ofertas-apos-filtro')
+      reportEmptyShelf(
+        shelfName,
+        params,
+        sourceFailure ?? 'sem-ofertas-apos-filtro',
+      )
     }
     return result
   } catch (error) {

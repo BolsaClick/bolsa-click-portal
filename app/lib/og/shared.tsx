@@ -16,9 +16,19 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import type { ReactNode } from 'react'
 import { seoSite } from '@/app/lib/seo/site-config'
+import type { MascotPose } from '@/app/components/v2/mascot/Mascot'
 
 export const OG_SIZE = { width: 1200, height: 630 } as const
 export const OG_CONTENT_TYPE = 'image/png' as const
+
+/**
+ * Formato de feed do Instagram (4:5). É o maior retrato que o app aceita sem
+ * recortar: 1:1 desperdiça altura na timeline e 9:16 é de Stories, não de
+ * carrossel. Todo slide sai neste tamanho, então mudar aqui muda o carrossel
+ * inteiro de uma vez — que é o motivo de ser constante compartilhada e não
+ * número solto na rota.
+ */
+export const SOCIAL_SIZE = { width: 1080, height: 1350 } as const
 
 export const OG_PAPER = '#F4EFE5'
 export const OG_INK = '#0B1F3C'
@@ -55,6 +65,33 @@ export async function getBolsaClickLogoDataUri(): Promise<string> {
   cachedLogoDataUri = `data:image/png;base64,${logo.toString('base64')}`
   cachedLogoKey = seoSite.key
   return cachedLogoDataUri
+}
+
+/**
+ * Bob (mascote oficial) embutido como data URI — mesma razão do logo acima:
+ * `ImageResponse` não resolve URL relativa e não dá pra depender do host estar
+ * de pé no momento da geração. Cacheado POR POSE, porque um carrossel usa
+ * várias poses diferentes e um cache de slot único faria cada slide reler o
+ * disco e descartar o anterior.
+ *
+ * Os PNGs da biblioteca pesam ~200-370KB cada; em base64 isso vira ~270-500KB
+ * de string viva por pose usada. É aceitável para as poucas poses de um
+ * carrossel, mas não pré-carregue as 52 de uma vez.
+ *
+ * Mapa pose→contexto em docs/MASCOTES.md. O tipo `MascotPose` vem do
+ * componente oficial (import de tipo, apagado na compilação — não puxa
+ * `next/image` pra dentro da rota de imagem).
+ */
+const cachedMascotDataUris = new Map<MascotPose, string>()
+export async function getMascotDataUri(pose: MascotPose): Promise<string> {
+  const cached = cachedMascotDataUris.get(pose)
+  if (cached) return cached
+  const png = await readFile(
+    path.join(process.cwd(), 'public', 'assets', 'mascote', '3d', `bob-${pose}.png`),
+  )
+  const dataUri = `data:image/png;base64,${png.toString('base64')}`
+  cachedMascotDataUris.set(pose, dataUri)
+  return dataUri
 }
 
 /**

@@ -430,6 +430,25 @@ export default async function CityHubPage({ params }: Props) {
         </section>
       )}
 
+      {/* Link pro estudo próprio. Entra nas ~159 páginas de cidade porque o
+          gancho é natural (o leitor quer comparar a cidade dele com o país) e
+          porque dá ao panorama um volume de links internos que nenhuma página
+          isolada daria. Antes do FAQ pra não competir com o bloco de conversão. */}
+      <section className="bg-white py-10 md:py-12 border-b border-hairline">
+        <div className="container mx-auto px-4 max-w-3xl">
+          <p className="text-ink-700 leading-relaxed">
+            Quer comparar {cityData.name} com o resto do país? O{' '}
+            <Link
+              href="/estudos/panorama-bolsa-2026"
+              className="text-ink-900 underline underline-offset-4 hover:text-bolsa-primary"
+            >
+              Panorama da Bolsa de Estudo no Brasil 2026
+            </Link>{' '}
+            reúne preço, desconto e oferta por cidade e por curso, com a metodologia aberta.
+          </p>
+        </div>
+      </section>
+
       <VisibleFaq
         items={faqItems}
         heading={`Perguntas frequentes sobre bolsas em ${cityData.name}`}

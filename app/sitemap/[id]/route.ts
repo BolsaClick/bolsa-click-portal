@@ -152,6 +152,40 @@ async function buildStaticSitemap(): Promise<SitemapEntry[]> {
     { loc: `${SITE_URL}/sisu`, lastmod: now, changefreq: 'monthly', priority: 0.85 },
     { loc: `${SITE_URL}/fies`, lastmod: now, changefreq: 'monthly', priority: 0.85 },
     { loc: `${SITE_URL}/encceja`, lastmod: now, changefreq: 'monthly', priority: 0.8 },
+    // Pillars editoriais. Ficaram fora do sitemap na migração do next-sitemap
+    // pro App Router (o config antigo listava os 5 primeiros com priority
+    // 0.85-0.95 e isso se perdeu). Todas respondem 200 + index,follow + schema
+    // completo desde então, só não eram submetidas. Auditoria 2026-10, P3.
+    { loc: `${SITE_URL}/faculdade-ead`, lastmod: now, changefreq: 'weekly', priority: 0.9 },
+    { loc: `${SITE_URL}/sem-enem`, lastmod: now, changefreq: 'weekly', priority: 0.9 },
+    {
+      loc: `${SITE_URL}/como-conseguir-bolsa-de-estudo`,
+      lastmod: now,
+      changefreq: 'weekly',
+      priority: 0.9,
+    },
+    { loc: `${SITE_URL}/bolsas/saude`, lastmod: now, changefreq: 'weekly', priority: 0.85 },
+    { loc: `${SITE_URL}/programas`, lastmod: now, changefreq: 'monthly', priority: 0.85 },
+    // E-E-A-T: quem assina o conteúdo editorial. Tem Person schema e é a página
+    // que o editorialTeamPath do site-config aponta.
+    {
+      loc: `${SITE_URL}/sobre/equipe-editorial`,
+      lastmod: now,
+      changefreq: 'monthly',
+      priority: 0.7,
+    },
+    // Hub de estudos próprios + o panorama. São as páginas de dado first-party
+    // (Dataset + Article schema) desenhadas pra atrair citação e backlink. Até
+    // 2026-10 estavam fora dos 5 sub-sitemaps e sem nenhum link interno, ou
+    // seja, invisíveis pro Google. Prioridade alta de propósito: linkbait só
+    // rende depois de ser rastreado.
+    { loc: `${SITE_URL}/estudos`, lastmod: now, changefreq: 'monthly', priority: 0.85 },
+    {
+      loc: `${SITE_URL}/estudos/panorama-bolsa-2026`,
+      lastmod: now,
+      changefreq: 'monthly',
+      priority: 0.9,
+    },
     ...BRAZILIAN_CITIES
       .filter((city) => citySlugsWithOffers.has(city.slug))
       .map((city) => ({

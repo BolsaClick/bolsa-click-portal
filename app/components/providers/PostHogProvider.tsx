@@ -6,13 +6,27 @@ import { usePathname, useSearchParams } from "next/navigation"
 import type { PostHog } from "posthog-js"
 import { useConsent } from "./ConsentProvider"
 import { whenIdle } from '@/app/lib/utils/when-idle'
+import {
+  discardPostHogBuffer,
+  flushPostHogBuffer,
+} from '@/app/lib/analytics/pre-consent-buffer'
 
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
-  const { hydrated, isCategoryEnabled } = useConsent()
+  const { hydrated, hasDecision, isCategoryEnabled } = useConsent()
   const initializedRef = useRef(false)
   const [posthogClient, setPosthogClient] = useState<PostHog | null>(null)
   const analyticsAllowed = hydrated && isCategoryEnabled("analytics")
+
+  // Recusa explícita de analytics: a fila em memória é descartada na hora, sem
+  // nunca ter saído do device. É o outro lado do contrato do buffer — ele só
+  // existe porque o aceite pode chegar DEPOIS do evento, nunca para contornar
+  // a decisão de quem disse não.
+  useEffect(() => {
+    if (hydrated && hasDecision && !analyticsAllowed) {
+      discardPostHogBuffer()
+    }
+  }, [hydrated, hasDecision, analyticsAllowed])
 
   useEffect(() => {
     if (!analyticsAllowed || initializedRef.current) return
@@ -90,14 +104,61 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
       } catch {
         /* sessionStorage indisponível / JSON inválido — ignora */
       }
+
+      // Sobe o que ficou represado antes do aceite — com o timestamp ORIGINAL
+      // de cada evento, senão o funil chegaria todo colado no instante do
+      // consent e a ordem (viewed → identified → submitted) se perderia.
+      const flushed = flushPostHogBuffer(posthog)
+      if (process.env.NODE_ENV === "development" && flushed > 0) {
+        console.log(`✅ PostHog: ${flushed} evento(s) pré-consent enviados`)
+      }
     })
   }, [analyticsAllowed])
 
-  if (!analyticsAllowed || !posthogClient) return <>{children}</>
-
+  // O PHProvider fica SEMPRE montado, mesmo sem cliente. Antes a árvore
+  // trocava de forma quando o consent chegava (`<>{children}</>` virava
+  // `<PHProvider>{children}</PHProvider>`), e trocar o tipo do pai faz o React
+  // desmontar e remontar TODA a subárvore: o estado de componente ia junto.
+  //
+  // Medido no browser em 2026-10-08, com sondas de mount/unmount em cada nível
+  // de ClientProviders e A/B contra o HEAD. Com a troca de forma, ao clicar em
+  // "Aceitar tudo": desmontavam as sondas DENTRO do PostHogProvider (PostHog,
+  // QueryClient, Auth, Global) e sobrevivia só a de FORA — a fronteira do
+  // remount era exatamente este componente. Efeito visível: "Enfermagem"
+  // digitado na home voltava vazio, em um nó de DOM novo. Com o provider fixo,
+  // zero unmounts e o valor preservado.
+  //
+  // Isso era inofensivo enquanto o banner não aparecia no checkout. Agora que
+  // aparece, seria o pior lugar possível: aceitar cookies no meio do
+  // formulário apagaria os dados já digitados pelo candidato. Mantendo o
+  // provider fixo, o consent passa a trocar só o VALOR do contexto — re-render,
+  // nunca remount.
+  //
+  // ATENÇÃO — ESTE FIX TEM UM PAR. NÃO MEXA EM UM SEM O OUTRO.
+  //
+  // O remount mascarava a perda de eventos, porque remontar re-disparava os
+  // efeitos e os eventos apareciam por acidente. Com o remount fechado, os
+  // efeitos NÃO re-disparam e o buffer deixa de ser cinto de segurança e vira a
+  // ÚNICA coisa que salva o `checkout_viewed`. Ou seja: o fix do remount
+  // sozinho nos faria PERDER o topo do funil.
+  //
+  // Por isso este arquivo e o app/lib/analytics/pre-consent-buffer.ts são uma
+  // coisa só: corrigir o remount sem o buffer troca "apaga o formulário do
+  // candidato" por "perde o denominador do funil em silêncio". Quem reverter um
+  // tem de reverter o outro.
+  //
+  // Sem `client`, o PHProvider cai no singleton global do SDK (ainda sem
+  // `init()`): `usePostHog()` devolve um objeto não-inicializado, que o
+  // `isPostHogReady` de usePostHogTracking reconhece como "não pronto" e manda
+  // para a fila. Nada é enviado nem persistido antes do aceite.
+  // O tipo do PHProvider exige `client` definido OU `apiKey`. Passar `apiKey`
+  // resolveria o tipo, mas faria o PRÓPRIO provider chamar `init()` — isto é,
+  // ligaria o PostHog sem consent, exatamente o que não pode acontecer. O cast
+  // mantém o runtime correto (sem client o SDK usa o singleton não
+  // inicializado) sem abrir essa porta.
   return (
-    <PHProvider client={posthogClient}>
-      <SuspendedPostHogPageView />
+    <PHProvider client={posthogClient as PostHog}>
+      {posthogClient ? <SuspendedPostHogPageView /> : null}
       {children}
     </PHProvider>
   )

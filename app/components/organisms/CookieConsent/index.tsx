@@ -1,25 +1,28 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { usePathname } from 'next/navigation'
 import { useConsent } from '../../providers/ConsentProvider'
 import { CONSENT_OPEN_EVENT } from '@/app/lib/consent/storage'
-import { isInscriptionRoute } from '@/app/lib/consent/inscription-route'
 import { CookieBanner } from './CookieBanner'
 import { CookiePreferences } from './CookiePreferences'
 
 export default function CookieConsent() {
-  const pathname = usePathname()
   const { hydrated, hasDecision, categories, acceptAll, rejectAll, save } =
     useConsent()
   const [prefsOpen, setPrefsOpen] = useState(false)
 
-  // Hide on every inscription rail — not only /checkout/estacio.
-  // Also trust window.location (mobile / error remounts can briefly report
-  // an empty usePathname while the URL is still /checkout/matricula).
-  // No AnimatePresence: the exit fade left a fixed overlay on top of step 02/03.
-  const hideBannerOnRoute = isInscriptionRoute(pathname)
-  const showBanner = hydrated && !hasDecision && !prefsOpen && !hideBannerOnRoute
+  // Sem exceção de rota: o banner aparece também no checkout. Entre o #87 e o
+  // #90 ele foi escondido nas rotas de inscrição porque, fixo no rodapé do
+  // mobile, cobria o CTA dos passos 02/03. O preço disso era alto demais:
+  // quem entra direto no checkout nunca era perguntado, nunca consentia, e o
+  // PostHog — que só inicializa com consent — nunca carregava. O funil de
+  // checkout inteiro ficava cego e nenhum teste A/B rodava ali.
+  //
+  // O CTA agora é defendido por LAYOUT, não escondendo a pergunta:
+  // `html.cookie-banner-visible [data-checkout-inscription]` (globals.css)
+  // reserva espaço no rodapé enquanto o banner estiver na tela, e
+  // `.checkout-step-cta` tem z-index acima do banner.
+  const showBanner = hydrated && !hasDecision && !prefsOpen
 
   useEffect(() => {
     const open = () => setPrefsOpen(true)

@@ -300,10 +300,15 @@ html.cookie-banner-visible [data-checkout-inscription] {
 }
 
 /* Layout-level kill switch: checkout layout sets html.on-inscription-route.
-   CookieConsent lives in the root DeferredWidgets (sibling, not descendant),
-   so this must hide by global selector. Covers /checkout/matricula errors
-   and mobile 375px where the banner is full-width over steps 02/03. */
-html.on-inscription-route [aria-label="Aviso de cookies"],
+   Os widgets vivem no DeferredWidgets da raiz (irmão, não descendente), então
+   só dá para escondê-los por seletor global. Cobre /checkout/matricula com
+   erro e o mobile 375px.
+
+   O banner de cookies NÃO entra mais aqui. Escondê-lo no checkout era o que
+   impedia o consent de ser dado justamente onde a medição importa — sem
+   consent o PostHog não inicializa e o funil inteiro ficava cego. O CTA é
+   protegido pela reserva de rodapé de `html.cookie-banner-visible` acima e
+   pelo z-index de `.checkout-step-cta`, não ocultando a pergunta. */
 html.on-inscription-route #wati-whatsapp,
 html.on-inscription-route iframe[src*="clare.ai"],
 html.on-inscription-route iframe[src*="wati"],

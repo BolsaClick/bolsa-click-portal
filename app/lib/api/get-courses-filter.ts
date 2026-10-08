@@ -134,16 +134,6 @@ export async function getShowFiltersCourses(
   let athenaOffers =
     athenaResult.status === 'fulfilled' ? athenaResult.value : []
 
-  // Fonte principal caiu e a Athena não trouxe nada pra compensar (falhou
-  // também, foi pulada, ou legitimamente não tem oferta): não há dado nenhum
-  // pra mostrar — rejeitar pra UI exibir o estado de erro com retry, em vez
-  // de um falso "não encontramos ofertas".
-  if (tartarusResult.status === 'rejected' && athenaOffers.length === 0) {
-    throw tartarusResult.reason instanceof Error
-      ? tartarusResult.reason
-      : new Error('Falha ao carregar as ofertas (Cogna e Estácio indisponíveis)')
-  }
-
   // Modo descoberta (sem curso): a lista de cursos vem de `api/courses`, não de
   // ofertas deduplicadas.
   //
@@ -158,12 +148,36 @@ export async function getShowFiltersCourses(
   // `api/courses` não devolve preço, e buscar oferta pros 261 seria absurdo.
   const hasCourseName = !!(courseName && courseName.trim())
   if (!hasCourseName && !skipAthena && typeof window === 'undefined') {
-    const enriquecidos = await listarCursosAthena(
-      { city, state, modality, academicLevel },
-      brandFilter.yduqs,
-      size,
-    )
-    if (enriquecidos.length > 0) athenaOffers = enriquecidos
+    // try/catch pra não trocar a causa raiz: com a Cogna já rejeitada, um erro
+    // aqui sobrescreveria o motivo real que será lançado logo abaixo.
+    try {
+      const enriquecidos = await listarCursosAthena(
+        { city, state, modality, academicLevel },
+        brandFilter.yduqs,
+        size,
+      )
+      if (enriquecidos.length > 0) athenaOffers = enriquecidos
+    } catch (error) {
+      console.error('Erro ao listar cursos Athena (modo descoberta):', error)
+      if (!failedSources.includes('estacio')) failedSources.push('estacio')
+    }
+  }
+
+  // Fonte principal caiu e a Athena não trouxe nada pra compensar (falhou
+  // também, foi pulada, ou legitimamente não tem oferta): não há dado nenhum
+  // pra mostrar — rejeitar pra UI exibir o estado de erro com retry, em vez
+  // de um falso "não encontramos ofertas".
+  //
+  // Esta checagem fica DEPOIS do modo descoberta de propósito: antes ela
+  // rodava com `athenaOffers` ainda sem o resultado de `listarCursosAthena`,
+  // então uma queda da Cogna abortava a busca mesmo com a Estácio viva e com
+  // oferta — justamente o caminho que a prateleira da home usa (sem
+  // courseName). Com a Estácio respondendo, o certo é devolver resultado
+  // PARCIAL (`failedSources`), não rejeitar.
+  if (tartarusResult.status === 'rejected' && athenaOffers.length === 0) {
+    throw tartarusResult.reason instanceof Error
+      ? tartarusResult.reason
+      : new Error('Falha ao carregar as ofertas (Cogna e Estácio indisponíveis)')
   }
 
   const tartarusData: CourseWithPrices[] = Array.isArray(tartarus?.data)

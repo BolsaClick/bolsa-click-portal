@@ -53,3 +53,20 @@ jobs:
           CITY_LIMIT: ${{ github.event.inputs.city_limit }}
           CONCURRENCY: ${{ github.event.inputs.concurrency || '4' }}
         run: npx tsx scripts/precompute-institution-city-offers.ts
+
+      # Fotografia da série histórica de preço (PriceIndexSnapshot), que vai
+      # sustentar o estudo trimestral de /estudos. Fica pendurado AQUI, e não em
+      # cron próprio, porque este job roda 04:17 — depois do precompute de
+      # curso×cidade (03:17) — então os dois caches que o snapshot lê já estão
+      # frescos. Ver scripts/snapshot-price-index.ts.
+      #
+      # `if: always()` é de propósito: o snapshot LÊ os caches, não o resultado
+      # desta rodada. Se o precompute acima falhar no meio, o cache ainda guarda
+      # o último valor bom, e perder a foto da semana custa mais que registrá-la
+      # a partir de dado um pouco mais velho. O script tem piso de evidência
+      # próprio (MIN_ROWS) e aborta sozinho se o cache estiver ralo.
+      - name: Snapshot do índice de preço
+        if: always()
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx tsx scripts/snapshot-price-index.ts

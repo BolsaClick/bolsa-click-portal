@@ -19,6 +19,52 @@ export const tartarus = axios.create({
   },
 })
 
+/**
+ * Instrumentação de falha do Tartarus.
+ *
+ * Sem isto, um erro do BFF chega no chamador só como "Request failed with
+ * status code 400" — sem URL, sem params e sem o motivo REAL, que vem no corpo
+ * da resposta. Foi exatamente o que escondeu, por horas, um bloqueio
+ * 429 da Cogna ("tentativa de fraude") que o Tartarus reempacota como 400:
+ * a prateleira "Mais procurados" sumia da home sem nenhum rastro do porquê.
+ *
+ * Só loga (nunca engole): reinjeta a mensagem do upstream no `error.message`
+ * para que quem der catch lá em cima — p.ex. reportEmptyShelf — registre a
+ * causa de verdade em vez do texto genérico do axios.
+ */
+tartarus.interceptors.response.use(undefined, (error) => {
+  const cfg = error?.config ?? {}
+  // baseURL vem sem barra final e o path sem barra inicial: concatenar cru
+  // produzia ".../apicogna/courses/search" — URL diagnóstica errada é pior
+  // que URL nenhuma, porque manda quem investiga pro endpoint que não existe.
+  const base = String(cfg.baseURL ?? '').replace(/\/+$/, '')
+  const path = String(cfg.url ?? '').replace(/^\/+/, '')
+  const url = base && path ? `${base}/${path}` : base || path
+  const status = error?.response?.status
+  const upstream = error?.response?.data
+
+  console.error('[tartarus] request falhou', {
+    method: (cfg.method ?? 'get').toUpperCase(),
+    url,
+    params: cfg.params,
+    status: status ?? '(sem resposta)',
+    upstream,
+  })
+
+  // O motivo real do upstream vale mais que "status code 400" para quem loga
+  // a prateleira vazia; preserva o status para quem ainda checa error.response.
+  const detail =
+    typeof upstream?.message === 'string'
+      ? upstream.message
+      : typeof upstream === 'string'
+        ? upstream
+        : null
+  if (detail) {
+    error.message = `${error.message} — ${detail}`
+  }
+  return Promise.reject(error)
+})
+
 export const opencage = axios.create({
   baseURL: process.env.OPENCAGE_URL,
 })

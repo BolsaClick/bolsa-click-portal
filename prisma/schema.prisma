@@ -981,6 +981,79 @@ enum GapMatchStatus {
 }
 
 // ==========================================
+// ÍNDICE DE PREÇO (série histórica p/ o estudo próprio recorrente)
+// ==========================================
+
+// Fotografia periódica do inventário de ofertas, pra sustentar o estudo
+// trimestral de /estudos. Existe por um motivo só: CityCourseOfferCache e
+// InstitutionCityOfferCache guardam ESTADO ATUAL e são sobrescritos a cada
+// rodada, então hoje é impossível afirmar "subiu X% no trimestre" — e é essa
+// frase que faz veículo citar o estudo.
+//
+// Escrito por scripts/snapshot-price-index.ts, pendurado no FIM do workflow
+// precompute-institution-city-offers (domingo 04:17 UTC), que já roda depois do
+// precompute de curso×cidade (03:17) — ou seja, lê os dois caches frescos.
+// Não tem cron próprio, de propósito.
+//
+// O script LÊ os caches em vez de gravar o que aquela rodada buscou: assim uma
+// rodada truncada ou com lote suspeito não contamina a série (mesma filosofia
+// conservadora de InstitutionMaxDiscountCache). O snapshot é retrato do
+// inventário conhecido, não do que deu certo naquela execução.
+model PriceIndexSnapshot {
+  id         String   @id @default(cuid())
+  capturedAt DateTime @default(now())
+  /**
+   * Rótulo do período de referência, ex: "2026-T4". Fecha o trimestre sem
+   * depender de agrupar por data na leitura.
+   */
+  period     String
+
+  // Metadados de confiança: quantas linhas sustentaram a medição e quão velho
+  // era o dado mais defasado na hora da foto. Sem isto não dá pra defender a
+  // metodologia publicamente.
+  courseCityRows      Int
+  institutionCityRows Int
+  stalestFetchedAt    DateTime?
+  notes               String?   @db.Text
+
+  entries PriceIndexEntry[]
+
+  @@index([period])
+  @@index([capturedAt])
+}
+
+model PriceIndexEntry {
+  id         String @id @default(cuid())
+  snapshotId String
+
+  /**
+   * Recorte da medição. scopeKey é o valor dentro do recorte: slug do curso,
+   * slug da cidade, UF ou slug da marca. Em NATIONAL, scopeKey é "br".
+   */
+  scope    PriceIndexScope
+  scopeKey String
+
+  offersCount   Int
+  citiesCovered Int
+  minPrice      Float?
+  avgMinPrice   Float?
+
+  snapshot PriceIndexSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+
+  @@unique([snapshotId, scope, scopeKey])
+  @@index([snapshotId])
+  @@index([scope, scopeKey])
+}
+
+enum PriceIndexScope {
+  NATIONAL
+  COURSE
+  CITY
+  STATE
+  BRAND
+}
+
+// ==========================================
 // BETTER AUTH (migração Firebase→Better Auth, Fase 1)
 // Tabelas próprias (ba_*) pra conviver com o `User` (perfil) existente.
 // Vínculo authUser↔User será por email na migração de usuários.
@@ -1048,4 +1121,82 @@ model AuthVerification {
   updatedAt  DateTime @updatedAt
 
   @@map("ba_verification")
+}
+
+// ==========================================
+// REDES SOCIAIS (FILA DE PUBLICAÇÃO)
+// ==========================================
+
+enum SocialPlatform {
+  INSTAGRAM
+}
+
+/// Formatos da grade editorial. Hoje só OFERTA tem slides implementados;
+/// os outros três existem no enum porque a fila precisa saber filtrar e
+/// medir por formato desde o primeiro post, não depois.
+enum SocialFormat {
+  OFERTA
+  CARROSSEL_EDUCATIVO
+  NOTICIA
+  PROVA_SOCIAL
+}
+
+/// DRAFT -> APPROVED -> PUBLISHED. A aprovação humana é permanente por
+/// decisão do CEO: nada sai sem olho humano, nem depois da API da Meta.
+/// FAILED é terminal de tentativa de publicação, não de geração.
+enum SocialPostStatus {
+  DRAFT
+  APPROVED
+  PUBLISHED
+  FAILED
+}
+
+/// Uma peça de conteúdo social (hoje: um carrossel de Instagram).
+///
+/// `slides` guarda o conteúdo CONGELADO no momento da geração, não uma
+/// referência pro catálogo ao vivo. É a diferença entre aprovar e torcer:
+/// se a prévia relesse o preço na hora de exibir, o Rodrigo aprovaria um
+/// valor e publicaria outro. O De/Por que ele vê é o que vai pro feed.
+model SocialPost {
+  id       String           @id @default(uuid())
+  platform SocialPlatform   @default(INSTAGRAM)
+  format   SocialFormat
+  status   SocialPostStatus @default(DRAFT)
+
+  /// Quando deve ir ao ar. Null = sem data ainda (rascunho solto).
+  scheduledFor DateTime?
+
+  /// Array de slides já resolvidos — ver `SocialSlide` em app/lib/social/slides.ts,
+  /// que é quem valida esse JSON na leitura (o banco não tipa Json).
+  slides   Json
+  caption  String   @db.Text
+  hashtags String[]
+  ctaUrl   String?
+  altText  String?
+
+  /// URLs públicas (Tigris) dos PNGs renderizados, na ordem dos slides.
+  /// Vazio enquanto ninguém renderizou: a prévia do admin não depende
+  /// disso, ela desenha direto da rota de imagem.
+  imageUrls String[]
+
+  /// De onde veio o conteúdo, pra rotação não repetir o mesmo card.
+  /// No formato OFERTA é a chave do slot (ex.: "Pedagogia|Belo Horizonte|MG").
+  sourceRef String?
+
+  approvedAt DateTime?
+  approvedBy String?
+
+  igMediaId     String?
+  publishedAt   DateTime?
+  failureReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+
+  @@index([status, scheduledFor])
+  @@index([format, createdAt])
+  /// A rotação pergunta "qual slot eu publiquei há mais tempo?" — este
+  /// índice é o que faz essa pergunta ser barata.
+  @@index([sourceRef, publishedAt])
 }

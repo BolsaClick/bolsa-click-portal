@@ -1,4 +1,5 @@
 import { readFile, readdir } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
 import { extname, join, relative } from 'node:path'
 
 const baseUrl = (process.env.SEO_AUDIT_BASE_URL || '').replace(/\/+$/, '')
@@ -37,6 +38,41 @@ for (const path of await walk(process.cwd())) {
       fail(`${rel} contém termo público incompatível com a marca alvo`)
       break
     }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Trava do sitemap/robots dinâmicos.
+//
+// A fonte de verdade é o App Router: app/robots.ts, app/sitemap.xml/route.ts e
+// app/sitemap/[id]/route.ts. O gerador estático next-sitemap foi aposentado na
+// migração (commit 5d68fc6), mas o next-sitemap.config.js ficou para trás e
+// divergiu em silêncio: emitia /faculdades/[slug]/[city] (rota legada, hoje um
+// redirect) e slugs de curso sem o sufixo canônico.
+//
+// O modo de falha grave não é o config em si, é o que acontece se alguém rodar
+// o gerador: ele escreve public/robots.txt e public/sitemap.xml, e arquivo
+// estático em public/ TEM PRECEDÊNCIA sobre rota do App Router no Next. O site
+// perderia em silêncio os 17 blocos de crawler de IA do robots e trocaria um
+// sitemap de ~12k URLs por um errado, sem nenhum erro de build pra avisar.
+//
+// Este bloco falha o PR se qualquer peça dessa armadilha voltar.
+const staticOverrides = ['public/robots.txt', 'public/sitemap.xml', 'public/sitemap-0.xml']
+for (const rel of staticOverrides) {
+  if (existsSync(join(process.cwd(), rel))) {
+    fail(rel + ' existe e sombreia a rota dinâmica do App Router; remova o arquivo estático')
+  }
+}
+if (existsSync(join(process.cwd(), 'next-sitemap.config.js'))) {
+  fail('next-sitemap.config.js voltou; o sitemap vive em app/sitemap/[id]/route.ts, não reative o gerador estático')
+}
+{
+  const pkg = JSON.parse(await readFile(join(process.cwd(), 'package.json'), 'utf8'))
+  if (pkg.dependencies?.['next-sitemap'] || pkg.devDependencies?.['next-sitemap']) {
+    fail('next-sitemap voltou às dependencies; o gerador estático foi aposentado, use as rotas do App Router')
+  }
+  if (Object.values(pkg.scripts ?? {}).some((cmd) => String(cmd).includes('next-sitemap'))) {
+    fail('há script npm chamando next-sitemap; sobrescreveria o robots.txt e o sitemap.xml dinâmicos')
   }
 }
 

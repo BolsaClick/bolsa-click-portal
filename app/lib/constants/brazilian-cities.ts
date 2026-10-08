@@ -1,7 +1,10 @@
 // 284 municípios brasileiros para SEO programático.
 // Cobre as 27 capitais (presença em todos os estados) + grandes municípios por
 // população (IBGE 2022) + cidades com polo real de Anhanguera/Unopar/Pitágoras
-// (via API Tartarus). Manter sincronizado com next-sitemap.config.js.
+// (via API Tartarus). Fonte ÚNICA da lista de cidades do SEO programático:
+// o sitemap (app/sitemap/[id]/route.ts) importa daqui. Não recriar uma segunda
+// cópia desta lista em outro arquivo: a que existia em next-sitemap.config.js
+// divergiu em silêncio, e por isso aquele arquivo foi removido.
 // Ordem das primeiras 102: top por relevância/população (usado em internal linking).
 export interface BrazilianCity {
   name: string

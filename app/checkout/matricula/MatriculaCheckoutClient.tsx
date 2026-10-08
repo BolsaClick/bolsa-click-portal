@@ -284,6 +284,12 @@ function MatriculaContent({ taxaEmCentavos }: { taxaEmCentavos: number }) {
     formState: { errors, isSubmitting },
   } = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
+    // `onTouched`: valida quando a pessoa SAI do campo, não só no submit. No
+    // default (`onSubmit`) o objeto `errors` ficava vazio até o primeiro envio
+    // — e como o envio estava bloqueado por campo faltando, a mensagem de erro
+    // nunca chegava a existir. Era o mecanismo exato do beco sem saída do
+    // birthDate: passo marcado como concluído, botão cinza, zero explicação.
+    mode: 'onTouched',
     defaultValues: {
       email: '',
       name: '',
@@ -305,18 +311,26 @@ function MatriculaContent({ taxaEmCentavos }: { taxaEmCentavos: number }) {
 // `useEffect` que mede o abandono por passo precisa observá-los. O stepper
 // continua sendo a única coisa que os DESENHA; aqui eles só passam a ser
 // observáveis.
-const dadosOk = !!(watchedValues.email && watchedValues.name && cpfValidationOk)
+//
+// `birthDate` entra no passo 01 porque ele é desenhado DENTRO da seção de
+// dados do estudante e o envio sempre o exigiu (ver `isFormValidForPayment`).
+// Fora daqui, `dadosOk` ficava true sem ele: o stepper pintava o passo como
+// concluído, o `checkout_step_completed` subia um passo que não estava
+// completo, e o funil no PostHog mostrava gente "passando" por uma etapa em
+// que na verdade estava travada. Analítica e tela agora contam a mesma coisa.
+const birthDateOk = !!watchedValues.birthDate && !errors.birthDate
+const dadosOk = !!(
+  watchedValues.email &&
+  watchedValues.name &&
+  birthDateOk &&
+  cpfValidationOk
+)
 const contatoOk = !!watchedValues.phone
 
-const isFormValidForPayment =
-  !!watchedValues.email &&
-  !!watchedValues.name &&
-  !!watchedValues.cpf &&
-  !!watchedValues.birthDate &&
-  !!watchedValues.phone &&
-  !cpfValidationError &&
-  !cpfInscriptionBlocked &&
-  Object.keys(errors).length === 0
+// `isFormValidForPayment` saiu daqui junto com o `disabled` do CTA: quem decide
+// se o formulário pode ser enviado é o zod, dentro do `handleSubmit` — que, ao
+// contrário de um botão cinza, ESCREVE o motivo em cada campo e põe o foco no
+// primeiro que falta.
 
 
   // Pré-preencher formulário quando usuário estiver logado
@@ -2471,6 +2485,7 @@ const isFormValidForPayment =
                             <div>
                               <div className="relative">
                               <input
+                                ref={field.ref}
                                 value={field.value}
                                 onChange={(e) => {
                                   const masked = e.target.value
@@ -2494,12 +2509,36 @@ const isFormValidForPayment =
                                     try {
                                       // Consulta se o CPF já existe no banco — só alimenta o
                                       // tracking; a matrícula não exige conta.
-                                      const dbCheckResponse = await fetch('/api/auth/check-cpf', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ cpf: cleanCpf }),
-                                      })
-                                      const dbCheckResult = await dbCheckResponse.json()
+                                      //
+                                      // try/catch PRÓPRIO, e de propósito: o CPF já passou pelo
+                                      // `validarCPF` local na linha acima, então o resultado desta
+                                      // chamada não decide nada sobre a validade. Quando ela caía
+                                      // no catch de fora, porém, derrubava `cpfValidationOk` e
+                                      // acendia `cpfValidationError` — ou seja, uma chamada de
+                                      // ANALYTICS barrava a inscrição por rede instável. Agora a
+                                      // falha é não-fatal: loga, segue com `cpf_exists_in_db`
+                                      // desconhecido e não bloqueia ninguém.
+                                      let cpfExistsInDb: boolean | undefined
+                                      try {
+                                        const dbCheckResponse = await fetch('/api/auth/check-cpf', {
+                                          method: 'POST',
+                                          headers: { 'Content-Type': 'application/json' },
+                                          body: JSON.stringify({ cpf: cleanCpf }),
+                                        })
+                                        const dbCheckResult = await dbCheckResponse.json()
+                                        cpfExistsInDb = dbCheckResult?.exists
+                                      } catch (dbCheckError: unknown) {
+                                        console.error(
+                                          'check-cpf falhou (não-fatal, só tracking):',
+                                          dbCheckError,
+                                        )
+                                        trackCheckoutError(
+                                          trackEvent,
+                                          'cpf_db_check',
+                                          dbCheckError,
+                                          'cogna_matricula',
+                                        )
+                                      }
 
                                       setCpfValidationError(null)
                                       setCpfValidationOk(true)
@@ -2507,7 +2546,7 @@ const isFormValidForPayment =
                                       trackEvent('cpf_validated', {
                                         cpf_valid: true,
                                         inscription_allowed: true,
-                                        cpf_exists_in_db: dbCheckResult.exists,
+                                        cpf_exists_in_db: cpfExistsInDb,
                                         course_id: offerDetails?.courseId,
                                         course_name: offerDetails?.course,
                                       })
@@ -2602,12 +2641,21 @@ const isFormValidForPayment =
                                         }
                                       }
                                     } catch (error: unknown) {
-                                      console.error('Erro ao validar CPF:', error)
-                                      const axiosError = error as { response?: { data?: { message?: string } }; message?: string }
-                                      const errorMessage = axiosError.response?.data?.message || axiosError.message || 'Erro ao validar CPF. Tente novamente.'
-                                      setCpfValidationError(errorMessage)
-                                      toast.error(errorMessage)
-                                      trackCheckoutError(trackEvent, 'cpf_validation', error)
+                                      // Rede de segurança NÃO-BLOQUEANTE. Depois que o
+                                      // `validarCPF` local passou e o `check-cpf` ganhou o
+                                      // try próprio dele, só sobra telemetria aqui dentro
+                                      // (PostHog, Meta, GA4, TikTok) e a trava da Cogna, que
+                                      // já é fail-open. Nada disso diz se o CPF é válido —
+                                      // então nada disso pode acender erro no campo nem
+                                      // derrubar `cpfValidationOk`, como acontecia antes:
+                                      // um pixel caindo barrava a inscrição.
+                                      console.error('Falha não-fatal após validar CPF (telemetria):', error)
+                                      trackCheckoutError(
+                                        trackEvent,
+                                        'cpf_validation_side_effects',
+                                        error,
+                                        'cogna_matricula',
+                                      )
                                     } finally {
                                       setIsValidatingCpf(false)
                                     }
@@ -2655,6 +2703,11 @@ const isFormValidForPayment =
                           control={control}
                           render={({ field }) => (
                             <input
+                              // `field.ref` ligado: sem ele o react-hook-form NAO consegue
+                              // focar este campo quando a validacao falha — medido no
+                              // browser, o foco ficava no proprio botao e a mensagem podia
+                              // estar fora da tela. Era o resto do beco sem saida.
+                              ref={field.ref}
                               value={field.value}
                               onChange={(e) => {
                                 const masked = e.target.value
@@ -2725,6 +2778,7 @@ const isFormValidForPayment =
                         name="phone"
                         render={({ field }) => (
                           <input
+                            ref={field.ref}
                             value={field.value}
                             onChange={(e) => field.onChange(formatPhone(e.target.value))}
                             onFocus={() => {
@@ -3107,9 +3161,18 @@ const isFormValidForPayment =
                               </>
                             )}
                           </p>
+                          {/* Só trava no que a pessoa NÃO consegue resolver
+                              sozinha no formulário (envio em curso, CPF já
+                              inscrito). Campo faltando ou inválido não
+                              desabilita mais o botão: o clique roda o
+                              `handleSubmit`, que valida pelo zod, escreve as
+                              mensagens e dá foco no primeiro campo com
+                              problema. Antes, faltar o birthDate deixava o
+                              botão cinza sem dizer por quê — e como o envio
+                              nunca acontecia, o erro nunca era escrito. */}
                           <button
                             type="submit"
-                            disabled={isSubmitting || !isFormValidForPayment}
+                            disabled={isSubmitting || !!cpfInscriptionBlocked}
                             className="checkout-step-cta group w-full inline-flex items-center justify-center gap-3 bg-bolsa-secondary text-white py-4 px-6 rounded-full font-semibold text-[15px] hover:bg-bolsa-secondary/90 disabled:bg-ink-300 disabled:cursor-not-allowed shadow-lg shadow-bolsa-secondary/25 hover:shadow-bolsa-secondary/40 transition-all duration-300"
                           >
                             {isSubmitting ? (

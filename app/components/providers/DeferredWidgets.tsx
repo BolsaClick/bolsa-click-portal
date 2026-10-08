@@ -55,12 +55,18 @@ export function DeferredWidgets() {
   return (
     <>
       <Toaster richColors position="top-right" />
-      {onInscription ? null : (
-        <>
-          <VocationalTab />
-          <CookieConsent />
-        </>
-      )}
+      {/* CookieConsent monta em TODA rota, inclusive o checkout. Ele ficava de
+          fora das rotas de inscrição desde o #87 (o banner fixo cobria o CTA no
+          mobile), e o efeito colateral era que justamente onde a medição mais
+          importa ninguém era perguntado: sem decisão não há consent, sem
+          consent o PostHog não inicializa e o funil de checkout inteiro ficava
+          cego. O CTA passa a ser protegido por layout, não escondendo a
+          pergunta — ver `html.cookie-banner-visible [data-checkout-inscription]`
+          em globals.css e o z-index de `.checkout-step-cta`.
+          VocationalTab continua fora: é isca de topo de funil e não tem o que
+          fazer no meio de uma inscrição. */}
+      <CookieConsent />
+      {onInscription ? null : <VocationalTab />}
     </>
   )
 }

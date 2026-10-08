@@ -21,6 +21,7 @@ import {
   ImageIcon,
   FileText,
   TrendingUp,
+  Instagram,
 } from 'lucide-react'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { AdminProvider, useAdmin } from '@/app/contexts/AdminAuthContext'
@@ -100,6 +101,15 @@ const navigation = [
     name: 'Blog',
     href: '/admin/blog',
     icon: FileText,
+    permission: 'blog',
+  },
+  {
+    name: 'Instagram',
+    href: '/admin/social',
+    icon: Instagram,
+    // Permissão `blog` e não uma `social` nova: as claims vivem no Firebase e
+    // um nome novo deixaria a tela invisível pra todo mundo até alguém
+    // reemitir as claims de cada admin. É conteúdo editorial, mesma gente.
     permission: 'blog',
   },
   {

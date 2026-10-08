@@ -293,6 +293,15 @@ const Footer: React.FC = () => {
                     Blog
                   </Link>
                 </li>
+                {/* Hub de dado próprio. Fica no Institucional (e não em "Para
+                    Estudantes") porque é sinal de autoridade editorial, do mesmo
+                    naipe de Quem Somos e Blog, e porque daqui ele ganha caminho
+                    de rastreio em todas as páginas do site. */}
+                <li>
+                  <Link href="/estudos" className={linkClass}>
+                    Estudos e Pesquisas
+                  </Link>
+                </li>
               </ul>
             </nav>
           </div>

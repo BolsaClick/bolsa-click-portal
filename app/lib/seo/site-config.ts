@@ -1,6 +1,9 @@
 import { DISCOUNT_CEILING_PCT } from '../copy/claims'
+import { siteBrand, type SiteKey } from '../site/brands'
 
-export type SiteKey = 'bolsaclick' | 'bolsamais' | 'anhanguera'
+// `SiteKey` nasce em app/lib/site/brands.ts (fonte única do que varia por
+// site). Re-exportado aqui porque metade do app já importa daqui.
+export type { SiteKey }
 
 export type SeoSiteConfig = {
   key: SiteKey
@@ -24,7 +27,7 @@ function normalizedUrl(value: string): string {
   return value.replace(/\/+$/, '')
 }
 
-const selected = (process.env.NEXT_PUBLIC_THEME ?? 'bolsaclick') as SiteKey
+const selected = siteBrand.key
 
 const defaults: Record<SiteKey, Omit<SeoSiteConfig, 'indexingEnabled'>> = {
   bolsaclick: {

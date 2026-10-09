@@ -1,20 +1,13 @@
 'use client'
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { CheckCircle, Users, School, Award, TrendingUp } from 'lucide-react';
 import './style.css';
 import Image from 'next/image';
 import Link from 'next/link';
 import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
+import { siteBrand } from '@/app/lib/site/brands'
 
 const AboutSection: React.FC = () => {
-  const [currentTheme, setCurrentTheme] = useState('bolsaclick')
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setCurrentTheme(process.env.NEXT_PUBLIC_THEME || 'bolsaclick')
-    }
-  }, [])
-
   const benefits = [
     "Cadastro grátis, sem taxa de adesão",
     "Parceria com as maiores redes de ensino do Brasil",
@@ -110,7 +103,7 @@ const AboutSection: React.FC = () => {
           <h3 className="text-2xl font-bold text-center mb-8 text-emerald-600">
             O que dizem nossos alunos
           </h3>
-          {currentTheme === 'bolsaclick' && (
+          {siteBrand.showTestimonials && (
             <div className="testimonials-grid">
               {testimonials.map((testimonial, index) => (
                 <div key={index} className="testimonial-card">

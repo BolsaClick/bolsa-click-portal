@@ -8,29 +8,14 @@ import Image from 'next/image'
 import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { PUBLIC_AUTH_ENTRYPOINTS_ENABLED } from '@/app/lib/auth/public-auth-visibility'
+import { siteBrand } from '@/app/lib/site/brands'
 
 export const Header = () => {
   const { user, loading, logout } = useAuth()
-  const [currentTheme, setCurrentTheme] = useState('bolsaclick')
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
 
-useEffect(() => {
-  if (typeof window !== 'undefined') {
-    setCurrentTheme(process.env.NEXT_PUBLIC_THEME || 'bolsaclick')
-  }
-}, [])
-const theme = process.env.NEXT_PUBLIC_THEME
-const sectionBg = theme === 'anhanguera' ? 'bg-[#d63c06]' : 'bg-emerald-700'
-
-
-const logoWhite = currentTheme === 'anhanguera'
-  ? '/assets/logo-anhanguera-bolsa-click-branco.svg'
-  : '/assets/logo-bolsa-click-branco.png'
-
-const logoColor = currentTheme === 'anhanguera'
-  ? '/assets/logo-anhanguera-bolsa-click.svg'
-  : '/assets/logo-bolsa-click-rosa.png'
+  const { headerAccentClass: sectionBg, logoWhite, logoColor } = siteBrand
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false);

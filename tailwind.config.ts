@@ -1,44 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 
-const colorsByTheme = {
-  bolsaclick: {
-    primary: '#023e73',
-    secondary: '#f21d44',
-    emerald: {
-      50: '#e7f0fa',
-      100: '#d0e0f5',
-      200: '#a6c4e6',
-      300: '#7da9d8',
-      400: '#548dca',
-      500: '#023e73',
-      600: '#02345f',
-      700: '#022a4c',
-      800: '#011f39',
-      900: '#011525',
-      950: '#000a12',
-    },
-  },
-  anhanguera: {
-    primary: '#f94d12',
-    secondary: '#17375c',
-    emerald: {
-      50: '#fff7f3',
-      100: '#ffece6',
-      200: '#ffd2c2',
-      300: '#ffb299',
-      400: '#fca96c',
-      500: '#f94d12',
-      600: '#d63c06',
-      700: '#b12f03',
-      800: '#8a2302',
-      900: '#6b1b01',
-      950: '#4a0f00',
-    },
-  },
-}
+// Paleta e identidade por site vivem em app/lib/site/brands.ts — fonte única
+// compartilhada com a aplicação. Antes havia uma segunda lista de cores aqui,
+// que só tinha 2 das 3 chaves de SiteKey e quebrava este config no load.
+const { getSiteBrand } = require('./app/lib/site/brands')
 
-const theme = (process.env.NEXT_PUBLIC_THEME || 'bolsaclick') as keyof typeof colorsByTheme
-const emerald = colorsByTheme[theme].emerald
+const brand = getSiteBrand(process.env.NEXT_PUBLIC_THEME)
+
 module.exports = {
   content: [
     './app/**/*.{js,ts,jsx,tsx}',
@@ -58,8 +26,8 @@ module.exports = {
         'screen-lg': '1440px',
       },
       colors: {
-        'bolsa-primary': colorsByTheme[theme].primary,
-        'bolsa-secondary': colorsByTheme[theme].secondary,
+        'bolsa-primary': brand.primary,
+        'bolsa-secondary': brand.secondary,
         'bolsa-black': '#151515',
         'bolsa-white': '#FAFAFA',
         'bolsa-gray-dark': '#242424',
@@ -78,10 +46,10 @@ module.exports = {
         },
         // Neutro FRIO (não faz parte da família `paper`, que é quente) —
         // fundo da dobra do Hero: cinza muito claro puxado pro azul da
-        // marca (`bolsa-primary` #023e73), no espírito da home do Quero
-        // Bolsa referenciada na decisão de produto de 2026-09.
+        // marca (`bolsa-primary` #023e73), conforme a decisão de produto de
+        // 2026-09 sobre a dobra da home.
         mist: '#F4F6F9',
-        emerald: emerald,
+        emerald: brand.ramp,
       },
        keyframes: {
         'slide-pulse': {

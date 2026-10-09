@@ -3,12 +3,10 @@ import React from 'react';
 import { CreditCard, ShieldCheck, Lock, HelpCircle } from 'lucide-react';
 import Image from 'next/image';
 import { CONSENT_OPEN_EVENT } from '@/app/lib/consent/storage';
+import { siteBrand } from '@/app/lib/site/brands'
 
 export const SecureFooter: React.FC = () => {
-  const theme = process.env.NEXT_PUBLIC_THEME
-  const central = theme === 'anhanguera'
-    ? 'https://ajuda.anhangueracursos.com.br/pt-br/'
-    : 'https://ajuda.bolsaclick.com.br/pt-br/'
+  const central = siteBrand.helpCenterUrl
 
   return (
     <footer className="bg-white border-t border-gray-200 py-8 w-full">

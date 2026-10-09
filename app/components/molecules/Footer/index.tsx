@@ -7,6 +7,7 @@ import { business } from '@/app/lib/constants/business';
 import { ManageCookiesButton } from './ManageCookiesButton'
 import { ReclameAquiSeal } from './ReclameAquiSeal';
 import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
+import { siteBrand } from '@/app/lib/site/brands'
 
 const linkClass = 'text-neutral-300 text-sm hover:text-white transition-colors'
 
@@ -70,12 +71,7 @@ const bolsasPorCidade = [
   { nome: 'Pedagogia em Goiânia', curso: 'pedagogia', cidade: 'goiania' },
 ]
 
-const currentTheme = process.env.NEXT_PUBLIC_THEME || 'bolsaclick'
-
-const logoColor =
-  currentTheme === 'anhanguera'
-    ? '/assets/logo-anhanguera-bolsa-click.svg'
-    : '/assets/logo-bolsa-click-rosa.png'
+const logoColor = siteBrand.logoColor
 
 const Footer: React.FC = () => {
   return (

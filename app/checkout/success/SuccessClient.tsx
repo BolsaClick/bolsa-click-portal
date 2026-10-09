@@ -7,6 +7,7 @@ import { formatCurrency } from '@/utils/fomartCurrency'
 import { trackFbqDual } from '@/app/lib/analytics/fbq'
 import { pushDataLayerEvent } from '@/app/lib/analytics/gtag'
 import { trackTikTokDual } from '@/app/lib/analytics/ttq'
+import { siteBrand } from '@/app/lib/site/brands'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { trackEnrollmentConverted } from '@/app/lib/analytics/checkout-funnel'
 import ReviewInviteCard from '@/app/components/molecules/ReviewInviteCard'
@@ -36,10 +37,7 @@ export default function SuccessClient() {
 
 useEffect(() => {
   if (typeof window !== 'undefined') {
-    const theme = process.env.NEXT_PUBLIC_THEME || 'bolsaclick'
-
-    // Define o evento baseado no tema
-    const eventName = theme === 'anhanguera' ? 'formSuccess' : 'formBSuccess'
+    const eventName = siteBrand.dataLayerSuccessEvent
 
     type DataLayerEvent = Record<string, unknown>;
     const w = window as Window & { dataLayer?: DataLayerEvent[] };

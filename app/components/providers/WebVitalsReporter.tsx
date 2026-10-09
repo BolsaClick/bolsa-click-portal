@@ -2,6 +2,7 @@
 
 import { useReportWebVitals } from 'next/web-vitals'
 import { useConsent } from './ConsentProvider'
+import { siteBrand } from '@/app/lib/site/brands'
 
 const ALLOWED = new Set(['LCP', 'INP', 'CLS', 'FCP', 'TTFB'])
 
@@ -17,7 +18,7 @@ export function WebVitalsReporter() {
       rating: metric.rating,
       navigationType: metric.navigationType,
       path: window.location.pathname,
-      site: process.env.NEXT_PUBLIC_THEME ?? 'bolsaclick',
+      site: siteBrand.key,
       ts: Date.now(),
     })
     if (navigator.sendBeacon) {

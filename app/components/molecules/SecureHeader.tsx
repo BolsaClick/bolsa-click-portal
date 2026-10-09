@@ -1,22 +1,12 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { Lock } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { siteBrand } from '@/app/lib/site/brands'
 
 export const SecureHeader: React.FC = () => {
-  const [currentTheme, setCurrentTheme] = useState('bolsaclick')
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setCurrentTheme(process.env.NEXT_PUBLIC_THEME || 'bolsaclick')
-    }
-  }, [])
-
-  const logoColor =
-    currentTheme === 'anhanguera'
-      ? '/assets/logo-anhanguera-bolsa-click.svg'
-      : '/assets/logo-bolsa-click-rosa.png'
+  const logoColor = siteBrand.logoColor
 
   return (
     <header className="bg-white border-b border-hairline fixed top-0 left-0 right-0 z-50 shadow-[0_1px_0_rgba(11,31,60,0.04)]">

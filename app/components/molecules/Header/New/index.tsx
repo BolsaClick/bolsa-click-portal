@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/app/contexts/AuthContext'
 import { PUBLIC_AUTH_ENTRYPOINTS_ENABLED } from '@/app/lib/auth/public-auth-visibility'
+import { siteBrand } from '@/app/lib/site/brands'
 import { LogOut, User } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -10,20 +11,10 @@ import { Menu } from '../../Menu'
 
 const HeaderNew: React.FC = () => {
   const { user, logout } = useAuth()
-  const [currentTheme, setCurrentTheme] = useState('bolsaclick')
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setCurrentTheme(process.env.NEXT_PUBLIC_THEME || 'bolsaclick')
-    }
-  }, [])
-
-  const logoColor =
-    currentTheme === 'anhanguera'
-      ? '/assets/logo-anhanguera-bolsa-click.svg'
-      : '/assets/logo-bolsa-click-rosa.png'
+  const logoColor = siteBrand.logoColor
 
   // Close user menu when clicking outside
   useEffect(() => {

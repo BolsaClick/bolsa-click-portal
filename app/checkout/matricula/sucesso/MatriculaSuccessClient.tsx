@@ -8,6 +8,7 @@ import Mascot from '@/app/components/v2/mascot/Mascot'
 import { formatCurrency } from '@/utils/fomartCurrency'
 import { usePostHogTracking } from '@/app/lib/hooks/usePostHogTracking'
 import { trackTikTokDual } from '@/app/lib/analytics/ttq'
+import { siteBrand } from '@/app/lib/site/brands'
 import { trackEnrollmentConverted } from '@/app/lib/analytics/checkout-funnel'
 import PaymentLinkCard from './PaymentLinkCard'
 
@@ -53,10 +54,7 @@ export default function MatriculaSuccessClient() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const theme = process.env.NEXT_PUBLIC_THEME || 'bolsaclick'
-
-      // Define o evento baseado no tema
-      const eventName = theme === 'anhanguera' ? 'formSuccess' : 'formBSuccess'
+      const eventName = siteBrand.dataLayerSuccessEvent
 
       type DataLayerEvent = Record<string, unknown>;
       const w = window as Window & { dataLayer?: DataLayerEvent[] };

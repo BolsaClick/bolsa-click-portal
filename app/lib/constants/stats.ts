@@ -5,24 +5,14 @@
 // Unopar, Pitágoras, Estácio, Unime, Wyden), polos em 283 cidades
 // (estudo Panorama Bolsa 2026), +1.000 estudantes beneficiados.
 // Teto de desconto: DISCOUNT_CEILING_PCT (app/lib/copy/claims.ts).
-import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
+//
+// Os números por site moram em app/lib/site/brands.ts junto com o resto do
+// que varia por marca. Antes havia um Record próprio aqui com só 2 das 3
+// chaves de SiteKey, e `getStats()` devolvia undefined no terceiro site.
+import { siteBrand, getSiteBrand, type SiteKey } from '@/app/lib/site/brands'
 
-export const stats = {
-  bolsaclick: {
-    maxDiscount: DISCOUNT_CEILING_PCT,
-    citiesCount: '280+',
-    studentsCount: '+1.000',
-    partnersCount: '6',
-  },
-  anhanguera: {
-    maxDiscount: DISCOUNT_CEILING_PCT,
-    citiesCount: '280+',
-    studentsCount: '+1.000',
-    partnersCount: '6',
-  },
-} as const
+export type SiteStats = (typeof siteBrand)['stats']
 
-export function getStats() {
-  const theme = process.env.NEXT_PUBLIC_THEME || 'bolsaclick'
-  return stats[theme as keyof typeof stats]
+export function getStats(site?: SiteKey): SiteStats {
+  return site ? getSiteBrand(site).stats : siteBrand.stats
 }

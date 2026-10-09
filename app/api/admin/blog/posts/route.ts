@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { withAdminAuth, isAuthError } from '@/app/lib/middleware/admin-auth'
 import { pingIndexNow, INDEXNOW_HOST } from '@/app/lib/seo/indexnow'
+import { revalidateBlogPost } from '@/app/lib/blog/revalidate'
 
 /**
  * GET /api/admin/blog/posts
@@ -144,6 +145,8 @@ export async function POST(request: NextRequest) {
     if (post.publishedAt && post.isActive) {
       void pingIndexNow([`https://${INDEXNOW_HOST}/blog/${post.slug}`]).catch(() => {})
     }
+
+    revalidateBlogPost(post.slug)
 
     return NextResponse.json({ post }, { status: 201 })
   } catch (error) {

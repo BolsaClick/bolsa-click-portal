@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
+import { revalidateBlogCategories } from '@/app/lib/blog/revalidate'
 import { withAdminAuth, isAuthError } from '@/app/lib/middleware/admin-auth'
 
 type RouteContext = { params: Promise<{ id: string }> }
@@ -20,6 +21,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       where: { id },
       data: body,
     })
+
+    revalidateBlogCategories()
 
     return NextResponse.json({ category })
   } catch (error) {
@@ -59,6 +62,8 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     }
 
     await prisma.blogCategory.delete({ where: { id } })
+
+    revalidateBlogCategories()
 
     return NextResponse.json({ success: true })
   } catch (error) {

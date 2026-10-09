@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { withAdminAuth, isAuthError } from '@/app/lib/middleware/admin-auth'
 import { pingIndexNow, INDEXNOW_HOST } from '@/app/lib/seo/indexnow'
+import { revalidateBlogPost } from '@/app/lib/blog/revalidate'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
@@ -131,6 +132,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       void pingIndexNow([`https://${INDEXNOW_HOST}/blog/${post.slug}`]).catch(() => {})
     }
 
+    // Toda edição invalida o cache — inclusive despublicar e renomear slug.
+    revalidateBlogPost(post.slug, existing.slug)
+
     return NextResponse.json({ post })
   } catch (error) {
     console.error('Error updating blog post:', error)
@@ -151,7 +155,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     const existing = await prisma.blogPost.findUnique({
       where: { id },
-      select: { id: true },
+      select: { id: true, slug: true },
     })
 
     if (!existing) {
@@ -159,6 +163,8 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     }
 
     await prisma.blogPost.delete({ where: { id } })
+
+    revalidateBlogPost(existing.slug)
 
     return NextResponse.json({ success: true })
   } catch (error) {

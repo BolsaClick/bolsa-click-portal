@@ -3,6 +3,7 @@ import { prisma } from '@/app/lib/prisma'
 import { withAdminAuth, isAuthError } from '@/app/lib/middleware/admin-auth'
 import { pingIndexNow, INDEXNOW_HOST } from '@/app/lib/seo/indexnow'
 import { revalidateBlogPost } from '@/app/lib/blog/revalidate'
+import { validateBlogSnippet } from '@/app/lib/seo/snippet-limits'
 
 /**
  * GET /api/admin/blog/posts
@@ -98,6 +99,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'slug, title, excerpt, content e pelo menos uma categoria são obrigatórios' },
         { status: 400 }
+      )
+    }
+
+    // Title/description que estouram o SERP não entram (app/lib/seo/snippet-limits.ts).
+    const snippetIssues = validateBlogSnippet({ title, metaTitle, excerpt, metaDescription })
+    if (snippetIssues.length > 0) {
+      return NextResponse.json(
+        { error: snippetIssues.map(i => i.message).join(' '), snippetIssues },
+        { status: 422 },
       )
     }
 

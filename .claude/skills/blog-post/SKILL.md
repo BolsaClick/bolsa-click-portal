@@ -64,9 +64,10 @@ Se existirem, leia também `.claude/skills/seo-geo/SKILL.md` e
    GET https://www.bolsaclick.com.br/api/agents/blog/categories
    Header: X-Agent-Key: <AGENT_BLOG_API_KEY>
    ```
-4. Defina: keyword primária, título (≤65 caracteres, pergunta ou "como
-   fazer"), slug (curto, minúsculo, sem acento), meta description
-   (140-160 caracteres), categoria(s), autor (uma persona real de
+4. Defina: keyword primária, título (pergunta ou "como fazer"), meta
+   title (≤46 caracteres, SEM "| Bolsa Click": o site acrescenta e o Google
+   corta acima de 60 no total), slug (curto, minúsculo, sem acento), meta
+   description (110-155 caracteres, resposta direta primeiro), categoria(s), autor (uma persona real de
    `app/lib/blog/editorial-team.ts`, ver seção "Autoria" do DNA.md).
 
 ## Passo 3: escrever
@@ -128,7 +129,9 @@ por post neste sistema, o build do Next não valida conteúdo de blog):
 
 - [ ] Keyword primária presente em título, meta description, 1º parágrafo
       e pelo menos 1 H2.
-- [ ] Título ≤65 caracteres; meta description 140-160 caracteres.
+- [ ] metaTitle ≤46 caracteres (sem a marca) e metaDescription ≤155. A API
+      recusa com 422 acima disso (`app/lib/seo/snippet-limits.ts`); sem
+      metaDescription, o excerpt é medido no lugar.
 - [ ] Zero travessão (— ou –) no texto inteiro.
 - [ ] Zero linguagem de IA da lista do Passo 4.
 - [ ] Zero dado numérico específico de instituição sem lastro em dado

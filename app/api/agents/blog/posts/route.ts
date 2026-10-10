@@ -3,6 +3,7 @@ import { prisma } from '@/app/lib/prisma'
 import { withAgentAuth, isAgentAuthError } from '@/app/lib/middleware/agent-auth'
 import { pingIndexNow, INDEXNOW_HOST } from '@/app/lib/seo/indexnow'
 import { revalidateBlogPost } from '@/app/lib/blog/revalidate'
+import { validateBlogSnippet } from '@/app/lib/seo/snippet-limits'
 
 /**
  * POST /api/agents/blog/posts
@@ -14,6 +15,10 @@ import { revalidateBlogPost } from '@/app/lib/blog/revalidate'
  * Veja `app/lib/middleware/agent-auth.ts` pra detalhes de setup.
  *
  * Body obrigatório: slug, title, excerpt, content, categoryIds[≥1]
+ *
+ * 422 quando o snippet efetivo estoura o SERP: title > 60 contando o sufixo
+ * " | Bolsa Click" (texto ≤ 46) ou description > 155 — metaDescription, ou o
+ * excerpt quando ela vem vazia. Ver app/lib/seo/snippet-limits.ts.
  *
  * CLAUDE.md: o agente DEVE rodar o validator anti-concorrentes antes de
  * chamar este endpoint (server NÃO refaz a validação editorial — confiamos
@@ -57,6 +62,15 @@ export async function POST(request: NextRequest) {
             'Body inválido — campos obrigatórios: slug, title, excerpt, content, categoryIds (array com pelo menos 1 id)',
         },
         { status: 400 },
+      )
+    }
+
+    // Title/description que estouram o SERP não entram (app/lib/seo/snippet-limits.ts).
+    const snippetIssues = validateBlogSnippet({ title, metaTitle, excerpt, metaDescription })
+    if (snippetIssues.length > 0) {
+      return NextResponse.json(
+        { error: snippetIssues.map(i => i.message).join(' '), snippetIssues },
+        { status: 422 },
       )
     }
 

@@ -27,6 +27,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { PrismaClient } from '@prisma/client'
 import axios from 'axios'
 import { DISCOUNT_CEILING_PCT } from '../app/lib/copy/claims'
+import { SNIPPET_DESCRIPTION_MAX, SNIPPET_TITLE_BODY_MAX, validateBlogSnippet } from '../app/lib/seo/snippet-limits'
 
 // ============================================================
 // ARGS
@@ -1035,8 +1036,8 @@ const SUBMIT_TOOL: Anthropic.Tool = {
     type: 'object',
     properties: {
       title: { type: 'string', description: 'Título do post (50–65 chars). Sem aspas.' },
-      metaTitle: { type: 'string', description: 'Meta title HTML (50–60 chars, distinto do title).' },
-      metaDescription: { type: 'string', description: 'Meta description (140–160 chars).' },
+      metaTitle: { type: 'string', description: `Meta title (no máximo ${SNIPPET_TITLE_BODY_MAX} caracteres, SEM "| Bolsa Click" — o site acrescenta; distinto do title). Gancho comercial no começo, nunca no fim.` },
+      metaDescription: { type: 'string', description: `Meta description (110–${SNIPPET_DESCRIPTION_MAX} caracteres). Resposta direta nas primeiras palavras.` },
       excerpt: { type: 'string', description: 'Resumo plain text (150–220 chars), sem HTML.' },
       content: { type: 'string', description: 'HTML completo do post (1200–2500 palavras). Use h2/h3, ul/ol, table, p. Nunca h1/html/body/script.' },
       keywords: { type: 'array', items: { type: 'string' }, description: '6 a 12 keywords pt-BR.' },
@@ -1137,15 +1138,22 @@ function validatePost(post: GeneratedPost, _arch: Archetype, dataBlock: DataBloc
 
   // Anti-concorrente + teto de desconto (não republicar valor acima do teto nem Ampli)
   for (const rx of FORBIDDEN_BRANDS) {
-    if (rx.test(content) || rx.test(post.title) || rx.test(post.excerpt)) {
+    if ([content, post.title, post.excerpt, post.metaTitle, post.metaDescription].some(f => rx.test(f ?? ''))) {
       return { ok: false, reason: `Menção a concorrente/marca proibida: ${rx.source}` }
     }
   }
-  for (const field of [content, post.title, post.excerpt, post.metaDescription ?? '']) {
+  for (const field of [content, post.title, post.excerpt, post.metaTitle ?? '', post.metaDescription ?? '']) {
     const hit = findForbiddenCeilingPct(field)
     if (hit) {
       return { ok: false, reason: `Teto de desconto fora do canon (${DISCOUNT_CEILING_PCT}%): ${hit}` }
     }
+  }
+
+  // Snippet que estoura o SERP é recusado aqui — a API do admin/agentes também
+  // recusaria (422), mas este script grava direto via Prisma.
+  const snippetIssues = validateBlogSnippet(post)
+  if (snippetIssues.length > 0) {
+    return { ok: false, reason: snippetIssues.map(i => i.message).join(' ') }
   }
 
   // Internal linking: exige link pro pillar do cluster (hub-and-spoke). Sem isto

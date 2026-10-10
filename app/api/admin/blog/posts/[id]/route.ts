@@ -3,6 +3,7 @@ import { prisma } from '@/app/lib/prisma'
 import { withAdminAuth, isAuthError } from '@/app/lib/middleware/admin-auth'
 import { pingIndexNow, INDEXNOW_HOST } from '@/app/lib/seo/indexnow'
 import { revalidateBlogPost } from '@/app/lib/blog/revalidate'
+import { validateBlogSnippet } from '@/app/lib/seo/snippet-limits'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
@@ -54,11 +55,38 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const existing = await prisma.blogPost.findUnique({
       where: { id },
-      select: { slug: true, publishedAt: true, isActive: true },
+      select: {
+        slug: true,
+        publishedAt: true,
+        isActive: true,
+        title: true,
+        metaTitle: true,
+        excerpt: true,
+        metaDescription: true,
+      },
     })
 
     if (!existing) {
       return NextResponse.json({ error: 'Post não encontrado' }, { status: 404 })
+    }
+
+    // Snippet efetivo depois do update (campo do body vence o salvo). Só
+    // valida quando o PATCH toca um dos quatro campos — publicar/despublicar
+    // um post antigo não fica bloqueado por isso.
+    const snippetFields = ['title', 'metaTitle', 'excerpt', 'metaDescription'] as const
+    if (snippetFields.some(k => k in body)) {
+      const snippetIssues = validateBlogSnippet({
+        title: 'title' in body ? body.title : existing.title,
+        metaTitle: 'metaTitle' in body ? body.metaTitle : existing.metaTitle,
+        excerpt: 'excerpt' in body ? body.excerpt : existing.excerpt,
+        metaDescription: 'metaDescription' in body ? body.metaDescription : existing.metaDescription,
+      })
+      if (snippetIssues.length > 0) {
+        return NextResponse.json(
+          { error: snippetIssues.map(i => i.message).join(' '), snippetIssues },
+          { status: 422 },
+        )
+      }
     }
 
     // Validação de slug duplicado quando muda

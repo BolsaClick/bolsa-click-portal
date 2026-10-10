@@ -17,6 +17,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import SEOPanel from '@/app/components/atoms/SEOPanel'
+import SnippetLengthHint from '@/app/components/atoms/SnippetLengthHint'
+import { SNIPPET_TITLE_BODY_MAX, SNIPPET_DESCRIPTION_MAX, validateBlogSnippet } from '@/app/lib/seo/snippet-limits'
 import CategoryMultiSelect from '@/app/components/atoms/CategoryMultiSelect'
 
 const RichTextEditor = dynamic(
@@ -195,6 +197,12 @@ export default function AdminBlogNewPostPage() {
 
     if (!form.title || !form.slug || !form.excerpt || !form.content || form.categoryIds.length === 0) {
       setError('Título, slug, resumo, conteúdo e pelo menos uma categoria são obrigatórios')
+      return
+    }
+
+    const snippetIssues = validateBlogSnippet(form)
+    if (snippetIssues.length > 0) {
+      setError(snippetIssues.map(i => i.message).join(' '))
       return
     }
 
@@ -460,9 +468,9 @@ export default function AdminBlogNewPostPage() {
                     value={form.metaTitle}
                     onChange={(e) => setForm(prev => ({ ...prev, metaTitle: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bolsa-primary focus:border-transparent"
-                    placeholder="Título para mecanismos de busca (máx. 60 caracteres)"
+                    placeholder={`Título no Google (até ${SNIPPET_TITLE_BODY_MAX} caracteres; " | Bolsa Click" é automático)`}
                   />
-                  <p className="text-xs text-gray-400 mt-1">{form.metaTitle.length}/60 caracteres</p>
+                  <SnippetLengthHint kind="title" meta={form.metaTitle} fallback={form.title} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
@@ -471,9 +479,9 @@ export default function AdminBlogNewPostPage() {
                     onChange={(e) => setForm(prev => ({ ...prev, metaDescription: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bolsa-primary focus:border-transparent"
                     rows={2}
-                    placeholder="Descrição para mecanismos de busca (máx. 160 caracteres)"
+                    placeholder={`Descrição no Google (até ${SNIPPET_DESCRIPTION_MAX} caracteres)`}
                   />
-                  <p className="text-xs text-gray-400 mt-1">{form.metaDescription.length}/160 caracteres</p>
+                  <SnippetLengthHint kind="description" meta={form.metaDescription} fallback={form.excerpt} />
                 </div>
               </div>
             </div>

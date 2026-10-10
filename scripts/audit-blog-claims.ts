@@ -43,7 +43,7 @@ const FORBIDDEN_BRANDS: RegExp[] = [
   /\bBolsa\s*Universit[áa]ria\b/gi,
 ]
 
-const FIELDS = ['title', 'excerpt', 'metaDescription', 'content'] as const
+const FIELDS = ['title', 'metaTitle', 'excerpt', 'metaDescription', 'content'] as const
 
 /**
  * Contexto que desqualifica um percentual como claim de desconto nosso:
@@ -78,7 +78,7 @@ type Finding = { slug: string; field: string; detail: string }
 async function main() {
   const posts = await prisma.blogPost.findMany({
     where: { isActive: true, publishedAt: { not: null } },
-    select: { slug: true, title: true, excerpt: true, metaDescription: true, content: true },
+    select: { slug: true, title: true, metaTitle: true, excerpt: true, metaDescription: true, content: true },
   })
 
   const brandHits: Finding[] = []

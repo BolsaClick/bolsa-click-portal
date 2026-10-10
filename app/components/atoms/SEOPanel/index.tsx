@@ -17,6 +17,12 @@ import {
   Heading2,
   List,
 } from 'lucide-react'
+import { stripBrandSuffix } from '@/app/lib/seo/title'
+import {
+  BRAND_SUFFIX,
+  SNIPPET_DESCRIPTION_MAX,
+  SNIPPET_TITLE_MAX,
+} from '@/app/lib/seo/snippet-limits'
 
 interface SEOPanelProps {
   title: string
@@ -79,8 +85,12 @@ export default function SEOPanel({
     const readingTime = Math.max(1, Math.ceil(wordCount / 200))
     const headings = extractHeadings(content)
 
-    const displayTitle = metaTitle || title
-    const displayDescription = metaDescription || excerpt
+    // Como sai no Google: o layout acrescenta " | Bolsa Click" (e o page
+    // remove a marca se ela já vier salva). Limites em app/lib/seo/snippet-limits.ts
+    // — os mesmos que a API usa pra recusar o salvamento.
+    const rawTitle = stripBrandSuffix((metaTitle || title).trim())
+    const displayTitle = rawTitle ? `${rawTitle}${BRAND_SUFFIX}` : ''
+    const displayDescription = (metaDescription || excerpt).trim()
     const titleLen = displayTitle.length
     const descLen = displayDescription.length
 
@@ -93,14 +103,14 @@ export default function SEOPanel({
       {
         label: 'Título SEO',
         icon: <Type size={12} />,
-        status: titleLen >= 50 && titleLen <= 60 ? 'green' : titleLen >= 30 && titleLen <= 70 ? 'yellow' : 'red',
-        detail: `${titleLen} caracteres${titleLen === 0 ? '' : titleLen < 30 ? ' (muito curto)' : titleLen > 70 ? ' (muito longo)' : titleLen < 50 ? ' (poderia ser mais longo)' : titleLen > 60 ? ' (um pouco longo)' : ' (ideal)'}`,
+        status: titleLen > SNIPPET_TITLE_MAX || titleLen === 0 ? 'red' : titleLen >= 40 ? 'green' : 'yellow',
+        detail: `${titleLen}/${SNIPPET_TITLE_MAX} com a marca${titleLen === 0 ? '' : titleLen > SNIPPET_TITLE_MAX ? ' (cortado no Google — não salva)' : titleLen < 40 ? ' (curto)' : ' (ok)'}`,
       },
       {
         label: 'Meta description',
         icon: <FileText size={12} />,
-        status: descLen >= 120 && descLen <= 160 ? 'green' : descLen >= 80 && descLen <= 200 ? 'yellow' : 'red',
-        detail: `${descLen} caracteres${descLen === 0 ? '' : descLen < 80 ? ' (muito curta)' : descLen > 200 ? ' (muito longa)' : descLen < 120 ? ' (poderia ser maior)' : descLen > 160 ? ' (um pouco longa)' : ' (ideal)'}`,
+        status: descLen > SNIPPET_DESCRIPTION_MAX || descLen === 0 ? 'red' : descLen >= 110 ? 'green' : 'yellow',
+        detail: `${descLen}/${SNIPPET_DESCRIPTION_MAX}${descLen === 0 ? '' : descLen > SNIPPET_DESCRIPTION_MAX ? ' (cortada no Google — não salva)' : descLen < 110 ? ' (curta)' : ' (ok)'}`,
       },
       {
         label: 'Título H2',

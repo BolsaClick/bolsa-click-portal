@@ -1,17 +1,19 @@
 import { Metadata } from 'next'
-import { unstable_cache } from 'next/cache'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Check, Star } from 'lucide-react'
 import { prisma } from '@/app/lib/prisma'
 import { getCurrentTheme } from '@/app/lib/themes'
-import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
-import { Course } from '@/app/interface/course'
 import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
 import { VisibleFaq } from '@/app/cursos/[slug]/_seo/CourseSeoSections'
 import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 import { COMPARABLE_INSTITUTION } from '@/app/lib/utils/comparable-institution'
+import {
+  loadCompareStats,
+  type BrandStats,
+  type CompareStats,
+} from '@/app/lib/compare/offers-sample'
 
 const theme = getCurrentTheme()
 
@@ -38,70 +40,40 @@ function canonicalOrder(a: string, b: string): [string, string] {
   return [a, b].sort() as [string, string]
 }
 
-function normalize(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .trim()
-}
+/**
+ * Linhas vivas da tabela.
+ *
+ * `null` num campo = a fonte escolhida não mede aquilo, e vira "—". Zero
+ * seria uma medição real de ausência, então os dois NÃO podem colapsar no
+ * mesmo símbolo por acidente — é a diferença entre "não sabemos" e "não tem".
+ *
+ * Preço médio e nº de cursos só existem na amostra viva: o precompute de
+ * marca × cidade guarda contagem de oferta e piso de preço, nada além. Quando
+ * a fonte é o catálogo, essas duas linhas não entram — em vez de entrarem com
+ * "—" nas duas colunas, que ocuparia espaço pra não dizer nada.
+ */
+function buildLiveRows(
+  stats: CompareStats,
+): Array<{ label: string; a: React.ReactNode; b: React.ReactNode }> {
+  const money = (value: number | null) =>
+    value && value > 0 ? `R$ ${value.toFixed(0)}/mês` : '—'
+  const count = (value: number | null) => (value && value > 0 ? String(value) : '—')
+  const row = (label: string, render: (brand: BrandStats) => string) => ({
+    label,
+    a: render(stats.a),
+    b: render(stats.b),
+  })
 
-// Fetcha offers dos TOP_CURSOS inteiros (22 cursos × 50 offers = pool de ~1100).
-// Usa `unstable_cache` (não `react.cache`) pra dedupar entre os 15 builds das
-// páginas comparativas — caso contrário seriam 22×15 = 330 calls na Cogna.
-// Revalidate 24h alinha com o ISR da página.
-const fetchOffersSample = unstable_cache(
-  async (): Promise<Course[]> => {
-    const results = await Promise.all(
-      TOP_CURSOS.map(curso =>
-        getShowFiltersCourses(
-          curso.apiCourseName,
-          undefined,
-          undefined,
-          undefined,
-          'GRADUACAO',
-          1,
-          50
-        )
-          .then(r => (r?.data || []) as Course[])
-          .catch(error => {
-            console.error(
-              `⚠️ Falha ao buscar ofertas de ${curso.apiCourseName} pra comparação:`,
-              error
-            )
-            return [] as Course[]
-          })
-      )
-    )
-    return results.flat()
-  },
-  ['compare-offers-sample-v1'],
-  { revalidate: 86400, tags: ['compare-offers'] }
-)
-
-interface BrandStats {
-  offerCount: number
-  courseCount: number
-  cityCount: number
-  avgPrice: number
-  minPrice: number
-}
-
-function computeBrandStats(offers: Course[], brandName: string): BrandStats {
-  const brandKey = normalize(brandName)
-  const brandOffers = offers.filter(o => normalize(o.brand || '') === brandKey)
-  const prices = brandOffers.map(o => o.minPrice || 0).filter(p => p > 0)
-  const courses = new Set(brandOffers.map(o => normalize(o.name || '')).filter(Boolean))
-  const cities = new Set(
-    brandOffers.map(o => normalize(o.unitCity || o.city || '')).filter(Boolean)
-  )
-  return {
-    offerCount: brandOffers.length,
-    courseCount: courses.size,
-    cityCount: cities.size,
-    avgPrice: prices.length ? prices.reduce((a, b) => a + b, 0) / prices.length : 0,
-    minPrice: prices.length ? Math.min(...prices) : 0,
-  }
+  return [
+    row('Mensalidade a partir de', (b) => money(b.minPrice)),
+    ...(stats.source === 'live'
+      ? [
+          row('Mensalidade média', (b) => money(b.avgPrice)),
+          row('Cursos no Bolsa Click*', (b) => count(b.courseCount)),
+        ]
+      : []),
+    row('Cidades cobertas*', (b) => count(b.cityCount)),
+  ]
 }
 
 export async function generateStaticParams() {
@@ -191,11 +163,11 @@ export default async function CompareInstitutionsPage({ params }: Props) {
   const instA = institutions.find(i => i.slug === a)!
   const instB = institutions.find(i => i.slug === b)!
 
-  // Dados vivos da Cogna (amostra dos 5 cursos mais populares)
-  const offersSample = await fetchOffersSample()
-  const statsA = computeBrandStats(offersSample, instA.name)
-  const statsB = computeBrandStats(offersSample, instB.name)
-  const hasLiveData = statsA.offerCount > 0 || statsB.offerCount > 0
+  // Estatísticas vivas. Pode vir da amostra da busca ('live'), do nosso
+  // precompute de marca x cidade ('catalogo') quando a busca está degradada,
+  // ou `null` quando nenhuma das duas cobre AS DUAS marcas — nesse caso as
+  // linhas vivas simplesmente não entram. Ver app/lib/compare/offers-sample.ts.
+  const liveStats = await loadCompareStats(instA, instB)
 
   const canonicalUrl = `${theme.siteUrl}/comparar/${canonicalPair}`
 
@@ -279,31 +251,7 @@ export default async function CompareInstitutionsPage({ params }: Props) {
     },
   ]
 
-  // Linhas com dados vivos da API (só renderiza se ao menos uma brand tiver dados)
-  const liveRows: typeof rows = hasLiveData
-    ? [
-        {
-          label: 'Mensalidade a partir de',
-          a: statsA.minPrice > 0 ? `R$ ${statsA.minPrice.toFixed(0)}/mês` : '—',
-          b: statsB.minPrice > 0 ? `R$ ${statsB.minPrice.toFixed(0)}/mês` : '—',
-        },
-        {
-          label: 'Mensalidade média',
-          a: statsA.avgPrice > 0 ? `R$ ${statsA.avgPrice.toFixed(0)}/mês` : '—',
-          b: statsB.avgPrice > 0 ? `R$ ${statsB.avgPrice.toFixed(0)}/mês` : '—',
-        },
-        {
-          label: 'Cursos no Bolsa Click*',
-          a: statsA.courseCount > 0 ? String(statsA.courseCount) : '—',
-          b: statsB.courseCount > 0 ? String(statsB.courseCount) : '—',
-        },
-        {
-          label: 'Cidades cobertas*',
-          a: statsA.cityCount > 0 ? String(statsA.cityCount) : '—',
-          b: statsB.cityCount > 0 ? String(statsB.cityCount) : '—',
-        },
-      ]
-    : []
+  const liveRows: typeof rows = liveStats ? buildLiveRows(liveStats) : []
 
   const allRows = [...rows, ...liveRows]
 
@@ -433,10 +381,23 @@ export default async function CompareInstitutionsPage({ params }: Props) {
               </tbody>
             </table>
           </div>
-          {hasLiveData && (
+          {liveStats && (
             <p className="mt-4 font-mono text-[11px] text-ink-500">
-              * Baseado nos {TOP_CURSOS.length} cursos de graduação ativos no Bolsa Click.
-              Atualizado a cada 24h.
+              {liveStats.source === 'live' ? (
+                <>
+                  * Baseado nos {TOP_CURSOS.length} cursos de graduação ativos no Bolsa
+                  Click. Atualizado a cada 24h.
+                </>
+              ) : (
+                <>
+                  * Medido no catálogo do Bolsa Click por marca e cidade
+                  {liveStats.measuredAt
+                    ? ` (medição mais antiga em uso: ${liveStats.measuredAt.toLocaleDateString('pt-BR')})`
+                    : ''}
+                  . A busca ao vivo está indisponível agora, então mensalidade média e
+                  número de cursos não aparecem — são dados que esta medição não cobre.
+                </>
+              )}
             </p>
           )}
         </div>

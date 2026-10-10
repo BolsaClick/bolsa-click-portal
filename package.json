@@ -13,7 +13,8 @@
     "seo:audit": "node scripts/seo-audit.mjs",
     "seo:audit:remote": "node scripts/seo-audit.mjs",
     "seed:institutions": "tsx prisma/seed-institutions.ts",
-    "lock:copy-claims": "tsx scripts/lock-copy-claims.ts"
+    "lock:copy-claims": "tsx scripts/lock-copy-claims.ts",
+    "audit:blog-claims": "tsx scripts/audit-blog-claims.ts"
   },
   "prisma": {
     "seed": "tsx scripts/seed.ts"

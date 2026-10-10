@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { withAgentAuth, isAgentAuthError } from '@/app/lib/middleware/agent-auth'
 import { pingIndexNow, INDEXNOW_HOST } from '@/app/lib/seo/indexnow'
+import { revalidateBlogPost } from '@/app/lib/blog/revalidate'
 
 /**
  * POST /api/agents/blog/posts
@@ -106,6 +107,8 @@ export async function POST(request: NextRequest) {
         () => {},
       )
     }
+
+    revalidateBlogPost(post.slug)
 
     return NextResponse.json(
       {

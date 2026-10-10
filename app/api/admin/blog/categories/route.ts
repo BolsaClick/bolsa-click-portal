@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
+import { revalidateBlogCategories } from '@/app/lib/blog/revalidate'
 import { withAdminAuth, isAuthError } from '@/app/lib/middleware/admin-auth'
 
 function generateSlug(text: string) {
@@ -82,6 +83,8 @@ export async function POST(request: NextRequest) {
         order: (maxOrder._max.order || 0) + 1,
       },
     })
+
+    revalidateBlogCategories()
 
     return NextResponse.json({ category }, { status: 201 })
   } catch (error) {

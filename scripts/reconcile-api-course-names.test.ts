@@ -20,8 +20,8 @@ describe('reconcile-api-course-names', () => {
     }
   })
 
-  it('51 cursos com página de cidade e zero oferta: 14 + 34 + 3 pendentes de decisão', () => {
-    assert.equal(RENAMES.length, 14)
+  it('51 cursos com página de cidade e zero oferta: 17 renomeados + 34 sem página de cidade', () => {
+    assert.equal(RENAMES.length, 17)
     assert.equal(WITHOUT_PARTNER.length, 34)
   })
 })

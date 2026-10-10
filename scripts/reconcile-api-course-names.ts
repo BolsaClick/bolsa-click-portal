@@ -20,7 +20,8 @@
  *
  *  - RENOMEAR: o nome tem prefixo editorial nosso ("Curso Profissionalizante
  *    de", "Especialização em") e o nome real está no catálogo. 14 casos de alta
- *    confiança, com o mesmo assunto e só a redação diferente.
+ *    confiança, com o mesmo assunto e só a redação diferente, mais 3 de média
+ *    confiança renomeados por decisão do CEO.
  *  - SEM PARCEIRO: nenhum nome do catálogo com o mesmo assunto e Athena zerada.
  *    `hasCityPages` sai. Isso NÃO desindexa nada: com zero oferta eles já
  *    estavam fora do sitemap (corte de 5) e a página já era noindex (gate ≥ 1).
@@ -60,16 +61,22 @@ export const RENAMES: ReadonlyArray<readonly [string, string]> = [
   ['Especialização em Nutrição Esportiva', 'Nutrição esportiva'],
   ['Especialização em Direito de Família e Sucessões', 'Direito de Família e das Sucessões'],
   ['MBA em Data Science e Analytics', 'MBA em Data Science'],
+  // Média confiança: renomeados por decisão do CEO (2026-10-10).
+  // Nome do catálogo é superconjunto do nosso.
+  ['Curso Profissionalizante de Eletricista Residencial', 'Eletricista: Instalador Predial e Residencial'],
+  // Mesmo assunto, ordem das palavras trocada.
+  ['Especialização em Saúde do Trabalho - Enfermagem', 'Enfermagem do Trabalho'],
+  // MBA é especialização lato sensu, então a oferta é legítima. MAS a copy da
+  // página (name/fullName, título) promete "Especialização" e vai exibir oferta
+  // de MBA. PENDENTE: revisão editorial do título pelo SEO Lead. Não alterar a
+  // copy daqui. Ver docs/DESCOBERTA-CIDADES.md.
+  ['Especialização em Administração Hospitalar', 'MBA em Administração Hospitalar'],
 ]
 
 /**
  * Sem curso correspondente em parceiro nenhum (ou sem oferta nas 160
  * cidades): `hasCityPages` → false. Identificados pelo apiCourseName atual.
- *
- * Fora desta lista DE PROPÓSITO (decisão do CEO pendente, ver relatório):
- * Especialização em Administração Hospitalar (catálogo só tem "MBA em…"),
- * Eletricista Residencial ("Eletricista: Instalador Predial e Residencial"),
- * Saúde do Trabalho - Enfermagem ("Enfermagem do Trabalho").
+
  */
 export const WITHOUT_PARTNER: ReadonlyArray<string> = [
   'Curso Profissionalizante de Vendedor',

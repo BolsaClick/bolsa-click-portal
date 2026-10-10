@@ -98,6 +98,27 @@ Confirmação sem chamada nova: a linha `[featured-cron] Sync concluido: N ofert
 varridas em P paginas` no log do tartarus-bff (Railway), ou os dados que o CEO
 salvou da varredura de 10/10.
 
+## Reconciliação de apiCourseName (tarefa 7, 2026-10-10)
+
+`scripts/reconcile-api-course-names.ts`, aplicado em 10/10: 17 cursos
+renomeados para o nome do catálogo Cogna e 34 sem `hasCityPages` (sem parceiro,
+ou sem oferta nas 160 cidades). A rodada seguinte do precompute diz quais nomes
+novos casaram.
+
+**Pendente, revisão editorial (SEO Lead):** `especializacao-administracao-
+hospitalar` agora busca "MBA em Administração Hospitalar". MBA é especialização
+lato sensu, então a oferta é legítima, mas o título e a copy da página prometem
+"Especialização". O título precisa de revisão. A copy não foi alterada.
+
+## Adiado: marcar cursos "só Estácio"
+
+53 cursos SEM página de cidade têm Cogna = 0 e Athena > 0 nas 160 cidades: só
+funcionam pela Estácio e gastam 53 × 160 = 8.480 buscas Cogna por ciclo
+completo. Marcá-los para o precompute pular a Cogna economizaria orçamento
+justamente da conta sob antifraude. Exige coluna nova (migration). Adiado até a
+distribuição de falhas da rodada de domingo (11/10) mostrar quanto da cota a
+Cogna consome; só então a economia é dimensionável.
+
 ## Bug latente já corrigido: "lacuna = época 0"
 
 Na fila antiga, um par sem linha no cache valia como fetchedAt = 0 e jogava o

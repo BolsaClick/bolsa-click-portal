@@ -645,11 +645,16 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
   const enrollWithoutPayment = async (enrollment: CreateEnrollmentInput) => {
     const candidate = candidateRef.current
     try {
-      const res = await fetch('/api/athena-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(enrollment),
-      })
+      // `curso` na query só rotula o desfecho gravado no servidor; o body vai
+      // inteiro para a Athena e não pode levar campo extra.
+      const res = await fetch(
+        `/api/athena-checkout?curso=${encodeURIComponent(offer.courseName ?? '')}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(enrollment),
+        },
+      )
       const data = await res.json().catch(() => null)
 
       if (!res.ok) {

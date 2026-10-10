@@ -1200,3 +1200,63 @@ model SocialPost {
   /// índice é o que faz essa pergunta ser barata.
   @@index([sourceRef, publishedAt])
 }
+
+/// Desfecho de cada envio de inscrição a um parceiro (Cogna via Tartarus,
+/// Estácio via Athena). UMA LINHA POR CHAMADA, append-only.
+///
+/// Por que tabela própria e não Enrollment nem Lead:
+///  - Enrollment exige `userId` (FK para User com cascade) e modela a matrícula
+///    de quem tem conta, com status de pagamento. O candidato do checkout não
+///    tem User, e uma recusa não é matrícula — forçar isso ali exigiria User
+///    fantasma ou afrouxar a FK de uma tabela que o admin já consome.
+///  - Lead é uma linha por pessoa/interesse, criada no blur do telefone. Um
+///    candidato pode tentar várias vezes (MS004 → escolhe outra oferta → envia
+///    de novo); cada tentativa tem código e mensagem próprios. Gravar no Lead
+///    sobrescreveria a primeira recusa com o sucesso da segunda — e é
+///    justamente a recusa que o watchdog precisa ver.
+///  - Append-only também é o que dá a taxa de conversão real: envios ÷
+///    aceites por parceiro, por dia, sem depender do painel da Cogna.
+/// Cruza com Lead pelo `cpf` e com Transaction pelo `transactionId`.
+model PartnerInscriptionOutcome {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  /// 'cogna' | 'estacio'
+  partner String
+  /// Endpoint do parceiro: 'tartarus-inscription' | 'tartarus-marketplace' | 'athena'
+  channel String
+  /// Quem chamou: 'checkout-direto' (sem cobrança) | 'confirm-matricula' |
+  /// 'confirm-campanha' | 'confirm-estacio'
+  flow    String
+
+  outcome PartnerInscriptionResult
+
+  /// Código do parceiro (MS002, MS004, ATL016…). Null quando o parceiro não
+  /// mandou código — aí `httpStatus` e `errorMessage` são o que há.
+  errorCode    String?
+  /// Mensagem técnica do parceiro, truncada. Nunca vai para a tela.
+  errorMessage String?
+  httpStatus   Int?
+
+  /// numeroInscricao (Athena) / id (Cogna) quando o parceiro aceitou.
+  partnerInscriptionId String?
+  /// CPF já inscrito (ATL016 / "já possui inscrição") — conta como SUCCESS.
+  alreadyEnrolled      Boolean @default(false)
+
+  cpf           String?
+  offerId       String?
+  courseName    String?
+  /// Transaction.externalTransactionId nos fluxos com cobrança.
+  transactionId String?
+  durationMs    Int?
+
+  @@index([createdAt])
+  @@index([partner, outcome, createdAt])
+  @@index([cpf])
+}
+
+enum PartnerInscriptionResult {
+  SUCCESS // parceiro aceitou (inclui CPF já inscrito)
+  REFUSED // parceiro respondeu e recusou (MS002, MS004, 4xx…)
+  ERROR // sem resposta útil: rede, timeout, 5xx
+}

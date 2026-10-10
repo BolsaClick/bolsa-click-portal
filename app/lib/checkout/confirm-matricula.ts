@@ -16,6 +16,14 @@ import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
 import { upsertCandidato } from '@/app/lib/api/attio'
 import { isServerFlagEnabled } from '@/app/lib/analytics/server-flags'
 import { refundElysiumCharge } from '@/app/lib/api/elysium-refund'
+import {
+  cognaVerdictFromError,
+  cognaVerdictFromResponse,
+  isJaInscritoNaCogna,
+  marketplaceVerdict,
+  recordInscriptionOutcome,
+  type InscriptionVerdict,
+} from '@/app/lib/checkout/inscription-outcome'
 
 /**
  * Confirmação do checkout Cogna/ATHENAS (`/checkout/matricula`): a taxa de
@@ -92,31 +100,6 @@ const CLAIM_ORFAO_MS = 5 * 60 * 1000
 
 function asObject(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' ? (value as Record<string, unknown>) : {}
-}
-
-/**
- * "CPF já inscrito nesta oferta" NÃO é falha: é a resposta esperada quando uma
- * segunda confirmação (webhook em retry, claim órfão reassumido) refaz a
- * inscrição que já existe. Tratar como recusa aqui estornaria a taxa de alguém
- * que ESTÁ inscrito.
- *
- * A Cogna não expõe código de erro estável para isso — o que chega é a
- * mensagem. Por isso o casamento é por texto, conservador: qualquer coisa que
- * não bata cai no caminho de recusa (que estorna), nunca o contrário.
- */
-function isJaInscritoNaCogna(mensagem: string | undefined): boolean {
-  if (!mensagem) return false
-  const normalizada = mensagem
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-  return (
-    normalizada.includes('ja possui inscricao') ||
-    normalizada.includes('ja esta inscrito') ||
-    normalizada.includes('ja inscrito') ||
-    normalizada.includes('inscricao ja existe') ||
-    normalizada.includes('inscricao existente')
-  )
 }
 
 /**
@@ -303,8 +286,24 @@ export async function confirmPaidMatricula(
   let inscriptionId: string | null = null
   let recusa: { message: string; errorCode: string | null } | null = null
 
+  // Desfecho no nosso banco (PartnerInscriptionOutcome) — nunca lança.
+  const inicioCogna = Date.now()
+  const registrarCogna = (verdict: InscriptionVerdict) =>
+    recordInscriptionOutcome({
+      partner: 'cogna',
+      channel: 'tartarus-inscription',
+      flow: 'confirm-matricula',
+      cpf: cpfDigits,
+      offerId: offerDetails?.dmhId ?? blob.inscriptionPayload?.inscription?.offers?.firstOption?.idDMH,
+      courseName: offerDetails?.course,
+      transactionId: externalTransactionId,
+      ...verdict,
+      durationMs: Date.now() - inicioCogna,
+    })
+
   try {
     const r = await createInscription(blob.inscriptionPayload, PROMOTER_ID, 'DC')
+    await registrarCogna(cognaVerdictFromResponse(r))
     if (r.success || r.id) {
       inscriptionId = r.id ?? null
       console.log('✅ confirm-matricula: inscrição criada', { externalTransactionId, id: r.id })
@@ -312,6 +311,7 @@ export async function confirmPaidMatricula(
       recusa = { message: 'A instituição não confirmou a inscrição.', errorCode: null }
     }
   } catch (e) {
+    await registrarCogna(cognaVerdictFromError(e))
     const cognaMsg = getCognaErrorMessage(e)
     const detalhes = getCognaErrorDetails(e)
     const mensagem = cognaMsg ?? (e instanceof Error ? e.message : String(e))
@@ -415,7 +415,19 @@ export async function confirmPaidMatricula(
     const marketplaceEnabled = await isServerFlagEnabled('marketplace_enabled', false)
     if (marketplaceEnabled) {
       try {
+        const inicioMarketplace = Date.now()
         const m = await createMarketplaceInscription(blob.marketplace.data, offerDetails)
+        await recordInscriptionOutcome({
+          partner: 'cogna',
+          channel: 'tartarus-marketplace',
+          flow: 'confirm-matricula',
+          cpf: cpfDigits,
+          offerId: offerDetails.idDmhElastic,
+          courseName: offerDetails.course,
+          transactionId: externalTransactionId,
+          ...marketplaceVerdict(m),
+          durationMs: Date.now() - inicioMarketplace,
+        })
         marketplaceCreated = m.success
         if (!m.success) {
           console.error('⚠️ confirm-matricula: marketplace ATHENAS falhou', {

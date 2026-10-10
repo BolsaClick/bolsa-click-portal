@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import {
-  createAthenaEnrollment,
-  extractCheckoutResult,
-  isEnrollmentAccepted,
-  type CreateEnrollmentInput,
-  type AthenaEnrollmentResponse,
-} from '@/app/lib/api/athena-offers'
+import type { CreateEnrollmentInput } from '@/app/lib/api/athena-offers'
 import { getEmailMxRejectionMessage } from '@/app/lib/validation/email-mx'
-import { mensagemDaRecusa } from '@/app/lib/checkout/athena-enrollment'
+import { runAthenaEnrollment } from '@/app/lib/checkout/athena-enrollment'
 
 /**
  * POST /api/athena-checkout — cria a inscrição Estácio na Athena (POST /api/enrollments)
@@ -19,8 +13,10 @@ import { mensagemDaRecusa } from '@/app/lib/checkout/athena-enrollment'
  * aqui. Ele cobra a taxa da plataforma antes
  * (/api/athena-checkout/charge) e cria a inscrição só depois do pagamento
  * confirmar (/api/athena-checkout/confirm → confirm-estacio.ts). Esta rota
- * segue de pé para inscrição SEM cobrança (uso interno/suporte); a lógica de
- * recusa é a mesma, compartilhada em app/lib/checkout/athena-enrollment.ts.
+ * segue de pé para inscrição SEM cobrança — e, com PAYMENTS_DISABLED ligado
+ * (2026-10-01), voltou a ser a rota ATIVA do checkout Estácio. A lógica de
+ * recusa é a de app/lib/checkout/athena-enrollment.ts (até 2026-10-10 era uma
+ * cópia dela aqui, que não gravava desfecho).
  */
 export async function POST(request: NextRequest) {
   try {
@@ -56,55 +52,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: mxRejection }, { status: 422 })
     }
 
-    const result = await createAthenaEnrollment(body)
+    // `runAthenaEnrollment` é o mesmo caminho do confirm-estacio: trata a
+    // recusa com 200 + FAILED, o ATL016 como sucesso — e GRAVA O DESFECHO no
+    // nosso banco (`PartnerInscriptionOutcome`). Com pagamentos desligados
+    // esta é a rota ativa da Estácio e não existe Transaction: sem a gravação,
+    // uma recusa MS002 aqui só ia para o log e ninguém ficava sabendo.
+    const attempt = await runAthenaEnrollment(body, {
+      flow: 'checkout-direto',
+      // Só para o alerta ler "Administração", não um uuid. Vem na query e
+      // NÃO no body, porque o body vai inteiro para a Athena.
+      courseName: request.nextUrl.searchParams.get('curso')?.slice(0, 200) || null,
+    })
 
-    // O athena-api responde 200 mesmo quando a YDUQS recusa: ele captura o
-    // erro, grava a inscrição como FAILED e devolve o registro. Sem checar
-    // isto, o candidato ia para a tela de sucesso sem link de pagamento,
-    // virava "inscrito" no CRM e contava como conversão.
-    if (!isEnrollmentAccepted(result)) {
-      console.error('❌ Athena recusou a inscrição', {
-        status: result.status,
-        errorCode: result.errorCode,
-        providerMessage: result.providerMessage,
-        offerId: body.offerId,
-      })
+    if (!attempt.accepted) {
       return NextResponse.json(
         {
-          error: mensagemDaRecusa(result.errorCode),
+          error: attempt.message,
           // Códigos ajudam o suporte a agrupar; a mensagem crua do parceiro
           // fica só no log, porque fala em codCursoPai e afins.
-          errorCode: result.errorCode,
+          errorCode: attempt.errorCode,
         },
-        { status: 422 },
+        { status: attempt.kind === 'refused' ? 422 : 502 },
       )
     }
 
-    return NextResponse.json(result)
+    return NextResponse.json(attempt.result)
   } catch (error: unknown) {
-    // ATL016 = CPF já inscrito → tratar como sucesso, devolvendo a inscrição existente.
-    if (error && typeof error === 'object' && 'response' in error) {
-      const axiosError = error as {
-        response?: { data?: AthenaEnrollmentResponse & { code?: string; message?: string }; status?: number }
-      }
-      const data = axiosError.response?.data
-      const code = (data?.providerResponse?.code || data?.code || '').toUpperCase()
-
-      if (code === 'ATL016' && data) {
-        return NextResponse.json(extractCheckoutResult(data))
-      }
-
-      console.error('❌ Erro ao criar inscrição na Athena:', data ?? error)
-      const message =
-        data?.providerResponse?.message ||
-        data?.message ||
-        'Erro ao criar inscrição'
-      return NextResponse.json(
-        { error: message },
-        { status: axiosError.response?.status || 500 },
-      )
-    }
-
     console.error('❌ Erro ao criar inscrição na Athena:', error)
     return NextResponse.json({ error: 'Erro interno ao criar inscrição' }, { status: 500 })
   }

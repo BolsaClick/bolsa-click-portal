@@ -4,6 +4,12 @@ import {
   type CreateInscriptionRequest,
 } from '@/app/lib/api/create-inscription'
 import { tartarusErrorResponse } from '@/app/lib/checkout/tartarus-proxy'
+import {
+  cognaVerdictFromError,
+  cognaVerdictFromResponse,
+  recordInscriptionOutcome,
+  type InscriptionVerdict,
+} from '@/app/lib/checkout/inscription-outcome'
 
 export const runtime = 'nodejs'
 
@@ -37,11 +43,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: 'missing_fields' }, { status: 422 })
   }
 
+  // Desfecho gravado no nosso banco (PartnerInscriptionOutcome) — é o trilho
+  // ativo da Cogna com pagamentos desligados, sem Transaction para o watchdog
+  // olhar. Gravado DEPOIS da resposta do parceiro e nunca lança.
+  const inicio = Date.now()
+  const registrar = (verdict: InscriptionVerdict) =>
+    recordInscriptionOutcome({
+      partner: 'cogna',
+      channel: 'tartarus-inscription',
+      flow: 'checkout-direto',
+      cpf: body.inscriptionData.personalData?.cpf,
+      offerId: body.inscriptionData.inscription?.offers?.firstOption?.idDMH,
+      ...verdict,
+      durationMs: Date.now() - inicio,
+    })
+
   try {
     const data = await createInscription(body.inscriptionData, body.promoterId, body.system ?? 'DC')
+    await registrar(cognaVerdictFromResponse(data))
     return NextResponse.json(data)
   } catch (err) {
     console.error('[checkout/matricula/create-inscription] falhou', err)
+    await registrar(cognaVerdictFromError(err))
     return tartarusErrorResponse(err)
   }
 }

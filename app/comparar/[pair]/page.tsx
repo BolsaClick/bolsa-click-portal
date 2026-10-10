@@ -6,6 +6,7 @@ import { Check, Star } from 'lucide-react'
 import { prisma } from '@/app/lib/prisma'
 import { getCurrentTheme } from '@/app/lib/themes'
 import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
+import { BRAZILIAN_CITIES } from '@/app/lib/constants/brazilian-cities'
 import { VisibleFaq } from '@/app/cursos/[slug]/_seo/CourseSeoSections'
 import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 import { COMPARABLE_INSTITUTION } from '@/app/lib/utils/comparable-institution'
@@ -390,12 +391,14 @@ export default async function CompareInstitutionsPage({ params }: Props) {
                 </>
               ) : (
                 <>
-                  * Medido no catálogo do Bolsa Click por marca e cidade
+                  * Medido no catálogo do Bolsa Click numa varredura de{' '}
+                  {BRAZILIAN_CITIES.length} municípios
                   {liveStats.measuredAt
-                    ? ` (medição mais antiga em uso: ${liveStats.measuredAt.toLocaleDateString('pt-BR')})`
+                    ? `, medição mais antiga em uso de ${liveStats.measuredAt.toLocaleDateString('pt-BR')}`
                     : ''}
-                  . A busca ao vivo está indisponível agora, então mensalidade média e
-                  número de cursos não aparecem — são dados que esta medição não cobre.
+                  : a contagem de cidades é um piso, não o total nacional. A busca ao
+                  vivo está indisponível agora, então mensalidade média e número de
+                  cursos não aparecem — são dados que esta medição não cobre.
                 </>
               )}
             </p>

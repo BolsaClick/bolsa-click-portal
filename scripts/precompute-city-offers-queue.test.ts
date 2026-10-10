@@ -15,6 +15,7 @@ import {
   buildWorkQueue,
   classifyFailure,
   pairKey,
+  zeroOverPositive,
   type QueueCity,
   type QueueCourse,
 } from './precompute-city-offers-queue'
@@ -237,5 +238,37 @@ describe('motivo da falha', () => {
     assert.equal(classifyFailure(erro(400, { message: 'courseName inválido' })), 'http_4xx')
     assert.equal(classifyFailure(erro(null, undefined, 'ECONNRESET')), 'rede')
     assert.equal(classifyFailure(new Error('boom')), 'outro')
+  })
+})
+
+describe('zero sobre positivo (falha silenciosa 200-vazio)', () => {
+  const prev = new Map([
+    ['a', 12],
+    ['b', 0],
+    ['c', 7],
+  ])
+  it('só reconsulta zero onde o cache tinha oferta; zero sobre zero e erro ficam fora', () => {
+    const r = zeroOverPositive(
+      [
+        { key: 'a', offerCount: 0, ok: true }, // 12 → 0: suspeito
+        { key: 'b', offerCount: 0, ok: true }, // 0 → 0: medição normal
+        { key: 'c', offerCount: 0, ok: false }, // erro: já não grava
+        { key: 'd', offerCount: 0, ok: true }, // lacuna: não há positivo para proteger
+        { key: 'c2', offerCount: 3, ok: true },
+      ],
+      prev,
+    )
+    assert.deepEqual(r.recheck.map((x) => x.key), ['a'])
+    assert.deepEqual(r.overflow, [])
+  })
+  it('acima do teto, o excedente vai para "não gravar" e não para reconsulta', () => {
+    const many = new Map(Array.from({ length: 15 }, (_, i) => [`k${i}`, 5] as [string, number]))
+    const r = zeroOverPositive(
+      [...many.keys()].map((key) => ({ key, offerCount: 0, ok: true })),
+      many,
+      10,
+    )
+    assert.equal(r.recheck.length, 10)
+    assert.equal(r.overflow.length, 5)
   })
 })

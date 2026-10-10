@@ -52,6 +52,8 @@ import {
   blockedMinutes,
   buildWorkQueue,
   chunk,
+  zeroOverPositive,
+  ZERO_RECHECK_CAP,
   classifyFailure,
   emptyTally,
   pairKey,
@@ -385,12 +387,18 @@ async function main() {
   // nascer com as duas fontes medidas, senão gravaria zero de uma fonte que
   // não foi medida.
   const cached = new Map<string, Date>()
+  // Contagem Cogna gravada — para reconhecer "zero sobre positivo".
+  const previousCogna = new Map<string, number>()
   {
     const rows = await prisma.cityCourseOfferCache.findMany({
       where: { featuredCourseId: { in: courses.map((c) => c.id) } },
-      select: { featuredCourseId: true, citySlug: true, fetchedAt: true },
+      select: { featuredCourseId: true, citySlug: true, fetchedAt: true, offerCount: true },
     })
-    for (const row of rows) cached.set(pairKey(row.featuredCourseId, row.citySlug), row.fetchedAt)
+    for (const row of rows) {
+      const key = pairKey(row.featuredCourseId, row.citySlug)
+      cached.set(key, row.fetchedAt)
+      previousCogna.set(key, row.offerCount)
+    }
   }
 
   const startedAt = Date.now()
@@ -445,6 +453,10 @@ Nos primeiros 30.000 pares (≈ rodada com 30% de falha): ${ate(30_000)}`)
     cognaVazioEmLoteSuspeito: 0,
     athenaComOferta: 0,
     athenaVazio: 0,
+    // Zero da Cogna onde o cache tinha oferta (ver zeroOverPositive).
+    zeroSobrePositivoConfirmado: 0,
+    zeroSobrePositivoDesmentido: 0,
+    zeroSobrePositivoNaoGravado: 0,
     processadosPorCamada: { 1: 0, 2: 0 } as Record<1 | 2, number>,
     cognaOkPorCamada: { 1: 0, 2: 0 } as Record<1 | 2, number>,
   }
@@ -511,6 +523,42 @@ Nos primeiros 30.000 pares (≈ rodada com 30% de falha): ${ate(30_000)}`)
           results.filter(({ r }) => !r.error).map(({ item, r }) => ({ item, r })),
           (item) => fetchOffers(item.course.apiCourseName, item.city.name, item.city.state, item.course.nivel),
         )
+    // Zero sobre positivo num lote confiável: reconsulta atrasada. "Desmentido"
+    // (a reconsulta acha oferta) é a medida DIRETA da falha silenciosa
+    // 200-vazio em produção, sem nenhuma chamada exploratória.
+    const zeroNaoGravar = new Set<string>()
+    if (cognaTrusted) {
+      const tagged = results.map((x) => ({
+        x,
+        key: pairKey(x.item.course.id, x.item.city.slug),
+        offerCount: x.r.offerCount,
+        ok: !x.r.error,
+      }))
+      const { recheck, overflow } = zeroOverPositive(tagged, previousCogna, ZERO_RECHECK_CAP)
+      for (const o of overflow) zeroNaoGravar.add(o.key)
+      counts.zeroSobrePositivoNaoGravado += overflow.length
+      if (recheck.length > 0) {
+        await sleep(5_000)
+        const again = await pMap(
+          recheck,
+          ({ x }) => fetchOffers(x.item.course.apiCourseName, x.item.city.name, x.item.city.state, x.item.course.nivel),
+          1,
+        )
+        again.forEach((r2, i) => {
+          const t = recheck[i]
+          if (r2.error) {
+            zeroNaoGravar.add(t.key)
+            counts.zeroSobrePositivoNaoGravado++
+          } else if (r2.offerCount > 0) {
+            t.x.r = r2 // a reconsulta é uma medição real: grava ela
+            counts.zeroSobrePositivoDesmentido++
+          } else {
+            counts.zeroSobrePositivoConfirmado++
+          }
+        })
+      }
+    }
+
     if (!cognaTrusted) {
       counts.lotesSuspeitosCogna++
       counts.cognaVazioEmLoteSuspeito += results.filter(({ r }) => !r.error && r.offerCount === 0).length
@@ -534,7 +582,10 @@ Nos primeiros 30.000 pares (≈ rodada com 30% de falha): ${ate(30_000)}`)
         async ({ item, r, a }) => {
           const { course, city } = item
           // Sob bloqueio, só grava a Cogna que trouxe oferta de verdade.
-          const writeCogna = !r.error && (cognaTrusted || (blocked !== undefined && r.offerCount > 0))
+          const writeCogna =
+            !r.error &&
+            !zeroNaoGravar.has(pairKey(course.id, city.slug)) &&
+            (cognaTrusted || (blocked !== undefined && r.offerCount > 0))
           const writeAthena = athenaTrusted && !a.error
           if (!writeCogna && !writeAthena) {
             counts.pulados++
@@ -623,6 +674,9 @@ Nos primeiros 30.000 pares (≈ rodada com 30% de falha): ${ate(30_000)}`)
     `  Cogna: com oferta ${counts.cognaComOferta} · 200-vazio ${counts.cognaVazio} (${counts.cognaVazioEmLoteSuspeito} em lote suspeito) · falhas ${totalFalhasCogna} (${pct(totalFalhasCogna, counts.processados)})`,
   )
   console.log(`  Cogna, motivo final:      ${fmtTally(finalFailures.cogna)}`)
+  console.log(
+    `  Cogna, zero sobre positivo: confirmados ${counts.zeroSobrePositivoConfirmado} · DESMENTIDOS ${counts.zeroSobrePositivoDesmentido} · não gravados ${counts.zeroSobrePositivoNaoGravado}`,
+  )
   console.log(`  Cogna, motivo por tentativa: ${fmtTally(attemptFailures.cogna)}`)
   if (!SKIP_ATHENA) {
     console.log(`  Athena, motivo final:     ${fmtTally(finalFailures.athena)}`)

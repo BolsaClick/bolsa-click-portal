@@ -28,6 +28,9 @@ interface RunDetails {
   cognaComOferta?: number
   cognaVazio?: number
   cognaVazioEmLoteSuspeito?: number
+  zeroSobrePositivoConfirmado?: number
+  zeroSobrePositivoDesmentido?: number
+  zeroSobrePositivoNaoGravado?: number
   falhasFinais?: { cogna?: Tally; athena?: Tally }
   falhasPorTentativa?: { cogna?: Tally; athena?: Tally }
   frescorDepois?: Record<string, number>[] | null
@@ -57,6 +60,9 @@ async function main() {
       `   Cogna: com oferta ${d.cognaComOferta} · 200-vazio ${d.cognaVazio} (${d.cognaVazioEmLoteSuspeito} em lote suspeito) · falhas ${falhasCogna} (${d.processados ? Math.round((falhasCogna / d.processados) * 100) : 0}%)`,
     )
     console.log(`   Cogna motivo final:         ${fmt(d.falhasFinais?.cogna)}`)
+    console.log(
+      `   Cogna zero sobre positivo:  confirmados ${d.zeroSobrePositivoConfirmado ?? 0} · DESMENTIDOS ${d.zeroSobrePositivoDesmentido ?? 0} (falha silenciosa medida) · não gravados ${d.zeroSobrePositivoNaoGravado ?? 0}`,
+    )
     console.log(`   Cogna motivo por tentativa: ${fmt(d.falhasPorTentativa?.cogna)}`)
     console.log(`   Athena motivo final:        ${fmt(d.falhasFinais?.athena)}`)
     for (const f of d.frescorDepois ?? []) {

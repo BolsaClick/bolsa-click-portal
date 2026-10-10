@@ -216,3 +216,32 @@ export const emptyTally = (): FailureTally => ({
   rede: 0,
   outro: 0,
 })
+
+// ─── Zero sobre positivo ─────────────────────────────────────────────────────
+
+/** Reconsultas de "zero sobre positivo" por lote — teto de carga na Cogna. */
+export const ZERO_RECHECK_CAP = 10
+
+/**
+ * Pares em que a Cogna respondeu 200 com ZERO onde o cache tinha oferta.
+ *
+ * O controle positivo por lote só pega o lote INTEIRO zerado. A falha
+ * silenciosa intermitente ("200 com lista vazia sob carga", vista pelo CEO na
+ * varredura de 10/10: Pedagogia e Ciências Contábeis com totalItems = 0) zera
+ * pares soltos num lote saudável, e cada um sobrescreveria dado bom. Esses pares
+ * ganham uma reconsulta atrasada. Acima do teto, o zero NÃO é gravado: a linha
+ * fica como está e, por estar velha, volta primeiro na rodada seguinte, ao custo
+ * de 1 consulta.
+ *
+ * Por que não tratar todo 200-vazio como falha: aí nenhum zero seria gravado
+ * nunca, e oferta que sumiu de verdade ficaria positiva no cache para sempre,
+ * deixando a página indexada com a tela vazia.
+ */
+export function zeroOverPositive<T extends { key: string; offerCount: number; ok: boolean }>(
+  results: T[],
+  previous: Map<string, number>,
+  cap: number = ZERO_RECHECK_CAP,
+): { recheck: T[]; overflow: T[] } {
+  const candidates = results.filter((x) => x.ok && x.offerCount === 0 && (previous.get(x.key) ?? 0) > 0)
+  return { recheck: candidates.slice(0, cap), overflow: candidates.slice(cap) }
+}

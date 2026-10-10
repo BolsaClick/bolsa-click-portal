@@ -44,7 +44,8 @@ for (const path of await walk(process.cwd())) {
 // ---------------------------------------------------------------------------
 // Trava do sitemap/robots dinâmicos.
 //
-// A fonte de verdade é o App Router: app/robots.ts, app/sitemap.xml/route.ts e
+// A fonte de verdade é o App Router: app/robots.txt/route.ts,
+// app/sitemap.xml/route.ts e
 // app/sitemap/[id]/route.ts. O gerador estático next-sitemap foi aposentado na
 // migração (commit 5d68fc6), mas o next-sitemap.config.js ficou para trás e
 // divergiu em silêncio: emitia /faculdades/[slug]/[city] (rota legada, hoje um
@@ -53,7 +54,8 @@ for (const path of await walk(process.cwd())) {
 // O modo de falha grave não é o config em si, é o que acontece se alguém rodar
 // o gerador: ele escreve public/robots.txt e public/sitemap.xml, e arquivo
 // estático em public/ TEM PRECEDÊNCIA sobre rota do App Router no Next. O site
-// perderia em silêncio os 17 blocos de crawler de IA do robots e trocaria um
+// perderia em silêncio os blocos de crawler de IA e o Content-Signal do
+// robots, e trocaria um
 // sitemap de ~12k URLs por um errado, sem nenhum erro de build pra avisar.
 //
 // Este bloco falha o PR se qualquer peça dessa armadilha voltar.
@@ -83,6 +85,18 @@ if (baseUrl) {
   const sitemap = await fetch(`${baseUrl}/sitemap.xml`)
   if (!sitemap.ok) fail(`sitemap.xml respondeu ${sitemap.status}`)
   const sitemapBody = await sitemap.text()
+  // Content Signals (contentsignals.org) — declaração de preferência de uso
+  // do conteúdo por IA. Mora em app/robots.txt/route.ts; se alguém reverter o
+  // robots pra Metadata API do Next, a diretiva some sem erro de build.
+  if (!/^Content-Signal:/m.test(robotsBody)) {
+    fail('robots.txt perdeu a diretiva Content-Signal')
+  }
+  // Crawler de IA liberado nominalmente é canal de aquisição, não detalhe.
+  for (const bot of ['GPTBot', 'ClaudeBot', 'PerplexityBot', 'OAI-SearchBot', 'CCBot']) {
+    if (!new RegExp('^User-agent: ' + bot + '$', 'mi').test(robotsBody)) {
+      fail(`robots.txt não libera ${bot} nominalmente`)
+    }
+  }
   if (process.env.NEXT_PUBLIC_SEO_INDEXING_ENABLED !== 'true') {
     if (/<loc>/i.test(sitemapBody)) fail('warmup expõe URLs no sitemap')
   } else if (!robotsBody.includes(`${baseUrl}/sitemap.xml`)) {

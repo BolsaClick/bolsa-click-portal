@@ -3,8 +3,8 @@
  * Passada de CTR nos posts do blog com mais impressões (GSC jul–out/2026).
  *
  * O blog rankeia em posição média 7,6 com CTR de 0,35%. Nos 20 posts de maior
- * impressão, 12 tinham title cortado no Google (63–86 caracteres com a marca)
- * e 6 tinham description acima de 155 — o gancho (preço, %, resposta) ficava
+ * impressão, 13 tinham title cortado no Google (62–86 caracteres com a marca)
+ * e 7 tinham description acima de 155 — o gancho (preço, %, resposta) ficava
  * justamente no pedaço cortado. Aqui só mudam metaTitle e metaDescription:
  * slug, title (H1), excerpt e conteúdo ficam intactos.
  *

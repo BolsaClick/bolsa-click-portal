@@ -12,7 +12,7 @@ const DATE_MODIFIED_LABEL = '25 de maio de 2026'
 export const revalidate = 86400
 
 export const metadata: Metadata = {
-  title: 'FAQ — Perguntas Frequentes sobre Bolsas de Estudo | Bolsa Click',
+  title: 'FAQ — Perguntas Frequentes sobre Bolsas de Estudo',
   description:
     'Respostas diretas sobre como funciona o Bolsa Click, ProUni, FIES, FIES, faculdade EAD, sem ENEM, segurança, valor e matrícula. Tire suas dúvidas em 2 minutos.',
   keywords: [

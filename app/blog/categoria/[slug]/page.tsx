@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/app/lib/prisma'
 import CategoryPageClient from './CategoryPageClient'
 import Breadcrumb from '@/app/components/atoms/Breadcrumb'
+import { stripBrandSuffix } from '@/app/lib/seo/title'
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -68,7 +69,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: 'Categoria não encontrada' }
   }
 
-  const title = category.metaTitle || `${category.title} - Blog`
+  const title = stripBrandSuffix(category.metaTitle || `${category.title} - Blog`)
   const description = category.metaDescription || `Artigos sobre ${category.title.toLowerCase()}. ${category.description}`
 
   return {

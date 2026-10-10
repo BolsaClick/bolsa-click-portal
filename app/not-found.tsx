@@ -5,7 +5,7 @@ import HeaderNew from './components/molecules/Header/New'
 import Footer from './components/molecules/Footer'
 
 export const metadata: Metadata = {
-  title: 'Página não encontrada (404) | Bolsa Click',
+  title: 'Página não encontrada (404)',
   description: 'A página que você procura não existe ou foi movida.',
   robots: 'noindex, follow',
   alternates: {

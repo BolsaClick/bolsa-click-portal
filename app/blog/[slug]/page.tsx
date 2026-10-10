@@ -8,6 +8,7 @@ import { getPersona, personaAtId, EDITORIAL_TEAM_ORG } from '@/app/lib/blog/edit
 import { isOffTopicNoindex } from '@/app/lib/blog/noindex-slugs'
 import { ogImageObject } from '@/app/lib/seo/schema-image'
 import { getPostBySlug } from './_data/post-lookup'
+import { stripBrandSuffix } from '@/app/lib/seo/title'
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -103,7 +104,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // stored in metaTitle — the root layout template appends it automatically,
   // so keeping it in the DB value causes "| Bolsa Click | Bolsa Click".
   const rawTitle = post.metaTitle || post.title
-  const title = rawTitle.replace(/\s*\|\s*Bolsa Click\s*$/i, '').trim()
+  const title = stripBrandSuffix(rawTitle)
   const description = post.metaDescription || post.excerpt
   // Card de marca gerado por código (opengraph-image.tsx nesta pasta) —
   // substitui o antigo fallback pra `post.featuredImage` (imagem solta do CMS,

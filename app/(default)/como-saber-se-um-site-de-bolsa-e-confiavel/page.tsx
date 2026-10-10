@@ -11,7 +11,7 @@ const SITE_URL = 'https://www.bolsaclick.com.br'
 export const revalidate = 86400
 
 export const metadata: Metadata = {
-  title: 'Como saber se um site de bolsa de estudo é confiável | Bolsa Click',
+  title: 'Como saber se um site de bolsa de estudo é confiável',
   description:
     'Um site de bolsa de estudo é confiável quando não cobra taxa do aluno, mostra o preço antes do cadastro, indica faculdades reconhecidas pelo MEC e o pagamento vai direto à instituição. Veja o checklist para não cair em golpe.',
   keywords: [

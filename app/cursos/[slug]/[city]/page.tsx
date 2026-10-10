@@ -4,7 +4,7 @@ import { cache } from 'react'
 import { prisma } from '@/app/lib/prisma'
 import { resolveCanonicalCourseSlug } from '@/app/lib/seo/slug-resolver'
 import { shouldIndexCityPage, MIN_TREND_SCORE_FOR_HIGH_DEMAND } from '@/app/lib/seo/city-page-gate'
-import { durationToIso8601 } from '@/app/lib/seo/schema-helpers'
+import { durationToIso8601, buildCourseInstances } from '@/app/lib/seo/schema-helpers'
 import { buildBrandedCourseCopy, canIndexBrandedCopy } from '@/app/lib/seo/branded-course-copy'
 import { absoluteUrl, publicRobots, seoSite } from '@/app/lib/seo/site-config'
 import { ogImageObject } from '@/app/lib/seo/schema-image'
@@ -517,6 +517,15 @@ export default async function CursoCidadePage({ params }: Props) {
     },
   }
 
+  // Uma CourseInstance por instituição que oferta o curso NESTA cidade — sem
+  // hasCourseInstance o Google não considera a página pro rich result de
+  // curso. No fallback nacional as ofertas não são da cidade: emite só a
+  // instância genérica, sem preço, pra não anunciar valor que não é local.
+  const courseInstances = buildCourseInstances(fromFallback ? [] : courseOffers, {
+    duration: cursoMetadata.duration,
+    url: pageUrl,
+  })
+
   // Article schema envelope — dá citation-readiness pra cada city page
   // (~5-10k URLs). datePublished do curso enriquecido + dateModified ao
   // ser atualizado. author = Equipe Editorial (mesmo pattern do pillar);
@@ -604,6 +613,7 @@ export default async function CursoCidadePage({ params }: Props) {
         articleSchema,
         {
           ...baseCourseSchema,
+          hasCourseInstance: courseInstances,
           ...(lowPrice > 0 && !fromFallback && {
             offers: {
               '@type': 'AggregateOffer',

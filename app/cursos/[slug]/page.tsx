@@ -7,6 +7,7 @@ import { courseTypeLabel } from '@/app/lib/courseTypeLabel'
 import {
   educationalCredentialAwarded,
   durationToIso8601,
+  buildCourseInstances,
 } from '@/app/lib/seo/schema-helpers'
 import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { resolveCanonicalCourseSlug } from '@/app/lib/seo/slug-resolver'
@@ -288,69 +289,12 @@ export default async function CursoPage({ params }: Props) {
   ) as string[]
   const reviewsAggregate = await getCourseReviewsAggregate(courseBrands)
 
-  // Per-institution CourseInstance entries — Google's Course rich result requires
-  // the educational institution as `provider`, not the marketplace. Aggregator role
-  // is captured via offers.offeredBy on the AggregateOffer.
-  const offersByBrand = new Map<string, typeof courseOffers>()
-  for (const offer of (courseOffers || [])) {
-    const brand = (offer as { brand?: string }).brand
-    if (!brand) continue
-    if (!offersByBrand.has(brand)) offersByBrand.set(brand, [])
-    offersByBrand.get(brand)!.push(offer)
-  }
-
-  const courseInstances = offersByBrand.size > 0
-    ? Array.from(offersByBrand.entries()).map(([brand, brandOffers]) => {
-        const typedOffers = brandOffers as Array<{ minPrice?: number; prices?: { withDiscount?: number }; modality?: string }>
-        const brandPrices = typedOffers
-          .map((o) => o.minPrice || o.prices?.withDiscount || 0)
-          .filter((p: number) => p > 0)
-        const brandLowPrice = brandPrices.length > 0 ? Math.min(...brandPrices) : 0
-        const modalities = Array.from(new Set(
-          typedOffers.map((o) => o.modality).filter(Boolean)
-        )) as string[]
-        const courseMode = modalities.includes('EAD') || modalities.includes('Online')
-          ? 'Online'
-          : 'Onsite'
-        return {
-          '@type': 'CourseInstance' as const,
-          courseMode,
-          courseWorkload: durationToIso8601(cursoMetadata.duration),
-          provider: {
-            '@type': 'CollegeOrUniversity' as const,
-            name: brand,
-          },
-          ...(brandLowPrice > 0 ? {
-            offers: {
-              '@type': 'Offer' as const,
-              priceCurrency: 'BRL',
-              price: brandLowPrice.toFixed(2),
-              availability: 'https://schema.org/InStock',
-              url: `https://www.bolsaclick.com.br/cursos/${slug}`,
-              seller: {
-                '@type': 'Organization' as const,
-                '@id': 'https://www.bolsaclick.com.br/#organization',
-              },
-            },
-          } : {}),
-        }
-      })
-    : [
-        {
-          '@type': 'CourseInstance' as const,
-          courseMode: 'Online',
-          courseWorkload: durationToIso8601(cursoMetadata.duration),
-          ...(lowPrice > 0 ? {
-            offers: {
-              '@type': 'Offer' as const,
-              priceCurrency: 'BRL',
-              price: lowPrice.toFixed(2),
-              availability: 'https://schema.org/InStock',
-              url: `https://www.bolsaclick.com.br/cursos/${slug}`,
-            },
-          } : {}),
-        },
-      ]
+  // Per-institution CourseInstance entries — ver buildCourseInstances.
+  const courseInstances = buildCourseInstances(courseOffers, {
+    duration: cursoMetadata.duration,
+    url: `https://www.bolsaclick.com.br/cursos/${slug}`,
+    fallbackLowPrice: lowPrice,
+  })
 
   const jsonLdSchemas = [
     {

@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { ArticleLayout } from '@/app/components/help/ArticleLayout'
 import { getHelpArticle, getAllArticleSlugs } from '../../_lib/data'
+import { stripBrandSuffix } from '@/app/lib/seo/title'
 
 export const revalidate = 86400 // Revalidar a cada 1 hora
 
@@ -30,7 +31,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: article.metaTitle || `${article.title} | Central de Ajuda`,
+    title: stripBrandSuffix(article.metaTitle || `${article.title} | Central de Ajuda`),
     description: article.metaDescription || article.description,
     robots: 'index, follow',
     alternates: {

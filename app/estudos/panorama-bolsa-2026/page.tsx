@@ -11,7 +11,7 @@ const DATA_MODIFIED = '2026-05-19'
 export const revalidate = 86400
 
 export const metadata: Metadata = {
-  title: 'Panorama da Bolsa de Estudo no Brasil 2026 — Estudo Bolsa Click',
+  title: { absolute: 'Panorama da Bolsa de Estudo no Brasil 2026 — Estudo Bolsa Click' },
   description:
     'Relatório com dados originais sobre o mercado de bolsas de estudo no Brasil em 2026: 117 cursos cobertos, 283 cidades, salários por área, distribuição por instituição e modalidade. Catálogo Bolsa Click cruzado com CAGED 2025 e IBGE 2022.',
   keywords: [

@@ -18,7 +18,7 @@ const ANO = new Date().getFullYear()
 export const revalidate = 86400
 
 export const metadata: Metadata = {
-  title: 'Programas de Estudo no Brasil — ProUni, FIES, SISU, ENEM | Bolsa Click',
+  title: 'Programas de Estudo no Brasil — ProUni, FIES, SISU, ENEM',
   description:
     `Guia central dos programas de estudo e financiamento no Brasil em ${ANO}: ProUni, FIES, SISU, ENEM, ENCCEJA e faculdade sem ENEM. Compare requisitos, descontos e calendários oficiais.`,
   keywords: [

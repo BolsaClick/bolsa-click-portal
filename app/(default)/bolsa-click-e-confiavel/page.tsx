@@ -13,7 +13,7 @@ const SITE_URL = 'https://www.bolsaclick.com.br'
 export const revalidate = 86400
 
 export const metadata: Metadata = {
-  title: 'O Bolsa Click é confiável? Como funciona e é seguro | Bolsa Click',
+  title: 'O Bolsa Click é confiável? Como funciona e é seguro',
   description:
     'Sim, o Bolsa Click é confiável: cadastro 100% grátis, você só paga a mensalidade já com desconto diretamente à faculdade, e todas as instituições parceiras são reconhecidas pelo MEC. Entenda como funciona e por que é seguro.',
   keywords: [

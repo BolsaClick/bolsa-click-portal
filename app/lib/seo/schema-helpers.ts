@@ -99,3 +99,89 @@ export function parseSalary(value: string | number | null | undefined): number |
   const num = parseFloat(normalized)
   return Number.isFinite(num) && num > 0 ? num : undefined
 }
+
+type CourseInstanceOffer = {
+  brand?: string
+  minPrice?: number
+  prices?: { withDiscount?: number }
+  modality?: string
+}
+
+/**
+ * Monta `Course.hasCourseInstance`: uma CourseInstance por instituição, com
+ * `courseMode` e a menor mensalidade daquela instituição em `offers`.
+ *
+ * O rich result de curso do Google exige a instituição de ensino como
+ * `provider`, não o marketplace — o papel de agregador fica em
+ * `offers.seller` / `AggregateOffer.offeredBy`.
+ *
+ * Sem oferta com marca, cai numa instância genérica (sem `provider`) e só
+ * emite `offers` se `fallbackLowPrice` > 0.
+ *
+ * `offers` precisa ser o conjunto que a página realmente mostra: na página de
+ * cidade, só as ofertas da cidade — nunca o fallback nacional, senão o preço
+ * anunciado no schema não é o da cidade.
+ */
+export function buildCourseInstances(
+  offers: CourseInstanceOffer[] | null | undefined,
+  opts: { duration: string | null | undefined; url: string; fallbackLowPrice?: number },
+) {
+  const courseWorkload = durationToIso8601(opts.duration)
+  const offerPrice = (o: CourseInstanceOffer) => o.minPrice || o.prices?.withDiscount || 0
+
+  const offersByBrand = new Map<string, CourseInstanceOffer[]>()
+  for (const offer of offers || []) {
+    if (!offer.brand) continue
+    if (!offersByBrand.has(offer.brand)) offersByBrand.set(offer.brand, [])
+    offersByBrand.get(offer.brand)!.push(offer)
+  }
+
+  if (offersByBrand.size === 0) {
+    const lowPrice = opts.fallbackLowPrice ?? 0
+    return [
+      {
+        '@type': 'CourseInstance' as const,
+        courseMode: 'Online',
+        courseWorkload,
+        ...(lowPrice > 0 ? {
+          offers: {
+            '@type': 'Offer' as const,
+            priceCurrency: 'BRL',
+            price: lowPrice.toFixed(2),
+            availability: 'https://schema.org/InStock',
+            url: opts.url,
+          },
+        } : {}),
+      },
+    ]
+  }
+
+  return Array.from(offersByBrand.entries()).map(([brand, brandOffers]) => {
+    const brandPrices = brandOffers.map(offerPrice).filter(p => p > 0)
+    const brandLowPrice = brandPrices.length > 0 ? Math.min(...brandPrices) : 0
+    const modalities = new Set(brandOffers.map(o => o.modality).filter(Boolean))
+    const courseMode = modalities.has('EAD') || modalities.has('Online') ? 'Online' : 'Onsite'
+    return {
+      '@type': 'CourseInstance' as const,
+      courseMode,
+      courseWorkload,
+      provider: {
+        '@type': 'CollegeOrUniversity' as const,
+        name: brand,
+      },
+      ...(brandLowPrice > 0 ? {
+        offers: {
+          '@type': 'Offer' as const,
+          priceCurrency: 'BRL',
+          price: brandLowPrice.toFixed(2),
+          availability: 'https://schema.org/InStock',
+          url: opts.url,
+          seller: {
+            '@type': 'Organization' as const,
+            '@id': 'https://www.bolsaclick.com.br/#organization',
+          },
+        },
+      } : {}),
+    }
+  })
+}

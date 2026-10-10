@@ -12,7 +12,7 @@ const SITE_URL = 'https://www.bolsaclick.com.br'
 export const revalidate = 86400
 
 export const metadata: Metadata = {
-  title: 'Como funciona bolsa de estudo e o desconto em faculdade | Bolsa Click',
+  title: 'Como funciona bolsa de estudo e o desconto em faculdade',
   description:
     'Bolsa de estudo é um desconto na mensalidade da faculdade. Você busca o curso, compara o desconto de cada instituição, se cadastra grátis e paga a mensalidade já reduzida, direto à faculdade. Veja como funciona a bolsa própria e os programas federais.',
   keywords: [

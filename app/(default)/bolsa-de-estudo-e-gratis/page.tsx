@@ -12,7 +12,7 @@ const SITE_URL = 'https://www.bolsaclick.com.br'
 export const revalidate = 86400
 
 export const metadata: Metadata = {
-  title: 'Bolsa de estudo é grátis? Site de bolsa cobra taxa? | Bolsa Click',
+  title: 'Bolsa de estudo é grátis? Site de bolsa cobra taxa?',
   description:
     'Buscar bolsa de estudo não deve custar taxa: plataformas sérias são gratuitas para o aluno. No Bolsa Click o cadastro é 100% grátis e você só paga a mensalidade já com desconto, direto à faculdade. Entenda quando há taxa e quando é golpe.',
   keywords: [

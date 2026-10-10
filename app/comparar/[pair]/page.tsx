@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import { unstable_cache } from 'next/cache'
+import { cache } from 'react'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -10,8 +11,14 @@ import { getShowFiltersCourses } from '@/app/lib/api/get-courses-filter'
 import { Course } from '@/app/interface/course'
 import { TOP_CURSOS } from '@/app/cursos/_data/cursos'
 import { VisibleFaq } from '@/app/cursos/[slug]/_seo/CourseSeoSections'
-import { DISCOUNT_CEILING_PCT } from '@/app/lib/copy/claims'
 import { COMPARABLE_INSTITUTION } from '@/app/lib/utils/comparable-institution'
+import { getDisplayDiscountPct } from '@/app/lib/utils/institution-discount'
+import {
+  buildCompareDescription,
+  buildCompareTitle,
+  pairDiscountClause,
+  type CompareSide,
+} from './_seo/snippet'
 
 const theme = getCurrentTheme()
 
@@ -79,6 +86,37 @@ const fetchOffersSample = unstable_cache(
   { revalidate: 86400, tags: ['compare-offers'] }
 )
 
+/**
+ * Desconto exibível da marca, lido de InstitutionMaxDiscountCache — a mesma
+ * fonte de /faculdades/[slug]. Antes esta página afirmava o teto do catálogo
+ * "nas duas faculdades" mesmo quando a marca mede menos (Pitágoras 69%, Wyden
+ * 73% em out/2026). `cache` do React: metadata e página leem o mesmo número.
+ */
+const getBrandDiscountPct = cache(async (brandSlug: string): Promise<number> => {
+  try {
+    const row = await prisma.institutionMaxDiscountCache.findUnique({
+      where: { brand: brandSlug },
+      select: { maxDiscountPctRaw: true, sampleSize: true },
+    })
+    return getDisplayDiscountPct(row)
+  } catch {
+    return getDisplayDiscountPct(null)
+  }
+})
+
+async function toCompareSide(inst: {
+  slug: string
+  name: string
+  mecRating: number | null
+}): Promise<CompareSide> {
+  return {
+    slug: inst.slug,
+    name: inst.name,
+    mecRating: inst.mecRating,
+    discountPct: await getBrandDiscountPct(inst.slug),
+  }
+}
+
 interface BrandStats {
   offerCount: number
   courseCount: number
@@ -128,7 +166,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const institutions = await prisma.institution.findMany({
     where: { slug: { in: [a, b] }, ...COMPARABLE_INSTITUTION },
-    select: { name: true, fullName: true, slug: true },
+    select: { name: true, slug: true, mecRating: true },
   })
 
   if (institutions.length !== 2) return { title: 'Comparação não encontrada' }
@@ -138,8 +176,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const canonicalUrl = `${theme.siteUrl}/comparar/${a}-vs-${b}`
 
-  const title = `${instA.name} vs ${instB.name}: Qual a Melhor Faculdade?`
-  const description = `Compare ${instA.fullName} e ${instB.fullName}: nota MEC, modalidades, polos, cursos e bolsas. Veja qual faculdade combina mais com seu perfil e estude com até ${DISCOUNT_CEILING_PCT}% de desconto.`
+  const [sideA, sideB] = await Promise.all([toCompareSide(instA), toCompareSide(instB)])
+  const title = buildCompareTitle(sideA, sideB)
+  const description = buildCompareDescription(sideA, sideB)
 
   return {
     title,
@@ -155,7 +194,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ],
     alternates: { canonical: canonicalUrl },
     openGraph: {
-      title: `${instA.name} vs ${instB.name} — Comparativo Completo`,
+      title,
       description,
       url: canonicalUrl,
       siteName: 'Bolsa Click',
@@ -196,6 +235,9 @@ export default async function CompareInstitutionsPage({ params }: Props) {
   const statsA = computeBrandStats(offersSample, instA.name)
   const statsB = computeBrandStats(offersSample, instB.name)
   const hasLiveData = statsA.offerCount > 0 || statsB.offerCount > 0
+
+  const [sideA, sideB] = await Promise.all([toCompareSide(instA), toCompareSide(instB)])
+  const discountClause = pairDiscountClause(sideA, sideB)
 
   const canonicalUrl = `${theme.siteUrl}/comparar/${canonicalPair}`
 
@@ -325,7 +367,7 @@ export default async function CompareInstitutionsPage({ params }: Props) {
     },
     {
       question: `Como conseguir bolsa de estudo na ${instA.name} ou na ${instB.name}?`,
-      answer: `O Bolsa Click oferece bolsas de até ${DISCOUNT_CEILING_PCT}% nas duas faculdades. Escolha o curso desejado, compare as ofertas das duas instituições lado a lado e finalize a inscrição grátis. Cadastro grátis, sem taxa de adesão. O percentual e a duração seguem o contrato da oferta.`,
+      answer: `${discountClause ? `O Bolsa Click oferece ${discountClause}. ` : ''}Escolha o curso desejado, compare as ofertas das duas instituições lado a lado e finalize a inscrição grátis. Cadastro grátis, sem taxa de adesão. O percentual e a duração seguem o contrato da oferta.`,
     },
   ]
 
@@ -360,8 +402,8 @@ export default async function CompareInstitutionsPage({ params }: Props) {
           </h1>
           <p className="text-lg text-ink-700 max-w-3xl">
             Comparativo lado a lado entre {instA.fullName} e {instB.fullName}: nota MEC,
-            modalidades, polos, cursos e tudo o que importa pra decidir. Ambas com bolsa
-            de até {DISCOUNT_CEILING_PCT}% pelo Bolsa Click.
+            modalidades, polos, cursos e tudo o que importa pra decidir.
+            {discountClause && <> Pelo Bolsa Click, {discountClause}.</>}
           </p>
         </div>
       </header>
@@ -487,8 +529,7 @@ export default async function CompareInstitutionsPage({ params }: Props) {
             quem prioriza <strong>{instA.mecRating && instB.mecRating ? (instA.mecRating >= instB.mecRating ? 'nota institucional MEC' : 'cobertura presencial')  : 'cobertura nacional'}</strong> tende a se identificar mais com a {instA.mecRating && instB.mecRating && instA.mecRating >= instB.mecRating ? instA.name : instA.campusCount && instB.campusCount && instA.campusCount >= instB.campusCount ? instA.name : instB.name}.
           </p>
           <p className="text-ink-700 leading-relaxed mt-3">
-            Pelo Bolsa Click, as duas faculdades oferecem bolsas de até {DISCOUNT_CEILING_PCT}% — então o
-            custo costuma se equilibrar. Recomendamos comparar as ofertas do curso
+            {discountClause && <>Pelo Bolsa Click, há {discountClause}. </>}Recomendamos comparar as ofertas do curso
             específico que você quer fazer, na cidade onde planeja estudar (ou no formato
             EAD se preferir flexibilidade).
           </p>

@@ -1,9 +1,58 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripForbiddenGeoParams } from "@/app/lib/geo/brazil-location";
+import { seoSite } from "@/app/lib/seo/site-config";
 
 const IS_WARMUP =
   process.env.NEXT_PUBLIC_THEME === "bolsamais" &&
   process.env.NEXT_PUBLIC_SEO_INDEXING_ENABLED !== "true";
+
+/**
+ * Link headers de descoberta (RFC 8288).
+ *
+ * Agente que chega via HTTP e não renderiza HTML — crawler de IA, cliente de
+ * MCP, script de terceiro — não vê nada do que está em `<head>`. O Link
+ * header entrega as mesmas referências na resposta, antes do corpo, e já é
+ * padrão registrado (os `rel` abaixo estão todos no registro da IANA:
+ * `describedby`, `help`, `terms-of-service` e `privacy-policy` da RFC 8631,
+ * `author` do HTML).
+ *
+ * Só entra aqui o que EXISTE de fato. Nada de `service-desc` ou de metadado
+ * de OAuth: não há API pública com autenticação de terceiro neste site, e
+ * anunciar capacidade inexistente em formato legível por máquina é pior do
+ * que não anunciar nada — o agente tenta, falha, e aprende que o domínio
+ * mente. `license` também fica fora: a licença CC BY cobre o llms.txt e os
+ * estudos publicados, não o site inteiro, e o header é por recurso.
+ */
+const AGENT_DISCOVERY_LINKS = [
+  `<${seoSite.siteUrl}/llms.txt>; rel="describedby"; type="text/plain"`,
+  `<${seoSite.siteUrl}/central-de-ajuda>; rel="help"`,
+  `<${seoSite.siteUrl}/central-de-ajuda/seguranca-dados-privacidade/termos-de-uso>; rel="terms-of-service"`,
+  `<${seoSite.siteUrl}/central-de-ajuda/seguranca-dados-privacidade/politica-de-privacidade>; rel="privacy-policy"`,
+  `<${seoSite.siteUrl}${seoSite.editorialTeamPath}>; rel="author"`,
+].join(", ");
+
+/**
+ * Aplicado só na saída de documento do site principal (o último `return` do
+ * middleware). Os domínios satélite — ingressa.digital e
+ * pos.anhangueracursos.com.br — saem antes, e é o que queremos: as URLs
+ * acima são do bolsaclick.com.br e não existem lá. `/api`, `/ingest` e
+ * `/utm` também ficam de fora: são respostas de máquina, não de navegação,
+ * e o header só somaria bytes em cada chamada de analytics.
+ */
+function withAgentDiscoveryLinks(
+  response: NextResponse,
+  pathname: string,
+): NextResponse {
+  if (
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/ingest") ||
+    pathname.startsWith("/utm")
+  ) {
+    return response;
+  }
+  response.headers.set("Link", AGENT_DISCOVERY_LINKS);
+  return response;
+}
 
 function seoResponse(response: NextResponse): NextResponse {
   if (IS_WARMUP) {
@@ -165,7 +214,7 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  return seoResponse(NextResponse.next());
+  return withAgentDiscoveryLinks(seoResponse(NextResponse.next()), pathname);
 }
 
 export const config = {

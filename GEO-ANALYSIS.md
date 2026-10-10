@@ -14,7 +14,8 @@ _Análise em 2026-05-25 | Foco: pillar `/bolsas-de-estudo` + cluster de 19 posts
 
 ## Baseline forte (mantém)
 
-- ✅ **Robots.txt**: 14 AI crawlers explicitamente permitidos (GPTBot, OAI-SearchBot, ClaudeBot, anthropic-ai, PerplexityBot, Perplexity-User, Google-Extended, CCBot, Bytespider, Applebot-Extended, Meta-ExternalAgent/Fetcher, cohere-ai, Diffbot) — `app/robots.ts`
+- ✅ **Robots.txt**: 36 crawlers de IA liberados nominalmente (OpenAI, Anthropic, Perplexity, Google/Vertex, Apple, Amazon, Meta, ByteDance, Common Crawl, Cohere, Mistral, Ai2, Diffbot…), `Content-Signal: search=yes, ai-input=yes, ai-train=yes` e bloqueio dos crawlers de índice de backlink (DotBot, BLEXBot, MJ12bot, MegaIndex, SEOkicks, Barkrowler) — `app/robots.txt/route.ts`
+- ✅ **Link headers (RFC 8288)**: `describedby` (llms.txt), `help`, `terms-of-service`, `privacy-policy` e `author` em toda resposta de documento — `middleware.ts`
 - ✅ **llms.txt dinâmico**: route handler em `app/llms.txt/route.ts` puxa cursos/faculdades/posts do Prisma em runtime (cache 1h). Inclui "Dados importantes para citação" — formato ideal pra extração LLM
 - ✅ **Schema sitewide**: WebSite, EducationalOrganization (com sameAs Instagram/Facebook/LinkedIn), ItemList nav, EducationalOccupationalProgram
 - ✅ **Schema pillar**: BreadcrumbList, ItemList (cidades), WebSite, FAQPage (18 Q&A), HowTo (6 passos)
@@ -113,7 +114,7 @@ A pillar usa **HowTo** (linha 20 acima). HowTo foi **deprecado como rich result 
 
 ## Quick wins (semana)
 1. Padronizar desconto-âncora (78% vs 95%) site-wide.
-2. `ChatGPT-User` explícito no `app/robots.ts`.
+2. `ChatGPT-User` explícito no `app/robots.txt/route.ts`.
 3. Reivindicar Reclame Aqui + página LinkedIn da empresa.
 4. `Organization.sameAs` com os perfis assim que criados.
 

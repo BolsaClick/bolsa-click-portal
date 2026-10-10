@@ -230,7 +230,11 @@ export async function confirmPaidEstacio(
     return result
   }
 
-  const attempt = await runAthenaEnrollment(blob.enrollment)
+  const attempt = await runAthenaEnrollment(blob.enrollment, {
+    flow: 'confirm-estacio',
+    courseName: blob.offer.courseName,
+    transactionId: externalTransactionId,
+  })
 
   // ── Recusa: estorna a taxa e registra no CRM ────────────────────────────
   if (!attempt.accepted) {

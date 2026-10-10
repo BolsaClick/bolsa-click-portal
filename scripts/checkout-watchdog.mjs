@@ -1,5 +1,6 @@
 /**
- * Checkout Watchdog — pega dinheiro cobrado que não virou inscrição.
+ * Checkout Watchdog — pega dinheiro cobrado que não virou inscrição e
+ * inscrição recusada pelo parceiro.
  *
  * POR QUE ELE EXISTE
  *
@@ -16,6 +17,15 @@
  * Este watchdog não tenta prever a próxima variante. Ele mede o SINTOMA que
  * todas compartilham: existe transação paga sem desfecho gravado?
  *
+ * RECUSA DE PARCEIRO (2026-10-10)
+ *
+ * Com PAYMENTS_DISABLED ligado não existe transação paga — e o cheque acima
+ * fica cego para a inscrição GRATUITA recusada. Desde então todo envio a
+ * parceiro grava o desfecho em `PartnerInscriptionOutcome`
+ * (app/lib/checkout/inscription-outcome.ts), com ou sem cobrança, e este
+ * watchdog lê dali. As regras (MS002 na Estácio = crítico na primeira) estão
+ * em checkout-watchdog-recusas.mjs, testadas sem banco.
+ *
  * VARIÁVEIS
  *   DATABASE_URL             (obrigatória)
  *   SLACK_WEBHOOK_URL        (opcional) — push do resumo pro Slack
@@ -27,6 +37,7 @@
  */
 
 import { PrismaClient } from '@prisma/client'
+import { avaliarRecusas } from './checkout-watchdog-recusas.mjs'
 
 const prisma = new PrismaClient()
 
@@ -47,6 +58,14 @@ const CARENCIA_MIN = Number(process.env.CHECKOUT_WATCHDOG_CARENCIA_MIN) || 10
  * para sempre, e um alerta permanentemente vermelho é um alerta desligado.
  */
 const JANELA_DIAS = Number(process.env.CHECKOUT_WATCHDOG_JANELA_DIAS) || 7
+
+/**
+ * Janela das recusas. Maior que a cadência do cron (30min) DE PROPÓSITO: o
+ * agendamento do GitHub atrasa, e um buraco entre execuções seria uma recusa
+ * que nunca é reportada. O preço é uma recusa às vezes aparecer em dois
+ * alertas seguidos — aceitável; perder uma não é.
+ */
+const RECUSA_JANELA_MIN = Number(process.env.CHECKOUT_WATCHDOG_RECUSA_JANELA_MIN) || 40
 
 const findings = []
 function add(severity, check, message, extra = {}) {
@@ -180,6 +199,78 @@ async function checkVolume() {
   add('info', 'volume', `Últimas 24h: ${pagas} pagamento(s), ${ok} com inscrição concluída (${Math.round((ok / pagas) * 100)}%).`)
 }
 
+// ---------- Recusa de parceiro (PartnerInscriptionOutcome) ----------
+
+/** Tabela ainda não criada (deploy antes da migration) — Postgres 42P01. */
+const tabelaInexistente = (err) =>
+  /42P01|does not exist/i.test(`${err?.code || ''} ${err?.message || ''}`)
+
+/**
+ * Recusas de parceiro na janela recente — com ou sem cobrança. É o cheque que
+ * cobre a inscrição gratuita, invisível para `checkPagoSemDesfecho`.
+ */
+async function checkRecusaParceiro() {
+  let linhas
+  try {
+    linhas = await prisma.$queryRaw`
+      SELECT "createdAt", partner, channel, flow, outcome::text AS outcome,
+             "errorCode", "errorMessage", "httpStatus", cpf, "offerId", "courseName"
+      FROM "PartnerInscriptionOutcome"
+      WHERE "createdAt" > now() - make_interval(mins => ${RECUSA_JANELA_MIN}::int)
+      ORDER BY "createdAt" DESC
+      LIMIT 500
+    `
+  } catch (err) {
+    if (tabelaInexistente(err)) {
+      add(
+        'warn',
+        'recusa-parceiro',
+        'Tabela PartnerInscriptionOutcome não existe ainda — migration 20261010150000 pendente. Recusas de parceiro NÃO estão sendo vigiadas.',
+      )
+      return
+    }
+    throw err
+  }
+
+  for (const a of avaliarRecusas(linhas, { janelaMin: RECUSA_JANELA_MIN })) {
+    const { severity, check, message, ...extra } = a
+    add(severity, check, message, extra)
+  }
+}
+
+/** Denominador das inscrições: envios e aceites por parceiro em 24h. */
+async function checkVolumeInscricoes() {
+  let linhas
+  try {
+    linhas = await prisma.$queryRaw`
+      SELECT partner,
+             COUNT(*)                                    AS envios,
+             COUNT(*) FILTER (WHERE outcome = 'SUCCESS') AS aceites
+      FROM "PartnerInscriptionOutcome"
+      WHERE "createdAt" > now() - interval '24 hours'
+      GROUP BY partner
+    `
+  } catch (err) {
+    if (tabelaInexistente(err)) return // já avisado em checkRecusaParceiro
+    throw err
+  }
+  if (linhas.length === 0) {
+    add('info', 'volume-inscricoes', 'Nenhum envio de inscrição a parceiro nas últimas 24h — nada a conferir (ou o funil parou).')
+    return
+  }
+  add(
+    'info',
+    'volume-inscricoes',
+    `Últimas 24h: ${linhas
+      .map((l) => {
+        const envios = Number(l.envios)
+        const aceites = Number(l.aceites)
+        return `${l.partner} ${aceites}/${envios} aceitas (${Math.round((aceites / envios) * 100)}%)`
+      })
+      .join(' · ')}`,
+  )
+}
+
 // ---------- Notificações ----------
 async function pushSlack(summary) {
   const url = process.env.SLACK_WEBHOOK_URL
@@ -189,6 +280,16 @@ async function pushSlack(summary) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ text: summary }),
   }).catch(() => {})
+}
+
+/** Assunto pelo pior achado — "Cobrança sem inscrição" para uma MS002 confundiria. */
+function subjectFor(summary) {
+  if (summary.includes('[estacio-ms002]')) return '[Bolsa Click] 🔴 Estácio recusou inscrição (MS002)'
+  if (summary.includes('[parceiro-falha-total]')) return '[Bolsa Click] 🔴 Parceiro recusando todas as inscrições'
+  if (summary.includes('[pago-sem-desfecho]') || summary.includes('[estorno-nao-confirmado]')) {
+    return '[Bolsa Click] Cobrança sem inscrição no checkout'
+  }
+  return '[Bolsa Click] Recusa de inscrição em parceiro'
 }
 
 async function pushEmail(summary) {
@@ -202,7 +303,7 @@ async function pushEmail(summary) {
     body: JSON.stringify({
       from,
       to: to.split(','),
-      subject: '[Bolsa Click] Cobrança sem inscrição no checkout',
+      subject: subjectFor(summary),
       text: summary,
     }),
   }).catch(() => {})
@@ -215,7 +316,13 @@ async function main() {
     process.exit(2)
   }
 
-  const checks = [checkPagoSemDesfecho, checkEstornoNaoConfirmado, checkVolume]
+  const checks = [
+    checkPagoSemDesfecho,
+    checkEstornoNaoConfirmado,
+    checkVolume,
+    checkRecusaParceiro,
+    checkVolumeInscricoes,
+  ]
   for (const c of checks) {
     try {
       await c()
@@ -245,9 +352,16 @@ async function main() {
   }
 
   if (crit.length || warn.length) {
-    const lines = [...crit, ...warn].map(
-      (f) => `${f.severity === 'critical' ? '🔴' : '🟡'} [${f.check}] ${f.message}`,
-    )
+    const lines = [...crit, ...warn].flatMap((f) => [
+      `${f.severity === 'critical' ? '🔴' : '🟡'} [${f.check}] ${f.message}`,
+      // Recusas trazem o caso (oferta, código, CPF mascarado) — sem isso o
+      // alerta diz "houve MS002" e alguém ainda tem que ir ao banco descobrir qual.
+      ...(f.check === 'estacio-ms002' || f.check === 'recusa-parceiro'
+        ? (f.transacoes || [])
+            .slice(0, 10)
+            .map((t) => `      ↳ ${t.ext} ${t.valor} — ${t.flow}${t.motivo ? ` — ${t.motivo}` : ''}`)
+        : []),
+    ])
     const summary = `Checkout Watchdog — ${crit.length} crítico(s), ${warn.length} aviso(s)\n` + lines.join('\n')
     await pushSlack(summary)
     await pushEmail(summary)

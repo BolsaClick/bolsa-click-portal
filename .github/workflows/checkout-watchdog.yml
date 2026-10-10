@@ -1,4 +1,6 @@
-# Pega dinheiro cobrado que não virou inscrição.
+# Pega dinheiro cobrado que não virou inscrição — e, desde 2026-10-10,
+# inscrição recusada pelo parceiro (tabela PartnerInscriptionOutcome), com ou
+# sem cobrança. MS002 na Estácio deixa o job vermelho na primeira ocorrência.
 #
 # O job FALHA quando há crítico → o GitHub notifica os watchers do repo por
 # email, sem credencial extra. Slack e email dedicado são opcionais (secrets

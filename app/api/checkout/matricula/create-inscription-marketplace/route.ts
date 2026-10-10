@@ -4,6 +4,7 @@ import {
   type MarketplaceInscriptionData,
 } from '@/app/lib/api/create-inscription-marketplace'
 import type { OfferDetails } from '@/app/lib/api/get-offer-details'
+import { marketplaceVerdict, recordInscriptionOutcome } from '@/app/lib/checkout/inscription-outcome'
 
 export const runtime = 'nodejs'
 
@@ -34,8 +35,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: 'missing_fields' }, { status: 422 })
   }
 
+  const inicio = Date.now()
   try {
     const result = await createMarketplaceInscription(body.formData, body.offerDetails)
+    // Desfecho no nosso banco (PartnerInscriptionOutcome). Nunca lança.
+    await recordInscriptionOutcome({
+      partner: 'cogna',
+      channel: 'tartarus-marketplace',
+      flow: 'checkout-direto',
+      cpf: body.formData.cpf,
+      offerId: body.offerDetails.idDmhElastic ?? body.offerDetails.dmhId,
+      courseName: body.offerDetails.course,
+      ...marketplaceVerdict(result),
+      durationMs: Date.now() - inicio,
+    })
     return NextResponse.json(result)
   } catch (err) {
     // Defensivo: createMarketplaceInscription não deveria lançar (ela mesma

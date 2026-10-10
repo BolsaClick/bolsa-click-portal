@@ -15,6 +15,13 @@ import { capturePostHogServerEvent } from '@/app/lib/analytics/posthog-server'
 import { upsertCandidato } from '@/app/lib/api/attio'
 import { sendFacebookEvent } from '@/app/lib/analytics/fb-capi'
 import { readMetaAttribution } from '@/app/lib/analytics/meta-attribution'
+import {
+  cognaVerdictFromError,
+  cognaVerdictFromResponse,
+  marketplaceVerdict,
+  recordInscriptionOutcome,
+  type InscriptionVerdict,
+} from '@/app/lib/checkout/inscription-outcome'
 
 /**
  * Canal de vendas próprio da campanha ingressa.digital (Cogna/Anhanguera).
@@ -292,14 +299,31 @@ export async function confirmPaidCampaign(
   let inscriptionId: string | null = null
   let inscriptionError: string | undefined
 
+  // Desfecho no nosso banco (PartnerInscriptionOutcome) — nunca lança.
+  const inicioCogna = Date.now()
+  const registrarCogna = (verdict: InscriptionVerdict) =>
+    recordInscriptionOutcome({
+      partner: 'cogna',
+      channel: 'tartarus-inscription',
+      flow: 'confirm-campanha',
+      cpf: cpfDigits,
+      offerId: blob.inscriptionPayload?.inscription?.offers?.firstOption?.idDMH,
+      courseName: blob.attio?.courseName,
+      transactionId: externalTransactionId,
+      ...verdict,
+      durationMs: Date.now() - inicioCogna,
+    })
+
   try {
     const response = await createInscription(blob.inscriptionPayload, PROMOTER_ID, 'DC')
+    await registrarCogna(cognaVerdictFromResponse(response))
     if (response.success || response.id) {
       inscriptionId = response.id != null ? String(response.id) : null
     } else {
       inscriptionError = 'Resposta da Cogna não indicou sucesso na inscrição.'
     }
   } catch (error) {
+    await registrarCogna(cognaVerdictFromError(error))
     inscriptionError =
       getCognaErrorMessage(error) ?? (error instanceof Error ? error.message : String(error))
     console.error('❌ confirm-campaign: inscrição recusada pela Cogna', externalTransactionId, {
@@ -369,11 +393,23 @@ export async function confirmPaidCampaign(
   // Sucesso: marketplace ATHENAS (best-effort, não bloqueia) + Attio + PostHog.
   if (blob.marketplace?.data && blob.marketplace.offerDetails) {
     try {
-      await createMarketplaceInscription(
+      const inicioMarketplace = Date.now()
+      const m = await createMarketplaceInscription(
         blob.marketplace.data,
         blob.marketplace.offerDetails,
         { canalVendasId: CAMPAIGN_CANAL_VENDAS_ID },
       )
+      await recordInscriptionOutcome({
+        partner: 'cogna',
+        channel: 'tartarus-marketplace',
+        flow: 'confirm-campanha',
+        cpf: cpfDigits,
+        offerId: blob.marketplace.offerDetails.idDmhElastic,
+        courseName: blob.marketplace.offerDetails.course,
+        transactionId: externalTransactionId,
+        ...marketplaceVerdict(m),
+        durationMs: Date.now() - inicioMarketplace,
+      })
     } catch (e) {
       console.error('⚠️ confirm-campaign: inscrição marketplace ATHENAS falhou (não bloqueante)', externalTransactionId, e)
     }

@@ -46,11 +46,25 @@ const FORBIDDEN_BRANDS: RegExp[] = [
 const FIELDS = ['title', 'excerpt', 'metaDescription', 'content'] as const
 
 /**
- * Contexto que desqualifica um percentual como claim de desconto nosso.
- * "100% online", "100% MEC válido", bolsa integral do ProUni, etc.
+ * Contexto que desqualifica um percentual como claim de desconto nosso:
+ * bolsa integral do ProUni/FIES, taxa de emprego/aprovação, etc. Testado na
+ * janela inteira em volta do número.
+ *
+ * Modalidade e validade ("online", "EAD", "MEC", "válido"...) NÃO entram
+ * aqui: na janela larga elas escondiam claim real — "até 85% de desconto em
+ * cursos EAD" passava batido porque "EAD" estava a menos de 110 caracteres.
+ * Em out/2026 isso deixou posts com 85% fora do relatório.
  */
 const NOT_A_DISCOUNT =
-  /(online|gratuit|grátis|MEC|EAD|assíncron|síncron|presencial|digital|ProUni|FIES|federal|filantrópic|integral|financia|aprovei|válid|reembols|segur|empregabilidade|aprovação)/i
+  /(ProUni|FIES|federal|filantrópic|integra(l|is)|financia|aprovei|reembols|segur|emprego|aprovação)/i
+
+/**
+ * Logo DEPOIS do número: "100% online", "100% MEC válido", "cursos 100%
+ * digitais", "85% dos alunos". Só desqualifica quando a palavra vem colada
+ * ao percentual.
+ */
+const NOT_A_DISCOUNT_RIGHT_AFTER =
+  /^\s*(online|EAD|a distância|digita|gratuit|grátis|MEC|válid|presencial|assíncron|síncron|d[oa]s alunos)/i
 
 /** Exige que o trecho realmente fale de desconto/bolsa/mensalidade. */
 const IS_DISCOUNT_CONTEXT = /(desconto|bolsa|mensalidade|off|economi)/i
@@ -91,6 +105,7 @@ async function main() {
         if (pct <= DISCOUNT_CEILING_PCT || pct > 100) continue
         const window = text.slice(Math.max(0, m.index! - 110), m.index! + 60)
         if (NOT_A_DISCOUNT.test(window)) continue
+        if (NOT_A_DISCOUNT_RIGHT_AFTER.test(text.slice(m.index! + m[0].length))) continue
         if (!IS_DISCOUNT_CONTEXT.test(window)) continue
         ceilingHits.push({ slug: post.slug, field, detail: `${pct}% — …${window.trim()}…` })
       }

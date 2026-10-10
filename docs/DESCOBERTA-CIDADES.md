@@ -85,6 +85,15 @@ da API por consulta:
 - a Proposta A herdaria o mesmo teto. Seria preciso particionar o sweep (por
   UF, por exemplo) para enxergar tudo.
 
+**Evidência forte (10/10, tarefa 7):** o cache `featured-offers` do BFF,
+gravado pelo sweep das 3h de 10/10 (varredura completa, não abortada), tem
+**só 21 cursos distintos**. A varredura do "catálogo nacional inteiro" enxerga
+21 cursos. Lido por `GET offers/featured`, que só lê o Redis. Conclusões:
+- a Proposta A, como desenhada, herdaria o teto. Antes de implementá-la, o sweep
+  precisa ser particionado (por UF, ou por curso) para enxergar o catálogo;
+- a chave `catalog:all`, lida pelos endpoints `catalog/*` do BFF, não tem quem
+  a grave no código atual: está morta.
+
 Confirmação sem chamada nova: a linha `[featured-cron] Sync concluido: N ofertas
 varridas em P paginas` no log do tartarus-bff (Railway), ou os dados que o CEO
 salvou da varredura de 10/10.

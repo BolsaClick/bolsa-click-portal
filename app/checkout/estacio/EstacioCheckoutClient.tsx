@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/react'
@@ -16,7 +18,6 @@ import {
   ExternalLink,
   GraduationCap,
   Loader2,
-  Mail,
   MapPin,
   User,
 } from 'lucide-react'
@@ -33,45 +34,50 @@ import {
   trackCheckoutViewed,
   trackCheckoutSubmitted,
   trackCheckoutIdentified,
-  trackCheckoutStepCompleted,
   trackCheckoutError,
   reportInscriptionFailure,
 } from '@/app/lib/analytics/checkout-funnel'
-import { suggestEmailCorrection } from '@/app/lib/validation/email-typo'
+import {
+  candidateSchema,
+  CANDIDATE_DEFAULT_VALUES,
+  maskCep,
+  type CandidateData,
+} from '@/app/lib/checkout/candidate'
+import {
+  buildAthenaEnrollment,
+  CODIGO_VESTIBULAR_ENEM,
+  estacioAddressError,
+  estacioVisibleAddressFields,
+  type EstacioAddressField,
+} from '@/app/lib/checkout/partner-payload'
+import { lookupCep, type CepLookupResult } from '@/app/lib/checkout/viacep'
+import {
+  BirthDateField,
+  CpfField,
+  EmailField,
+  NameField,
+  PhoneField,
+  useCpfValidation,
+} from '../_shared/CandidateFields'
+import { useCheckoutSteps } from '../_shared/useCheckoutSteps'
 import EstacioPayment, { type EstacioChargeContext } from './EstacioPayment'
 import type { CreateEnrollmentInput } from '@/app/lib/api/athena-offers'
 import { PAYMENTS_DISABLED } from '@/app/lib/checkout/payments-disabled'
 
-/** Máscaras simples (CPF / telefone / CEP). */
-const maskCpf = (v: string) =>
-  v
-    .replace(/\D/g, '')
-    .slice(0, 11)
-    .replace(/(\d{3})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
-
-const maskPhone = (v: string) =>
-  v
-    .replace(/\D/g, '')
-    .slice(0, 11)
-    .replace(/(\d{2})(\d)/, '($1) $2')
-    .replace(/(\d{5})(\d)/, '$1-$2')
-
-const maskCep = (v: string) =>
-  v
-    .replace(/\D/g, '')
-    .slice(0, 8)
-    .replace(/(\d{5})(\d)/, '$1-$2')
-
+/**
+ * O que a Estácio exige além da captação mínima do candidato.
+ *
+ * Os 5 campos do candidato (nome, e-mail, CPF, nascimento, celular) vêm do
+ * formulário único compartilhado com a Cogna (app/lib/checkout/candidate.ts +
+ * _shared/CandidateFields.tsx). Aqui fica só o que é da Athena: endereço REAL
+ * (ver o comentário de `EstacioAddress` em partner-payload.ts — nunca
+ * DADOS_ADMIN_PADRAO), forma de ingresso e aceite dos termos.
+ *
+ * Gênero e RG saíram do formulário (out/2026): são opcionais no contrato da
+ * Athena e já iam vazios para quem não preenchia. Um teste de regressão
+ * (estacio-form.test.ts) falha se voltarem.
+ */
 interface FormState {
-  name: string
-  cpf: string
-  email: string
-  mobile: string
-  gender: '' | 'M' | 'F' | 'NI'
-  rg: string
-  birthDate: string
   zipCode: string
   street: string
   number: string
@@ -84,13 +90,6 @@ interface FormState {
 }
 
 const initialForm: FormState = {
-  name: '',
-  cpf: '',
-  email: '',
-  mobile: '',
-  gender: '',
-  rg: '',
-  birthDate: '',
   zipCode: '',
   street: '',
   number: '',
@@ -104,8 +103,6 @@ const initialForm: FormState = {
   graduationYear: '',
   acceptTerms: false,
 }
-
-const CODIGO_VESTIBULAR_ENEM = 7
 
 /**
  * Opções de forma de ingresso pra graduação — codFormaIngresso Estácio/YDUQS.
@@ -125,9 +122,6 @@ const FORMA_INGRESSO_OPTIONS: { value: number; label: string; hint?: string }[] 
   { value: 3, label: 'MSV - Externa', hint: 'Segunda graduação, diploma de outra faculdade' },
   { value: 5, label: 'MSV - Interna', hint: 'Segunda graduação, diploma pela própria Estácio' },
 ]
-
-/** Pós-graduação/técnico: forma de ingresso fixa, sem escolha do candidato. */
-const CODIGO_INSCRICAO_POS_TECNICO = 15
 
 const inputClass =
   'w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors'
@@ -196,6 +190,60 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
     city: searchParams.get('city') ?? '',
     state: searchParams.get('state') ?? '',
   }))
+
+  // Formulário único do candidato — mesmo schema, mesmo modo de validação da
+  // Cogna. `onTouched` + `field.ref` nos campos são o fix de 08/10: o erro
+  // aparece ao sair do campo e o envio inválido foca o primeiro campo errado,
+  // em vez de travar em silêncio.
+  const {
+    register,
+    handleSubmit: handleCandidateSubmit,
+    setValue,
+    control,
+    getValues,
+    watch,
+    formState: { errors },
+  } = useForm<CandidateData>({
+    resolver: zodResolver(candidateSchema),
+    mode: 'onTouched',
+    defaultValues: CANDIDATE_DEFAULT_VALUES,
+  })
+  const candidateValues = watch()
+
+  // Identificação no PostHog: no blur do CPF validado, como na Cogna — quem
+  // desiste depois já sai do anonimato. `identifiedRef` evita um segundo
+  // `checkout_identified` no envio.
+  const identifiedRef = useRef(false)
+  const identify = (cpf: string) => {
+    if (identifiedRef.current) return
+    identifiedRef.current = true
+    trackCheckoutIdentified(
+      trackEvent,
+      {
+        flow: 'estacio',
+        checkoutFlow: 'estacio_checkout',
+        brand: offer.brand,
+        modality: offer.modality,
+        offerId: offer.offerId,
+        courseName: offer.courseName,
+        email: getValues('email').trim() || undefined,
+        phone: getValues('phone').replace(/\D/g, '') || undefined,
+        name: getValues('name').trim() || undefined,
+        cpf,
+      },
+      setUserProperties,
+      identifyUser,
+    )
+  }
+  const cpfCheck = useCpfValidation({
+    onCheckError: (error) => trackCheckoutError(trackEvent, 'cpf_db_check', error, 'estacio_checkout'),
+    onSideEffectError: (error) =>
+      trackCheckoutError(trackEvent, 'cpf_validation_side_effects', error, 'estacio_checkout'),
+    onValidated: ({ cpf }) => identify(cpf),
+  })
+
+  /** Candidato validado no envio — base do payload e dos pixels de conversão. */
+  const candidateRef = useRef<CandidateData | null>(null)
 
   // Preço a exibir pra forma de ingresso selecionada (regra da Estácio,
   // 2026-07-24): forma 2 e 3 usam preço próprio quando disponível; forma
@@ -303,6 +351,12 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
   } | null>(null)
   const [institutionPixCopied, setInstitutionPixCopied] = useState(false)
   const [cepLoading, setCepLoading] = useState(false)
+  // Resultado da consulta do CEP digitado. Decide quais campos de endereço
+  // aparecem (ver `estacioVisibleAddressFields`). `forceAddressReveal` abre os
+  // quatro quando o envio acusa falta num campo que estava escondido.
+  const [cepLookup, setCepLookup] = useState<CepLookupResult | null>(null)
+  const [forceAddressReveal, setForceAddressReveal] = useState(false)
+  const latestCepRef = useRef('')
   const [expanded, setExpanded] = useState({
     dados: true,
     endereco: false,
@@ -369,10 +423,6 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }))
 
-  // Sugestão de digitação do e-mail — nunca bloqueia, só sugere (ver
-  // app/lib/validation/email-typo.ts).
-  const emailTypoSuggestion = form.email ? suggestEmailCorrection(form.email) : null
-
   // O padrão do formulário é 24, que vale para a maioria das ofertas mas não
   // para todas: numa linha de catálogo publicada só como Transferência Externa
   // (forma 2), enviar 24 devolve MS004 e a inscrição morre. Quando o padrão não
@@ -383,133 +433,134 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
     setForm((prev) => ({ ...prev, codFormaIngresso: visibleFormaIngressoOptions[0].value }))
   }, [formasSuportadas, visibleFormaIngressoOptions, form.codFormaIngresso])
 
-  // Autofill de endereço via ViaCEP ao completar o CEP (8 dígitos).
-  const handleCepBlur = async () => {
-    const digits = form.zipCode.replace(/\D/g, '')
-    if (digits.length !== 8) return
-    try {
-      setCepLoading(true)
-      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`)
-      const data = await res.json()
-      if (!data?.erro) {
-        setForm((prev) => ({
-          ...prev,
-          street: data.logradouro || prev.street,
-          neighborhood: data.bairro || prev.neighborhood,
-          city: data.localidade || prev.city,
-          state: data.uf || prev.state,
-        }))
-      }
-    } catch (error) {
-      // silencioso pro usuário — preenche manualmente. Mas era mudo pro
-      // PostHog também: sem sinal nenhum de quando o ViaCEP falha.
-      trackCheckoutError(trackEvent, 'cep_autofill', error, 'estacio_checkout')
-    } finally {
+  // ViaCEP é CAMINHO CRÍTICO aqui: o formulário só pede CEP + número e é ele
+  // quem preenche logradouro, bairro, cidade e UF. Consulta ao completar os 8
+  // dígitos (não no blur — o candidato vai direto para o número). Se falhar ou
+  // vier incompleto, os campos que faltam APARECEM para preenchimento manual:
+  // ViaCEP fora do ar não pode travar a inscrição (ver viacep.ts).
+  const handleCepChange = async (raw: string) => {
+    const masked = maskCep(raw)
+    const digits = masked.replace(/\D/g, '')
+    const changed = digits !== latestCepRef.current
+    latestCepRef.current = digits
+    setForm((prev) => ({
+      ...prev,
+      zipCode: masked,
+      // CEP novo invalida o endereço que veio do anterior.
+      ...(changed ? { street: '', neighborhood: '' } : {}),
+    }))
+    if (!changed) return
+    setCepLookup(null)
+    if (digits.length !== 8) {
+      // Uma consulta anterior pode estar em voo: o resultado dela vai ser
+      // descartado, então o spinner não pode ficar esperando por ela.
       setCepLoading(false)
+      return
+    }
+
+    setCepLoading(true)
+    const result = await lookupCep(digits)
+    // Resposta de um CEP que o candidato já trocou: descarta.
+    if (latestCepRef.current !== digits) return
+    setCepLoading(false)
+    setCepLookup(result)
+    if (result.ok) {
+      setForm((prev) => ({ ...prev, ...result.address }))
+    } else {
+      trackCheckoutError(trackEvent, 'cep_autofill', new Error(`viacep_${result.reason}`), 'estacio_checkout')
     }
   }
 
-  // Estado das etapas (stepper)
-  const dadosOk = !!(
-    form.name.trim() &&
-    form.cpf.replace(/\D/g, '').length === 11 &&
-    /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email) &&
-    form.mobile.replace(/\D/g, '').length >= 10
-  )
-  const enderecoOk = !!(
-    form.zipCode.replace(/\D/g, '').length === 8 &&
-    form.street.trim() &&
-    form.number.trim() &&
-    form.neighborhood.trim() &&
-    form.city.trim() &&
-    form.state.trim()
+  const visibleAddressFields: EstacioAddressField[] = forceAddressReveal
+    ? ['zipCode', 'number', 'street', 'neighborhood', 'city', 'state']
+    : estacioVisibleAddressFields(cepLookup)
+  const showAddressField = (f: EstacioAddressField) => visibleAddressFields.includes(f)
+
+  // Estado das etapas (stepper) — um bloco por seção, na ordem da tela:
+  // 01 dados pessoais, 02 endereço (CEP + número), 03 ingresso + aceite.
+  const dadosOk = candidateSchema.safeParse(candidateValues).success
+  const enderecoOk = estacioAddressError(form) === null
+  const ingressoOk =
+    form.acceptTerms &&
+    (form.codFormaIngresso !== CODIGO_VESTIBULAR_ENEM || form.graduationYear.length === 4)
+
+  // Onde o formulário perde gente — rastreador compartilhado com a Cogna
+  // (_shared/useCheckoutSteps.ts). Cada bloco emite `checkout_step_started` no
+  // primeiro foco e `checkout_step_completed` na primeira vez que fica válido;
+  // "parou no bloco X" = started sem completed. Existe para medir se o
+  // abandono era mesmo o endereço (hipótese de out/2026, amostra de 25).
+  const startStep = useCheckoutSteps(
+    trackEvent,
+    {
+      flow: 'estacio',
+      checkoutFlow: 'estacio_checkout',
+      brand: offer.brand,
+      modality: offer.modality,
+      offerId: offer.offerId,
+      courseName: offer.courseName,
+    },
+    [
+      { n: 1, name: 'estudante', ok: dadosOk },
+      { n: 2, name: 'endereco', ok: enderecoOk },
+      { n: 3, name: 'ingresso', ok: ingressoOk },
+    ],
   )
 
-  // Onde o formulário perde gente. Cada passo do stepper avisa quando fica
-  // válido pela PRIMEIRA vez — `useRef` porque o cálculo acima roda a cada
-  // tecla digitada e o candidato pode voltar atrás para corrigir: sem a trava,
-  // um campo apagado e redigitado contaria o passo de novo e inflaria o degrau
-  // que a gente está justamente tentando medir.
-  //
-  // O passo 03 (forma de ingresso) não tem flag própria: ele é o envio do
-  // formulário, e quem o conclui já emite `checkout_identified`.
-  const passosEmitidos = useRef<Set<number>>(new Set())
-  useEffect(() => {
-    if (!offer) return
-    const passos: Array<{ ok: boolean; n: number; nome: string }> = [
-      { ok: dadosOk, n: 1, nome: 'estudante' },
-      { ok: enderecoOk, n: 2, nome: 'endereco' },
-    ]
-    for (const passo of passos) {
-      if (!passo.ok || passosEmitidos.current.has(passo.n)) continue
-      passosEmitidos.current.add(passo.n)
-      trackCheckoutStepCompleted(trackEvent, {
-        flow: 'estacio',
-        checkoutFlow: 'estacio_checkout',
-        brand: offer.brand,
-        modality: offer.modality,
-        offerId: offer.offerId,
-        courseName: offer.courseName,
-        stepNumber: passo.n,
-        stepName: passo.nome,
-      })
-    }
-  }, [dadosOk, enderecoOk, offer, trackEvent])
-
-  const validate = (): string | null => {
-    if (!offer.offerId) return 'Oferta inválida. Volte e selecione o curso novamente.'
-    if (!form.name.trim()) return 'Informe seu nome completo.'
-    if (form.cpf.replace(/\D/g, '').length !== 11) return 'CPF inválido.'
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email)) return 'E-mail inválido.'
-    if (form.mobile.replace(/\D/g, '').length < 10) return 'Telefone inválido.'
-    if (form.zipCode.replace(/\D/g, '').length !== 8) return 'CEP inválido.'
-    if (!form.street.trim()) return 'Informe o logradouro.'
-    if (!form.number.trim()) return 'Informe o número.'
-    if (!form.neighborhood.trim()) return 'Informe o bairro.'
-    if (!form.city.trim()) return 'Informe a cidade.'
-    if (!form.state.trim()) return 'Informe o estado (UF).'
-    if (!form.acceptTerms) return 'É necessário aceitar os termos.'
-    return null
+  /** Envio com candidato inválido: abre a seção 01 — o RHF foca o campo. */
+  const onCandidateInvalid = () => {
+    setExpanded((p) => ({ ...p, dados: true }))
+    setError('Confira os dados do aluno destacados acima.')
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const onCandidateValid = async (candidate: CandidateData) => {
     setError(null)
 
-    const validationError = validate()
-    if (validationError) {
-      setError(validationError)
-      // Abrir a seção relevante pra mostrar o erro
-      if (!dadosOk) setExpanded((p) => ({ ...p, dados: true }))
-      else if (!enderecoOk) setExpanded((p) => ({ ...p, endereco: true }))
-      else setExpanded((p) => ({ ...p, ingresso: true }))
+    if (!offer.offerId) {
+      setError('Oferta inválida. Volte e selecione o curso novamente.')
+      return
+    }
+    const addressError = estacioAddressError(form)
+    if (addressError) {
+      setError(addressError)
+      setExpanded((p) => ({ ...p, endereco: true }))
+      // Falta num campo escondido (ViaCEP ainda não respondeu, ou respondeu e
+      // o candidato apagou): mostra os quatro em vez de deixar sem saída.
+      setForceAddressReveal(true)
+      return
+    }
+    if (form.codFormaIngresso === CODIGO_VESTIBULAR_ENEM && form.graduationYear.length !== 4) {
+      setError('Informe o ano de conclusão do ensino médio.')
+      setExpanded((p) => ({ ...p, ingresso: true }))
+      return
+    }
+    if (!form.acceptTerms) {
+      setError('É necessário aceitar os termos.')
+      setExpanded((p) => ({ ...p, ingresso: true }))
       return
     }
 
     setSubmitting(true)
+    candidateRef.current = candidate
 
     // Persiste o contato como lead (tabela Lead) sem bloquear a inscrição.
     void createLead({
-      name: form.name.trim(),
-      cpf: form.cpf.replace(/\D/g, ''),
-      email: form.email.trim(),
-      phone: form.mobile.replace(/\D/g, ''),
+      name: candidate.name,
+      cpf: candidate.cpf,
+      email: candidate.email.trim(),
+      phone: candidate.phone,
       courseNames: offer.courseName ? [offer.courseName] : [],
       courseId: offer.offerId,
       courseName: offer.courseName,
       institutionName: offer.brand,
       modalidade: offer.modality,
-      birthDate: form.birthDate || undefined,
+      birthDate: candidate.birthDate || undefined,
       source: 'checkout-estacio',
       utm: readUtmifyParams() as unknown as Record<string, string | null>,
-      // O formulário da Estácio é o mais completo que temos — endereço, RG,
-      // gênero, ano de conclusão. Tudo isso ia só pra Athena e não ficava com
-      // a gente; sem coluna própria, vai em extraData.
+      // Endereço e forma de ingresso iam só pra Athena e não ficavam com a
+      // gente; sem coluna própria, vão em extraData.
       extraData: {
-        rg: form.rg.trim() || undefined,
-        genero: form.gender || undefined,
-        ano_conclusao: form.graduationYear || undefined,
         forma_ingresso: form.codFormaIngresso,
+        ano_conclusao: form.graduationYear || undefined,
         endereco: {
           cep: form.zipCode.replace(/\D/g, '') || undefined,
           logradouro: form.street.trim() || undefined,
@@ -517,6 +568,9 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
           bairro: form.neighborhood.trim() || undefined,
           cidade: form.city.trim() || undefined,
           estado: form.state.trim().toUpperCase() || undefined,
+          // Se o endereço veio do ViaCEP ou foi digitado (ViaCEP falhou) —
+          // para medir quanto o caminho de falha acontece de verdade.
+          origem: cepLookup?.ok && !forceAddressReveal ? 'viacep' : 'manual',
         },
         nivel: offer.academicLevel || undefined,
       },
@@ -525,66 +579,33 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
       trackCheckoutError(trackEvent, 'estacio_lead_create', leadError, 'estacio_checkout')
     })
 
-    // Funil unificado — etapa 2: identifica ANTES de enviar pra Estácio.
-    // Estava depois do sucesso, o que só identificava quem já tinha convertido:
-    // justamente quem a gente menos precisa rastrear. Aqui, quem falhar já sai
-    // do anonimato e o evento de falha nasce amarrado ao CPF.
-    trackCheckoutIdentified(
-      trackEvent,
-      {
-        flow: 'estacio',
-        checkoutFlow: 'estacio_checkout',
-        brand: offer.brand,
-        modality: offer.modality,
-        offerId: offer.offerId,
-        courseName: offer.courseName,
-        email: form.email.trim() || undefined,
-        phone: form.mobile.replace(/\D/g, '') || undefined,
-        name: form.name.trim() || undefined,
-        cpf: form.cpf,
-      },
-      setUserProperties,
-      identifyUser,
-    )
+    // Funil unificado — etapa 2: identifica ANTES de enviar pra Estácio (se o
+    // blur do CPF já não identificou).
+    identify(candidate.cpf)
+
+    // Funil unificado — etapa 3: ÚNICO disparo, no envio válido, igual à
+    // Cogna. O resultado da Athena tem eventos próprios
+    // (`estacio_enrollment_created`, `checkout_inscription_failed`).
+    trackCheckoutSubmitted(trackEvent, {
+      flow: 'estacio',
+      checkoutFlow: 'estacio_checkout',
+      brand: offer.brand,
+      modality: offer.modality,
+      offerId: offer.offerId,
+      courseName: offer.courseName,
+    })
 
     // Payload da inscrição montado AGORA (formulário em mãos), mas executado
     // só depois que a taxa for paga: o servidor guarda este payload na
     // Transaction (metadata.estacio) e cria a inscrição na confirmação do
     // pagamento. Ninguém é inscrito sem pagar, nem paga sem ser inscrito.
-    const enrollment: CreateEnrollmentInput = {
+    const enrollment = buildAthenaEnrollment({
       offerId: offer.offerId,
-      student: {
-        name: form.name.trim(),
-        cpf: form.cpf.replace(/\D/g, ''),
-        email: form.email.trim(),
-        mobile: form.mobile.replace(/\D/g, ''),
-        gender: form.gender || undefined,
-        rg: form.rg.trim() || undefined,
-        birthDate: form.birthDate || undefined,
-      },
-      address: {
-        street: form.street.trim(),
-        number: form.number.trim(),
-        neighborhood: form.neighborhood.trim(),
-        zipCode: form.zipCode.replace(/\D/g, ''),
-        state: form.state.trim().toUpperCase(),
-        city: form.city.trim(),
-      },
-      options: {
-        useEnem: form.codFormaIngresso === CODIGO_VESTIBULAR_ENEM,
-        graduationYear: form.graduationYear ? Number(form.graduationYear) : undefined,
-        acceptTerms: form.acceptTerms,
-        codFormaIngresso:
-          offer.academicLevel === 'POS_GRADUACAO'
-            ? CODIGO_INSCRICAO_POS_TECNICO
-            : form.codFormaIngresso,
-        // Sem checkbox individual pro candidato (decisão do Rodrigo,
-        // 2026-07-23) — coberto pelo aceite geral dos termos.
-        acceptReceiveEmail: true,
-        acceptReceiveSMS: true,
-        acceptReceiveWhatsApp: true,
-      },
-    }
+      academicLevel: offer.academicLevel,
+      candidate,
+      address: form,
+      ingresso: form,
+    })
 
     // Interruptor geral (payments-disabled.ts): sem taxa, inscreve direto na
     // Athena — o trilho de antes da taxa (PR #108) — e vai para o sucesso sem
@@ -618,8 +639,11 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
     })
   }
 
+  const submitForm = handleCandidateSubmit(onCandidateValid, onCandidateInvalid)
+
   /** Inscrição direta na Athena, sem cobrança (pagamentos desligados). */
   const enrollWithoutPayment = async (enrollment: CreateEnrollmentInput) => {
+    const candidate = candidateRef.current
     try {
       const res = await fetch('/api/athena-checkout', {
         method: 'POST',
@@ -642,10 +666,10 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
         })
         reportInscriptionFailure({
           flow: 'estacio',
-          cpf: form.cpf,
-          name: form.name.trim(),
-          email: form.email.trim(),
-          phone: form.mobile,
+          cpf: candidate?.cpf ?? '',
+          name: candidate?.name ?? '',
+          email: candidate?.email.trim() ?? '',
+          phone: candidate?.phone ?? '',
           courseName: offer.courseName,
           courseId: offer.offerId,
           brand: offer.brand,
@@ -671,14 +695,6 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
         numero_inscricao: numeroInscricao ?? undefined,
         payments_disabled: true,
       })
-      trackCheckoutSubmitted(trackEvent, {
-        flow: 'estacio',
-        checkoutFlow: 'estacio_checkout',
-        brand: offer.brand,
-        modality: offer.modality,
-        offerId: offer.offerId,
-        courseName: offer.courseName,
-      })
       void trackFbqDual(
         'Lead',
         {
@@ -688,10 +704,10 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
           currency: 'BRL',
         },
         {
-          email: form.email.trim() || undefined,
-          phone: form.mobile.replace(/\D/g, '') || undefined,
-          externalId: form.cpf.replace(/\D/g, '') || undefined,
-          firstName: form.name.trim().split(/\s+/)[0] || undefined,
+          email: candidate?.email.trim() || undefined,
+          phone: candidate?.phone || undefined,
+          externalId: candidate?.cpf || undefined,
+          firstName: candidate?.name.split(/\s+/)[0] || undefined,
         },
         numeroInscricao ? `estacio_${numeroInscricao}` : undefined,
       )
@@ -720,6 +736,7 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
    * idempotente — fechar a aba agora não perde a inscrição.
    */
   const handlePaid = async (externalTransactionId: string) => {
+    const candidate = candidateRef.current
     setConfirming(true)
     setConfirmError(null)
 
@@ -758,16 +775,6 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
             already_enrolled: !!checkout.alreadyEnrolled,
           })
 
-          // Funil unificado — etapa 3 (fluxo Estácio): inscrição criada.
-          trackCheckoutSubmitted(trackEvent, {
-            flow: 'estacio',
-            checkoutFlow: 'estacio_checkout',
-            brand: offer.brand,
-            modality: offer.modality,
-            offerId: offer.offerId,
-            courseName: offer.courseName,
-          })
-
           // Meta Pixel + Conversions API - Lead (inscrição Estácio; o curso é
           // pago na instituição). event_id pela inscrição, para dedup.
           void trackFbqDual(
@@ -779,10 +786,10 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
               currency: 'BRL',
             },
             {
-              email: form.email.trim() || undefined,
-              phone: form.mobile.replace(/\D/g, '') || undefined,
-              externalId: form.cpf.replace(/\D/g, '') || undefined,
-              firstName: form.name.trim().split(/\s+/)[0] || undefined,
+              email: candidate?.email.trim() || undefined,
+              phone: candidate?.phone || undefined,
+              externalId: candidate?.cpf || undefined,
+              firstName: candidate?.name.split(/\s+/)[0] || undefined,
             },
             checkout.numeroInscricao ? `estacio_${checkout.numeroInscricao}` : undefined,
           )
@@ -834,9 +841,9 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
               content_ids: offer.offerId ? [String(offer.offerId)] : undefined,
             },
             {
-              email: form.email.trim() || undefined,
-              phone: form.mobile.replace(/\D/g, '') || undefined,
-              externalId: form.cpf.replace(/\D/g, '') || undefined,
+              email: candidate?.email.trim() || undefined,
+              phone: candidate?.phone || undefined,
+              externalId: candidate?.cpf || undefined,
             },
             externalTransactionId,
           )
@@ -877,10 +884,10 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
           })
           reportInscriptionFailure({
             flow: 'estacio',
-            cpf: form.cpf,
-            name: form.name.trim(),
-            email: form.email.trim(),
-            phone: form.mobile,
+            cpf: candidate?.cpf ?? '',
+            name: candidate?.name ?? '',
+            email: candidate?.email.trim() ?? '',
+            phone: candidate?.phone ?? '',
             courseName: offer.courseName,
             courseId: offer.offerId,
             brand: offer.brand,
@@ -914,8 +921,8 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
     {
       n: '03',
       label: 'Ingresso',
-      done: stage === 'payment',
-      active: stage === 'form' && dadosOk && enderecoOk,
+      done: ingressoOk || stage === 'payment',
+      active: stage === 'form' && dadosOk && enderecoOk && !ingressoOk,
     },
     ...(PAYMENTS_DISABLED
       ? []
@@ -1032,10 +1039,10 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
                 <EstacioPayment
                   amountInCents={taxaEmCentavos}
                   customer={{
-                    name: form.name.trim(),
-                    cpf: form.cpf,
-                    email: form.email.trim(),
-                    phone: form.mobile,
+                    name: candidateRef.current?.name ?? '',
+                    cpf: candidateRef.current?.cpf ?? '',
+                    email: candidateRef.current?.email.trim() ?? '',
+                    phone: candidateRef.current?.phone ?? '',
                     postalCode: form.zipCode,
                     addressNumber: form.number.trim(),
                   }}
@@ -1132,8 +1139,9 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
                 </p>
               </div>
             ) : (
-            <form onSubmit={handleSubmit}>
-              {/* 01 · Dados do aluno */}
+            <form onSubmit={submitForm} noValidate>
+              {/* 01 · Dados do aluno — os 5 campos do formulário único */}
+              <div onFocusCapture={() => startStep(1)}>
               <Section
                 icon={<User size={15} />}
                 step="01 · Estudante"
@@ -1141,64 +1149,27 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
                 open={expanded.dados}
                 onToggle={() => toggleSection('dados')}
               >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="md:col-span-2">
-                    <label className={labelClass}>Nome completo</label>
-                    <input className={inputClass} value={form.name}
-                      onChange={(e) => set('name', e.target.value)} placeholder="Ex: Rodrigo Silva" />
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <EmailField
+                      register={register}
+                      errors={errors}
+                      value={candidateValues.email}
+                      onSuggestionAccept={(email) => setValue('email', email, { shouldValidate: true })}
+                    />
+                    <NameField register={register} errors={errors} />
                   </div>
-                  <div>
-                    <label className={labelClass}><Mail size={12} className="inline mr-1" />E-mail</label>
-                    <input type="email" className={inputClass} value={form.email}
-                      onChange={(e) => set('email', e.target.value)} placeholder="seuemail@exemplo.com" />
-                    {emailTypoSuggestion && (
-                      <p className="text-amber-600 text-xs mt-1">
-                        Você quis dizer{' '}
-                        <button
-                          type="button"
-                          className="underline font-medium hover:text-amber-700"
-                          onClick={() => set('email', emailTypoSuggestion)}
-                        >
-                          {emailTypoSuggestion}
-                        </button>
-                        ?
-                      </p>
-                    )}
+                  <div className="grid grid-cols-2 gap-3">
+                    <CpfField control={control} errors={errors} validation={cpfCheck} />
+                    <BirthDateField control={control} errors={errors} />
                   </div>
-                  <div>
-                    <label className={labelClass}>Celular</label>
-                    <input inputMode="numeric" className={inputClass} value={form.mobile}
-                      onChange={(e) => set('mobile', maskPhone(e.target.value))} placeholder="(00) 00000-0000" />
-                  </div>
-                  <div>
-                    <label className={labelClass}>CPF</label>
-                    <input inputMode="numeric" className={inputClass} value={form.cpf}
-                      onChange={(e) => set('cpf', maskCpf(e.target.value))} placeholder="000.000.000-00" />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Data de nascimento</label>
-                    <input type="date" className={inputClass} value={form.birthDate}
-                      onChange={(e) => set('birthDate', e.target.value)} />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Gênero</label>
-                    <select className={inputClass} value={form.gender}
-                      onChange={(e) => set('gender', e.target.value as FormState['gender'])}>
-                      <option value="">Prefiro não informar</option>
-                      <option value="M">Masculino</option>
-                      <option value="F">Feminino</option>
-                      <option value="NI">Outro</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className={labelClass}>RG</label>
-                    <input className={inputClass} value={form.rg}
-                      onChange={(e) => set('rg', e.target.value)} />
-                  </div>
+                  <PhoneField control={control} errors={errors} label="Celular" />
                 </div>
               </Section>
+              </div>
 
-              {/* 02 · Endereço */}
+              {/* 02 · Endereço — só CEP + número; o ViaCEP completa o resto */}
+              <div onFocusCapture={() => startStep(2)}>
               <Section
                 icon={<MapPin size={15} />}
                 step="02 · Endereço"
@@ -1210,43 +1181,77 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
                   <div>
                     <label className={labelClass}>CEP</label>
                     <div className="relative">
-                      <input inputMode="numeric" className={inputClass} value={form.zipCode}
-                        onChange={(e) => set('zipCode', maskCep(e.target.value))} onBlur={handleCepBlur}
+                      <input inputMode="numeric" autoComplete="postal-code" className={inputClass}
+                        value={form.zipCode}
+                        onChange={(e) => void handleCepChange(e.target.value)}
                         placeholder="00000-000" />
                       {cepLoading && (
                         <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-ink-300" />
                       )}
                     </div>
                   </div>
-                  <div className="md:col-span-2">
-                    <label className={labelClass}>Logradouro</label>
-                    <input className={inputClass} value={form.street}
-                      onChange={(e) => set('street', e.target.value)} />
-                  </div>
                   <div>
                     <label className={labelClass}>Número</label>
-                    <input className={inputClass} value={form.number}
+                    <input className={inputClass} value={form.number} autoComplete="address-line2"
                       onChange={(e) => set('number', e.target.value)} />
                   </div>
-                  <div>
-                    <label className={labelClass}>Bairro</label>
-                    <input className={inputClass} value={form.neighborhood}
-                      onChange={(e) => set('neighborhood', e.target.value)} />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Cidade</label>
-                    <input className={inputClass} value={form.city}
-                      onChange={(e) => set('city', e.target.value)} />
-                  </div>
-                  <div>
-                    <label className={labelClass}>UF</label>
-                    <input maxLength={2} className={inputClass} value={form.state}
-                      onChange={(e) => set('state', e.target.value.toUpperCase())} placeholder="SP" />
-                  </div>
+
+                  {cepLookup?.ok && !forceAddressReveal && (
+                    <p className="md:col-span-3 text-[13px] text-ink-500">
+                      {[form.street, form.neighborhood].filter(Boolean).join(', ')}
+                      {form.street || form.neighborhood ? ' — ' : ''}
+                      {form.city}/{form.state}{' '}
+                      <button
+                        type="button"
+                        className="underline text-ink-700 hover:text-ink-900"
+                        onClick={() => setForceAddressReveal(true)}
+                      >
+                        Corrigir
+                      </button>
+                    </p>
+                  )}
+                  {cepLookup && !cepLookup.ok && cepLookup.reason !== 'invalid' && (
+                    <p className="md:col-span-3 text-[12px] text-amber-700">
+                      {cepLookup.reason === 'not_found'
+                        ? 'Não encontramos esse CEP. Confira o número ou preencha o endereço abaixo.'
+                        : 'Não conseguimos completar o endereço pelo CEP agora. Preencha os campos abaixo.'}
+                    </p>
+                  )}
+
+                  {showAddressField('street') && (
+                    <div className="md:col-span-2">
+                      <label className={labelClass}>Logradouro</label>
+                      <input className={inputClass} value={form.street}
+                        onChange={(e) => set('street', e.target.value)} />
+                    </div>
+                  )}
+                  {showAddressField('neighborhood') && (
+                    <div>
+                      <label className={labelClass}>Bairro</label>
+                      <input className={inputClass} value={form.neighborhood}
+                        onChange={(e) => set('neighborhood', e.target.value)} />
+                    </div>
+                  )}
+                  {showAddressField('city') && (
+                    <div>
+                      <label className={labelClass}>Cidade</label>
+                      <input className={inputClass} value={form.city}
+                        onChange={(e) => set('city', e.target.value)} />
+                    </div>
+                  )}
+                  {showAddressField('state') && (
+                    <div>
+                      <label className={labelClass}>UF</label>
+                      <input maxLength={2} className={inputClass} value={form.state}
+                        onChange={(e) => set('state', e.target.value.toUpperCase())} placeholder="SP" />
+                    </div>
+                  )}
                 </div>
               </Section>
+              </div>
 
               {/* 03 · Ingresso */}
+              <div onFocusCapture={() => startStep(3)}>
               <Section
                 icon={<GraduationCap size={15} />}
                 step="03 · Ingresso"
@@ -1355,6 +1360,7 @@ export default function EstacioCheckoutClient({ taxaEmCentavos }: EstacioCheckou
                   </p>
                 )}
               </Section>
+              </div>
             </form>
             )}
           </div>

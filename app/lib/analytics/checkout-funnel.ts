@@ -251,7 +251,40 @@ export function trackCheckoutStepCompleted(
   })
 }
 
-/** Etapa 3 — a inscrição foi enviada/criada (qualquer fluxo). */
+/**
+ * Etapa 2.4 — o candidato COMEÇOU um bloco do formulário (primeiro foco num
+ * campo dele). Par do `checkout_step_completed`.
+ *
+ * Só "completou" não diz onde a pessoa parou: quem nunca completou o bloco 2
+ * pode ter desistido no bloco 1 sem tocar no 2, ou ter tentado o 2 e travado.
+ * Com o par, "parou no bloco X" = started X sem completed X — que é o que
+ * separa "a hipótese do endereço estava errada" de "a execução estava".
+ * Disparado no foco, não no `pagehide`, porque evento de saída de página se
+ * perde com frequência no mobile.
+ */
+export function trackCheckoutStepStarted(
+  track: TrackFn,
+  ctx: CheckoutContext & { stepNumber: number; stepName: string },
+): void {
+  track('checkout_step_started', {
+    ...baseProps(ctx),
+    step_number: ctx.stepNumber,
+    step_name: ctx.stepName,
+  })
+}
+
+/**
+ * Etapa 3 — o candidato ENVIOU o formulário com dados válidos (qualquer fluxo).
+ *
+ * Um disparo por envio, no `onSubmit`, depois das validações locais e antes de
+ * falar com o parceiro. O resultado do parceiro tem eventos próprios
+ * (`estacio_enrollment_created`, `enrollment_completed`,
+ * `checkout_inscription_failed`) e a conversão é `enrollment_converted`.
+ * Até out/2026 a graduação ATHENAS disparava duas vezes (no envio e de novo
+ * dentro de `if (isAthenasSource && idDmhElastic)`) e a Estácio só disparava
+ * depois da inscrição criada — o mesmo evento significava coisas diferentes
+ * por fluxo.
+ */
 export function trackCheckoutSubmitted(track: TrackFn, ctx: CheckoutContext): void {
   track('checkout_submitted', baseProps(ctx))
 }

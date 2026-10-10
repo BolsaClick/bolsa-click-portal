@@ -16,9 +16,11 @@ import { validateBlogSnippet } from '@/app/lib/seo/snippet-limits'
  *
  * Body obrigatório: slug, title, excerpt, content, categoryIds[≥1]
  *
- * 422 quando o snippet efetivo estoura o SERP: title > 60 contando o sufixo
- * " | Bolsa Click" (texto ≤ 46) ou description > 155 — metaDescription, ou o
- * excerpt quando ela vem vazia. Ver app/lib/seo/snippet-limits.ts.
+ * Snippet que estoura o SERP (title > 60 contando o sufixo " | Bolsa Click",
+ * ou seja texto ≤ 46; description > 155, metaDescription ou o excerpt quando
+ * ela vem vazia) NÃO bloqueia: o post é criado (201), a resposta traz
+ * `snippetWarnings: [{ field, message }]` e o servidor loga um console.warn.
+ * Ver app/lib/seo/snippet-limits.ts.
  *
  * CLAUDE.md: o agente DEVE rodar o validator anti-concorrentes antes de
  * chamar este endpoint (server NÃO refaz a validação editorial — confiamos
@@ -65,12 +67,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Title/description que estouram o SERP não entram (app/lib/seo/snippet-limits.ts).
-    const snippetIssues = validateBlogSnippet({ title, metaTitle, excerpt, metaDescription })
-    if (snippetIssues.length > 0) {
-      return NextResponse.json(
-        { error: snippetIssues.map(i => i.message).join(' '), snippetIssues },
-        { status: 422 },
+    // Snippet que estoura o SERP só gera aviso (app/lib/seo/snippet-limits.ts).
+    // Não recusa: o Hermes já publica por aqui e ainda não lê o campo. Vira 422
+    // depois que ele estiver adaptado e o aviso confirmado nos logs.
+    const snippetWarnings = validateBlogSnippet({ title, metaTitle, excerpt, metaDescription })
+    if (snippetWarnings.length > 0) {
+      console.warn(
+        `[agents/blog] snippet acima do limite, slug=${slug} agent=${authResult.agentName}: ${snippetWarnings
+          .map(w => w.message)
+          .join(' ')}`,
       )
     }
 
@@ -134,6 +139,7 @@ export async function POST(request: NextRequest) {
           isActive: post.isActive,
           readingTime: post.readingTime,
         },
+        ...(snippetWarnings.length > 0 && { snippetWarnings }),
       },
       { status: 201 },
     )

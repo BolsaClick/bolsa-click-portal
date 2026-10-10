@@ -43,7 +43,9 @@ const SNIPPETS: { slug: string; metaTitle: string; metaDescription: string }[] =
   {
     slug: 'faculdade-ead-mais-barata',
     metaTitle: 'Qual a faculdade EAD mais barata em 2026?',
-    metaDescription: `Compare mensalidades EAD na Anhanguera, Unopar, Pitágoras e Unime por curso, com nota MEC e bolsa de até ${pct}% sem ENEM. Cadastro grátis, sem taxa de adesão.`,
+    // Sem "até X%": o teto medido varia por rede (Pitágoras abaixo das demais).
+    metaDescription:
+      'Compare mensalidades EAD de Anhanguera, Unopar, Pitágoras e Unime por curso e nota MEC, com bolsa sem ENEM. Cadastro grátis, sem taxa de adesão.',
   },
   {
     slug: 'cursos-ead-mais-procurados-2026',
@@ -137,6 +139,12 @@ const SNIPPETS: { slug: string; metaTitle: string; metaDescription: string }[] =
   },
 ]
 
+/** Percentuais e preços citados no texto: o CEO revisa cada um antes do --apply. */
+function claims(text: string): string {
+  const found = [...text.matchAll(/R\$\s*[\d.,]+|\d{1,3}\s*%/g)].map(m => m[0])
+  return found.length ? found.join(', ') : 'nenhum'
+}
+
 const FORBIDDEN = [/\bAmpli\b/i, /Quero\s*Bolsa/i, /Educa\s*Mais/i, /Vai\s*de\s*Bolsa/i, /Bolsa\s*Universit[áa]ria/i]
 
 function check(): boolean {
@@ -187,8 +195,11 @@ async function main() {
       const beforeT = post.metaTitle || post.title
       const beforeD = post.metaDescription || post.excerpt
       console.log(`\n${s.slug}`)
-      console.log(`  T ${renderedTitleLength(beforeT)} → ${renderedTitleLength(s.metaTitle)}: ${beforeT}  →  ${s.metaTitle}`)
-      console.log(`  D ${beforeD.length} → ${s.metaDescription.length}: ${s.metaDescription}`)
+      console.log(`  T antes  (${renderedTitleLength(beforeT)}): ${beforeT}`)
+      console.log(`  T depois (${renderedTitleLength(s.metaTitle)}): ${s.metaTitle}`)
+      console.log(`  D antes  (${beforeD.length}): ${beforeD}`)
+      console.log(`  D depois (${s.metaDescription.length}): ${s.metaDescription}`)
+      console.log(`  % / R$ antes: ${claims(`${beforeT} ${beforeD}`)} | depois: ${claims(`${s.metaTitle} ${s.metaDescription}`)}`)
       if (mode === 'apply') {
         await prisma.blogPost.update({
           where: { id: post.id },

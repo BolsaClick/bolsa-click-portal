@@ -129,9 +129,10 @@ por post neste sistema, o build do Next não valida conteúdo de blog):
 
 - [ ] Keyword primária presente em título, meta description, 1º parágrafo
       e pelo menos 1 H2.
-- [ ] metaTitle ≤46 caracteres (sem a marca) e metaDescription ≤155. A API
-      recusa com 422 acima disso (`app/lib/seo/snippet-limits.ts`); sem
-      metaDescription, o excerpt é medido no lugar.
+- [ ] metaTitle ≤46 caracteres (sem a marca) e metaDescription ≤155
+      (`app/lib/seo/snippet-limits.ts`); sem metaDescription, o excerpt é
+      medido no lugar. Acima disso a API publica mesmo assim, mas devolve
+      `snippetWarnings` na resposta: se vier, corrija o snippet.
 - [ ] Zero travessão (— ou –) no texto inteiro.
 - [ ] Zero linguagem de IA da lista do Passo 4.
 - [ ] Zero dado numérico específico de instituição sem lastro em dado

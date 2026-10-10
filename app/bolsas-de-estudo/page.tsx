@@ -328,6 +328,9 @@ async function getScholarshipGuides(): Promise<ScholarshipGuide[]> {
   }
 }
 
+/** URL de registro de IES no e-MEC — a home do portal não identifica ninguém. */
+const EMEC_RECORD_URL = /emec\.mec\.gov\.br\/emec\/consulta-cadastro\/detalhamento\//
+
 async function getActiveInstitutions() {
   return prisma.institution.findMany({
     where: { isActive: true },
@@ -339,6 +342,7 @@ async function getActiveInstitutions() {
       mecRating: true,
       modalities: true,
       campusCount: true,
+      emecLink: true,
     },
     orderBy: { order: 'asc' },
   })
@@ -600,7 +604,16 @@ export default async function BolsasDeEstudoHubPage() {
         value: inst.campusCount,
       },
     }),
-    sameAs: [`https://emec.mec.gov.br/emec/consulta-cadastro/detalhamento/${inst.slug}`],
+    // `sameAs` é identificador externo da entidade, então só pode sair quando
+    // apontar pro REGISTRO da IES no e-MEC. A URL que estava aqui era montada
+    // com o nosso slug (".../detalhamento/anhanguera"), padrão que não existe
+    // no e-MEC — enquanto a URL correta, com o hash da IES, já estava no banco
+    // em `emecLink` e não era usada. Instituição cujo emecLink é a home do
+    // portal (hoje Pitágoras e Wyden) fica SEM sameAs: é o estado honesto, e
+    // some sozinho quando o registro real for cadastrado.
+    ...(inst.emecLink && EMEC_RECORD_URL.test(inst.emecLink)
+      ? { sameAs: [inst.emecLink] }
+      : {}),
   }))
 
   const jsonLd = [

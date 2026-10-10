@@ -14,9 +14,6 @@ import {
   Clock,
   Check,
   ChevronDown,
-  Mail,
-  Phone,
-  Calendar,
   GraduationCap,
   ShieldCheck,
   Award,
@@ -26,10 +23,8 @@ import {
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useMemo, useState, useRef, Suspense } from 'react'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { validarCPF } from '@/utils/cpf-validate'
 import { formatCurrency } from '@/utils/fomartCurrency'
 import { getPriceAnchor } from '@/app/lib/utils/price-anchor'
 import { hasInstallmentPlan, isTotalPriceLevel } from '@/app/components/v2/course-offer'
@@ -37,8 +32,7 @@ import { toast } from 'sonner'
 // [CUPOM] import { validateCoupon } from '@/app/lib/api/get-coupon'
 import { createLead } from '@/app/lib/api/create-lead'
 import { validateEmailDeliverability } from '@/app/lib/api/validate-email'
-import { suggestEmailCorrection } from '@/app/lib/validation/email-typo'
-import { buildInscriptionPayload, getCognaErrorMessage, getCognaErrorDetails } from '@/app/lib/api/create-inscription'
+import { getCognaErrorMessage, getCognaErrorDetails } from '@/app/lib/api/create-inscription'
 import type { ValidateVoucherResponse, VoucherInstallment } from '@/app/lib/api/validate-voucher'
 // As 5 chamadas abaixo saíam direto do navegador pro Tartarus, sem
 // autenticação (achado 3.1.6 do SECURITY_AUDIT.md — CRITICAL). Agora passam
@@ -63,13 +57,26 @@ import {
   trackCheckoutViewed,
   trackCheckoutIdentified,
   trackCheckoutSubmitted,
-  trackCheckoutStepCompleted,
   trackCheckoutError,
   reportInscriptionFailure,
 } from '@/app/lib/analytics/checkout-funnel'
 import { formatPhone } from '@/utils/formatters'
+import { candidateSchema, CANDIDATE_DEFAULT_VALUES, type CandidateData } from '@/app/lib/checkout/candidate'
+import {
+  buildCognaInscriptionPayload as buildCognaInscriptionPayloadFor,
+  buildCognaMarketplaceData,
+} from '@/app/lib/checkout/partner-payload'
+import {
+  BirthDateField,
+  CpfField,
+  EmailField,
+  NameField,
+  PhoneField,
+  useCpfValidation,
+} from '../_shared/CandidateFields'
+import { useCheckoutSteps } from '../_shared/useCheckoutSteps'
+import { DADOS_ADMIN_PADRAO } from '@/app/lib/checkout/dados-admin-padrao'
 import { useAuth } from '@/app/contexts/AuthContext'
-import { Loader2 } from 'lucide-react'
 import MatriculaPayment, { type MatriculaChargeContext } from './MatriculaPayment'
 import PaymentLinkCard from './sucesso/PaymentLinkCard'
 import { getMatriculaCharge } from '@/app/lib/checkout/matricula-charge'
@@ -95,77 +102,15 @@ function formatTaxaCentavos(cents: number): string {
 
 
 // Captação mínima (fluxo acordado com a Cogna — parceiro autorizou
-// explicitamente): o formulário captura só os 5 campos que a Cogna cruza
-// com a Receita + contato (nome, CPF, data de nascimento, telefone, e-mail).
-// Os demais campos administrativos exigidos pelo payload da Cogna (RG,
-// gênero, ano de conclusão, endereço) vão com um valor padrão válido em
-// FORMATO — a própria instituição confirma os dados reais na matrícula
-// efetiva. Ver DADOS_ADMIN_PADRAO abaixo; um teste real de inscrição (HTTP
+// explicitamente): o formulário captura só os 5 campos que a Cogna cruza com
+// a Receita + contato. O schema é o compartilhado com o checkout da Estácio
+// (app/lib/checkout/candidate.ts); os campos administrativos que a Cogna
+// exige vão com DADOS_ADMIN_PADRAO, no adaptador
+// (app/lib/checkout/partner-payload.ts) — um teste real de inscrição (HTTP
 // 201) já validou esse formato como aceito pela Cogna.
-const formSchema = z.object({
-  email: z.string().email('Email inválido').min(1, 'Email é obrigatório'),
-  name: z
-    .string()
-    .min(3, 'Informe o nome completo')
-    .transform((val) => val.trim()),
-  cpf: z
-    .string()
-    .transform((val) => val.replace(/\D/g, ''))
-    .refine((val) => val.length === 11, 'CPF inválido')
-    .refine((val) => validarCPF(val), { message: 'CPF inválido' }),
-  birthDate: z
-    .string()
-    .refine(
-      (val) => {
-        const regex = /^\d{2}-\d{2}-\d{4}$/
-        if (!regex.test(val)) return false
-        const [day, month, year] = val.split('-').map(Number)
-        const birth = new Date(year, month - 1, day)
-        if (
-          birth.getFullYear() !== year ||
-          birth.getMonth() !== month - 1 ||
-          birth.getDate() !== day
-        ) return false
-        const today = new Date()
-        if (year < 1930 || year > today.getFullYear()) return false
-        let age = today.getFullYear() - year
-        const hadBirthday =
-          today.getMonth() > birth.getMonth() ||
-          (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate())
-        if (!hadBirthday) age--
-        return age >= 15
-      },
-      { message: 'Data de nascimento inválida. O candidato deve ter mais de 15 anos.' }
-    ),
-  phone: z
-    .string()
-    .transform((val) => val.replace(/\D/g, ''))
-    .refine(
-      (val) => val.length === 11 && val[2] === '9',
-      'Informe um celular válido no formato (99) 99999-9999'
-    ),
-})
+const formSchema = candidateSchema
 
-type FormSchema = z.infer<typeof formSchema>
-
-/**
- * Dados administrativos padrão exigidos pelo payload da Cogna, mas não
- * capturados no formulário (captação mínima acordada com o parceiro). São
- * válidos em FORMATO — a Cogna valida formato, não conteúdo, e confirma os
- * dados reais do candidato na matrícula efetiva. NUNCA enviar estes valores
- * ao CRM — só ao payload de inscrição da Cogna/Tartarus.
- */
-const DADOS_ADMIN_PADRAO = {
-  rg: '000000000',
-  gender: 'masculino' as const,
-  schoolYear: '2020',
-  address: 'Avenida Paulista',
-  addressNumber: '1000',
-  neighborhood: 'Bela Vista',
-  cep: '01310100',
-  state: 'SP',
-  city: 'São Paulo',
-}
+type FormSchema = CandidateData
 
 // [CUPOM] Comentado para possível reativação futura
 // interface CouponData {
@@ -216,14 +161,118 @@ function MatriculaContent({ taxaEmCentavos }: { taxaEmCentavos: number }) {
   // const [couponCode, setCouponCode] = useState('')
   // const [coupon, setCoupon] = useState<CouponData | null>(null)
   // const [couponError, setCouponError] = useState<string | null>(null)
-  const [cpfValidationError, setCpfValidationError] = useState<string | null>(null)
-  const [isValidatingCpf, setIsValidatingCpf] = useState(false)
-  const [cpfValidationOk, setCpfValidationOk] = useState(false)
-  // Trava de CPF já inscrito (Cogna, GET can-create-inscription). Guarda a
-  // mensagem amigável quando `inscriptionAllowed === false` — usada pra
-  // desabilitar o botão de envio e avisar o candidato. Falha de rede na
-  // checagem NÃO seta isso (fail-open, ver onBlur do CPF).
-  const [cpfInscriptionBlocked, setCpfInscriptionBlocked] = useState<string | null>(null)
+  // Checagem de CPF no blur — hook compartilhado com a Estácio
+  // (_shared/CandidateFields.tsx). O que é só da Cogna fica em `onValidated`:
+  // pixels, identificação no PostHog e a trava de CPF já inscrito
+  // (GET can-create-inscription), que guarda a mensagem em `blocked` quando
+  // `inscriptionAllowed === false` e desabilita o envio. Falha de rede nessa
+  // checagem NÃO bloqueia (fail-open).
+  const cpfCheck = useCpfValidation({
+    onCheckError: (error) => trackCheckoutError(trackEvent, 'cpf_db_check', error, 'cogna_matricula'),
+    onSideEffectError: (error) =>
+      trackCheckoutError(trackEvent, 'cpf_validation_side_effects', error, 'cogna_matricula'),
+    onValidated: async ({ cpf: cleanCpf, existsInDb: cpfExistsInDb, setBlocked }) => {
+      toast.success('CPF validado com sucesso!')
+      trackEvent('cpf_validated', {
+        cpf_valid: true,
+        inscription_allowed: true,
+        cpf_exists_in_db: cpfExistsInDb,
+        course_id: offerDetails?.courseId,
+        course_name: offerDetails?.course,
+      })
+
+      // Funil unificado — etapa 2: contato já preenchido + CPF validado.
+      // Identifica a pessoa no PostHog (tira do anonimato → habilita
+      // retargeting de quem NÃO concluir).
+      trackCheckoutIdentified(
+        trackEvent,
+        {
+          flow: 'matricula',
+          checkoutFlow: 'cogna_matricula',
+          academicLevel: offerDetails?.academicLevel,
+          brand: offerDetails?.brand,
+          modality: offerDetails?.modality,
+          courseId: offerDetails?.courseId,
+          courseName: offerDetails?.course,
+          email: getValues('email') || undefined,
+          phone: getValues('phone') || undefined,
+          name: getValues('name') || undefined,
+          // CPF já validado neste ponto: vira o distinct_id AQUI, não só no
+          // sucesso — é o que faz a falha da Cogna ter dono.
+          cpf: cleanCpf,
+        },
+        setUserProperties,
+        identifyUser,
+      )
+
+      // Facebook Pixel + Conversions API - AddPaymentInfo (dados pessoais preenchidos + CPF validado)
+      void trackFbqDual(
+        'AddPaymentInfo',
+        {
+          content_name: offerDetails?.course,
+          content_ids: offerDetails?.courseId ? [String(offerDetails.courseId)] : undefined,
+          content_type: 'product',
+          value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
+          currency: 'BRL',
+        },
+        {
+          email: getValues('email') || undefined,
+          phone: getValues('phone') || undefined,
+          externalId: (getValues('cpf') || '').replace(/\D/g, '') || undefined,
+        },
+      )
+
+      // GA4 ecommerce (dataLayer/GTM) - add_payment_info, paridade com o AddPaymentInfo acima.
+      pushDataLayerEvent('add_payment_info', {
+        ecommerce: {
+          currency: 'BRL',
+          value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
+          items: [
+            {
+              item_id: offerDetails?.courseId ? String(offerDetails.courseId) : undefined,
+              item_name: offerDetails?.course,
+              item_brand: offerDetails?.brand,
+            },
+          ],
+        },
+      })
+
+      // TikTok Pixel - AddPaymentInfo
+      trackTikTok('AddPaymentInfo', {
+        content_id: offerDetails?.courseId,
+        content_name: offerDetails?.course,
+        content_type: 'product',
+        value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
+        currency: 'BRL',
+      })
+
+      // Trava de CPF já inscrito (Cogna): GET can-create-inscription.
+      // Isolada num try próprio — falha de rede/infra aqui NÃO bloqueia o
+      // candidato (fail-open); a Cogna valida de novo, com força, no
+      // create-inscription final.
+      if (offerDetails?.dmhId) {
+        try {
+          const inscriptionCheck = await canCreateInscription(cleanCpf, offerDetails.dmhId)
+          if (inscriptionCheck.inscriptionAllowed === false) {
+            const blockedMessage =
+              inscriptionCheck.message || 'Este CPF já possui uma inscrição ativa.'
+            setBlocked(blockedMessage)
+            toast.error(blockedMessage)
+            trackEvent('cpf_inscription_blocked', {
+              course_id: offerDetails?.courseId,
+              course_name: offerDetails?.course,
+            })
+          }
+        } catch (checkError: unknown) {
+          console.error('Erro ao verificar inscrição existente na Cogna (fail-open, não bloqueia):', checkError)
+          trackCheckoutError(trackEvent, 'cpf_inscription_check', checkError)
+        }
+      }
+    },
+  })
+  const cpfValidationError = cpfCheck.error
+  const cpfValidationOk = cpfCheck.ok
+  const cpfInscriptionBlocked = cpfCheck.blocked
   const [studentCreated, setStudentCreated] = useState(false)
   const [isCreatingStudent, setIsCreatingStudent] = useState(false)
   // Desacoplado de studentCreated: /api/leads exige phone (diferente de
@@ -290,22 +339,10 @@ function MatriculaContent({ taxaEmCentavos }: { taxaEmCentavos: number }) {
     // nunca chegava a existir. Era o mecanismo exato do beco sem saída do
     // birthDate: passo marcado como concluído, botão cinza, zero explicação.
     mode: 'onTouched',
-    defaultValues: {
-      email: '',
-      name: '',
-      cpf: '',
-      birthDate: '',
-      phone: '',
-    },
+    defaultValues: CANDIDATE_DEFAULT_VALUES,
   })
 
   const watchedValues = watch()
-
-  // Sugestão de digitação do e-mail — nunca bloqueia, só sugere (ver
-  // app/lib/validation/email-typo.ts). Recalcula a cada troca do campo.
-  const emailTypoSuggestion = watchedValues.email
-    ? suggestEmailCorrection(watchedValues.email)
-    : null
 
 // Passos do stepper — no corpo do componente, e não dentro do JSX, porque o
 // `useEffect` que mede o abandono por passo precisa observá-los. O stepper
@@ -462,36 +499,29 @@ const contatoOk = !!watchedValues.phone
     }
   }, [offerDetails, trackEvent])
 
-  // Onde o formulário perde gente. Espelha o do checkout Estácio: cada passo
-  // avisa quando fica válido pela PRIMEIRA vez. `useRef` porque as flags são
-  // recalculadas a cada tecla e o candidato pode voltar atrás para corrigir —
-  // sem a trava, um campo apagado e redigitado contaria o passo de novo.
-  //
-  // O passo 03 (pagamento) não entra aqui: quem o alcança já emite
-  // `checkout_identified` e depois `checkout_submitted`.
-  const passosEmitidos = useRef<Set<number>>(new Set())
-  useEffect(() => {
-    if (!offerDetails) return
-    const passos: Array<{ ok: boolean; n: number; nome: string }> = [
-      { ok: dadosOk, n: 1, nome: 'estudante' },
-      { ok: contatoOk, n: 2, nome: 'contato' },
-    ]
-    for (const passo of passos) {
-      if (!passo.ok || passosEmitidos.current.has(passo.n)) continue
-      passosEmitidos.current.add(passo.n)
-      trackCheckoutStepCompleted(trackEvent, {
-        flow: 'matricula',
-        checkoutFlow: 'cogna_matricula',
-        academicLevel: offerDetails.academicLevel,
-        brand: offerDetails.brand,
-        modality: offerDetails.modality,
-        courseId: offerDetails.courseId,
-        courseName: offerDetails.course,
-        stepNumber: passo.n,
-        stepName: passo.nome,
-      })
-    }
-  }, [dadosOk, contatoOk, offerDetails, trackEvent])
+  // Onde o formulário perde gente — rastreador compartilhado com a Estácio
+  // (_shared/useCheckoutSteps.ts): cada bloco emite `checkout_step_started`
+  // no primeiro foco e `checkout_step_completed` na primeira vez que fica
+  // válido. O passo 03 (pagamento) não entra: quem o alcança já emite
+  // `checkout_submitted`.
+  const startStep = useCheckoutSteps(
+    trackEvent,
+    offerDetails
+      ? {
+          flow: 'matricula',
+          checkoutFlow: 'cogna_matricula',
+          academicLevel: offerDetails.academicLevel,
+          brand: offerDetails.brand,
+          modality: offerDetails.modality,
+          courseId: offerDetails.courseId,
+          courseName: offerDetails.course,
+        }
+      : null,
+    [
+      { n: 1, name: 'estudante', ok: dadosOk },
+      { n: 2, name: 'contato', ok: contatoOk },
+    ],
+  )
 
   useEffect(() => {
     if (offerDetails) {
@@ -1236,68 +1266,11 @@ const contatoOk = !!watchedValues.phone
     data: FormSchema,
     offer: OfferDetails,
     paymentMethod: { id: string; dueDay: string; voucher?: string; voucherId?: number } | undefined,
-  ) =>
-    buildInscriptionPayload(
-      {
-        // Capturados de verdade no formulário (captação mínima).
-        name: data.name,
-        cpf: data.cpf,
-        birthDate: data.birthDate,
-        email: data.email,
-        phone: data.phone,
-        // Administrativos NÃO capturados — valor padrão válido em formato;
-        // a Cogna confirma os dados reais na matrícula efetiva.
-        gender: DADOS_ADMIN_PADRAO.gender,
-        schoolYear: DADOS_ADMIN_PADRAO.schoolYear,
-        rg: DADOS_ADMIN_PADRAO.rg,
-        address: DADOS_ADMIN_PADRAO.address,
-        addressNumber: DADOS_ADMIN_PADRAO.addressNumber,
-        neighborhood: DADOS_ADMIN_PADRAO.neighborhood,
-        city: DADOS_ADMIN_PADRAO.city,
-        state: DADOS_ADMIN_PADRAO.state,
-        cep: DADOS_ADMIN_PADRAO.cep,
-      },
-      {
-        dmhId: offer.dmhId,
-        businessKey: offer.businessKey,
-        dmhSource: offer.dmhSource,
-        academicLevel: offer.academicLevel,
-        // Graduação: usar tipo de ingresso selecionado (ENEM ou VESTIBULAR)
-        // Pós-graduação: manter ingressType original da oferta
-        ingressType: offer.academicLevel === 'GRADUACAO'
-          ? [selectedIngressType]
-          : offer.ingressType,
-        schedules: offer.schedules,
-        shift: offer.shift,
-      },
-      paymentMethod
-    )
+  ) => buildCognaInscriptionPayloadFor(data, offer, selectedIngressType, paymentMethod)
 
   /** Dados do candidato no formato do marketplace ATHENAS. */
-  const buildMarketplaceData = (data: FormSchema) => ({
-    // Capturados de verdade no formulário (captação mínima).
-    name: data.name,
-    cpf: data.cpf,
-    email: data.email,
-    phone: data.phone,
-    birthDate: data.birthDate,
-    // Administrativos NÃO capturados — valor padrão válido em formato; a Cogna
-    // confirma os dados reais na matrícula efetiva.
-    rg: DADOS_ADMIN_PADRAO.rg,
-    gender: DADOS_ADMIN_PADRAO.gender,
-    cep: DADOS_ADMIN_PADRAO.cep,
-    address: DADOS_ADMIN_PADRAO.address,
-    addressNumber: DADOS_ADMIN_PADRAO.addressNumber,
-    neighborhood: DADOS_ADMIN_PADRAO.neighborhood,
-    city: DADOS_ADMIN_PADRAO.city,
-    state: DADOS_ADMIN_PADRAO.state,
-    ingressType: selectedIngressType,
-    schoolYear: DADOS_ADMIN_PADRAO.schoolYear,
-    acceptTerms: true,
-    acceptEmail: true,
-    acceptSms: true,
-    acceptWhatsapp: true,
-  })
+  const buildMarketplaceData = (data: FormSchema) =>
+    buildCognaMarketplaceData(data, selectedIngressType)
 
   /**
    * Tudo que a confirmação server-side precisa para inscrever DEPOIS do
@@ -1511,19 +1484,9 @@ const contatoOk = !!watchedValues.phone
             }
           }
 
-          // Funil unificado — etapa 3 (ramo graduação/ATHENAS). Fica FORA do
-          // gate acima de propósito: o candidato enviou o checkout independente
-          // de a chamada ao marketplace estar ligada ou não — não queremos que
-          // desativar o marketplace crie um ponto cego no funil de conversão.
-          trackCheckoutSubmitted(trackEvent, {
-            flow: 'matricula',
-            checkoutFlow: 'cogna_matricula',
-            academicLevel: offerDetails.academicLevel,
-            brand: offerDetails.brand,
-            modality: offerDetails.modality,
-            courseId: offerDetails.courseId,
-            courseName: offerDetails.course,
-          })
+          // `checkout_submitted` NÃO é emitido aqui: era um segundo disparo
+          // (o primeiro sai no `onSubmit`, para todo envio) e contava a
+          // graduação ATHENAS em dobro. Ver trackCheckoutSubmitted.
         }
 
         // Montar params para a página de sucesso antes de limpar o localStorage
@@ -1740,7 +1703,9 @@ const contatoOk = !!watchedValues.phone
       course_name: offerDetails.course,
     })
 
-    // Funil unificado — etapa 3 (ramo pós/profissionalizante)
+    // Funil unificado — etapa 3: ÚNICO disparo, para todo envio válido
+    // (graduação ATHENAS ou não, pós, profissionalizante). Ver
+    // trackCheckoutSubmitted em checkout-funnel.ts.
     trackCheckoutSubmitted(trackEvent, {
       flow: 'matricula',
       checkoutFlow: 'cogna_matricula',
@@ -2405,7 +2370,7 @@ const contatoOk = !!watchedValues.phone
 
             <form onSubmit={handleSubmit(onSubmit)}>
               {/* Dados do Aluno - Seção Expansível */}
-              <div className="border-b border-hairline">
+              <div className="border-b border-hairline" onFocusCapture={() => startStep(1)}>
                 <button
                   type="button"
                   onClick={() => toggleSection('dadosPessoais')}
@@ -2437,303 +2402,24 @@ const contatoOk = !!watchedValues.phone
                 {expandedSections.dadosPessoais && (
                   <div className="px-6 pb-6 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
-                          <Mail size={14} className="inline mr-1" /> E-mail
-                        </label>
-                        <input
-                          type="email"
-                          autoComplete="email"
-                          {...register('email')}
-                          placeholder="seuemail@exemplo.com"
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        />
-                        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
-                        {!errors.email && emailTypoSuggestion && (
-                          <p className="text-amber-600 text-xs mt-1">
-                            Você quis dizer{' '}
-                            <button
-                              type="button"
-                              className="underline font-medium hover:text-amber-700"
-                              onClick={() => setValue('email', emailTypoSuggestion, { shouldValidate: true })}
-                            >
-                              {emailTypoSuggestion}
-                            </button>
-                            ?
-                          </p>
-                        )}
-                      </div>
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">Nome Completo</label>
-                        <input
-                          type="text"
-                          autoComplete="name"
-                          {...register('name')}
-                          placeholder="Ex: Rodrigo Silva"
-                          className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                        />
-                        {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
-                      </div>
+                      <EmailField
+                        register={register}
+                        errors={errors}
+                        value={watchedValues.email}
+                        onSuggestionAccept={(email) => setValue('email', email, { shouldValidate: true })}
+                      />
+                      <NameField register={register} errors={errors} />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">CPF</label>
-                        <Controller
-                          control={control}
-                          name="cpf"
-                          render={({ field }) => (
-                            <div>
-                              <div className="relative">
-                              <input
-                                ref={field.ref}
-                                value={field.value}
-                                onChange={(e) => {
-                                  const masked = e.target.value
-                                    .replace(/\D/g, '')
-                                    .replace(/(\d{3})(\d)/, '$1.$2')
-                                    .replace(/(\d{3})(\d)/, '$1.$2')
-                                    .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
-                                  field.onChange(masked)
-                                  if (cpfValidationOk) setCpfValidationOk(false)
-                                  if (cpfValidationError) setCpfValidationError(null)
-                                  if (cpfInscriptionBlocked) setCpfInscriptionBlocked(null)
-                                }}
-                                onBlur={async (e) => {
-                                  field.onBlur()
-                                  const cleanCpf = e.target.value.replace(/\D/g, '')
-                                  if (cleanCpf.length === 11 && validarCPF(cleanCpf)) {
-                                    setIsValidatingCpf(true)
-                                    setCpfValidationError(null)
-                                    setCpfValidationOk(false)
-                                    setCpfInscriptionBlocked(null)
-                                    try {
-                                      // Consulta se o CPF já existe no banco — só alimenta o
-                                      // tracking; a matrícula não exige conta.
-                                      //
-                                      // try/catch PRÓPRIO, e de propósito: o CPF já passou pelo
-                                      // `validarCPF` local na linha acima, então o resultado desta
-                                      // chamada não decide nada sobre a validade. Quando ela caía
-                                      // no catch de fora, porém, derrubava `cpfValidationOk` e
-                                      // acendia `cpfValidationError` — ou seja, uma chamada de
-                                      // ANALYTICS barrava a inscrição por rede instável. Agora a
-                                      // falha é não-fatal: loga, segue com `cpf_exists_in_db`
-                                      // desconhecido e não bloqueia ninguém.
-                                      let cpfExistsInDb: boolean | undefined
-                                      try {
-                                        const dbCheckResponse = await fetch('/api/auth/check-cpf', {
-                                          method: 'POST',
-                                          headers: { 'Content-Type': 'application/json' },
-                                          body: JSON.stringify({ cpf: cleanCpf }),
-                                        })
-                                        const dbCheckResult = await dbCheckResponse.json()
-                                        cpfExistsInDb = dbCheckResult?.exists
-                                      } catch (dbCheckError: unknown) {
-                                        console.error(
-                                          'check-cpf falhou (não-fatal, só tracking):',
-                                          dbCheckError,
-                                        )
-                                        trackCheckoutError(
-                                          trackEvent,
-                                          'cpf_db_check',
-                                          dbCheckError,
-                                          'cogna_matricula',
-                                        )
-                                      }
-
-                                      setCpfValidationError(null)
-                                      setCpfValidationOk(true)
-                                      toast.success('CPF validado com sucesso!')
-                                      trackEvent('cpf_validated', {
-                                        cpf_valid: true,
-                                        inscription_allowed: true,
-                                        cpf_exists_in_db: cpfExistsInDb,
-                                        course_id: offerDetails?.courseId,
-                                        course_name: offerDetails?.course,
-                                      })
-
-                                      // Funil unificado — etapa 2: contato já
-                                      // preenchido + CPF validado. Identifica a
-                                      // pessoa no PostHog (tira do anonimato →
-                                      // habilita retargeting de quem NÃO concluir).
-                                      trackCheckoutIdentified(
-                                        trackEvent,
-                                        {
-                                          flow: 'matricula',
-                                          checkoutFlow: 'cogna_matricula',
-                                          academicLevel: offerDetails?.academicLevel,
-                                          brand: offerDetails?.brand,
-                                          modality: offerDetails?.modality,
-                                          courseId: offerDetails?.courseId,
-                                          courseName: offerDetails?.course,
-                                          email: getValues('email') || undefined,
-                                          phone: getValues('phone') || undefined,
-                                          name: getValues('name') || undefined,
-                                          // CPF já validado neste ponto: vira o
-                                          // distinct_id AQUI, não só no sucesso —
-                                          // é o que faz a falha da Cogna ter dono.
-                                          cpf: cleanCpf,
-                                        },
-                                        setUserProperties,
-                                        identifyUser,
-                                      )
-
-                                      // Facebook Pixel + Conversions API - AddPaymentInfo (dados pessoais preenchidos + CPF validado)
-                                      void trackFbqDual(
-                                        'AddPaymentInfo',
-                                        {
-                                          content_name: offerDetails?.course,
-                                          content_ids: offerDetails?.courseId ? [String(offerDetails.courseId)] : undefined,
-                                          content_type: 'product',
-                                          value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
-                                          currency: 'BRL',
-                                        },
-                                        {
-                                          email: getValues('email') || undefined,
-                                          phone: getValues('phone') || undefined,
-                                          externalId: (getValues('cpf') || '').replace(/\D/g, '') || undefined,
-                                        },
-                                      )
-
-                                      // GA4 ecommerce (dataLayer/GTM) - add_payment_info, paridade com o AddPaymentInfo acima.
-                                      pushDataLayerEvent('add_payment_info', {
-                                        ecommerce: {
-                                          currency: 'BRL',
-                                          value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
-                                          items: [
-                                            {
-                                              item_id: offerDetails?.courseId ? String(offerDetails.courseId) : undefined,
-                                              item_name: offerDetails?.course,
-                                              item_brand: offerDetails?.brand,
-                                            },
-                                          ],
-                                        },
-                                      })
-
-                                      // TikTok Pixel - AddPaymentInfo
-                                      trackTikTok('AddPaymentInfo', {
-                                        content_id: offerDetails?.courseId,
-                                        content_name: offerDetails?.course,
-                                        content_type: 'product',
-                                        value: offerDetails?.subscriptionValue || offerDetails?.montlyFeeTo || 0,
-                                        currency: 'BRL',
-                                      })
-
-                                      // Trava de CPF já inscrito (Cogna): GET can-create-inscription.
-                                      // Isolada num try próprio — falha de rede/infra aqui NÃO bloqueia
-                                      // o candidato (fail-open); a Cogna valida de novo, com força, no
-                                      // create-inscription final.
-                                      if (offerDetails?.dmhId) {
-                                        try {
-                                          const inscriptionCheck = await canCreateInscription(cleanCpf, offerDetails.dmhId)
-                                          if (inscriptionCheck.inscriptionAllowed === false) {
-                                            const blockedMessage =
-                                              inscriptionCheck.message || 'Este CPF já possui uma inscrição ativa.'
-                                            setCpfInscriptionBlocked(blockedMessage)
-                                            toast.error(blockedMessage)
-                                            trackEvent('cpf_inscription_blocked', {
-                                              course_id: offerDetails?.courseId,
-                                              course_name: offerDetails?.course,
-                                            })
-                                          }
-                                        } catch (checkError: unknown) {
-                                          console.error('Erro ao verificar inscrição existente na Cogna (fail-open, não bloqueia):', checkError)
-                                          trackCheckoutError(trackEvent, 'cpf_inscription_check', checkError)
-                                        }
-                                      }
-                                    } catch (error: unknown) {
-                                      // Rede de segurança NÃO-BLOQUEANTE. Depois que o
-                                      // `validarCPF` local passou e o `check-cpf` ganhou o
-                                      // try próprio dele, só sobra telemetria aqui dentro
-                                      // (PostHog, Meta, GA4, TikTok) e a trava da Cogna, que
-                                      // já é fail-open. Nada disso diz se o CPF é válido —
-                                      // então nada disso pode acender erro no campo nem
-                                      // derrubar `cpfValidationOk`, como acontecia antes:
-                                      // um pixel caindo barrava a inscrição.
-                                      console.error('Falha não-fatal após validar CPF (telemetria):', error)
-                                      trackCheckoutError(
-                                        trackEvent,
-                                        'cpf_validation_side_effects',
-                                        error,
-                                        'cogna_matricula',
-                                      )
-                                    } finally {
-                                      setIsValidatingCpf(false)
-                                    }
-                                  }
-                                }}
-                                placeholder="000.000.000-00"
-                                maxLength={14}
-                                inputMode="numeric"
-                                className={`w-full px-3 py-2 pr-9 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-bolsa-primary ${
-                                  cpfValidationError || cpfInscriptionBlocked
-                                    ? 'border-red-500'
-                                    : cpfValidationOk
-                                      ? 'border-green-500'
-                                      : 'border-gray-300'
-                                }`}
-                              />
-                              <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
-                                {isValidatingCpf && (
-                                  <Loader2 size={16} className="text-bolsa-primary animate-spin" aria-label="Validando CPF" />
-                                )}
-                                {!isValidatingCpf && cpfValidationOk && !cpfInscriptionBlocked && (
-                                  <Check size={16} className="text-green-600" aria-label="CPF validado" />
-                                )}
-                              </div>
-                              </div>
-                              {isValidatingCpf && (
-                                <p className="text-blue-500 text-xs mt-1">Validando CPF...</p>
-                              )}
-                              {!isValidatingCpf && cpfValidationOk && !cpfInscriptionBlocked && (
-                                <p className="text-green-600 text-xs mt-1">CPF validado — você pode continuar.</p>
-                              )}
-                            </div>
-                          )}
-                        />
-                        {errors.cpf && <p className="text-red-500 text-xs mt-1">{errors.cpf.message}</p>}
-                        {cpfValidationError && <p className="text-red-500 text-xs mt-1">{cpfValidationError}</p>}
-                        {cpfInscriptionBlocked && <p className="text-red-500 text-xs mt-1">{cpfInscriptionBlocked}</p>}
-                      </div>
-                      <div>
-                        <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
-                          <Calendar size={14} className="inline mr-1" /> Data de Nascimento
-                        </label>
-                        <Controller
-                          name="birthDate"
-                          control={control}
-                          render={({ field }) => (
-                            <input
-                              // `field.ref` ligado: sem ele o react-hook-form NAO consegue
-                              // focar este campo quando a validacao falha — medido no
-                              // browser, o foco ficava no proprio botao e a mensagem podia
-                              // estar fora da tela. Era o resto do beco sem saida.
-                              ref={field.ref}
-                              value={field.value}
-                              onChange={(e) => {
-                                const masked = e.target.value
-                                  .replace(/\D/g, '')
-                                  .replace(/(\d{2})(\d)/, '$1-$2')
-                                  .replace(/(\d{2})-(\d{2})(\d)/, '$1-$2-$3')
-                                  .slice(0, 10)
-                                field.onChange(masked)
-                              }}
-                              placeholder="DD-MM-AAAA"
-                              maxLength={10}
-                              inputMode="numeric"
-                              autoComplete="bday"
-                              className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                            />
-                          )}
-                        />
-                        {errors.birthDate && <p className="text-red-500 text-xs mt-1">{errors.birthDate.message}</p>}
-                      </div>
+                      <CpfField control={control} errors={errors} validation={cpfCheck} />
+                      <BirthDateField control={control} errors={errors} />
                     </div>
                   </div>
                 )}
               </div>
 
               {/* Contato - Seção Expansível */}
-              <div className="border-b border-hairline">
+              <div className="border-b border-hairline" onFocusCapture={() => startStep(2)}>
                 <button
                   type="button"
                   onClick={() => {
@@ -2769,37 +2455,13 @@ const contatoOk = !!watchedValues.phone
                 </button>
                 {expandedSections.contato && (
                   <div className="px-6 pb-6 space-y-4">
-                    <div>
-                      <label className="block font-mono text-[10px] tracking-[0.2em] uppercase text-ink-500 mb-1.5">
-                        <Phone size={14} className="inline mr-1" /> Telefone
-                      </label>
-                      <Controller
-                        control={control}
-                        name="phone"
-                        render={({ field }) => (
-                          <input
-                            ref={field.ref}
-                            value={field.value}
-                            onChange={(e) => field.onChange(formatPhone(e.target.value))}
-                            onFocus={() => {
-                              // Tentar cadastrar quando o usuário focar no campo
-                              tryCreateStudent()
-                            }}
-                            onBlur={() => {
-                              // Tentar cadastrar quando o usuário sair do campo
-                              tryCreateStudent()
-                            }}
-                            placeholder="(00) 00000-0000"
-                            maxLength={15}
-                            type="tel"
-                            inputMode="numeric"
-                            autoComplete="tel"
-                            className="w-full px-3 py-2 text-sm border border-hairline bg-white text-ink-900 placeholder:text-ink-300 rounded-xl focus:outline-none focus:border-ink-900 focus:ring-2 focus:ring-bolsa-secondary/15 transition-colors"
-                          />
-                        )}
-                      />
-                      {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
-                    </div>
+                    <PhoneField
+                      control={control}
+                      errors={errors}
+                      // Tentar cadastrar o estudante ao entrar e ao sair do campo
+                      onFocus={() => tryCreateStudent()}
+                      onBlur={() => tryCreateStudent()}
+                    />
                   </div>
                 )}
               </div>

@@ -38,6 +38,14 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # Suíte node:test (app/**/*.test.ts). Sem este passo ela não gatilha nada:
+      # vitrine-shelf-resilience.test.ts nasceu em 08/10 como trava do incidente
+      # da Cogna e nunca rodou no CI — regressão que ninguém executa é enfeite.
+      # Não precisa de DATABASE_URL: os testes mockam o adapter do axios e as
+      # funções de decisão são puras.
+      - name: Testes unitários
+        run: npx tsx --test "app/**/*.test.ts" "scripts/**/*.test.ts"
+
   build:
     name: Build (next build)
     runs-on: ubuntu-latest
